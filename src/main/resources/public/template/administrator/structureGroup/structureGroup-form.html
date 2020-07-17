@@ -1,0 +1,75 @@
+<div class ="row">
+    <h1>
+        <i18n ng-show="structureGroup.id == undefined">lystore.form.structureGroups.add</i18n>
+        <i18n ng-show="structureGroup.id !== undefined">lystore.form.structureGroups.modify</i18n>
+    </h1>
+    <article>
+        <div class="row horizontal-spacing vertical-spacing">
+            <div class="twelve cell horizontal-spacing">
+                <h2><i18n>lystore.information</i18n></h2>
+                <label class="row twelve vertical-spacing">
+                    <span class="twelve"><i18n>lystore.form.structureGroups.name</i18n></span>
+                    <input type ="text" class="twelve" ng-model="structureGroup.name">
+                </label>
+            </div>
+            <div class="twelve cell horizontal-spacing">
+                <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.form.structureGroups.description</i18n>
+                        </span>
+                    <textarea ng-model="structureGroup.description"></textarea>
+                </label>
+            </div>
+        </div>
+        <br>
+        <div class="row list_structureGroup-form">
+            <div class="five cell twelve-mobile">
+                <h2 class="">[[getStructureNumber()]] <i18n>lystor.form.structureGroups.structures.no.affect</i18n></h2>
+                <div class="card listStructure ">
+                    <div class="toolbox vertical-spacing horizontal-spacing">
+                        <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structure">
+                        <a class="instantButtons deselect right-magnet button" ng-click="deselectAllStructures(structures)" tooltip="deselectAll"></a>
+                        <a class="instantButtons select right-magnet button" ng-click="selectAllStructures(structures)" tooltip="multi-combo.selectAll"></a>
+                    </div>
+                    <ul class="selectable-list">
+                        <li class= "ellipsis"
+                            ng-repeat = "structureLeft in structures.all | filter:structuresFilter | filter:search.structure"
+                            ng-click="structureLeft.selected=!structureLeft.selected"
+                            ng-class="{selected: structureLeft.selected}">
+                            [[structureLeft.uai]] - [[structureLeft.name]]<span>[[structureLeft.city]]</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="two cell twelve-mobile">
+                <div class="arrow ">
+                    <button ng-click="addStructuresInGroup()" ><i class="open-right"></i></button>
+                    <button ng-click="deleteStructuresofGroup()"><i class="left-open"></i></button>
+                </div>
+            </div>
+            <div class="five cell twelve-mobile">
+                <h2 class="row">[[structureGroup.structures.length]] <i18n>lystor.form.structureGroups.structures.affect</i18n></h2>
+                <div class="card listStructure ">
+                    <div class="toolbox vertical-spacing horizontal-spacing">
+                        <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structureRight">
+                        <a class="instantButtons deselect right-magnet button" ng-click="updateSelection(structureGroup.structures, false)" tooltip="deselectAll"></a>
+                        <a class="instantButtons select right-magnet button" ng-click="updateSelection(structureGroup.structures, true)" tooltip="multi-combo.selectAll"></a>
+                    </div>
+                    <ul class="selectable-list" >
+                        <li class= "ellipsis" ng-repeat="structureRight in structureGroup.structures | filter:search.structureRight"
+                            ng-click="structureRight.selected = !structureRight.selected"
+                            ng-class="{selected: structureRight.selected}">[[structureRight.uai]] - [[structureRight.name]]<span>[[structureRight.city]]</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="right-magnet">
+                <input type="button" class="cancel" ng-click="redirectTo('/structureGroups')" i18n-value="cancel"/>
+                <input type="submit" class="button" ng-click="validStructureGroup(structureGroup)" ng-disabled="!validStructureGroupForm(structureGroup)"/>
+            </div>
+        </div>
+        </form>
+    </article>
+</div>

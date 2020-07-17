@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id_grade": {
+      "type": "number"
+    },
+    "id_title": {
+      "type": "number"
+    },
+    "building": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stair": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "room": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "site": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "preference": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "id_title"
+  ]
+}

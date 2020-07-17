@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "number"
+    },
+    "id_exercise": {
+      "type": "number"
+    },
+    "object": {
+      "type": "string"
+    },
+
+    "service_number": {
+      "type": ["string", "null"]
+    },
+    "cp_number": {
+      "type": ["string", "null"]
+    },
+    "date_cp": {
+      "type": ["string", "null"]
+    },
+    "comment": {
+      "type": ["string", "null"]
+    },
+    "submitted_to_cp": {
+      "type": "boolean"
+    }
+  }, "required": [
+  "id_exercise",
+  "object"
+]
+}

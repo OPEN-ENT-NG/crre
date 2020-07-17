@@ -1,0 +1,194 @@
+<div ng-controller="orderRegionController" class="order-client-sent">
+    <h1>
+        <i18n>lystore.order.create</i18n>
+    </h1>
+    <form class="row">
+        <div class="row vertical-spacing-four">
+            <label class="four right-padding-form-field cell">
+                <i18n>CAMPAIGN</i18n>
+            </label>
+            <select ng-model="orderToCreate.campaign"
+                    class="six cell"
+                    ng-change="updateCampaign()"
+                    ng-options="campaign as campaign.name for campaign in campaigns.all">
+                <option value="" disabled selected>[[translate('lystore.placeholder.campaign')]]</option>
+            </select>
+        </div>
+
+        <div ng-show="titles.all.length !== 0 " class="row vertical-spacing-four">
+            <label class="four right-padding-form-field cell">
+                <i18n>lystore.project</i18n>
+            </label>
+            <select type="text" ng-model="orderToCreate.project"
+                    class="six cell"
+                    ng-options="title.id as title.name for title in titles.all">
+                <option value="" disabled selected>[[translate('lystore.placeholder.project')]]</option>
+            </select></div>
+        <div class="row vertical-spacing-four">
+            <label class="four right-padding-form-field cell">
+                <i18n>lystore.operation</i18n>
+            </label>
+            <select ng-model="orderToCreate.operation"
+                    class="six cell"
+                    ng-options="operation.id as operation.label.label + ' - ' + operation.displayOperation()
+                      for operation in operations.all">
+                <option value="" disabled selected>[[translate('lystore.instruction.choose.operation')]]</option>
+
+            </select>
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <input type="button" ng-disabled="!validForm()" class="right-magnet button" ng-click="createOrder()"
+                   i18n-value="lystore.save"/>
+        </div>
+        <article class="responsive-table">
+            <table class="twelve">
+                <thead>
+                <tr class="row">
+                    <td class="one">
+
+                    </td>
+                    <td class="two">
+                        [[translate('lystore.structure.label')]] / [[translate('lystore.structureGroup.management')]]
+                    </td>
+                    <td class="two">
+                        [[translate('support.market')]]
+                    </td>
+                    <td class="four">
+                        [[translate('EQUIPMENT')]]
+                    </td>
+
+                    <td class="one">
+                        [[translate('price')]]
+                    </td>
+                    <td class="one">
+                        [[translate('quantity')]]
+                    </td>
+                    <td class="one" ng-if="orderToCreate.campaign.orderPriorityEnable()">
+                        [[translate('lystore.project.priority.order')]]
+                    </td>
+                    <td class="three">
+                        [[translate('comment')]]
+                    </td>
+                    <td class="one">
+                    </td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="row" ng-repeat="row in orderToCreate.rows track by $index">
+                    <td class="one">
+                        <div ng-if="!row.display.struct" class="cell row ">
+                            <i class="house" ng-click="swapTypeStruct(row)"></i>
+                        </div>
+                        <div ng-if="row.display.struct" class="row ">
+                            <i class="groups one" ng-click="swapTypeStruct(row)"></i>
+                        </div>
+                    </td>
+                    <td class="one ">
+                        <div style="min-width: 150px; max-width: 400px;" ng-if="!row.display.struct" class="cell row ">
+                            <search-and-select
+                                    class="twelve cell"
+                                    options="structuresToDisplay.all"
+                                    param1="uai"
+                                    param2="name"
+                                    ng-model="row.structure"
+                                    search-on="name"
+                                    order-by="uai"
+                                    placeholder="lystore.placeholder.structure"
+                                    ng-change="switchStructure(row,row.structure)"
+                                    class="cell horizontal-margin"
+                            >
+                            </search-and-select >
+                        </div>
+                        <div style="min-width: 150px; max-width: 400px;" ng-if="row.display.struct" class="row ">
+                            <search-and-select
+                                    class="twelve cell"
+                                    options="structure_groups.all"
+                                    param1="name"
+                                    ng-model="row.structure"
+                                    placeholder="lystore.placeholder.structureGroup"
+                                    search-on="name"
+                                    order-by="uai"
+                                    ng-change="switchStructure(row)"
+                                    class="cell horizontal-margin"
+                            >
+                            </search-and-select >
+                        </div>
+                    </td>
+                    <td class="four ">
+                        <div  style="min-width: 150px; max-width: 400px;">
+                            <search-and-select
+                                    class="twelve cell"
+                                    disabled="!row.structure || row.structure === undefined"
+                                    options="row.contracts.all"
+                                    param1="name"
+                                    ng-model="row.contract"
+                                    search-on="name"
+                                    order-by="name"
+                                    placeholder="lystore.contract.type.placeholder"
+                                    class="cell horizontal-margin"
+                                    ng-change="initContractType(row)"
+                            >
+                            </search-and-select >
+                        </div>
+
+
+                    </td>
+                    <td class="four ">
+                        <div  style="min-width: 150px; max-width: 400px;">
+
+                            <search-and-select
+                                    class="twelve cell"
+                                    disabled="!row.ct_enabled"
+                                    options="row.equipments.all"
+                                    param1="name"
+                                    ng-model="row.equipment"
+                                    search-on="name"
+                                    order-by="name"
+                                    placeholder="lystore.placeholder.equipment"
+                                    ng-change="initEquipmentData(row)"
+                                    class="cell horizontal-margin"
+                            >
+                            </search-and-select >
+                        </div>
+
+
+                    </td>
+                    <td class="one ">
+                        <input ng-disabled="!row.equipment" class="input-in-row-number-price" ng-model="row.price" type="number"
+                               min="0" step="0.01"/>
+                    </td>
+                    <td class="one ">
+                        <input ng-disabled="!row.equipment" class="input-in-row-number" ng-model="row.amount" type="number"
+                               min="1" step="1"/>
+                    </td>
+                    <td class="one " ng-if="orderToCreate.project.preference">
+                        <input ng-model="row.priority" type="number" min="0" step="1"/>
+                    </td>
+                    <td class="one" ng-if="orderToCreate.campaign.orderPriorityEnable()">
+                        <input class="input-in-row-number" ng-init="row.rank = 1" ng-model="row.rank" type="number"
+                               min="1" step="1" max="10"/>
+                    </td>
+                    <td class="two">
+                        <input ng-model="row.comment" type="text"/>
+                    </td>
+                    <td class="one">
+                        <i class="plus" ng-click="duplicateRow($index)"></i>
+                    </td>
+                    <td class="one">
+                        <i class="trash" ng-click="dropRow($index)"></i>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+
+                </tfoot>
+            </table>
+        </article>
+        <input type="button" ng-disabled="!orderToCreate.campaign" ng-click="addRow()"
+               i18n-value="add"/>
+
+
+        <!--<input type="button" class="right-magnet cancel" ng-click="cancelCreation()" i18n-value="cancel"/>-->
+    </form>
+</div>

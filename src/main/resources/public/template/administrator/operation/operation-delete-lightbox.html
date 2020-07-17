@@ -1,0 +1,15 @@
+<h2><i18n>lystore.operation.title.delete</i18n></h2>
+
+<div>
+    <div class="row">
+        <i18n>lysctore.operation.text.delete.start</i18n>
+        [[operations.selected.length]]
+        <i18n ng-show="operations.selected.length === 1">lysctore.operation.text.delete.one.end</i18n>
+        <i18n ng-show="operations.selected.length > 1">lysctore.operation.text.delete.many.end</i18n>
+    </div>
+
+    <div class="right-magnet vertical-spacing">
+        <input type="button" class="cancel" ng-click="cancelOperationForm()" i18n-value="cancel"/>
+        <input type="submit" class="button" ng-click="deleteOperations()" i18n-value="confirm"/>
+    </div>
+</div>

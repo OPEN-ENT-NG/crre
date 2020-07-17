@@ -1,0 +1,84 @@
+<div ng-controller="PurseController" class="purse-management">
+
+    <div class="tools right-magnet eleven-mobile">
+        <button class="five-mobile" ng-click="openPurseImporter()"><i18n>lystore.campaign.purse.import</i18n></button>
+        <button class="five-mobile" ng-click="exportPurses(campaign.id)"><i18n>lystore.campaign.purse.export</i18n></button>
+<!--            <button class="five-mobile" ng-click="checkPurses(campaign.id)"><i18n>lystore.campaign.check.purses</i18n></button>-->
+    </div>
+
+    <div class="six centered twelve-mobile">
+        <h1 class="centered-text">[[campaign.name]]</h1>
+
+        <article class="responsive-table">
+            <table class="twelve">
+                <thead>
+                    <td workflow="lystore.administrator">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   ng-change="switchAll(allPurseSelected, campaign.purses)"
+                                   ng-model="allPurseSelected">
+                            <span></span>
+                        </label>
+                    </td>
+                    <td ng-click="sort.purse.type = 'uai';
+                        sort.purse.reverse = !sort.purse.reverse">
+                        <i18n>UAI</i18n>
+                        <i class="up-open" ng-show="sort.purse.type === 'uai' && !sort.purse.reverse"></i>
+                        <i class="down-open" ng-show="sort.purse.type === 'uai' && sort.purse.reverse"></i>
+                    </td>
+                    <td ng-click="sort.purse.type = 'name';
+                        sort.purse.reverse = !sort.purse.reverse">
+                        <i18n>name</i18n>
+                        <i class="up-open" ng-show="sort.purse.type === 'name' && !sort.purse.reverse"></i>
+                        <i class="down-open" ng-show="sort.purse.type === 'name' && sort.purse.reverse"></i>
+                    </td>
+                    <td ng-click="sort.purse.type = 'amount';
+                        sort.purse.reverse = !sort.purse.reverse">
+                        <i18n>lystore.campaign.purse</i18n>
+                        <i class="up-open" ng-show="sort.purse.type === 'amount' && !sort.purse.reverse"></i>
+                        <i class="down-open" ng-show="sort.purse.type === 'amount' && sort.purse.reverse"></i>
+                    </td>
+                    <td ng-click="sort.purse.type = 'amount';
+                        sort.purse.reverse = !sort.purse.reverse">
+                        <i18n>lystore.campaign.purse.init</i18n>
+                        <i class="up-open" ng-show="sort.purse.type === 'amount' && !sort.purse.reverse"></i>
+                        <i class="down-open" ng-show="sort.purse.type === 'amount' && sort.purse.reverse"></i>
+                    </td>
+                    <td ng-show="isChecked"><i18n>difference</i18n></td>
+                </thead>
+                <tbody>
+                <tr ng-repeat="purse in campaign.purses.all | orderBy:sort.purse.type:sort.purse.reverse"
+                ng-class="{'tr-warning': purse.substraction !== undefined && purse.substraction !== 0 && !purse.bigDifference,
+                          'tr-error': purse.substraction !== undefined && purse.substraction !== 0 &&  purse.bigDifference,
+                           'tr-valid': purse.substraction !== undefined && purse.substraction === 0 }">
+                    <td workflow="lystore.administrator">
+                        <label class="checkbox">
+                            <input type="checkbox" ng-model="purse.selected">
+                            <span></span>
+                        </label>
+                    </td>
+                    <td>[[purse.uai]]</td>
+                    <td>[[purse.name]]</td>
+                    <td><span ng-bind="purse.amount | currency"></span></td>
+                    <td><span ng-bind="purse.initial_amount | currency"></span></td>
+                    <td ng-show="isChecked">[[purse.substraction | currency]]  <i ng-class="{'warning-icon':purse.substraction !== 0 ,
+                        'valid-icon':purse.substraction === 0 }"></i></td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </div>
+    <lightbox show="lightbox.open" on-close="lightbox.open = false">
+        <container template="purse.lightbox"></container>
+    </lightbox>
+
+    <section class="toggle-buttons" ng-class="{ hide: campaign.purses.selected.length === 0 || campaign.purses.selected.length > 1}">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="openEditPurseForm(campaign.purses.selected[0])" ng-show="campaign.purses.selected.length === 1">
+                    <i18n>modify</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,10 @@
+<form ng-submit="deleteTags(tags.selected)">
+    <h4><i18n>lystore.tag.delete</i18n></h4>
+    <ul>
+        <li ng-repeat="tag in tags.selected">[[tag.name]]</li>
+    </ul>
+    <div class="right-magnet">
+        <input type="button" class="cancel" ng-click="display.lightbox.tag = false;" i18n-value="cancel" />
+        <input type="submit" class="button" />
+    </div>
+</form>

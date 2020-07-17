@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id_structure":{
+      "type": "string"
+    },
+    "structure_name":{
+      "type": "string"
+    },
+    "id_project": {
+      "type": "number"
+    },
+    "baskets": {
+      "type": "array"
+    }
+  },
+  "required": [
+    "id_structure",
+    "structure_name",
+    "id_project",
+    "baskets"
+  ]
+}

@@ -1,0 +1,31 @@
+<h2><i18n ng-show="operation.id === undefined">lystore.operation.add</i18n><i18n ng-show="operation.id !== undefined">lystore.operation.modify</i18n></h2>
+
+<form ng-submit="validOperation(operation)">
+    <div class="row">
+        <label class="cell twelve">
+            <span class="four cell twelve-mobile">
+                <i18n>label :</i18n>
+            </span>
+            <select  ng-model="operation.id_label" class="twelve"
+                     ng-init="operation.id_label = operation.id_label || (labelOperation.all.length > 0 ? labelOperation.all[0].id : null)"
+                     ng-options="LabelOperation.id as LabelOperation.label for LabelOperation in labelOperation.all" required>
+            </select>
+        </label>
+        <date-picker i18n-placeholder="lystore.instruction.date.place_holder" ng-model="operation.date_operation" ng-disaled>
+        </date-picker>
+    </div>
+    <label class="row vertical-spacing twelve-mobile row-mobile">
+                                <span class="cell ">
+                                    <i18n>lystore.operation.status</i18n>
+                                </span>
+        <switch-toggle ng-model="operation.status" class="cell">
+        </switch-toggle>
+    </label>
+    <div class="warning" ng-show="!validOperationForm(operation)">
+        <i18n>operation.form.warning</i18n>
+    </div>
+    <div class="right-magnet vertical-spacing">
+        <input type="button" class="cancel" ng-click="cancelOperationForm()" i18n-value="cancel"/>
+        <input type="submit" class="button" ng-disabled="!validOperationForm(operation)"/>
+    </div>
+</form>

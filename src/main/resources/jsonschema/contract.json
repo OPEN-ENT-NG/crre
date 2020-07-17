@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "annual_min": {
+      "type":  ["number", "null"]
+    },
+    "annual_max": {
+      "type": ["number", "null"]
+    },
+    "start_date": {
+      "type": ["string", "null"]
+    },
+    "nb_renewal": {
+      "type": "number"
+    },
+    "id_contract_type": {
+      "type": "number"
+    },
+    "max_brink": {
+      "type": ["number", "null"]
+    },
+    "id_supplier": {
+      "type": "number"
+    },
+    "id_agent": {
+      "type": "number"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "end_date": {
+      "type": "string"
+    },
+    "renewal_end": {
+      "type": "string"
+    },
+    "file": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "reference",
+    "start_date",
+    "nb_renewal",
+    "id_contract_type",
+    "id_supplier",
+    "id_agent",
+    "end_date",
+    "renewal_end",
+    "file"
+  ]
+}

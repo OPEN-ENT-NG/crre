@@ -1,0 +1,10 @@
+<form ng-submit="deleteContracts(contracts.selected)">
+    <h4><i18n>lystore.contract.delete</i18n></h4>
+    <ul>
+        <li ng-repeat="contract in contracts.selected">[[contract.name]]</li>
+    </ul>
+    <div class="right-magnet">
+        <input type="button" class="cancel" ng-click="display.lightbox.contract = false;" i18n-value="cancel" />
+        <input type="submit" class="button"/>
+    </div>
+</form>

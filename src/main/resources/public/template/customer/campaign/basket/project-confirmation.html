@@ -1,0 +1,97 @@
+<div class="project-creator" ng-controller="projectController">
+    <h1>
+        <i18n>lystore.confirmation.project.title</i18n>
+    </h1>
+    <div class="row">
+        <div class="row">
+            <div class="three cell image-container">
+                <img src="/lystore/public/img/information.png"/>
+            </div>
+            <div class="nine cell projet-text-container">
+                <div class="ten centered">
+                    <i18n>lystore.project.info.phrase</i18n>
+                    :
+                </div>
+            </div>
+        </div>
+        <form class="eleven centered" ng-submit="confirmProject(project)">
+            <div class="row">
+                <div class="row vertical-spacing-four">
+                    <strong class="cell right-padding-form-field">
+                        <i18n>entitled</i18n>
+                        :
+                    </strong>
+                    <select ng-model="project.title" required
+                            ng-options="title as title.name for title in project.titles.all"
+                            class="cell nine"></select>
+                </div>
+                <div class="row vertical-spacing-four">
+                    <div class="six right-padding-form-field cell">
+                        <strong class="cell right-padding-form-field">
+                            <i18n>sites</i18n>
+                            :
+                        </strong>
+                        <div class="right-padding-form-field cell six">
+                            <input ng-model="project.site" type="text" class="twelve">
+                        </div>
+                    </div>
+                    <div class="six cell">
+                        <strong class="cell left-padding-form-field right-padding-form-field">
+                            <i18n>building</i18n>
+                            :
+                        </strong>
+                        <div class="six cell">
+                            <input ng-model="project.building" type="text" class="twelve">
+                        </div>
+                    </div>
+                </div>
+                <div class="row vertical-spacing-four">
+                    <div class="six cell">
+                        <strong class="cell right-padding-form-field">
+                            <i18n>lystore.project.stage</i18n>
+                            :
+                        </strong>
+                        <div class="right-padding-form-field cell six">
+                            <input ng-model="project.stair" type="number" min="0" class="twelve">
+                        </div>
+                    </div>
+                    <div class="six cell">
+                        <strong class="cell left-padding-form-field right-padding-form-field">
+                            <i18n>room.number</i18n>
+                            :
+                        </strong>
+                        <div class="six cell">
+                            <input ng-model="project.room" type="text" class="twelve">
+                        </div>
+                    </div>
+                </div>
+                <div class="row vertical-spacing-four">
+                    <strong class="cell right-padding-form-field">
+                        <i18n>lystore.project.grade</i18n>
+                        :
+                    </strong>
+                    <select ng-model="project.grade" ng-options="grade as grade.name for grade in project.grades.all"
+                            class="cell nine"></select>
+                </div>
+                <div class="row vertical-spacing-four">
+                    <strong>
+                        <i18n>description</i18n>
+                        :
+                    </strong>
+                    <textarea auto-height placeholder="Objectifs pédagogiques / informations à transmettre à la Région"
+                              style="resize: none;" ng-model="project.description"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="right-magnet">
+                    <input type="button" ng-click="cancelProjectConfirmation()" class="cancel"
+                           i18n-value="cancel"/>
+                    <button>
+                        <i18n>ok</i18n>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>

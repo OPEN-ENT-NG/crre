@@ -1,0 +1,351 @@
+<div class="loading-bar" ng-class="{loading: equipment.loading}"></div>
+
+<div ng-if="equipment.loading">
+    <h1><i18n>lystore.loading</i18n></h1>
+</div>
+
+<div ng-if="!equipment.loading" class="row ten centered">
+    <h1>
+        <i18n ng-show="equipment.id == undefined">lystore.equipment.add</i18n>
+        <i18n ng-show="equipment.id !== undefined">lystore.equipment.modify</i18n>
+    </h1>
+
+    <article>
+        <form >
+            <div class="row horizontal-spacing vertical-spacing">
+                <div class="cell four horizontal-spacing twelve-mobile">
+                    <div class="eight row centered">
+                        <image-select ng-model="equipment.image"
+                                      visibility="'public'"
+                                      default="/img/illustrations/image-default.svg">
+                        </image-select>
+                    </div>
+                </div>
+                <div class="eight cell horizontal-spacing twelve-mobile">
+                    <h2><i18n>lystore.information</i18n></h2>
+                    <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.equipment.name</i18n> *
+                        </span>
+                        <input type="text" class="twelve" ng-model="equipment.name" required>
+                    </label>
+                    <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.equipment.reference</i18n>[[equipment.id? " *" : ""]]
+                        </span>
+                        <input type="text" class="twelve" ng-model="equipment.reference">
+                    </label>
+                    <label class="five twelve vertical-spacing cell">
+                        <span class="twelve">
+                            <i18n>lystore.equipment_type</i18n> *
+                        </span>
+                        <select  ng-model="equipment.id_type" class="twelve"
+                                 ng-init="equipment.id_type = equipment.id_type || (equipmentTypes.all.length > 0 ? equipmentTypes.all[0].id : null)"
+                                 ng-options="EquipmentType.id as EquipmentType.name for EquipmentType in equipmentTypes.all" required>
+                        </select>
+                    </label>
+                    <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.equipment.summary</i18n>
+                            <em class="smaller-text"><i18n>lystore.equipment.summary.length</i18n></em>
+                        </span>
+                        <textarea ng-model="equipment.summary"
+                                  cols="20"
+                                  rows="10"
+                                  maxlength="300"
+                        >
+                        </textarea>
+                    </label>
+                    <label class="five twelve-mobile vertical-spacing cell">
+                        <span class="four cell twelve-mobile">
+                            <i18n>lystore.tax</i18n> *
+                        </span>
+                        <span class="eight cell twelve-mobile">
+                            <select
+                                    ng-model="equipment.id_tax"
+                                    class="eleven"
+                                    ng-init="equipment.id_tax = equipment.id_tax || (taxes.all.length > 0 ? taxes.all[0].id : null)"
+                                    ng-options="tax.id as tax.value + '%' for tax in taxes.all"
+                                    required
+                            >
+                            </select>
+                        </span>
+                    </label>
+                    <label class="five twelve-mobile vertical-spacing cell">
+                        <span class="four cell twelve-mobile">
+                            <i18n>lystore.price</i18n> *
+                        </span>
+                        <span class="eight cell twelve-mobile">
+                            <input type="number" step="0.01" class="eleven" ng-model="equipment.price" required>
+                        </span>
+                    </label>
+                    <label class="five twelve-mobile vertical-spacing cell">
+                        <span class="four cell twelve-mobile">
+                            <i18n>lystore.warranty</i18n> *
+                        </span>
+                        <span class="eight cell twelve-mobile">
+                            <input type="number" min="0" value="1" ng-model="equipment.warranty" class="eleven" required>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="row twelve">
+                <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.equipment.description</i18n>
+                        </span>
+                    <editor ng-model="equipment.description"></editor>
+                </label>
+            </div>
+            <div class="row twelve">
+                <h2 class="vertical-spacing">
+                    <i18n>lystore.equipment.technical.specifications</i18n>
+                </h2>
+                <div class="row technical-specs">
+                    <div class="twelve row">
+                        <div class="technical-spec twelve row"
+                             ng-repeat="technicalSpec in equipment.technical_specs">
+                            <div class="five cell horizontal-spacing">
+                                <input
+                                        type="text"
+                                        class="twelve"
+                                        ng-model="technicalSpec.name"
+                                >
+                            </div>
+                            <div class="six cell horizontal-spacing">
+                                <input
+                                        type="text"
+                                        class="twelve"
+                                        ng-model="technicalSpec.value"
+                                >
+                            </div>
+                            <div class="one cell">
+                                <i class="trash"
+                                   ng-click="dropTechnicalSpec(equipment, technicalSpec)">
+
+                                </i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row vertical-spacing">
+                        <div class="right-magnet horizontal-spacing">
+                            <input type="button" ng-click="addTechnicalSpec(equipment)" class="cancel" i18n-value="add">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row twelve">
+                <h2 class="vertical-spacing">
+                    <i18n>lystore.equipment.options</i18n>
+                </h2>
+                <article class="responsive-table row">
+                    <table class="twelve">
+                        <thead>
+                        <td class="two"><i18n>reference</i18n></td>
+                        <td class="two"><i18n>name</i18n></td>
+                        <td class="two"><i18n>lystore.unit.price.ht</i18n></td>
+                        <td class="two"><i18n>lystore.amount</i18n></td>
+                        <td class="one aligne-text-center "><i18n>lystore.price.TTC</i18n></td>
+                        <td class="two"><i18n>lystore.tax</i18n></td>
+                        <td class="two"><i18n>lystore.type</i18n></td>
+                        <td class="two "><i18n>lystore.required</i18n></td>
+                        <td class="one aligne-text-center">&nbsp;</td>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="option in equipment.options">
+                            <td class="two">
+                                <async-autocomplete
+                                        ng-model="option" ng-disabled="false"
+                                        ng-change="selectOption"
+                                        on-search="searchOptionByReference"
+                                        options="option.searchReference"
+                                        search="option.reference"
+                                >
+                                </async-autocomplete>
+                            </td>
+                            <td class="two">
+                                <async-autocomplete
+                                        ng-model="option" ng-disabled="false"
+                                        ng-change="selectOption"
+                                        on-search="searchOptionByName"
+                                        options="option.search"
+                                        search="option.name"
+                                >
+                                </async-autocomplete>
+                            </td>
+                            <td class="two">
+                                <input type="number" step="0.01" class="twelve" ng-model="option.price" required/>
+                            </td>
+                            <td class="one">
+                                <input type="text" ng-model="option.amount" integer-input class="twelve" required/>
+                            </td>
+                            <td class="two aligne-text-center">
+                                <span ng-bind="calculatePriceOption(option.price,option.id_tax,option.amount) | currency">
+                                </span>
+                            </td>
+                            <td class="two">
+                                <select
+                                        ng-model="option.id_tax"
+                                        class="twelve"
+                                        ng-init="option.id_tax = option.id_tax || (taxes.all.length > 0 ? taxes.all[0].id : null)"
+                                        ng-options="tax.id as tax.value for tax in taxes.all"
+                                        required
+                                >
+                                </select>
+                            </td>
+                            <td class="two" >
+                                <label  ng-model="option.nametype"
+                                        class="twelve" >
+                                    [[option.nametype]]
+                                </label>
+                            </td>
+
+                            <td class="two aligne-text-center">
+                                <switch-toggle ng-model="option.required"></switch-toggle>
+                            </td>
+                            <td class="one aligne-text-center" ng-click="dropOption(equipment, $index)">
+                                <i  class="trash"></i>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <input type="button" class="vertical-spacing" ng-click="addOptionLigne()" i18n-value="add" />
+                </article>
+
+            </div>
+            <div class="row twelve">
+                <h2 class="vertical-spacing">
+                    <i18n>lystore.equipment.tag</i18n>
+                </h2>
+                <div class="row twelve vertical-spacing"
+                     ng-init="equipment.tags = equipment.tags || []">
+                    <div class="cell two twelve-mobile">
+                        <i18n>lystore.equipment.tags</i18n> *
+                    </div>
+                    <div class="cell nine twelve-mobile">
+                        <div class="row">
+                            <select
+                                    ng-model="equipment._tag"
+                                    class="six twelve-mobile"
+                                    ng-change="addTagToEquipment(equipment._tag)"
+                                    ng-options="tag as tag.name for tag in tags.all |tagFilter:equipment.tags"
+                            >
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="select-blocks">
+                                <div ng-repeat="tag in equipment.tags"
+                                     ng-click="removeTagToEquipment(tag)"
+                                     class="labels-in-ligne">
+                                    <span class="color-tag" ng-style="{ 'background-color': tag.color }">
+                                        &nbsp;
+                                    </span>
+                                    <div > [[ tag.name ]] </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row twelve">
+                <h2>
+                    <i18n>lystore.equipment.administration</i18n>
+                </h2>
+                <div class="row">
+                    <h4 class="two cell twelve-mobile vertical-spacing"><i18n>lystore.equipment.contract</i18n> *</h4>
+                    <div class="nine cell twelve-mobile vertical-spacing">
+                        <select
+                                class="six twelve-mobile"
+                                ng-model="equipment.id_contract"
+                                required
+                                ng-options="contract.id as (contract.name + ' - Ref ' + contract.reference) for contract in contracts.all"
+                        >
+                        </select>
+                    </div>
+                </div>
+                <div class="row vertical-spacing">
+                    <h4 class="two cell twelve-mobile">
+                        <i18n>lystore.availability</i18n>
+                    </h4>
+                    <div class="cell twelve-mobile ten">
+                        <div class="row seven twelve-mobile" ng-init="equipment.status = equipment.status || 'AVAILABLE'">
+                            <label class="horizontal-spacing twelve-mobile row-mobile">
+                                <span class="horizontal-spacing six-mobile cell">
+                                    <i18n>lystore.AVAILABLE</i18n>
+                                </span>
+                                <input type="radio" class="cell"
+                                       ng-model="equipment.status"
+                                       value="AVAILABLE"
+                                />
+                            </label>
+                            <label class="horizontal-spacing twelve-mobile row-mobile">
+                                <span class="horizontal-spacing six-mobile cell">
+                                    <i18n>lystore.OUT_OF_STOCK</i18n>
+                                </span>
+                                <input type="radio" class="cell"
+                                       ng-model="equipment.status"
+                                       value="OUT_OF_STOCK"
+                                />
+                            </label>
+                            <label class="horizontal-spacing twelve-mobile row-mobile">
+                                <span class="horizontal-spacing six-mobile cell">
+                                    <i18n>lystore.UNAVAILABLE</i18n>
+                                </span>
+                                <input
+                                        type="radio"
+                                        class="cell"
+                                        ng-model="equipment.status"
+                                        value="UNAVAILABLE"
+                                />
+                            </label>
+                        </div>
+                        <div class="row seven twelve-mobile">
+                            <label class="vertical-spacing twelve-mobile row-mobile">
+                                <span class="horizontal-spacing six-mobile cell three">
+                                    <i18n>lystore.AVAILABLE_ON_THE_CATALOG</i18n>
+                                </span>
+                                <switch-toggle ng-model="equipment.catalog_enabled"
+                                               class="cell"></switch-toggle>
+                            </label>
+                            <div class="row seven twelve-mobile">
+                                <label class="vertical-spacing twelve-mobile row-mobile">
+                                <span class="horizontal-spacing six-mobile cell three">
+                                    <i18n>lystore.AVAILABLE_AS_AN_OPTION</i18n>
+                                </span>
+                                    <switch-toggle
+                                            ng-model="equipment.option_enabled"
+                                            class="cell">
+                                    </switch-toggle>
+                                </label>
+                            </div>
+                            <div class="row seven twelve-mobile">
+                                <label class="vertical-spacing twelve-mobile row-mobile">
+                                <span class="horizontal-spacing six-mobile cell three">
+                                    <i18n>lystore.contract.price_editable</i18n>
+                                </span>
+                                    <switch-toggle ng-model="equipment.price_editable"></switch-toggle>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="right-magnet">
+                    <input
+                            type="button"
+                            class="cancel"
+                            ng-click="redirectTo('/equipments')"
+                            i18n-value="cancel"
+                    />
+                    <input
+                            type="submit"
+                            class="button"
+                            ng-click="validEquipment(equipment)"
+                            ng-disabled="!validEquipmentForm(equipment)"
+                    />
+                </div>
+            </div>
+        </form>
+    </article>
+</div>

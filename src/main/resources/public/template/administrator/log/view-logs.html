@@ -1,0 +1,81 @@
+
+
+
+<div class="log-view" ng-controller="loggerController">
+    <div class="loading-bar" ng-class="{loading: loadingArrayLogs}"></div>
+    <div ng-show="loadingArrayLogs">
+        <h1><i18n>lystore.loading</i18n></h1>
+    </div>
+
+    <div ng-show="!loadingArrayLogs" class="row">
+        <h1 class="cell">
+            <i18n>lystore.log</i18n>
+        </h1>
+        <div class="right-magnet twelve-mobile">
+            <button ng-click="logs.export()" class="twelve-mobile">
+                <i18n>lystore.logs.csv.export</i18n>
+            </button>
+        </div>
+    </div>
+    <article  ng-show="!loadingArrayLogs" class="responsive-table">
+        <table class="twelve">
+            <thead>
+            <tr>
+                <td class="two"><i18n>date</i18n></td>
+                <td class="two"><i18n>user</i18n></td>
+                <td class="one"><i18n>action</i18n></td>
+                <td class="one"><i18n>context</i18n></td>
+                <td class="two"><i18n>resource</i18n></td>
+                <td class="four"><i18n>value</i18n></td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="log in logs.all" ng-click="log.selected = !log.selected">
+                <td class="two">[[formatDate(log.date, 'DD/MM/YYYY HH:mm:ss')]]</td>
+                <td class="two">[[log.username]]</td>
+                <td class="one">[[log.action]]</td>
+                <td class="one">[[lang.translate(log.context)]]</td>
+                <td class="one">[[log.item]]</td>
+                <td class="five">
+                    <pre class="twelve" ng-if="log.action !== 'IMPORT'"
+                         ng-class="{ ellipsis: !log.selected, 'overflow-y': log.selected }">
+                        [[formatJson(log.value, log.selected ? 2 : 0)]]
+                    </pre>
+                    <div class="twelve" ng-if="log.action === 'IMPORT'">
+                        <a ng-click="showFile(log)"><i18n>show.file</i18n></a>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+    <div  ng-show="!loadingArrayLogs" class="row" ng-if="(logs.numberOfPages !== undefined) && (logs.numberOfPages > 1)">
+        <div class="pagination centered-text centered">
+            <button ng-click="previousPage()" class="horizontal-margin-twice"
+                    ng-disabled="current.page === 1"><i18n>previous</i18n></button>
+            <div class="cell" ng-if="logs.numberOfPages < 10">
+                <button ng-repeat="number in getNumber(logs.numberOfPages)"
+                        ng-click="loadMoreLogs(number)"
+                        ng-disabled="current.page === number">
+                    [[number]]
+                </button>
+            </div>
+            <div class="cell" ng-if="logs.numberOfPages > 10">
+                <h4>
+                    <i18n>page</i18n> :
+                    <select ng-model="current.page" ng-change="loadMoreLogs(current.page)"
+                            ng-options="number as (number) for number in getNumber(logs.numberOfPages)"></select>
+                </h4>
+            </div>
+            <button ng-click="nextPage()" class="horizontal-margin-twice"
+                    ng-disabled="current.page === logs.numberOfPages"><i18n>next</i18n></button>
+        </div>
+    </div>
+    <lightbox show="display.lightbox" on-close="lightbox.display = false">
+        <h2><i18n>lystore.log.purse.import</i18n> [[formatDate(log.date, 'DD/MM/YYYY HH:mm:ss')]]</h2>
+        <h4><i18n>lystore.log.purse.import.file</i18n> :</h4>
+        <pre class="pre-file-import">
+            [[parseJson(log.value).content.trim()]]
+        </pre>
+    </lightbox>
+</div>

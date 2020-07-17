@@ -1,0 +1,82 @@
+<div class="delete-confirmation">
+    <h2>
+        <span ng-if="campaign.purse_enabled"> <i18n>lystore.orderEquipment.delete.title</i18n></span>
+        <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestEquipment.delete.title</i18n></span>
+
+    </h2>
+    <p ng-if="ordersEquipmentToDelete.all.length === 1 ">
+        <i18n>lystore.orderEquipment.delete.message</i18n>
+        <span ng-if="campaign.purse_enabled"> <i18n>lystore.orderEquipment.delete.message</i18n></span>
+        <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestEquipment.delete.message</i18n></span>
+        :
+    </p>
+    <p ng-if="ordersEquipmentToDelete.all.length !== 1">
+        <span ng-if="campaign.purse_enabled"> <i18n>lystore.orderEquipment.delete.message</i18n></span>
+        <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestsEquipment.delete.message</i18n></span>
+
+        :
+
+    </p>
+    <div ng-repeat="orderClient in ordersEquipmentToDelete track by $index">
+        <div class="cell twelve">
+        <div class="row article-equipment">
+            <h4 class="highlighted"><i18n>description</i18n></h4>
+            <div class="two cell basket-image">
+                <img ng-src="[[orderClient.image]]"
+                     ng-show="orderClient.image!==null && orderClient.image!==undefined "/>
+                <img skin-src="/img/illustrations/pages-default.png"
+                     ng-show="orderClient.image===null || orderClient.image===undefined "/>
+            </div>
+            <div class="nine cell basket-equipment">
+                <h3>[[orderClient.name]]</h3>
+                <p ng-bind-html="orderClient.summary"></p>
+                <p>
+            </div>
+        </div>
+            <div class="row options-head" ng-show="orderClient.options.length > 0">
+            <h4 class="highlighted"><i18n>multi-combo.options</i18n></h4>
+            <table class="twelve option-table">
+                <thead>
+                <tr>
+                    <td>Nom</td>
+                    <td>Prix Unitaire</td>
+                    <td>Quantité</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="option in orderClient.options">
+                    <td>[[option.name]]</td>
+                    <td><span ng-bind="calculatePriceTTC(option.price, option.tax_amount, 2) | currency"></span></td>
+                    <td>[[option.amount]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+
+        <div class="twelve">
+            <h4 class="highlighted">
+                <i18n>lystore.order</i18n>
+            </h4>
+            <p>
+                <span> <i18n>lystore.quantity</i18n> : </span><strong>[[orderClient.amount]]</strong>
+            </p>
+            <p>
+                <span><i18n>price</i18n> : </span>
+                <strong ng-bind="calculateTotal(orderClient,2) | currency"></strong>
+            </p>
+            <p ng-if="hasAProposalPrice(orderClient)">
+                <span><i18n>lystore.priceProposal</i18n></span>
+                <strong ng-bind="orderClient.price_proposal | currency"></strong>
+            </p>
+        </div>
+        </div>
+    </div>
+
+    <div>
+        <input type="button" i18n-value="delete" ng-click="deleteOrdersEquipment(ordersEquipmentToDelete)">
+    </div>
+
+
+</div>

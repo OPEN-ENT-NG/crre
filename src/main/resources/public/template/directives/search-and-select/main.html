@@ -1,0 +1,23 @@
+<button class="search-and-select-button" ng-click="toggleVisibility()" ng-class="{'opened': show,'disabled':disabled}">
+    <span ng-show="ngModel">
+
+        [[ (ngModel[param2]) ? ngModel[param1] + " - " + ngModel[param2] :  ngModel[param1]  ]]
+    </span>
+    <span ng-show="!ngModel">
+          [[ i18nplaceholder ]]
+    </span>
+
+</button>
+<div class="search-and-select-panel " ng-class="{'hidden': !show}" ng-hide="!show">
+    <div class="search-and-select-bar">
+        <input ng-model="search.input" placeholder="[[lang.translate('search')]]"/>
+        <i class="icon-search-cancel" ng-click="search.reset()" ng-show="search.input"></i>
+    </div>
+    <ul>
+        <li ng-repeat="item in items = (options |filter:fsearch | orderBy: orderBy)"
+            ng-click="toggleItem(item)"
+            ng-class="{'selected': isSelected(item)}">
+            [[display(item)]]
+        </li>
+    </ul>
+</div>

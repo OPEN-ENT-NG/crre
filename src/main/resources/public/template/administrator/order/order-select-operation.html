@@ -1,0 +1,21 @@
+<h1><i18n>lystore.order.operation.title</i18n></h1>
+<table class="listElementSelect">
+    <tbody>
+    <tr ng-repeat="operation in operations.all">
+        <td class="selectOperationRow"
+            ng-class="{ greyRow: $index % 2 === 1 }"
+            ng-if="operation.status == 'true' && operation.id_instruction === null"
+            ng-click="operationSelected(operation)">
+            [[operation.label.label]] -  [[formatDate(operation.date_cp)]]
+        </td>
+    </tr>
+    <tr ng-show="isOperationsIsEmpty">
+        <td>
+            <opt ng-click="redirectTo('/operation')">
+                <i18n>lystore.operation.empty</i18n>
+            </opt>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<input type="button" class="cancel right-magnet " ng-click="display.lightbox.operation? cancelOperationForm() : cancelBasketDelete()" i18n-value="cancel"/>

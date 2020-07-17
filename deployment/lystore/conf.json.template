@@ -1,0 +1,35 @@
+    {
+      "name": "fr.openent~lystore~1.9-SNAPSHOT",
+      "config": {
+        "main" : "fr.openent.lystore.Lystore",
+        "port" : 8140,
+        "app-name" : "Lystore",
+    	"app-address" : "/lystore",
+    	"app-icon" : "${host}/lystore/public/img/logo.png",
+        "app-type" : "END_USER",
+        "host": "${host}",
+        "ssl" : $ssl,
+        "auto-redeploy": false,
+        "userbook-host": "${host}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "${mode}",
+        "entcore.port" : 8009,
+        "sql": true,
+        "db-schema": "lystore",
+        "iteration-worker": ${lystoreIterationWorker},
+        "exports" : {
+            "template-path" : "./public/template/pdf/",
+            "logo-path": "./public/img/ile_de_france.png"
+        },
+        "slack": {
+            "token": "",
+            "api-uri": "",
+            "bot-username": "Lystore Bot",
+            "channel": ""
+        },
+         "mail": {
+            "enableMail": ${lystoreEnableMail}
+         }
+      }
+    }

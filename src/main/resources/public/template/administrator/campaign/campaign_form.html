@@ -1,0 +1,133 @@
+<div class="row ten centered"  workflow="lystore.administrator">
+    <h1>
+        <i18n ng-show="campaign.id == undefined">lystore.campaigns.add</i18n>
+        <i18n ng-show="campaign.id !== undefined">lystore.campaigns.modify</i18n>
+    </h1>
+
+    <form>
+        <article>
+            <div class="row horizontal-spacing vertical-spacing">
+                <div class="cell four horizontal-spacing twelve-mobile">
+                    <div class="eight row centered">
+                        <image-select ng-model="campaign.image"
+                                      visibility="'public'"
+                                      default="/img/illustrations/image-default.svg"></image-select>
+                    </div>
+                </div>
+                <div class="eight cell horizontal-spacing twelve-mobile">
+                    <h2><i18n>lystore.information</i18n></h2>
+                    <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.campaigns.name</i18n> *
+                        </span>
+                        <input type="text" class="twelve" ng-model="campaign.name" required>
+                    </label>
+                    <div class="row twelve">
+                        <label class="row twelve vertical-spacing">
+                        <span class="twelve">
+                            <i18n>lystore.campaigns.description</i18n>
+                        </span>
+                            <editor ng-model="campaign.description"></editor>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </article>
+        <h4 style="margin: 50px 0 10px 0">
+            <i18n>lystore.campaign.groups</i18n>
+            :
+        </h4>
+        <article class="responsive-table" style="margin: 0;">
+            <table class="twelve">
+                <thead>
+                <td class="one checkbox ">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAll(allGroupSelected, structureGroups)"
+                               ng-model="allGroupSelected">
+                        <span></span>
+                    </label></td>
+                <td class="tree ">
+                    <i18n>lystore.name.of.group</i18n>
+                </td>
+                <td class="eight ">
+                    <i18n>lystore.equipements.visibles</i18n>
+                </td>
+                </thead>
+                <tbody>
+                <tr ng-repeat="group in structureGroups.all track by $index ">
+                    <td class="one">
+                        <label class="checkbox">
+                            <input type="checkbox" ng-model="group.selected">
+                            <span></span>
+                        </label></td>
+                    <td class="tree">[[group.name]]</td>
+                    <td class="label-row">
+                        <div class="select-blocks" ng-show="group.selected">
+                            <div ng-repeat="tag in group.tags track by tag.id"
+                                 ng-click="deleteTagFromCampaign($parent.$index, tag)"
+                                 class="labels-in-ligne">
+                                <div><span class="color-tag" ng-style="{ 'background-color': tag.color }">
+                                                &nbsp;
+                                              </span></div>
+                                <div>[[ tag.name ]]</div>
+                            </div>
+                        </div>
+                        <autocomplete
+                                options="tags.all|tagFilter:group.tags"
+                                ng-model="search.tag[$index]"
+                                ng-change="addTagToCampaign($index)"
+                                ng-show="display.input.group[$index] && group.selected">
+
+                        </autocomplete>
+                        <div><input type="button" ng-click="display.input.group[$index]=true" value="+"
+                                    ng-disabled="!group.selected"/></div>
+
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+        <h4 style="margin: 50px 0 10px 0">
+            <i18n>lystore.campaign.options</i18n>
+            :
+        </h4>
+        <article>
+            <div class="row">
+                <span class="cell">
+                    <i18n>lystore.campaign.type.choose</i18n>
+                    :
+                </span>
+                <switch-toggle ng-model="campaign.purse_enabled" class="cell horizontal-margin-four"></switch-toggle>
+            </div>
+            <div class="row">
+                <span class="cell">
+                    <i18n>lystore.campaign.priority.choose</i18n>
+                    :
+                </span>
+                <switch-toggle ng-model="campaign.priority_enabled" class="cell horizontal-margin-four"></switch-toggle>
+            </div>
+            <div ng-if="campaign.priority_enabled" class="priority_field" >
+                <div>
+                    <input type="radio" ng-model="campaign.priority_field" value="ORDER" >
+                    <label ><i18n>lystore.on.order</i18n></label>
+                </div>
+                <div>
+                    <input type="radio" ng-model="campaign.priority_field" value="PROJECT" >
+                    <label ><i18n>lystore.on.project</i18n></label>
+                </div>
+            </div>
+        </article>
+        <div class="right-magnet warning" ng-show="!validCampaignForm(campaign)">
+            <i18n>not.valid.campaign.form</i18n>
+        </div>
+        <div class="row">
+            <div class="right-magnet">
+                <input type="button" class="cancel" ng-click="redirectTo('/campaigns')" i18n-value="cancel"/>
+                <input type="submit" class="button" ng-click="validCampaign(campaign)"
+                       ng-disabled="!validCampaignForm(campaign)"/>
+            </div>
+        </div>
+
+    </form>
+</div>

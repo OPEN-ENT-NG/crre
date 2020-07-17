@@ -1,0 +1,166 @@
+
+<article class="twelve cell order-equipment-manage"
+         ng-repeat="project in ordersClient.projects.all track by $index">
+    <div>
+        <div class="row">
+            <label>
+                <label ng-if="campaign.accessible" class="checkbox vertical-spacing-four cell">
+                    <input type="checkbox" ng-model="project.selected"
+                           ng-checked="project.selected">
+                    <span></span>
+                </label>
+                <h3 class="cell horizontal-margin">
+                    <em>[[project.title.name]]</em>
+                </h3>
+            </label>
+        </div>
+        <div class="cell priority-manager" ng-if="campaign.projectPriorityEnable()">
+            <div ng-if="campaign.accessible"  class="priority_carree UP cell row" tooltip="lystore.order.priority.up"
+                 ng-show=" $index>0 && $index <= (ordersClient.projects.all.length - 1)"
+                 ng-click="switchProjectClient($index, 'up') ">
+            </div>
+            <div class="priority_number cell">
+                [[$index + 1]]
+            </div>
+            <div ng-if="campaign.accessible"  class="priority_carree DOWN cell row" tooltip="lystore.order.priority.down"
+                 ng-show=" $index>=0 && $index < (ordersClient.projects.all.length - 1)"
+                 ng-click="switchProjectClient($index, 'down')">
+            </div>
+        </div>
+        <div ng-class="{'order-item-list': campaign.priority_enabled}" class="cell">
+            <article class="basket-item twelve cell" ng-repeat="orderClient in ordersClient.all track by $index"
+                     ng-if="project.id == orderClient.project.id">
+                <div class="cell width-40">
+                    <label ng-if="campaign.accessible" ng-show="orderClient.status === 'WAITING'" class="checkbox">
+                        <input type="checkbox" ng-model="orderClient.selected"
+                               ng-checked="orderClient.selected">
+                        <span></span>
+                    </label>
+                    <div class="cell priority-manager order vertical-spacing" ng-if="campaign.orderPriorityEnable() && campaign.priority_field === 'PROJECT'">
+                        <div class="priority_number cell">
+                            [[$index + 1]]
+                        </div>
+                    </div>
+                </div>
+                <div class="cell width-100-40">
+                    <div class="row article-equipment">
+                        <div class="one cell basket-image zero-mobile">
+                            <img ng-src="[[orderClient.image]]"
+                                 ng-show="orderClient.image!==null && orderClient.image!==undefined "/>
+                            <img skin-src="/img/illustrations/pages-default.png"
+                                 ng-show="orderClient.image===null || orderClient.image===undefined "/>
+                        </div>
+                        <div class="cell four">
+                            <div class="eleven centered">
+                                <h3>[[orderClient.name]]</h3>
+                                <p ng-bind-html="orderClient.summary"></p>
+                                <a ng-init="display.ordersClientOption[$index] = false"
+                                   ng-click="displayEquipmentOption($index)"
+                                   ng-show="orderClient.options.length > 0">
+                                    [[lang.translate(
+                                    display.ordersClientOption[$index]
+                                    ? 'lystore.options.hide'
+                                    :'lystore.options.show'
+                                    )]]
+                                </a>
+                            </div>
+                        </div>
+                        <div class="cell four">
+                            <div tooltip="[[orderClient.status]]"
+                                 class="[[orderClient.status]] status-circle cell row">
+                                <i></i>
+                            </div>
+                        </div>
+                        <div class="three cell text-right">
+                            <div class="vertical-spacing-twice">
+                                <span ng-if="hasAProposalPrice(orderClient)"> <i18n>lystore.priceProposal</i18n> :</span>
+                                <span ng-if="!hasAProposalPrice(orderClient)"><i18n>price</i18n> :</span>
+                                <span ng-if="hasAProposalPrice(orderClient)"
+                                      ng-bind="orderClient.price_proposal | currency"
+                                      class="price-label"></span>
+                                <span ng-if="!hasAProposalPrice(orderClient)"
+                                      ng-bind="calculateTotal(orderClient,2) | currency"
+                                      class="price-label"></span>
+                            </div>
+                            <div class="vertical-spacing-twice">
+                                <i18n>lystore.quantity</i18n>
+                                :
+                                [[orderClient.amount]]
+                                <!--p ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></p-->
+                            </div>
+
+                        </div>
+                    </div>
+                    <div ng-show="orderClient.options.length > 0 && display.ordersClientOption[$index]">
+                        <div class="twelve row">
+                            <h4 class="cell">
+                                <i18n>lystore.options</i18n>
+                                :
+                            </h4>
+                        </div>
+                        <table class="twelve vertical-spacing option-table">
+                            <thead>
+                            <tr>
+                                <td>
+                                    <i18n>price</i18n>
+                                </td>
+                                <td>
+                                    <i18n>lystore.quantity</i18n>
+                                </td>
+                                <td>
+                                    <i18n>price</i18n>
+                                </td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="option in orderClient.options">
+                                <td>[[option.name]]</td>
+                                <td>[[option.amount]]</td>
+                                <td><span
+                                        ng-bind="calculatePriceTTC(option.price, option.tax_amount, 2) | currency"></span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row twelve vertical-spacing-four" ng-if="orderClient.files.length > 0">
+                        <div class="twelve row">
+                            <h4 class="cell">
+                                <i18n>lystore.basket.file.name</i18n>
+                                :
+                            </h4>
+                        </div>
+                        <div class="row basket-file-list">
+                            <ul class="twelve">
+                                <li ng-repeat="file in orderClient.files" class="twelve basket-file row">
+                                    <a class="cell twelve" ng-click="orderClient.downloadFile(file)">[[
+                                        file.name ||
+                                        file.filename ]]</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="twelve cell vertical-spacing-four"
+                         ng-if="orderClient.comment !== null && orderClient.comment.trim() !== ''">
+                        <div class="row">
+                            <h4 class="cell">
+                                <i18n>comment</i18n>
+                                :
+                            </h4>
+                        </div>
+                        <div class="row">
+                            <p>
+                                [[orderClient.comment]]
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row border top">
+                        <h1 class="right-magnet vertical-spacing">
+                            <span ng-bind="calculateTotal(orderClient,2) | currency"></span>
+                        </h1>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</article>

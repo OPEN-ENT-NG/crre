@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "type": "number"
+    },
+    "id_structure": {
+      "type": "string"
+    },
+    "id_operation": {
+      "type": "number"
+    },
+    "price": {
+      "type": "number"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "creation_date": {
+      "type": "number"
+    },
+    "image": {
+      "type": "string"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    },
+    "id_order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "id_operation"
+  ]
+}

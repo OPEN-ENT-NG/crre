@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "type": "number"
+    },
+    "processing_date": {
+      "type": ["string", "null"]
+    },
+    "equipment": {
+      "type": "number"
+    },
+    "options": {
+      "type": ["array", "null"  ]
+    },
+    "id_campaign":{
+      "type": "number"
+    },
+    "id_structure":{
+      "type": "string"
+    },
+    "id_type": {
+      "type": "number"
+    }
+  },
+  "required": [ "amount", "equipment", "id_campaign", "id_structure" ]
+}

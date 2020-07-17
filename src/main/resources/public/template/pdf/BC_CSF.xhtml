@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>Formulaire de saisie</title>
+    <style type="text/css">
+        body {
+            font-family: "Calibri", sans-serif;
+            font-size: 13px ;
+            align-content: center;
+        }
+        .page {
+            display: block;
+        }
+        @page {
+            size:  A4 ;
+            margin-left: 5%;
+            margin-right: 5%;
+            margin-top: 3%;
+        }
+        .logo-region{
+            height: auto;
+            width: 300px;
+            border-bottom: 1px #f6f6f6 solid ;
+            margin-bottom: 5px;
+        }
+        .left {
+            position: relative;
+            width: 40%;
+            margin-right: 5%;
+            display: inline-block;
+        }
+        .right {
+            position: relative;
+            margin-left: 5%;
+            width: 44%;
+            display: inline-block;
+        }
+
+        .order-info {
+            /*margin-top: 25px;*/
+            /*margin-bottom: 25px;*/
+        }
+
+        .right > input {
+            width: 90%;
+        }
+        .right > h1{
+            font-size: 20px ;
+        }
+        .header {
+            width: 100%;
+            vertical-align: top;
+            display: flex;
+            align-items: start;
+            justify-content: center;
+        }
+        .foot {
+            width: 100%;
+            margin-top: 35px;
+        }
+
+        .fright {
+            float: right;
+        }
+
+        .break {
+            page-break-after: always;
+        }
+
+        .break:first-child {
+            page-break-after: auto;
+        }
+
+        .signature {
+            height: 60px;
+        }
+        .equipments-table  {
+            width: 100%;
+            margin-top: 10px;
+            border-collapse: collapse;
+        }
+        .equipments-table tfoot tr td:first-child  {
+            font-weight: bold;
+        }
+        .equipments-table tr  td {
+            padding-top:1px;
+            padding-left: 5px ;
+            padding-bottom:1px;
+            border: 1px solid #ddd;
+        }
+
+        table.equipments-table > tbody tr:nth-child(odd) td {
+            background-color: #efefef;
+        }
+        table.equipments-table > tbody tr:nth-child(even) td {
+            background-color: #f2f4f6;
+        }
+
+        table > thead {
+            font-size: 14px ;
+            font-weight: bold;
+            text-align: center;
+        }
+        input {
+            min-width: 150px ;
+            width: 150px;
+            max-width: 100%;
+            margin-left: 5px;
+            padding-left: 5px ;
+        }
+
+        table > tfoot > tr {
+            margin-top: 20px;
+        }
+        div.service-fait > table.header {
+            margin-bottom: 10px ;
+        }
+        div.service-fait > table.equipments-table {
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        div.service-fait > div.signature {
+            width: 100%;
+            height: 400px;
+        }
+        div.block {
+            border: 0.5px #aaaaaa solid;
+            margin-bottom: 5px ;
+            margin-top: 5px ;
+            padding: 5px;
+            page-break-after: avoid;
+            page-break-inside: avoid;
+        }
+        .center-text {
+            text-align: center;
+        }
+
+        .right-text {
+            text-align: right;
+            padding-right: 5px;
+        }
+
+        .bigger {
+            width: 70%;
+        }
+
+        .smaller {
+            width: 25%;
+        }
+
+        .uppercase {
+            text-transform: uppercase;
+        }
+
+        .orders {
+            margin-bottom: 50px;
+        }
+
+        .header h4, .header h5 {
+            margin: 5px;
+        }
+
+    </style>
+</head>
+
+<body class="page">
+{{#print_certificates}}
+{{#certificates}}
+<div class="break">
+    <div class="service-fait" >
+        <div class="header">
+                <div class="left">
+                    <div class=" center-text">
+                        <img  class="logo-region" src="data:image/png;base64, {{logo-data}}" alt="ile de france" />
+                        <h4>REGION ILE DE FRANCE</h4>
+                        <h5>PÔLE LYCÉES</h5>
+                        <p>
+                            <span class="uppercase">Mission administration, pilotage et projets transverses</span><br />
+                            Service administratif et juridique<br />
+                            2, rue Simone Veil, 93400 Saint-Ouen
+                        </p>
+                    </div>
+                    <div class="order-info">
+                        <div class="agent-info">
+                            {{#agent}}
+                            <strong>{{name}} <br/> </strong>
+                            {{email}} <br/>
+                            Tel : {{phone}}  <br/>
+                            {{/agent}}
+                        </div>
+                    </div>
+                </div>
+                <div class="right">
+                    <h1>
+                        CERTIFICAT DE SERVICE FAIT
+                    </h1>
+                    <p>
+
+                        {{#supplier}}
+                        <h4>Titulaire du marché :</h4>
+                        {{name}} <br/>
+                        {{address}} <br/>
+                        Tel : {{phone}}  <br/>
+                        {{/supplier}}
+                        <h4>Etablissement :</h4>
+                        {{#structure}}
+                        {{name}} <br />
+                        {{address}} <br />
+                        {{zipCode}} - {{city}} <br />
+                        Tel : {{phone}}
+                        {{/structure}}
+                    </p>
+                    <strong>
+                        N° Bon de commande : <input type="text"  value = "{{nbr_bc}}" /> <br/>
+                    </strong>
+                </div>
+            </div>
+
+        <br/>
+        <strong>Description de l'équipement livré et installé</strong>
+        <table class="equipments-table">
+            <thead>
+            <tr>
+                <td>
+                    Nom
+                </td>
+                <td>
+                    Quantité
+                </td>
+                <td style="width: 40%;">
+                    Observations
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+            {{#orders}}
+            <tr>
+                <td>
+                    {{name}}
+                </td>
+                <td class="right-text">
+                    {{amount}}
+                </td>
+                <td style="width: 40%;">
+                    &nbsp;
+                </td>
+            </tr>
+            {{/orders}}
+            </tbody>
+        </table>
+
+        <br/>
+        <div class="break">
+            <div class=" block">
+                <div class="center-text"><strong>A remplir par le chef d’établissement ou son représentant</strong></div>
+
+                <div class="block">
+                    <strong>DATE DE LIVRAISON DU MATERIEL / SERVICE FAIT : <input type="text"  value = "..../..../........" /> <br/> </strong>
+                    <p>
+                        La date de mise en service sera prise comme référence au calcul de pénalités en cas de non respect du
+                        délai de livraison et de mise en service (voir CCAP).  Tout dépassement de délai non imputable au prestataire devra être dûment justifié par un écrit.
+                    </p>
+                </div>
+
+                <div class="block">
+                    Le chef d’etablissement certifie que les matériels ont été réceptionnés à la date indiquée ci-dessus en parfait état d'usage. <br/>
+
+                    A RENVOYER UNE FOIS LES OBSERVATIONS LEVEES EN ORIGINAL  <br/>
+                    <br/>
+                    A  <input type="text"  value = "..............." />,  le  <input type="text"   />  <br/>
+                    Nom:  <input type="text"  value = "..............." />  <br/>
+                    Qualité  <input type="text"  value = "..............." /> <br/>
+                    SIGNATURE ET CACHET DU PROVISEUR OU DU GESTIONNAIRE :   <br/>
+                    <div class="signature" >
+                        &nbsp;
+                    </div>
+                </div>
+                <br/>
+                <div class="center-text"><strong>A remplir par les services de la Région  </strong> </div>
+                <div class="block">
+                    <table>
+                        <tr>
+                            <td>
+                                Référence facture :
+                            </td>
+                            <td colspan="2">
+                                <input type="text"  value = "...................." />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+
+                            </td>
+                            <td >
+                                <div class="center-text"> Motifs </div>
+                            </td>
+                            <td >
+                                <div class="center-text"> Date </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Rejet facture
+                            </td>
+                            <td >
+                                <input type="text"  value = "...................." />
+                            </td>
+                            <td >
+                                <input type="text"  value = "....../....../........" />
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+                    Validation du service fait le <input type="text"  value = "....../....../........" /> ,  Par: <input type="text"  value = "..............." />   <br/>
+                    A  <input type="text"  value = "..............." /> <br/>
+                    SIGNATURE ET CACHET: <br/>
+                    <div class="signature" >
+                        &nbsp;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/certificates }}
+{{/print_certificates}}
+</body>
+</html>

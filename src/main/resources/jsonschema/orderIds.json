@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "ids": {
+      "type": "array"
+    },
+    "status":{
+      "type": "string"
+    },
+    "bc_number":{
+      "type": [ "string", "null" ]
+    },
+    "engagement_number":{
+      "type": [ "string", "null" ]
+    },
+    "dateGeneration":{
+      "type": [ "string", "null" ]
+    },
+    "supplierId":{
+      "type": ["number", "null"]
+    },
+    "userId":{
+      "type": "string"
+    },
+    "id_program": {
+      "type": ["number", "null"]
+    },
+    "id_project": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "ids"
+  ]
+}

@@ -1,0 +1,59 @@
+<div ng-controller="campaignMainController" >
+    <nav class="vertical twelve-mobile mobile-navigation" side-nav>
+        <ul>
+            <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
+            <li><a ng-click="openCatalog()"><i18n>CATALOG</i18n></a></li>
+            <li>
+                <a ng-click="openOrder()">
+                    <i18n>lystore.order.tracking</i18n>
+                    <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
+                        [[campaign.nb_order]]
+                    </span>
+                </a>
+            </li>
+            <li>
+                <a ng-click="openBasket()">
+                    <i18n>BASKET</i18n>
+                    <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
+                        [[campaign.nb_panier]]
+                    </span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="twelve tabs vertical-spacing heading-tabs zero-mobile" >
+        <header class="horizontal-spacing"  ng-click="backHome()"  >
+            <i class="home"></i>
+        </header>
+        <header  ng-show="campaign.accessible" class="horizontal-spacing"  ng-click="openCatalog()"  >
+            <i18n>CATALOG</i18n>
+        </header>
+        <header class="horizontal-spacing" ng-click="openOrder()" >
+            <span ng-show="campaign.purse_enabled"><i18n>lystore.order.tracking</i18n></span>
+            <span ng-show="!campaign.purse_enabled"><i18n>lystore.request.tracking</i18n></span>
+            <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
+                    [[campaign.nb_order]]
+            </span>
+        </header>
+        <header  ng-if="campaign.accessible" class="horizontal-spacing" ng-click="openBasket()">
+            <i18n>BASKET</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
+                    [[campaign.nb_panier]]
+            </span>
+        </header>
+        <div class="purse-in-menue" ng-if="campaign.purse_enabled">
+            <h4><i18n>purse</i18n> :</h4>&nbsp;
+            <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
+        </div>
+    </div>
+
+    <div class="twelve-mobile tabs vertical-spacing heading-tabs mobile-navigation" >
+        <div class="purse-in-menue" ng-if="campaign.purse_enabled">
+            <h4><i18n>purse</i18n> :</h4>&nbsp;
+            <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
+        </div>
+    </div>
+
+
+    <container template="campaign-main"></container>
+</div>

@@ -1,0 +1,70 @@
+<div ng-controller="orderController" class="pdf-generation-preview">
+    <article class="eight twelve-mobile centered">
+        <h1><i18n>lystore.order.generate.bc.csf</i18n></h1>
+        <div class="row">
+            <div class="row vertical-spacing">
+                <div class="cell four"><i18n>lystore.order.supplier.name</i18n> :</div>
+                <div class="cell eight"><strong>[[orderToSend.preview.supplier.name]]</strong></div>
+            </div>
+            <div class="row vertical-spacing">
+                <div class="cell four"><i18n>lystore.order.agent.name</i18n> :</div>
+                <div class="cell eight"><strong>[[getUsername()]]</strong></div>
+            </div>
+            <div class="row vertical-spacing">
+                <div class="cell four"><i18n>lystore.order.bc.number</i18n> :</div>
+                <div class="cell eight"><input type="text" ng-model="orderToSend.bc_number"></div>
+            </div>
+            <div class="row vertical-spacing">
+                <div class="cell four"><i18n>lystore.order.engagement.number</i18n> :</div>
+                <div class="cell eight"><input type="text" ng-model="orderToSend.engagement_number"></div>
+            </div>
+            <div class="row verical-spacing">
+                <div class="four cell">
+                    <i18n>lystore.contract.program</i18n>
+                </div>
+                <div class="cell eight">
+                    <select ng-model="orderToSend.id_program"
+                            ng-options="program.id as program.name for program in programs.all">
+                    </select>
+                </div>
+            </div>
+            <div class="row vertical-spacing">
+                <div class="cell four"><i18n>lystore.order.generation.date</i18n> :</div>
+                <div class="cell eight"><date-picker ng-model="orderToSend.dateGeneration" ></date-picker></div>
+            </div>
+        </div>
+        <div class="row">
+            <input type="button" class="submit right-magnet"
+                   ng-click="display.lightbox.sendOrder = true"
+                   ng-disabled="!validatePrepareSentOrders(orderToSend)"
+                   i18n-value="Validate"/>
+        </div>
+    </article>
+
+    <article class="eight twelve-mobile centered">
+        <div class="row">
+            <container template="sendOrder.preview"></container>
+        </div>
+    </article>
+
+    <lightbox show="display.lightbox.sendOrder" on-close="display.lightbox.sendOrder = false">
+        <h1>
+            <i18n>lystore.order.valided.generateBC</i18n>
+        </h1>
+        <h4><i18n>lystore.order.validated.message</i18n></h4>
+        <div class="row vertical-spacing">
+            <p>
+                <i18n>lystore.order.number</i18n> : <strong>[[orderToSend.bc_number]]</strong>
+            </p>
+            <p>
+                <i18n>lystore.order.engagement.number</i18n> : <strong>[[orderToSend.engagement_number]]</strong>
+            </p>
+            <p>
+                <i18n>lystore.contract.program</i18n> : <strong>[[getProgramName(orderToSend.id_program)]]</strong>
+            </p>
+        </div>
+        <input type="button" class="submit right-magnet"
+               ng-click="sendOrders(orderToSend)"
+               i18n-value="Validate"/>
+    </lightbox>
+</div>

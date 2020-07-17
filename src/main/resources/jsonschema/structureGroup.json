@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "number"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": ["string","null"]
+    },
+    "structures": {
+      "type": "array"
+    },
+    "tags": {
+      "type":"array"
+    }
+  },
+  "required": [
+    "name",
+    "structures"
+  ]
+}

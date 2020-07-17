@@ -1,0 +1,52 @@
+<div ng-controller="orderPersonnelController">
+    <div ng-show="ordersClient.all.length > 0" class="basket-list">
+        <h1>
+            <span ng-if="campaign.purse_enabled"><i18n>lystore.orderEquipment.manage.title</i18n></span>
+            <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestsEquipment.manage.title</i18n></span>
+            <button class="right-magnet" ng-click="exportCSV()"><i18n>lystore.orderEquipment.manage.exportCSV</i18n></button>
+        </h1>
+        <div ng-if="campaign.priority_enabled">
+            <tabs menus="menu" ng-model="display.list" ng-change="switchView(display.list)"></tabs>
+        </div>
+        <container template="order-list"></container>
+    </div>
+    <article ng-show = "ordersClient.all.length === 0 " class="centered-text row">
+        <p><i18n>lystore.orderEquipment.manage.empty.order</i18n></p>
+    </article>
+    <lightbox show="display.lightbox.deleteOrder" on-close="cancelOrderEquipmentDelete()">
+        <container template="orderClient.delete"></container>
+    </lightbox>
+    <lightbox show="display.lightbox.deleteProject" on-close="cancelProjectDelete()">
+        <container template="orderClient.deleteProject"></container>
+    </lightbox>
+    <lightbox show="display.lightbox.udpateProject" on-close="cancelProjectUpdate()">
+        <container template="orderClient.updateProject"></container>
+    </lightbox>
+
+
+    <section class="toggle-buttons" ng-class="{ hide: ordersClient.projects.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="openProjectForm(ordersClient.projects.selected[0])"
+                        ng-show="ordersClient.projects.selected.length === 1">
+                    <i18n>modify</i18n>
+                </button>
+                <button ng-if="alltheProjectsDeletable(ordersClient.projects.selected)"
+                        ng-click="openProjectsDeletion(ordersClient.projects.selected)">
+                    <i18n>delete</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+    <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+
+                <button
+                        ng-click="displayLightboxDelete(ordersClient.selected)">
+                    <i18n>delete</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

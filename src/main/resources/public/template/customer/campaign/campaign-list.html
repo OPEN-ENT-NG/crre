@@ -1,0 +1,84 @@
+<div class="twelve-mobile ten centered row" ng-controller="campaignsListController">
+    <div class="row aligned" ng-if="structures.all.length > 1">
+        <h4 class="right-magnet"><i18n>multi-structures.choice</i18n> :
+            <search-and-select class="cell right-magnet horizontal-margin"
+                               param1="UAI"
+                               param2="name"
+                               options="structures.all"
+                               ng-model="current.structure"
+                               search-on="name" order-by="name"
+                               ng-change="initCampaign(current.structure)">
+            </search-and-select>
+        </h4>
+
+    </div>
+    <div>
+        <article class="twelve cell"
+                 ng-class="{disabled : !campaign.accessible}"
+                 ng-repeat="campaign in campaigns.all track by $index">
+            <div class="twelve-mobile two cell campaign-image four-mobile">
+                <img ng-class="!campaign.accessible ? 'image-disabled' : ''" ng-src="[[campaign.image]]" ng-show="campaign.image!==null && campaign.image!==undefined " />
+                <img ng-class="!campaign.accessible ? 'image-disabled' : ''" skin-src="/img/illustrations/pages-default.png" ng-show="campaign.image===null || campaign.image===undefined "/>
+            </div>
+            <div class="ten cell eight-mobile" >
+                <h3 ng-class="!campaign.accessible ? 'title-disabled' : ''" >[[campaign.name]]</h3>
+                <div>
+                    <p ng-bind-html="campaign.description" class="small-text"></p>
+                    <div class="groupButtons">
+                        <div class="twelve-mobile four cell" >
+                            <p class="small-text-align" ng-if="campaign.purse_enabled">
+                                <em class="small-text">
+                                    <i18n>lystore.campaign.amount</i18n> : <span ng-bind="campaign.purse_amount || 0 | currency"></span>
+                                </em>
+                            </p>
+                            <p class="small-text-align" ng-if="campaign.purse_enabled">
+                                <em class="small-text">
+                                    <i18n>lystore.campaign.amount.init</i18n> : <span ng-bind="campaign.initial_purse_amount || 0 | currency"></span>
+                                </em>
+                            </p>
+                            <p class="small-text-align" ng-show="campaign.nb_order && campaign.nb_order !== 0">
+                                <em class="small-text">
+                                    [[campaign.nb_order]]
+                                    <i18n ng-show="campaign.nb_order > 1">lystore.demands.waiting</i18n>
+                                    <i18n ng-show="campaign.nb_order === 1">lystore.demand.waiting</i18n>
+                                </em>
+                            </p>
+                        </div>
+                        <div class="twelve-mobile right-magnet"  >
+                            <div class="twelve-mobile cell ">
+                                <input type="button"
+                                       class="button"
+                                       ng-show="campaign.nb_order && campaign.nb_order !== 0"
+                                       ng-click="openOrderToMain(campaign)"
+                                       i18n-value="lystore.access.demand"/>
+                                <input type="button"
+                                       class="button"
+                                       ng-show="!campaign.nb_order"
+                                       ng-click="openOrderToMain(campaign)"
+                                       ng-disabled="true"
+                                       i18n-value="lystore.demand.empty"/>
+                            </div>
+                            <div class="twelve-mobile cell">
+                                <input ng-show="campaign.accessible"
+                                       ng-click="openCampaign(campaign)"
+                                       type="button"
+                                       class="button"
+                                       i18n-value="lystore.access.catalog"/>
+                                <input ng-show="!campaign.accessible"
+                                       type="button"
+                                       class="button"
+                                       ng-disabled="true"
+                                       i18n-value="lystore.catalog.disabled"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+    <article ng-if="campaigns.isEmpty()">
+        <h4 class="centered-text">
+            <i class="sad-face horizontal-margin"></i>
+            <i18n>lystore.campaigns.empty</i18n></h4>
+    </article>
+</div>

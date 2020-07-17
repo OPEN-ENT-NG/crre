@@ -1,0 +1,166 @@
+<h1><i18n>lystore.catalog.management</i18n></h1>
+<div class="row">
+    <div class="cell twelve-mobile horizontal-spacing search-pagination four">
+        <div class="row twelve vertical-spacing">
+            <input type="text" class="twelve" ng-keydown="addEquipmentFilter($event)"
+                   i18n-placeholder="add.a.filter">
+            <i class="search flex-row"></i>
+        </div>
+        <div class="row horizontal-spacing">
+            <div class="select-blocks">
+                <div ng-repeat="filter in sort.equipment.filters"
+                     ng-click="dropEquipmentFilter(filter)" class="labels-in-ligne">
+                    <div> [[ filter ]]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="right-magnet twelve-mobile">
+        <button workflow="lystore.administrator" class="twelve-mobile" ng-click="openEquipmentImporter()">
+            <i18n>lystore.equipment.add.list2</i18n>
+        </button>
+        <button workflow="lystore.administrator" class="twelve-mobile" ng-click="openEquipmentForm()">
+            <i18n>lystore.equipment.add</i18n>
+        </button>
+    </div>
+</div>
+<nav class="prev-next vertical-spacing-four">
+    <button ng-click="equipments.loadPrev(undefined, undefined, sort.equipment)"
+            ng-disabled="equipments.page === 0">
+        <i class="left-open"></i>
+    </button>
+    <span class="pagination">
+				<span>[[ equipments.page + 1 ]]</span>
+				<i18n class="zero-mobile"><i18n>lystore.pages.separator</i18n></i18n>
+				<span class="zero-desktop">/</span>
+				<span>[[ equipments.page_count ]]</span>
+			</span>
+    <button ng-click="equipments.loadNext(undefined, undefined, sort.equipment)"
+            ng-disabled="equipments.page + 1 === equipments.page_count">
+        <i class="open-right"></i>
+    </button>
+</nav>
+<article class="responsive-table">
+    <h2>
+        <i18n>lystore.catalog</i18n>
+    </h2>
+    <div class="loading-bar" ng-class="{loading: equipments.loading}"></div>
+    <table class="twelve">
+        <thead>
+        <tr>
+            <td workflow="lystore.administrator">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-change="switchAll(allEquipmentSelected, equipments)"
+                           ng-model="allEquipmentSelected">
+                    <span></span>
+                </label>
+            </td>
+            <td ng-click="filterEquipments('reference', !sort.equipment.reverse)">
+                <i18n>reference</i18n>
+                <i class="up-open" ng-show="sort.equipment.type === 'reference' && !sort.equipment.reverse"></i>
+                <i class="down-open" ng-show="sort.equipment.type === 'reference' && sort.equipment.reverse"></i>
+            </td>
+            <td ng-click="filterEquipments('name', !sort.equipment.reverse)">
+                <i18n>name</i18n>
+                <i class="up-open" ng-show="sort.equipment.type === 'name' && !sort.equipment.reverse"></i>
+                <i class="down-open" ng-show="sort.equipment.type === 'name' && sort.equipment.reverse"></i>
+            </td>
+            <td ng-click="filterEquipments('price', !sort.equipment.reverse)">
+                <i18n>lystore.price.TTC</i18n>
+                <i class="up-open" ng-show="sort.equipment.type === 'price' && !sort.equipment.reverse"></i>
+                <i class="down-open" ng-show="sort.equipment.type === 'price' && sort.equipment.reverse"></i>
+            </td>
+            <td ng-click="filterEquipments('supplier', !sort.equipment.reverse)">
+                <i18n>supplier</i18n>
+                <i class="up-open" ng-show="sort.equipment.type === 'supplier' && !sort.equipment.reverse"></i>
+                <i class="down-open" ng-show="sort.equipment.type === 'supplier' && sort.equipment.reverse"></i>
+            </td>
+            <td ng-click="filterEquipments('contract', !sort.equipment.reverse)">
+                <i18n>contract</i18n>
+                <i class="up-open" ng-show="sort.equipment.type === 'contract' && !sort.equipment.reverse"></i>
+                <i class="down-open" ng-show="sort.equipment.type === 'contract' && sort.equipment.reverse"></i>
+            </td>
+            <td ng-click="filterEquipments('status', !sort.equipment.reverse)">
+                <i18n>lystore.availability</i18n>
+                <i class="up-open" ng-show="sort.equipment.type === 'status' && !sort.equipment.reverse"></i>
+                <i class="down-open" ng-show="sort.equipment.type === 'status' && sort.equipment.reverse"></i>
+            </td>
+        </tr>
+        </thead>
+        <tbody ng-if="!equipments.loading">
+        <tr ng-repeat="equipment in equipments.all">
+            <td workflow="lystore.administrator">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="equipment.selected">
+                    <span></span>
+                </label>
+            </td>
+            <td ng-class="{'color-grey': equipment.status === 'UNAVAILABLE'}">[[ equipment.reference ]]</td>
+            <td ng-class="'c{olor-grey': equipment.status === 'UNAVAILABLE'}">[[ equipment.name ]]</td>
+            <td class="color-orange"
+                ng-class="{'color-grey': equipment.status === 'UNAVAILABLE'||equipment.status === 'OUT_OF_STOCK'}">
+                <span ng-bind="calculatePriceOfEquipment(equipment, false , 2) | currency"></span>
+            </td>
+            <td>[[ equipment.supplier_name ]]</td>
+            <td>[[equipment.contract_name]]</td>
+            <td ng-class="{'color-green': equipment.status === 'AVAILABLE','color-red': equipment.status === 'OUT_OF_STOCK', 'color-orange': equipment.status === 'UNAVAILABLE'}">
+                [[ lang.translate('lystore.' + equipment.status) ]]
+            </td>
+        </tr>
+        </tbody>
+        <tbody ng-if="equipments.loading">
+        <tr ng-repeat="x in [].constructor(15) track by $index" class="twelve">
+            <td>
+                <label class="checkbox">
+                    <input type="checkbox">
+                    <span></span>
+                </label>
+            </td>
+            <td class="one">
+                <div class="grey-matter">&nbsp;</div>
+            </td>
+            <td class="four">
+                <div class="grey-matter">&nbsp;</div>
+            </td>
+            <td class="one">
+                <div class="grey-matter">&nbsp;</div>
+            </td>
+            <td class="two">
+                <div class="grey-matter">&nbsp;</div>
+            </td>
+            <td class="three">
+                <div class="grey-matter">&nbsp;</div>
+            </td>
+            <td class="one">
+                <div class="grey-matter">&nbsp;</div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</article>
+
+<lightbox on-close="display.lightbox.equipment = false;"
+          show="display.lightbox.equipment">
+    <container template="equipment.lightbox"></container>
+</lightbox>
+
+<section class="toggle-buttons" ng-class="{ hide: equipments.selected.length === 0 }">
+    <div class="toggle">
+        <div class="row">
+            <button ng-click="openEquipmentForm(equipments.selected[0])" ng-show="equipments.selected.length === 1">
+                <i18n>modify</i18n>
+            </button>
+            <button ng-click="openEquipmentsDeletion()"><i18n>delete</i18n></button>
+            <button ng-click="setStatus('AVAILABLE')">
+                <i18n>lystore.set.AVAILABLE</i18n>
+            </button>
+            <button ng-click="setStatus('UNAVAILABLE')">
+                <i18n>lystore.set.UNAVAILABLE</i18n>
+            </button>
+            <button ng-click="setStatus('OUT_OF_STOCK')">
+                <i18n>lystore.set.OUT_OF_STOCK</i18n>
+            </button>
+        </div>
+    </div>
+</section>

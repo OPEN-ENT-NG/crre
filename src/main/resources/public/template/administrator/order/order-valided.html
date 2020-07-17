@@ -1,0 +1,138 @@
+<div ng-controller="orderController">
+    <h1><i18n>lystore.order.valided.title</i18n></h1>
+    <div class="row">
+        <div class="cell twelve-mobile horizontal-spacing search-pagination four">
+            <div class="row twelve vertical-spacing">
+                <input  class="row"
+                        type="text"
+                        ng-model="search.filterWord"
+                        ng-change="filterByTag(search.filterWord)"
+                        ng-keydown="addFilter(search.filterWord, $event)"
+                        i18n-placeholder="add.a.filter" />
+
+                <i class="search flex-row" ng-click="addFilter(search.filterWord)"></i>
+            </div>
+            <div class="row horizontal-spacing">
+                <div class="select-blocks">
+                    <div ng-repeat="filterWord in search.filterWords"
+                         ng-click="pullFilterWord(filterWord)"
+                         class="labels-in-ligne">
+                        <div > [[ filterWord ]] </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <article class="responsive-table">
+        <table class="twelve">
+            <thead>
+            <tr>
+                <td workflow="lystore.manager">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAllOrders()"
+                               ng-model="allOrdersSelected">
+                        <span></span>
+                    </label>
+                </td>
+                <td ng-click="sort.order.type = 'number_validation';
+                    sort.order.reverse = !sort.order.reverse">
+                <i18n>number.validation</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'number_validation' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'number_validation' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'order_number';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.orders.order.number</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'order_number' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'order_number' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'contract_name';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>contract</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'contract_name' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'contract_name' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'supplier_name';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>supplier</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'supplier_name' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'supplier_name' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'structure_count';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.structures.number</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'structure_count' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'structure_count' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'label_program';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.program</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'label_program' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'label_program' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'price';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.price.TTC</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'price' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'price' && sort.order.reverse"></i>
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="order in displayedOrders.all | orderBy:sort.order.type:sort.order.reverse"
+                class="[[order.status]] [[sort.order.type]]">
+                <td workflow="lystore.manager">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="order.selected">
+                        <span></span>
+                    </label>
+                </td>
+                <td>[[order.number_validation]]</td>
+                <td>[[order.order_number]]</td>
+                <td>[[order.contract_name]]</td>
+                <td>[[order.supplier_name]]</td>
+                <td>[[order.structure_count]]</td>
+                <td>[[order.label_program]]</td>
+                <td><span ng-bind="order.price | currency"></span></td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+    <lightbox on-close="display.lightbox.sendOrder = false;"
+              show="display.lightbox.sendOrder">
+        <container template="sendOrder.lightbox"></container>
+    </lightbox>
+    <section class="toggle-buttons" ng-class="{ hide:ordersClient.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+                <button class="right-magnet"
+                        ng-click="prepareSendOrder(getSelectedOrders())"
+                        ng-disabled=" isNotValidated(getSelectedOrders()) || !validateSentOrders(getSelectedOrders()) ">
+                    <i18n>lystore.order.valided.generateBC</i18n>
+                </button>
+
+                <button ng-click="exportValidOrders(getSelectedOrders(), 'structure_list')"
+                        ng-disabled="!validateSentOrders(getSelectedOrders()) || displayedOrders.selected.length != 1 ">
+                    <i18n>lystore.orders.valid.structure.list.export</i18n>
+                </button>
+                <button ng-click="exportOrderStruct(getSelectedOrders()) "
+                        ng-disabled="!validateSentOrders(getSelectedOrders())">
+                    <i18n>lystore.order.valided.generateBC.struct</i18n>
+                </button>
+                <button ng-click="exportOrder(getSelectedOrders())"
+                        ng-disabled="!validateSentOrders(getSelectedOrders())">
+                    <i18n>lystore.orders.valid.order.export</i18n>
+                </button>
+                <button ng-click="exportValidOrders(getSelectedOrders(), 'certificates')"
+                        ng-disabled="!validateSentOrders(getSelectedOrders())">
+                    <i18n>lystore.orders.valid.certificates.export</i18n>
+                </button>
+                <button ng-click="cancelValidation(getSelectedOrders())"
+                        ng-disabled="disableCancelValidation(getSelectedOrders())">
+                    <i18n>cancel</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

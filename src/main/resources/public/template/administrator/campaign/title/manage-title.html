@@ -1,0 +1,59 @@
+<div ng-controller="TitleController" class="purse-management">
+
+    <div class="tools right-magnet eleven-mobile">
+        <button class="five-mobile" ng-click="openTitleImporter()">
+            <i18n>lystore.campaign.purse.import</i18n>
+        </button>
+    </div>
+
+    <div class="six centered twelve-mobile">
+        <h1 class="centered-text">[[campaign.name]]</h1>
+        <article class="responsive-table">
+            <table class="twelve">
+                <thead>
+                <td ng-click="sort.title.type = 'name';
+                        sort.title.reverse = !sort.title.reverse">
+                    <i18n>name</i18n>
+                    <i class="up-open" ng-show="sort.title.type === 'name' && !sort.title.reverse"></i>
+                    <i class="down-open" ng-show="sort.title.type === 'name' && sort.title.reverse"></i>
+                </td>
+                <td ng-click="sort.purse.type = 'name';
+                        sort.purse.reverse = !sort.purse.reverse">
+                    <i18n>lystore.campaign.titles</i18n>
+                </td>
+                </thead>
+                <tbody>
+                <tr ng-repeat="structure in campaign.titles.all | orderBy:sort.title.type:sort.title.reverse">
+                    <td>[[structure.name]]</td>
+                    <td>
+                        <div class="select-blocks">
+                            <div ng-repeat="title in structure.titles"
+                                 ng-click="openDeleteConfirmation(structure, title)"
+                                 class="labels-in-ligne">
+                                <div> [[ title.name ]]</div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+
+    </div>
+
+    <lightbox show="lightbox.open" on-close="lightbox.open = false">
+        <container template="title.lightbox"></container>
+    </lightbox>
+
+    <section class="toggle-buttons"
+             ng-class="{ hide: campaign.titles.selected.length === 0 || campaign.titles.selected.length > 1}">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="openEditPurseForm(campaign.purses.selected[0])"
+                        ng-show="campaign.purses.selected.length === 1">
+                    <i18n>modify</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

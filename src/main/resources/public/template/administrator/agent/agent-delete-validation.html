@@ -1,0 +1,10 @@
+<form ng-submit="deleteAgents(agents.selected)">
+    <h4><i18n>lystore.agent.delete</i18n></h4>
+    <ul>
+        <li ng-repeat="agent in agents.selected">[[agent.name]]</li>
+    </ul>
+    <div class="right-magnet">
+        <input type="button" class="cancel" ng-click="display.lightbox.agent = false;" i18n-value="cancel" />
+        <input type="submit" class="button"/>
+    </div>
+</form>

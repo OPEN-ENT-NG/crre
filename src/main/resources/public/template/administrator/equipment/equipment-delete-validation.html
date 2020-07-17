@@ -1,0 +1,10 @@
+<form ng-submit="deleteEquipments(equipments.selected)">
+    <h4><i18n>lystore.equipment.delete</i18n></h4>
+    <ul>
+        <li ng-repeat="equipment in equipments.selected">[[equipment.name]]</li>
+    </ul>
+    <div class="right-magnet">
+        <input type="button" class="cancel" ng-click="display.lightbox.equipment = false;" i18n-value="cancel" />
+        <input type="submit" class="button"/>
+    </div>
+</form>

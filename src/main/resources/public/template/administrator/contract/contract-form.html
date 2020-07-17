@@ -1,0 +1,123 @@
+<h1>
+    <i18n ng-show="contract.id == undefined">lystore.contract.add</i18n>
+    <i18n ng-show="contract.id !== undefined">lystore.contract.modify</i18n>
+</h1>
+<form ng-submit="validContract(contract)">
+    <div class="row">
+        <label class="cell six vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="six cell twelve-mobile">
+                <i18n>lystore.contract.name</i18n>
+            </span>
+            <input type="text" class="cell six twelve-mobile" ng-model="contract.name" />
+        </label>
+        <label class="cell six vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="six cell twelve-mobile">
+                <i18n>lystore.contract.reference</i18n>
+            </span>
+            <input type="text" class="cell six twelve-mobile" ng-model="contract.reference" />
+        </label>
+    </div>
+    <div class="row">
+        <label class="cell six vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="six cell twelve-mobile">
+                <i18n>lystore.contract.start</i18n>
+            </span>
+            <date-picker ng-model="contract.start_date" class="cell six twelve-mobile"></date-picker>
+        </label>
+        <label class="cell six vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="six cell twelve-mobile">
+                <i18n>lystore.contract.renewal</i18n>
+            </span>
+            <input type="text" ng-model="contract.nb_renewal" class="cell six twelve-mobile" />
+        </label>
+    </div>
+    <div class="row">
+        <label class="cell twelve vertical-spacing horizontal-spacing  twelve-mobile">
+            <span class="cell three twelve-mobile">
+                <i18n>lystore.contract.type</i18n>
+            </span>
+            <select class="cell nine twelve-mobile"
+                    ng-options="type.id as type.displayName for type in contractTypes.all"
+                    ng-model="contract.id_contract_type"></select>
+        </label>
+    </div>
+    <div class="row">
+        <label class="cell twelve vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell three twelve-mobile"><i18n>lystore.contract.agent</i18n></span>
+            <select class="cell nine twelve-mobile"
+                    ng-model="contract.id_agent"
+                    ng-options="agent.id as agent.name for agent in agents.all"></select>
+        </label>
+    </div>
+    <div class="row">
+        <label class="cell twelve vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell three twelve-mobile"><i18n>lystore.contract.supplier</i18n></span>
+            <select class="cell nine twelve-mobile"
+                    ng-model="contract.id_supplier"
+                    ng-options="supplier.id as supplier.name for supplier in suppliers.all"></select>
+        </label>
+    </div>
+    <div class="row twelve">
+        <div class="cell four vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell eight"><i18n>lystore.contract.annual_min</i18n></span>
+            <span class="horizontal-spacing cell four">
+                <switch-toggle ng-model="contract.annual_min_enabled"></switch-toggle>
+            </span>
+        </div>
+        <label class="cell eight vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell twelve-mobile"><i18n>amount</i18n></span>
+            <span class="cell horizontal-margin twelve-mobile">
+                <input type="text" class="twelve-mobile" ng-model="contract.annual_min"
+                       ng-disabled="!contract.annual_min_enabled" />
+            </span>
+        </label>
+    </div>
+    <div class="row twelve">
+        <div class="cell four vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell eight"><i18n>lystore.contract.max_brink</i18n></span>
+            <span class="horizontal-spacing cell four">
+                <switch-toggle ng-model="contract.max_brink_enabled"></switch-toggle>
+            </span>
+        </div>
+        <label class="cell eight vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell twelve-mobile"><i18n>amount</i18n></span>
+            <span class="cell horizontal-margin twelve-mobile">
+                <input type="text" class="twelve-mobile" ng-model="contract.max_brink"
+                   ng-disabled="!contract.max_brink_enabled" />
+            </span>
+        </label>
+    </div>
+    <div class="row twelve">
+        <div class="cell four vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell eight"><i18n>lystore.contract.annual_max</i18n></span>
+            <span class="horizontal-spacing cell four">
+                <switch-toggle ng-model="contract.annual_max_enabled"></switch-toggle>
+            </span>
+        </div>
+        <label class="cell eight vertical-spacing horizontal-spacing twelve-mobile">
+            <span class="cell twelve-mobile"><i18n>amount</i18n></span>
+            <span class="cell horizontal-margin twelve-mobile">
+                <input type="text" class="twelve-mobile" ng-model="contract.annual_max"
+                   ng-disabled="!contract.annual_max_enabled" />
+            </span>
+        </label>
+    </div>
+    <div class="row twelve">
+        <h3>
+            <i18n>lystore.options</i18n>
+        </h3>
+        <div class="row">
+            <div class="cell four vertical-spacing horizontal-spacing twelve-mobile">
+                <i18n>lystore.contract.file</i18n>
+                :
+            </div>
+            <label class="cell eight vertical-spacing horizontal-spacing twelve-mobile">
+                <switch-toggle ng-model="contract.file"></switch-toggle>
+            </label>
+        </div>
+    </div>
+    <div class="right-magnet">
+        <input type="button" class="cancel" ng-click="cancelContractForm()" i18n-value="cancel"/>
+        <input type="submit" class="button" ng-disabled="!validContractForm(contract)"/>
+    </div>
+</form>

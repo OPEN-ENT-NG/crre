@@ -1,0 +1,78 @@
+<div class="row supplier-management" ng-controller="configurationController">
+    <div class="twelve" workflow="lystore.administrator">
+        <button class="right-magnet twelve-mobile" ng-click="openSupplierForm()">
+            <i18n>lystore.supplier.add</i18n>
+        </button>
+    </div>
+    <div class="centered six twelve-mobile">
+        <h1><i18n>lystore.suppliers</i18n></h1>
+        <article class="responsive-table">
+            <table class="twelve">
+                <thead>
+                <td workflow="lystore.administrator">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAll(allSupplierSelected, suppliers)"
+                               ng-model="allSupplierSelected">
+                        <span></span>
+                    </label>
+                </td>
+                <td ng-click="sort.supplier.type = 'name';
+                    sort.supplier.reverse = !sort.supplier.reverse">
+                    <i18n>name</i18n>
+                    <i class="up-open" ng-show="sort.supplier.type === 'name' && !sort.supplier.reverse"></i>
+                    <i class="down-open" ng-show="sort.supplier.type === 'name' && sort.supplier.reverse"></i>
+                </td>
+                <td ng-click="sort.supplier.type = 'department';
+                    sort.supplier.reverse = !sort.supplier.reverse">
+                    <i18n>address</i18n>
+                    <i class="up-open" ng-show="sort.supplier.type === 'department' && !sort.supplier.reverse"></i>
+                    <i class="down-open" ng-show="sort.supplier.type === 'department' && sort.supplier.reverse"></i>
+                </td>
+                <td ng-click="sort.supplier.type = 'phone';
+                    sort.supplier.reverse = !sort.supplier.reverse">
+                    <i18n>phone</i18n>
+                    <i class="up-open" ng-show="sort.supplier.type === 'phone' && !sort.supplier.reverse"></i>
+                    <i class="down-open" ng-show="sort.supplier.type === 'phone' && sort.supplier.reverse"></i>
+                </td>
+                <td ng-click="sort.supplier.type = 'email';
+                    sort.supplier.reverse = !sort.supplier.reverse">
+                    <i18n>email</i18n>
+                    <i class="up-open" ng-show="sort.supplier.type === 'email' && !sort.supplier.reverse"></i>
+                    <i class="down-open" ng-show="sort.supplier.type === 'email' && sort.supplier.reverse"></i>
+                </td>
+                </thead>
+                <tbody>
+                <tr ng-repeat="supplier in suppliers.all | orderBy:sort.supplier.type:sort.supplier.reverse">
+                    <td workflow="lystore.administrator">
+                        <label class="checkbox">
+                            <input type="checkbox" ng-model="supplier.selected">
+                            <span></span>
+                        </label>
+                    </td>
+                    <td>[[supplier.name]]</td>
+                    <td>[[supplier.address]]</td>
+                    <td>[[supplier.phone]]</td>
+                    <td>[[supplier.email]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </div>
+
+    <lightbox show="display.lightbox.supplier"
+              on-close="cancelSupplierForm()">
+        <container template="supplier.lightbox"></container>
+    </lightbox>
+
+    <section class="toggle-buttons" ng-class="{ hide: suppliers.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="openSupplierForm(suppliers.selected[0])" ng-show="suppliers.selected.length === 1">
+                    <i18n>modify</i18n>
+                </button>
+                <button ng-click="openSuppliersDeletion()"><i18n>delete</i18n></button>
+            </div>
+        </div>
+    </section>
+</div>

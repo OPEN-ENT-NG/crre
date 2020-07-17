@@ -1,0 +1,211 @@
+<article ng-controller="orderRegionController" class=" order-client-sent">
+    <h1>
+        <i18n>lystore.order.update</i18n>
+    </h1>
+    <form>
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>lystore.structure.label</i18n>
+                :
+            </label>
+            <label class="six cell">[[orderToUpdate.structure.name]]</label>
+        </div>
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>CAMPAIGN</i18n>
+                :
+            </label>
+            <label class="six cell">[[orderToUpdate.campaign.name]]</label>
+        </div>
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>lystore.project</i18n>
+                :
+            </label>
+            <label class="six cell">[[orderToUpdate.title.name || '-']]</label>
+        </div>
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>comment</i18n>
+                <br/>
+                <i18n>lystore.project.lowerCase</i18n>
+                :
+            </label>
+            <label ng-if="orderToUpdate.project.description"
+                   class="six cell comment">[[orderToUpdate.project.description || '-']]</label>
+
+            <label ng-if="!orderToUpdate.project.description"
+                   class="six cell">-</label>
+        </div>
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>room</i18n>
+                :
+            </label>
+            <label class="six cell">[[orderToUpdate.project.room || '-']]</label>
+        </div>
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>building</i18n>
+                :
+            </label>
+            <label class="six cell">[[orderToUpdate.project.building || '-']]</label>
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>lystore.contract.type.name</i18n>
+                :
+            </label>
+            <label class="six cell">[[orderToUpdate.contract_type.name || '-']]</label>
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>lystore.amountTTC</i18n>
+                :
+            </label>
+            <span
+                    class="four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                <span ng-bind="orderParent.price_single_ttc * orderParent.amount | currency"></span>
+            </span>
+            <label
+                    class="cell horizontal-margin"
+                    ng-class="{'two': orderParent, 'six': !orderParent}"
+            >
+                <span ng-bind="orderToUpdate.price_single_ttc * orderToUpdate.amount | currency"></span>
+            </label>
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>EQUIPMENT</i18n>
+                :
+            </label>
+            <span
+                    class="four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                [[orderParent.equipment.contract_type_name]]&nbsp
+                -&nbsp
+                [[orderParent.equipment.name]]
+            </span>
+            <search-and-select
+                    class="four cell"
+                    options="equipments.all"
+                    param1="contract_type_name"
+                    param2="name"
+                    ng-model="orderToUpdate.equipment"
+                    search-on="name"
+                    order-by="name"
+                    class="cell horizontal-margin"
+                    ng-class="{'four': orderParent, 'six': !orderParent}"
+            >
+            </search-and-select>
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>quantity.full</i18n>
+                :
+            </label>
+            <span
+                    class="four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                [[orderParent.amount]]
+            </span>
+            <input
+                    min="0"
+                    type="number"
+                    ng-model="orderToUpdate.amount"
+                    class="cell horizontal-margin"
+                    ng-class="{'two': orderParent}"
+            />
+
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>lystore.price.TTC</i18n>
+                :
+            </label>
+            <span
+                    class="four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                [[orderParent.price_single_ttc]] €
+            </span>
+            <input type="number"
+                   step="any"
+                   min="0"
+                   ng-model="orderToUpdate.price_single_ttc "
+                   class="cell horizontal-margin"
+                   ng-class="{'two': orderParent}"
+            />
+        </div>
+
+
+        <div ng-if="orderToUpdate.campaign.orderPriorityEnable()"
+             class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>lystore.project.priority.order</i18n>
+                :
+            </label>
+            <span
+                    class="four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                [[orderParent.rank]]
+            </span>
+            <span
+                    class="four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                [[orderParent.rank]]
+            </span>
+        </div>
+
+        <div class="row vertical-spacing-four">
+            <label class="two right-padding-form-field cell">
+                <i18n>comment</i18n>
+                :
+            </label>
+            <div
+                    class="comment ng-pristine ng-valid ng-touched four cell horizontal-margin"
+                    ng-if="orderParent"
+            >
+                [[orderParent.comment]]
+            </div>
+            <textarea auto-height=""
+                      style="resize: none; height: 62px;"
+                      ng-model="orderToUpdate.comment"
+                      class="ng-pristine ng-valid ng-touched cell horizontal-margin"
+                      ng-class="{'four': orderParent}">
+            >
+            </textarea>
+        </div>
+
+        <lightbox on-close="display.lightbox.validOrder = false; "
+                  show="display.lightbox.validOrder">
+            <container template="validOrder.lightbox"></container>
+        </lightbox>
+        <div class="row">
+            <div class="right-magnet">
+                <input type="button" class=" cancel" ng-click="cancelUpdate()"
+                       i18n-value="cancel"/>
+
+                <input type="button" ng-if="!orderToUpdate.id_operation" class=" button" ng-disabled="!isValidFormUpdate()"
+                       ng-click="updateOrderConfirm()"
+                       i18n-value="lystore.order.operation.select"/>
+
+                <input type="button" ng-if="orderToUpdate.id_operation" ng-disabled="!isValidFormUpdate()" class=" button"
+                       ng-click="updateLinkedOrderConfirm()"
+                       i18n-value="confirm"/>
+
+            </div>
+        </div>
+    </form>
+</article>

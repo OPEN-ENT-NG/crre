@@ -1,0 +1,19 @@
+<h2><i18n>lystore.purse.modify</i18n></h2>
+<form ng-submit="validPurse(purse)">
+    <div class="row">
+        <label class="cell twelve">
+                    <span class="four cell">
+                        <i18n>amount</i18n>
+                    </span>
+            <input class="cell eight" type="number" step="0.01" ng-model="purse.amount" required />
+        </label>
+    </div>
+    <br/>
+    <div ng-show = "isNegativePurse" class="warning" >
+        <label><i18n>lystore.error.purse.negative</i18n></label>
+    </div>
+    <div class="right-magnet">
+        <input type="button" class="cancel" ng-click="cancelPurseForm()" value="Annuler" />
+        <input type="submit" class="button" />
+    </div>
+</form>

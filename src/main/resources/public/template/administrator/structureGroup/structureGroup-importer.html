@@ -1,0 +1,25 @@
+<form ng-submit="importStructureGroups(importer)">
+    <div class="info">
+        <p>
+            <i18n>lystore.structureGroups.import.definition</i18n>
+        </p>
+        <p>
+            <i18n>lystore.campaign.purse.import.skeleton</i18n>
+            <a href="/lystore/public/import/skeletonStructureGroups.csv">skeletonStructureGroups.csv</a>
+        </p>
+    </div>
+    <div class="warning" ng-if="importer.message">
+        <p>[[lang.translate(importer.message)]]</p>
+    </div>
+    <div class="vertical-spacing">
+        <p class="six centered">
+            <i18n>csv.file</i18n>
+            <input type="file" files-input-change ng-model="importer.files">
+        </p>
+        <div class="row">
+            <button class="right-magnet" ng-disabled="!importer.isValid()">
+                <i18n>import</i18n>
+            </button>
+        </div>
+    </div>
+</form>

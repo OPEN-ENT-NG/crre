@@ -1,0 +1,87 @@
+<div class="card cell left-detail-box" ng-show="display.equipment">
+    <h1 class="row">[[basket.equipment.name]] </h1>
+    <div class="twelve cell">
+        <div class="four cell twelve-mobile">
+            <img class="img-equipment" ng-src="[[basket.equipment.image]]" ng-show="basket.equipment.image!==null && basket.equipment.image!==undefined " />
+            <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.image===null || basket.equipment.image===undefined "/>
+        </div>
+        <div class="eight cell twelve-mobile" >
+            <div class="summary" ng-show="basket.equipment.description !== null" >
+                <p ng-bind-html="basket.equipment.description"></p>
+            </div>
+            <article class="add-basket centered row twelve vertical-spacing twelve-mobile">
+                <div class="six cell twelve-mobile">
+                    <h1 class="centered-text" ng-bind="calculatePriceOfEquipment(basket.equipment, true, 2) | currency"></h1>
+                </div>
+                <div class="six cell twelve-mobile">
+                    <div class="centered-text quantity">
+                        <h4 class="cell"><i18n>lystore.quantity</i18n></h4>
+                        <i class="moins" ng-click="amountDecrease()"></i>
+                        <input type="number"
+                               step="1"
+                               min="0"
+                               ng-keypress="avoidDecimals($event)"
+                               class="numberWithoutArrow"
+                               ng-model="basket.amount" class="three"/>
+                        <i class="plus" ng-click="amountIncrease()"></i>
+                    </div>
+                    <div class="centered-text row"><input type="button"  ng-click="addBasketItem(basket)" i18n-value="lystore.add.to.basket" ng-disabled="!validArticle(basket.equipment)" /> </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div ng-show="basket.equipment.technical_specs.length !== 0">
+        <h2>
+            <i18n>SPECIFICATIONS</i18n>
+        </h2>
+        <div class="row technical-specs">
+            <div class="technical-spec twelve row"
+                 ng-repeat="technicalSpec in basket.equipment.technical_specs">
+                <div class="five cell horizontal-spacing bold">
+                    [[technicalSpec.name]]
+                </div>
+                <div class="six cell horizontal-spacing">
+                    [[technicalSpec.value]]
+                </div>
+            </div>
+        </div>
+    </div>
+    <div ng-show="basket.equipment.options.length !== 0">
+        <h2><i18n>lystore.equipment.options</i18n></h2>
+        <table class="twelve">
+            <thead>
+            <td class="one">
+                <label class="checkbox" ng-show="thereAreOptionalOptions(basket.equipment)">
+                    <input type="checkbox"
+                           ng-change="switchAll(alloptionsSelected, basket.equipment.options)"
+                           ng-model="alloptionsSelected">
+                    <span></span>
+                </label>
+            </td>
+            <td >
+                &nbsp;
+            </td>
+            <td class="three">
+                <i18n>lystore.price.TTC</i18n>
+            </td>
+            </thead>
+            <tbody>
+            <tr  ng-repeat="option in basket.equipment.options">
+                <td  class="one">
+                    <label class="checkbox"  ng-show="!option.required">
+                        <input type="checkbox" ng-model="option.selected">
+                        <span></span>
+                    </label>
+                    <label class="checkbox"  ng-show="option.required" >
+                        <input type="checkbox" checked disabled>
+                        <span></span>
+                    </label>
+                </td>
+                <td >[[option.name]]</td>
+                <td class="three"><span ng-bind="calculatePriceTTC(option.price, option.tax_amount, 2) | currency"></span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

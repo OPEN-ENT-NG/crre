@@ -1,0 +1,103 @@
+<div ng-controller="orderController" class="order-client-sent">
+    <h1><i18n>lystore.order.sent.title</i18n></h1>
+    <div class="row">
+        <div class="cell twelve-mobile horizontal-spacing search-pagination four">
+            <div class="row twelve vertical-spacing">
+                <input  class="row"
+                        type="text"
+                        ng-model="search.filterWord"
+                        ng-change="filterByTag(search.filterWord)"
+                        ng-keydown="addFilter(search.filterWord, $event)"
+                        i18n-placeholder="add.a.filter" />
+
+                <i class="search flex-row" ng-click="addFilter(search.filterWord)"></i>
+            </div>
+            <div class="row horizontal-spacing">
+                <div class="select-blocks">
+                    <div ng-repeat="filterWord in search.filterWords"
+                         ng-click="pullFilterWord(filterWord)"
+                         class="labels-in-ligne">
+                        <div > [[ filterWord ]] </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <article class="responsive-table">
+        <table class="twelve">
+            <thead>
+            <tr>
+                <td workflow="lystore.manager">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAllOrders()"
+                               ng-model="allOrdersSelected">
+                        <span></span>
+                    </label>
+                </td>
+                <td ng-click="sort.order.type = 'name_structure';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>Structure</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'name_structure' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'name_structure' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'order_number';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.orders.order.number</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'order_number' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'order_number' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'contract.name';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>contract</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'contract.name' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'contract.name' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'supplier.name';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>supplier</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'supplier.name' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'supplier.name' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'amount';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.amount</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'amount' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'amount' && sort.order.reverse"></i>
+                </td>
+                <td ng-click="sort.order.type = 'priceTTCtotal';
+                    sort.order.reverse = !sort.order.reverse">
+                    <i18n>lystore.price.TTC</i18n>
+                    <i class="up-open" ng-show="sort.order.type === 'priceTTCtotal' && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === 'priceTTCtotal' && sort.order.reverse"></i>
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="order in displayedOrders.all | orderBy:sort.order.type:sort.order.reverse">
+                <td workflow="lystore.manager">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="order.selected">
+                        <span></span>
+                    </label>
+                </td>
+                <td >[[order.name_structure]]</td>
+                <td >[[order.order_number]]</td>
+                <td >[[order.contract.name]]</td>
+                <td> [[order.supplier.name]]</td>
+                <td>[[order.amount ]]</td>
+                <td><span ng-bind="order.total | currency"></span></td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+    <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="windUpOrders(displayedOrders.selected)">
+                    <i18n>windUp</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

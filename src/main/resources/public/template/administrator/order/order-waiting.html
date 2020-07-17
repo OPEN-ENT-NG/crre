@@ -1,0 +1,148 @@
+<div ng-controller="orderController" class="order-client-validation">
+    <div class="row">
+        <h1 class="twelve-mobile six cell"><i18n>lystore.orders.validations.waiting</i18n></h1>
+        <div class="right-magnet">
+            <select
+                    ng-model="campaign"
+                    ng-options="campaignSelect as campaignSelect.name for campaignSelect in campaignsForSelectInput"
+                    ng-change="selectCampaignAndInitFilter(campaign)"
+            >
+                <option value="" disabled >[[campaign.name]]</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="cell twelve-mobile horizontal-spacing search-pagination four">
+            <div class="row twelve vertical-spacing">
+                <input  class="row"
+                        type="text"
+                        ng-model="search.filterWord"
+                        ng-keydown="addFilter(search.filterWord, $event)"
+                        i18n-placeholder="add.a.filter" />
+
+                <i class="search flex-row" ng-click="addFilter(search.filterWord)"></i>
+            </div>
+            <div class="row horizontal-spacing">
+                <div class="select-blocks">
+                    <div ng-repeat="filterWord in search.filterWords"
+                         ng-click="pullFilterWord(filterWord)"
+                         class="labels-in-ligne">
+                        <div > [[ filterWord ]] </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <article class="responsive-table vertical-array-scroll">
+        <table class="twelve">
+            <thead>
+            <tr>
+                <td workflow="lystore.manager" class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAllOrders()"
+                               ng-model="allOrdersSelected">
+                        <span></span>
+                    </label>
+                </td>
+                <td ng-repeat="field in tableFields "
+                    ng-hide="!field.display"
+                    ng-click="sort.order.type = field.fieldName;
+                    sort.order.reverse = !sort.order.reverse">
+                    <div class="smallTabElem">  [[lang.translate(field.name)]] </div>
+                    <i class="up-open" ng-show="sort.order.type === field.fieldName && !sort.order.reverse"></i>
+                    <i class="down-open" ng-show="sort.order.type === field.fieldName && sort.order.reverse"></i>
+                </td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="order in displayedOrders.all | orderBy:sort.order.type:sort.order.reverse" post-ng-repeat>
+                <td workflow="lystore.manager" class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="order.selected">
+                        <span></span>
+                    </label>
+                </td>
+                <td ng-if="tableFields[0].display"> <div class="smallTabElem"> [[order.structure.uai]]</div></td>
+                <td ng-if="tableFields[1].display"> <div class="tabElem"> [[order.structure.name]]</div></td>
+                <td ng-if="tableFields[2].display"> <div class="tabElem"> [[order.structure.type_etab]]</div></td>
+                <td ng-if="tableFields[3].display"> <div class="tabElem"> [[order.structure.city]]</div></td>
+                <td ng-if="tableFields[4].display"> <div class="tabElem"> [[order.campaign.name]]</div></td>
+                <td ng-if="tableFields[5].display"> <div class="smallTabElem"> [[order.rankOrder]]</div></td>
+                <td ng-if="tableFields[6].display"> <div class="tabElem"> [[order.name]]</div></td>
+                <td ng-if="tableFields[7].display"> <div ng-init="tableFields[7].fullDisplay = false"
+                                                         class="tabElem"
+                                                         ng-class="{ellipsis:!tableFields[7].fullDisplay}"
+                                                         ng-click="tableFields[7].fullDisplay = !tableFields[7].fullDisplay"> [[order.comment || '-']]</div></td>
+                <td ng-if="tableFields[8].display"> <div class="smallTabElem"> [[order.amount]]</div></td>
+                <td ng-if="tableFields[9].display"> <div class="smallTabElem"><span ng-bind="order.priceUnitedTTC | currency"></span></div></td>
+                <td ng-if="tableFields[10].display"> <div class="tabElem">
+                    <div ng-if="order.files.length > 0" class="twelve">
+                        <div ng-repeat="file in order.files" class="twelve basket-file row">
+                            <a class="cell twelve" ng-click="order.downloadFile(file)">[[
+                                file.name ||
+                                file.filename ]]</a>
+                        </div>
+                    </div>
+                </div></td>
+                <td ng-if="tableFields[11].display"> <div class="tabElem"> [[order.contract_type.name]]</div></td>
+                <td ng-if="tableFields[12].display"> <div class="tabElem">[[order.structure.academy]]</div></td>
+                <td ng-if="tableFields[13].display"> <div class="smallTabElem">[[order.structure.type]]</div></td>
+                <td ng-if="tableFields[14].display"> <div class="tabElem">[[order.contract.name]]</div></td>
+                <td ng-if="tableFields[15].display"> <div class="tabElem">[[order.project.title.name.toString() ]]</div></td>
+                <td ng-if="tableFields[16].display"> <div class="tabElem">[[getStructureGroupsList(order.structure_groups)]]</div></td>
+                <td ng-if="tableFields[17].display"> <div class="smallTabElem">[[order.creation_date]]</div></td>
+                <td ng-if="tableFields[18].display"> <div class="smallTabElem">[[order.project.room || '-']]</div></td>
+                <td ng-if="tableFields[19].display"> <div class="smallTabElem">[[order.project.building || '-']]</div></td>
+                <td ng-if="tableFields[20].display"> <div ng-init="tableFields[19].fullDisplay = false"
+                                                          class="tabElem"
+                                                          ng-class="{ellipsis:!tableFields[19].fullDisplay}"
+                                                          ng-click="tableFields[19].fullDisplay = !tableFields[19].fullDisplay">[[order.project.description || '-']]</div></td>
+                <td ng-if="tableFields[21].display"> <div class="smallTabElem">[[order.structure.department]]</div></td>
+                <td ng-if="tableFields[22].display"> <div class="tabElem">[[order.program]]</div></td>
+                <td ng-if="tableFields[23].display"> <div class="tabElem"><span ng-bind="order.priceTotalTTC | currency"></span></div>
+                </td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr >
+                <td colspan="[[countColSpan('totaux')]]">
+                    <i18n>totals</i18n>
+                </td>
+
+                <td ng-if="tableFields[8].display" colspan="[[countColSpan('price') - 1]]"> <div class="tabElem">[[displayedOrders.calculTotalAmount() ]]</div></td>
+
+                <td ng-if="tableFields[23].display" >
+                    <div class="tabElem"> [[displayedOrders.calculTotalPriceTTC() | currency]]</div>
+                </td>
+            </tr>
+            </tfoot>
+        </table>
+    </article>
+    <lightbox on-close="closedLighbtox();"
+              show="display.lightbox.validOrder">
+        <container template="validOrder.lightbox"></container>
+    </lightbox>
+    <parameter-table ng-change="savePreference()" ng-model="tableFields">
+    </parameter-table>
+    <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="validateOrders(getSelectedOrders())" ng-disabled="!isValidOrdersWaitingSelection()">
+                    <i18n>Validate</i18n>
+                </button>
+                <button ng-click="updateOrder(ordersClient.selected[0])"
+                        ng-show=" ordersClient.selected.length ===  1">
+                    <i18n>modify</i18n>
+                </button>
+                <button ng-click="exportCSV()" >
+                    <i18n>lystore.logs.csv.export</i18n>
+                </button>
+                <button ng-click="selectOperationForOrder()">
+                    <i18n>lystore.order.operation.select</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>
+

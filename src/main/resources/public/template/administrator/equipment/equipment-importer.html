@@ -1,0 +1,47 @@
+<div class="importer">
+    <form ng-submit="importEquipment(importer)">
+        <div class="row">
+            <h1>
+                <i18n>lystore.equipment.add.list</i18n>
+            </h1>
+            <i18n>lystore.equipment.import.text</i18n>
+        </div>
+        <div class="info">
+            <p>
+                <i18n>lystore.equipments.import.definition</i18n>
+            </p>
+            <p>
+                <i18n>lystore.campaign.purse.import.skeleton</i18n>
+                <a href="/lystore/public/import/import-equipment.csv">import-equipment.csv</a>
+            </p>
+        </div>
+        <div class="row vertical-spacing">
+            <i18n class="three cell twelve-mobile">target.market</i18n>
+            <select class="nine cell twelve-mobile" ng-model="importer.id_contract" required=""
+                    ng-options="contract.id as (contract.name + ' - Ref ' + contract.reference) for contract in contracts.all">
+            </select>
+        </div>
+        <div class="vertical-spacing row">
+            <div class="three cell">
+                <i18n>csv.file</i18n>
+            </div>
+            <div class="nine cell">
+                <input type="file" files-input-change ng-model="importer.files">
+            </div>
+        </div>
+        <div class="row vertical-spacing">
+            <switch-toggle ng-model="importer.required"></switch-toggle>
+            <span style="margin-left: 15px"><i18n>lystore.equipments.import.warning</i18n></span>
+        </div>
+        <div class="row">
+            <div class="right-magnet">
+                <button ng-disabled="!(importer.isValid() && importer.required) || importer.loading">
+                    <i18n>add</i18n>
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="loading-bar" ng-class="{loading: importer.loading}"></div>
+        </div>
+    </form>
+</div>

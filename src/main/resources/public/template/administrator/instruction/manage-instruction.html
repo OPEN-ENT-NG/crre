@@ -1,0 +1,196 @@
+<h1><i18n>lystore.instructions</i18n></h1>
+<div class="row">
+    <div class="cell twelve-mobile horizontal-spacing search-pagination four">
+        <div class="row twelve vertical-spacing">
+            <input type="text" class="twelve" ng-keydown="addInstructionFilter($event)"
+                   i18n-placeholder="add.a.filter">
+            <i class="search flex-row"></i>
+        </div>
+        <div class="row horizontal-spacing">
+            <div class="select-blocks">
+                <div ng-repeat="filter in instructions.filters"
+                     ng-click="dropInstructionFilter(filter)" class="labels-in-ligne">
+                    <div> [[ filter ]]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="right-magnet twelve-mobile">
+        <button workflow="lystore.manager" class="twelve-mobile" ng-click="openInstructionForm('create')">
+            <i18n>lystore.instruction.add</i18n>
+        </button>
+    </div>
+</div>
+<article class="responsive-table">
+    <table class="twelve">
+        <thead>
+        <tr>
+            <td workflow="lystore.manager" class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-show="instructions.all.length > 0"
+                           ng-change="switchAllInstruction()"
+                           ng-model="allInstructionsSelected">
+                    <span></span>
+                </label>
+            </td>
+            <td ng-click="sort.instruction.type = 'object';
+                   sort.instruction.reverse = !sort.instruction.reverse">
+                <i18n>lystore.instruction.object</i18n>
+                <i class="up-open" ng-show="sort.instruction.type === 'object' && !sort.instruction.reverse"></i>
+                <i class="down-open" ng-show="sort.instruction.type === 'object' && sort.instruction.reverse"></i>
+            </td>
+            <td ng-click="sort.instruction.type = 'amount';
+                    sort.instruction.reverse = !sort.instruction.reverse">
+                <i18n>amount</i18n>
+                <i class="up-open" ng-show="sort.instruction.type === 'amount' && !sort.instruction.reverse"></i>
+                <i class="down-open" ng-show="sort.instruction.type === 'amount' && sort.instruction.reverse"></i>
+            </td>
+
+            <td ng-click="sort.instruction.type = 'exercise.year';
+                    sort.instruction.reverse = !sort.instruction.reverse">
+                <i18n>lystore.exercise.year</i18n>
+                <i class="up-open" ng-show="sort.instruction.type === 'exercise.year' && !sort.instruction.reverse"></i>
+                <i class="down-open" ng-show="sort.instruction.type === 'exercise.year' && sort.instruction.reverse"></i>
+            </td>
+
+            <td ng-click="sort.instruction.type = 'service_number';
+                    sort.instruction.reverse = !sort.instruction.reverse">
+                <i18n>lystore.instruction.service_number</i18n>
+                <i class="up-open" ng-show="sort.instruction.type === 'service_number' && !sort.instruction.reverse"></i>
+                <i class="down-open" ng-show="sort.instruction.type === 'service_number' && sort.instruction.reverse"></i>
+            </td>
+
+            <td ng-click="sort.instruction.type = 'cp_number';
+                    sort.instruction.reverse = !sort.instruction.reverse">
+                <i18n>lystore.instruction.cp_number</i18n>
+                <i class="up-open" ng-show="sort.instruction.type === 'cp_number' && !sort.instruction.reverse"></i>
+                <i class="down-open" ng-show="sort.instruction.type === 'cp_number' && sort.instruction.reverse"></i>
+            </td>
+
+            <td ng-click="sort.instruction.type = 'date_cp';
+                    sort.instruction.reverse = !sort.instruction.reverse">
+                <i18n>lystore.instruction.date_cp</i18n>
+                <i class="up-open" ng-show="sort.instruction.type === 'date_cp' && !sort.instruction.reverse"></i>
+                <i class="down-open" ng-show="sort.instruction.type === 'date_cp' && sort.instruction.reverse"></i>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="instruction in instructions.all | orderBy:sort.instruction.type:sort.instruction.reverse"
+            ng-class="{ disableRow: instruction.status === 'false' }">
+            <td workflow="lystore.manager" class="table-selector" >
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="instruction.selected">
+                    <span></span>
+                </label>
+            </td>
+            <td >[[instruction.object]]</td>
+            <td ><span ng-bind="instruction.amount | currency"></span></td>
+            <td >[[getYearFromStr(instruction.exercise.year)]]</td>
+            <td >[[instruction.service_number]]</td>
+            <td >[[instruction.cp_number]]</td>
+            <td >[[formatDate(instruction.date_cp)]]</td>
+        </tr>
+        </tbody>
+    </table>
+</article>
+<lightbox show="display.lightbox.exportEquipment"
+          on-close="cancelexportEquipmentForm()">
+    <container template="export.equipment.lightbox"></container>
+</lightbox>
+
+<section class="toggle-buttons" ng-class="{ hide:instructions.selected.length === 0 }">
+    <div class="toggle">
+        <div class="row">
+            <button
+                    ng-click="openInstructionForm('edit')"
+                    ng-show="instructions.selected.length === 1"
+            >
+                <i18n>modify</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+            >
+                <i18n>lystore.close</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+            >
+                <i18n>lystore.logs.csv.export</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+            >
+                <i18n>lystore.export.airDelib</i18n>
+            </button>
+            <button
+                    ng-disabled="instructions.selected[0].operations.length === 0"
+                    ng-click="exportIris(instructions.selected[0])"
+                    ng-show="instructions.selected.length === 1"
+            >
+                <i18n>lystore.export.airIris</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+                    download
+            >
+                <i18n>lystore.list.equipment</i18n>
+            </button>
+            <button
+                    ng-disabled="instructions.selected[0].operations.length === 0"
+                    ng-show="instructions.selected.length === 1"
+                    ng-click="openExportEquipmentRapp(instructions.selected[0])"
+                    download
+            >
+                <i18n>lystore.exportEquipmentRapp</i18n>
+            </button>
+            <button
+                    ng-disabled="instructions.selected[0].operations.length === 0"
+                    ng-show="instructions.selected.length === 1"
+                    ng-click="exportNotification(instructions.selected[0])"
+                    download
+            >
+                <i18n>lystore.exportNotificationCP</i18n>
+
+            </button>
+            <button
+                    ng-disabled="instructions.selected[0].operations.length === 0"
+                    ng-show="instructions.selected.length === 1"
+                    ng-click="exportRME(instructions.selected[0])"
+                    download
+            >
+
+                <i18n>lystore.exportRME</i18n>
+            </button>
+            <button
+                    ng-disabled="instructions.selected[0].operations.length === 0"
+                    ng-show="instructions.selected.length === 1"
+                    ng-click="exportSubvention(instructions.selected[0])"
+            >
+
+                <i18n>lystore.export.subvention</i18n>
+            </button>
+            <button
+                    ng-disabled="instructions.selected[0].operations.length === 0"
+                    ng-show="instructions.selected.length === 1"
+                    ng-click="exportPublipostage(instructions.selected[0])"
+            >
+                <i18n>lystore.export.publipostage</i18n>
+            </button>
+            <button
+                    ng-click="openLightboxDeleteInstruction()"
+            >
+                <i18n>delete</i18n>
+            </button>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,96 @@
+<div ng-controller="catalogController" class="catalog">
+    <div class="cell twelve-mobile horizontal-spacing search-pagination four vertical-spacing-twice">
+        <a ng-show="display.equipment" class="zero block-mobile"
+            href="#/campaign/[[campaign.id]]/catalog">
+            <i class="angle-double-left horizontal-spacing"></i>
+            <i18n>back.to.catalog</i18n>
+        </a>
+        <div class="row twelve vertical-spacing" ng-show="!display.equipment">
+            <input class="row"
+                   type="text"
+                   ng-keyup="addFilter($event)"
+                   i18n-placeholder="add.a.filter"/></i>
+        </div>
+    </div>
+    <div class="row horizontal-spacing">
+        <div class="select-blocks">
+            <div ng-repeat="filter in equipments.sort.filters"
+                 ng-click="dropEquipmentFilter(filter)"
+                 class="labels-in-ligne">
+                <div> [[ filter ]]</div>
+            </div>
+        </div>
+    </div>
+    <nav class="prev-next vertical-spacing-four" ng-if="equipments.page_count > 1">
+        <button ng-click="display.equipment = false; equipments.loadPrev(campaign.id, current.structure.id)"
+                ng-disabled="equipments.page === 0">
+            <i class="left-open"></i>
+        </button>
+        <span class="pagination">
+				<span>[[ equipments.page + 1 ]]</span>
+				<i18n class="zero-mobile"><i18n>lystore.pages.separator</i18n></i18n>
+				<span class="zero-desktop">/</span>
+				<span>[[ equipments.page_count ]]</span>
+			</span>
+        <button ng-click="display.equipment = false; equipments.loadNext(campaign.id, current.structure.id);"
+                ng-disabled="equipments.page + 1 === equipments.page_count">
+            <i class="open-right"></i>
+        </button>
+    </nav>
+    <div class="cell catalog-list" ng-class="{twelve: !display.equipment, 'border-list': display.equipment}"
+         ng-if="!equipments.loading">
+        <div class="dominos item_hover_accent_list">
+            <div class="item six-mobile" ng-class="{
+                    disabled: equipment.status!== 'AVAILABLE',
+                    'list-item': display.equipment
+                 }"
+                 ng-repeat="equipment in equipments.all"
+                 ng-click="openEquipment(equipment)">
+
+                <div ng-class="{disabled: equipment.status!== 'AVAILABLE'} "></div>
+                <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">
+                    <i18n ng-show="equipment.status === 'UNAVAILABLE'">lystore.UNAVAILABLE</i18n>
+                    <i18n ng-show="equipment.status === 'OUT_OF_STOCK'">lystore.OUT_OF_STOCK</i18n></h1>
+
+                <article class="domino"  ng-class="{ disabled: equipment.status !== 'AVAILABLE' }">
+                    <h2 ng-bind="calculatePriceOfEquipment(equipment, false, 2) | currency"></h2>
+                    <div class="top" ng-class="{ item: display.equipment }">
+                        <img ng-src="[[equipment.image]]" ng-show="equipment.image!==null && equipment.image!==undefined " />
+                        <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.image===null || equipment.image===undefined "/>
+                        <strong style="display: block; margin: 10px 0 5px 0;">[[equipment.name]]</strong>
+                        <em class="metadata">[[equipment.contract_name]]</em>
+                        <p class="description">[[equipment.summary]]</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+    <div class="cell catalog-list" ng-if="equipments.loading">
+        <div class="dominos item_hover_accent_list loading-domino">
+            <div class="item six-mobile"
+                 ng-repeat="x in [].constructor(15) track by $index">
+                <article class="domino loading-domino">
+                    <div class="loading-bar" ng-class="{loading: equipments.loading}"></div>
+                    <h2>
+                        <div class="grey-matter max-75">&nbsp;</div>
+                    </h2>
+                    <div class="top">
+                        <div class="image-container">
+                            <div class="grey-matter grey-image">&nbsp;</div>
+                        </div>
+                        <h4 class="vertical-spacing">
+                            <div class="grey-matter">&nbsp;</div>
+                        </h4>
+                        <div class="vertical-spacing-twice summary">
+                            <div class="grey-matter">&nbsp;</div>
+                        </div>
+                        <div class="vertical-spacing-twice summary">
+                            <div class="grey-matter max-60">&nbsp;</div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+    <container template="right-side"></container>
+</div>

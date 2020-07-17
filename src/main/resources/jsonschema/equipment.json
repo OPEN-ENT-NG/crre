@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "summary": {
+      "type": [ "string", "null" ]
+    },
+    "description": {
+      "type": [ "string", "null" ]
+    },
+    "price": {
+      "type": "number"
+    },
+    "id_tax": {
+      "type": "integer"
+    },
+    "image": {
+      "type": [ "string", "null" ]
+    },
+    "id_contract": {
+      "type": "integer"
+    },
+    "status": {
+      "type": "string"
+    },
+    "id_type" : {
+      "type": "integer"
+    },
+    "reference" : {
+      "type": "string"
+    },
+    "catalog_enabled" : {
+      "type": "boolean"
+    },
+    "option_enabled" : {
+      "type": "boolean"
+    },
+    "tags": {
+      "type": "array"
+    },
+    "options":{
+      "type": "array"
+    },
+    "technical_specs": {
+      "type": "array"
+    },
+    "deletedOptions": {
+      "type": ["array", "null" ]
+    },
+    "optionsCreate": {
+      "type": ["array", "null" ]
+    },
+    "optionsUpdate": {
+      "type": ["array", "null" ]
+    },
+    "warranty": {
+      "type": "integer"
+    },
+    "price_editable": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "price",
+    "id_tax",
+    "id_contract",
+    "tags"
+  ]
+}

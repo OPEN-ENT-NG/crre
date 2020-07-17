@@ -1,0 +1,10 @@
+<form ng-submit="deleteCampaigns(campaigns.selected)" >
+    <h4><i18n>lystore.campaign.delete</i18n></h4>
+    <ul>
+        <li ng-repeat="campaign in campaigns.selected">[[campaign.name]]</li>
+    </ul>
+    <div class="right-magnet twelve cell">
+        <input type="button" class="cancel" ng-click="display.lightbox.campaign = false;" i18n-value="cancel" />
+        <input type="submit" class="button"/>
+    </div>
+</form>

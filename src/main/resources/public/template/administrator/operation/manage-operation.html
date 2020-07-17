@@ -1,0 +1,174 @@
+<h1><i18n>lystore.operations</i18n></h1>
+<div class="row">
+    <div class="cell twelve-mobile horizontal-spacing search-pagination four">
+        <div class="row twelve vertical-spacing">
+            <input type="text" class="twelve" ng-keydown="addOperationFilter($event)"
+                   i18n-placeholder="add.a.filter">
+            <i class="search flex-row"></i>
+        </div>
+        <div class="row horizontal-spacing">
+            <div class="select-blocks">
+                <div ng-repeat="filter in operations.filters"
+                     ng-click="dropOperatonFilter(filter)" class="labels-in-ligne">
+                    <div> [[ filter ]]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="right-magnet twelve-mobile">
+        <button workflow="lystore.manager" class="twelve-mobile" ng-click="openOperationForm('create')">
+            <i18n>lystore.operation.add</i18n>
+        </button>
+    </div>
+</div>
+<article class="responsive-table">
+    <table class="twelve">
+        <thead>
+        <tr>
+            <td workflow="lystore.manager" class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-show="operations.all.length > 0"
+                           ng-change="switchAllOperations()"
+                           ng-model="allOperationsSelected">
+                    <span></span>
+                </label>
+            </td>
+            <td ng-click="sort.operation.type = 'label.label';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.operation.name</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'label.label' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'label.label' && sort.operation.reverse"></i>
+            </td>
+            <td ng-click="sort.operation.type = 'amount';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.amountTTC</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'amount' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'amount' && sort.operation.reverse"></i>
+            </td>
+
+            <td ng-click="sort.operation.type = 'nb_orders';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.operation.number.structure</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'nb_orders' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'nb_orders' && sort.operation.reverse"></i>
+            </td>
+
+            <td ng-click="sort.operation.type = 'bc_numbers';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.operation.bc_numbers</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'bc_numbers' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'bc_numbers' && sort.operation.reverse"></i>
+            </td>
+            <td ng-click="sort.operation.type = 'date_cp';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.instruction.date_cp</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'date_cp' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'date_cp' && sort.operation.reverse"></i>
+            </td>
+            <td ng-click="sort.operation.type = 'date_operation';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.instruction.date_operation</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'date_operation' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'date_operation' && sort.operation.reverse"></i>
+            </td>
+            <td ng-click="sort.operation.type = 'instruction.cp_number';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.instruction.official.number</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'instruction.cp_number' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'instruction.cp_number' && sort.operation.reverse"></i>
+            </td>
+            <td ng-click="sort.operation.type = 'contracts';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.operation.contracts</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'contracts' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'contracts' && sort.operation.reverse"></i>
+            </td>
+
+            <td ng-click="sort.operation.type = 'programs';
+                    sort.operation.reverse = !sort.operation.reverse">
+                <i18n>lystore.operation.programs</i18n>
+                <i class="up-open" ng-show="sort.operation.type === 'programs' && !sort.operation.reverse"></i>
+                <i class="down-open" ng-show="sort.operation.type === 'programs' && sort.operation.reverse"></i>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="operation in operations.all | orderBy:sort.operation.type:sort.operation.reverse"
+            ng-class="{ disableRow: operation.status === 'false' }">
+            <td workflow="lystore.manager" class="table-selector" >
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="operation.selected">
+                    <span></span>
+                </label>
+            </td>
+            <td >[[operation.label.label]]</td>
+            <td ><span ng-bind="operation.amount | currency"></span></td>
+            <td >[[operation.nb_orders]]</td>
+            <td >[[operation.bc_numbers || '-']]</td>
+            <td >[[formatDate(operation.date_cp)]]</td>
+            <td >[[formatDate(operation.date_operation)]]</td>
+            <td >[[operation.instruction.cp_number]]</td>
+            <td tooltip=[[formatArrayToolTip(operation.contracts)]] >
+                [[getFirstElement(operation.contracts)]]
+            </td>
+            <td tooltip=[[formatArrayToolTip(operation.programs)]] >
+                [[getFirstElement(operation.programs)]]
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</article>
+
+<section class="toggle-buttons" ng-class="{ hide:operations.selected.length === 0 }">
+    <div class="toggle">
+        <div class="row">
+            <button
+                    ng-click="openOperationForm('edit')"
+                    ng-show="operations.selected.length === 1"
+            >
+                <i18n>modify</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+            >
+                <i18n>lystore.orders.valid.certificates.export</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+            >
+                <i18n>lystore.orders.valid.order.export</i18n>
+            </button>
+            <button
+                ng-disabled="true"
+                ng-click=""
+                ng-show="false"
+        >
+            <i18n>lystore.orders.valid.structure.list.export</i18n>
+        </button>
+            <button
+                    ng-click="openOrders()"
+                    ng-show="operations.selected[0].nb_orders !== 0 && operations.selected.length === 1"
+            >
+                <i18n>lystore.list.equipment</i18n>
+            </button>
+            <button
+                    ng-click="openLightboxDeleteOperation()"
+            >
+                <i18n>delete</i18n>
+            </button>
+            <button
+                    ng-disabled="true"
+                    ng-click=""
+                    ng-show="false"
+            >
+                <i18n>lystore.order.valided.generateBC</i18n>
+            </button>
+        </div>
+    </div>
+</section>
+

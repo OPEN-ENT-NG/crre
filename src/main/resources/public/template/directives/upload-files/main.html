@@ -1,0 +1,68 @@
+<div class="upload-files">
+    <div class="row">
+        <div class="drop-zone import-files" ng-hide="upload.loading">
+            <article class="drop flex-row align-center">
+                <i class="two cloud-upload"></i>
+                <div class="ten help">
+                    <em>
+                        <i18n>medialibrary.drop.help2</i18n>
+                    </em>
+                </div>
+            </article>
+            <article class="default flex-row align-center absolute-position">
+                <div class="three select-file">
+                    <div class="hidden-content">
+                        <input type="file" class="file-input" multiple files-input-change="importFiles()"
+                               ng-model="files"/>
+                    </div>
+                    <button class="file-button no-margin" translate content="library.file.choose"></button>
+                </div>
+                <i class="two cloud-upload"></i>
+                <div class="seven help">
+                    <em>
+                        <i18n>medialibrary.drop.help</i18n>
+                    </em>
+                </div>
+            </article>
+
+        </div>
+    </div>
+    <div class="split-screen" ng-show="upload.loading" ng-class="{ split: display.editedDocument !== undefined }">
+        <div class="loading-list drop-zone">
+            <ul>
+                <li ng-repeat="doc in upload.documents"
+                    ng-class=" {
+            'image-file': doc.isEditableImage && doc.status === 'loaded',
+            'loading': doc.status === 'loading',
+            selected: doc === display.editedDocument
+            }"
+                >
+                    <div class="icon">
+                        <i tooltip-check="doc.isEditableImage && doc.status === 'loaded'"
+                           tooltip="medialibrary.editImage.tooltip" class="edit"
+                           ng-if="doc.isEditableImage && doc.status === 'loaded'"></i>
+                    </div>
+                    <div class="title">[[doc.name || doc.title]]</div>
+                    <div class="status-infos">
+                    <span class="small-text horizontal-margin">
+                        [[doc.size]]
+                    </span>
+                        <i ng-class="{
+                        loading: doc.status === 'loading',
+                        loaded: doc.status === 'loaded',
+                        failed: doc.status === 'failed'
+                    }"></i>
+                    </div>
+                    <i class="close" ng-if="doc.status === 'loaded'" ng-click="delete(doc)"></i>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row" ng-if="end">
+        <button class="right-magnet" ng-click="endUpload()" type="button">
+            <i18n>lystore.end</i18n>
+        </button>
+    </div>
+
+
+</div>
