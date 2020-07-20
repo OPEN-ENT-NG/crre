@@ -10,13 +10,11 @@ import {
     Equipment,
     Equipments,
     EquipmentTypes,
-    Exercises,
     Exports,
-    Instructions,
-    labels,
+    //labels,
     Logs,
     Notification,
-    Operations, Order,
+    Order,
     OrderClient,
     OrderRegion,
     OrdersClient, OrderUtils,
@@ -56,7 +54,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.campaign = new Campaign();
         $scope.structureGroups = new StructureGroups();
         $scope.taxes = new Taxes();
-        $scope.operations= new Operations();
         $scope.logs = new Logs();
         $scope.baskets = new Baskets();
         $scope.ordersClient = new OrdersClient();
@@ -64,8 +61,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.orderRegion = new OrderRegion();
         $scope.displayedOrders = new OrdersClient();
         $scope.equipmentTypes = new EquipmentTypes();
-        $scope.instructions = new Instructions();
-        $scope.exercises = new Exercises();
         $scope.exports = new Exports([]);
         $scope.ub = new Userbook();
         $scope.equipments.eventer.on('loading::true', $scope.$apply);
@@ -337,49 +332,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 }
                 Utils.safeApply($scope);
             },
-            instruction: async () =>{
-                await $scope.initInstructions();
-                template.open('administrator-main', 'administrator/instruction/instruction-container');
-                template.open('instruction-main', 'administrator/instruction/manage-instruction');
-                Utils.safeApply($scope);
-            },
-            operation: async () =>{
-                $scope.loadingArray = true;
-                await $scope.initOperation();
-                template.open('administrator-main', 'administrator/operation/operation-container');
-                template.open('operation-main', 'administrator/operation/manage-operation');
-                $scope.loadingArray = false;
-                Utils.safeApply($scope);
-            },
-
-            operationOrders: async (params) =>{
-                $scope.loadingArray = true;
-                template.close('administrator-main');
-                template.close('operation-main');
-                $scope.operations = new Operations();
-                $scope.structures = new Structures();
-                await $scope.structures.sync();
-                await $scope.operations.sync();
-                $scope.operation = await $scope.operations.all.find(operationFound => operationFound.id.toString() === params.idOperation.toString());
-                $scope.ordersClientByOperation = await $scope.operation.getOrders($scope.structures.all);
-                template.open('administrator-main', 'administrator/operation/operation-container');
-                template.open('operation-main', 'administrator/operation/operation-orders-list');
-                $scope.loadingArray = false;
-                Utils.safeApply($scope);
-            },
             createRegionOrder: async () => {
                 $scope.loadingArray = true;
                 await  $scope.campaigns.sync();
-                await  $scope.operations.sync();
-                let operations = [];
-                $scope.operations.all.map((operation,index)=>{
-                    if(operation.status == 'true' && !operation.instruction) {
-                        operations.push(operation);
-                    }
-                });
-
                 await $scope.contractTypes.sync();
-                $scope.operations.all = operations;
                 await $scope.structures.sync();
                 template.open('administrator-main', 'administrator/orderRegion/order-region-create-form');
                 $scope.loadingArray = false;

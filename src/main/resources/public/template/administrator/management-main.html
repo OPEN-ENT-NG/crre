@@ -1,7 +1,5 @@
 <nav class="vertical twelve-mobile mobile-navigation" side-nav>
     <ul>
-        <li><a href="#/operation"><i18n>lystore.operations</i18n></a></li>
-        <li><a href="#/instruction"><i18n>lystore.instructions</i18n></a></li>
         <li><a href="#/order/waiting"><i18n>lystore.orders.validations.waiting</i18n></a></li>
         <li><a href="#/order/valid"><i18n>lystore.order.form.generate</i18n></a></li>
         <li><a href="#/order/sent"><i18n>lystore.end.expedited.requests</i18n></a></li>
@@ -19,8 +17,6 @@
 <div class="twelve tabs vertical-spacing heading-tabs zero-mobile">
     <header class="horizontal-spacing">
         <drop-down-menu title="[[lang.translate('lystore.orders')]]">
-            <opt ng-click="redirectTo('/operation')"><i18n>lystore.operations</i18n></opt>
-            <opt ng-click="redirectTo('/instruction')"><i18n>lystore.instructions</i18n></opt>
             <opt ng-click="redirectTo('/order/waiting')"><i18n>lystore.orders.validations.waiting</i18n></opt>
             <opt ng-click="redirectTo('/order/valid')"><i18n>lystore.order.form.generate</i18n></opt>
             <opt ng-click="redirectTo('/order/sent')"><i18n>lystore.end.expedited.requests</i18n></opt>

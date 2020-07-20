@@ -67,8 +67,6 @@ public class Lystore extends BaseServer {
         addController(new TitleController(vertx, eb));
         addController(new GradeController());
         addController(new ProjectController());
-        addController(new OperationController());
-        addController(new InstructionController(storage));
         addController(new OrderRegionController());
         addController(new ExportController(storage));
         CONFIG = config;

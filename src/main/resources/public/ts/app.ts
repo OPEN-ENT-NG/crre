@@ -88,15 +88,6 @@ routes.define(($routeProvider) => {
             .when('/order/region/create', {
                 action: 'createRegionOrder'
             })
-            .when('/operation',{
-                action:'operation'
-            })
-            .when('/instruction', {
-                action: 'instruction'
-            })
-            .when('/operation/order/:idOperation', {
-                action: 'operationOrders'
-            })
             .when('/exports', {
                 action: 'exportList'
             });
