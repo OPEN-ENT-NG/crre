@@ -15,8 +15,6 @@ export class Contract implements Selectable {
     id_supplier: number;
     id_agent: number;
     end_date: string;
-    renewal_end: string;
-    supplier_display_name: string;
     file: boolean;
 
     selected: false;
@@ -73,26 +71,26 @@ export class Contract implements Selectable {
 
     async create (): Promise<void> {
         try {
-            let res = await http.post(`/lystore/contract`, this.toJson());
+            let res = await http.post(`/crre/contract`, this.toJson());
             this.id = res.data.id;
         } catch (e) {
-            notify.error('lystore.contract.create.err');
+            notify.error('crre.contract.create.err');
         }
     }
 
     async update (): Promise<void> {
         try {
-            await http.put(`/lystore/contract/${this.id}`, this.toJson());
+            await http.put(`/crre/contract/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.contract.update.err');
+            notify.error('crre.contract.update.err');
         }
     }
 
     async delete (): Promise<void> {
         try {
-            await http.delete(`/lystore/contract?id=${this.id}`);
+            await http.delete(`/crre/contract?id=${this.id}`);
         } catch (e) {
-            notify.error('lystore.contract.delete.err');
+            notify.error('crre.contract.delete.err');
         }
     }
     syncBooleans = async () => {
@@ -108,7 +106,7 @@ export class Contracts extends Selection<Contract> {
 
     constructor () {
         super([]);
-        this.provider = new Provider(`/lystore/contracts`, Contract);
+        this.provider = new Provider(`/crre/contracts`, Contract);
         this.mapping = {};
     }
 
@@ -123,9 +121,9 @@ export class Contracts extends Selection<Contract> {
             let filter = '';
             contracts.map((contract) => filter += `id=${contract.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/contract?${filter}`);
+            await http.delete(`/crre/contract?${filter}`);
         } catch (e) {
-            notify.error('lystore.contract.delete.err');
+            notify.error('crre.contract.delete.err');
         }
     }
 

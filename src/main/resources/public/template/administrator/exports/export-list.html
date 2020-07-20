@@ -1,6 +1,6 @@
 <div class="row" ng-controller="exportCtrl">
     <h1>
-        <i18n>lystore.list.export.title</i18n>
+        <i18n>crre.list.export.title</i18n>
     </h1>
     <div class="row">
         <div class="cell twelve-mobile horizontal-spacing search-pagination four">
@@ -28,14 +28,14 @@
     <article class="responsive-table ">
         <div>
             <h2>
-                <i18n>lystore.list.export.text</i18n>
+                <i18n>crre.list.export.text</i18n>
             </h2>
         </div>
         <div class="vertical-array-scroll">
         <table class="twelve">
             <thead>
             <tr>
-                <td workflow="lystore.manager" class="table-selector">
+                <td workflow="crre.manager" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox"
                                ng-show="exports.all.length > 0"
@@ -46,31 +46,31 @@
                 </td>
                 <td ng-click="sort.export.type = 'filename';
                     sort.export.reverse = !sort.export.reverse">
-                    <i18n>lystore.nameFile</i18n>
+                    <i18n>crre.nameFile</i18n>
                     <i class="up-open" ng-show="sort.export.type === 'filename' && !sort.export.reverse"></i>
                     <i class="down-open" ng-show="sort.export.type === 'filename' && sort.export.reverse"></i>
                 </td>
                 <td ng-click="sort.export.type = 'created';
                     sort.export.reverse = !sort.export.reverse">
-                    <i18n>lystore.creation.date</i18n>
+                    <i18n>crre.creation.date</i18n>
                     <i class="up-open" ng-show="sort.export.type === 'created' && !sort.export.reverse"></i>
                     <i class="down-open" ng-show="sort.export.type === 'created' && sort.export.reverse"></i>
                 </td>
                 <td ng-click="sort.export.type = 'object_name';
                     sort.export.reverse = !sort.export.reverse">
-                    <i18n>lystore.export.object.name</i18n>
+                    <i18n>crre.export.object.name</i18n>
                     <i class="up-open" ng-show="sort.export.type === 'object_name' && !sort.export.reverse"></i>
                     <i class="down-open" ng-show="sort.export.type === 'object_name' && sort.export.reverse"></i>
                 </td>
                 <td ng-click="sort.export.type = 'typeObject';
                     sort.export.reverse = !sort.export.reverse">
-                    <i18n>lystore.export.type</i18n>
+                    <i18n>crre.export.type</i18n>
                     <i class="up-open" ng-show="sort.export.type === 'typeObject' && !sort.export.reverse"></i>
                     <i class="down-open" ng-show="sort.export.type === 'typeObject' && sort.export.reverse"></i>
                 </td>
                 <td ng-click="sort.export.type = 'extension';
                     sort.export.reverse = !sort.export.reverse">
-                    <i18n>lystore.export.extension</i18n>
+                    <i18n>crre.export.extension</i18n>
                     <i class="up-open" ng-show="sort.export.type === 'extension' && !sort.export.reverse"></i>
                     <i class="down-open" ng-show="sort.export.type === 'extension' && sort.export.reverse"></i>
                 </td>
@@ -84,7 +84,7 @@
                     class=[[export.classStatus]]
                     tooltip=[[export.tooltip]]
             >
-                <td workflow="lystore.manager" class="table-selector" >
+                <td workflow="crre.manager" class="table-selector" >
                     <label class="checkbox">
                         <input type="checkbox" ng-model="export.selected">
                         <span></span>

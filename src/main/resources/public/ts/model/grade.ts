@@ -28,7 +28,7 @@ export class Grades extends Selection<Grade> {
 
     async sync(): Promise<void> {
         {
-            let grades = await http.get(`/lystore/grades`);
+            let grades = await http.get(`/crre/grades`);
             this.all = Mix.castArrayAs(Title, grades.data);
 
         }

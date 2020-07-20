@@ -258,9 +258,9 @@ export const configurationController = ng.controller('configurationController',
             $scope.importer.eventer.on('loading::true', () => $scope.$apply());
             $scope.importer.eventer.on('loading::false', () => {
                 if ($scope.importer.err) {
-                    toasts.warning('lystore.equipments.import.error');
+                    toasts.warning('crre.equipments.import.error');
                 } else {
-                    toasts.confirm('lystore.equipments.import.success');
+                    toasts.confirm('crre.equipments.import.success');
                 }
                 $scope.$apply();
             });
@@ -585,7 +585,7 @@ export const configurationController = ng.controller('configurationController',
             await $scope.equipments.setStatus(status);
             await $scope.equipments.sync();
             $scope.allEquipmentSelected = false;
-            toasts.confirm('lystore.status.update.ok');
+            toasts.confirm('crre.status.update.ok');
             Utils.safeApply($scope);
         };
 

@@ -43,27 +43,27 @@ export class StructureGroup implements Selectable {
 
     async create () {
         try {
-            await http.post(`/lystore/structure/group`, this.toJson());
+            await http.post(`/crre/structure/group`, this.toJson());
         } catch (e) {
-            notify.error('lystore.structureGroup.create.err');
+            notify.error('crre.structureGroup.create.err');
         }
     }
 
     async update () {
         try {
-            await http.put(`/lystore/structure/group/${this.id}`, this.toJson());
+            await http.put(`/crre/structure/group/${this.id}`, this.toJson());
 
         } catch (e) {
-            notify.error('lystore.structureGroup.update.err');
+            notify.error('crre.structureGroup.update.err');
         }
     }
 
     async delete () {
         try {
             let id = `id=${this.id}`;
-            await http.delete(`/lystore/structure/group?${id}`);
+            await http.delete(`/crre/structure/group?${id}`);
         } catch (e) {
-            notify.error('lystore.structureGroup.delete.err');
+            notify.error('crre.structureGroup.delete.err');
         }
     }
 
@@ -106,7 +106,7 @@ export class StructureGroupImporter {
         formData.append('file', this.files[0], this.files[0].name);
         let response;
         try {
-            response = await http.post(`/lystore/structure/group/import`,
+            response = await http.post(`/crre/structure/group/import`,
                 formData, {'headers': {'Content-Type': 'multipart/form-data'}});
         } catch (err) {
             throw err.response.data;
@@ -122,7 +122,7 @@ export class StructureGroups extends Selection<StructureGroup> {
     }
 
     async syncByCampaign(idCampaign: number) {
-        let {data} = await http.get(`/lystore/structure/groups/campaign/${idCampaign}`);
+        let {data} = await http.get(`/crre/structure/groups/campaign/${idCampaign}`);
         this.all = Mix.castArrayAs(StructureGroup, data);
         this.all.map((structureGroup) => {
             structureGroup.structures = JSON.parse(structureGroup.structures.toString());
@@ -133,14 +133,14 @@ export class StructureGroups extends Selection<StructureGroup> {
             let filter = '';
             structureGroups.map((structureGroup) => filter += `ìd=${structureGroup.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/structure/group?${filter}`);
+            await http.delete(`/crre/structure/group?${filter}`);
         } catch (e) {
-            notify.error('lystore.structureGroup.sync.err');
+            notify.error('crre.structureGroup.sync.err');
         }
     }
 
     async sync() {
-        let {data} = await http.get(`/lystore/structure/groups`);
+        let {data} = await http.get(`/crre/structure/groups`);
         this.all = Mix.castArrayAs(StructureGroup, data);
         this.all.map((structureGroup) => {
             structureGroup.structures = JSON.parse(structureGroup.structures.toString());

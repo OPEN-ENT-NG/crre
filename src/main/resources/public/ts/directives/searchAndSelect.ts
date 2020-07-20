@@ -15,7 +15,7 @@ export const searchAndSelect = ng.directive('searchAndSelect', function() {
             ngChange: '&',
             placeholder:'@'
         },
-        templateUrl: '/lystore/public/template/directives/search-and-select/main.html',
+        templateUrl: '/crre/public/template/directives/search-and-select/main.html',
         controller: ['$scope', '$filter', '$timeout', function($scope, $filter, $timeout) {
             /* Search input */
             $scope.search = {

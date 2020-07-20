@@ -1,9 +1,9 @@
 <div ng-controller="orderPersonnelController">
     <div ng-show="ordersClient.all.length > 0" class="basket-list">
         <h1>
-            <span ng-if="campaign.purse_enabled"><i18n>lystore.orderEquipment.manage.title</i18n></span>
-            <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestsEquipment.manage.title</i18n></span>
-            <button class="right-magnet" ng-click="exportCSV()"><i18n>lystore.orderEquipment.manage.exportCSV</i18n></button>
+            <span ng-if="campaign.purse_enabled"><i18n>crre.orderEquipment.manage.title</i18n></span>
+            <span ng-if="!campaign.purse_enabled"><i18n>crre.requestsEquipment.manage.title</i18n></span>
+            <button class="right-magnet" ng-click="exportCSV()"><i18n>crre.orderEquipment.manage.exportCSV</i18n></button>
         </h1>
         <div ng-if="campaign.priority_enabled">
             <tabs menus="menu" ng-model="display.list" ng-change="switchView(display.list)"></tabs>
@@ -11,7 +11,7 @@
         <container template="order-list"></container>
     </div>
     <article ng-show = "ordersClient.all.length === 0 " class="centered-text row">
-        <p><i18n>lystore.orderEquipment.manage.empty.order</i18n></p>
+        <p><i18n>crre.orderEquipment.manage.empty.order</i18n></p>
     </article>
     <lightbox show="display.lightbox.deleteOrder" on-close="cancelOrderEquipmentDelete()">
         <container template="orderClient.delete"></container>

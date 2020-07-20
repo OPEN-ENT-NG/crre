@@ -83,26 +83,26 @@ export class Equipment implements Selectable {
 
     async create () {
         try {
-            await http.post(`/lystore/equipment`, this.toJson());
+            await http.post(`/crre/equipment`, this.toJson());
         } catch (e) {
-            notify.error('lystore.equipment.create.err');
+            notify.error('crre.equipment.create.err');
         }
     }
 
     async update () {
         try {
-            await http.put(`/lystore/equipment/${this.id}`, this.toJson());
+            await http.put(`/crre/equipment/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.equipment.update.err');
+            notify.error('crre.equipment.update.err');
             throw e;
         }
     }
 
     async delete () {
         try {
-            await http.delete(`/lystore/equipment/${this.id}`);
+            await http.delete(`/crre/equipment/${this.id}`);
         } catch (e) {
-            notify.error('lystore.equipment.delete.err');
+            notify.error('crre.equipment.delete.err');
         }
     }
 
@@ -110,7 +110,7 @@ export class Equipment implements Selectable {
         this.loading = true;
 
         try {
-            let { data } =  await http.get(`/lystore/equipment/${id}`);
+            let { data } =  await http.get(`/crre/equipment/${id}`);
             Mix.extend(this, data[0]);
             this.price = parseFloat(this.price.toString());
             this.tax_amount = parseFloat(this.tax_amount.toString());
@@ -125,7 +125,7 @@ export class Equipment implements Selectable {
                 : this.technical_specs;
         } catch (e) {
             console.error(e);
-            notify.error('lystore.equipment.sync.err');
+            notify.error('crre.equipment.sync.err');
         }
         finally {
             this.loading = false;
@@ -193,16 +193,16 @@ export class Equipments extends Selection<Equipment> {
             let filter = '';
             equipments.map((equipment) => filter += `id=${equipment.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/equipment?${filter}`);
+            await http.delete(`/crre/equipment?${filter}`);
         } catch (e) {
-            notify.error('lystore.equipment.delete.err');
+            notify.error('crre.equipment.delete.err');
         }
     }
 
     async getPageCount(idCampaign?: number, idStructure?: string) {
         let filter: string = idCampaign && idStructure ? `?idCampaign=${idCampaign}&idStructure=${idStructure}` : '?';
         filter += `${Utils.formatGetParameters({q: this.sort.filters})}`;
-        const {data} = await http.get(`/lystore/equipments/pages/count${filter}`);
+        const {data} = await http.get(`/crre/equipments/pages/count${filter}`);
         this.page_count = data.count;
     }
 
@@ -212,8 +212,8 @@ export class Equipments extends Selection<Equipment> {
             await this.getPageCount(idCampaign, idStructure);
             const queriesFilter = Utils.formatGetParameters({q: filter.filters});
             const uri: string = idCampaign
-                ? `/lystore/equipments/campaign/${idCampaign}?idStructure=${idStructure}&page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`
-                : `/lystore/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+                ? `/crre/equipments/campaign/${idCampaign}?idStructure=${idStructure}&page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`
+                : `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
             let {data} = await http.get(uri);
             this.all = Mix.castArrayAs(Equipment, data);
             this.all.map((equipment) => {
@@ -231,7 +231,7 @@ export class Equipments extends Selection<Equipment> {
             });
 
         } catch (e) {
-            notify.error('lystore.equipment.sync.err');
+            notify.error('crre.equipment.sync.err');
             throw e;
         } finally {
             this.loading = false;
@@ -241,8 +241,8 @@ export class Equipments extends Selection<Equipment> {
     async syncAll(idCampaign: number, idStructure?: string) {
         try {
             const uri: string = idStructure
-                ? `/lystore/equipments/admin/${idCampaign}?idStructure=${idStructure}`
-                : `/lystore/equipments/admin/${idCampaign}`;
+                ? `/crre/equipments/admin/${idCampaign}?idStructure=${idStructure}`
+                : `/crre/equipments/admin/${idCampaign}`;
             let {data} = await http.get(uri);
             this.all = Mix.castArrayAs(Equipment, data);
             this.all.map((equipment) => {
@@ -261,7 +261,7 @@ export class Equipments extends Selection<Equipment> {
             });
 
         } catch (e) {
-            notify.error('lystore.equipment.sync.err');
+            notify.error('crre.equipment.sync.err');
             throw e;
 
         }
@@ -287,9 +287,9 @@ export class Equipments extends Selection<Equipment> {
     async setStatus (status: string): Promise<void> {
         try {
             let params = Utils.formatKeyToParameter(this.selected, 'id');
-            await http.put(`/lystore/equipments/${status}?${params}`);
+            await http.put(`/crre/equipments/${status}?${params}`);
         } catch (e) {
-            notify.error('lystore.equipment.update.err');
+            notify.error('crre.equipment.update.err');
             throw e;
         }
     }
@@ -297,10 +297,10 @@ export class Equipments extends Selection<Equipment> {
     async search(text: String, fieldName: String) {
         try {
             if ((text.trim() === '' || !text) || (fieldName.trim() === '' || !fieldName)) return;
-            const {data} = await http.get(`/lystore/equipments/search?q=${text}&field=${fieldName}`);
+            const {data} = await http.get(`/crre/equipments/search?q=${text}&field=${fieldName}`);
             return Mix.castArrayAs(Equipment, data);
         } catch (err) {
-            notify.error('lystore.option.search.err');
+            notify.error('crre.option.search.err');
             throw err;
         }
     }
@@ -384,12 +384,12 @@ export class EquipmentImporter {
             formData.append('file', this.files[0], this.files[0].name);
             let response;
             try {
-                response = await http.post(`/lystore/equipments/contract/${this.id_contract}/import`,
+                response = await http.post(`/crre/equipments/contract/${this.id_contract}/import`,
                     formData, {'headers': {'Content-Type': 'multipart/form-data'}});
                 return response;
             } catch (err) {
                 throw err.response.data;
             }
-        } else throw new Error("lystore.equipment.import.contract");
+        } else throw new Error("crre.equipment.import.contract");
     }
 }

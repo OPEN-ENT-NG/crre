@@ -53,64 +53,64 @@ export class Basket implements Selectable {
 
     async create () {
         try {
-            return await  http.post(`/lystore/basket/campaign/${this.id_campaign}`, this.toJson());
+            return await  http.post(`/crre/basket/campaign/${this.id_campaign}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.basket.create.err');
+            notify.error('crre.basket.create.err');
         }
     }
 
     async update () {
         try {
-            http.put(`/lystore/basket/${this.id}`, this.toJson());
+            http.put(`/crre/basket/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }
     async updateAmount () {
         try {
-            http.put(`/lystore/basket/${this.id}/amount`, this.toJson());
+            http.put(`/crre/basket/${this.id}/amount`, this.toJson());
         } catch (e) {
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }
     async updateComment(){
         try{
-            http.put(`/lystore/basket/${this.id}/comment`, { comment: this.comment });
+            http.put(`/crre/basket/${this.id}/comment`, { comment: this.comment });
         }catch (e){
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }
 
     async updatePriceProposal() {
         try {
-            http.put(`/lystore/basket/${this.id}/priceProposal`, {price_proposal: this.price_proposal});
+            http.put(`/crre/basket/${this.id}/priceProposal`, {price_proposal: this.price_proposal});
         } catch (e) {
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }
 
     async delete () {
         try {
-            return await  http.delete(`/lystore/basket/${this.id}/campaign/${this.id_campaign}`);
+            return await  http.delete(`/crre/basket/${this.id}/campaign/${this.id_campaign}`);
         } catch (e) {
-            notify.error('lystore.basket.delete.err');
+            notify.error('crre.basket.delete.err');
         }
     }
 
     async deleteDocument(file) {
         try {
-            await http.delete(`/lystore/basket/${this.id}/file/${file.id}`);
+            await http.delete(`/crre/basket/${this.id}/file/${file.id}`);
         } catch (err) {
             throw err;
         }
     }
 
     downloadFile(file) {
-        window.open(`/lystore/basket/${this.id}/file/${file.id}`);
+        window.open(`/crre/basket/${this.id}/file/${file.id}`);
     }
 }
 
@@ -123,7 +123,7 @@ export class Baskets extends Selection<Basket> {
 
     async sync (idCampaign: number , idStructure: string ) {
         try {
-            let { data } = await http.get(`/lystore/basket/${idCampaign}/${idStructure}`);
+            let { data } = await http.get(`/crre/basket/${idCampaign}/${idStructure}`);
             this.all = Mix.castArrayAs(Basket, data);
             this.all.map((basket) => {
                 basket.equipment = Mix.castAs(Equipment, JSON.parse(basket.equipment.toString())[0]);
@@ -135,7 +135,7 @@ export class Baskets extends Selection<Basket> {
                 basket.equipment.options.map((option) => option.selected = true);
             });
         } catch (e) {
-            notify.error('lystore.basket.sync.err');
+            notify.error('crre.basket.sync.err');
         }
     }
 
@@ -160,9 +160,9 @@ export class Baskets extends Selection<Basket> {
                 baskets: baskets
             };
 
-            return await http.post(`/lystore/baskets/to/orders/${idCampaign}`, data);
+            return await http.post(`/crre/baskets/to/orders/${idCampaign}`, data);
         } catch (e) {
-            notify.error('lystore.order.create.err');
+            notify.error('crre.order.create.err');
         }
     }
 }

@@ -4,19 +4,19 @@
             <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><i18n>total</i18n> :
                 <span class="color-orange" ng-bind="calculatePriceOfEquipmentsProposal(baskets, 2)| currency"></span>
             </h3>
-            <input type="button" ng-click="takeClientProject(baskets)" i18n-value="lystore.take.order"
+            <input type="button" ng-click="takeClientProject(baskets)" i18n-value="crre.take.order"
                    ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
                    ng-if="campaign.purse_enabled"/>
 
-            <input type="button" ng-click="takeClientProject(baskets)" i18n-value="lystore.take.request"
+            <input type="button" ng-click="takeClientProject(baskets)" i18n-value="crre.take.request"
                    ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
                    ng-if="!campaign.purse_enabled"/>
         </div>
         <div class="basket-list">
             <div ng-repeat="basket in baskets.all track by $index" class="row">
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="basket.equipment.status !== 'AVAILABLE'">
-                    <i18n ng-show="basket.equipment.status === 'UNAVAILABLE'">lystore.UNAVAILABLE</i18n>
-                    <i18n ng-show="basket.equipment.status === 'OUT_OF_STOCK'">lystore.OUT_OF_STOCK</i18n></h1>
+                    <i18n ng-show="basket.equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
+                    <i18n ng-show="basket.equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n></h1>
                 <article class="basket-item twelve cell"
                          ng-class="{ openedOptions: display.equipmentOption[$index], disabled: basket.equipment.status !== 'AVAILABLE' }">
                     <div class="cell width-40">
@@ -43,15 +43,15 @@
                                        ng-show="basket.options.length > 0">
                                         [[lang.translate(
                                         display.equipmentOption[$index]
-                                        ? 'lystore.options.hide'
-                                        :'lystore.options.show'
+                                        ? 'crre.options.hide'
+                                        :'crre.options.show'
                                         )]]
                                     </a>
                                 </div>
                             </div>
                             <div class="three cell text-right">
                                 <div class="vertical-spacing-twice price-field">
-                                    <span ng-if="isProposed(basket) || basket.display_price_editable"> <i18n>lystore.priceProposal</i18n> :</span>
+                                    <span ng-if="isProposed(basket) || basket.display_price_editable"> <i18n>crre.priceProposal</i18n> :</span>
                                     <span ng-if="!isProposed(basket) && !basket.display_price_editable"><i18n>price</i18n> :</span>
                                     <input type="number"
                                            class="number-input"
@@ -64,15 +64,15 @@
 
                                     <span ng-bind="priceDisplay(basket) | currency" class="price-label"
                                           ng-if="!basket.display_price_editable"></span>
-                                    <i class="notes-icon" tooltip="lystore.price.edit"
+                                    <i class="notes-icon" tooltip="crre.price.edit"
                                        ng-show="basket.equipment.price_editable && !basket.display_price_editable"
                                        ng-click="displayPriceEdition(basket)"></i>
-                                    <i class="refused-status" tooltip="lystore.price.reset"
+                                    <i class="refused-status" tooltip="crre.price.reset"
                                        ng-show="basket.display_price_editable"
                                        ng-click="resetPriceProposal(basket)"></i>
                                 </div>
                                 <div class="vertical-spacing-twice">
-                                    <i18n>lystore.quantity</i18n>
+                                    <i18n>crre.quantity</i18n>
                                     :
                                     <input type="number" step="1" min="0" ng-model="basket.amount"
                                            class="number-input"
@@ -86,7 +86,7 @@
                         <div ng-show="basket.options.length > 0 && display.equipmentOption[$index]">
                             <div class="twelve row">
                                 <h4 class="cell">
-                                    <i18n>lystore.options</i18n>
+                                    <i18n>crre.options</i18n>
                                     :
                                 </h4>
                             </div>
@@ -97,7 +97,7 @@
                                         <i18n>price</i18n>
                                     </td>
                                     <td>
-                                        <i18n>lystore.quantity</i18n>
+                                        <i18n>crre.quantity</i18n>
                                     </td>
                                     <td>
                                         <i18n>price</i18n>
@@ -118,15 +118,15 @@
                         <div class="row twelve vertical-spacing-four" ng-if="basket.equipment.file === true">
                             <div class="twelve row">
                                 <h4 class="cell">
-                                    <i18n>lystore.basket.file.name</i18n>
+                                    <i18n>crre.basket.file.name</i18n>
                                     :
                                 </h4>
                                 <button class="right-magnet" ng-click="openAddDocumentsLightbox(basket)">
-                                    <i18n>lystore.basket.add-file</i18n>
+                                    <i18n>crre.basket.add-file</i18n>
                                 </button>
                             </div>
                             <p ng-if="basket.files.length === 0">
-                                <i18n>lystore.basket.no-file</i18n>
+                                <i18n>crre.basket.no-file</i18n>
                             </p>
                             <div class="row basket-file-list"
                                  ng-if="basket.files.length > 0">
@@ -149,16 +149,16 @@
                                 </h4>
                                 <button class="right-magnet" ng-if="basket.comment === null || basket.comment===''"
                                         ng-click="basket.commentOnEdition = true">
-                                    <i18n>lystore.basket.add-comment</i18n>
+                                    <i18n>crre.basket.add-comment</i18n>
                                 </button>
                                 <button class="right-magnet" ng-if="basket.comment && basket.comment!=='' && basket.commentOnEdition === false"
                                         ng-click="basket.commentOnEdition = true">
-                                    <i18n>lystore.update.comment</i18n>
+                                    <i18n>crre.update.comment</i18n>
                                 </button>
                             </div>
                             <div class="row" ng-init="basket.commentOnEdition = false">
                                 <p ng-if="(basket.comment === null || basket.comment.trim() === '') && basket.commentOnEdition === false">
-                                    <i18n>lystore.basket.no-comment</i18n>
+                                    <i18n>crre.basket.no-comment</i18n>
                                 </p>
                                 <p ng-if="basket.comment !== null && basket.commentOnEdition === false"
                                    ng-click="basket.commentOnEdition = true" tooltip="Modifier le commentaire">
@@ -186,10 +186,10 @@
     </div>
     <div ng-show="baskets.all.length === 0" class=" row cell centered empty-basket-message">
         <div class="cell twelve-mobile centered-text">
-            <img src="/lystore/public/img/basket.png" />
+            <img src="/crre/public/img/basket.png" />
         </div>
         <div class="cell centered-text four twelve-mobile" >
-            <h4><i18n>lystore.info.empty.basket</i18n></h4>
+            <h4><i18n>crre.info.empty.basket</i18n></h4>
         </div>
     </div>
     <lightbox show="display.lightbox.deleteBasket" on-close="cancelBasketDelete()">
@@ -206,6 +206,6 @@
 
     <lightbox show="display.lightbox.addDocuments" on-close="display.lightbox.addDocuments = false">
         <upload-files end="endUpload"
-                      upload-uri="'/lystore/basket/' + basket.id + '/file'"></upload-files>
+                      upload-uri="'/crre/basket/' + basket.id + '/file'"></upload-files>
     </lightbox>
 </div>

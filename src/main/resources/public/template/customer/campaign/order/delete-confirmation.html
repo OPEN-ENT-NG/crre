@@ -1,18 +1,18 @@
 <div class="delete-confirmation">
     <h2>
-        <span ng-if="campaign.purse_enabled"> <i18n>lystore.orderEquipment.delete.title</i18n></span>
-        <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestEquipment.delete.title</i18n></span>
+        <span ng-if="campaign.purse_enabled"> <i18n>crre.orderEquipment.delete.title</i18n></span>
+        <span ng-if="!campaign.purse_enabled"><i18n>crre.requestEquipment.delete.title</i18n></span>
 
     </h2>
     <p ng-if="ordersEquipmentToDelete.all.length === 1 ">
-        <i18n>lystore.orderEquipment.delete.message</i18n>
-        <span ng-if="campaign.purse_enabled"> <i18n>lystore.orderEquipment.delete.message</i18n></span>
-        <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestEquipment.delete.message</i18n></span>
+        <i18n>crre.orderEquipment.delete.message</i18n>
+        <span ng-if="campaign.purse_enabled"> <i18n>crre.orderEquipment.delete.message</i18n></span>
+        <span ng-if="!campaign.purse_enabled"><i18n>crre.requestEquipment.delete.message</i18n></span>
         :
     </p>
     <p ng-if="ordersEquipmentToDelete.all.length !== 1">
-        <span ng-if="campaign.purse_enabled"> <i18n>lystore.orderEquipment.delete.message</i18n></span>
-        <span ng-if="!campaign.purse_enabled"><i18n>lystore.requestsEquipment.delete.message</i18n></span>
+        <span ng-if="campaign.purse_enabled"> <i18n>crre.orderEquipment.delete.message</i18n></span>
+        <span ng-if="!campaign.purse_enabled"><i18n>crre.requestsEquipment.delete.message</i18n></span>
 
         :
 
@@ -57,17 +57,17 @@
 
         <div class="twelve">
             <h4 class="highlighted">
-                <i18n>lystore.order</i18n>
+                <i18n>crre.order</i18n>
             </h4>
             <p>
-                <span> <i18n>lystore.quantity</i18n> : </span><strong>[[orderClient.amount]]</strong>
+                <span> <i18n>crre.quantity</i18n> : </span><strong>[[orderClient.amount]]</strong>
             </p>
             <p>
                 <span><i18n>price</i18n> : </span>
                 <strong ng-bind="calculateTotal(orderClient,2) | currency"></strong>
             </p>
             <p ng-if="hasAProposalPrice(orderClient)">
-                <span><i18n>lystore.priceProposal</i18n></span>
+                <span><i18n>crre.priceProposal</i18n></span>
                 <strong ng-bind="orderClient.price_proposal | currency"></strong>
             </p>
         </div>

@@ -1,11 +1,11 @@
 <article ng-controller="orderRegionController" class=" order-client-sent">
     <h1>
-        <i18n>lystore.order.update</i18n>
+        <i18n>crre.order.update</i18n>
     </h1>
     <form>
         <div class="row vertical-spacing-four">
             <label class="two right-padding-form-field cell">
-                <i18n>lystore.structure.label</i18n>
+                <i18n>crre.structure.label</i18n>
                 :
             </label>
             <label class="six cell">[[orderToUpdate.structure.name]]</label>
@@ -19,7 +19,7 @@
         </div>
         <div class="row vertical-spacing-four">
             <label class="two right-padding-form-field cell">
-                <i18n>lystore.project</i18n>
+                <i18n>crre.project</i18n>
                 :
             </label>
             <label class="six cell">[[orderToUpdate.title.name || '-']]</label>
@@ -28,7 +28,7 @@
             <label class="two right-padding-form-field cell">
                 <i18n>comment</i18n>
                 <br/>
-                <i18n>lystore.project.lowerCase</i18n>
+                <i18n>crre.project.lowerCase</i18n>
                 :
             </label>
             <label ng-if="orderToUpdate.project.description"
@@ -54,7 +54,7 @@
 
         <div class="row vertical-spacing-four">
             <label class="two right-padding-form-field cell">
-                <i18n>lystore.contract.type.name</i18n>
+                <i18n>crre.contract.type.name</i18n>
                 :
             </label>
             <label class="six cell">[[orderToUpdate.contract_type.name || '-']]</label>
@@ -62,7 +62,7 @@
 
         <div class="row vertical-spacing-four">
             <label class="two right-padding-form-field cell">
-                <i18n>lystore.amountTTC</i18n>
+                <i18n>crre.amountTTC</i18n>
                 :
             </label>
             <span
@@ -129,7 +129,7 @@
 
         <div class="row vertical-spacing-four">
             <label class="two right-padding-form-field cell">
-                <i18n>lystore.price.TTC</i18n>
+                <i18n>crre.price.TTC</i18n>
                 :
             </label>
             <span
@@ -151,7 +151,7 @@
         <div ng-if="orderToUpdate.campaign.orderPriorityEnable()"
              class="row vertical-spacing-four">
             <label class="two right-padding-form-field cell">
-                <i18n>lystore.project.priority.order</i18n>
+                <i18n>crre.project.priority.order</i18n>
                 :
             </label>
             <span
@@ -199,7 +199,7 @@
 
                 <input type="button" ng-if="!orderToUpdate.id_operation" class=" button" ng-disabled="!isValidFormUpdate()"
                        ng-click="updateOrderConfirm()"
-                       i18n-value="lystore.order.operation.select"/>
+                       i18n-value="crre.order.operation.select"/>
 
                 <input type="button" ng-if="orderToUpdate.id_operation" ng-disabled="!isValidFormUpdate()" class=" button"
                        ng-click="updateLinkedOrderConfirm()"

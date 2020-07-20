@@ -1,7 +1,7 @@
-<div class="row ten centered"  workflow="lystore.administrator">
+<div class="row ten centered"  workflow="crre.administrator">
     <h1>
-        <i18n ng-show="campaign.id == undefined">lystore.campaigns.add</i18n>
-        <i18n ng-show="campaign.id !== undefined">lystore.campaigns.modify</i18n>
+        <i18n ng-show="campaign.id == undefined">crre.campaigns.add</i18n>
+        <i18n ng-show="campaign.id !== undefined">crre.campaigns.modify</i18n>
     </h1>
 
     <form>
@@ -15,17 +15,17 @@
                     </div>
                 </div>
                 <div class="eight cell horizontal-spacing twelve-mobile">
-                    <h2><i18n>lystore.information</i18n></h2>
+                    <h2><i18n>crre.information</i18n></h2>
                     <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.campaigns.name</i18n> *
+                            <i18n>crre.campaigns.name</i18n> *
                         </span>
                         <input type="text" class="twelve" ng-model="campaign.name" required>
                     </label>
                     <div class="row twelve">
                         <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.campaigns.description</i18n>
+                            <i18n>crre.campaigns.description</i18n>
                         </span>
                             <editor ng-model="campaign.description"></editor>
                         </label>
@@ -34,7 +34,7 @@
             </div>
         </article>
         <h4 style="margin: 50px 0 10px 0">
-            <i18n>lystore.campaign.groups</i18n>
+            <i18n>crre.campaign.groups</i18n>
             :
         </h4>
         <article class="responsive-table" style="margin: 0;">
@@ -48,10 +48,10 @@
                         <span></span>
                     </label></td>
                 <td class="tree ">
-                    <i18n>lystore.name.of.group</i18n>
+                    <i18n>crre.name.of.group</i18n>
                 </td>
                 <td class="eight ">
-                    <i18n>lystore.equipements.visibles</i18n>
+                    <i18n>crre.equipements.visibles</i18n>
                 </td>
                 </thead>
                 <tbody>
@@ -89,20 +89,20 @@
             </table>
         </article>
         <h4 style="margin: 50px 0 10px 0">
-            <i18n>lystore.campaign.options</i18n>
+            <i18n>crre.campaign.options</i18n>
             :
         </h4>
         <article>
             <div class="row">
                 <span class="cell">
-                    <i18n>lystore.campaign.type.choose</i18n>
+                    <i18n>crre.campaign.type.choose</i18n>
                     :
                 </span>
                 <switch-toggle ng-model="campaign.purse_enabled" class="cell horizontal-margin-four"></switch-toggle>
             </div>
             <div class="row">
                 <span class="cell">
-                    <i18n>lystore.campaign.priority.choose</i18n>
+                    <i18n>crre.campaign.priority.choose</i18n>
                     :
                 </span>
                 <switch-toggle ng-model="campaign.priority_enabled" class="cell horizontal-margin-four"></switch-toggle>
@@ -110,11 +110,11 @@
             <div ng-if="campaign.priority_enabled" class="priority_field" >
                 <div>
                     <input type="radio" ng-model="campaign.priority_field" value="ORDER" >
-                    <label ><i18n>lystore.on.order</i18n></label>
+                    <label ><i18n>crre.on.order</i18n></label>
                 </div>
                 <div>
                     <input type="radio" ng-model="campaign.priority_field" value="PROJECT" >
-                    <label ><i18n>lystore.on.project</i18n></label>
+                    <label ><i18n>crre.on.project</i18n></label>
                 </div>
             </div>
         </article>

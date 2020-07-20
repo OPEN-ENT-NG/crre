@@ -1,0 +1,35 @@
+    {
+      "name": "fr.openent~crre~0.1-SNAPSHOT",
+      "config": {
+        "main" : "fr.openent.crre.Crre",
+        "port" : 8140,
+        "app-name" : "CRRE",
+    	"app-address" : "/crre",
+    	"app-icon" : "${host}/crre/public/img/logo.png",
+        "app-type" : "END_USER",
+        "host": "${host}",
+        "ssl" : $ssl,
+        "auto-redeploy": false,
+        "userbook-host": "${host}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "${mode}",
+        "entcore.port" : 8009,
+        "sql": true,
+        "db-schema": "crre",
+        "iteration-worker": ${crreIterationWorker},
+        "exports" : {
+            "template-path" : "./public/template/pdf/",
+            "logo-path": "./public/img/ile_de_france.png"
+        },
+        "slack": {
+            "token": "",
+            "api-uri": "",
+            "bot-username": "Crre Bot",
+            "channel": ""
+        },
+         "mail": {
+            "enableMail": ${crreEnableMail}
+         }
+      }
+    }

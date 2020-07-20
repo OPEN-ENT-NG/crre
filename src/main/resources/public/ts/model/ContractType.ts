@@ -24,7 +24,7 @@ export class ContractTypes extends Selection<ContractType> {
     }
 
     async sync (): Promise<void> {
-        let types = await http.get(`/lystore/contract/types`);
+        let types = await http.get(`/crre/contract/types`);
         this.all = Mix.castArrayAs(ContractType, types.data);
         this.all.map((type) => type.displayName = type.code + ' - ' + type.name);
     }

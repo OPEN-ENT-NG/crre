@@ -1,4 +1,4 @@
-import {_,notify, $, Behaviours, idiom as lang, model, moment, ng, template, toasts} from 'entcore';
+import {_,Behaviours, idiom as lang, model, moment, ng, template, toasts} from 'entcore';
 import {
     Agents,
     Basket,
@@ -11,9 +11,7 @@ import {
     Equipments,
     EquipmentTypes,
     Exports,
-    //labels,
     Logs,
-    Notification,
     Order,
     OrderClient,
     OrderRegion,
@@ -30,8 +28,7 @@ import {
     Utils,
 } from '../model';
 import {Mix} from "entcore-toolkit";
-
-export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
+ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
         template.open('main', 'main');
 
@@ -363,11 +360,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-        $scope.initOperation = async (id_label? ) =>{
-            $scope.labelOperation = new labels();
-            await $scope.labelOperation.sync();
-            await $scope.operations.sync();
-        };
         $scope.initBasketItem = async (idEquipment: number, idCampaign: number, structure) => {
             $scope.equipment = _.findWhere($scope.equipments.all, {id: idEquipment});
             if ($scope.equipment === undefined && !isNaN(idEquipment)) {
@@ -390,15 +382,15 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.hasAccess = () => {
-            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.lystore.rights.workflow.access);
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.access);
         };
 
         $scope.isManager = () => {
-            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.lystore.rights.workflow.manager);
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager);
         };
 
         $scope.isAdministrator = () => {
-            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.lystore.rights.workflow.administrator);
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator);
         };
 
         $scope.redirectTo = (path: string) => {
@@ -450,9 +442,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.notifyBasket = (action: String, basket: Basket) => {
             let messageForOne = basket.amount + ' ' + lang.translate('article') + ' "'
-                + basket.equipment.name + '" ' + lang.translate('lystore.basket.' + action + '.article');
+                + basket.equipment.name + '" ' + lang.translate('crre.basket.' + action + '.article');
             let messageForMany = basket.amount + ' ' + lang.translate('articles') + ' "'
-                + basket.equipment.name + '" ' + lang.translate('lystore.basket.' + action + '.articles');
+                + basket.equipment.name + '" ' + lang.translate('crre.basket.' + action + '.articles');
             toasts.confirm(basket.amount === 1 ? messageForOne : messageForMany);
         };
 
@@ -492,7 +484,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
         $scope.syncCampaignInputSelected = async ():Promise<void> => {
             $scope.campaignsForSelectInput = [];
-            $scope.allCampaignsSelect = new Campaign(lang.translate("lystore.campaign.order.all"), '');
+            $scope.allCampaignsSelect = new Campaign(lang.translate("crre.campaign.order.all"), '');
             $scope.allCampaignsSelect.id = -1;
             await $scope.campaigns.sync();
             $scope.campaignsForSelectInput = [...$scope.campaigns.all];

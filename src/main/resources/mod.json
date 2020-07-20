@@ -1,10 +1,10 @@
 {
-	"main" : "fr.openent.lystore.Lystore",
+	"main" : "fr.openent.crre.Crre",
 	"port" : 8140,
-	"app-name" : "Lystore",
-	"app-address" : "/lystore",
-	"app-icon" : "Lystore-large",
-	"app-displayName" : "Lystore",
+	"app-name" : "CRRE",
+	"app-address" : "/crre",
+	"app-icon" : "Crre-large",
+	"app-displayName" : "CRRE",
 	"mode": "dev",
 	"entcore.port" : 8090,
 	"auto-redeploy": false

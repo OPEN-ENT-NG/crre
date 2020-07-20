@@ -81,9 +81,9 @@ export class OrderClient implements Order  {
 
     async updateComment():Promise<void>{
         try{
-            http.put(`/lystore/order/${this.id}/comment`, { comment: this.comment });
+            http.put(`/crre/order/${this.id}/comment`, { comment: this.comment });
         }catch (e){
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }
@@ -91,21 +91,21 @@ export class OrderClient implements Order  {
 
     async delete ():Promise<any> {
         try {
-            return await http.delete(`/lystore/order/${this.id}/${this.id_structure}/${this.id_campaign}`);
+            return await http.delete(`/crre/order/${this.id}/${this.id_structure}/${this.id_campaign}`);
         } catch (e) {
-            notify.error('lystore.order.delete.err');
+            notify.error('crre.order.delete.err');
         }
     }
 
     downloadFile(file):void {
-        window.open(`/lystore/order/${this.id}/file/${file.id}`);
+        window.open(`/crre/order/${this.id}/file/${file.id}`);
     }
 
     async updateStatusOrder(status: String, id:number = this.id):Promise<void>{
         try {
-            await http.put(`/lystore/order/${id}`, {status: status});
+            await http.put(`/crre/order/${id}`, {status: status});
         } catch (e) {
-            notify.error('lystore.order.update.err');
+            notify.error('crre.order.update.err');
         }
     }
 
@@ -141,29 +141,29 @@ export class OrderClient implements Order  {
 
     async get():Promise<void> {
         try {
-            let {data} = await http.get(`/lystore/order/${this.id}`);
+            let {data} = await http.get(`/crre/order/${this.id}`);
             Mix.extend(this, OrderClient.formatSqlDataToModel(data));
 
         } catch (e) {
-            notify.error('lystore.order.get.err');
+            notify.error('crre.order.get.err');
         }
     }
 
     async getOneOrderClient(id:number, structures:Structures, status:string):Promise<Order>{
         try{
-            const {data} = await http.get(`/lystore/orderClient/${id}/order/${status}`);
+            const {data} = await http.get(`/crre/orderClient/${id}/order/${status}`);
             return new Order(Object.assign(data, {typeOrder:"client"}), structures);
         } catch (e) {
-            notify.error('lystore.admin.order.get.err');
+            notify.error('crre.admin.order.get.err');
             throw e;
         }
     }
 
     async exportListLycee(params: string) {
         try {
-           await http.get( `/lystore/orders/valid/export/structure_list?${params}`);
+           await http.get( `/crre/orders/valid/export/structure_list?${params}`);
         } catch (e) {
-            notify.error("lystore.order.get.err")
+            notify.error("crre.order.get.err")
         }
     }
 }
@@ -190,10 +190,10 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async updateReference(tabIdsProjects: Array<object>, id_campaign:number, id_project:number, id_structure:string):Promise<void> {
         try {
-            await  http.put(`/lystore/campaign/${id_campaign}/projects/${id_project}/preferences?structureId=${id_structure}`,
+            await  http.put(`/crre/campaign/${id_campaign}/projects/${id_project}/preferences?structureId=${id_structure}`,
                 { preferences: tabIdsProjects });
         }catch (e) {
-            notify.error('lystore.project.update.err');
+            notify.error('crre.project.update.err');
         }
     }
 
@@ -203,11 +203,11 @@ export class OrdersClient extends Selection<OrderClient> {
             this.projects = new Selection<Project>([]);
             this.id_project_use = -1;
             if (idCampaign && idStructure) {
-                const { data } = await http.get(  `/lystore/orders/${idCampaign}/${idStructure}` );
+                const { data } = await http.get(  `/crre/orders/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
                 this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
             } else {
-                const { data } = await http.get(  `/lystore/orders?status=${status}`);
+                const { data } = await http.get(  `/crre/orders?status=${status}`);
                 this.all = Mix.castArrayAs(OrderClient, data);
                 this.all.map((order: OrderClient) => {
                     order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
@@ -225,7 +225,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 });
             }
         } catch (e) {
-            notify.error('lystore.order.sync.err');
+            notify.error('crre.order.sync.err');
         }
     }
 
@@ -280,7 +280,7 @@ export class OrdersClient extends Selection<OrderClient> {
         } else if (order.campaign.projectPriorityEnable()){
             order.rankOrder = order.project.preference + 1;
         }else{
-            order.rankOrder = lang.translate("lystore.order.not.prioritized");
+            order.rankOrder = lang.translate("crre.order.not.prioritized");
         }
     }
 
@@ -313,7 +313,7 @@ export class OrdersClient extends Selection<OrderClient> {
     async getPreviewData (): Promise<any> {
         try {
             const params = Utils.formatGetParameters(this.toJson('SENT'));
-            const { data } = await http.get(`lystore/orders/preview?${params}`);
+            const { data } = await http.get(`crre/orders/preview?${params}`);
             return data;
         } catch (e) {
             throw e;
@@ -327,18 +327,18 @@ export class OrdersClient extends Selection<OrderClient> {
                 statusURL = "inprogress";
             }
             let config = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
-            return await  http.put(`/lystore/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
+            return await  http.put(`/crre/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
         } catch (e) {
-            notify.error('lystore.order.update.err');
+            notify.error('crre.order.update.err');
             throw e;
         }
     }
 
     async updateOrderRanks(tabIdsProjects: Array<object>, structureId:string, campaignId:number):Promise<void>{
         try {
-            await  http.put(`/lystore/order/rank/move?idStructure=${structureId}&idCampaign=${campaignId}`,{ orders: tabIdsProjects });
+            await  http.put(`/crre/order/rank/move?idStructure=${structureId}&idCampaign=${campaignId}`,{ orders: tabIdsProjects });
         }catch (e) {
-            notify.error('lystore.project.update.err');
+            notify.error('crre.project.update.err');
             throw e;
         }
     }
@@ -366,24 +366,24 @@ export class OrdersClient extends Selection<OrderClient> {
                 params += `number_validation=${order.number_validation}&`;
             });
             params = params.slice(0, -1);
-            await http.delete(`/lystore/orders/valid?${params}`);
+            await http.delete(`/crre/orders/valid?${params}`);
         } catch (e) {
             throw e;
         }
     }
     async addOperation (idOperation:number, idsOrder: Array<number>):Promise<void> {
         try{
-            await http.put(`/lystore/orders/operation/${idOperation}`, idsOrder);
+            await http.put(`/crre/orders/operation/${idOperation}`, idsOrder);
         }catch (e){
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }
     async addOperationInProgress (idOperation:number, idsOrder: Array<number>):Promise<void> {
         try{
-            await http.put(`/lystore/orders/operation/in-progress/${idOperation}`, idsOrder);
+            await http.put(`/crre/orders/operation/in-progress/${idOperation}`, idsOrder);
         }catch (e){
-            notify.error('lystore.basket.update.err');
+            notify.error('crre.basket.update.err');
             throw e;
         }
     }

@@ -1,13 +1,13 @@
 <div class="delete-project-confirmation">
     <h1>
-        <i18n>lystore.project.delete.title</i18n>
+        <i18n>crre.project.delete.title</i18n>
     </h1>
     <p ng-show="projectsToDelete.length === 1 ">
-        <i18n>lystore.project.delete.message</i18n>
+        <i18n>crre.project.delete.message</i18n>
         :
     </p>
     <p ng-show="projectsToDelete.length > 1">
-        <i18n>lystore.projects.delete.message</i18n>
+        <i18n>crre.projects.delete.message</i18n>
         :
     </p>
 
@@ -23,7 +23,7 @@
             </div>
             <em class="cell nine">[[project.title.name]]</em>
             <div class="cell three">
-                <i18n>lystore.project.grade</i18n>
+                <i18n>crre.project.grade</i18n>
                 :
             </div>
             <em class="cell nine">[[project.grade.name]]</em>
@@ -51,15 +51,15 @@
         </div>
         <div ng-if="projectHasStair(project)">
             <div class="cell three">
-                <i18n>lystore.project.stage</i18n>
+                <i18n>crre.project.stage</i18n>
                 :
             </div>
             <em class="cell nine">[[project.stair]]</em>
         </div>
     </div>
     <div class="row vertical-spacing">
-        <i18n ng-if="projectsToDelete.length > 1">lystore.project.delete.confirmation.multiple</i18n>
-        <i18n ng-if="projectsToDelete.length === 1">lystore.project.delete.confirmation</i18n>
+        <i18n ng-if="projectsToDelete.length > 1">crre.project.delete.confirmation.multiple</i18n>
+        <i18n ng-if="projectsToDelete.length === 1">crre.project.delete.confirmation</i18n>
     </div>
     <div class="row vertical-spacing">
         <div class="right-magnet">

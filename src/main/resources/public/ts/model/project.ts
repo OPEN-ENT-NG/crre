@@ -75,29 +75,29 @@ export class Project implements Selectable {
 
     async create(id_campaign: number, id_structure:string ) {
         try {
-            let id_project = await  http.post(`/lystore/project/${id_campaign}/${id_structure}`, this.toJson());
+            let id_project = await  http.post(`/crre/project/${id_campaign}/${id_structure}`, this.toJson());
             this.id = (id_project.data["id"]);
             this.eventer.trigger('create:end');
             return id_project;
 
         } catch (e) {
-            notify.error('lystore.project.create.err');
+            notify.error('crre.project.create.err');
         }
     }
 
     async delete(id_campaign, id_structure) {
         try {
-            return await http.delete(`/lystore/project/${this.id}/${id_campaign}/${id_structure}`);
+            return await http.delete(`/crre/project/${this.id}/${id_campaign}/${id_structure}`);
         } catch (e) {
-            notify.error('lystore.project.delete.err')
+            notify.error('crre.project.delete.err')
         }
     }
 
     async update(idCampaign) {
         try {
-            return await  http.put(`/lystore/project/${this.id}/campaign/${idCampaign}`, this.toJson());
+            return await  http.put(`/crre/project/${this.id}/campaign/${idCampaign}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.project.update.err');
+            notify.error('crre.project.update.err');
         }
     }
 }
@@ -110,7 +110,7 @@ export class Projects extends Selection<Project> {
 
     async sync(): Promise<void> {
         {
-            let projects = await http.get(`/lystore/projects`);
+            let projects = await http.get(`/crre/projects`);
             this.all = Mix.castArrayAs(Project, projects.data);
 
         }

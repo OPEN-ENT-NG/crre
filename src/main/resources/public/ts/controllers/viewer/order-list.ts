@@ -17,17 +17,17 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             list: $scope.campaign.priority_field
         };
         $scope.menu = [{
-            name:'lystore.by.project',
+            name:'crre.by.project',
             value:PRIORITY_FIELD.PROJECT
         },{
-            name:'lystore.by.equipment',
+            name:'crre.by.equipment',
             value:PRIORITY_FIELD.ORDER
         }];
 
         $scope.exportCSV = () => {
             let idCampaign = $scope.ordersClient.all[0].id_campaign;
             let idStructure = $scope.ordersClient.all[0].id_structure;
-            window.location = `/lystore/orders/export/${idCampaign}/${idStructure}`;
+            window.location = `/crre/orders/export/${idCampaign}/${idStructure}`;
         };
 
         $scope.hasAProposalPrice = (orderClient: OrderClient) => {
@@ -87,8 +87,8 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             if (status === 200) {
                 $scope.campaign.nb_order = data.nb_order;
                 $scope.campaign.purse_amount = data.amount;
-                ($scope.campaign.purse_enabled) ? toasts.confirm('lystore.orderEquipment.delete.confirm')
-                    : toasts.confirm('lystore.requestEquipment.delete.confirm');
+                ($scope.campaign.purse_enabled) ? toasts.confirm('crre.orderEquipment.delete.confirm')
+                    : toasts.confirm('crre.requestEquipment.delete.confirm');
             }
         };
 
@@ -147,7 +147,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 if ($scope.projectIsDeletable(projects[i])) {
                     let {status, data} = await projects[i].delete($scope.campaign.id, $scope.ordersClient.all[0].id_structure);
                     if (status == 200) {
-                        toasts.confirm('lystore.project.delete.confirm');
+                        toasts.confirm('crre.project.delete.confirm');
                     }
                     if (data) {
                         $scope.campaign.nb_order = data.nb_order;
@@ -187,7 +187,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             delete $scope.projectToUpdate;
             $scope.display.lightbox.udpateProject = false;
             template.close('orderClient.updateProject');
-            toasts.confirm('lystore.project.update.success');
+            toasts.confirm('crre.project.update.success');
             Utils.safeApply($scope);
         };
 

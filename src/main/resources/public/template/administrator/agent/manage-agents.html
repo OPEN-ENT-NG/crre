@@ -1,15 +1,15 @@
 <div class="row agent-management" ng-controller="configurationController">
-    <div class="twelve" workflow="lystore.administrator">
+    <div class="twelve" workflow="crre.administrator">
         <button class="right-magnet twelve-mobile" ng-click="openAgentForm()">
-            <i18n>lystore.agent.add</i18n>
+            <i18n>crre.agent.add</i18n>
         </button>
     </div>
     <div class="centered six twelve-mobile">
-        <h1><i18n>lystore.locality.agents</i18n></h1>
+        <h1><i18n>crre.locality.agents</i18n></h1>
         <article class="responsive-table">
             <table class="twelve">
                 <thead>
-                <td workflow="lystore.administrator">
+                <td workflow="crre.administrator">
                     <label class="checkbox">
                         <input type="checkbox"
                                ng-change="switchAll(allAgentSelected, agents)"
@@ -44,7 +44,7 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="agent in agents.all | orderBy:sort.agent.type:sort.agent.reverse">
-                    <td workflow="lystore.administrator">
+                    <td workflow="crre.administrator">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="agent.selected">
                             <span></span>

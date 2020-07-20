@@ -65,13 +65,13 @@ export const orderRegionController = ng.controller('orderRegionController',
                 orderRegionCreate.id_contract = $scope.orderToUpdate.equipment.id_contract;
                 const { status } = await orderRegionCreate.create();
                 if (status === 200) {
-                    toasts.confirm('lystore.order.region.update');
+                    toasts.confirm('crre.order.region.update');
                     await $scope.ordersClient.addOperationInProgress(operation.id, [$routeParams.idOrder]);
                     // $scope.operationId =  $scope.operation.id
                     $scope.cancelUpdate();
                 }
                 else {
-                    notify.error('lystore.admin.order.update.err');
+                    notify.error('crre.admin.order.update.err');
                 }
                 Utils.safeApply($scope);
 
@@ -80,7 +80,6 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.isOperationsIsEmpty = false;
         $scope.selectOperationForOrder = async ():Promise<void> => {
-            await $scope.initOperation();
             $scope.isOperationsIsEmpty = !$scope.operations.all.some(operation => operation.status === 'true');
             template.open('validOrder.lightbox', 'administrator/order/order-select-operation');
             $scope.display.lightbox.validOrder = true;
@@ -111,7 +110,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             } else {
                 await orderRegion.create();
             }
-            toasts.confirm('lystore.order.region.update');
+            toasts.confirm('crre.order.region.update');
         };
         $scope.isValidFormUpdate = ():boolean => {
             return $scope.orderToUpdate &&  $scope.orderToUpdate.equipment_key
@@ -308,12 +307,12 @@ export const orderRegionController = ng.controller('orderRegionController',
             });
             let {status} = await ordersToCreate.create();
             if (status === 201) {
-                toasts.confirm('lystore.order.region.create.message');
+                toasts.confirm('crre.order.region.create.message');
                 $scope.orderToCreate = new OrderRegion();
                 $scope.titles = new Titles();
             }
             else {
-                notify.error('lystore.admin.order.create.err');
+                notify.error('crre.admin.order.create.err');
             }
             Utils.safeApply($scope);
         }

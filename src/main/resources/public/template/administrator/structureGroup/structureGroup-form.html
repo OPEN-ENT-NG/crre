@@ -1,21 +1,21 @@
 <div class ="row">
     <h1>
-        <i18n ng-show="structureGroup.id == undefined">lystore.form.structureGroups.add</i18n>
-        <i18n ng-show="structureGroup.id !== undefined">lystore.form.structureGroups.modify</i18n>
+        <i18n ng-show="structureGroup.id == undefined">crre.form.structureGroups.add</i18n>
+        <i18n ng-show="structureGroup.id !== undefined">crre.form.structureGroups.modify</i18n>
     </h1>
     <article>
         <div class="row horizontal-spacing vertical-spacing">
             <div class="twelve cell horizontal-spacing">
-                <h2><i18n>lystore.information</i18n></h2>
+                <h2><i18n>crre.information</i18n></h2>
                 <label class="row twelve vertical-spacing">
-                    <span class="twelve"><i18n>lystore.form.structureGroups.name</i18n></span>
+                    <span class="twelve"><i18n>crre.form.structureGroups.name</i18n></span>
                     <input type ="text" class="twelve" ng-model="structureGroup.name">
                 </label>
             </div>
             <div class="twelve cell horizontal-spacing">
                 <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.form.structureGroups.description</i18n>
+                            <i18n>crre.form.structureGroups.description</i18n>
                         </span>
                     <textarea ng-model="structureGroup.description"></textarea>
                 </label>
@@ -24,7 +24,7 @@
         <br>
         <div class="row list_structureGroup-form">
             <div class="five cell twelve-mobile">
-                <h2 class="">[[getStructureNumber()]] <i18n>lystor.form.structureGroups.structures.no.affect</i18n></h2>
+                <h2 class="">[[getStructureNumber()]] <i18n>crre.form.structureGroups.structures.no.affect</i18n></h2>
                 <div class="card listStructure ">
                     <div class="toolbox vertical-spacing horizontal-spacing">
                         <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structure">
@@ -48,7 +48,7 @@
                 </div>
             </div>
             <div class="five cell twelve-mobile">
-                <h2 class="row">[[structureGroup.structures.length]] <i18n>lystor.form.structureGroups.structures.affect</i18n></h2>
+                <h2 class="row">[[structureGroup.structures.length]] <i18n>crre.form.structureGroups.structures.affect</i18n></h2>
                 <div class="card listStructure ">
                     <div class="toolbox vertical-spacing horizontal-spacing">
                         <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structureRight">

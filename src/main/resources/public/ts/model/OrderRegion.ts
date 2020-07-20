@@ -145,18 +145,18 @@ export class OrderRegion implements Order  {
 
     async create():Promise<any> {
         try {
-            return await http.post(`/lystore/region/order`, this.toJson());
+            return await http.post(`/crre/region/order`, this.toJson());
         } catch (e) {
-            notify.error('lystore.admin.order.update.err');
+            notify.error('crre.admin.order.update.err');
             throw e;
         }
     }
 
     async update(id:number):Promise<any>{
         try {
-            return await http.put(`/lystore/region/order/${id}`, this.toJson());
+            return await http.put(`/crre/region/order/${id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.admin.order.update.err');
+            notify.error('crre.admin.order.update.err');
             throw e;
         }
     }
@@ -171,19 +171,19 @@ export class OrderRegion implements Order  {
 
     async delete(id:number):Promise<any>{
         try{
-            return await http.delete(`/lystore/region/${id}/order`);
+            return await http.delete(`/crre/region/${id}/order`);
         } catch (e) {
-            notify.error('lystore.admin.order.update.err');
+            notify.error('crre.admin.order.update.err');
             throw e;
         }
     }
 
     async getOneOrderRegion(id:number, structures:Structures):Promise<Order>{
         try{
-            const {data} =  await http.get(`/lystore/orderRegion/${id}/order`);
+            const {data} =  await http.get(`/crre/orderRegion/${id}/order`);
             return new Order(Object.assign(data, {typeOrder:"region"}), structures);
         } catch (e) {
-            notify.error('lystore.admin.order.update.err');
+            notify.error('crre.admin.order.update.err');
             throw e;
         }
     }
@@ -201,17 +201,17 @@ export class OrdersRegion extends Selection<OrderRegion> {
             orders.push(order.toJson());
         });
         try {
-            return await http.post(`/lystore/region/orders/`, {orders: orders});
+            return await http.post(`/crre/region/orders/`, {orders: orders});
         } catch (e) {
-            notify.error('lystore.order.create.err');
+            notify.error('crre.order.create.err');
             throw e;
         }
     }
     async updateOperation(idOperation:number, idsRegions: Array<number>):Promise<any>{
         try {
-            await http.put(`/lystore/order/region/${idOperation}/operation`, idsRegions);
+            await http.put(`/crre/order/region/${idOperation}/operation`, idsRegions);
         } catch (e) {
-            notify.error('lystore.admin.order.update.err');
+            notify.error('crre.admin.order.update.err');
             throw e;
         }
     }

@@ -1,10 +1,10 @@
-<h2><i18n ng-show="tag.id == undefined">lystore.tag.add</i18n><i18n ng-show="tag.id !== undefined">lystore.tag.modify</i18n></h2>
+<h2><i18n ng-show="tag.id == undefined">crre.tag.add</i18n><i18n ng-show="tag.id !== undefined">crre.tag.modify</i18n></h2>
 
 <form ng-submit="validTag(tag)">
     <div class="row">
         <label class="cell twelve">
             <span class="four cell twelve-mobile">
-                <i18n>lystore.tag.name</i18n>
+                <i18n>crre.tag.name</i18n>
             </span>
             <input class="cell seven eleven-mobile" type="text" ng-model="tag.name" required />
             <span class="one cell color-tag large horizontal-margin" ng-style="{ 'background-color' : tag.color }"></span>

@@ -1,13 +1,13 @@
 <div ng-if="campaign.purse_enabled" class="confirm-order">
-    <h1><i18n>lystore.confirm.order.title</i18n></h1>
+    <h1><i18n>crre.confirm.order.title</i18n></h1>
     <div class="row">
-        <div class="three cell twelve-mobile"><img class=" centered " src="/lystore/public/img/thumb_up.png"/></div>
+        <div class="three cell twelve-mobile"><img class=" centered " src="/crre/public/img/thumb_up.png"/></div>
         <p class="nine cell twelve-mobile">
-            <i18n>lystore.confirm.order.message1</i18n>
+            <i18n>crre.confirm.order.message1</i18n>
             <strong ng-bind="totalPriceOrder | currency"></strong>
-            <i18n>lystore.confirm.order.message2</i18n>
-            <i18n>lystore.order.tracking</i18n>
-            <i18n>lystore.confirm.order.message3</i18n>
+            <i18n>crre.confirm.order.message2</i18n>
+            <i18n>crre.order.tracking</i18n>
+            <i18n>crre.confirm.order.message3</i18n>
         </p>
     </div>
     <div class="row vertical-spacing">
@@ -20,7 +20,7 @@
         </p>
         <p ng-if="display.grade">
             <b>
-                <i18n>lystore.grade</i18n>
+                <i18n>crre.grade</i18n>
                 :
             </b>
             <span>[[display.grade]]</span>
@@ -32,14 +32,14 @@
 </div>
 <div ng-if="!campaign.purse_enabled" class="confirm-order">
     <h1>
-        <i18n>lystore.confirm.request.title</i18n>
+        <i18n>crre.confirm.request.title</i18n>
     </h1>
-    <div class="three cell twelve-mobile"><img class=" centered " src="/lystore/public/img/thumb_up.png"/></div>
+    <div class="three cell twelve-mobile"><img class=" centered " src="/crre/public/img/thumb_up.png"/></div>
     <p class="nine cell twelve-mobile">
-        <i18n>lystore.confirm.request.message1</i18n>
-        <i18n>lystore.confirm.request.message2</i18n>
-        <i18n>lystore.request.tracking</i18n>
-        <i18n>lystore.confirm.request.message3</i18n>
+        <i18n>crre.confirm.request.message1</i18n>
+        <i18n>crre.confirm.request.message2</i18n>
+        <i18n>crre.request.tracking</i18n>
+        <i18n>crre.confirm.request.message3</i18n>
     </p>
     <div class="row">
         <input type="button" class="cancel right-magnet " ng-click="cancelConfirmOrder()" i18n-value="ok"/>

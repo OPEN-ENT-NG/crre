@@ -24,7 +24,7 @@ export const exportCtrl = ng.controller('exportCtrl', [
 
         $scope.getExport = (exportTemp: Export) => {
             if(exportTemp.status === STATUS.SUCCESS){
-                 $window.open(`lystore/export/${exportTemp.fileId}`, '_blank');
+                 $window.open(`crre/export/${exportTemp.fileId}`, '_blank');
             }
         };
 
@@ -50,7 +50,7 @@ export const exportCtrl = ng.controller('exportCtrl', [
             $scope.isAllExportSelected = false;
             $scope.display.delete = false;
             template.close('export.delete.lightbox');
-            toasts.confirm('lystore.delete.notif');
+            toasts.confirm('crre.delete.notif');
             $scope.exportToDelete = [];
             await $scope.exports.getExports();
             $scope.filterDisplayedExports();

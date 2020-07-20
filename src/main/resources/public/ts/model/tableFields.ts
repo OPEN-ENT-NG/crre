@@ -10,7 +10,7 @@ export const orderWaiting = [
         display: true
     },
     {
-        name:'lystore.type',
+        name:'crre.type',
         fieldName:'structure.type_etab',
         display: false
     },
@@ -40,12 +40,12 @@ export const orderWaiting = [
         display: true
     },
     {
-        name:'lystore.amount',
+        name:'crre.amount',
         fieldName:'amount',
         display: true
     },
     {
-        name:'lystore.unit.price.ttc',
+        name:'crre.unit.price.ttc',
         fieldName:'priceUnitedTTC',
         display: true
     },
@@ -55,7 +55,7 @@ export const orderWaiting = [
         display: false,
     },
     {
-        name:'lystore.contract.type.name',
+        name:'crre.contract.type.name',
         fieldName:'contract_type.name',
         display: true
     },
@@ -65,7 +65,7 @@ export const orderWaiting = [
         display: false
     },
     {
-        name:'lystore.structure.type',
+        name:'crre.structure.type',
         fieldName:'structure.type',
         display: false
     },
@@ -75,7 +75,7 @@ export const orderWaiting = [
         display: false
     },
     {
-        name:'lystore.project',
+        name:'crre.project',
         fieldName:'project.title.name',
         display: false
     },
@@ -90,7 +90,7 @@ export const orderWaiting = [
         display: false
     },
     {
-        name:'lystore.room',
+        name:'crre.room',
         fieldName:'project.room',
         display: false
     },
@@ -100,22 +100,22 @@ export const orderWaiting = [
         display: false
     },
     {
-        name:'lystore.project.comment',
+        name:'crre.project.comment',
         fieldName:'project.description',
         display: false
     },
     {
-        name:'lystore.department',
+        name:'crre.department',
         fieldName:'structure.department',
         display: false
     },
     {
-        name:'lystore.program',
+        name:'crre.program',
         fieldName:'program',
         display: false
     },
     {
-        name: 'lystore.amountTTC',
+        name: 'crre.amountTTC',
         fieldName: 'price',
         display: true,
     }

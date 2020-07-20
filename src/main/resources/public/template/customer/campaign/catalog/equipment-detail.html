@@ -15,7 +15,7 @@
                 </div>
                 <div class="six cell twelve-mobile">
                     <div class="centered-text quantity">
-                        <h4 class="cell"><i18n>lystore.quantity</i18n></h4>
+                        <h4 class="cell"><i18n>crre.quantity</i18n></h4>
                         <i class="moins" ng-click="amountDecrease()"></i>
                         <input type="number"
                                step="1"
@@ -25,7 +25,7 @@
                                ng-model="basket.amount" class="three"/>
                         <i class="plus" ng-click="amountIncrease()"></i>
                     </div>
-                    <div class="centered-text row"><input type="button"  ng-click="addBasketItem(basket)" i18n-value="lystore.add.to.basket" ng-disabled="!validArticle(basket.equipment)" /> </div>
+                    <div class="centered-text row"><input type="button"  ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" ng-disabled="!validArticle(basket.equipment)" /> </div>
                 </div>
             </article>
         </div>
@@ -48,7 +48,7 @@
         </div>
     </div>
     <div ng-show="basket.equipment.options.length !== 0">
-        <h2><i18n>lystore.equipment.options</i18n></h2>
+        <h2><i18n>crre.equipment.options</i18n></h2>
         <table class="twelve">
             <thead>
             <td class="one">
@@ -63,7 +63,7 @@
                 &nbsp;
             </td>
             <td class="three">
-                <i18n>lystore.price.TTC</i18n>
+                <i18n>crre.price.TTC</i18n>
             </td>
             </thead>
             <tbody>

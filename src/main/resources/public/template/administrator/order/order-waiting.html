@@ -1,6 +1,6 @@
 <div ng-controller="orderController" class="order-client-validation">
     <div class="row">
-        <h1 class="twelve-mobile six cell"><i18n>lystore.orders.validations.waiting</i18n></h1>
+        <h1 class="twelve-mobile six cell"><i18n>crre.orders.validations.waiting</i18n></h1>
         <div class="right-magnet">
             <select
                     ng-model="campaign"
@@ -37,7 +37,7 @@
         <table class="twelve">
             <thead>
             <tr>
-                <td workflow="lystore.manager" class="table-selector">
+                <td workflow="crre.manager" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox"
                                ng-change="switchAllOrders()"
@@ -57,7 +57,7 @@
             </thead>
             <tbody>
             <tr ng-repeat="order in displayedOrders.all | orderBy:sort.order.type:sort.order.reverse" post-ng-repeat>
-                <td workflow="lystore.manager" class="table-selector">
+                <td workflow="crre.manager" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected">
                         <span></span>
@@ -136,10 +136,10 @@
                     <i18n>modify</i18n>
                 </button>
                 <button ng-click="exportCSV()" >
-                    <i18n>lystore.logs.csv.export</i18n>
+                    <i18n>crre.logs.csv.export</i18n>
                 </button>
                 <button ng-click="selectOperationForOrder()">
-                    <i18n>lystore.order.operation.select</i18n>
+                    <i18n>crre.order.operation.select</i18n>
                 </button>
             </div>
         </div>

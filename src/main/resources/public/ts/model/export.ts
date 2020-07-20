@@ -7,11 +7,8 @@ export class Export implements Selectable {
     selected: boolean;
     filename: string;
     fileId: string;
-    ownerid: string;
     _id: string;
     typeObject: string;
-    instruction_name:string;
-    instruction_id:Number;
     extension:string
     status: STATUS;
     created?;
@@ -24,22 +21,22 @@ export class Export implements Selectable {
 export class Exports extends Selection<Export> {
     async getExports() {
         try {
-            let {data} = await http.get(`/lystore/exports`);
+            let {data} = await http.get(`/crre/exports`);
             let response = data.map( exportResponse => {
                 let exportEdit = {
                     ...exportResponse};
                 switch(exportResponse.status) {
                     case STATUS.WAITING:
                         exportEdit.classStatus =  "disableRow";
-                        exportEdit.tooltip = lang.translate("lystore.export.waiting");
+                        exportEdit.tooltip = lang.translate("crre.export.waiting");
                         break;
                     case STATUS.SUCCESS:
                         exportEdit.classStatus =  "successRow";
-                        exportEdit.tooltip = lang.translate("lystore.export.success");
+                        exportEdit.tooltip = lang.translate("crre.export.success");
                         break;
                     default:
                         exportEdit.classStatus = "errorRow";
-                        exportEdit.tooltip = lang.translate("lystore.export.error");
+                        exportEdit.tooltip = lang.translate("crre.export.error");
                 }
                 exportEdit.created = moment(exportResponse.created).format("YYYY-MM-DD HH:mm:ss");
                 if(!exportEdit.typeObject)
@@ -50,7 +47,7 @@ export class Exports extends Selection<Export> {
             });
             this.all = Mix.castArrayAs(Export, response);
         } catch (e) {
-            notify.error('lystore.instruction.create.err');
+            notify.error('crre.instruction.create.err');
             throw e;
         }
     }
@@ -61,9 +58,9 @@ export class Exports extends Selection<Export> {
                 idsExport: idsExports,
                 idsFiles: idsFiles,
             };
-            await http.delete('/lystore/exports', { data: bodySend });
+            await http.delete('/crre/exports', { data: bodySend });
         } catch (e) {
-            throw notify.error('lystore.export.delete.err');
+            throw notify.error('crre.export.delete.err');
         }
     }
 }

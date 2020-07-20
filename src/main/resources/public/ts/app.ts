@@ -20,7 +20,7 @@ routes.define(($routeProvider) => {
         .when('/', {
             action: 'main'
         });
-    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.lystore.rights.workflow.administrator)) {
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider.when('/campaigns/create', {
             action: 'createCampaigns'
         })
@@ -39,7 +39,7 @@ routes.define(($routeProvider) => {
             )
         ;
     }
-    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.lystore.rights.workflow.manager)) {
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager)) {
         $routeProvider.when('/campaigns', {
             action: 'manageCampaigns'
         })

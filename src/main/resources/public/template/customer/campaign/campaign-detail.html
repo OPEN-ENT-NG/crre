@@ -5,7 +5,7 @@
             <li><a ng-click="openCatalog()"><i18n>CATALOG</i18n></a></li>
             <li>
                 <a ng-click="openOrder()">
-                    <i18n>lystore.order.tracking</i18n>
+                    <i18n>crre.order.tracking</i18n>
                     <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
                         [[campaign.nb_order]]
                     </span>
@@ -29,8 +29,8 @@
             <i18n>CATALOG</i18n>
         </header>
         <header class="horizontal-spacing" ng-click="openOrder()" >
-            <span ng-show="campaign.purse_enabled"><i18n>lystore.order.tracking</i18n></span>
-            <span ng-show="!campaign.purse_enabled"><i18n>lystore.request.tracking</i18n></span>
+            <span ng-show="campaign.purse_enabled"><i18n>crre.order.tracking</i18n></span>
+            <span ng-show="!campaign.purse_enabled"><i18n>crre.request.tracking</i18n></span>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
                     [[campaign.nb_order]]
             </span>

@@ -1,9 +1,9 @@
 <div class="row contract-management" ng-controller="configurationController">
     <h1>
-        <i18n>lystore.contracts</i18n>
-        <button class="right-magnet twelve-mobile" workflow="lystore.administrator"
+        <i18n>crre.contracts</i18n>
+        <button class="right-magnet twelve-mobile" workflow="crre.administrator"
                 ng-click="openContractForm()">
-            <i18n>lystore.contract.add</i18n>
+            <i18n>crre.contract.add</i18n>
         </button>
     </h1>
     <div class="row centered twelve twelve-mobile">
@@ -11,7 +11,7 @@
             <table class="twelve">
                 <thead>
                 <tr>
-                    <td workflow="lystore.administrator">
+                    <td workflow="crre.administrator">
                         <label class="checkbox">
                             <input type="checkbox"
                                    ng-change="switchAll(allContractSelected, contracts)"
@@ -24,31 +24,31 @@
                     </td>
                     <td ng-click="sort.contract.type = 'reference';
                     sort.contract.reverse = !sort.contract.reverse">
-                        <i18n>lystore.reference</i18n>
+                        <i18n>crre.reference</i18n>
                         <i class="up-open" ng-show="sort.contract.type === 'reference' && !sort.contract.reverse"></i>
                         <i class="down-open" ng-show="sort.contract.type === 'reference' && sort.contract.reverse"></i>
                     </td>
                     <td ng-click="sort.contract.type = 'name';
                     sort.contract.reverse = !sort.contract.reverse">
-                        <i18n>lystore.contract.name</i18n>
+                        <i18n>crre.contract.name</i18n>
                         <i class="up-open" ng-show="sort.contract.type === 'name' && !sort.contract.reverse"></i>
                         <i class="down-open" ng-show="sort.contract.type === 'name' && sort.contract.reverse"></i>
                     </td>
                     <td ng-click="sort.contract.type = 'supplier_display_name';
                     sort.contract.reverse = !sort.contract.reverse">
-                        <i18n>lystore.contract.supplier</i18n>
+                        <i18n>crre.contract.supplier</i18n>
                         <i class="up-open" ng-show="sort.contract.type === 'supplier_display_name' && !sort.contract.reverse"></i>
                         <i class="down-open" ng-show="sort.contract.type === 'supplier_display_nae' && sort.contract.reverse"></i>
                     </td>
                     <td ng-click="sort.contract.type = 'start_date';
                     sort.contract.reverse = !sort.contract.reverse">
-                        <i18n>lystore.calendar</i18n>
+                        <i18n>crre.calendar</i18n>
                         <i class="up-open" ng-show="sort.contract.type === 'start_date' && !sort.contract.reverse"></i>
                         <i class="down-open" ng-show="sort.contract.type === 'start_date' && sort.contract.reverse"></i>
                     </td>
                     <td ng-click="sort.contract.type = 'file';
                     sort.contract.reverse = !sort.contract.reverse">
-                        <i18n>lystore.contract.file</i18n>
+                        <i18n>crre.contract.file</i18n>
                         <i class="up-open" ng-show="sort.contract.type === 'file' && !sort.contract.reverse"></i>
                         <i class="down-open" ng-show="sort.contract.type === 'file' && sort.contract.reverse"></i>
                     </td>
@@ -56,7 +56,7 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="contract in contracts.all | orderBy:sort.contract.type:sort.contract.reverse">
-                    <td workflow="lystore.administrator">
+                    <td workflow="crre.administrator">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="contract.selected">
                             <span></span>

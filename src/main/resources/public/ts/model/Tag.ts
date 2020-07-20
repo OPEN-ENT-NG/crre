@@ -32,25 +32,25 @@ export class Tag implements Selectable {
 
     async create () {
         try {
-            await http.post(`/lystore/tag`, this.toJson());
+            await http.post(`/crre/tag`, this.toJson());
         } catch (e) {
-            notify.error('lystore.tag.create.err');
+            notify.error('crre.tag.create.err');
         }
     }
 
     async update () {
         try {
-            await http.put(`/lystore/tag/${this.id}`, this.toJson());
+            await http.put(`/crre/tag/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.tag.update.err');
+            notify.error('crre.tag.update.err');
         }
     }
 
     async delete () {
         try {
-            await http.delete(`/lystore/tag/${this.id}`);
+            await http.delete(`/crre/tag/${this.id}`);
         } catch (e) {
-            notify.error('lystore.tag.delete.err');
+            notify.error('crre.tag.delete.err');
         }
     }
     toString = () => this.name;
@@ -63,7 +63,7 @@ export class Tags extends Selection<Tag> {
     constructor () {
         super([]);
         this.colors = TAG_COLORS;
-        this.provider = new Provider(`/lystore/tags`, Tag);
+        this.provider = new Provider(`/crre/tags`, Tag);
     }
 
     async sync (force: boolean) {
@@ -76,9 +76,9 @@ export class Tags extends Selection<Tag> {
             let filter = '';
             tags.map((tag) => filter += `id=${tag.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/tag?${filter}`);
+            await http.delete(`/crre/tag?${filter}`);
         } catch (e) {
-            notify.error('lystore.tag.delete.err');
+            notify.error('crre.tag.delete.err');
         }
     }
 }

@@ -15,7 +15,7 @@ export class Taxes {
     constructor () {
         this.all = [];
         this.mapping = {};
-        this.provider = new Provider<Tax>(`/lystore/taxes`, Tax);
+        this.provider = new Provider<Tax>(`/crre/taxes`, Tax);
     }
 
     async sync (force: boolean = false) {
@@ -24,7 +24,7 @@ export class Taxes {
             this.all = await this.provider.data();
             this.all.map((tax) => this.mapping[tax.id] = tax);
         } catch (e) {
-            notify.error('lystore.tax.sync.err');
+            notify.error('crre.tax.sync.err');
             throw e;
         }
     }

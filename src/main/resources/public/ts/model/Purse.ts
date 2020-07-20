@@ -22,7 +22,7 @@ export class Purse implements Selectable {
 
     async save (): Promise<number> {
         try {
-            let {status, data} = await http.put(`/lystore/purse/${this.id}`, this.toJson());
+            let {status, data} = await http.put(`/crre/purse/${this.id}`, this.toJson());
             if(status===200) {
                 let {amount} = data.amount;
                 this.amount = amount;
@@ -31,7 +31,7 @@ export class Purse implements Selectable {
             }
         } catch (e) {
             console.log(e)
-            notify.error('lystore.purse.update.err');
+            notify.error('crre.purse.update.err');
         }
     }
 
@@ -53,12 +53,12 @@ export class Purses extends Selection<Purse> {
     }
 
     async sync () {
-        let {data} = await http.get(`/lystore/campaign/${this.id_campaign}/purses/list`);
+        let {data} = await http.get(`/crre/campaign/${this.id_campaign}/purses/list`);
         this.all = Mix.castArrayAs(Purse, data);
     }
 
     async check(id_campaign){
-        let {data, status} =  await  http.get(`/lystore/campaign/${id_campaign}/purse/check`);
+        let {data, status} =  await  http.get(`/crre/campaign/${id_campaign}/purse/check`);
         if(status===201){
             this.all.map(purse => {
                 data.map( back_data =>{
@@ -107,7 +107,7 @@ export class PurseImporter {
         formData.append('file', this.files[0], this.files[0].name);
         let response;
         try {
-            response = await http.post(`/lystore/campaign/${this.id_campaign}/purses/import`,
+            response = await http.post(`/crre/campaign/${this.id_campaign}/purses/import`,
                 formData, {'headers' : { 'Content-Type': 'multipart/form-data' }});
         } catch (err) {
             throw err.response.data;

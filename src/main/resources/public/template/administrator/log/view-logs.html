@@ -4,16 +4,16 @@
 <div class="log-view" ng-controller="loggerController">
     <div class="loading-bar" ng-class="{loading: loadingArrayLogs}"></div>
     <div ng-show="loadingArrayLogs">
-        <h1><i18n>lystore.loading</i18n></h1>
+        <h1><i18n>crre.loading</i18n></h1>
     </div>
 
     <div ng-show="!loadingArrayLogs" class="row">
         <h1 class="cell">
-            <i18n>lystore.log</i18n>
+            <i18n>crre.log</i18n>
         </h1>
         <div class="right-magnet twelve-mobile">
             <button ng-click="logs.export()" class="twelve-mobile">
-                <i18n>lystore.logs.csv.export</i18n>
+                <i18n>crre.logs.csv.export</i18n>
             </button>
         </div>
     </div>
@@ -72,8 +72,8 @@
         </div>
     </div>
     <lightbox show="display.lightbox" on-close="lightbox.display = false">
-        <h2><i18n>lystore.log.purse.import</i18n> [[formatDate(log.date, 'DD/MM/YYYY HH:mm:ss')]]</h2>
-        <h4><i18n>lystore.log.purse.import.file</i18n> :</h4>
+        <h2><i18n>crre.log.purse.import</i18n> [[formatDate(log.date, 'DD/MM/YYYY HH:mm:ss')]]</h2>
+        <h4><i18n>crre.log.purse.import.file</i18n> :</h4>
         <pre class="pre-file-import">
             [[parseJson(log.value).content.trim()]]
         </pre>

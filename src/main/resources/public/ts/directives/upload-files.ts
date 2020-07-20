@@ -10,7 +10,7 @@ export const uploadFiles = ng.directive("uploadFiles", function () {
             end: '=?',
             ngChange: '&'
         },
-        templateUrl: '/lystore/public/template/directives/upload-files/main.html',
+        templateUrl: '/crre/public/template/directives/upload-files/main.html',
         controller: ['$scope', '$element', '$attrs', function ($scope, element, attributes) {
             $scope.upload = {
                 loading: false,

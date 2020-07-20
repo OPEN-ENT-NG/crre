@@ -1,19 +1,19 @@
 <div >
     <h1>
-        <i18n>lystore.manage.structureGroups</i18n>
+        <i18n>crre.manage.structureGroups</i18n>
         <button class="right-magnet twelve-mobile" ng-click="openStructureGroupImporter()">
-            <i18n>lystore.campaign.purse.import</i18n>
+            <i18n>crre.campaign.purse.import</i18n>
         </button>
     </h1>
     <div class="row structureGroups-management">
         <div class ="twelve ten-mobile centered">
-            <article workflow="lystore.administrator">
+            <article workflow="crre.administrator">
                 <i  class="add-group" ng-click="openStructureGroupForm()"></i>
             </article>
             <article ng-repeat="structureGroup in structureGroups.all">
                     <h3>[[structureGroup.name]]</h3>
                     <p> [[structureGroup.structures.length]] <i18n>structures</i18n> </p>
-                    <div workflow="lystore.administrator" class="two-icons">
+                    <div workflow="crre.administrator" class="two-icons">
                         <i class="edit" ng-click="openStructureGroupForm(structureGroup)"></i>
                         <i class="delete" ng-click="openStructureGroupDeletion(structureGroup)"></i>
                     </div>

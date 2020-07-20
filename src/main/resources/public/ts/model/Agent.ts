@@ -36,32 +36,32 @@ export class Agent implements Selectable {
 
     async create (): Promise<void> {
         try {
-            let agent = await http.post(`/lystore/agent`, this.toJson());
+            let agent = await http.post(`/crre/agent`, this.toJson());
             this.id = agent.data.id;
         } catch (e) {
-            notify.error('lystore.agent.create.err');
+            notify.error('crre.agent.create.err');
         }
 
     }
 
     async update (): Promise<void> {
         try {
-            let agent = await http.put(`/lystore/agent/${this.id}`, this.toJson());
+            let agent = await http.put(`/crre/agent/${this.id}`, this.toJson());
             let { name, phone, email, department } = agent.data;
             this.name = name;
             this.phone = phone;
             this.email = email;
             this.department = department;
         } catch (e) {
-            notify.error('lystore.agent.update.err');
+            notify.error('crre.agent.update.err');
         }
     }
 
     async delete (): Promise<void> {
         try {
-            await http.delete(`/lystore/agent?id=${this.id}`);
+            await http.delete(`/crre/agent?id=${this.id}`);
         } catch (e) {
-            notify.error('lystore.agent.delete.err');
+            notify.error('crre.agent.delete.err');
         }
     }
 
@@ -74,7 +74,7 @@ export class Agents extends Selection<Agent> {
     }
 
     async sync (): Promise<void> {
-        let agents = await http.get(`/lystore/agents`);
+        let agents = await http.get(`/crre/agents`);
         this.all = Mix.castArrayAs(Agent, agents.data);
     }
 
@@ -83,9 +83,9 @@ export class Agents extends Selection<Agent> {
             let filter = '';
             agents.map((agent) => filter += `id=${agent.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/agent?${filter}`);
+            await http.delete(`/crre/agent?${filter}`);
         } catch (e) {
-            notify.error('lystore.agent.delete.err');
+            notify.error('crre.agent.delete.err');
         }
     }
 }

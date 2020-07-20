@@ -1,6 +1,6 @@
 <div ng-controller="orderRegionController" class="order-client-sent">
     <h1>
-        <i18n>lystore.order.create</i18n>
+        <i18n>crre.order.create</i18n>
     </h1>
     <form class="row">
         <div class="row vertical-spacing-four">
@@ -11,35 +11,35 @@
                     class="six cell"
                     ng-change="updateCampaign()"
                     ng-options="campaign as campaign.name for campaign in campaigns.all">
-                <option value="" disabled selected>[[translate('lystore.placeholder.campaign')]]</option>
+                <option value="" disabled selected>[[translate('crre.placeholder.campaign')]]</option>
             </select>
         </div>
 
         <div ng-show="titles.all.length !== 0 " class="row vertical-spacing-four">
             <label class="four right-padding-form-field cell">
-                <i18n>lystore.project</i18n>
+                <i18n>crre.project</i18n>
             </label>
             <select type="text" ng-model="orderToCreate.project"
                     class="six cell"
                     ng-options="title.id as title.name for title in titles.all">
-                <option value="" disabled selected>[[translate('lystore.placeholder.project')]]</option>
+                <option value="" disabled selected>[[translate('crre.placeholder.project')]]</option>
             </select></div>
         <div class="row vertical-spacing-four">
             <label class="four right-padding-form-field cell">
-                <i18n>lystore.operation</i18n>
+                <i18n>crre.operation</i18n>
             </label>
             <select ng-model="orderToCreate.operation"
                     class="six cell"
                     ng-options="operation.id as operation.label.label + ' - ' + operation.displayOperation()
                       for operation in operations.all">
-                <option value="" disabled selected>[[translate('lystore.instruction.choose.operation')]]</option>
+                <option value="" disabled selected>[[translate('crre.instruction.choose.operation')]]</option>
 
             </select>
         </div>
 
         <div class="row vertical-spacing-four">
             <input type="button" ng-disabled="!validForm()" class="right-magnet button" ng-click="createOrder()"
-                   i18n-value="lystore.save"/>
+                   i18n-value="crre.save"/>
         </div>
         <article class="responsive-table">
             <table class="twelve">
@@ -49,7 +49,7 @@
 
                     </td>
                     <td class="two">
-                        [[translate('lystore.structure.label')]] / [[translate('lystore.structureGroup.management')]]
+                        [[translate('crre.structure.label')]] / [[translate('crre.structureGroup.management')]]
                     </td>
                     <td class="two">
                         [[translate('support.market')]]
@@ -65,7 +65,7 @@
                         [[translate('quantity')]]
                     </td>
                     <td class="one" ng-if="orderToCreate.campaign.orderPriorityEnable()">
-                        [[translate('lystore.project.priority.order')]]
+                        [[translate('crre.project.priority.order')]]
                     </td>
                     <td class="three">
                         [[translate('comment')]]
@@ -94,7 +94,7 @@
                                     ng-model="row.structure"
                                     search-on="name"
                                     order-by="uai"
-                                    placeholder="lystore.placeholder.structure"
+                                    placeholder="crre.placeholder.structure"
                                     ng-change="switchStructure(row,row.structure)"
                                     class="cell horizontal-margin"
                             >
@@ -106,7 +106,7 @@
                                     options="structure_groups.all"
                                     param1="name"
                                     ng-model="row.structure"
-                                    placeholder="lystore.placeholder.structureGroup"
+                                    placeholder="crre.placeholder.structureGroup"
                                     search-on="name"
                                     order-by="uai"
                                     ng-change="switchStructure(row)"
@@ -125,7 +125,7 @@
                                     ng-model="row.contract"
                                     search-on="name"
                                     order-by="name"
-                                    placeholder="lystore.contract.type.placeholder"
+                                    placeholder="crre.contract.type.placeholder"
                                     class="cell horizontal-margin"
                                     ng-change="initContractType(row)"
                             >
@@ -145,7 +145,7 @@
                                     ng-model="row.equipment"
                                     search-on="name"
                                     order-by="name"
-                                    placeholder="lystore.placeholder.equipment"
+                                    placeholder="crre.placeholder.equipment"
                                     ng-change="initEquipmentData(row)"
                                     class="cell horizontal-margin"
                             >

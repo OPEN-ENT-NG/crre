@@ -15,14 +15,14 @@
             </label>
         </div>
         <div class="cell priority-manager" ng-if="campaign.projectPriorityEnable()">
-            <div ng-if="campaign.accessible"  class="priority_carree UP cell row" tooltip="lystore.order.priority.up"
+            <div ng-if="campaign.accessible"  class="priority_carree UP cell row" tooltip="crre.order.priority.up"
                  ng-show=" $index>0 && $index <= (ordersClient.projects.all.length - 1)"
                  ng-click="switchProjectClient($index, 'up') ">
             </div>
             <div class="priority_number cell">
                 [[$index + 1]]
             </div>
-            <div ng-if="campaign.accessible"  class="priority_carree DOWN cell row" tooltip="lystore.order.priority.down"
+            <div ng-if="campaign.accessible"  class="priority_carree DOWN cell row" tooltip="crre.order.priority.down"
                  ng-show=" $index>=0 && $index < (ordersClient.projects.all.length - 1)"
                  ng-click="switchProjectClient($index, 'down')">
             </div>
@@ -59,8 +59,8 @@
                                    ng-show="orderClient.options.length > 0">
                                     [[lang.translate(
                                     display.ordersClientOption[$index]
-                                    ? 'lystore.options.hide'
-                                    :'lystore.options.show'
+                                    ? 'crre.options.hide'
+                                    :'crre.options.show'
                                     )]]
                                 </a>
                             </div>
@@ -73,7 +73,7 @@
                         </div>
                         <div class="three cell text-right">
                             <div class="vertical-spacing-twice">
-                                <span ng-if="hasAProposalPrice(orderClient)"> <i18n>lystore.priceProposal</i18n> :</span>
+                                <span ng-if="hasAProposalPrice(orderClient)"> <i18n>crre.priceProposal</i18n> :</span>
                                 <span ng-if="!hasAProposalPrice(orderClient)"><i18n>price</i18n> :</span>
                                 <span ng-if="hasAProposalPrice(orderClient)"
                                       ng-bind="orderClient.price_proposal | currency"
@@ -83,10 +83,9 @@
                                       class="price-label"></span>
                             </div>
                             <div class="vertical-spacing-twice">
-                                <i18n>lystore.quantity</i18n>
+                                <i18n>crre.quantity</i18n>
                                 :
                                 [[orderClient.amount]]
-                                <!--p ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></p-->
                             </div>
 
                         </div>
@@ -94,7 +93,7 @@
                     <div ng-show="orderClient.options.length > 0 && display.ordersClientOption[$index]">
                         <div class="twelve row">
                             <h4 class="cell">
-                                <i18n>lystore.options</i18n>
+                                <i18n>crre.options</i18n>
                                 :
                             </h4>
                         </div>
@@ -105,7 +104,7 @@
                                     <i18n>price</i18n>
                                 </td>
                                 <td>
-                                    <i18n>lystore.quantity</i18n>
+                                    <i18n>crre.quantity</i18n>
                                 </td>
                                 <td>
                                     <i18n>price</i18n>
@@ -126,7 +125,7 @@
                     <div class="row twelve vertical-spacing-four" ng-if="orderClient.files.length > 0">
                         <div class="twelve row">
                             <h4 class="cell">
-                                <i18n>lystore.basket.file.name</i18n>
+                                <i18n>crre.basket.file.name</i18n>
                                 :
                             </h4>
                         </div>

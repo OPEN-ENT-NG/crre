@@ -48,10 +48,10 @@ export const titleController = ng.controller('TitleController',
                 await $scope.campaign.titles.delete(id_campaign, id, structure_id);
                 await $scope.campaign.titles.sync($scope.campaign.id);
                 $scope.lightbox.open = false;
-                toasts.confirm('lystore.campaign.titles.delete.success');
+                toasts.confirm('crre.campaign.titles.delete.success');
                 Utils.safeApply($scope);
             } catch (err) {
-                toasts.warning('lystore.campaign.titles.delete.error');
+                toasts.warning('crre.campaign.titles.delete.error');
             }
         };
 

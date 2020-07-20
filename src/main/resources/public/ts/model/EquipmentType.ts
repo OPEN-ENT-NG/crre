@@ -14,7 +14,7 @@ export class EquipmentTypes {
     constructor(){
         this.all = [];
         this.mapping = {};
-        this.provider = new Provider<EquipmentType>('lystore/equipmentType',EquipmentType);
+        this.provider = new Provider<EquipmentType>('crre/equipmentType',EquipmentType);
     }
 
     async sync (force : boolean = false){
@@ -23,7 +23,7 @@ export class EquipmentTypes {
             this.all = await this.provider.data();
             this.all.map((equipmenttype) => this.mapping[equipmenttype.id] = equipmenttype);
         }catch (e) {
-            notify.error('lystore.equipment_type.sync.error');
+            notify.error('crre.equipment_type.sync.error');
             throw e;
         }
     }

@@ -36,32 +36,32 @@ export class Supplier implements Selectable {
 
     async create (): Promise<void> {
         try {
-            let supplier = await http.post(`/lystore/supplier`, this.toJson());
+            let supplier = await http.post(`/crre/supplier`, this.toJson());
             this.id = supplier.data.id;
         } catch (e) {
-            notify.error('lystore.supplier.create.err');
+            notify.error('crre.supplier.create.err');
         }
 
     }
 
     async update (): Promise<void> {
         try {
-            let supplier = await http.put(`/lystore/supplier/${this.id}`, this.toJson());
+            let supplier = await http.put(`/crre/supplier/${this.id}`, this.toJson());
             let { name, phone, email, address } = supplier.data;
             this.name = name;
             this.phone = phone;
             this.email = email;
             this.address = address;
         } catch (e) {
-            notify.error('lystore.supplier.update.err');
+            notify.error('crre.supplier.update.err');
         }
     }
 
     async delete (): Promise<void> {
         try {
-            await http.delete(`/lystore/supplier?id=${this.id}`);
+            await http.delete(`/crre/supplier?id=${this.id}`);
         } catch (e) {
-            notify.error('lystore.supplier.delete.err');
+            notify.error('crre.supplier.delete.err');
         }
     }
 
@@ -76,7 +76,7 @@ export class Suppliers extends Selection<Supplier> {
     }
 
     async sync (): Promise<void> {
-        let agents = await http.get(`/lystore/suppliers`);
+        let agents = await http.get(`/crre/suppliers`);
         this.all = Mix.castArrayAs(Supplier, agents.data);
         this.all.map((supplier) => this.mapping[supplier.id] = supplier);
     }
@@ -86,9 +86,9 @@ export class Suppliers extends Selection<Supplier> {
             let filter = '';
             suppliers.map((supplier) => filter += `id=${supplier.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/supplier?${filter}`);
+            await http.delete(`/crre/supplier?${filter}`);
         } catch (e) {
-            notify.error('lystore.supplier.delete.err');
+            notify.error('crre.supplier.delete.err');
         }
     }
 

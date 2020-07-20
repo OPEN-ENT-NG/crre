@@ -6,14 +6,14 @@
             <span></span>
         </label>
         <div class="cell priority-manager order vertical-spacing" ng-if="campaign.orderPriorityEnable()">
-            <div ng-if="campaign.accessible" class="priority_carree UP cell row" tooltip="lystore.order.priority.up"
+            <div ng-if="campaign.accessible" class="priority_carree UP cell row" tooltip="crre.order.priority.up"
                  ng-show=" $index>0 && $index <= (orders.length - 1)"
                  ng-click="switchOrderClient(orderClient,$index, project.id, 'up') ">
             </div>
             <div class="priority_number cell">
                 [[$index + 1]]
             </div>
-            <div  ng-if="campaign.accessible" class="priority_carree DOWN cell row" tooltip="lystore.order.priority.down"
+            <div  ng-if="campaign.accessible" class="priority_carree DOWN cell row" tooltip="crre.order.priority.down"
                   ng-show=" $index>=0 && $index < (orders.length - 1)"
                   ng-click="switchOrderClient(orderClient,$index, project.id, 'down')">
             </div>
@@ -32,7 +32,7 @@
                     <h3>[[orderClient.name]]</h3>
                     <p ng-bind-html="orderClient.summary"></p>
                     <div class="project">
-                        <i18n>lystore.output.project</i18n>
+                        <i18n>crre.output.project</i18n>
                         [[ orderClient.project.title['name'] ]]
                     </div>
                     <a ng-init="display.ordersClientOption[$index] = false"
@@ -40,15 +40,15 @@
                        ng-show="orderClient.options.length > 0">
                         [[lang.translate(
                         display.ordersClientOption[$index]
-                        ? 'lystore.options.hide'
-                        :'lystore.options.show'
+                        ? 'crre.options.hide'
+                        :'crre.options.show'
                         )]]
                     </a>
                 </div>
             </div>
             <div class="four cell text-right">
                 <div class="vertical-spacing-twice">
-                    <span ng-if="hasAProposalPrice(orderClient)"> <i18n>lystore.priceProposal</i18n> :</span>
+                    <span ng-if="hasAProposalPrice(orderClient)"> <i18n>crre.priceProposal</i18n> :</span>
                     <span ng-if="!hasAProposalPrice(orderClient)"><i18n>price</i18n> :</span>
                     <span ng-if="hasAProposalPrice(orderClient)"
                           ng-bind="orderClient.price_proposal | currency"
@@ -58,22 +58,13 @@
                           class="price-label"></span>
                 </div>
                 <div class="vertical-spacing-twice">
-                    <i18n>lystore.quantity</i18n>
+                    <i18n>crre.quantity</i18n>
                     :
                     [[orderClient.amount]]
-                    <!--p ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></p-->
                 </div>
                 <div class="right-magnet flexbox">
                     <div tooltip="[[orderClient.status]]"
                          class="[[orderClient.status]] status-circle  cell row">
-
-<!--                        <img src="/lystore/public/img/scss/check-all.svg" type="image/svg+xml" fill="white" />-->
-                        <!--    <svg id="circle" height="60" width="60"
-                             xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" >
-                            <image x="0" y="0" height="60" width="60"  xlink:href="/lystore/public/img/scss/check-all.svg" fill="#ffffff" />
-                        </svg>                        <i>-->
-                        <i>
-                        </i>
                     </div><span ng-bind=" lang.translate(orderClient.status)"></span>
                 </div>
             </div>
@@ -81,7 +72,7 @@
         <div ng-show="orderClient.options.length > 0 && display.ordersClientOption[$index]">
             <div class="twelve row">
                 <h4 class="cell">
-                    <i18n>lystore.options</i18n>
+                    <i18n>crre.options</i18n>
                     :
                 </h4>
             </div>
@@ -92,7 +83,7 @@
                         <i18n>price</i18n>
                     </td>
                     <td>
-                        <i18n>lystore.quantity</i18n>
+                        <i18n>crre.quantity</i18n>
                     </td>
                     <td>
                         <i18n>price</i18n>
@@ -113,7 +104,7 @@
         <div class="row twelve vertical-spacing-four" ng-if="orderClient.files.length > 0">
             <div class="twelve row">
                 <h4 class="cell">
-                    <i18n>lystore.basket.file.name</i18n>
+                    <i18n>crre.basket.file.name</i18n>
                     :
                 </h4>
             </div>

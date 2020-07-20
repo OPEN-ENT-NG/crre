@@ -1,13 +1,13 @@
 <div class="loading-bar" ng-class="{loading: equipment.loading}"></div>
 
 <div ng-if="equipment.loading">
-    <h1><i18n>lystore.loading</i18n></h1>
+    <h1><i18n>crre.loading</i18n></h1>
 </div>
 
 <div ng-if="!equipment.loading" class="row ten centered">
     <h1>
-        <i18n ng-show="equipment.id == undefined">lystore.equipment.add</i18n>
-        <i18n ng-show="equipment.id !== undefined">lystore.equipment.modify</i18n>
+        <i18n ng-show="equipment.id == undefined">crre.equipment.add</i18n>
+        <i18n ng-show="equipment.id !== undefined">crre.equipment.modify</i18n>
     </h1>
 
     <article>
@@ -22,22 +22,22 @@
                     </div>
                 </div>
                 <div class="eight cell horizontal-spacing twelve-mobile">
-                    <h2><i18n>lystore.information</i18n></h2>
+                    <h2><i18n>crre.information</i18n></h2>
                     <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.equipment.name</i18n> *
+                            <i18n>crre.equipment.name</i18n> *
                         </span>
                         <input type="text" class="twelve" ng-model="equipment.name" required>
                     </label>
                     <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.equipment.reference</i18n>[[equipment.id? " *" : ""]]
+                            <i18n>crre.equipment.reference</i18n>[[equipment.id? " *" : ""]]
                         </span>
                         <input type="text" class="twelve" ng-model="equipment.reference">
                     </label>
                     <label class="five twelve vertical-spacing cell">
                         <span class="twelve">
-                            <i18n>lystore.equipment_type</i18n> *
+                            <i18n>crre.equipment_type</i18n> *
                         </span>
                         <select  ng-model="equipment.id_type" class="twelve"
                                  ng-init="equipment.id_type = equipment.id_type || (equipmentTypes.all.length > 0 ? equipmentTypes.all[0].id : null)"
@@ -46,8 +46,8 @@
                     </label>
                     <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.equipment.summary</i18n>
-                            <em class="smaller-text"><i18n>lystore.equipment.summary.length</i18n></em>
+                            <i18n>crre.equipment.summary</i18n>
+                            <em class="smaller-text"><i18n>crre.equipment.summary.length</i18n></em>
                         </span>
                         <textarea ng-model="equipment.summary"
                                   cols="20"
@@ -58,7 +58,7 @@
                     </label>
                     <label class="five twelve-mobile vertical-spacing cell">
                         <span class="four cell twelve-mobile">
-                            <i18n>lystore.tax</i18n> *
+                            <i18n>crre.tax</i18n> *
                         </span>
                         <span class="eight cell twelve-mobile">
                             <select
@@ -73,7 +73,7 @@
                     </label>
                     <label class="five twelve-mobile vertical-spacing cell">
                         <span class="four cell twelve-mobile">
-                            <i18n>lystore.price</i18n> *
+                            <i18n>crre.price</i18n> *
                         </span>
                         <span class="eight cell twelve-mobile">
                             <input type="number" step="0.01" class="eleven" ng-model="equipment.price" required>
@@ -81,7 +81,7 @@
                     </label>
                     <label class="five twelve-mobile vertical-spacing cell">
                         <span class="four cell twelve-mobile">
-                            <i18n>lystore.warranty</i18n> *
+                            <i18n>crre.warranty</i18n> *
                         </span>
                         <span class="eight cell twelve-mobile">
                             <input type="number" min="0" value="1" ng-model="equipment.warranty" class="eleven" required>
@@ -92,14 +92,14 @@
             <div class="row twelve">
                 <label class="row twelve vertical-spacing">
                         <span class="twelve">
-                            <i18n>lystore.equipment.description</i18n>
+                            <i18n>crre.equipment.description</i18n>
                         </span>
                     <editor ng-model="equipment.description"></editor>
                 </label>
             </div>
             <div class="row twelve">
                 <h2 class="vertical-spacing">
-                    <i18n>lystore.equipment.technical.specifications</i18n>
+                    <i18n>crre.equipment.technical.specifications</i18n>
                 </h2>
                 <div class="row technical-specs">
                     <div class="twelve row">
@@ -136,19 +136,19 @@
             </div>
             <div class="row twelve">
                 <h2 class="vertical-spacing">
-                    <i18n>lystore.equipment.options</i18n>
+                    <i18n>crre.equipment.options</i18n>
                 </h2>
                 <article class="responsive-table row">
                     <table class="twelve">
                         <thead>
                         <td class="two"><i18n>reference</i18n></td>
                         <td class="two"><i18n>name</i18n></td>
-                        <td class="two"><i18n>lystore.unit.price.ht</i18n></td>
-                        <td class="two"><i18n>lystore.amount</i18n></td>
-                        <td class="one aligne-text-center "><i18n>lystore.price.TTC</i18n></td>
-                        <td class="two"><i18n>lystore.tax</i18n></td>
-                        <td class="two"><i18n>lystore.type</i18n></td>
-                        <td class="two "><i18n>lystore.required</i18n></td>
+                        <td class="two"><i18n>crre.unit.price.ht</i18n></td>
+                        <td class="two"><i18n>crre.amount</i18n></td>
+                        <td class="one aligne-text-center "><i18n>crre.price.TTC</i18n></td>
+                        <td class="two"><i18n>crre.tax</i18n></td>
+                        <td class="two"><i18n>crre.type</i18n></td>
+                        <td class="two "><i18n>crre.required</i18n></td>
                         <td class="one aligne-text-center">&nbsp;</td>
                         </thead>
                         <tbody>
@@ -215,12 +215,12 @@
             </div>
             <div class="row twelve">
                 <h2 class="vertical-spacing">
-                    <i18n>lystore.equipment.tag</i18n>
+                    <i18n>crre.equipment.tag</i18n>
                 </h2>
                 <div class="row twelve vertical-spacing"
                      ng-init="equipment.tags = equipment.tags || []">
                     <div class="cell two twelve-mobile">
-                        <i18n>lystore.equipment.tags</i18n> *
+                        <i18n>crre.equipment.tags</i18n> *
                     </div>
                     <div class="cell nine twelve-mobile">
                         <div class="row">
@@ -249,10 +249,10 @@
             </div>
             <div class="row twelve">
                 <h2>
-                    <i18n>lystore.equipment.administration</i18n>
+                    <i18n>crre.equipment.administration</i18n>
                 </h2>
                 <div class="row">
-                    <h4 class="two cell twelve-mobile vertical-spacing"><i18n>lystore.equipment.contract</i18n> *</h4>
+                    <h4 class="two cell twelve-mobile vertical-spacing"><i18n>crre.equipment.contract</i18n> *</h4>
                     <div class="nine cell twelve-mobile vertical-spacing">
                         <select
                                 class="six twelve-mobile"
@@ -265,13 +265,13 @@
                 </div>
                 <div class="row vertical-spacing">
                     <h4 class="two cell twelve-mobile">
-                        <i18n>lystore.availability</i18n>
+                        <i18n>crre.availability</i18n>
                     </h4>
                     <div class="cell twelve-mobile ten">
                         <div class="row seven twelve-mobile" ng-init="equipment.status = equipment.status || 'AVAILABLE'">
                             <label class="horizontal-spacing twelve-mobile row-mobile">
                                 <span class="horizontal-spacing six-mobile cell">
-                                    <i18n>lystore.AVAILABLE</i18n>
+                                    <i18n>crre.AVAILABLE</i18n>
                                 </span>
                                 <input type="radio" class="cell"
                                        ng-model="equipment.status"
@@ -280,7 +280,7 @@
                             </label>
                             <label class="horizontal-spacing twelve-mobile row-mobile">
                                 <span class="horizontal-spacing six-mobile cell">
-                                    <i18n>lystore.OUT_OF_STOCK</i18n>
+                                    <i18n>crre.OUT_OF_STOCK</i18n>
                                 </span>
                                 <input type="radio" class="cell"
                                        ng-model="equipment.status"
@@ -289,7 +289,7 @@
                             </label>
                             <label class="horizontal-spacing twelve-mobile row-mobile">
                                 <span class="horizontal-spacing six-mobile cell">
-                                    <i18n>lystore.UNAVAILABLE</i18n>
+                                    <i18n>crre.UNAVAILABLE</i18n>
                                 </span>
                                 <input
                                         type="radio"
@@ -302,7 +302,7 @@
                         <div class="row seven twelve-mobile">
                             <label class="vertical-spacing twelve-mobile row-mobile">
                                 <span class="horizontal-spacing six-mobile cell three">
-                                    <i18n>lystore.AVAILABLE_ON_THE_CATALOG</i18n>
+                                    <i18n>crre.AVAILABLE_ON_THE_CATALOG</i18n>
                                 </span>
                                 <switch-toggle ng-model="equipment.catalog_enabled"
                                                class="cell"></switch-toggle>
@@ -310,7 +310,7 @@
                             <div class="row seven twelve-mobile">
                                 <label class="vertical-spacing twelve-mobile row-mobile">
                                 <span class="horizontal-spacing six-mobile cell three">
-                                    <i18n>lystore.AVAILABLE_AS_AN_OPTION</i18n>
+                                    <i18n>crre.AVAILABLE_AS_AN_OPTION</i18n>
                                 </span>
                                     <switch-toggle
                                             ng-model="equipment.option_enabled"
@@ -321,7 +321,7 @@
                             <div class="row seven twelve-mobile">
                                 <label class="vertical-spacing twelve-mobile row-mobile">
                                 <span class="horizontal-spacing six-mobile cell three">
-                                    <i18n>lystore.contract.price_editable</i18n>
+                                    <i18n>crre.contract.price_editable</i18n>
                                 </span>
                                     <switch-toggle ng-model="equipment.price_editable"></switch-toggle>
                                 </label>

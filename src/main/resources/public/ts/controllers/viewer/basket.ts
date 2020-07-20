@@ -239,9 +239,9 @@ export const basketController = ng.controller('basketController',
                 Utils.safeApply($scope);
                 await basket.deleteDocument(file);
                 basket.files = _.reject(basket.files, (doc) => doc.id === file.id);
-                toasts.confirm('lystore.basket.file.delete.success');
+                toasts.confirm('crre.basket.file.delete.success');
             } catch (err) {
-                toasts.warning('lystore.basket.file.delete.error');
+                toasts.warning('crre.basket.file.delete.error');
                 delete file.status;
             } finally {
                 Utils.safeApply($scope);

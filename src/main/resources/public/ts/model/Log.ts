@@ -24,17 +24,17 @@ export class Logs {
 
     async loadPage (pageNumber: number = 1) {
         try {
-            let { data } = await http.get(`/lystore/logs?page=${--pageNumber}`);
+            let { data } = await http.get(`/crre/logs?page=${--pageNumber}`);
             this.all = Mix.castArrayAs(Log, data.logs);
             this.numberOfPages = Math.floor(data.number_logs / 100) + 1;
             this.all.map((log) => log.selected = false);
         } catch (e) {
-            notify.error('lystore.logs.sync.err');
+            notify.error('crre.logs.sync.err');
         }
     }
 
     export () {
-        location.replace(`/lystore/logs/export`);
+        location.replace(`/crre(/logs/export`);
     }
 
     reset () {

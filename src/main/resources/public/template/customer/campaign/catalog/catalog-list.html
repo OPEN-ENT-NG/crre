@@ -28,7 +28,7 @@
         </button>
         <span class="pagination">
 				<span>[[ equipments.page + 1 ]]</span>
-				<i18n class="zero-mobile"><i18n>lystore.pages.separator</i18n></i18n>
+				<i18n class="zero-mobile"><i18n>crre.pages.separator</i18n></i18n>
 				<span class="zero-desktop">/</span>
 				<span>[[ equipments.page_count ]]</span>
 			</span>
@@ -49,8 +49,8 @@
 
                 <div ng-class="{disabled: equipment.status!== 'AVAILABLE'} "></div>
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">
-                    <i18n ng-show="equipment.status === 'UNAVAILABLE'">lystore.UNAVAILABLE</i18n>
-                    <i18n ng-show="equipment.status === 'OUT_OF_STOCK'">lystore.OUT_OF_STOCK</i18n></h1>
+                    <i18n ng-show="equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
+                    <i18n ng-show="equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n></h1>
 
                 <article class="domino"  ng-class="{ disabled: equipment.status !== 'AVAILABLE' }">
                     <h2 ng-bind="calculatePriceOfEquipment(equipment, false, 2) | currency"></h2>

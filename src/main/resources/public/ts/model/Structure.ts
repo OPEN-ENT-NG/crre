@@ -38,11 +38,11 @@ export class Structures  extends Selection<Structure> {
     }
 
     async sync (): Promise<void> {
-        let {data} = await http.get(`/lystore/structures`);
+        let {data} = await http.get(`/crre/structures`);
         this.all = Mix.castArrayAs(Structure, data);
     }
     async getStructureType() : Promise<void> {
-        let {data} = await http.get(`/lystore/structures/type`);
+        let {data} = await http.get(`/crre/structures/type`);
         this.all.map((structure)=>{
             let type = _.findWhere(data, {id: structure.id});
             structure.type = type ? type.type : 'LYC';
@@ -50,7 +50,7 @@ export class Structures  extends Selection<Structure> {
     }
 
     async syncUserStructures (): Promise<void> {
-        let { data } = await http.get('/lystore/user/structures');
+        let { data } = await http.get('/crre/user/structures');
         this.all = Mix.castArrayAs(Structure, data);
     }
 

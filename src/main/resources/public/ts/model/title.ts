@@ -27,7 +27,7 @@ export class Titles extends Selection<Title> {
 
     async sync(idCampaign: number, idStructure?: string): Promise<void> {
         {
-            const uri = idStructure ? `/lystore/titles/campaigns/${idCampaign}/structures/${idStructure}` : `/lystore/titles/campaigns/${idCampaign}`;
+            const uri = idStructure ? `/crre/titles/campaigns/${idCampaign}/structures/${idStructure}` : `/crre/titles/campaigns/${idCampaign}`;
             let titles = await http.get(uri);
             this.all = Mix.castArrayAs(Title, titles.data);
         }
@@ -35,14 +35,14 @@ export class Titles extends Selection<Title> {
 
     async syncAdmin(idCampaign: number): Promise<void> {
         {
-            const uri = `/lystore/titles/campaigns/admin/${idCampaign}`;
+            const uri = `/crre/titles/campaigns/admin/${idCampaign}`;
             let titles = await http.get(uri);
             this.all = Mix.castArrayAs(Title, titles.data);
         }
     }
 
     delete(idCampaign: number, idTitle: number, idStructure: string) {
-        return http.delete(`/lystore/titles/${idTitle}/campaigns/${idCampaign}/structures/${idStructure}`);
+        return http.delete(`/crre/titles/${idTitle}/campaigns/${idCampaign}/structures/${idStructure}`);
     }
 }
 
@@ -75,7 +75,7 @@ export class TitleImporter {
         formData.append('file', this.files[0], this.files[0].name);
         let response;
         try {
-            response = await http.post(`/lystore/titles/campaigns/${this.id_campaign}/import`,
+            response = await http.post(`/crre/titles/campaigns/${this.id_campaign}/import`,
                 formData, {'headers': {'Content-Type': 'multipart/form-data'}});
         }
         catch (err) {

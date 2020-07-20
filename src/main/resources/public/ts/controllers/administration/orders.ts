@@ -241,7 +241,7 @@ export const orderController = ng.controller('orderController',
             ordersToWindUp.all = Mix.castArrayAs(OrderClient, orders);
             let { status } = await ordersToWindUp.updateStatus('DONE');
             if (status === 200) {
-                toasts.confirm('lystore.windUp.notif');
+                toasts.confirm('crre.windUp.notif');
             }
             await $scope.syncOrders('SENT');
             while ($scope.displayedOrders.selected.length > 0){
@@ -278,7 +278,7 @@ export const orderController = ng.controller('orderController',
                     await $scope.initOrdersForPreview(orders);
                 } catch (e) {
                     console.error(e);
-                    toasts.warning('lystore.order.pdf.preview.error');
+                    toasts.warning('crre.order.pdf.preview.error');
                 } finally {
                     if ($scope.orderToSend.hasOwnProperty('preview')) {
                         $scope.redirectTo('/order/preview');
@@ -289,15 +289,14 @@ export const orderController = ng.controller('orderController',
         };
         $scope.validatePrepareSentOrders = (orderToSend: OrdersClient) => {
             return orderToSend && orderToSend.supplier && orderToSend.bc_number && orderToSend.engagement_number
-                && orderToSend.bc_number !== undefined && orderToSend.engagement_number !== undefined
                 && orderToSend.bc_number.trim() !== '' && orderToSend.engagement_number.trim() !== ''
                 && orderToSend.id_program !== undefined;
         };
         $scope.sendOrders = async (orders: OrdersClient) => {
             let { status, data } = await orders.updateStatus('SENT');
             if (status === 201) {
-                toasts.confirm( 'lystore.sent.order');
-                toasts.info( 'lystore.sent.export.BC');
+                toasts.confirm( 'crre.sent.order');
+                toasts.info( 'crre.sent.export.BC');
             }
             $scope.redirectTo('/order/valid');
             Utils.safeApply($scope);
@@ -317,7 +316,7 @@ export const orderController = ng.controller('orderController',
         };
         $scope.exportCSV = async() => {
             let params = Utils.formatKeyToParameter($scope.ordersClient.selected, 'id');
-            window.location = `/lystore/orders/export?${params}`;
+            window.location = `/crre/orders/export?${params}`;
         };
 
         $scope.getUsername = () => model.me.username;
@@ -331,7 +330,7 @@ export const orderController = ng.controller('orderController',
         };
         $scope.exportCSV = async() => {
             let params = Utils.formatKeyToParameter($scope.ordersClient.selected, 'id');
-            window.location = `/lystore/orders/export?${params}`;
+            window.location = `/crre/orders/export?${params}`;
         };
 
         $scope.isValidOrdersWaitingSelection = () => {
@@ -352,9 +351,9 @@ export const orderController = ng.controller('orderController',
 
             if ((_.where(orders, { status : 'SENT' }).length === orders.length || (_.where(orders, { status : 'DONE' }).length === orders.length ) && $scope.validateSentOrders(orders))) {
                 let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
-                let  {status, data} =  await http.get(`/lystore/order?bc_number=${orderNumber}`);
+                let  {status, data} =  await http.get(`/crre/order?bc_number=${orderNumber}`);
                 if(status === 201){
-                    toasts.info('lystore.sent.export.BC');
+                    toasts.info('crre.sent.export.BC');
                 }
             } else {
                 $scope.exportValidOrders(orders, 'order');
@@ -369,9 +368,9 @@ export const orderController = ng.controller('orderController',
 
             if ((_.where(orders, { status : 'SENT' }).length === orders.length || (_.where(orders, { status : 'DONE' }).length === orders.length ) && $scope.validateSentOrders(orders))) {
                 let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
-                let  {status, data} =  await http.get(`/lystore/order/struct?bc_number=${orderNumber}`);
+                let  {status, data} =  await http.get(`/crre/order/struct?bc_number=${orderNumber}`);
                 if(status === 201){
-                    toasts.info('lystore.sent.export.BC');
+                    toasts.info('crre.sent.export.BC');
                 }
             } else {
                 let filter = "";
@@ -379,9 +378,9 @@ export const orderController = ng.controller('orderController',
                     filter +="number_validation=" +  order.number_validation + "&";
                 });
                 filter = filter.substring(filter.length-1,0);
-                let  {status, data} = await http.get(`/lystore/order/struct?${filter}`);
+                let  {status, data} = await http.get(`/crre/order/struct?${filter}`);
                 if(status === 201){
-                    toasts.info('lystore.sent.export.BC');
+                    toasts.info('crre.sent.export.BC');
                 }
             }
             $scope.displayedOrders.selected.map(order => {
@@ -396,18 +395,18 @@ export const orderController = ng.controller('orderController',
             });
             params = params.slice(0, -1);
             if(fileType ==='structure_list'){
-                toasts.info('lystore.sent.export.BC');
+                toasts.info('crre.sent.export.BC');
                 await orders[0].exportListLycee(params);
                 $scope.displayedOrders.selected[0].selected = false;
                 Utils.safeApply($scope);
             }else
             if(fileType === 'certificates'){
-                window.location = `/lystore/orders/valid/export/${fileType}?${params}`;
+                window.location = `/crre/orders/valid/export/${fileType}?${params}`;
             }
             else{
-                let  {status, data} = await http.get(`/lystore/orders/valid/export/${fileType}?${params}`);
+                let  {status, data} = await http.get(`/crre/orders/valid/export/${fileType}?${params}`);
                 if(status === 201){
-                    toasts.info('lystore.sent.export.BC');
+                    toasts.info('crre.sent.export.BC');
                 }
             }
         };
@@ -416,9 +415,9 @@ export const orderController = ng.controller('orderController',
             try {
                 await $scope.displayedOrders.cancel(orders);
                 await $scope.syncOrders('VALID');
-                toasts.confirm('lystore.orders.valid.cancel.confirmation');
+                toasts.confirm('crre.orders.valid.cancel.confirmation');
             } catch (e) {
-                toasts.warning('lystore.orders.valid.cancel.error');
+                toasts.warning('crre.orders.valid.cancel.error');
             } finally {
                 Utils.safeApply($scope);
             }
@@ -444,7 +443,6 @@ export const orderController = ng.controller('orderController',
         $scope.isOperationsIsEmpty = false;
 
         $scope.selectOperationForOrder = async () =>{
-            await $scope.initOperation();
             $scope.isOperationsIsEmpty = !$scope.operations.all.some(operation => operation.status === 'true' && !operation.id_instruction);
             template.open('validOrder.lightbox', 'administrator/order/order-select-operation');
             $scope.display.lightbox.validOrder = true;
@@ -484,7 +482,7 @@ export const orderController = ng.controller('orderController',
                     return order.rank = order.project.preference + 1;
                 }
             }
-            return order.rank = lang.translate("lystore.order.not.prioritized");
+            return order.rank = lang.translate("crre.order.not.prioritized");
         };
         $scope.updateOrder = (order: OrderClient) => {
             $scope.ub.putPreferences("searchFields", $scope.search.filterWords);

@@ -26,7 +26,7 @@
 
     > i {
 
-      background-image: url(/lystore/public/img/scss/send.svg);
+      background-image: url(/crre/public/img/scss/send.svg);
     }
   }
 
@@ -34,7 +34,7 @@
     background: $yellow;
 
     > i {
-      background-image: url(/lystore/public/img/scss/sync.svg);
+      background-image: url(/crre/public/img/scss/sync.svg);
     }
   }
 
@@ -42,14 +42,14 @@
     background: $yellow;
 
     > i {
-      background-image: url(/lystore/public/img/scss/truck.svg);
+      background-image: url(/crre/public/img/scss/truck.svg);
     }
   }
 
   &.DONE {
     background: $green;
     > i {
-      background-image: url(/lystore/public/img/scss/check-all.svg);
+      background-image: url(/crre/public/img/scss/check-all.svg);
       fill: white;
     }
   }
@@ -72,7 +72,7 @@
   &.VALID{
     background: $yellow;
     >i{
-      background-image: url(/lystore/public/img/scss/check.svg);
+      background-image: url(/crre/public/img/scss/check.svg);
     }
   }
 }

@@ -13,10 +13,7 @@ export class Campaign implements Selectable  {
     groups: StructureGroup[];
     selected: boolean;
     purse_amount?: number;
-    initial_purse_amount?: number;
     nb_structures: number;
-    nb_equipments: number;
-    purses?: Purses;
     titles: Titles;
     nb_panier?: number;
     purse_enabled: boolean;
@@ -58,32 +55,32 @@ export class Campaign implements Selectable  {
 
     async create () {
         try {
-            await http.post(`/lystore/campaign`, this.toJson());
+            await http.post(`/crre/campaign`, this.toJson());
         } catch (e) {
-            notify.error('lystore.campaign.create.err');
+            notify.error('crre.campaign.create.err');
         }
     }
 
     async update () {
         try {
-            await http.put(`/lystore/campaign/${this.id}`, this.toJson());
+            await http.put(`/crre/campaign/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.campaign.update.err');
+            notify.error('crre.campaign.update.err');
         }
     }
 
     async delete () {
         try {
-            await http.delete(`/lystore/campaign/${this.id}`);
+            await http.delete(`/crre/campaign/${this.id}`);
         } catch (e) {
-            notify.error('lystore.campaign.delete.err');
+            notify.error('crre.campaign.delete.err');
         }
     }
     async updateAccessibility() {
         try {
-            await http.put(`/lystore/campaign/accessibility/${this.id}`, this.toJson());
+            await http.put(`/crre/campaign/accessibility/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('lystore.campaign.update.err');
+            notify.error('crre.campaign.update.err');
         }
     }
     projectPriorityEnable(){
@@ -94,7 +91,7 @@ export class Campaign implements Selectable  {
     }
     async sync (id, tags?: Tags) {
         try {
-            let { data } = await http.get(`/lystore/campaigns/${id}`);
+            let { data } = await http.get(`/crre/campaigns/${id}`);
             Mix.extend(this, Mix.castAs(Campaign, data));
             if (this.groups[0] !== null ) {
                 this.groups = Mix.castArrayAs(StructureGroup, JSON.parse(this.groups.toString())) ;
@@ -108,7 +105,7 @@ export class Campaign implements Selectable  {
             } else this.groups = [];
 
         } catch (e) {
-            notify.error('lystore.campaign.sync.err');
+            notify.error('crre.campaign.sync.err');
         }
     }
 }
@@ -125,18 +122,18 @@ export class Campaigns extends Selection<Campaign> {
             let filter = '';
             campaigns.map((campaign) => filter += `id=${campaign.id}&`);
             filter = filter.slice(0, -1);
-            await http.delete(`/lystore/campaign?${filter}`);
+            await http.delete(`/crre/campaign?${filter}`);
         } catch (e) {
-            notify.error('lystore.campaign.delete.err');
+            notify.error('crre.campaign.delete.err');
         }
     }
 
     async sync (Structure?: string) {
         try {
-            let { data } = await http.get( Structure ? `/lystore/campaigns?idStructure=${Structure}`  : `/lystore/campaigns`  );
+            let { data } = await http.get( Structure ? `/crre/campaigns?idStructure=${Structure}`  : `/crre/campaigns`  );
             this.all = Mix.castArrayAs(Campaign, data);
         } catch (e) {
-            notify.error('lystore.campaigns.sync.err');
+            notify.error('crre.campaigns.sync.err');
         }
     }
 

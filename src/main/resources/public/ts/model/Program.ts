@@ -20,7 +20,7 @@ export class Programs extends Selection<Program> {
     }
 
     async sync (): Promise<void> {
-        let programs = await http.get(`/lystore/programs`);
+        let programs = await http.get(`/crre/programs`);
         this.all = Mix.castArrayAs(Program, programs.data);
     }
 }

@@ -1,52 +1,52 @@
 <nav class="vertical twelve-mobile mobile-navigation" side-nav>
     <ul>
-        <li><a href="#/order/waiting"><i18n>lystore.orders.validations.waiting</i18n></a></li>
-        <li><a href="#/order/valid"><i18n>lystore.order.form.generate</i18n></a></li>
-        <li><a href="#/order/sent"><i18n>lystore.end.expedited.requests</i18n></a></li>
-        <li><a href="#/tags"><i18n>lystore.tag.management</i18n></a></li>
-        <li><a href="#/equipments"><i18n>lystore.catalog.management</i18n></a></li>
-        <li><a href="#/campaigns"><i18n>lystore.manage.campaigns</i18n></a></li>
-        <li><a href="#/structureGroups"><i18n>lystore.structureGroups.management</i18n></a></li>
-        <li><a href="#/suppliers"><i18n>lystore.suppliers.management</i18n></a></li>
-        <li><a href="#/contracts"><i18n>lystore.contracts.management</i18n></a></li>
-        <li><a href="#/agents"><i18n>lystore.agents.management</i18n></a></li>
-        <li workflow="lystore.administrator"><a href="#/logs"><i18n>lystore.logs</i18n></a></li>
+        <li><a href="#/order/waiting"><i18n>crre.orders.validations.waiting</i18n></a></li>
+        <li><a href="#/order/valid"><i18n>crre.order.form.generate</i18n></a></li>
+        <li><a href="#/order/sent"><i18n>crre.end.expedited.requests</i18n></a></li>
+        <li><a href="#/tags"><i18n>crre.tag.management</i18n></a></li>
+        <li><a href="#/equipments"><i18n>crre.catalog.management</i18n></a></li>
+        <li><a href="#/campaigns"><i18n>crre.manage.campaigns</i18n></a></li>
+        <li><a href="#/structureGroups"><i18n>crre.structureGroups.management</i18n></a></li>
+        <li><a href="#/suppliers"><i18n>crre.suppliers.management</i18n></a></li>
+        <li><a href="#/contracts"><i18n>crre.contracts.management</i18n></a></li>
+        <li><a href="#/agents"><i18n>crre.agents.management</i18n></a></li>
+        <li workflow="crre.administrator"><a href="#/logs"><i18n>crre.logs</i18n></a></li>
     </ul>
 </nav>
 
 <div class="twelve tabs vertical-spacing heading-tabs zero-mobile">
     <header class="horizontal-spacing">
-        <drop-down-menu title="[[lang.translate('lystore.orders')]]">
-            <opt ng-click="redirectTo('/order/waiting')"><i18n>lystore.orders.validations.waiting</i18n></opt>
-            <opt ng-click="redirectTo('/order/valid')"><i18n>lystore.order.form.generate</i18n></opt>
-            <opt ng-click="redirectTo('/order/sent')"><i18n>lystore.end.expedited.requests</i18n></opt>
-            <opt ng-click="redirectTo('/order/region/create')"><i18n>lystore.order.region.create</i18n></opt>
-            <opt ng-click="redirectTo('/exports')"><i18n>lystore.goTo.exports</i18n></opt>
+        <drop-down-menu title="[[lang.translate('crre.orders')]]">
+            <opt ng-click="redirectTo('/order/waiting')"><i18n>crre.orders.validations.waiting</i18n></opt>
+            <opt ng-click="redirectTo('/order/valid')"><i18n>crre.order.form.generate</i18n></opt>
+            <opt ng-click="redirectTo('/order/sent')"><i18n>crre.end.expedited.requests</i18n></opt>
+            <opt ng-click="redirectTo('/order/region/create')"><i18n>crre.order.region.create</i18n></opt>
+            <opt ng-click="redirectTo('/exports')"><i18n>crre.goTo.exports</i18n></opt>
 
 
         </drop-down-menu>
     </header>
     <header class="horizontal-spacing">
-        <drop-down-menu title="[[lang.translate('lystore.equipments')]]">
-            <opt ng-click="redirectTo('/tags')"><i18n>lystore.tag.management</i18n></opt>
-            <opt ng-click="redirectTo('/equipments')"><i18n>lystore.catalog.management</i18n></opt>
+        <drop-down-menu title="[[lang.translate('crre.equipments')]]">
+            <opt ng-click="redirectTo('/tags')"><i18n>crre.tag.management</i18n></opt>
+            <opt ng-click="redirectTo('/equipments')"><i18n>crre.catalog.management</i18n></opt>
         </drop-down-menu></header>
     <header class="horizontal-spacing">
-        <drop-down-menu title="[[lang.translate('lystore.campaigns')]]">
-            <opt ng-click="redirectTo('/campaigns')"><i18n>lystore.manage.campaigns</i18n></opt>
-            <opt ng-click="redirectTo('/structureGroups')"><i18n>lystore.structureGroups.management</i18n></opt>
+        <drop-down-menu title="[[lang.translate('crre.campaigns')]]">
+            <opt ng-click="redirectTo('/campaigns')"><i18n>crre.manage.campaigns</i18n></opt>
+            <opt ng-click="redirectTo('/structureGroups')"><i18n>crre.structureGroups.management</i18n></opt>
         </drop-down-menu>
     </header>
     <header class="horizontal-spacing">
-        <drop-down-menu title="[[lang.translate('lystore.contracts')]]">
-            <opt ng-click="redirectTo('/suppliers')"><i18n>lystore.suppliers.management</i18n></opt>
-            <opt ng-click="redirectTo('/contracts')"><i18n>lystore.contracts.management</i18n></opt>
-            <opt ng-click="redirectTo('/agents')"><i18n>lystore.agents.management</i18n></opt>
+        <drop-down-menu title="[[lang.translate('crre.contracts')]]">
+            <opt ng-click="redirectTo('/suppliers')"><i18n>crre.suppliers.management</i18n></opt>
+            <opt ng-click="redirectTo('/contracts')"><i18n>crre.contracts.management</i18n></opt>
+            <opt ng-click="redirectTo('/agents')"><i18n>crre.agents.management</i18n></opt>
         </drop-down-menu>
     </header>
     <header class="horizontal-spacing" ng-click="redirectTo('/logs')"
-            workflow="lystore.administrator">
-        <i18n>lystore.logs</i18n>
+            workflow="crre.administrator">
+        <i18n>crre.logs</i18n>
     </header>
 </div>
 <lightbox show="display.lightbox.lightBoxIsOpen" on-close="cancelSelectCampaign(true)">
@@ -54,7 +54,7 @@
 </lightbox>
 <div class="loading-bar" ng-class="{loading: loadingArray}"></div>
 <div ng-if="loadingArray">
-    <h1><i18n>lystore.loading</i18n></h1>
+    <h1><i18n>crre.loading</i18n></h1>
 </div>
 
 <container ng-show="!loadingArray" template="administrator-main"></container>

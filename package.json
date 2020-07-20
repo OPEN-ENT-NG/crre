@@ -1,21 +1,21 @@
 {
-  "name": "Lystore",
+  "name": "CRRE",
   "version": "1.2.3",
-  "description": "ENT Core application to create Lystore",
+  "description": "ENT Core application to create CRRE",
   "main": "gulpfile.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OPEN-ENT-NG/Lystore.git"
+    "url": "git+https://github.com/OPEN-ENT-NG/Crre.git"
   },
   "author": "",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/OPEN-ENT-NG/Lystore/issues"
+    "url": "https://github.com/OPEN-ENT-NG/crre/issues"
   },
-  "homepage": "https://github.com/OPEN-ENT-NG/Lystore#readme",
+  "homepage": "https://github.com/OPEN-ENT-NG/crre#readme",
   "dependencies": {
     "@types/core-js": "0.9.42",
     "awesome-typescript-loader": "3.2.1",

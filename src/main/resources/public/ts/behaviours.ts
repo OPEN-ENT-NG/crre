@@ -1,13 +1,12 @@
 import { Behaviours } from 'entcore';
 
-Behaviours.register('lystore', {
+Behaviours.register('crre', {
     rights: {
         workflow: {
-            access: 'fr.openent.lystore.controllers.LystoreController|view',
-            administrator: 'fr.openent.lystore.controllers.AgentController|createAgent',
-            manager: 'fr.openent.lystore.controllers.AgentController|getAgents'
+            access: 'fr.openent.crre.controllers.CrreController|view',
+            administrator: 'fr.openent.crre.controllers.AgentController|createAgent',
+            manager: 'fr.openent.crre.controllers.AgentController|getAgents'
         },
         resource: {}
-    },
-    loadResources: async function (): Promise<void> {}
+    }
 });

@@ -72,7 +72,7 @@ export const purseController = ng.controller('PurseController',
         };
 
         $scope.exportPurses = (id: number) => {
-            window.location = `/lystore/campaign/${id}/purses/export`;
+            window.location = `/crre/campaign/${id}/purses/export`;
         };
         $scope.checkPurses = async ( id_Campaign : number ) =>{
             $scope.isChecked = true;

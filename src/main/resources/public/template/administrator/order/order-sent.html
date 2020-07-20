@@ -1,5 +1,5 @@
 <div ng-controller="orderController" class="order-client-sent">
-    <h1><i18n>lystore.order.sent.title</i18n></h1>
+    <h1><i18n>crre.order.sent.title</i18n></h1>
     <div class="row">
         <div class="cell twelve-mobile horizontal-spacing search-pagination four">
             <div class="row twelve vertical-spacing">
@@ -27,7 +27,7 @@
         <table class="twelve">
             <thead>
             <tr>
-                <td workflow="lystore.manager">
+                <td workflow="crre.manager">
                     <label class="checkbox">
                         <input type="checkbox"
                                ng-change="switchAllOrders()"
@@ -43,7 +43,7 @@
                 </td>
                 <td ng-click="sort.order.type = 'order_number';
                     sort.order.reverse = !sort.order.reverse">
-                    <i18n>lystore.orders.order.number</i18n>
+                    <i18n>crre.orders.order.number</i18n>
                     <i class="up-open" ng-show="sort.order.type === 'order_number' && !sort.order.reverse"></i>
                     <i class="down-open" ng-show="sort.order.type === 'order_number' && sort.order.reverse"></i>
                 </td>
@@ -61,13 +61,13 @@
                 </td>
                 <td ng-click="sort.order.type = 'amount';
                     sort.order.reverse = !sort.order.reverse">
-                    <i18n>lystore.amount</i18n>
+                    <i18n>crre.amount</i18n>
                     <i class="up-open" ng-show="sort.order.type === 'amount' && !sort.order.reverse"></i>
                     <i class="down-open" ng-show="sort.order.type === 'amount' && sort.order.reverse"></i>
                 </td>
                 <td ng-click="sort.order.type = 'priceTTCtotal';
                     sort.order.reverse = !sort.order.reverse">
-                    <i18n>lystore.price.TTC</i18n>
+                    <i18n>crre.price.TTC</i18n>
                     <i class="up-open" ng-show="sort.order.type === 'priceTTCtotal' && !sort.order.reverse"></i>
                     <i class="down-open" ng-show="sort.order.type === 'priceTTCtotal' && sort.order.reverse"></i>
                 </td>
@@ -75,7 +75,7 @@
             </thead>
             <tbody>
             <tr ng-repeat="order in displayedOrders.all | orderBy:sort.order.type:sort.order.reverse">
-                <td workflow="lystore.manager">
+                <td workflow="crre.manager">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected">
                         <span></span>
