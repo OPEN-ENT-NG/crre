@@ -33,6 +33,30 @@ CREATE TABLE crre.contract_type (
   CONSTRAINT contract_type_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE crre.functional_code
+(
+    id bigserial NOT NULL,
+    code bigint NOT NULL,
+    label character varying(200) NOT NULL,
+    date_validity_start date,
+    date_validity_end date,
+    PRIMARY KEY (id),
+    CONSTRAINT uq_functional_code UNIQUE (code)
+);
+
+CREATE TABLE crre.chapter
+(
+    id bigserial NOT NULL,
+    code bigint NOT NULL,
+    label character varying(200) NOT NULL,
+    section character varying(50) NOT NULL,
+    label_section character(100) NOT NULL,
+    date_validity_start date NOT NULL,
+    date_validity_end date NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uq_chapter_code UNIQUE (code)
+);
+
 CREATE TABLE crre.program (
   id bigserial NOT NULL,
   name character varying(255),
@@ -93,6 +117,17 @@ CREATE TABLE crre.tax (
   CONSTRAINT tax_pkey PRIMARY KEY (id),
   CONSTRAINT "Check_tax_value" CHECK (value >= 0::numeric)
 );
+
+CREATE TABLE crre.equipment_type (
+    id bigserial NOT NULL,
+    name character varying(255) NOT NULL,
+    CONSTRAINT equipment_type_pkey PRIMARY KEY (id)
+);
+
+INSERT INTO crre.equipment_type
+VALUES (1,'EQUIPEMENT');
+INSERT INTO crre.equipment_type
+VALUES (2,'PRESTATION');
 
 CREATE TABLE crre.equipment (
   id bigserial NOT NULL,
@@ -261,6 +296,47 @@ CREATE TABLE crre.basket_option (
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 );
+
+CREATE TABLE crre.order (
+    id bigserial NOT NULL,
+    engagement_number character varying(255),
+    label_program character varying(255),
+    date_creation timestamp without time zone NOT NULL DEFAULT now(),
+    order_number character varying (255),
+    CONSTRAINT order_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.title (
+    id bigserial NOT NULL,
+    name character varying(255),
+    CONSTRAINT title_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.grade (
+                            id bigserial NOT NULL,
+                            name character varying(255),
+                            CONSTRAINT grade_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.project (
+    id bigserial NOT NULL,
+    description character varying(255),
+    id_title bigint NOT NULL,
+    id_grade bigint,
+    building character varying(255),
+    stair integer,
+    room character varying(50),
+    site character varying(255),
+    preference bigint,
+    CONSTRAINT project_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_title_id FOREIGN KEY (id_title)
+      REFERENCES crre.title (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE CASCADE,
+    CONSTRAINT fk_grade_id FOREIGN KEY (id_grade)
+      REFERENCES crre.grade (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE CASCADE
+);
+
 CREATE TABLE crre.order_client_equipment (
     id bigserial NOT NULL,
     price numeric NOT NULL,
@@ -323,86 +399,37 @@ CREATE TABLE crre.order_client_options (
     CONSTRAINT "Check_tax_amount_positive" CHECK (tax_amount >= 0::numeric)
 );
 
-CREATE TABLE crre.order (
-                               id bigserial NOT NULL,
-                               engagement_number character varying(255),
-                               label_program character varying(255),
-                               date_creation timestamp without time zone NOT NULL DEFAULT now(),
-                               order_number character varying (255),
-                               CONSTRAINT order_pkey PRIMARY KEY (id)
-);
-
 CREATE TABLE crre.file (
-                              id bigserial NOT NULL,
-                              id_mongo character varying(255),
-                              owner character varying(255),
-                              date timestamp without time zone NOT NULL DEFAULT now(),
-                              id_order bigint,
-                              CONSTRAINT file_pkey PRIMARY KEY (id),
-                              CONSTRAINT fk_order_id FOREIGN KEY (id_order)
-                                  REFERENCES crre.order (id) MATCH SIMPLE
-                                  ON UPDATE NO ACTION ON DELETE CASCADE
+    id bigserial NOT NULL,
+    id_mongo character varying(255),
+    owner character varying(255),
+    date timestamp without time zone NOT NULL DEFAULT now(),
+    id_order bigint,
+    CONSTRAINT file_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_order_id FOREIGN KEY (id_order)
+      REFERENCES crre.order (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE CASCADE
 );
 
 CREATE TABLE crre.basket_file (
-                                     id character varying (36) NOT NULL,
-                                     id_basket_equipment bigint NOT NULL,
-                                     filename character varying (255) NOT NULL,
-                                     CONSTRAINT basket_file_pkey PRIMARY KEY (id, id_basket_equipment),
-                                     CONSTRAINT fk_basket_equipment_id FOREIGN KEY (id_basket_equipment)
-                                         REFERENCES crre.basket_equipment (id) MATCH SIMPLE
-                                         ON UPDATE NO ACTION ON DELETE CASCADE
+    id character varying (36) NOT NULL,
+    id_basket_equipment bigint NOT NULL,
+    filename character varying (255) NOT NULL,
+    CONSTRAINT basket_file_pkey PRIMARY KEY (id, id_basket_equipment),
+    CONSTRAINT fk_basket_equipment_id FOREIGN KEY (id_basket_equipment)
+     REFERENCES crre.basket_equipment (id) MATCH SIMPLE
+     ON UPDATE NO ACTION ON DELETE CASCADE
 );
 
 CREATE TABLE crre.order_file (
-                                    id character varying (36) NOT NULL,
-                                    id_order_client_equipment bigint NOT NULL,
-                                    filename character varying (255) NOT NULL,
-                                    CONSTRAINT order_file_pkey PRIMARY KEY (id, id_order_client_equipment),
-                                    CONSTRAINT fk_order_client_equipment_id FOREIGN KEY (id_order_client_equipment)
-                                        REFERENCES crre.order_client_equipment (id) MATCH SIMPLE
-                                        ON UPDATE NO ACTION ON DELETE CASCADE
+    id character varying (36) NOT NULL,
+    id_order_client_equipment bigint NOT NULL,
+    filename character varying (255) NOT NULL,
+    CONSTRAINT order_file_pkey PRIMARY KEY (id, id_order_client_equipment),
+    CONSTRAINT fk_order_client_equipment_id FOREIGN KEY (id_order_client_equipment)
+        REFERENCES crre.order_client_equipment (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE CASCADE
 );
-
-CREATE TABLE crre.title (
-                               id bigserial NOT NULL,
-                               name character varying(255),
-                               CONSTRAINT title_pkey PRIMARY KEY (id)
-);
-CREATE TABLE crre.grade (
-                               id bigserial NOT NULL,
-                               name character varying(255),
-                               CONSTRAINT grade_pkey PRIMARY KEY (id)
-);
-CREATE TABLE crre.project (
-                                 id bigserial NOT NULL,
-                                 description character varying(255),
-                                 id_title bigint NOT NULL,
-                                 id_grade bigint,
-                                 building character varying(255),
-                                 stair integer,
-                                 room character varying(50),
-                                 site character varying(255),
-                                 preference bigint,
-                                 CONSTRAINT project_pkey PRIMARY KEY (id),
-                                 CONSTRAINT fk_title_id FOREIGN KEY (id_title)
-                                     REFERENCES crre.title (id) MATCH SIMPLE
-                                     ON UPDATE NO ACTION ON DELETE CASCADE,
-                                 CONSTRAINT fk_grade_id FOREIGN KEY (id_grade)
-                                     REFERENCES crre.grade (id) MATCH SIMPLE
-                                     ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
-CREATE TABLE crre.equipment_type (
-                                     id bigserial NOT NULL,
-                                     name character varying(255) NOT NULL,
-                                     CONSTRAINT equipment_type_pkey PRIMARY KEY (id)
-);
-
-INSERT INTO crre.equipment_type
-VALUES (1,'EQUIPEMENT');
-INSERT INTO crre.equipment_type
-VALUES (2,'PRESTATION');
 
 CREATE TABLE crre.rel_title_campaign_structure (
     id_title bigint NOT NULL,
@@ -440,30 +467,6 @@ CREATE TABLE crre.structure_program_action(
     CONSTRAINT fk_program_action_id FOREIGN KEY (program_action_id) REFERENCES crre.program_action (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE,
     CONSTRAINT "structure_program_action_type_values" CHECK (structure_type IN ('CMD', 'CMR', 'LYC')),
     CONSTRAINT fk_contract_type_id FOREIGN KEY(contract_type_id) REFERENCES crre.contract_type (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
-CREATE TABLE crre.chapter
-(
-    id bigserial NOT NULL,
-    code bigint NOT NULL,
-    label character varying(200) NOT NULL,
-    section character varying(50) NOT NULL,
-    label_section character(100) NOT NULL,
-    date_validity_start date NOT NULL,
-    date_validity_end date NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT uq_chapter_code UNIQUE (code)
-);
-
-CREATE TABLE crre.functional_code
-(
-    id bigserial NOT NULL,
-    code bigint NOT NULL,
-    label character varying(200) NOT NULL,
-    date_validity_start date,
-    date_validity_end date,
-    PRIMARY KEY (id),
-    CONSTRAINT uq_functional_code UNIQUE (code)
 );
 
 CREATE TABLE crre."order-region-equipment"

@@ -2,7 +2,7 @@
       "name": "fr.openent~crre~0.1-SNAPSHOT",
       "config": {
         "main" : "fr.openent.crre.Crre",
-        "port" : 8140,
+        "port" : 8150,
         "app-name" : "CRRE",
     	"app-address" : "/crre",
     	"app-icon" : "${host}/crre/public/img/logo.png",

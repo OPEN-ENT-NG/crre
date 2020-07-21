@@ -1,7 +1,5 @@
 import {_, idiom as lang, ng, notify, template, toasts} from 'entcore';
 import {
-    Notification,
-    Operation,
     OrderRegion,
     OrdersRegion,
     Structure,
@@ -10,7 +8,8 @@ import {
     Structures,
     Titles,
     Utils,
-    Equipments, ContractType, ContractTypes, Contracts
+    Equipments,
+    Contracts
 } from "../../model";
 
 declare let window: any;
@@ -51,31 +50,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 return 0;
             });
             Utils.safeApply($scope);
-        };
-
-        $scope.operationSelected = async (operation: Operation):Promise<void> => {
-            $scope.isOperationSelected = true;
-            $scope.operation = operation;
-            if (!$scope.orderToUpdate.id_operation) {
-                let orderRegionCreate = new OrderRegion();
-                orderRegionCreate.createFromOrderClient($scope.orderToUpdate);
-                orderRegionCreate.id_operation = operation.id;
-                orderRegionCreate.equipment_key = $scope.orderToUpdate.equipment_key;
-                orderRegionCreate.technical_spec = $scope.orderToUpdate.equipment.technical_specs;
-                orderRegionCreate.id_contract = $scope.orderToUpdate.equipment.id_contract;
-                const { status } = await orderRegionCreate.create();
-                if (status === 200) {
-                    toasts.confirm('crre.order.region.update');
-                    await $scope.ordersClient.addOperationInProgress(operation.id, [$routeParams.idOrder]);
-                    // $scope.operationId =  $scope.operation.id
-                    $scope.cancelUpdate();
-                }
-                else {
-                    notify.error('crre.admin.order.update.err');
-                }
-                Utils.safeApply($scope);
-
-            }
         };
 
         $scope.isOperationsIsEmpty = false;

@@ -1,5 +1,5 @@
 import {_, moment, ng, template, toasts} from 'entcore';
-import {Basket, Baskets, Notification, Utils} from '../../model';
+import {Basket, Baskets, Utils} from '../../model';
 
 export const basketController = ng.controller('basketController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
@@ -71,6 +71,7 @@ export const basketController = ng.controller('basketController',
 
         $scope.calculatePriceOfBasketProposal = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
             let equipmentPrice =  $scope.calculatePriceOfEquipment(basket.equipment, true, roundNumber);
+            // @ts-ignore
             if (basket.price_proposal === false || basket.price_proposal ===  null || basket.price_proposal === undefined) {
                 equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * basket.amount;
             } else {
@@ -80,7 +81,6 @@ export const basketController = ng.controller('basketController',
         };
 
         $scope.resetPriceProposal = (basket: Basket) => {
-            //    basket.price_proposal = $scope.calculatePriceOfBasketUnity(basket,2);
             basket.price_proposal = null;
             basket.display_price_editable = false;
             Utils.safeApply($scope);
@@ -96,6 +96,7 @@ export const basketController = ng.controller('basketController',
         };
 
         $scope.priceDisplay = (basket: Basket) => {
+            // @ts-ignore
             if (basket.price_proposal === false || basket.price_proposal ===  null || basket.price_proposal === undefined) {
                 return $scope.calculatePriceOfBasketUnity(basket, 2, true);
             } else {

@@ -1,9 +1,6 @@
-import {_, $,idiom as lang,angular, model, ng, template, toasts,moment} from 'entcore';
+import {_, $,idiom as lang,angular, model, ng, template, toasts} from 'entcore';
 import http from "axios";
-import {
-    Campaign, Notification, Operation, OrderClient, OrdersClient, orderWaiting, PRIORITY_FIELD, Userbook, Order,
-    Utils
-} from '../../model';
+import { Campaign, OrderClient, OrdersClient, orderWaiting, PRIORITY_FIELD, Utils } from '../../model';
 import {Mix} from 'entcore-toolkit';
 
 
@@ -446,15 +443,6 @@ export const orderController = ng.controller('orderController',
             $scope.isOperationsIsEmpty = !$scope.operations.all.some(operation => operation.status === 'true' && !operation.id_instruction);
             template.open('validOrder.lightbox', 'administrator/order/order-select-operation');
             $scope.display.lightbox.validOrder = true;
-        };
-
-        $scope.operationSelected = async (operation:Operation) => {
-            $scope.operation = operation;
-            let idsOrder = $scope.ordersClient.selected.map(order => order.id);
-            await $scope.ordersClient.addOperationInProgress(operation.id, idsOrder);
-            // await $scope.getOrderWaitingFiltered($scope.campaign);
-            template.open('validOrder.lightbox', 'administrator/order/order-valid-add-operation');
-            $scope.operationId= operation.id;
         };
 
         $scope.inProgressOrders = async (orders: OrderClient[]) => {

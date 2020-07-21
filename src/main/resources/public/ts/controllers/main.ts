@@ -28,7 +28,8 @@ import {
     Utils,
 } from '../model';
 import {Mix} from "entcore-toolkit";
-ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
+
+export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
         template.open('main', 'main');
 
