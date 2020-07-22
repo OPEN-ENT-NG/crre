@@ -17,7 +17,6 @@ import {
     OrderRegion,
     OrdersClient, OrderUtils,
     PRIORITY_FIELD,
-    Programs,
     StructureGroups,
     Structures,
     Supplier,
@@ -44,7 +43,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.agents = new Agents();
         $scope.suppliers = new Suppliers();
         $scope.contractTypes = new ContractTypes();
-        $scope.programs = new Programs();
         $scope.contracts = new Contracts();
         $scope.tags = new Tags();
         $scope.equipments = new Equipments();

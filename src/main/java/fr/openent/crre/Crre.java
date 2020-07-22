@@ -49,7 +49,6 @@ public class Crre extends BaseServer {
         addController(new CrreController());
         addController(new AgentController());
         addController(new SupplierController());
-        addController(new ProgramController());
         addController(new ContractTypeController());
         addController(new ContractController());
         addController(new TagController());

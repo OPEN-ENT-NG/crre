@@ -6,7 +6,6 @@ import {
     OrderClient,
     OrderOptionClient,
     OrderRegion,
-    Program,
     Project,
     Structure,
     Structures,
@@ -55,7 +54,6 @@ export class Order implements OrderImp{
     price: number;
     price_proposal: number;
     price_single_ttc: number;
-    program: Program;
     project: Project;
     rank: number;
     rankOrder: Number;

@@ -32,24 +32,15 @@ public class BCExportDuringValidation extends PDF_OrderHElper {
         final String nbrEngagement = params.getString("nbrEngagement");
         final String dateGeneration = params.getString("dateGeneration");
         Number supplierId = params.getInteger("supplierId");
-        final Number programId = params.getInteger("programId");
         getOrdersData(exportHandler,nbrBc, nbrEngagement, dateGeneration, supplierId, ids,false,
-                new Handler<JsonObject>() {
-                    @Override
-                    public void handle(JsonObject data) {
-                        data.put("print_order", true);
-                        data.put("print_certificates", false);
+                data -> {
+                    data.put("print_order", true);
+                    data.put("print_certificates", false);
 
-                        generatePDF( exportHandler,data,
-                                "BC.xhtml", "Bon_Commande_",
-                                new Handler<Buffer>() {
-                                    @Override
-                                    public void handle(final Buffer pdf) {
-                                        exportHandler.handle(new Either.Right<>(pdf));
-                                    }
-                                }
-                        );
-                    }
+                    generatePDF( exportHandler,data,
+                            "BC.xhtml", "Bon_Commande_",
+                            pdf -> exportHandler.handle(new Either.Right<>(pdf))
+                    );
                 });
     }
 }

@@ -34,7 +34,7 @@ export class Logs {
     }
 
     export () {
-        location.replace(`/crre(/logs/export`);
+        location.replace(`/crre/logs/export`);
     }
 
     reset () {

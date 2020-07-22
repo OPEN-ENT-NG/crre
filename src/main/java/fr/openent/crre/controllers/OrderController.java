@@ -56,7 +56,6 @@ public class OrderController extends ControllerHelper {
     private final ExportPDFService exportPDFService;
     private final ContractService contractService;
     private final AgentService agentService;
-    private final ProgramService programService;
     private final ExportService exportService;
 
     public static final String UTF8_BOM = "\uFEFF";
@@ -73,7 +72,6 @@ public class OrderController extends ControllerHelper {
         this.supplierService = new DefaultSupplierService(Crre.crreSchema, "supplier");
         this.contractService = new DefaultContractService(Crre.crreSchema, "contract");
         this.agentService = new DefaultAgentService(Crre.crreSchema, "agent");
-        this.programService = new DefaultProgramService(Crre.crreSchema, "program");
         exportService = new DefaultExportServiceService(storage);
     }
 
@@ -410,28 +408,26 @@ public class OrderController extends ControllerHelper {
     private void sentOrders(HttpServerRequest request,
                             final JsonArray ids, final String engagementNumber, final Number programId, final String dateCreation,
                             final String orderNumber) {
-        programService.getProgramById(programId, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> programEvent) {
-                if (programEvent.isRight()) {
-                    JsonObject program = programEvent.right().getValue();
-                    orderService.updateStatusToSent(ids.getList(), "SENT", engagementNumber, program.getString("name"),
-                            dateCreation, orderNumber,  new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> event) {
-                                    if (event.isRight()) {
-                                        logSendingOrder(ids,request);
-                                        ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_DURING_VALIDATION, "_BC");
-                                    } else {
-                                        badRequest(request);
-                                    }
+/*        programService.getProgramById(programId, (Handler<Either<String, JsonObject>>) programEvent -> {
+            if (programEvent.isRight()) {
+                JsonObject program = programEvent.right().getValue();
+                orderService.updateStatusToSent(ids.getList(), "SENT", engagementNumber, program.getString("name"),
+                        dateCreation, orderNumber,  new Handler<Either<String, JsonObject>>() {
+                            @Override
+                            public void handle(Either<String, JsonObject> event) {
+                                if (event.isRight()) {
+                                    logSendingOrder(ids,request);
+                                    ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_DURING_VALIDATION, "_BC");
+                                } else {
+                                    badRequest(request);
                                 }
-                            });
-                } else {
-                    badRequest(request);
-                }
+                            }
+                        });
+            } else {
+                badRequest(request);
             }
-        });
+        });*/
+        badRequest(request);
     }
     @Put("/orders/sent")
     @ApiDoc("send orders")

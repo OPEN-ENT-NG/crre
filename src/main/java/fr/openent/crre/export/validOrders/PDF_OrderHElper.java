@@ -38,8 +38,6 @@ public class PDF_OrderHElper {
     protected String node;
     protected Logger log = LoggerFactory.getLogger(BCExport.class);
     protected OrderService orderService;
-    protected ProgramService programService;
-
     protected DefaultContractService contractService;
     protected StructureService structureService;
     protected AgentService agentService;
@@ -58,8 +56,6 @@ public class PDF_OrderHElper {
         this.contractService = new DefaultContractService(Crre.crreSchema, "contract");
         this.agentService = new DefaultAgentService(Crre.crreSchema, "agent");
         this.renders = new RendersHelper(this.vertx, config);
-        programService = new DefaultProgramService(Crre.crreSchema,"program");
-
 
     }
 

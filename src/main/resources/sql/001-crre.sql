@@ -33,45 +33,6 @@ CREATE TABLE crre.contract_type (
   CONSTRAINT contract_type_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE crre.functional_code
-(
-    id bigserial NOT NULL,
-    code bigint NOT NULL,
-    label character varying(200) NOT NULL,
-    date_validity_start date,
-    date_validity_end date,
-    PRIMARY KEY (id),
-    CONSTRAINT uq_functional_code UNIQUE (code)
-);
-
-CREATE TABLE crre.chapter
-(
-    id bigserial NOT NULL,
-    code bigint NOT NULL,
-    label character varying(200) NOT NULL,
-    section character varying(50) NOT NULL,
-    label_section character(100) NOT NULL,
-    date_validity_start date NOT NULL,
-    date_validity_end date NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT uq_chapter_code UNIQUE (code)
-);
-
-CREATE TABLE crre.program (
-  id bigserial NOT NULL,
-  name character varying(255),
-  section character varying(50),
-  chapter bigint,
-  functional_code bigint,
-  label text,
-  program_type VARCHAR (50) NOT NULL DEFAULT '0',
-  CONSTRAINT program_pkey PRIMARY KEY (id),
-  CONSTRAINT fk_functional_code FOREIGN KEY (functional_code)
-      REFERENCES crre.functional_code (code) MATCH SIMPLE,
-  CONSTRAINT fk_chapter FOREIGN KEY (chapter)
-      REFERENCES crre.chapter (code) MATCH SIMPLE
-);
-
 CREATE TABLE crre.contract (
   id bigserial NOT NULL,
   name character varying(255),
@@ -101,13 +62,6 @@ CREATE TABLE crre.contract (
   CONSTRAINT "Check_annual_max_positive" CHECK (annual_max >= 0::numeric),
   CONSTRAINT "Check_annual_max_max" CHECK (annual_max >= annual_min::numeric)
 
-);
-
-CREATE TABLE crre.tag (
-  id bigserial NOT NULL,
-  name character varying(255),
-  color character varying(7),
-  CONSTRAINT tag_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE crre.tax (
@@ -155,17 +109,6 @@ CREATE TABLE crre.equipment (
       REFERENCES crre.equipment_type (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE CASCADE,
   CONSTRAINT "Check_price_positive" CHECK (price >= 0::numeric)
-);
-
-CREATE TABLE crre.rel_equipment_tag (
-  id_equipment bigint,
-  id_tag bigint,
-  CONSTRAINT fk_equipment_id FOREIGN KEY (id_equipment)
-  REFERENCES crre.equipment (id) MATCH SIMPLE
-  ON UPDATE NO ACTION ON DELETE CASCADE,
-  CONSTRAINT fk_tag_id FOREIGN KEY (id_tag)
-  REFERENCES crre.tag (id) MATCH SIMPLE
-  ON UPDATE NO ACTION ON DELETE CASCADE
 );
 
 CREATE TABLE crre.equipment_option (
@@ -224,15 +167,11 @@ CREATE TABLE crre.rel_group_campaign
 (
     id_campaign bigint NOT NULL,
     id_structure_group bigint NOT NULL,
-    id_tag bigint NOT NULL,
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
         REFERENCES crre.campaign (id) MATCH SIMPLE
         ON UPDATE NO ACTION ON DELETE NO ACTION,
     CONSTRAINT fk_structure_group FOREIGN KEY (id_structure_group)
         REFERENCES crre.structure_group (id) MATCH SIMPLE
-        ON UPDATE NO ACTION ON DELETE NO ACTION,
-    CONSTRAINT fk_tag_id FOREIGN KEY (id_tag)
-        REFERENCES crre.tag (id) MATCH SIMPLE
         ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
@@ -300,7 +239,6 @@ CREATE TABLE crre.basket_option (
 CREATE TABLE crre.order (
     id bigserial NOT NULL,
     engagement_number character varying(255),
-    label_program character varying(255),
     date_creation timestamp without time zone NOT NULL DEFAULT now(),
     order_number character varying (255),
     CONSTRAINT order_pkey PRIMARY KEY (id)
@@ -360,8 +298,6 @@ CREATE TABLE crre.order_client_equipment (
     price_proposal numeric,
     id_project bigint,
     rank numeric,
-    program character varying,
-    action character varying,
     override_region boolean DEFAULT false,
     id_type bigint NOT NULL DEFAULT 1,
     PRIMARY KEY (id),
@@ -440,35 +376,6 @@ CREATE TABLE crre.rel_title_campaign_structure (
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign) REFERENCES crre.campaign (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE
 );
 
-CREATE TABLE crre.specific_structures (
-    id character varying(36),
-    uai character varying(50) NOT NULL,
-    type character varying (3) NOT NULL,
-    code_coriolis VARCHAR (250),
-    CONSTRAINT specific_structures_pkey PRIMARY KEY (id),
-    CONSTRAINT "specific_structure_type_values" CHECK (type IN ('CMD', 'CMR','LYC'))
-);
-
-CREATE TABLE crre.program_action(
-    id bigserial,
-    id_program bigint NOT NULL,
-    action character varying(50) NOT NULL,
-    description text,
-    CONSTRAINT program_action_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_program_id FOREIGN KEY (id_program) REFERENCES crre.program (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
-CREATE TABLE crre.structure_program_action(
-    id bigserial,
-    program_action_id bigint NOT NULL,
-    structure_type character varying(50) NOT NULL,
-    contract_type_id bigint NOT NULL,
-    CONSTRAINT structure_program_action_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_program_action_id FOREIGN KEY (program_action_id) REFERENCES crre.program_action (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE,
-    CONSTRAINT "structure_program_action_type_values" CHECK (structure_type IN ('CMD', 'CMR', 'LYC')),
-    CONSTRAINT fk_contract_type_id FOREIGN KEY(contract_type_id) REFERENCES crre.contract_type (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 CREATE TABLE crre."order-region-equipment"
 (
     id bigserial NOT NULL,
@@ -495,8 +402,6 @@ CREATE TABLE crre."order-region-equipment"
     rank numeric,
     id_project bigint,
     id_order_client_equipment bigint,
-    program character varying,
-    action character varying,
 
     CONSTRAINT order_region_equipment_pkey PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
@@ -587,76 +492,6 @@ CREATE TRIGGER check_empty_project AFTER DELETE
     FOR EACH ROW
     EXECUTE PROCEDURE delete_empty_project();
 
-CREATE OR REPLACE FUNCTION crre.getAction(orderId in bigint) RETURNS character varying AS
-$BODY$
-DECLARE
-    actionId bigint;
-BEGIN
-    SELECT program_action.action
-    FROM crre.program_action
-             INNER JOIN crre.structure_program_action ON (structure_program_action.program_action_id = program_action.id)
-    WHERE structure_program_action.contract_type_id = (
-        SELECT contract_type.id
-        FROM crre.contract_type
-                 INNER JOIN crre.contract ON (contract.id_contract_type = contract_type.id)
-                 INNER JOIN crre.equipment ON (equipment.id_contract = contract.id)
-                 INNER JOIN crre.order_client_equipment ON (order_client_equipment.equipment_key = equipment.id)
-        WHERE order_client_equipment.id = orderId
-    )
-      AND structure_program_action.structure_type = (
-        WITH counter as (
-            SELECT count(specific_structures.id) as value
-            FROM crre.specific_structures
-                     INNER JOIN crre.order_client_equipment ON (order_client_equipment.id_structure = specific_structures.id)
-            WHERE order_client_equipment.id = orderId
-        )
-        SELECT (
-                   CASE WHEN counter.value = 0
-                            THEN 'LYC'
-                        ELSE (
-                            SELECT specific_structures.type
-                            FROM crre.specific_structures
-                                     INNER JOIN crre.order_client_equipment ON (order_client_equipment.id_structure = specific_structures.id)
-                            WHERE order_client_equipment.id = orderId
-                        )
-                       END
-                   ) as type
-        FROM counter
-    ) INTO actionId;
-
-    RETURN actionId;
-END;
-$BODY$
-    LANGUAGE plpgsql VOLATILE;
-
-CREATE OR REPLACE FUNCTION crre.fill_program_action() RETURNS TRIGGER AS $order_client_equipment$
-DECLARE
-    actionValue character varying;
-    programValue character varying;
-BEGIN
-    SELECT crre.getAction(NEW.id) INTO actionValue;
-
-    SELECT name
-    FROM crre.program
-             INNER JOIN crre.program_action ON (program.id = program_action.id_program)
-    WHERE program_action.action = actionValue
-    INTO programValue;
-
-    RAISE NOTICE '%', NEW.id;
-    RAISE NOTICE '%', programValue;
-    RAISE NOTICE '%', actionValue;
-    UPDATE crre.order_client_equipment
-    SET program = programValue,
-        action = actionValue
-    WHERE id = NEW.id;
-
-    RETURN NEW;
-END;
-$order_client_equipment$ LANGUAGE plpgsql;
-
-CREATE TRIGGER fill_program_action AFTER INSERT ON crre.order_client_equipment
-    FOR EACH ROW EXECUTE PROCEDURE crre.fill_program_action();
-
 CREATE OR REPLACE FUNCTION crre.region_override_client_order() RETURNS TRIGGER AS $$
 BEGIN
     UPDATE crre.order_client_equipment
@@ -685,76 +520,6 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER region_delete_override_client_order_trigger AFTER
     DELETE ON crre."order-region-equipment"
     FOR EACH ROW EXECUTE PROCEDURE crre.region_delete_order_override_client();
-
-CREATE OR REPLACE FUNCTION crre.get_action_region(orderId in bigint) RETURNS character varying AS
-$BODY$
-DECLARE
-    actionId bigint;
-BEGIN
-    SELECT program_action.action
-    FROM crre.program_action
-             INNER JOIN crre.structure_program_action ON (structure_program_action.program_action_id = program_action.id)
-    WHERE structure_program_action.contract_type_id = (
-        SELECT contract_type.id
-        FROM crre.contract_type
-                 INNER JOIN crre.contract ON (contract.id_contract_type = contract_type.id)
-                 INNER JOIN crre.equipment ON (equipment.id_contract = contract.id)
-                 INNER JOIN crre."order-region-equipment" ON ("order-region-equipment".equipment_key = equipment.id)
-        WHERE "order-region-equipment".id = orderId
-    )
-      AND structure_program_action.structure_type = (
-        WITH counter as (
-            SELECT count(specific_structures.id) as value
-            FROM crre.specific_structures
-                     INNER JOIN crre."order-region-equipment" ON ("order-region-equipment".id_structure = specific_structures.id)
-            WHERE "order-region-equipment".id = orderId
-        )
-        SELECT (
-                   CASE WHEN counter.value = 0
-                            THEN 'LYC'
-                        ELSE (
-                            SELECT specific_structures.type
-                            FROM crre.specific_structures
-                                     INNER JOIN crre."order-region-equipment" ON ("order-region-equipment".id_structure = specific_structures.id)
-                            WHERE "order-region-equipment".id = orderId
-                        )
-                       END
-                   ) as type
-        FROM counter
-    ) INTO actionId;
-
-    RETURN actionId;
-END;
-$BODY$
-    LANGUAGE plpgsql VOLATILE;
-
-CREATE OR REPLACE FUNCTION crre.fill_program_action_region() RETURNS TRIGGER AS $order_region_equipment$
-DECLARE
-    actionValue character varying;
-    programValue character varying;
-BEGIN
-    SELECT crre.get_action_region(NEW.id) INTO actionValue;
-
-    SELECT name
-    FROM crre.program
-             INNER JOIN crre.program_action ON (program.id = program_action.id_program)
-    WHERE program_action.action = actionValue
-    INTO programValue;
-
-    RAISE NOTICE '%', NEW.id;
-    RAISE NOTICE '%', programValue;
-    RAISE NOTICE '%', actionValue;
-    UPDATE crre."order-region-equipment"
-    SET program = programValue,
-        action = actionValue
-    WHERE id = NEW.id;
-
-    RETURN NEW;
-END;
-$order_region_equipment$ LANGUAGE plpgsql;
-
-CREATE TRIGGER fill_program_action_region AFTER INSERT ON crre."order-region-equipment"
-    FOR EACH ROW EXECUTE PROCEDURE crre.fill_program_action_region();
 
 CREATE OR REPLACE FUNCTION order_without_ref()
     RETURNS trigger AS  $$
