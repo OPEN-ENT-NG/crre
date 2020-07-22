@@ -97,7 +97,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
     public void equipment(Integer idEquipment,  Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT equip.*, supplier.name as supplier_name, contract.name as contract_name, tax.value as tax_amount, equipment_type.name as nametype, array_to_json( " +
+        String query = "SELECT equip.*, supplier.name as supplier_name, contract.name as contract_name, tax.value as tax_amount, array_to_json( " +
                 "(SELECT array_agg(tag.*) " +
                 "FROM " + Crre.crreSchema + ".equipment " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_equipment_tag ON (equipment.id = rel_equipment_tag.id_equipment) " +
@@ -105,21 +105,19 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 " WHERE equip.id = rel_equipment_tag.id_equipment)) as tags, " +
                 "array_to_json(array_agg(opts.*)) as options " +
                 "FROM  " + Crre.crreSchema + ".equipment equip    " +
-                "LEFT JOIN " + Crre.crreSchema + ".equipment_type ON (equipment_type.id = equip.id_type) " +
                 "LEFT JOIN " + Crre.crreSchema + ".equipment_option ON (equip.id = equipment_option.id_equipment) " +
                 "LEFT JOIN ( " +
                 "SELECT equipment.id as id_equipment, equipment.reference, equipment.id_type, equipment_option.id, equipment_option.id_option, equipment.name, equipment.price, equipment_option.amount, " +
-                "equipment_option.required, tax.value as tax_amount, equipment_option.id_equipment as master_equipment, equipment_type.name as nametype " +
+                "equipment_option.required, tax.value as tax_amount, equipment_option.id_equipment as master_equipment, " +
                 "FROM " + Crre.crreSchema + ".equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".tax  ON (equipment.id_tax = tax.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".equipment_option  ON (equipment_option.id_option = equipment.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment_type ON (equipment_type.id = equipment.id_type) " +
                 ") opts ON (equipment_option.id_option = opts.id_equipment AND opts.master_equipment = equip.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".tax ON tax.id = equip.id_tax " +
                 "INNER JOIN " + Crre.crreSchema + ".contract ON (contract.id = equip.id_contract) " +
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON (contract.id_supplier = supplier.id) " +
                 "WHERE equip.id = ? " +
-                "GROUP BY (equip.id, tax.id,equipment_type.name, supplier.name, contract.name, tax.value) " +
+                "GROUP BY (equip.id, tax.id, supplier.name, contract.name, tax.value) " +
                 "ORDER by equip.name ASC " +
                 "LIMIT 50 OFFSET 0";
 
@@ -129,7 +127,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
     @Override
     public void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT e.*,contract_type.name as contract_type_name, equipment_type.name as nametype, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options, contract.name as contract_name, array_to_json(array_agg(DISTINCT  rel_equipment_tag.id_tag)) tags " +
+        String query = "SELECT e.*,contract_type.name as contract_type_name, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options, contract.name as contract_name, array_to_json(array_agg(DISTINCT  rel_equipment_tag.id_tag)) tags " +
                 "FROM " + Crre.crreSchema + ".equipment e LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment_option option " +
@@ -140,7 +138,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "INNER JOIN " + Crre.crreSchema + ".contract ON (e.id_contract = contract.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".contract_type ON (contract.id_contract_type = contract_type.id) " +
 
-                "INNER JOIN " + Crre.crreSchema + ".equipment_type on equipment_type.id = e.id_type " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_equipment_tag ON (e.id = rel_equipment_tag.id_equipment) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (" +
                 "rel_group_campaign.id_tag = rel_equipment_tag.id_tag " +
@@ -173,7 +170,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 values.add(filter).add(filter);
             }
         }
-        String query = "SELECT e.*,contract_type.name as contract_type_name, equipment_type.name as nametype, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options, contract.name as contract_name, array_to_json(array_agg(DISTINCT  rel_equipment_tag.id_tag)) tags " +
+        String query = "SELECT e.*,contract_type.name as contract_type_name, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options, contract.name as contract_name, array_to_json(array_agg(DISTINCT  rel_equipment_tag.id_tag)) tags " +
                 "FROM " + Crre.crreSchema + ".equipment e LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment_option option " +
@@ -184,7 +181,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "INNER JOIN " + Crre.crreSchema + ".contract ON (e.id_contract = contract.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".contract_type ON (contract.id_contract_type = contract_type.id) " +
 
-                "INNER JOIN " + Crre.crreSchema + ".equipment_type on equipment_type.id = e.id_type " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_equipment_tag ON (e.id = rel_equipment_tag.id_equipment) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (" +
                 "rel_group_campaign.id_tag = rel_equipment_tag.id_tag " +
@@ -261,8 +257,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
         String query = "WITH equipmentId_rows AS (" +
                 "INSERT INTO " + Crre.crreSchema + ".equipment(" + (referenceValue ? " reference, " : "") + "name, price, id_tax, warranty, catalog_enabled, id_contract, status, id_type, price_editable) " +
-                "VALUES (" + (referenceValue ? "?," : "") + "?, ?, (SELECT id FROM " + Crre.crreSchema + ".tax WHERE value = ? LIMIT 1), ?, ?, ?, ?, " +
-                "(SELECT id FROM " + Crre.crreSchema + ".equipment_type WHERE name = ?), ?) RETURNING id)" +
+                "VALUES (" + (referenceValue ? "?," : "") + "?, ?, (SELECT id FROM " + Crre.crreSchema + ".tax WHERE value = ? LIMIT 1), ?, ?, ?, ?, ?) RETURNING id)" +
                 "INSERT INTO " + Crre.crreSchema + ".rel_equipment_tag (id_equipment, id_tag) " +
                 "SELECT equipmentId_rows.id, tag.id FROM " + Crre.crreSchema + ".tag, equipmentId_rows WHERE lower(name) IN " + getImportTagFilter(tags);
 
@@ -276,7 +271,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         params.add(equipment.getBoolean("catalog_enabled"));
         params.add(equipment.getInteger("id_contract"));
         params.add(equipment.getString("status"));
-        params.add(equipment.getString("type"));
         params.add(equipment.getBoolean("price_editable"));
         for (String tag : tags) {
             params.add(tag.trim());
@@ -306,9 +300,9 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         Double tax = Double.parseDouble(equipment.getValue("id_tax").toString().replace(",", "."));
         JsonArray params = new JsonArray();
         String query = "WITH equipmentId_rows AS (UPDATE " + Crre.crreSchema + ".equipment " +
-                "SET name = ?, price = ?, id_tax = (SELECT id FROM " + Crre.crreSchema + ".tax WHERE value = ? LIMIT 1), warranty = ?," +
-                "id_type = (SELECT id FROM " + Crre.crreSchema + ".equipment_type WHERE name = ? LIMIT 1), catalog_enabled = ?, price_editable = ?, status = ?" +
-                "WHERE equipment.reference = ? RETURNING id)" +
+                "SET name = ?, price = ?, id_tax = (SELECT id FROM " + Crre.crreSchema + ".tax WHERE value = ? LIMIT 1)," +
+                " warranty = ?, catalog_enabled = ?, price_editable = ?, status = ? " +
+                "WHERE equipment.reference = ? RETURNING id) " +
                 "INSERT INTO " + Crre.crreSchema + ".rel_equipment_tag (id_equipment, id_tag) " +
                 "SELECT equipmentId_rows.id, tag.id FROM " + Crre.crreSchema + ".tag, equipmentId_rows WHERE lower(name) IN " + getImportTagFilter(tags);
 
@@ -316,7 +310,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 .add(price)
                 .add(tax)
                 .add(equipment.getInteger("warranty"))
-                .add(equipment.getString("type"))
                 .add(equipment.getBoolean("catalog_enabled"))
                 .add(equipment.getBoolean("price_editable"))
                 .add(equipment.getString("status"))
@@ -602,7 +595,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                                     "e.id_type, e.option_enabled, et.name as nameType "+
                 "FROM " + Crre.crreSchema + ".equipment as e " +
                 "INNER JOIN " + Crre.crreSchema + ".tax as t ON (e.id_tax = t.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment_type as et ON (e.id_type = et.id) " +
                 "WHERE e.status = 'AVAILABLE' AND e.option_enabled = true ";
 
         String fieldName=listFields.get(0);

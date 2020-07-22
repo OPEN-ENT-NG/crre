@@ -40,7 +40,7 @@ import static org.entcore.common.utils.FileUtils.deleteImportPath;
 public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
-    private ImportCSVHelper importCSVHelper;
+    private final ImportCSVHelper importCSVHelper;
 
     public EquipmentController(Vertx vertx) {
         super();
@@ -55,7 +55,7 @@ public class EquipmentController extends ControllerHelper {
     public void list(HttpServerRequest request) {
         Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
         String order = request.params().contains("order") ? request.getParam("order") : "name";
-        Boolean reverse = request.params().contains("reverse") ? Boolean.parseBoolean(request.getParam("reverse")) : false;
+        Boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
         List<String> queries = request.params().getAll("q");
         equipmentService.listEquipments(page, order, reverse, queries, arrayResponseHandler(request));
     }

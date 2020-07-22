@@ -9,7 +9,6 @@ import {
     ContractTypes,
     Equipment,
     Equipments,
-    EquipmentTypes,
     Exports,
     Logs,
     Order,
@@ -56,7 +55,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.orderClient = new OrderClient();
         $scope.orderRegion = new OrderRegion();
         $scope.displayedOrders = new OrdersClient();
-        $scope.equipmentTypes = new EquipmentTypes();
         $scope.exports = new Exports([]);
         $scope.ub = new Userbook();
         $scope.equipments.eventer.on('loading::true', $scope.$apply);
@@ -104,7 +102,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('equipments-main', 'administrator/equipment/manage-equipments');
                 await $scope.equipments.sync();
                 await $scope.contracts.sync();
-                await $scope.equipmentTypes.sync();
                 $scope.taxes.sync();
                 $scope.tags.sync();
                 Utils.safeApply($scope);

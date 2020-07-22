@@ -5,7 +5,6 @@ import {
     Contract,
     ContractType, Grade,
     Order,
-    Program,
     Structure,
     Structures, Supplier, TechnicalSpec, Title,
     Utils,
@@ -34,7 +33,6 @@ export class OrderRegion implements Order  {
     price: number;
     price_proposal: number;
     price_single_ttc: number;
-    program: Program;
     project: Project;
     rank: number;
     rankOrder: Number;

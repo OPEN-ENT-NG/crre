@@ -295,8 +295,6 @@ public class RecapListLycee extends TabHelper {
                 "       market.name as market_name," +
                 "       market.reference as market_reference " +
                 "       FROM   "+ Crre.crreSchema +".order_client_equipment oce  " +
-                "       INNER JOIN "+ Crre.crreSchema +".equipment_type et  " +
-                "               ON oce.id_type = et.id  " +
                 "       INNER JOIN "+ Crre.crreSchema +".contract market  " +
                 "               ON oce.id_contract = market.id  " +
                 "WHERE  number_validation = ?  " +
@@ -332,8 +330,6 @@ public class RecapListLycee extends TabHelper {
                 "        FROM   "+ Crre.crreSchema +".order_client_options options  " +
                 "               INNER JOIN "+ Crre.crreSchema +".order_client_equipment oce  " +
                 "                       ON ( options.id_order_client_equipment = oce.id )  " +
-                "               INNER JOIN "+ Crre.crreSchema +".equipment_type et  " +
-                "                       ON options.id_type = et.id " +
                 "               INNER JOIN " + Crre.crreSchema + ".contract market " +
                 "                       ON oce.id_contract = market.id "  +
                 "        WHERE  number_validation = ? ) AS opt  " +

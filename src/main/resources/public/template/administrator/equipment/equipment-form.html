@@ -35,15 +35,6 @@
                         </span>
                         <input type="text" class="twelve" ng-model="equipment.reference">
                     </label>
-                    <label class="five twelve vertical-spacing cell">
-                        <span class="twelve">
-                            <i18n>crre.equipment_type</i18n> *
-                        </span>
-                        <select  ng-model="equipment.id_type" class="twelve"
-                                 ng-init="equipment.id_type = equipment.id_type || (equipmentTypes.all.length > 0 ? equipmentTypes.all[0].id : null)"
-                                 ng-options="EquipmentType.id as EquipmentType.name for EquipmentType in equipmentTypes.all" required>
-                        </select>
-                    </label>
                     <label class="row twelve vertical-spacing">
                         <span class="twelve">
                             <i18n>crre.equipment.summary</i18n>

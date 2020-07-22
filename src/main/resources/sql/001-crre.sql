@@ -72,17 +72,6 @@ CREATE TABLE crre.tax (
   CONSTRAINT "Check_tax_value" CHECK (value >= 0::numeric)
 );
 
-CREATE TABLE crre.equipment_type (
-    id bigserial NOT NULL,
-    name character varying(255) NOT NULL,
-    CONSTRAINT equipment_type_pkey PRIMARY KEY (id)
-);
-
-INSERT INTO crre.equipment_type
-VALUES (1,'EQUIPEMENT');
-INSERT INTO crre.equipment_type
-VALUES (2,'PRESTATION');
-
 CREATE TABLE crre.equipment (
   id bigserial NOT NULL,
   name character varying(255) NOT NULL,
@@ -105,9 +94,6 @@ CREATE TABLE crre.equipment (
   CONSTRAINT fk_tax_id FOREIGN KEY (id_tax)
   REFERENCES crre.tax (id) MATCH SIMPLE
   ON UPDATE NO ACTION ON DELETE CASCADE,
-  CONSTRAINT fk_equipment_type_id FOREIGN KEY (id_type)
-      REFERENCES crre.equipment_type (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE CASCADE,
   CONSTRAINT "Check_price_positive" CHECK (price >= 0::numeric)
 );
 
