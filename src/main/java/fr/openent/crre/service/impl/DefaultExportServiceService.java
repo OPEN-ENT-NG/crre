@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 
 public class DefaultExportServiceService implements ExportService {
     Storage storage;
-    private final Logger logger = LoggerFactory.getLogger(DefaultProjectService.class);
+    private final Logger logger = LoggerFactory.getLogger(DefaultEquipmentService.class);
     MongoHelper mongo;
 
     public DefaultExportServiceService(Storage storage) {

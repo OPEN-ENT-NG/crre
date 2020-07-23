@@ -23,9 +23,9 @@ import java.util.List;
 public class DefaultOrderService extends SqlCrudService implements OrderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
-    private PurseService purseService ;
-    private EmailSendService emailSender ;
-    private StructureService structureService;
+    private final PurseService purseService ;
+    private final EmailSendService emailSender ;
+    private final StructureService structureService;
 
     public DefaultOrderService(
             String schema, String table, EmailSender emailSender){
@@ -108,8 +108,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
         String query = "SELECT oce.* , prj.id as id_project ,prj.preference as preference , oce.price * oce.amount as total_price , " +
                 "to_json(contract.*) contract ,to_json(supplier.*) supplier, " +
-                "to_json(campaign.* ) campaign, to_json( prj.*) as project, to_json( tt.*) as title," +
-                "to_json( gr.*) as grade, array_to_json(array_agg(  oco.*)) as options " +
+                "to_json(campaign.* ) campaign, to_json( prj.*) as project, to_json( tt.*) as title, " +
+                "array_to_json(array_agg(  oco.*)) as options " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN "+ Crre.crreSchema + ".order_client_options oco " +
                 "ON oco.id_order_client_equipment = oce.id " +
@@ -117,7 +117,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON contract.id_supplier = supplier.id " +
                 "INNER JOIN " + Crre.crreSchema + ".project as prj ON oce.id_project = prj.id " +
                 "INNER JOIN " + Crre.crreSchema + ".title as tt ON tt.id = prj.id_title " +
-                "INNER JOIN " + Crre.crreSchema + ".grade as gr ON gr.id = prj.id_grade " +
                 "INNER JOIN "+ Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "WHERE oce.id in "+ Sql.listPrepared(ids.toArray()) +
                 " GROUP BY (prj.preference, prj.id , oce.id, tt.id, gr.id, contract.id, supplier.id, campaign.id) ORDER BY prj.preference, oce.id_project DESC; ";
@@ -269,19 +268,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void getOrderFileId(String orderNumber, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT id_mongo FROM " + Crre.crreSchema + ".file " +
-                "INNER JOIN " + Crre.crreSchema + ".order ON (" + Crre.crreSchema + ".order.id = file.id_order) " +
-                "WHERE order_number = ? " +
-                "ORDER BY date DESC " +
-                "LIMIT 1;";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(orderNumber);
-
-        this.sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-    }
-
-    @Override
     public void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
@@ -397,7 +383,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         Sql.getInstance().prepared(getCampaignPurseEnabledQuery, params, SqlResult.validResultHandler(event -> {
             if (event.isRight()) {
                 JsonArray results = event.right().getValue();
-                Boolean purseEnabled = (results.size() > 0 && results.getJsonObject(0).getBoolean("purse_enabled"));
+                boolean purseEnabled = (results.size() > 0 && results.getJsonObject(0).getBoolean("purse_enabled"));
                 Double price = Double.valueOf(order.getString("price_total_equipment"));
                 try {
                     JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
@@ -411,25 +397,22 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                     }
                     statements.add(getNewNbOrder(idCampaign, idStructure));
 
-                    sql.transaction(statements, new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> event) {
-                            JsonArray results = event.body().getJsonArray("results");
-                            JsonObject res = new JsonObject();
-                            JsonObject newPurse = purseEnabled ? results.getJsonObject(3) : new JsonObject();
-                            JsonObject newOrderNumber = results.getJsonObject(purseEnabled ? 4 : 2);
-                            JsonArray newPurseArray = purseEnabled ? newPurse.getJsonArray("results").getJsonArray(0) : new JsonArray();
-                            JsonArray newOrderNumberArray = newOrderNumber.getJsonArray("results").getJsonArray(0);
-                            res.put("f1", newPurseArray.size() > 0
-                                    ? Double.parseDouble(newPurseArray.getString(0))
-                                    : 0);
-                            res.put("f2", newOrderNumberArray.size() > 0
-                                    ? Double.parseDouble(newOrderNumberArray.getLong(0).toString())
-                                    : 0);
+                    sql.transaction(statements, event1 -> {
+                        JsonArray results1 = event1.body().getJsonArray("results");
+                        JsonObject res = new JsonObject();
+                        JsonObject newPurse = purseEnabled ? results1.getJsonObject(3) : new JsonObject();
+                        JsonObject newOrderNumber = results1.getJsonObject(purseEnabled ? 4 : 2);
+                        JsonArray newPurseArray = purseEnabled ? newPurse.getJsonArray("results").getJsonArray(0) : new JsonArray();
+                        JsonArray newOrderNumberArray = newOrderNumber.getJsonArray("results").getJsonArray(0);
+                        res.put("f1", newPurseArray.size() > 0
+                                ? Double.parseDouble(newPurseArray.getString(0))
+                                : 0);
+                        res.put("f2", newOrderNumberArray.size() > 0
+                                ? Double.parseDouble(newOrderNumberArray.getLong(0).toString())
+                                : 0);
 
-                            getTransactionHandler(event, res, handler);
+                        getTransactionHandler(event1, res, handler);
 
-                        }
                     });
                 } catch (ClassCastException e) {
                     LOGGER.error("An error occurred when casting order elements", e);
@@ -443,7 +426,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public  void windUpOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler){
-        JsonObject statement = getUpdateStatusStatement(ids, "DONE");
+        JsonObject statement = getUpdateStatusStatement(ids);
         sql.prepared(statement.getString("statement"),
                 statement.getJsonArray("values"),
                 SqlResult.validUniqueResultHandler(handler));
@@ -463,35 +446,29 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     @Override
     public void sendOrders(List<Integer> ids,final Handler<Either<String, JsonObject>> handler){
 
-        this.listOrders(ids, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonArray res = event.right().getValue();
-                    final JsonObject ordersObject = formatSendOrdersResult(res);
-                    structureService.getStructureById(ordersObject.getJsonArray("id_structures"),
-                            new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> structureArray) {
-                                    if(structureArray.isRight()){
-                                        Either<String, JsonObject> either;
-                                        JsonObject returns = new JsonObject()
-                                                .put("ordersCSF",
-                                                        getOrdersFormatedCSF(ordersObject.getJsonArray("order"),
-                                                                (JsonArray) structureArray.right().getValue()))
-                                                .put("ordersBC",
-                                                        getOrdersFormatedBC(ordersObject.getJsonArray("order"),
-                                                                (JsonArray) structureArray.right().getValue()))
-                                                .put("total",
-                                                        getTotalsOrdersPrices(ordersObject.getJsonArray("order")));
-                                        either = new Either.Right<>(returns);
-                                        handler.handle(either);
-                                    }
-                                }
-                            });
-                } else {
-                    handler.handle(new Either.Left<String, JsonObject>("An error occurred when collecting orders"));
-                }
+        this.listOrders(ids, event -> {
+            if (event.isRight()) {
+                JsonArray res = event.right().getValue();
+                final JsonObject ordersObject = formatSendOrdersResult(res);
+                structureService.getStructureById(ordersObject.getJsonArray("id_structures"),
+                        structureArray -> {
+                            if(structureArray.isRight()){
+                                Either<String, JsonObject> either;
+                                JsonObject returns = new JsonObject()
+                                        .put("ordersCSF",
+                                                getOrdersFormatedCSF(ordersObject.getJsonArray("order"),
+                                                        structureArray.right().getValue()))
+                                        .put("ordersBC",
+                                                getOrdersFormatedBC(ordersObject.getJsonArray("order"),
+                                                        structureArray.right().getValue()))
+                                        .put("total",
+                                                getTotalsOrdersPrices(ordersObject.getJsonArray("order")));
+                                either = new Either.Right<>(returns);
+                                handler.handle(either);
+                            }
+                        });
+            } else {
+                handler.handle(new Either.Left<>("An error occurred when collecting orders"));
             }
         });
     }
@@ -502,41 +479,35 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         String query = "SELECT distinct id_order " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "WHERE order_client_equipment.number_validation IN " + Sql.listPrepared(ids.toArray());
-        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray(ids), SqlResult.validResultHandler(new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> updateOrCreateEvent) {
-                if (updateOrCreateEvent.isRight()) {
-                    JsonArray orderIds =  updateOrCreateEvent.right().getValue();
-                    JsonObject orderObject = orderIds.getJsonObject(0);
-                    if (null == orderObject.getInteger("id_order")) {
-                        String nextValQuery = "SELECT nextval('" + Crre.crreSchema + ".order_id_seq') as id";
-                        Sql.getInstance().raw(nextValQuery, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-                            @Override
-                            public void handle(Either<String, JsonObject> eventId) {
-                                if (eventId.isRight()) {
-                                    Number orderId = eventId.right().getValue().getInteger("id");
-                                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                                            .add(getOrderCreateStatement(orderId, engagementNumber, labelProgram, dateCreation, orderNumber))
-                                            .add(getAddOrderClientRef(orderId, ids))
-                                            .add(getUpdateClientOrderStatement(new fr.wseduc.webutils.collections.JsonArray(ids), "SENT"));
+        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray(ids), SqlResult.validResultHandler(updateOrCreateEvent -> {
+            if (updateOrCreateEvent.isRight()) {
+                JsonArray orderIds =  updateOrCreateEvent.right().getValue();
+                JsonObject orderObject = orderIds.getJsonObject(0);
+                if (null == orderObject.getInteger("id_order")) {
+                    String nextValQuery = "SELECT nextval('" + Crre.crreSchema + ".order_id_seq') as id";
+                    Sql.getInstance().raw(nextValQuery, SqlResult.validUniqueResultHandler(eventId -> {
+                        if (eventId.isRight()) {
+                            Number orderId = eventId.right().getValue().getInteger("id");
+                            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                                    .add(getOrderCreateStatement(orderId, engagementNumber, labelProgram, dateCreation, orderNumber))
+                                    .add(getAddOrderClientRef(orderId, ids))
+                                    .add(getUpdateClientOrderStatement(new fr.wseduc.webutils.collections.JsonArray(ids)));
 
-                                    Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
-                                } else {
-                                    handler.handle(new Either.Left<String, JsonObject>(eventId.left().getValue()));
-                                }
-                            }
-                        }));
-                    } else {
-                        Number orderId = (orderIds.getJsonObject(0)).getInteger("id_order");
-                        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                                .add(getUpdateOrderStatement(engagementNumber, labelProgram, dateCreation, orderNumber, orderId))
-                                .add(getUpdateClientOrderStatement(new fr.wseduc.webutils.collections.JsonArray(ids), "SENT"));
-
-                        Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
-                    }
+                            Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
+                        } else {
+                            handler.handle(new Either.Left<>(eventId.left().getValue()));
+                        }
+                    }));
                 } else {
-                    handler.handle(new Either.Left<String, JsonObject>(updateOrCreateEvent.left().getValue()));
+                    Number orderId = (orderIds.getJsonObject(0)).getInteger("id_order");
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                            .add(getUpdateOrderStatement(engagementNumber, labelProgram, dateCreation, orderNumber, orderId))
+                            .add(getUpdateClientOrderStatement(new fr.wseduc.webutils.collections.JsonArray(ids)));
+
+                    Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
                 }
+            } else {
+                handler.handle(new Either.Left<>(updateOrCreateEvent.left().getValue()));
             }
         }));
     }
@@ -590,30 +561,15 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 .put("action", "prepared");
     }
 
-    private JsonObject getUpdateClientOrderStatement (JsonArray validationNumbers, String status) {
+    private JsonObject getUpdateClientOrderStatement(JsonArray validationNumbers) {
         String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                " SET  status = ? " +
+                " SET  status = SENT " +
                 " WHERE number_validation in " + Sql.listPrepared(validationNumbers.getList()) +";";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (int i = 0; i < validationNumbers.size(); i++) {
             params.add(validationNumbers.getString(i));
         }
-
-        return new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared");
-    }
-
-    private JsonObject getAddFileStatement(String mongoId, String owner, Number orderId) {
-        String query = "INSERT INTO " + Crre.crreSchema + ".file(id_mongo, owner, id_order) " +
-                "VALUES (?, ?, ?);";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(mongoId)
-                .add(owner)
-                .add(orderId);
 
         return new JsonObject()
                 .put("statement", query)
@@ -629,11 +585,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             JsonObject order = orderOld
                     .put("structure",
                             (getStructureObject( structures, orderOld.getString("id_structure"))));
-            if (orderOld.getJsonArray("options").size() == 0) {
-                order.put("hasOptions", false);
-            } else {
-                order.put("hasOptions", true);
-            }
+            order.put("hasOptions", orderOld.getJsonArray("options").size() != 0);
             orders.add(order);
         }
 
@@ -659,9 +611,9 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                             orderOld.getInteger("amount").toString(),
                             orderOld.getString("number_validation")));
                     orderNew.put("structures", structure);
-                    Integer amount = (Integer.parseInt(orderOld.getInteger("amount").toString()) +
+                    int amount = (Integer.parseInt(orderOld.getInteger("amount").toString()) +
                             Integer.parseInt( orderNew.getInteger("amount").toString())) ;
-                    orderNew.put("amount",amount.toString());
+                    orderNew.put("amount", Integer.toString(amount));
                 }
             }
             if(! isIn) {
@@ -717,10 +669,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     private JsonObject getTotalsOrdersPrices(JsonArray orders){
 
-        Double tva = new Double(0);
-        Double total = new Double(0);
-        final Integer Const = 100;
-        Double totalTTC ;
+        double tva = 0;
+        double total = 0;
+        final int Const = 100;
+        double totalTTC ;
         try {
             tva = Double.parseDouble((orders.getJsonObject(0)).getString("tax_amount"));
         }catch (ClassCastException e) {
@@ -806,59 +758,50 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void validateOrders(final HttpServerRequest request, final UserInfos user, final List<Integer> ids,
                                final String url, final Handler<Either<String, JsonObject>> handler){
         String getIdQuery = "Select "+ Crre.crreSchema + ".get_validation_number() as numberOrder ";
-        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    try {
-                        final String numberOrder = event.right().getValue().getString("numberorder");
-                        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                                .add(getValidateStatusStatement(ids, numberOrder, "VALID"))
-                                .add(getAgentInformation( ids));
-                        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-                            @Override
-                            public void handle(Message<JsonObject> jsonObjectMessage) {
+        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
+            if (event.isRight()) {
+                try {
+                    final String numberOrder = event.right().getValue().getString("numberorder");
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                            .add(getValidateStatusStatement(ids, numberOrder))
+                            .add(getAgentInformation( ids));
+                    sql.transaction(statements, jsonObjectMessage -> {
 
 
-                                final JsonArray rows = ((jsonObjectMessage).body()
-                                        .getJsonArray("results").getJsonObject(1)).getJsonArray("results");
-                                JsonArray names = new fr.wseduc.webutils.collections.JsonArray();
-                                final int agentNameIndex = 2;
-                                final int structureIdIndex = 4;
-                                JsonArray structureIds = new fr.wseduc.webutils.collections.JsonArray();
-                                for (int j = 0; j < rows.size(); j++) {
+                        final JsonArray rows = ((jsonObjectMessage).body()
+                                .getJsonArray("results").getJsonObject(1)).getJsonArray("results");
+                        JsonArray names = new fr.wseduc.webutils.collections.JsonArray();
+                        final int agentNameIndex = 2;
+                        final int structureIdIndex = 4;
+                        JsonArray structureIds = new fr.wseduc.webutils.collections.JsonArray();
+                        for (int j = 0; j < rows.size(); j++) {
 
 
-                                    names.add((rows.getJsonArray(j)).getString(agentNameIndex));
-                                    structureIds.add((rows.getJsonArray(j)).getString(structureIdIndex));
-                                }
-                                final JsonArray agentNames = names;
-                                emailSender.getPersonnelMailStructure(structureIds,
-                                        new Handler<Either<String, JsonArray>>() {
-                                            @Override
-                                            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+                            names.add((rows.getJsonArray(j)).getString(agentNameIndex));
+                            structureIds.add((rows.getJsonArray(j)).getString(structureIdIndex));
+                        }
+                        final JsonArray agentNames = names;
+                        emailSender.getPersonnelMailStructure(structureIds,
+                                stringJsonArrayEither -> {
 
 
-                                                final JsonObject result = new JsonObject()
-                                                        .put("number_validation", numberOrder)
-                                                        .put("agent", agentNames);
-                                                handler.handle(new Either.Right<String, JsonObject>(result));
-                                                emailSender.sendMails(request, result,  rows,  user,  url,
-                                                        (JsonArray) stringJsonArrayEither.right().getValue());
-                                            }
-                                        });
-                            }
-                        });
-                    } catch (ClassCastException e) {
-                        LOGGER.error("An error occurred when casting numberOrder", e);
-                        handler.handle(new Either.Left<String, JsonObject>(""));
-                    } catch (NullPointerException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    LOGGER.error("An error occurred when selecting number of the order");
-                    handler.handle(new Either.Left<String, JsonObject>(""));
+                                    final JsonObject result = new JsonObject()
+                                            .put("number_validation", numberOrder)
+                                            .put("agent", agentNames);
+                                    handler.handle(new Either.Right<>(result));
+                                    emailSender.sendMails(request, result,  rows,  user,  url,
+                                            stringJsonArrayEither.right().getValue());
+                                });
+                    });
+                } catch (ClassCastException e) {
+                    LOGGER.error("An error occurred when casting numberOrder", e);
+                    handler.handle(new Either.Left<>(""));
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
                 }
+            } else {
+                LOGGER.error("An error occurred when selecting number of the order");
+                handler.handle(new Either.Left<>(""));
             }
         }));
     }
@@ -881,12 +824,12 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 .put("action", "prepared");
     }
 
-    private static JsonObject getValidateStatusStatement(List<Integer>  ids, String numberOrder, String status){
+    private static JsonObject getValidateStatusStatement(List<Integer> ids, String numberOrder){
 
-        String query = "UPDATE \" + Crre.crreSchema + \".order_client_equipment " +
-                " SET  status = ?, number_validation = ?  " +
+        String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
+                " SET  status = VALID, number_validation = ?  " +
                 " WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ; ";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status).add(numberOrder);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(numberOrder);
 
         for (Integer id : ids) {
             params.add( id);
@@ -898,12 +841,12 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 .put("action", "prepared");
     }
 
-    private static JsonObject getUpdateStatusStatement(List<Integer>  ids, String status){
+    private static JsonObject getUpdateStatusStatement(List<Integer> ids){
 
-        String query = "UPDATE \" + Crre.crreSchema + \".order_client_equipment " +
-                " SET  status = ? " +
+        String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
+                " SET  status = DONE " +
                 " WHERE id in "+ Sql.listPrepared(ids.toArray()) +";";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Integer id : ids) {
             params.add( id);
@@ -923,10 +866,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
             returns.put("amount", amountPurseNbOrder.getDouble("f1"));
             returns.put("nb_order",amountPurseNbOrder.getDouble("f2"));
-            handler.handle(new Either.Right<String, JsonObject>(returns));
+            handler.handle(new Either.Right<>(returns));
         }  else {
             LOGGER.error("An error occurred when launching 'order' transaction");
-            handler.handle(new Either.Left<String, JsonObject>(""));
+            handler.handle(new Either.Left<>(""));
         }
 
     }

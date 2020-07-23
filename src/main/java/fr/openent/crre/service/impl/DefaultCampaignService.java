@@ -103,11 +103,9 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignEquipmentCount(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT campaign.id, COUNT(DISTINCT rel_equipment_tag.id_equipment) as nb_equipments " +
+        String query = "SELECT campaign.id, " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
-                "INNER JOIN " + Crre.crreSchema + ".tag ON (rel_group_campaign.id_tag = tag.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_equipment_tag ON (tag.id = rel_equipment_tag.id_tag) " +
                 "GROUP BY campaign.id";
         Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
@@ -157,11 +155,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, count(DISTINCT rel_equipment_tag.id_equipment) as nb_equiments " +
+        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_campaign.id_structure_group = rel_group_structure.id_structure_group) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_equipment_tag ON (rel_group_campaign.id_tag = rel_equipment_tag.id_tag) " +
                 "WHERE rel_group_structure.id_structure = ? " +
                 "GROUP BY campaign.id;";
 

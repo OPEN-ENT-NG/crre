@@ -222,45 +222,6 @@ CREATE TABLE crre.basket_option (
         ON DELETE NO ACTION
 );
 
-CREATE TABLE crre.order (
-    id bigserial NOT NULL,
-    engagement_number character varying(255),
-    date_creation timestamp without time zone NOT NULL DEFAULT now(),
-    order_number character varying (255),
-    CONSTRAINT order_pkey PRIMARY KEY (id)
-);
-
-CREATE TABLE crre.title (
-    id bigserial NOT NULL,
-    name character varying(255),
-    CONSTRAINT title_pkey PRIMARY KEY (id)
-);
-
-CREATE TABLE crre.grade (
-                            id bigserial NOT NULL,
-                            name character varying(255),
-                            CONSTRAINT grade_pkey PRIMARY KEY (id)
-);
-
-CREATE TABLE crre.project (
-    id bigserial NOT NULL,
-    description character varying(255),
-    id_title bigint NOT NULL,
-    id_grade bigint,
-    building character varying(255),
-    stair integer,
-    room character varying(50),
-    site character varying(255),
-    preference bigint,
-    CONSTRAINT project_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_title_id FOREIGN KEY (id_title)
-      REFERENCES crre.title (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE CASCADE,
-    CONSTRAINT fk_grade_id FOREIGN KEY (id_grade)
-      REFERENCES crre.grade (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 CREATE TABLE crre.order_client_equipment (
     id bigserial NOT NULL,
     price numeric NOT NULL,
@@ -295,12 +256,6 @@ CREATE TABLE crre.order_client_equipment (
         REFERENCES crre.contract (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT fk_order_id FOREIGN KEY (id_order)
-        REFERENCES crre.order (id) MATCH SIMPLE
-        ON UPDATE NO ACTION ON DELETE CASCADE,
-    CONSTRAINT fk_project_id  FOREIGN KEY (id_project)
-        REFERENCES crre.project (id) MATCH SIMPLE
-        ON UPDATE NO ACTION ON DELETE CASCADE,
     CONSTRAINT "Check_price_positive" CHECK (price >= 0::numeric),
     CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric),
     CONSTRAINT "Check_tax_amount_positive" CHECK (tax_amount >= 0::numeric),
@@ -321,18 +276,6 @@ CREATE TABLE crre.order_client_options (
     CONSTRAINT "Check_tax_amount_positive" CHECK (tax_amount >= 0::numeric)
 );
 
-CREATE TABLE crre.file (
-    id bigserial NOT NULL,
-    id_mongo character varying(255),
-    owner character varying(255),
-    date timestamp without time zone NOT NULL DEFAULT now(),
-    id_order bigint,
-    CONSTRAINT file_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_order_id FOREIGN KEY (id_order)
-      REFERENCES crre.order (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 CREATE TABLE crre.basket_file (
     id character varying (36) NOT NULL,
     id_basket_equipment bigint NOT NULL,
@@ -351,15 +294,6 @@ CREATE TABLE crre.order_file (
     CONSTRAINT fk_order_client_equipment_id FOREIGN KEY (id_order_client_equipment)
         REFERENCES crre.order_client_equipment (id) MATCH SIMPLE
         ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
-CREATE TABLE crre.rel_title_campaign_structure (
-    id_title bigint NOT NULL,
-    id_campaign bigint NOT NULL,
-    id_structure character varying (36),
-    CONSTRAINT rel_title_campaign_structure_pkey PRIMARY KEY (id_title, id_campaign, id_structure),
-    CONSTRAINT fk_title_id FOREIGN KEY (id_title) REFERENCES crre.title (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE,
-    CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign) REFERENCES crre.campaign (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE
 );
 
 CREATE TABLE crre."order-region-equipment"
@@ -396,14 +330,6 @@ CREATE TABLE crre."order-region-equipment"
         ON DELETE NO ACTION,
     CONSTRAINT fk_contract_id FOREIGN KEY (id_contract)
         REFERENCES crre.contract (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT fk_order_id FOREIGN KEY (id_order)
-        REFERENCES crre."order" (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT fk_project_id FOREIGN KEY (id_project)
-        REFERENCES crre.project (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
     CONSTRAINT fk_order_client_id FOREIGN KEY (id_order_client_equipment)
@@ -456,28 +382,6 @@ CREATE TRIGGER on_equipment_insert
     FOR EACH ROW
     EXECUTE PROCEDURE crre.create_equipment_reference();
 
-CREATE OR REPLACE FUNCTION delete_empty_project()
-    RETURNS trigger AS  $$
-BEGIN
-    DELETE FROM crre.project as prj
-    WHERE prj.id NOT IN (SELECT pp.id FROM crre.project as pp
-                                               INNER JOIN crre.order_client_equipment oce
-                                                          ON oce.id_project = pp.id
-                         GROUP BY pp.id)
-      AND prj.id NOT IN (SELECT pp.id FROM crre.project as pp
-                                               INNER JOIN crre."order-region-equipment" ore
-                                                          ON ore.id_project = pp.id
-                         GROUP BY pp.id)
-    ;
-    RETURN NULL;
-END;
-$$  LANGUAGE plpgsql;
-
-CREATE TRIGGER check_empty_project AFTER DELETE
-    ON crre.order_client_equipment
-    FOR EACH ROW
-    EXECUTE PROCEDURE delete_empty_project();
-
 CREATE OR REPLACE FUNCTION crre.region_override_client_order() RETURNS TRIGGER AS $$
 BEGIN
     UPDATE crre.order_client_equipment
@@ -506,22 +410,5 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER region_delete_override_client_order_trigger AFTER
     DELETE ON crre."order-region-equipment"
     FOR EACH ROW EXECUTE PROCEDURE crre.region_delete_order_override_client();
-
-CREATE OR REPLACE FUNCTION order_without_ref()
-    RETURNS trigger AS  $$
-BEGIN
-    DELETE FROM crre.order
-    WHERE id NOT IN (
-        SELECT DISTINCT id_order FROM crre.order_client_equipment
-        WHERE id_order IS NOT NULL
-        ORDER BY id_order );
-    RETURN NULL;
-END;
-$$  LANGUAGE plpgsql;
-
-CREATE TRIGGER check_order_no_ref AFTER UPDATE
-    ON crre.order_client_equipment
-    FOR EACH ROW
-EXECUTE PROCEDURE order_without_ref();
 
 CREATE INDEX equipment_idcontract_name_reference_idx ON crre.equipment USING btree (id_contract, reference, name);

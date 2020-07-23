@@ -11,12 +11,8 @@ public enum Contexts {
     PURSE ("PURSE"),
     BASKET("BASKET"),
     TITLE("TITLE"),
-    GRADE("GRADE"),
-    PROJECT("PROJECT"),
     ORDER ("ORDER"),
     ORDERREGION ("ORDERREGION"),
-    OPERATION("OPERATION"),
-    INSTRUCTION("INSTRUCTION"),
     EXPORT("EXPORT");
 
     private final String contextName;

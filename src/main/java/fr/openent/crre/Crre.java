@@ -51,7 +51,6 @@ public class Crre extends BaseServer {
         addController(new SupplierController());
         addController(new ContractTypeController());
         addController(new ContractController());
-        addController(new TagController());
         addController(new EquipmentController(vertx));
         addController(new TaxController());
         addController(new LogController());
@@ -62,9 +61,6 @@ public class Crre extends BaseServer {
         addController(new BasketController(vertx, storage, config.getJsonObject("slack", new JsonObject()), mail));
         addController(new OrderController(storage, vertx, config, eb));
         addController(new UserController());
-        addController(new TitleController(vertx, eb));
-        addController(new GradeController());
-        addController(new ProjectController());
         addController(new OrderRegionController());
         addController(new ExportController(storage));
         CONFIG = config;

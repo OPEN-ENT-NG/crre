@@ -38,16 +38,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class PurseController extends ControllerHelper {
 
 
-    private ImportCSVHelper importCSVHelper;
-    private StructureService structureService;
-    private PurseService purseService;
-    private CampaignService campaignService;
+    private final ImportCSVHelper importCSVHelper;
+    private final StructureService structureService;
+    private final PurseService purseService;
+    private final CampaignService campaignService;
 
     public PurseController(Vertx vertx) {
         super();

@@ -2,7 +2,7 @@ package fr.openent.crre.export;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.helpers.ExcelHelper;
-import fr.openent.crre.service.impl.DefaultProjectService;
+import fr.openent.crre.service.impl.DefaultEquipmentService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -30,7 +30,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public abstract class TabHelper {
-    protected Logger logger = LoggerFactory.getLogger(DefaultProjectService.class);
+    protected Logger logger = LoggerFactory.getLogger(DefaultEquipmentService.class);
     protected static final String CMD = "CMD";
     protected static final String CMR = "CMR";
     protected static final String LYCEE = "LYC";
@@ -47,7 +47,7 @@ public abstract class TabHelper {
     final protected int xTab = 1;
     protected int cellColumn = 1;
     protected boolean isEmpty = false;
-    protected Logger log = LoggerFactory.getLogger(DefaultProjectService.class);
+    protected Logger log = LoggerFactory.getLogger(DefaultEquipmentService.class);
     protected int arrayLength = 4;
     protected long timeout = 999999999;
     protected JsonArray datas;

@@ -146,8 +146,6 @@ public interface OrderService {
      */
     void cancelValidation(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
 
-    void getOrderFileId(String orderNumber, Handler<Either<String, JsonObject>> handler);
-
     void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> eitherHandler);
 
     /**
