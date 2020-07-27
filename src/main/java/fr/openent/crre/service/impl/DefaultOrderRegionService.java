@@ -141,13 +141,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (order.getInteger("rank") != -1) {
             queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
                     " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment,  id_project,  id_operation, rank) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                    " comment,  id_project, rank) " +
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
         } else {
             queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
                     " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment,  id_project,  id_operation) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                    " comment,  id_project) " +
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
         }
 
         params = new fr.wseduc.webutils.collections.JsonArray()
@@ -167,8 +167,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getInteger("id_campaign"))
                 .add(order.getString("id_structure"))
                 .add(order.getString("comment"))
-                .add(id_project)
-                .add(order.getInteger("id_operation"));
+                .add(id_project);
         if (order.getInteger("rank") != -1) {
             params.add(order.getInteger("rank"));
         }
@@ -229,20 +228,5 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "          oce.id )";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idOrder), SqlResult.validUniqueResultHandler(handler));
-    }
-
-    @Override
-    public void updateOperation(Integer idOperation, JsonArray idsOrders, Handler<Either<String, JsonObject>> handler) {
-        String query = " UPDATE " + Crre.crreSchema + ".\"order-region-equipment\" " +
-                " SET id_operation = " +
-                idOperation +
-                " WHERE id IN " +
-                Sql.listPrepared(idsOrders.getList()) +
-                " RETURNING id";
-        JsonArray values = new JsonArray();
-        for (int i = 0; i < idsOrders.size(); i++) {
-            values.add(idsOrders.getValue(i));
-        }
-        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 }

@@ -4,4 +4,3 @@ export * from './purse';
 export * from './orders';
 export * from './orderRegion';
 export * from './export';
-export * from './title';

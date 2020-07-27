@@ -20,9 +20,8 @@ import {
     Structures,
     Supplier,
     Suppliers,
-    Tags,
     Taxes,
-    Titles, Userbook,
+    Userbook,
     Utils,
 } from '../model';
 import {Mix} from "entcore-toolkit";
@@ -43,7 +42,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.suppliers = new Suppliers();
         $scope.contractTypes = new ContractTypes();
         $scope.contracts = new Contracts();
-        $scope.tags = new Tags();
         $scope.equipments = new Equipments();
         $scope.campaigns = new Campaigns();
         $scope.campaign = new Campaign();
@@ -90,11 +88,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.contractTypes.sync();
                 Utils.safeApply($scope);
             },
-            manageEquipmentTags: async () => {
-                template.open('administrator-main', 'administrator/tag/manage-tags');
-                await $scope.tags.sync(true);
-                Utils.safeApply($scope);
-            },
             manageEquipments: async () => {
                 delete $scope.equipment;
 
@@ -103,7 +96,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.equipments.sync();
                 await $scope.contracts.sync();
                 $scope.taxes.sync();
-                $scope.tags.sync();
                 Utils.safeApply($scope);
             },
             createEquipment: async () => {
@@ -150,7 +142,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             manageTitles: async (params) => {
                 const campaign = $scope.campaigns.get(parseInt(params.idCampaign));
-                campaign.titles = new Titles();
                 if (template.isEmpty('administrator-main') || campaign === undefined) {
                     $scope.redirectTo('/campaigns');
                 }

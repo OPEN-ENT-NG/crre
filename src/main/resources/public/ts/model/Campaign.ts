@@ -1,7 +1,7 @@
 import http from 'axios';
 import {_, notify} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {Purses, StructureGroup, Tags, Titles} from './index';
+import {StructureGroup} from './index';
 
 
 export class Campaign implements Selectable  {
@@ -14,7 +14,6 @@ export class Campaign implements Selectable  {
     selected: boolean;
     purse_amount?: number;
     nb_structures: number;
-    titles: Titles;
     nb_panier?: number;
     purse_enabled: boolean;
     priority_enabled: boolean;
@@ -89,19 +88,12 @@ export class Campaign implements Selectable  {
     orderPriorityEnable(){
         return this.priority_field == PRIORITY_FIELD.ORDER  && this.priority_enabled ;
     }
-    async sync (id, tags?: Tags) {
+    async sync (id) {
         try {
             let { data } = await http.get(`/crre/campaigns/${id}`);
             Mix.extend(this, Mix.castAs(Campaign, data));
             if (this.groups[0] !== null ) {
                 this.groups = Mix.castArrayAs(StructureGroup, JSON.parse(this.groups.toString())) ;
-                if (tags) {
-                this.groups.map((group) => {
-                    group.tags =  group.tags.map( (tag) => {
-                        return _.findWhere(tags, {id: tag});
-                    });
-                });
-                }
             } else this.groups = [];
 
         } catch (e) {

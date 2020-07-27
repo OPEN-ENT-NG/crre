@@ -46,7 +46,6 @@ export const orderController = ng.controller('orderController',
                             || ('structure' in order && order.structure['city'] ? regex.test(order.structure.city.toLocaleLowerCase()) : false)
                             || ('structure' in order && order.structure['academy'] ? regex.test(order.structure.academy.toLowerCase()) : false)
                             || ('structure' in order && order.structure['type'] ? regex.test(order.structure.type.toLowerCase()) : false)
-                            || ('project' in order ? regex.test(order.project.title['name'].toLowerCase()) : false)
                             || ('contract_type' in order ? regex.test(order.contract_type.name.toLowerCase()) : false)
                             || regex.test('contract' in (order as OrderClient)
                                 ? order.contract.name.toLowerCase()
@@ -160,7 +159,7 @@ export const orderController = ng.controller('orderController',
 
         function generateRegexp (words: string[]): RegExp {
             function escapeRegExp(str: string) {
-                return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
+                return str.replace(/[\-\[\]\/{}()*+?.\\^$|]/g, '\\$&');
             }
             let reg;
             if (words.length > 0) {
@@ -466,8 +465,6 @@ export const orderController = ng.controller('orderController',
             if(order.rank !== undefined){
                 if(order.campaign.priority_field === PRIORITY_FIELD.ORDER && order.campaign.orderPriorityEnable()){
                     return order.rank = order.rank + 1;
-                } else if (order.campaign.priority_field === PRIORITY_FIELD.PROJECT && order.project.preference !== null && order.campaign.projectPriorityEnable()){
-                    return order.rank = order.project.preference + 1;
                 }
             }
             return order.rank = lang.translate("crre.order.not.prioritized");
@@ -480,13 +477,6 @@ export const orderController = ng.controller('orderController',
             await $scope.selectCampaignShow(campaign);
             $scope.search.filterWords = [];
         };
-
-        // $scope.test = () =>{
-        //     let elements = document.getElementsByClassName('vertical-array-scroll');
-        //     if(elements[0])
-        //          elements[0].scrollLeft = 9000000000000;
-        //     Utils.safeApply($scope);
-        // };
 
         angular.element(document).ready(function(){
             let elements = document.getElementsByClassName('vertical-array-scroll');

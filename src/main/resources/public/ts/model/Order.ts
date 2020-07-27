@@ -6,10 +6,8 @@ import {
     OrderClient,
     OrderOptionClient,
     OrderRegion,
-    Project,
     Structure,
     Structures,
-    Title,
     Utils
 } from './index';
 import {Mix, Selectable} from "entcore-toolkit";
@@ -27,13 +25,11 @@ export interface OrderImp extends Selectable{
     price: number;
     price_proposal: number;
     price_single_ttc: number;
-    project: Project;
     rank: number;
     rankOrder: Number;
     selected:boolean;
     structure: Structure;
     tax_amount: number;
-    title:Title;
 }
 
 export class Order implements OrderImp{
@@ -54,13 +50,11 @@ export class Order implements OrderImp{
     price: number;
     price_proposal: number;
     price_single_ttc: number;
-    project: Project;
     rank: number;
     rankOrder: Number;
     selected:boolean;
     structure: Structure;
     tax_amount: number;
-    title:Title;
     typeOrder:string;
 
     constructor(order: Order, structures:Structures){
@@ -71,14 +65,12 @@ export class Order implements OrderImp{
         this.contract_type = order.contract_type? JSON.parse(order.contract_type.toString()) : null;
         this.equipment_key = order.equipment_key;
         this.inheritedClass = order;
-        this.project = order.project? Mix.castAs(Project, JSON.parse(order.project.toString())) : null;
         this.price = order.price? parseFloat(order.price.toString()) : null;
         this.price_proposal = order.price_proposal? parseFloat(order.price_proposal.toString()) : null;
         this.price_single_ttc  = order.price_single_ttc? parseFloat(order.price_single_ttc.toString()) : null;
         this.rank  = order.rank? parseInt(order.rank.toString()) + 1: null;
         this.structure = order.id_structure? OrderUtils.initStructure( order.id_structure, structures) : new Structure();
         this.tax_amount  = order.tax_amount? parseFloat(order.tax_amount.toString()) : null;
-        this.title = order.title?JSON.parse(order.title.toString()) : null;
         this.typeOrder = order.typeOrder;
         if(order.id)this.id = order.id;
         if(order.id_operation)this.id_operation = order.id_operation;

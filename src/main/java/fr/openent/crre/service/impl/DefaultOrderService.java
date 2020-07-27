@@ -198,7 +198,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public void getOrdersGroupByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT row.id_operation, row.number_validation, row.status, contract.name as contract_name, contract.id as id_contract, supplier.name as supplier_name, " +
+        String query = "SELECT row.number_validation, row.status, contract.name as contract_name, contract.id as id_contract, supplier.name as supplier_name, " +
                 "array_to_json(array_agg(structure_group.name)) as structure_groups, count(distinct row.id_structure) as structure_count, supplier.id as supplierId, " +
                 Crre.crreSchema + ".order.label_program, " + Crre.crreSchema + ".order.order_number " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment row " +
@@ -208,7 +208,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id) " +
                 "LEFT OUTER JOIN " + Crre.crreSchema + ".order ON (row.id_order = " + Crre.crreSchema + ".order.id)  " +
                 "WHERE row.status IN " + Sql.listPrepared(status.getList()) +
-                " GROUP BY row.id_operation, row.number_validation, contract.name, supplier.name, contract.id, supplierId, row.status, " + Crre.crreSchema +
+                " GROUP BY row.number_validation, contract.name, supplier.name, contract.id, supplierId, row.status, " + Crre.crreSchema +
                 ".order.label_program, " + Crre.crreSchema + ".order.order_number;";
 
         this.sql.prepared(query, status, SqlResult.validResultHandler(handler));
@@ -233,30 +233,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         }
 
         this.sql.prepared(query, statusList, SqlResult.validResultHandler(handler));
-    }
-
-    @Override
-    public void getOrdersForCSVExportByValidationNumbers(JsonArray validationNumbers, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT name, SUM(amount) as amount, id_structure, equipment_key " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment " +
-                "WHERE number_validation IN " + Sql.listPrepared(validationNumbers.getList()) +
-                "GROUP BY equipment_key, id_structure, name, id_structure " +
-                "UNION ALL " +
-                "SELECT order_client_options.name, SUM(order_client_options.amount) as amount, order_client_equipment.id_structure, order_client_equipment.equipment_key " +
-                "FROM " + Crre.crreSchema + ".order_client_options " +
-                "INNER JOIN " + Crre.crreSchema + ".order_client_equipment ON (order_client_options.id_order_client_equipment = order_client_equipment.id) " +
-                "WHERE number_validation IN " + Sql.listPrepared(validationNumbers.getList()) +
-                "GROUP BY equipment_key, id_structure, order_client_options.name, id_structure " +
-                "ORDER BY id_structure";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < validationNumbers.size(); j++) {
-                params.add(validationNumbers.getString(j));
-            }
-        }
-
-        this.sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -925,42 +901,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void updateOperation(Integer idOperation, JsonArray idOrders, Handler<Either<String, JsonObject>> handler) {
-        String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                " SET id_operation = " +
-                idOperation +
-                " WHERE id IN " +
-                Sql.listPrepared(idOrders.getList()) +
-                " RETURNING id";
-        JsonArray values = new JsonArray();
-        for (int i = 0; i < idOrders.size(); i++) {
-            values.add(idOrders.getValue(i));
-        }
-        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
-    }
-
-    @Override
-    public void updateOperationInProgress(Integer idOperation, JsonArray idOrders, Handler<Either<String, JsonObject>> handler) {
-        String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                " SET status = 'IN PROGRESS', " +
-                "id_operation = " +
-                idOperation +
-                " WHERE id IN " +
-                Sql.listPrepared(idOrders.getList()) +
-                " RETURNING id";
-        JsonArray values = new JsonArray();
-        for (int i = 0; i < idOrders.size(); i++) {
-            values.add(idOrders.getValue(i));
-        }
-        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
-    }
-
-    @Override
     public void updateStatusOrder(Integer idOrder, JsonObject orderStatus, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                "SET id_operation = null, " +
-                "status = ? " +
+                "SET status = ? " +
                 "WHERE id = " +
                 idOrder +
                 " RETURNING id";

@@ -116,35 +116,29 @@ public class OrderController extends ControllerHelper {
             final String status = request.params().get("status");
             if ("valid".equals(status.toLowerCase())) {
                 final JsonArray statusList = new fr.wseduc.webutils.collections.JsonArray().add(status).add("SENT").add("DONE");
-                orderService.getOrdersGroupByValidationNumber(statusList, new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            final JsonArray orders = event.right().getValue();
-                            orderService.getOrdersDetailsIndexedByValidationNumber(statusList, new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> event) {
-                                    if (event.isRight()) {
-                                        JsonArray equipments = event.right().getValue();
-                                        JsonObject mapNumberEquipments = initNumbersMap(orders);
-                                        mapNumberEquipments = mapNumbersEquipments(equipments, mapNumberEquipments);
-                                        JsonObject order;
-                                        for (int i = 0; i < orders.size(); i++) {
-                                            order = orders.getJsonObject(i);
-                                            order.put("price",
-                                                    decimals.format(
-                                                            roundWith2Decimals(getTotalOrder(mapNumberEquipments.getJsonArray(order.getString("number_validation")))))
-                                                            .replace(".", ","));
-                                        }
-                                        renderJson(request, orders);
-                                    } else {
-                                        badRequest(request);
-                                    }
+                orderService.getOrdersGroupByValidationNumber(statusList, event -> {
+                    if (event.isRight()) {
+                        final JsonArray orders = event.right().getValue();
+                        orderService.getOrdersDetailsIndexedByValidationNumber(statusList, event1 -> {
+                            if (event1.isRight()) {
+                                JsonArray equipments = event1.right().getValue();
+                                JsonObject mapNumberEquipments = initNumbersMap(orders);
+                                mapNumbersEquipments(equipments, mapNumberEquipments);
+                                JsonObject order;
+                                for (int i = 0; i < orders.size(); i++) {
+                                    order = orders.getJsonObject(i);
+                                    order.put("price",
+                                            decimals.format(
+                                                    roundWith2Decimals(getTotalOrder(mapNumberEquipments.getJsonArray(order.getString("number_validation")))))
+                                                    .replace(".", ","));
                                 }
-                            });
-                        } else {
-                            badRequest(request);
-                        }
+                                renderJson(request, orders);
+                            } else {
+                                badRequest(request);
+                            }
+                        });
+                    } else {
+                        badRequest(request);
                     }
                 });
             } else {
@@ -224,23 +218,17 @@ public class OrderController extends ControllerHelper {
         try {
             final Integer idOrder = Integer.parseInt(request.params().get("idOrder"));
             final String idStructure = request.params().get("idStructure");
-            orderService.deletableOrder(idOrder, new Handler<Either<String, JsonObject>>() {
-                @Override
-                public void handle(Either<String, JsonObject> deletableEvent) {
-                    if (deletableEvent.isRight() && deletableEvent.right().getValue().getInteger("count") == 0) {
-                        orderService.orderForDelete(idOrder, new Handler<Either<String, JsonObject>>() {
-                            @Override
-                            public void handle(Either<String, JsonObject> order) {
-                                if (order.isRight()) {
-                                    orderService.deleteOrder(idOrder, order.right().getValue(), idStructure,
-                                            Logging.defaultResponseHandler(eb, request, Contexts.ORDER.toString(),
-                                                    Actions.DELETE.toString(), "idOrder", order.right().getValue()));
-                                }
-                            }
-                        });
-                    } else {
-                        badRequest(request);
-                    }
+            orderService.deletableOrder(idOrder, deletableEvent -> {
+                if (deletableEvent.isRight() && deletableEvent.right().getValue().getInteger("count") == 0) {
+                    orderService.orderForDelete(idOrder, order -> {
+                        if (order.isRight()) {
+                            orderService.deleteOrder(idOrder, order.right().getValue(), idStructure,
+                                    Logging.defaultResponseHandler(eb, request, Contexts.ORDER.toString(),
+                                            Actions.DELETE.toString(), "idOrder", order.right().getValue()));
+                        }
+                    });
+                } else {
+                    badRequest(request);
                 }
             });
 
@@ -258,19 +246,15 @@ public class OrderController extends ControllerHelper {
     public void export (final HttpServerRequest request){
         Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
         String idStructure = request.params().get("idStructure");
-        orderService.listExport(idCampaign, idStructure, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if(event.isRight()){
-                    request.response()
-                            .putHeader("Content-Type", "text/csv; charset=utf-8")
-                            .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                            .end(generateExport(request, event.right().getValue()));
-
-                }else{
-                    log.error("An error occurred when collecting orders");
-                    renderError(request);
-                }
+        orderService.listExport(idCampaign, idStructure, event -> {
+            if(event.isRight()){
+                request.response()
+                        .putHeader("Content-Type", "text/csv; charset=utf-8")
+                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                        .end(generateExport(request, event.right().getValue()));
+            }else{
+                log.error("An error occurred when collecting orders");
+                renderError(request);
             }
         });
 
@@ -354,50 +338,41 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ManagerRight.class)
     public void validateOrders (final HttpServerRequest request){
-        RequestUtils.bodyToJson(request, pathPrefix + "orderIds", new Handler<JsonObject>() {
-            @Override
-            public void handle(final JsonObject orders) {
-                UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                    @Override
-                    public void handle(UserInfos userInfos) {
-                        try {
-                            List<String> params = new ArrayList<>();
-                            for (Object id: orders.getJsonArray("ids") ) {
-                                params.add( id.toString());
-                            }
+        RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
+                orders -> UserUtils.getUserInfos(eb, request,
+                        userInfos -> {
+                            try {
+                                List<String> params = new ArrayList<>();
+                                for (Object id: orders.getJsonArray("ids") ) {
+                                    params.add( id.toString());
+                                }
 
-                            List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                            final String url = request.headers().get("Referer");
-                            orderService.validateOrders(request, userInfos , ids, url,
-                                    Logging.defaultResponsesHandler(eb,
-                                            request,
-                                            Contexts.ORDER.toString(),
-                                            Actions.UPDATE.toString(),
-                                            params,
-                                            null));
-                        } catch (ClassCastException e) {
-                            log.error("An error occurred when casting order id", e);
-                        }
-                    }
-                });
-            }
-        });
+                                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
+                                final String url = request.headers().get("Referer");
+                                orderService.validateOrders(request, userInfos , ids, url,
+                                        Logging.defaultResponsesHandler(eb,
+                                                request,
+                                                Contexts.ORDER.toString(),
+                                                Actions.UPDATE.toString(),
+                                                params,
+                                                null));
+                            } catch (ClassCastException e) {
+                                log.error("An error occurred when casting order id", e);
+                            }
+                        }));
 
     }
 
 
     private void logSendingOrder(JsonArray ids, final HttpServerRequest request) {
-        orderService.getOrderByValidatioNumber(ids, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonArray orders = event.right().getValue();
-                    JsonObject order;
-                    for (int i = 0; i < orders.size(); i++) {
-                        order = orders.getJsonObject(i);
-                        Logging.insert(eb, request, Contexts.ORDER.toString(), Actions.UPDATE.toString(),
-                                order.getInteger("id").toString(), order);
-                    }
+        orderService.getOrderByValidatioNumber(ids, event -> {
+            if (event.isRight()) {
+                JsonArray orders = event.right().getValue();
+                JsonObject order;
+                for (int i = 0; i < orders.size(); i++) {
+                    order = orders.getJsonObject(i);
+                    Logging.insert(eb, request, Contexts.ORDER.toString(), Actions.UPDATE.toString(),
+                            order.getInteger("id").toString(), order);
                 }
             }
         });
@@ -549,141 +524,97 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessOrderCommentRight.class)
     public void updateComment(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject order) {
-                if (!order.containsKey("comment")) {
-                    badRequest(request);
-                    return;
-                }
-                try {
-                    Integer id = Integer.parseInt(request.params().get("idOrder"));
-                    String comment = order.getString("comment");
-                    orderService.updateComment(id, comment, defaultResponseHandler(request));
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
+        RequestUtils.bodyToJson(request, order -> {
+            if (!order.containsKey("comment")) {
+                badRequest(request);
+                return;
+            }
+            try {
+                Integer id = Integer.parseInt(request.params().get("idOrder"));
+                String comment = order.getString("comment");
+                orderService.updateComment(id, comment, defaultResponseHandler(request));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
             }
         });
     }
 
-
-    private void renderValidOrdersCSVExport(HttpServerRequest request, JsonArray equipments) {
-        StringBuilder export = new StringBuilder(UTF8_BOM).append(getValidOrdersCSVExportHeader(request));
-        for (int i = 0; i < equipments.size(); i++) {
-            export.append(getValidOrdersCSVExportline(equipments.getJsonObject(i)));
-        }
-
-        request.response()
-                .putHeader("Content-Type", "text/csv; charset=utf-8")
-                .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                .end(export.toString());
-    }
-
-    private String getValidOrdersCSVExportline(JsonObject equipment) {
-        return equipment.getString("uai")
-                + ";"
-                + equipment.getString("structure_name")
-                + ";"
-                + equipment.getString("city")
-                + ";"
-                + equipment.getString("phone")
-                + ";"
-                + equipment.getString("name")
-                + ";"
-                + equipment.getString("amount")
-                + "\n";
-    }
-
-
     private void retrieveContract(final HttpServerRequest request, JsonArray ids,
                                   final Handler<JsonObject> handler) {
-        contractService.getContract(ids, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight() && event.right().getValue().size() == 1) {
-                    handler.handle(event.right().getValue().getJsonObject(0));
-                } else {
-                    log.error("An error occured when collecting contract data");
-                    badRequest(request);
-                }
+        contractService.getContract(ids, event -> {
+            if (event.isRight() && event.right().getValue().size() == 1) {
+                handler.handle(event.right().getValue().getJsonObject(0));
+            } else {
+                log.error("An error occured when collecting contract data");
+                badRequest(request);
             }
         });
     }
 
     private void retrieveStructures(final HttpServerRequest request, JsonArray ids,
                                     final Handler<JsonObject> handler) {
-        orderService.getStructuresId(ids, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonArray structures = event.right().getValue();
-                    JsonArray structuresList = new fr.wseduc.webutils.collections.JsonArray();
-                    final JsonObject structureMapping = new JsonObject();
-                    JsonObject structure;
-                    JsonObject structureInfo;
-                    JsonArray orderIds;
-                    for (int i = 0; i < structures.size(); i++) {
-                        structure = structures.getJsonObject(i);
-                        if (!structuresList.contains(structure.getString("id_structure"))) {
-                            structuresList.add(structure.getString("id_structure"));
-                            structureInfo = new JsonObject();
-                            structureInfo.put("orderIds", new fr.wseduc.webutils.collections.JsonArray());
-                        } else {
-                            structureInfo = structureMapping.getJsonObject(structure.getString("id_structure"));
-                        }
-                        orderIds = structureInfo.getJsonArray("orderIds");
-                        orderIds.add(structure.getInteger("id"));
-                        structureMapping.put(structure.getString("id_structure"), structureInfo);
+        orderService.getStructuresId(ids, event -> {
+            if (event.isRight()) {
+                JsonArray structures = event.right().getValue();
+                JsonArray structuresList = new fr.wseduc.webutils.collections.JsonArray();
+                final JsonObject structureMapping = new JsonObject();
+                JsonObject structure;
+                JsonObject structureInfo;
+                JsonArray orderIds;
+                for (int i = 0; i < structures.size(); i++) {
+                    structure = structures.getJsonObject(i);
+                    if (!structuresList.contains(structure.getString("id_structure"))) {
+                        structuresList.add(structure.getString("id_structure"));
+                        structureInfo = new JsonObject();
+                        structureInfo.put("orderIds", new fr.wseduc.webutils.collections.JsonArray());
+                    } else {
+                        structureInfo = structureMapping.getJsonObject(structure.getString("id_structure"));
                     }
-                    structureService.getStructureById(structuresList, new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight()) {
-                                JsonArray structures = event.right().getValue();
-                                JsonObject structure;
-                                for (int i = 0; i < structures.size(); i++) {
-                                    structure = structures.getJsonObject(i);
-                                    JsonObject structureObject = structureMapping.getJsonObject(structure.getString("id"));
-                                    structureObject.put("structureInfo", structure);
-                                }
-                                handler.handle(structureMapping);
-                            } else {
-                                log.error("An error occurred when collecting structures based on ids");
-                                badRequest(request);
-                            }
-                        }
-                    });
-                } else {
-                    log.error("An error occurred when getting structures id based on order ids.");
-                    renderError(request);
+                    orderIds = structureInfo.getJsonArray("orderIds");
+                    orderIds.add(structure.getInteger("id"));
+                    structureMapping.put(structure.getString("id_structure"), structureInfo);
                 }
+                structureService.getStructureById(structuresList, event1 -> {
+                    if (event1.isRight()) {
+                        JsonArray structures1 = event1.right().getValue();
+                        JsonObject structure1;
+                        for (int i = 0; i < structures1.size(); i++) {
+                            structure1 = structures1.getJsonObject(i);
+                            JsonObject structureObject = structureMapping.getJsonObject(structure1.getString("id"));
+                            structureObject.put("structureInfo", structure1);
+                        }
+                        handler.handle(structureMapping);
+                    } else {
+                        log.error("An error occurred when collecting structures based on ids");
+                        badRequest(request);
+                    }
+                });
+            } else {
+                log.error("An error occurred when getting structures id based on order ids.");
+                renderError(request);
             }
         });
     }
 
     private void retrieveOrderData(final HttpServerRequest request, JsonArray ids,
                                    final Handler<JsonObject> handler) {
-        orderService.getOrders(ids, null, true, false, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonObject order = new JsonObject();
-                    JsonArray orders = formatOrders(event.right().getValue());
-                    order.put("orders", orders);
-                    Double sumWithoutTaxes = getSumWithoutTaxes(orders);
-                    Double taxTotal = getTaxesTotal(orders);
-                    order.put("sumLocale",
-                            getReadableNumber(roundWith2Decimals(sumWithoutTaxes)));
-                    order.put("totalTaxesLocale",
-                            getReadableNumber(roundWith2Decimals(taxTotal)));
-                    order.put("totalPriceTaxeIncludedLocal",
-                            getReadableNumber(roundWith2Decimals(taxTotal + sumWithoutTaxes)));
-                    handler.handle(order);
-                } else {
-                    log.error("An error occurred when retrieving order data");
-                    badRequest(request);
-                }
+        orderService.getOrders(ids, null, true, false, event -> {
+            if (event.isRight()) {
+                JsonObject order = new JsonObject();
+                JsonArray orders = formatOrders(event.right().getValue());
+                order.put("orders", orders);
+                Double sumWithoutTaxes = getSumWithoutTaxes(orders);
+                Double taxTotal = getTaxesTotal(orders);
+                order.put("sumLocale",
+                        getReadableNumber(roundWith2Decimals(sumWithoutTaxes)));
+                order.put("totalTaxesLocale",
+                        getReadableNumber(roundWith2Decimals(taxTotal)));
+                order.put("totalPriceTaxeIncludedLocal",
+                        getReadableNumber(roundWith2Decimals(taxTotal + sumWithoutTaxes)));
+                handler.handle(order);
+            } else {
+                log.error("An error occurred when retrieving order data");
+                badRequest(request);
             }
         });
     }
@@ -697,7 +628,7 @@ public class OrderController extends ControllerHelper {
     }
 
     private Double getTotalOrder(JsonArray orders) {
-        Double sum = 0D;
+        double sum = 0D;
         JsonObject order;
         for (int i = 0; i < orders.size(); i++) {
             order = orders.getJsonObject(i);
@@ -709,7 +640,7 @@ public class OrderController extends ControllerHelper {
     }
 
     private Double getTaxesTotal(JsonArray orders) {
-        Double sum = 0D;
+        double sum = 0D;
         JsonObject order;
         for (int i = 0; i < orders.size(); i++) {
             order = orders.getJsonObject(i);
@@ -722,7 +653,7 @@ public class OrderController extends ControllerHelper {
 
     private Double getSumWithoutTaxes(JsonArray orders) {
         JsonObject order;
-        Double sum = 0D;
+        double sum = 0D;
         for (int i = 0; i < orders.size(); i++) {
             order = orders.getJsonObject(i);
             sum += Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"));
@@ -782,19 +713,13 @@ public class OrderController extends ControllerHelper {
             badRequest(request);
         } else {
             final List<String> ids = params.getAll("ids");
-            final List<Integer> integerIds = new ArrayList<>();
             final String nbrBc = params.get("bc_number");
             final String nbrEngagement = params.get("engagement_number");
             final String dateGeneration = params.get("dateGeneration");
             Number supplierId = Integer.parseInt(params.get("supplierId"));
 
             getOrdersData(request, nbrBc, nbrEngagement, dateGeneration, supplierId,
-                    new fr.wseduc.webutils.collections.JsonArray(ids), new Handler<JsonObject>() {
-                        @Override
-                        public void handle(JsonObject data) {
-                            renderJson(request, data);
-                        }
-                    });
+                    new fr.wseduc.webutils.collections.JsonArray(ids), data -> renderJson(request, data));
         }
     }
 
@@ -803,73 +728,44 @@ public class OrderController extends ControllerHelper {
                                final Number supplierId, final JsonArray ids,
                                final Handler<JsonObject> handler) {
         final JsonObject data = new JsonObject();
-        retrieveManagementInfo(request, ids, supplierId, new Handler<JsonObject>() {
-            @Override
-            public void handle(final JsonObject managmentInfo) {
-                retrieveStructures(request, ids, new Handler<JsonObject>() {
-                    @Override
-                    public void handle(final JsonObject structures) {
-                        retrieveOrderData(request, ids, new Handler<JsonObject>() {
-                            @Override
-                            public void handle(final JsonObject order) {
-                                retrieveOrderDataForCertificate(request, structures, new Handler<JsonArray>() {
-                                    @Override
-                                    public void handle(final JsonArray certificates) {
-                                        retrieveContract(request, ids, new Handler<JsonObject>() {
-                                            @Override
-                                            public void handle(JsonObject contract) {
-                                                retrieveOrderParam(ids, new Handler<JsonObject>() {
-                                                    @Override
-                                                    public void handle(JsonObject event) {
-
-
-                                                        JsonObject certificate;
-                                                        for (int i = 0; i < certificates.size(); i++) {
-                                                            certificate = certificates.getJsonObject(i);
-                                                            certificate.put("agent", managmentInfo.getJsonObject("userInfo"));
-                                                            certificate.put("supplier",
-                                                                    managmentInfo.getJsonObject("supplierInfo"));
-                                                            addStructureToOrders(certificate.getJsonArray("orders"),
-                                                                    certificate.getJsonObject("structure"));
-                                                        }
-                                                        data.put("supplier", managmentInfo.getJsonObject("supplierInfo"))
-                                                                .put("agent", managmentInfo.getJsonObject("userInfo"))
-                                                                .put("order", order)
-                                                                .put("certificates", certificates)
-                                                                .put("contract", contract)
-                                                                .put("nbr_bc", nbrBc)
-                                                                .put("nbr_engagement", nbrEngagement)
-                                                                .put("date_generation", dateGeneration);
-                                                        if(nbrBc.equals("")){
-                                                            data.put("nbr_bc",  event.getString("order_number"))
-                                                                    .put("nbr_engagement", event.getString("engagement_number"));
-
-
-                                                        }
-                                                        handler.handle(data);
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
+        retrieveManagementInfo(request, ids, supplierId,
+                managmentInfo -> retrieveStructures(request, ids,
+                        structures -> retrieveOrderData(request, ids,
+                                order -> retrieveOrderDataForCertificate(request, structures,
+                                        certificates -> retrieveContract(request, ids,
+                                                contract -> retrieveOrderParam(ids,
+                                                        event -> {
+                                                            JsonObject certificate;
+                                                            for (int i = 0; i < certificates.size(); i++) {
+                                                                certificate = certificates.getJsonObject(i);
+                                                                certificate.put("agent", managmentInfo.getJsonObject("userInfo"));
+                                                                certificate.put("supplier",
+                                                                        managmentInfo.getJsonObject("supplierInfo"));
+                                                                addStructureToOrders(certificate.getJsonArray("orders"),
+                                                                        certificate.getJsonObject("structure"));
+                                                            }
+                                                            data.put("supplier", managmentInfo.getJsonObject("supplierInfo"))
+                                                                    .put("agent", managmentInfo.getJsonObject("userInfo"))
+                                                                    .put("order", order)
+                                                                    .put("certificates", certificates)
+                                                                    .put("contract", contract)
+                                                                    .put("nbr_bc", nbrBc)
+                                                                    .put("nbr_engagement", nbrEngagement)
+                                                                    .put("date_generation", dateGeneration);
+                                                            if(nbrBc.equals("")){
+                                                                data.put("nbr_bc",  event.getString("order_number"))
+                                                                        .put("nbr_engagement", event.getString("engagement_number"));
+                                                            }
+                                                            handler.handle(data);
+                                                        }))))));
     }
 
     private void retrieveOrderParam(JsonArray validationNumbers, Handler<JsonObject> jsonObjectHandler) {
-        orderService.getOrderBCParams(validationNumbers, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if(event.isRight()) {
-                    jsonObjectHandler.handle(event.right().getValue());
-                }
-
+        orderService.getOrderBCParams(validationNumbers, event -> {
+            if(event.isRight()) {
+                jsonObjectHandler.handle(event.right().getValue());
             }
+
         });
     }
 
@@ -891,25 +787,21 @@ public class OrderController extends ControllerHelper {
             structureId = structureIds.next();
             structure = structures.getJsonObject(structureId);
             orderService.getOrders(structure.getJsonArray("orderIds"), structureId, false, true,
-                    new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight() && event.right().getValue().size() > 0) {
-                                JsonObject order = event.right().getValue().getJsonObject(0);
-                                result.add(new JsonObject()
-                                        .put("id_structure", order.getString("id_structure"))
-                                        .put("structure", structures.getJsonObject(order.getString("id_structure"))
-                                                .getJsonObject("structureInfo"))
-                                        .put("orders", formatOrders(event.right().getValue()))
-                                );
-                                if (result.size() == structures.size()) {
-                                    handler.handle(result);
-                                }
-                            } else {
-                                log.error("An error occurred when collecting orders for certificates");
-                                badRequest(request);
-                                return;
+                    event -> {
+                        if (event.isRight() && event.right().getValue().size() > 0) {
+                            JsonObject order = event.right().getValue().getJsonObject(0);
+                            result.add(new JsonObject()
+                                    .put("id_structure", order.getString("id_structure"))
+                                    .put("structure", structures.getJsonObject(order.getString("id_structure"))
+                                            .getJsonObject("structureInfo"))
+                                    .put("orders", formatOrders(event.right().getValue()))
+                            );
+                            if (result.size() == structures.size()) {
+                                handler.handle(result);
                             }
+                        } else {
+                            log.error("An error occurred when collecting orders for certificates");
+                            badRequest(request);
                         }
                     });
         }
@@ -917,33 +809,25 @@ public class OrderController extends ControllerHelper {
 
     private void retrieveManagementInfo(final HttpServerRequest request, JsonArray ids,
                                         final Number supplierId, final Handler<JsonObject> handler) {
-        agentService.getAgentByOrderIds(ids, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> user) {
-                if (user.isRight()) {
-                    final JsonObject userObject = user.right().getValue();
-                    supplierService.getSupplier(supplierId.toString(), new Handler<Either<String, JsonObject>>() {
-                        @Override
-                        public void handle(Either<String, JsonObject> supplier) {
-                            if (supplier.isRight()) {
-                                JsonObject supplierObject = supplier.right().getValue();
-                                handler.handle(
-                                        new JsonObject()
-                                                .put("userInfo", userObject)
-                                                .put("supplierInfo", supplierObject)
-                                );
-                            } else {
-                                log.error("An error occurred when collecting supplier data");
-                                badRequest(request);
-                                return;
-                            }
-                        }
-                    });
-                } else {
-                    log.error("An error occured when collecting user information");
-                    badRequest(request);
-                    return;
-                }
+        agentService.getAgentByOrderIds(ids, user -> {
+            if (user.isRight()) {
+                final JsonObject userObject = user.right().getValue();
+                supplierService.getSupplier(supplierId.toString(), supplier -> {
+                    if (supplier.isRight()) {
+                        JsonObject supplierObject = supplier.right().getValue();
+                        handler.handle(
+                                new JsonObject()
+                                        .put("userInfo", userObject)
+                                        .put("supplierInfo", supplierObject)
+                        );
+                    } else {
+                        log.error("An error occurred when collecting supplier data");
+                        badRequest(request);
+                    }
+                });
+            } else {
+                log.error("An error occured when collecting user information");
+                badRequest(request);
             }
         });
     }
@@ -952,26 +836,23 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("Wind up orders ")
     @ResourceFilter(ManagerRight.class)
     public void windUpOrders(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "orderIds", new Handler<JsonObject>() {
-            @Override
-            public void handle(final JsonObject orders) {
-                try {
-                    List<String> params = new ArrayList<>();
-                    for (Object id : orders.getJsonArray("ids")) {
-                        params.add(id.toString());
-                    }
-                    List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                    orderService.windUpOrders(ids, Logging.defaultResponsesHandler(eb,
-                            request,
-                            Contexts.ORDER.toString(),
-                            Actions.UPDATE.toString(),
-                            params,
-                            null)
-
-                    );
-                } catch (ClassCastException e) {
-                    log.error("An error occurred when casting order id", e);
+        RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
+            try {
+                List<String> params = new ArrayList<>();
+                for (Object id : orders.getJsonArray("ids")) {
+                    params.add(id.toString());
                 }
+                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
+                orderService.windUpOrders(ids, Logging.defaultResponsesHandler(eb,
+                        request,
+                        Contexts.ORDER.toString(),
+                        Actions.UPDATE.toString(),
+                        params,
+                        null)
+
+                );
+            } catch (ClassCastException e) {
+                log.error("An error occurred when casting order id", e);
             }
         });
 
@@ -985,55 +866,46 @@ public class OrderController extends ControllerHelper {
         List<String> params = request.params().getAll("id");
         List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
         if (!idsOrders.isEmpty()) {
-            orderService.getExportCsvOrdersAdmin(idsOrders, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> ordersWithIdStructure) {
-                    if (ordersWithIdStructure.isRight()) {
-                        final JsonArray orders = ordersWithIdStructure.right().getValue();
-                        JsonArray idsStructures = new fr.wseduc.webutils.collections.JsonArray();
-                        for (int i = 0; i < orders.size(); i++) {
-                            JsonObject order = orders.getJsonObject(i);
-                            idsStructures.add(order.getString("idstructure"));
-                        }
-                        structureService.getStructureById(idsStructures, new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> repStructures) {
-                                if (repStructures.isRight()) {
-                                    JsonArray structures = repStructures.right().getValue();
-
-                                    Map<String, String> structuresMap = retrieveUaiNameStructure(structures);
-                                    for (int i = 0; i < orders.size(); i++) {
-                                        JsonObject order = orders.getJsonObject(i);
-                                        order.put("uaiNameStructure", structuresMap.get(order.getString("idstructure")));
-                                    }
-
-                                    request.response()
-                                            .putHeader("Content-Type", "text/csv; charset=utf-8")
-                                            .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                            .end(generateExport(request, orders));
-
-                                } else {
-                                    log.error("An error occured when collecting StructureById");
-                                    renderError(request);
-                                }
-                            }
-                        });
-                    } else {
-                        log.error("An error occurred when collecting ordersSqlwithIdStructure");
-                        renderError(request);
+            orderService.getExportCsvOrdersAdmin(idsOrders, ordersWithIdStructure -> {
+                if (ordersWithIdStructure.isRight()) {
+                    final JsonArray orders = ordersWithIdStructure.right().getValue();
+                    JsonArray idsStructures = new fr.wseduc.webutils.collections.JsonArray();
+                    for (int i = 0; i < orders.size(); i++) {
+                        JsonObject order = orders.getJsonObject(i);
+                        idsStructures.add(order.getString("idstructure"));
                     }
+                    structureService.getStructureById(idsStructures, repStructures -> {
+                        if (repStructures.isRight()) {
+                            JsonArray structures = repStructures.right().getValue();
+
+                            Map<String, String> structuresMap = retrieveUaiNameStructure(structures);
+                            for (int i = 0; i < orders.size(); i++) {
+                                JsonObject order = orders.getJsonObject(i);
+                                order.put("uaiNameStructure", structuresMap.get(order.getString("idstructure")));
+                            }
+
+                            request.response()
+                                    .putHeader("Content-Type", "text/csv; charset=utf-8")
+                                    .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                                    .end(generateExport(request, orders));
+
+                        } else {
+                            log.error("An error occured when collecting StructureById");
+                            renderError(request);
+                        }
+                    });
+                } else {
+                    log.error("An error occurred when collecting ordersSqlwithIdStructure");
+                    renderError(request);
                 }
             });
         } else {
             badRequest(request);
         }
-
-
     }
 
     private Map<String, String> retrieveUaiNameStructure(JsonArray structures) {
-        final Map<String, String> structureMap = new HashMap<String, String>();
-
+        final Map<String, String> structureMap = new HashMap<>();
         for (int i = 0; i < structures.size(); i++) {
             JsonObject structure = structures.getJsonObject(i);
             String uaiNameStructure = structure.getString("uai") + " - " + structure.getString("name");
@@ -1063,13 +935,7 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ManagerRight.class)
     public void updateOperationInProgress(final HttpServerRequest request) {
-        final Integer idOperation = Integer.parseInt(request.params().get("idOperation"));
-        RequestUtils.bodyToJsonArray(request, idOrders -> orderService.updateOperationInProgress(idOperation, idOrders, Logging.defaultResponseHandler(eb,
-                request,
-                Contexts.ORDER.toString(),
-                Actions.UPDATE.toString(),
-                idOperation.toString(),
-                new JsonObject().put("ids", idOrders))));
+        badRequest(request);
     }
 
     @Put("/orders/operation/:idOperation")
@@ -1077,13 +943,7 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ManagerRight.class)
     public void updateOperation(final HttpServerRequest request) {
-        final Integer idOperation = Integer.parseInt(request.params().get("idOperation"));
-        RequestUtils.bodyToJsonArray(request, idOrders -> orderService.updateOperation(idOperation, idOrders, Logging.defaultResponseHandler(eb,
-                request,
-                Contexts.ORDER.toString(),
-                Actions.UPDATE.toString(),
-                idOperation.toString(),
-                new JsonObject().put("ids", idOrders))));
+        badRequest(request);
     }
 
     @Put("/order/:idOrder")
@@ -1118,7 +978,7 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ManagerRight.class)
     public void getOneOrderProgress(HttpServerRequest request) {
-        Integer idOrder = Integer.parseInt(request.getParam("id"));
+        int idOrder = Integer.parseInt(request.getParam("id"));
         orderService.getOneOrderClient(idOrder,"IN PROGRESS" ,defaultResponseHandler(request));
     }
 
@@ -1127,7 +987,7 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ManagerRight.class)
     public void getOneOrderWaiting(HttpServerRequest request) {
-        Integer idOrder = Integer.parseInt(request.getParam("id"));
+        int idOrder = Integer.parseInt(request.getParam("id"));
         orderService.getOneOrderClient(idOrder,"WAITING" ,defaultResponseHandler(request));
     }
 }

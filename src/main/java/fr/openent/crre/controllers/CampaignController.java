@@ -41,19 +41,16 @@ public class CampaignController extends ControllerHelper {
     @ResourceFilter(ManagerOrPersonnelRight.class)
     @Override
     public void list(final HttpServerRequest  request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos user) {
-                if(! (WorkflowActionUtils.hasRight(user, WorkflowActions.MANAGER_RIGHT.toString()))){
-                    String idStructure = request.params().contains("idStructure")
-                            ? request.params().get("idStructure")
-                            : null;
-                    campaignService.listCampaigns(idStructure, arrayResponseHandler(request));
-                }else{
-                    campaignService.listCampaigns(arrayResponseHandler(request));
-                }
-
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(! (WorkflowActionUtils.hasRight(user, WorkflowActions.MANAGER_RIGHT.toString()))){
+                String idStructure = request.params().contains("idStructure")
+                        ? request.params().get("idStructure")
+                        : null;
+                campaignService.listCampaigns(idStructure, arrayResponseHandler(request));
+            }else{
+                campaignService.listCampaigns(arrayResponseHandler(request));
             }
+
         });
     }
 
@@ -76,17 +73,10 @@ public class CampaignController extends ControllerHelper {
     @ResourceFilter(ManagerRight.class)
     @Override
     public void create(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "campaign", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject campaign) {
-                campaignService.create(campaign, Logging.defaultResponseHandler(eb,
-                        request,
-                        Contexts.CAMPAIGN.toString(),
-                        Actions.CREATE.toString(),
-                        null,
-                        campaign));
-            }
-        });
+        RequestUtils.bodyToJson(request, pathPrefix + "campaign",
+                campaign -> campaignService.create(campaign,
+                        Logging.defaultResponseHandler(eb, request, Contexts.CAMPAIGN.toString(), Actions.CREATE.toString(),
+                                null, campaign)));
     }
 
     @Put("/campaign/accessibility/:id")
@@ -94,20 +84,17 @@ public class CampaignController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ManagerRight.class)
     public void updateAccessibility(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "campaign", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject campaign) {
-                try {
-                    Integer id = Integer.parseInt(request.params().get("id"));
-                    campaignService.updateAccessibility(id, campaign, Logging.defaultResponseHandler(eb,
-                            request,
-                            Contexts.CAMPAIGN.toString(),
-                            Actions.UPDATE.toString(),
-                            request.params().get("id"),
-                            campaign));
-                } catch (ClassCastException e) {
-                    log.error(" An error occurred when casting campaign id", e);
-                }
+        RequestUtils.bodyToJson(request, pathPrefix + "campaign", campaign -> {
+            try {
+                Integer id = Integer.parseInt(request.params().get("id"));
+                campaignService.updateAccessibility(id, campaign, Logging.defaultResponseHandler(eb,
+                        request,
+                        Contexts.CAMPAIGN.toString(),
+                        Actions.UPDATE.toString(),
+                        request.params().get("id"),
+                        campaign));
+            } catch (ClassCastException e) {
+                log.error(" An error occurred when casting campaign id", e);
             }
         });
     }
@@ -116,23 +103,20 @@ public class CampaignController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void updatePriority(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject campaign){
-                if (!campaign.containsKey("preferences")) {
-                    badRequest(request);
-                    return;
-                }
-                JsonArray projectOrders = new fr.wseduc.webutils.collections.JsonArray();
-                projectOrders =campaign.getJsonArray("preferences");
-                Integer campaignId = Integer.parseInt(request.params().get("idCampaign"));
-                Integer projectId = Integer.parseInt(request.params().get("idProject"));
-                String structureId = request.getParam("structureId");
-                try{
-                    campaignService.updatePreference(campaignId, projectId, structureId,projectOrders, defaultResponseHandler(request));
-                }catch(Exception e){
-                    log.error(" An error occurred when casting campaign id", e);
-                }
+        RequestUtils.bodyToJson(request, campaign -> {
+            if (!campaign.containsKey("preferences")) {
+                badRequest(request);
+                return;
+            }
+            JsonArray projectOrders;
+            projectOrders =campaign.getJsonArray("preferences");
+            Integer campaignId = Integer.parseInt(request.params().get("idCampaign"));
+            Integer projectId = Integer.parseInt(request.params().get("idProject"));
+            String structureId = request.getParam("structureId");
+            try{
+                campaignService.updatePreference(campaignId, projectId, structureId,projectOrders, defaultResponseHandler(request));
+            }catch(Exception e){
+                log.error(" An error occurred when casting campaign id", e);
             }
         });
     }
@@ -142,20 +126,17 @@ public class CampaignController extends ControllerHelper {
     @ResourceFilter(ManagerRight.class)
     @Override
     public void update(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "campaign", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject campaign) {
-                try {
-                    Integer id = Integer.parseInt(request.params().get("id"));
-                    campaignService.update(id, campaign, Logging.defaultResponseHandler(eb,
-                            request,
-                            Contexts.CAMPAIGN.toString(),
-                            Actions.UPDATE.toString(),
-                            request.params().get("id"),
-                            campaign));
-                } catch (ClassCastException e) {
-                    log.error(" An error occurred when casting campaign id", e);
-                }
+        RequestUtils.bodyToJson(request, pathPrefix + "campaign", campaign -> {
+            try {
+                Integer id = Integer.parseInt(request.params().get("id"));
+                campaignService.update(id, campaign, Logging.defaultResponseHandler(eb,
+                        request,
+                        Contexts.CAMPAIGN.toString(),
+                        Actions.UPDATE.toString(),
+                        request.params().get("id"),
+                        campaign));
+            } catch (ClassCastException e) {
+                log.error(" An error occurred when casting campaign id", e);
             }
         });
     }

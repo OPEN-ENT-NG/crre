@@ -3,19 +3,16 @@ import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {
     Campaign,
     Contract,
-    ContractType, Equipment,
+    ContractType,
+    Equipment,
     Order,
     OrderRegion,
     OrderUtils,
-    Program,
     Structure,
     Structures,
     Supplier,
     TechnicalSpec,
-    Utils,
-    Grade,
-    Title,
-    Project
+    Utils
 } from './index';
 import http from 'axios';
 
@@ -38,14 +35,11 @@ export class OrderClient implements Order  {
     price: number;
     price_proposal: number;
     price_single_ttc: number;
-    program: Program;
-    project: Project;
     rank: number;
     rankOrder: Number;
     selected:boolean;
     structure: Structure;
     tax_amount: number;
-    title:Title;
     typeOrder:string;
     total?:number;
     action?:string;
@@ -58,7 +52,6 @@ export class OrderClient implements Order  {
     id_order:number;
     id_project:number;
     id_supplier: string;
-    grade?: Grade;
     name:string;
     name_structure: string;
     number_validation:string;
@@ -173,7 +166,6 @@ export class OrdersClient extends Selection<OrderClient> {
     bc_number?: string;
     id_program?: number;
     engagement_number?: string;
-    projects: Selection<Project>;
     dateGeneration?: Date;
     id_project_use?: number;
     filters: Array<string>;
@@ -183,7 +175,6 @@ export class OrdersClient extends Selection<OrderClient> {
         super([]);
         this.supplier = supplier ? supplier : new Supplier();
         this.dateGeneration = new Date();
-        this.projects = new Selection<Project>([]);
         this.id_project_use = -1;
         this.filters = [];
     }
@@ -200,7 +191,6 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string):Promise<void> {
         try {
-            this.projects = new Selection<Project>([]);
             this.id_project_use = -1;
             if (idCampaign && idStructure) {
                 const { data } = await http.get(  `/crre/orders/${idCampaign}/${idStructure}` );
@@ -234,10 +224,6 @@ export class OrdersClient extends Selection<OrderClient> {
             order.price = parseFloat(order.price.toString());
             order.price_proposal = order.price_proposal? parseFloat( order.price_proposal.toString()) : null;
             order.tax_amount = parseFloat(order.tax_amount.toString());
-            order.project = Mix.castAs(Project, JSON.parse(order.project.toString()));
-            order.project.init(idCampaign, idStructure);
-            order.project.title = Mix.castAs(Title, JSON.parse(order.title.toString()));
-            if(this.id_project_use != order.project.id)this.makeProjects(order);
             order.rank = order.rank ? parseInt(order.rank.toString()) : null ;
             order.options = order.options.toString() !== '[null]' && order.options !== null ?
                 Mix.castArrayAs(OrderOptionClient, JSON.parse(order.options.toString()))
@@ -246,14 +232,6 @@ export class OrdersClient extends Selection<OrderClient> {
             order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
         });
         this.all = _.sortBy(this.all, (order)=> order.rank != null ? order.rank : this.all.length );
-        this.projects.all = _.sortBy(this.projects.all, (project)=> project.preference != null
-            ? project.preference
-            : this.projects.all.length );
-    }
-
-    makeProjects(order:OrderClient, ordersClients:OrdersClient = this):void{
-        ordersClients.id_project_use = order.project.id;
-        ordersClients.projects.push(order.project);
     }
 
     makeOrderNotValid(order:OrderClient):void{
@@ -263,10 +241,7 @@ export class OrdersClient extends Selection<OrderClient> {
         order.supplier = Mix.castAs(Supplier,  JSON.parse(order.supplier.toString()));
         order.id_supplier = order.supplier.id;
         order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
-        order.project = Mix.castAs(Project, JSON.parse(order.project.toString()));
-        order.project.title = Mix.castAs(Title, JSON.parse(order.title.toString()));
         order.rank = order.rank ? parseInt(order.rank.toString()) : null ;
-        if (this.id_project_use != order.project.id)this.makeProjects(order);
         order.creation_date = moment(order.creation_date).format('L');
         order.options.toString() !== '[null]' && order.options !== null ?
             order.options = Mix.castArrayAs( OrderOptionClient, JSON.parse(order.options.toString()))
@@ -277,9 +252,7 @@ export class OrdersClient extends Selection<OrderClient> {
         order.priceTotalTTC = this.choosePriceTotal(order);
         if( order.campaign.orderPriorityEnable()){
             order.rankOrder = order.rank + 1;
-        } else if (order.campaign.projectPriorityEnable()){
-            order.rankOrder = order.project.preference + 1;
-        }else{
+        } else{
             order.rankOrder = lang.translate("crre.order.not.prioritized");
         }
     }

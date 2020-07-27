@@ -17,8 +17,6 @@ public interface OrderRegionService {
 
     void getOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
 
-    void updateOperation(Integer id, JsonArray orders, Handler<Either<String, JsonObject>> handler);
-
     void createProject (Integer idProject,  Handler<Either<String, JsonObject>> handler);
 
 }

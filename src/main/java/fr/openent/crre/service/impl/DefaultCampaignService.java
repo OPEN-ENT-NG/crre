@@ -103,7 +103,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignEquipmentCount(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT campaign.id, " +
+        String query = "SELECT campaign.id " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
                 "GROUP BY campaign.id";

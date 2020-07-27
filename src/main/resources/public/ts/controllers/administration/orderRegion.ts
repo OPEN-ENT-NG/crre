@@ -6,7 +6,6 @@ import {
     StructureGroup,
     StructureGroups,
     Structures,
-    Titles,
     Utils,
     Equipments,
     Contracts
@@ -19,7 +18,6 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.orderToCreate = new OrderRegion();
         $scope.structure_groups = new StructureGroups();
         $scope.structuresToDisplay = new Structures();
-        $scope.titles = new Titles();
         $scope.display = {
             lightbox: {
                 validOrder: false,
@@ -31,7 +29,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.orderToCreate.rows = undefined;
             $scope.orderToCreate.project = undefined;
             $scope.orderToCreate.operation = undefined;
-            await $scope.titles.syncAdmin($scope.orderToCreate.campaign.id);
             await $scope.structure_groups.syncByCampaign($scope.orderToCreate.campaign.id);
             let structures = new Structures();
             $scope.structure_groups.all.map(structureGR => {
@@ -283,7 +280,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             if (status === 201) {
                 toasts.confirm('crre.order.region.create.message');
                 $scope.orderToCreate = new OrderRegion();
-                $scope.titles = new Titles();
             }
             else {
                 notify.error('crre.admin.order.create.err');

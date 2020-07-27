@@ -1,4 +1,4 @@
-import {Tag, Utils} from './index';
+import {Utils} from './index';
 import {_, notify} from 'entcore';
 import {Eventer, Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
@@ -16,7 +16,6 @@ export class Equipment implements Selectable {
     reference: string;
     id_option?: number;
     technical_specs: TechnicalSpec[];
-    tags: Tag[];
     tax_amount: number;
     selected: boolean;
     options: EquipmentOption[];
@@ -37,7 +36,6 @@ export class Equipment implements Selectable {
         if (name) this.name = name;
         if (price) this.price = price;
         this.technical_specs = [];
-        this.tags = [];
         this.options = [];
         this.price_editable = false;
         this.option_enabled = false;
@@ -66,7 +64,6 @@ export class Equipment implements Selectable {
             image: this.image || null,
             id_contract: this.id_contract,
             technical_specs:  (this.technical_specs!=null) ? this.technical_specs.map((spec: TechnicalSpec) => spec.toJson()) : [],
-            tags: this.tags.map((tag: Tag) => tag.id),
             optionsCreate : _.filter(optionList, function(option) { return option.id === null ; }) ,
             optionsUpdate : _.filter(optionList, function(option) { return option.id !== null ; }) ,
             deletedOptions : this.deletedOptions || null,
@@ -117,9 +114,6 @@ export class Equipment implements Selectable {
             this.options.toString() !== '[null]' && this.options !== null ?
                 this.options = Mix.castArrayAs(EquipmentOption, JSON.parse(this.options.toString()))
                 : this.options = [];
-            this.tags.toString() !== '[null]' && this.options !== null ?
-                this.tags = Mix.castArrayAs(Tag, JSON.parse(this.tags.toString()))
-                : this.tags = [];
             this.technical_specs = this.technical_specs !== null && this.technical_specs.toString() !== '[null]'
                 ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(this.technical_specs))
                 : this.technical_specs;
@@ -220,7 +214,6 @@ export class Equipments extends Selection<Equipment> {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
                 if (idCampaign) {
-                    equipment.tags = equipment.tags !== null && equipment.tags.toString() !== '[null]' ? JSON.parse(equipment.tags.toString()) : [];
                     equipment.options.toString() !== '[null]' && equipment.options !== null ?
                         equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
                         : equipment.options = [];
@@ -250,7 +243,6 @@ export class Equipments extends Selection<Equipment> {
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
                 equipment.priceTTC = equipment.price + (equipment.price * equipment.tax_amount / 100);
                 if (idCampaign) {
-                    equipment.tags = equipment.tags !== null && equipment.tags.toString() !== '[null]' ? JSON.parse(equipment.tags.toString()) : [];
                     equipment.options.toString() !== '[null]' && equipment.options !== null ?
                         equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
                         : equipment.options = [];

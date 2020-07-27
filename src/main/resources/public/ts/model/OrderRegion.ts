@@ -3,14 +3,13 @@ import {_, moment, notify} from "entcore";
 import {
     Campaign,
     Contract,
-    ContractType, Grade,
+    ContractType,
     Order,
     Structure,
-    Structures, Supplier, TechnicalSpec, Title,
+    Structures, Supplier, TechnicalSpec,
     Utils,
     OrderClient,
-    Equipment,
-    Project,
+    Equipment
 } from "./index";
 import {Selection} from "entcore-toolkit";
 
@@ -33,15 +32,12 @@ export class OrderRegion implements Order  {
     price: number;
     price_proposal: number;
     price_single_ttc: number;
-    project: Project;
     rank: number;
     rankOrder: Number;
     selected:boolean;
     structure: Structure;
     tax_amount: number;
-    title:Title;
     typeOrder:string;
-
     contract_name?: string;
     description:string;
     files: string;
@@ -50,7 +46,6 @@ export class OrderRegion implements Order  {
     id_orderClient: number;
     id_project:number;
     id_supplier: string;
-    grade?: Grade;
     name:string;
     name_structure: string;
     number_validation:string;
@@ -124,7 +119,6 @@ export class OrderRegion implements Order  {
         this.campaign = order.campaign;
         this.structure_groups = order.structure_groups;
         this.contract_name = order.contract_name;
-        this.project = order.project;
         this.files = order.files;
         this.contract_type = order.contract_type;
         this.name_structure = order.name_structure;

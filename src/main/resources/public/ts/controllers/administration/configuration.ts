@@ -8,14 +8,11 @@ import {
     Equipment,
     EquipmentImporter,
     EquipmentOption,
-    Notification,
     StructureGroup,
     StructureGroupImporter,
     Supplier,
-    Tag,
     TechnicalSpec,
-    Utils,
-    PRIORITY_FIELD
+    Utils
 } from '../../model';
 
 export const configurationController = ng.controller('configurationController',
@@ -195,48 +192,6 @@ export const configurationController = ng.controller('configurationController',
             Utils.safeApply($scope);
         };
 
-        $scope.openTagForm = (tag: Tag = new Tag()) => {
-            $scope.tag = new Tag();
-            Mix.extend($scope.tag, tag);
-            template.open('tag.lightbox', 'administrator/tag/tag-form');
-            $scope.display.lightbox.tag = true;
-        };
-
-        $scope.cancelTagForm = () => {
-            $scope.display.lightbox.tag = false;
-            template.close('tag.lightbox');
-            delete $scope.tag;
-        };
-
-        $scope.validTag = async (tag: Tag) => {
-            await tag.save();
-            await $scope.tags.sync(true);
-            $scope.display.lightbox.tag = false;
-            Utils.safeApply($scope);
-            delete $scope.tag;
-            template.close('tag.lightbox');
-        };
-
-        $scope.validTagForm = (tag: Tag) => {
-            return tag.name !== undefined
-                && tag.name.trim() !== ''
-                && tag.color !== undefined
-                && tag.color.trim() !== '';
-        };
-
-        $scope.openTagsDeletion = () => {
-            template.open('tag.lightbox', 'administrator/tag/tag-delete-validation');
-            $scope.display.lightbox.tag = true;
-        };
-
-        $scope.deleteTags = async (tags: Tag[]) => {
-            await $scope.tags.delete(tags);
-            await $scope.tags.sync(true);
-            $scope.allTagSelected = false;
-            $scope.display.lightbox.tag = false;
-            Utils.safeApply($scope);
-        };
-
         $scope.openEquipmentForm = (equipment: Equipment = new Equipment()) => {
             $scope.redirectTo('/equipments/create');
             $scope.equipment = new Equipment();
@@ -285,17 +240,6 @@ export const configurationController = ng.controller('configurationController',
             }
         };
 
-        $scope.addTagToEquipment = (tag: Tag) => {
-            if (!_.contains($scope.equipment.tags, tag)) {
-                $scope.equipment.tags.push(tag);
-            }
-            delete $scope.equipment._tag;
-        };
-
-        $scope.removeTagToEquipment = (tag: Tag) => {
-            $scope.equipment.tags = _.without($scope.equipment.tags, tag);
-        };
-
         $scope.validEquipmentOptions = (options: EquipmentOption[]):boolean => {
             if (options.length > 0) {
                 let valid = true;
@@ -324,7 +268,6 @@ export const configurationController = ng.controller('configurationController',
                 && !isNaN(parseFloat(equipment.price.toString()))
                 && equipment.id_contract !== undefined
                 && equipment.id_tax !== undefined
-                && equipment.tags.length > 0
                 && $scope.validEquipmentOptions(equipment.options)
                 && equipment.warranty !== undefined
                 && equipment.warranty >= 0

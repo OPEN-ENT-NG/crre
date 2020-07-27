@@ -1,4 +1,4 @@
-import {Structure, Tag} from './index';
+import {Structure} from './index';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {_, notify} from 'entcore';
 import http from 'axios';
@@ -13,14 +13,12 @@ export class StructureGroup implements Selectable {
     name: string;
     description: string;
     structures: Structure [];
-    tags: Tag [];
     selected: boolean;
 
     constructor (name?: string, description?: string) {
         if (name) this.name = name;
         if (description) this.description = description;
         this.structures = [];
-        this.tags =  [];
     }
 
     toJson() {
@@ -29,7 +27,6 @@ export class StructureGroup implements Selectable {
             name: this.name,
             description: this.description,
             structures : ( typeof(this.structures[0]) === 'string' ) ? this.structures : this.structures.map((structure) => structure.id) ,
-            tags: this.tags.map((tag) => tag.id)
         };
     }
 

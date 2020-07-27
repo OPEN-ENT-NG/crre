@@ -137,8 +137,6 @@ public interface OrderService {
      */
     void getOrdersDetailsIndexedByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler);
 
-    void getOrdersForCSVExportByValidationNumbers(JsonArray validationNumbers, Handler<Either<String, JsonArray>> handler);
-
     /**
      * Cancel validation order. Set all orders to waiting status. All orders update are based on validation numbers;
      * @param validationNumbers validatio numbers list
@@ -168,14 +166,6 @@ public interface OrderService {
     void updateRank( JsonArray orders, Handler<Either<String, JsonObject>> handler);
 
     /**
-     * Update the operations of  orders
-     *
-     * @param orders orders to update
-     * @param handler Function handler returning data
-     */
-    void updateOperation( Integer id, JsonArray orders, Handler<Either<String, JsonObject>> handler);
-
-    /**
      * Update the status orders
      *
      * @param idOrder orders to update
@@ -191,14 +181,6 @@ public interface OrderService {
      * @param handler Function handler returning data
      */
     void getOrder(Integer idOrder, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Get an order by id
-     *  @param idOrder id of the order to get
-     * @param idOrders
-     * @param handler Function handler returning data
-     */
-    void updateOperationInProgress(Integer idOrder, JsonArray idOrders, Handler<Either<String, JsonObject>> handler);
 
     void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler);
 

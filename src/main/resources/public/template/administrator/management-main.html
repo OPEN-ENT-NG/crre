@@ -3,8 +3,7 @@
         <li><a href="#/order/waiting"><i18n>crre.orders.validations.waiting</i18n></a></li>
         <li><a href="#/order/valid"><i18n>crre.order.form.generate</i18n></a></li>
         <li><a href="#/order/sent"><i18n>crre.end.expedited.requests</i18n></a></li>
-        <li><a href="#/tags"><i18n>crre.tag.management</i18n></a></li>
-        <li><a href="#/equipments"><i18n>crre.catalog.management</i18n></a></li>
+        <li><a href="#/equipments"><i18n>crre.catalog</i18n></a></li>
         <li><a href="#/campaigns"><i18n>crre.manage.campaigns</i18n></a></li>
         <li><a href="#/structureGroups"><i18n>crre.structureGroups.management</i18n></a></li>
         <li><a href="#/suppliers"><i18n>crre.suppliers.management</i18n></a></li>
@@ -26,11 +25,9 @@
 
         </drop-down-menu>
     </header>
-    <header class="horizontal-spacing">
-        <drop-down-menu title="[[lang.translate('crre.equipments')]]">
-            <opt ng-click="redirectTo('/tags')"><i18n>crre.tag.management</i18n></opt>
-            <opt ng-click="redirectTo('/equipments')"><i18n>crre.catalog.management</i18n></opt>
-        </drop-down-menu></header>
+    <header class="horizontal-spacing" ng-click="redirectTo('/equipments')">
+            <i18n>crre.catalog</i18n>
+    </header>
     <header class="horizontal-spacing">
         <drop-down-menu title="[[lang.translate('crre.campaigns')]]">
             <opt ng-click="redirectTo('/campaigns')"><i18n>crre.manage.campaigns</i18n></opt>
