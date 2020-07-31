@@ -7,13 +7,6 @@
     <form>
         <article>
             <div class="row horizontal-spacing vertical-spacing">
-                <div class="cell four horizontal-spacing twelve-mobile">
-                    <div class="eight row centered">
-                        <image-select ng-model="campaign.image"
-                                      visibility="'public'"
-                                      default="/img/illustrations/image-default.svg"></image-select>
-                    </div>
-                </div>
                 <div class="eight cell horizontal-spacing twelve-mobile">
                     <h2><i18n>crre.information</i18n></h2>
                     <label class="row twelve vertical-spacing">
@@ -50,9 +43,6 @@
                 <td class="tree ">
                     <i18n>crre.name.of.group</i18n>
                 </td>
-                <td class="eight ">
-                    <i18n>crre.equipements.visibles</i18n>
-                </td>
                 </thead>
                 <tbody>
                 <tr ng-repeat="group in structureGroups.all track by $index ">
@@ -62,28 +52,6 @@
                             <span></span>
                         </label></td>
                     <td class="tree">[[group.name]]</td>
-                    <td class="label-row">
-                        <div class="select-blocks" ng-show="group.selected">
-                            <div ng-repeat="tag in group.tags track by tag.id"
-                                 ng-click="deleteTagFromCampaign($parent.$index, tag)"
-                                 class="labels-in-ligne">
-                                <div><span class="color-tag" ng-style="{ 'background-color': tag.color }">
-                                                &nbsp;
-                                              </span></div>
-                                <div>[[ tag.name ]]</div>
-                            </div>
-                        </div>
-                        <autocomplete
-                                options="tags.all|tagFilter:group.tags"
-                                ng-model="search.tag[$index]"
-                                ng-change="addTagToCampaign($index)"
-                                ng-show="display.input.group[$index] && group.selected">
-
-                        </autocomplete>
-                        <div><input type="button" ng-click="display.input.group[$index]=true" value="+"
-                                    ng-disabled="!group.selected"/></div>
-
-                    </td>
                 </tr>
                 </tbody>
             </table>

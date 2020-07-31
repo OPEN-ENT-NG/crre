@@ -19,7 +19,6 @@ export const campaignsListController = ng.controller('campaignsListController',
             $scope.campaign.description= campaign.description;
             $scope.campaign.groups= campaign.groups;
             $scope.campaign.id= campaign.id;
-            $scope.campaign.image= campaign.image;
             $scope.campaign.name= campaign.name;
             $scope.campaign.purse_amount= campaign.purse_amount;
             $scope.campaign.nb_panier= campaign.nb_panier;

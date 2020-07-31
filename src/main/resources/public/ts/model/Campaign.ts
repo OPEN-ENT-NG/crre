@@ -8,7 +8,6 @@ export class Campaign implements Selectable  {
     id?: number;
     name: string;
     description: string;
-    image: string;
     accessible: boolean;
     groups: StructureGroup[];
     selected: boolean;
@@ -23,7 +22,6 @@ export class Campaign implements Selectable  {
         if (name) this.name = name;
         if (description) this.description = description;
         this.groups = [];
-        this.image = '';
         this.purse_enabled = false;
         this.priority_enabled = true;
         this.priority_field = PRIORITY_FIELD.ORDER
@@ -33,7 +31,6 @@ export class Campaign implements Selectable  {
         return {
             name: this.name,
             description: this.description || null,
-            image: this.image || null,
             accessible: this.accessible || false,
             groups: this.groups.map((group) => {
                 return group.toJson();

@@ -28,14 +28,12 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
     public void listCampaigns(Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> campaignFuture = Future.future();
-        Future<JsonArray> equipmentFuture = Future.future();
         Future<JsonArray> purseFuture = Future.future();
         Future<JsonArray> orderFuture = Future.future();
 
-        CompositeFuture.all(campaignFuture, equipmentFuture, purseFuture, orderFuture).setHandler(event -> {
+        CompositeFuture.all(campaignFuture, purseFuture, orderFuture).setHandler(event -> {
             if (event.succeeded()) {
                 JsonArray campaigns = campaignFuture.result();
-                JsonArray equipments = equipmentFuture.result();
                 JsonArray purses = purseFuture.result();
                 JsonArray orders = orderFuture.result();
 
@@ -66,31 +64,21 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
                 }
-
-                for (int i = 0; i < equipments.size(); i++) {
-                    object = equipments.getJsonObject(i);
-                    campaign = campaignMap.getJsonObject(object.getInteger("id").toString());
-                    campaign.put("nb_equipments", object.getLong("nb_equipments"));
-                }
-
-                JsonArray campaignList = new JsonArray();
+            JsonArray campaignList = new JsonArray();
                 for (Map.Entry<String, Object> aCampaign : campaignMap) {
                     campaignList.add(aCampaign.getValue());
                 }
-
                 handler.handle(new Either.Right<>(campaignList));
 
             } else {
                 handler.handle(new Either.Left<>("An error occurred when retrieving campaigns"));
             }
         });
-
         getCampaignsInfo(handlerFuture(campaignFuture));
-        getCampaignEquipmentCount(handlerFuture(equipmentFuture));
+        //getCampaignEquipmentCount(handlerFuture(equipmentFuture));
         getCampaignsPurses(handlerFuture(purseFuture));
         getCampaignOrderStatusCount(handlerFuture(orderFuture));
     }
-
     private Handler<Either<String, JsonArray>> handlerFuture(Future<JsonArray> future) {
         return event -> {
             if (event.isRight()) {
@@ -100,14 +88,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 future.fail(event.left().getValue());
             }
         };
-    }
-
-    private void getCampaignEquipmentCount(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT campaign.id " +
-                "FROM " + Crre.crreSchema + ".campaign " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
-                "GROUP BY campaign.id";
-        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignsPurses(Handler<Either<String, JsonArray>> handler) {
@@ -243,11 +223,11 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     public void getCampaign(Integer id, Handler<Either<String, JsonObject>> handler){
-        String query = "  SELECT campaign.*,array_to_json(array_agg(groupe)) as  groups     "+
+        String query = "  SELECT campaign.*,array_to_json(array_agg(groupe)) as  groups"+
                 "FROM  " + Crre.crreSchema + ".campaign campaign  "+
                 "LEFT JOIN  "+
-                "(SELECT rel_group_campaign.id_campaign, structure_group.*,  array_to_json(array_agg(id_tag))" +
-                " as  tags FROM " + Crre.crreSchema + ".structure_group " +
+                "(SELECT rel_group_campaign.id_campaign, structure_group.*)" +
+                "FROM " + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign" +
                 " ON structure_group.id = rel_group_campaign.id_structure_group "+
                 "WHERE rel_group_campaign.id_campaign = ?  "+
@@ -389,21 +369,16 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     private JsonObject getCampaignTagsGroupsRelationshipStatement(Number id, JsonArray groups) {
         StringBuilder insertTagCampaignRelationshipQuery = new StringBuilder("INSERT INTO " +
                 Crre.crreSchema + ".rel_group_campaign" +
-                "(id_campaign, id_structure_group, id_tag) VALUES ");
+                "(id_campaign, id_structure_group) VALUES ");
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for(int j = 0; j < groups.size(); j++ ){
             JsonObject group =  groups.getJsonObject(j);
-            JsonArray tags = group.getJsonArray("tags");
-            for (int i = 0; i < tags.size(); i++) {
-                insertTagCampaignRelationshipQuery.append(" (?, ?, ?)");
-                if(i!=tags.size()-1 || j!= groups.size()-1){
-                    insertTagCampaignRelationshipQuery.append(",");
-                }
-                params.add(id)
-                        .add(group.getInteger("id"))
-                        .add(tags.getInteger(i));
-            }
+            insertTagCampaignRelationshipQuery.append("(?, ?)");
+            params.add(id)
+                    .add(group.getInteger("id"));
         }
+        System.out.print(insertTagCampaignRelationshipQuery.toString());
+
         return new JsonObject()
                 .put("statement", insertTagCampaignRelationshipQuery.toString())
                 .put("values", params)

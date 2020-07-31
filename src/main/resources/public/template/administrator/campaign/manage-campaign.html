@@ -12,10 +12,6 @@
                     <span></span>
                 </label>
             </div>
-            <div class="two cell campaign-image zero-mobile">
-                <img ng-src="[[campaign.image]]" ng-show="campaign.image!==null && campaign.image!==undefined " />
-                <img skin-src="/img/illustrations/pages-default.png" ng-show="campaign.image===null || campaign.image===undefined "/>
-            </div>
             <div class="three cell twelve-mobile">
                 <h3>[[campaign.name]]</h3>
                 <p ng-bind-html="campaign.description"></p>
@@ -30,14 +26,14 @@
                         ng-click="redirectTo('/campaigns/' + campaign.id + '/purse')"><i18n>crre.campaign.purse.manage</i18n></button>
                 <button class="vertical-spacing twelve-mobile"
                         ng-click="redirectTo('/campaigns/' + campaign.id + '/titles')">
-                    <i18n>crre.campaign.titles.manage</i18n>
+                    <i18n>crre.campaign.purse.manage</i18n>
                 </button>
             </div>
             <div class="twelve-mobile row-mobile cell">
                 <ul class="colored status-bar cell row">
-                    <li tooltip="[[lang.translate('crre.order.waiting')]]" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_waiting]]</span></li>
-                    <li tooltip="[[lang.translate('crre.order.valid')]]" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_valid]]</span></li>
-                    <li tooltip="[[lang.translate('crre.order.sent')]]" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_sent]]</span></li>
+                    <li tooltip="[[lang.translate('crre.order.waiting')]]" style="background-color: #f71e35;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_waiting]]</span></li>
+                    <li tooltip="[[lang.translate('crre.order.valid')]]" style="background-color: #e39d00;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_valid]]</span></li>
+                    <li tooltip="[[lang.translate('crre.order.sent')]]" style="background-color: #1794a5;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_sent]]</span></li>
                 </ul>
             </div>
 

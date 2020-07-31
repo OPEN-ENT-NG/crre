@@ -381,6 +381,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.redirectTo = (path: string) => {
+            $scope.selectedType = path;
             $location.path(path);
         };
 

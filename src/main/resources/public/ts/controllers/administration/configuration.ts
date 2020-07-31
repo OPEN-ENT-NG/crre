@@ -356,7 +356,7 @@ export const configurationController = ng.controller('configurationController',
             id ? $scope.redirectTo('/campaigns/update') : $scope.redirectTo('/campaigns/create');
             $scope.campaign = new Campaign();
             Mix.extend($scope.campaign, campaign);
-            await $scope.tags.sync();
+/*            await $scope.tags.sync();*/
             await $scope.structureGroups.sync();
             id ? $scope.updateSelectedCampaign(id) : null;
             Utils.safeApply($scope);
@@ -381,21 +381,20 @@ export const configurationController = ng.controller('configurationController',
             $scope.display.lightbox.campaign = true;
         };
 
-        $scope.checkTags = () =>{
+/*        $scope.checkTags = () =>{
            return _.every(_.where($scope.structureGroups.all, {selected: true}), (structureGroup) => {
                 return structureGroup.tags.length > 0;
             })
-        };
+        };*/
         $scope.validCampaignForm = (campaign: Campaign) => {
             return campaign.name !== undefined
             && campaign.name.trim() !== ''
-            && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined
-            && (_.where($scope.structureGroups.all, {selected: true}).length > 0) ? $scope.checkTags()
-             : false;
-
+            && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined;
+            /*&& (_.where($scope.structureGroups.all, {selected: true}).length > 0) ? $scope.checkTags()
+             : false;*/
         };
 
-        $scope.addTagToCampaign = (index) => {
+/*        $scope.addTagToCampaign = (index) => {
             $scope.structureGroups.all[index].tags.push($scope.search.tag[index]);
             $scope.structureGroups.all[index].tags = _.uniq($scope.structureGroups.all[index].tags);
             $scope.display.input.group[index] = false;
@@ -405,7 +404,7 @@ export const configurationController = ng.controller('configurationController',
         $scope.deleteTagFromCampaign = (index, tag) => {
             $scope.structureGroups.all[index].tags = _.without($scope.structureGroups.all[index].tags, tag);
             Utils.safeApply($scope);
-        };
+        };*/
 
         $scope.validCampaign = async (campaign: Campaign) => {
             $scope.campaign.groups = [];
