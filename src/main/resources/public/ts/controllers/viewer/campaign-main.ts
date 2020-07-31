@@ -14,4 +14,10 @@ export const campaignMainController = ng.controller('campaignMainController',
         $scope.backHome = () => {
             $scope.redirectTo(`/`);
         };
+        $scope.returnPath = (s: string) => {
+            return /[^\/]+[\/]?$/.exec(s);
+        }
+
     }]);
+
+
