@@ -5,7 +5,6 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -29,8 +28,8 @@ public final class Logging {
         throw new IllegalAccessError("Utility class");
     }
 
-    public static JsonObject add(EventBus eb, HttpServerRequest request, final String context,
-                                 final String action, final String item, final JsonObject object, UserInfos user) {
+    public static JsonObject add(final String context, final String action, final String item, final JsonObject object,
+                                 UserInfos user) {
         final JsonObject statement = new JsonObject();
         StringBuilder query = new StringBuilder("INSERT INTO ")
                 .append(Crre.crreSchema)
@@ -44,15 +43,7 @@ public final class Logging {
         }
         query.append(");");
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(user.getUserId())
-                .add(user.getUsername())
-                .add(action)
-                .add(context)
-                .add(item.contains("id = ") ? item : ("id = " + item));
-        if (object != null) {
-            params.add(object);
-        }
+        JsonArray params = addParams(context, action, item, object, user);
         statement.put("statement", query.toString())
                 .put("values",params)
                 .put("action", "prepared");
@@ -63,64 +54,50 @@ public final class Logging {
     public static Handler<Either<String, JsonObject>> defaultResponseHandler (final EventBus eb,
                       final HttpServerRequest request, final String context, final String action,
                       final String item, final JsonObject object) {
-        return new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(final Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                        @Override
-                        public void handle(UserInfos user) {
-                            Renders.renderJson(request, event.right().getValue(), OK_STATUS);
-                            JsonObject statement = add(eb, request, context, action,
-                                    item == null ? event.right().getValue().getInteger("id").toString() : item, object, user);
-                            Sql.getInstance().prepared(statement.getString("statement"), statement.getJsonArray("values"), new Handler<Message<JsonObject>>() {
-                                @Override
-                                public void handle(Message<JsonObject> response) {
-                                    if (!"ok".equals(response.body().getString("status"))) {
-                                        log(context, action);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    JsonObject error = new JsonObject()
-                            .put("error", event.left().getValue());
-                    Renders.renderJson(request, error, BAD_REQUEST_STATUS);
-                }
+        return event -> {
+            if (event.isRight()) {
+                UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+                    @Override
+                    public void handle(UserInfos user) {
+                        Renders.renderJson(request, event.right().getValue(), OK_STATUS);
+                        JsonObject statement = add(context, action,
+                                item == null ? event.right().getValue().getInteger("id").toString() : item, object, user);
+                        Sql.getInstance().prepared(statement.getString("statement"), statement.getJsonArray("values"),
+                                response -> {
+                            if (!"ok".equals(response.body().getString("status"))) {
+                                log(context, action);
+                            }
+                        });
+                    }
+                });
+            } else {
+                JsonObject error = new JsonObject()
+                        .put("error", event.left().getValue());
+                Renders.renderJson(request, error, BAD_REQUEST_STATUS);
             }
         };
     }
     public static Handler<Either<String, JsonObject>> defaultResponsesHandler
             (final EventBus eb, final HttpServerRequest request, final String context, final String action,
              final  List<String> items, final JsonObject object) {
-        return new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(final Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                        @Override
-                        public void handle(UserInfos user) {
-                            Renders.renderJson(request, event.right().getValue(), OK_STATUS);
-                            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-                            for(int i=0; i<items.size(); i++){
-                                statements.add( add(eb, request, context, action,items.get(i), object, user));
-                            }
-                            Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
-                                @Override
-                                public void handle(Message<JsonObject> response) {
-                                    if (!"ok".equals(response.body().getString("status"))) {
-                                        log(context, action);
-                                    }
-                                }
-                            });
+        return event -> {
+            if (event.isRight()) {
+                UserUtils.getUserInfos(eb, request, user -> {
+                    Renders.renderJson(request, event.right().getValue(), OK_STATUS);
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                    for (String item : items) {
+                        statements.add(add(context, action, item, object, user));
+                    }
+                    Sql.getInstance().transaction(statements, response -> {
+                        if (!"ok".equals(response.body().getString("status"))) {
+                            log(context, action);
                         }
                     });
-                } else {
-                    JsonObject error = new JsonObject()
-                            .put("error", event.left().getValue());
-                    Renders.renderJson(request, error, BAD_REQUEST_STATUS);
-                }
+                });
+            } else {
+                JsonObject error = new JsonObject()
+                        .put("error", event.left().getValue());
+                Renders.renderJson(request, error, BAD_REQUEST_STATUS);
             }
         };
     }
@@ -128,76 +105,62 @@ public final class Logging {
     public static Handler<Either<String, JsonObject>> defaultCreateResponsesHandler
             (final EventBus eb, final HttpServerRequest request,
              final String context, final String action,final String item, final JsonArray objects) {
-        return new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(final Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                        @Override
-                        public void handle(UserInfos user) {
-                            JsonObject object;
-                            Renders.renderJson(request, event.right().getValue(), OK_STATUS);
-                            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-                            for(int i=0; i<objects.size(); i++){
-                                object = objects.getJsonObject(i);
-                                statements.add( add(eb, request, context, action,
-                                        object.getInteger(item).toString(), object, user));
-                            }
-                            Sql.getInstance().transaction(statements, new Handler<Message<JsonObject>>() {
-                                @Override
-                                public void handle(Message<JsonObject> response) {
-                                    if (!"ok".equals(response.body().getString("status"))) {
-                                        log(context, action);
-                                    }
-                                }
-                            });
+        return event -> {
+            if (event.isRight()) {
+                UserUtils.getUserInfos(eb, request, user -> {
+                    JsonObject object;
+                    Renders.renderJson(request, event.right().getValue(), OK_STATUS);
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                    for(int i=0; i<objects.size(); i++){
+                        object = objects.getJsonObject(i);
+                        statements.add( add(context, action,
+                                object.getInteger(item).toString(), object, user));
+                    }
+                    Sql.getInstance().transaction(statements, response -> {
+                        if (!"ok".equals(response.body().getString("status"))) {
+                            log(context, action);
                         }
                     });
-                } else {
-                    JsonObject error = new JsonObject()
-                            .put("error", event.left().getValue());
-                    Renders.renderJson(request, error, BAD_REQUEST_STATUS);
-                }
+                });
+            } else {
+                JsonObject error = new JsonObject()
+                        .put("error", event.left().getValue());
+                Renders.renderJson(request, error, BAD_REQUEST_STATUS);
             }
         };
     }
     public static void insert (EventBus eb, HttpServerRequest request, final String context,
                                final String action, final String item, final JsonObject object) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos user) {
-                String query = "INSERT INTO " + Crre.crreSchema + ".logs" +
-                        "(id_user, username, action, context, item, value) " +
-                        "VALUES (?, ?, ?, ?, ?, ";
-
-                if (object != null) {
-                    query += "to_json(?::text)";
-                } else {
-                    query += "null";
-                }
-
-                query += ")";
-
-                JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(user.getUserId())
-                        .add(user.getUsername())
-                        .add(action)
-                        .add(context)
-                        .add(item.contains("id = ") ? item : ("id = " + item));
-                if (object != null) {
-                    params.add(object);
-                }
-
-                Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> response) {
-                        if (!"ok".equals(response.body().getString("status"))) {
-                            log(context, action);
-                        }
-                    }
-                });
+        UserUtils.getUserInfos(eb, request, user -> {
+            String query = "INSERT INTO " + Crre.crreSchema + ".logs" +
+                    "(id_user, username, action, context, item, value) " +
+                    "VALUES (?, ?, ?, ?, ?, ";
+            if (object != null) {
+                query += "to_json(?::text)";
+            } else {
+                query += "null";
             }
+            query += ")";
+            JsonArray params = addParams(context, action, item, object, user);
+            Sql.getInstance().prepared(query, params, response -> {
+                if (!"ok".equals(response.body().getString("status"))) {
+                    log(context, action);
+                }
+            });
         });
+    }
+
+    private static JsonArray addParams(String context, String action, String item, JsonObject object, UserInfos user) {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(user.getUserId())
+                .add(user.getUsername())
+                .add(action)
+                .add(context)
+                .add(item.contains("id = ") ? item : ("id = " + item));
+        if (object != null) {
+            params.add(object);
+        }
+        return params;
     }
 
     private static void log(String context, String action) {

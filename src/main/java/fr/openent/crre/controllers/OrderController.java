@@ -2,6 +2,7 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.export.ExportTypes;
+import fr.openent.crre.export.validOrders.PDF_OrderHElper;
 import fr.openent.crre.helpers.ExportHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
@@ -26,7 +27,6 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -35,14 +35,13 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.math.BigDecimal;
 import java.text.*;
 import java.util.*;
 
-import static fr.openent.crre.utils.OrderUtils.getValidOrdersCSVExportHeader;
+import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -53,7 +52,6 @@ public class OrderController extends ControllerHelper {
     private final OrderService orderService;
     private final StructureService structureService;
     private final SupplierService supplierService;
-    private final ExportPDFService exportPDFService;
     private final ContractService contractService;
     private final AgentService agentService;
     private final ExportService exportService;
@@ -67,7 +65,6 @@ public class OrderController extends ControllerHelper {
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender emailSender = emailFactory.getSender();
         this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment", emailSender);
-        this.exportPDFService = new DefaultExportPDFService(eb, vertx, config);
         this.structureService = new DefaultStructureService(Crre.crreSchema);
         this.supplierService = new DefaultSupplierService(Crre.crreSchema, "supplier");
         this.contractService = new DefaultContractService(Crre.crreSchema, "contract");
@@ -251,21 +248,13 @@ public class OrderController extends ControllerHelper {
                 request.response()
                         .putHeader("Content-Type", "text/csv; charset=utf-8")
                         .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                        .end(generateExport(request, event.right().getValue()));
+                        .end(LogController.generateExport(request, event.right().getValue()));
             }else{
                 log.error("An error occurred when collecting orders");
                 renderError(request);
             }
         });
 
-    }
-
-    private static String generateExport (HttpServerRequest request, JsonArray orders)  {
-        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
-        for (int i = 0; i < orders.size(); i++) {
-            report.append(generateExportLine(request, orders.getJsonObject(i)));
-        }
-        return report.toString();
     }
 
     private static String getExportHeader(HttpServerRequest request){
@@ -475,8 +464,8 @@ public class OrderController extends ControllerHelper {
                     getOrdersData(request, "", "", "", supplier.getInteger("id"), new fr.wseduc.webutils.collections.JsonArray(validationNumbers),
                             data -> {
                                 data.put("print_certificates", printCertificates);
-                                exportPDFService.generatePDF(request, data,
-                                        "BC_CSF.xhtml", "CSF_",
+                                new PDF_OrderHElper(eb,vertx,config).generatePDF(null, request, data,
+                                        "BC_CSF.xhtml",
                                         pdf -> request.response()
                                                 .putHeader("Content-Type", "application/pdf; charset=utf-8")
                                                 .putHeader("Content-Disposition", "attachment; filename="
@@ -494,12 +483,11 @@ public class OrderController extends ControllerHelper {
     }
 
     private String generateExportName(List<String> validationNumbers, String prefix) {
-        String exportName = prefix;
-        for (int i = 0; i < validationNumbers.size(); i++) {
-            exportName = exportName + "_" + validationNumbers.get(i);
+        StringBuilder exportName = new StringBuilder(prefix);
+        for (String validationNumber : validationNumbers) {
+            exportName.append("_").append(validationNumber);
         }
-
-        return exportName;
+        return exportName.toString();
     }
 
     private void exportStructuresList(final HttpServerRequest request) {
@@ -553,47 +541,7 @@ public class OrderController extends ControllerHelper {
 
     private void retrieveStructures(final HttpServerRequest request, JsonArray ids,
                                     final Handler<JsonObject> handler) {
-        orderService.getStructuresId(ids, event -> {
-            if (event.isRight()) {
-                JsonArray structures = event.right().getValue();
-                JsonArray structuresList = new fr.wseduc.webutils.collections.JsonArray();
-                final JsonObject structureMapping = new JsonObject();
-                JsonObject structure;
-                JsonObject structureInfo;
-                JsonArray orderIds;
-                for (int i = 0; i < structures.size(); i++) {
-                    structure = structures.getJsonObject(i);
-                    if (!structuresList.contains(structure.getString("id_structure"))) {
-                        structuresList.add(structure.getString("id_structure"));
-                        structureInfo = new JsonObject();
-                        structureInfo.put("orderIds", new fr.wseduc.webutils.collections.JsonArray());
-                    } else {
-                        structureInfo = structureMapping.getJsonObject(structure.getString("id_structure"));
-                    }
-                    orderIds = structureInfo.getJsonArray("orderIds");
-                    orderIds.add(structure.getInteger("id"));
-                    structureMapping.put(structure.getString("id_structure"), structureInfo);
-                }
-                structureService.getStructureById(structuresList, event1 -> {
-                    if (event1.isRight()) {
-                        JsonArray structures1 = event1.right().getValue();
-                        JsonObject structure1;
-                        for (int i = 0; i < structures1.size(); i++) {
-                            structure1 = structures1.getJsonObject(i);
-                            JsonObject structureObject = structureMapping.getJsonObject(structure1.getString("id"));
-                            structureObject.put("structureInfo", structure1);
-                        }
-                        handler.handle(structureMapping);
-                    } else {
-                        log.error("An error occurred when collecting structures based on ids");
-                        badRequest(request);
-                    }
-                });
-            } else {
-                log.error("An error occurred when getting structures id based on order ids.");
-                renderError(request);
-            }
-        });
+        new PDF_OrderHElper(eb,vertx,config).retrieveStructures(null, request,ids,handler);
     }
 
     private void retrieveOrderData(final HttpServerRequest request, JsonArray ids,
@@ -634,29 +582,6 @@ public class OrderController extends ControllerHelper {
             order = orders.getJsonObject(i);
             sum += (Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"))
                     * (Double.parseDouble(order.getString("tax_amount")) / 100 + 1));
-        }
-
-        return sum;
-    }
-
-    private Double getTaxesTotal(JsonArray orders) {
-        double sum = 0D;
-        JsonObject order;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            sum += Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"))
-                    * (Double.parseDouble(order.getString("tax_amount")) / 100);
-        }
-
-        return sum;
-    }
-
-    private Double getSumWithoutTaxes(JsonArray orders) {
-        JsonObject order;
-        double sum = 0D;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            sum += Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"));
         }
 
         return sum;
@@ -735,23 +660,8 @@ public class OrderController extends ControllerHelper {
                                         certificates -> retrieveContract(request, ids,
                                                 contract -> retrieveOrderParam(ids,
                                                         event -> {
-                                                            JsonObject certificate;
-                                                            for (int i = 0; i < certificates.size(); i++) {
-                                                                certificate = certificates.getJsonObject(i);
-                                                                certificate.put("agent", managmentInfo.getJsonObject("userInfo"));
-                                                                certificate.put("supplier",
-                                                                        managmentInfo.getJsonObject("supplierInfo"));
-                                                                addStructureToOrders(certificate.getJsonArray("orders"),
-                                                                        certificate.getJsonObject("structure"));
-                                                            }
-                                                            data.put("supplier", managmentInfo.getJsonObject("supplierInfo"))
-                                                                    .put("agent", managmentInfo.getJsonObject("userInfo"))
-                                                                    .put("order", order)
-                                                                    .put("certificates", certificates)
-                                                                    .put("contract", contract)
-                                                                    .put("nbr_bc", nbrBc)
-                                                                    .put("nbr_engagement", nbrEngagement)
-                                                                    .put("date_generation", dateGeneration);
+                                                            putInfosInData(nbrBc, nbrEngagement, data, managmentInfo, order, certificates, contract);
+                                                            data.put("date_generation", dateGeneration);
                                                             if(nbrBc.equals("")){
                                                                 data.put("nbr_bc",  event.getString("order_number"))
                                                                         .put("nbr_engagement", event.getString("engagement_number"));
@@ -767,14 +677,6 @@ public class OrderController extends ControllerHelper {
             }
 
         });
-    }
-
-    private void addStructureToOrders(JsonArray orders, JsonObject structure) {
-        JsonObject order;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            order.put("structure", structure);
-        }
     }
 
     private void retrieveOrderDataForCertificate(final HttpServerRequest request, final JsonObject structures,
@@ -887,7 +789,7 @@ public class OrderController extends ControllerHelper {
                             request.response()
                                     .putHeader("Content-Type", "text/csv; charset=utf-8")
                                     .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                    .end(generateExport(request, orders));
+                                    .end(LogController.generateExport(request, orders));
 
                         } else {
                             log.error("An error occured when collecting StructureById");
@@ -902,17 +804,6 @@ public class OrderController extends ControllerHelper {
         } else {
             badRequest(request);
         }
-    }
-
-    private Map<String, String> retrieveUaiNameStructure(JsonArray structures) {
-        final Map<String, String> structureMap = new HashMap<>();
-        for (int i = 0; i < structures.size(); i++) {
-            JsonObject structure = structures.getJsonObject(i);
-            String uaiNameStructure = structure.getString("uai") + " - " + structure.getString("name");
-            structureMap.put(structure.getString("id"), uaiNameStructure);
-        }
-
-        return structureMap;
     }
 
     @Get("/order/:id/file/:fileId")

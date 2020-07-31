@@ -37,8 +37,13 @@ public class DefaultContractService extends SqlCrudService implements ContractSe
                 "VALUES (?, ?, ?, to_date(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?, ?, to_date(?, 'YYYY-MM-DD')," +
                 " to_date(?, 'YYYY-MM-DD'), ?) " +
                 "RETURNING id;";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(contract.getString("name"))
+        JsonArray params = new JsonArray();
+        addValues(contract, params);
+        this.sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private void addValues(JsonObject contract, JsonArray params) {
+        params.add(contract.getString("name"))
                 .add(contract.getDouble("annual_min"))
                 .add(contract.getDouble("annual_max"))
                 .add(contract.getString("start_date"))
@@ -51,8 +56,6 @@ public class DefaultContractService extends SqlCrudService implements ContractSe
                 .add(contract.getString("end_date"))
                 .add(contract.getString("renewal_end"))
                 .add(contract.getBoolean("file"));
-
-        this.sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     public void updateContract(JsonObject contract, Integer id, Handler<Either<String, JsonObject>> handler) {
@@ -61,22 +64,9 @@ public class DefaultContractService extends SqlCrudService implements ContractSe
                 "id_contract_type = ?, max_brink = ?, id_supplier = ?, id_agent = ?, " +
                 "reference = ?, end_date = to_date(?, 'YYYY-MM-DD'), renewal_end = to_date(?, 'YYYY-MM-DD'), file = ? " +
                 "WHERE id = ?;";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(contract.getString("name"))
-                .add(contract.getDouble("annual_min"))
-                .add(contract.getDouble("annual_max"))
-                .add(contract.getString("start_date"))
-                .add(contract.getInteger("nb_renewal"))
-                .add(contract.getInteger("id_contract_type"))
-                .add(contract.getDouble("max_brink"))
-                .add(contract.getInteger("id_supplier"))
-                .add(contract.getInteger("id_agent"))
-                .add(contract.getString("reference"))
-                .add(contract.getString("end_date"))
-                .add(contract.getString("renewal_end"))
-                .add(contract.getBoolean("file"))
-                .add(id);
+        JsonArray params = new JsonArray();
+        addValues(contract, params);
+        params.add(id);
 
         this.sql.prepared(query, params, SqlResult.validRowsResultHandler(handler));
     }

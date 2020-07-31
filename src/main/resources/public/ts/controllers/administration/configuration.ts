@@ -493,6 +493,7 @@ export const configurationController = ng.controller('configurationController',
             $scope.display.lightbox.structureGroup = true;
         };
 
+        // noinspection DuplicatedCode
         $scope.importStructureGroups = async (importer: StructureGroupImporter): Promise<void> => {
             try {
                 await importer.validate();

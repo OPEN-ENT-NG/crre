@@ -70,24 +70,6 @@ export const exportCtrl = ng.controller('exportCtrl', [
         };
 
 
-
-        function generateRegexp (words: string[]): RegExp {
-            function escapeRegExp(str: string) {
-                return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
-            }
-            let reg;
-            if (words.length > 0) {
-                reg = '.*(';
-                words.map((word: string) => reg += `${escapeRegExp(word.toLowerCase())}|`);
-                reg = reg.slice(0, -1);
-                reg += ').*';
-            } else {
-                reg = '.*';
-            }
-            return new RegExp(reg);
-        }
-
-
         $scope.filterDisplayedExports = () => {
             let searchResult = [];
             let regex;
@@ -95,7 +77,7 @@ export const exportCtrl = ng.controller('exportCtrl', [
             if( $scope.search.filterWords.length > 0) {
                 $scope.search.filterWords.map((searchTerm: string, index: number): void => {
                     let searchItems: Export[] = index === 0 ? $scope.displayExports : searchResult;
-                    regex = generateRegexp([searchTerm]);
+                    regex = Utils.generateRegexp([searchTerm]);
 
                     searchResult = _.filter(searchItems, (exportToHandle: Export) => {
                         return ('object_name' in exportToHandle ? regex.test(exportToHandle.object_name.toLowerCase()) : false)

@@ -22,10 +22,10 @@ routes.define(($routeProvider) => {
         });
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider.when('/campaigns/create', {
-            action: 'createCampaigns'
+            action: 'createOrUpdateCampaigns'
         })
             .when('/campaigns/update', {
-                action: 'updateCampaigns'
+                action: 'createOrUpdateCampaigns'
             })
             .when('/equipments/create', {
                 action: 'createEquipment'

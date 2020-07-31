@@ -15,16 +15,6 @@ export const campaignsListController = ng.controller('campaignsListController',
         };
         $scope.openOrderToMain = (campaign: Campaign) => {
             $scope.redirectTo(`/campaign/${campaign.id}/order`);
-            $scope.campaign.accessible= campaign.accessible;
-            $scope.campaign.description= campaign.description;
-            $scope.campaign.groups= campaign.groups;
-            $scope.campaign.id= campaign.id;
-            $scope.campaign.name= campaign.name;
-            $scope.campaign.purse_amount= campaign.purse_amount;
-            $scope.campaign.nb_panier= campaign.nb_panier;
-            $scope.campaign.nb_structures= campaign.nb_structures;
-            $scope.campaign.priority_enabled= campaign.priority_enabled;
-            $scope.campaign.priority_field= campaign.priority_field;
-            $scope.campaign.purse_enabled= campaign.purse_enabled;
+            $scope.campaign = campaign;
         };
     }]);

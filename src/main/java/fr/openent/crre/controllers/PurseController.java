@@ -63,16 +63,12 @@ public class PurseController extends ControllerHelper {
     public void purse(final HttpServerRequest request) {
         final String importId = UUID.randomUUID().toString();
         final String path = config.getString("import-folder", "/tmp") + File.separator + importId;
-        importCSVHelper.getParsedCSV(request, path, new Handler<Either<String, Buffer>>() {
-            @Override
-            public void handle(Either<String, Buffer> event) {
-                if (event.isRight()) {
-
-                    Buffer content = event.right().getValue();
-                    parseCsv(request, path, content);
-                } else {
-                    renderError(request);
-                }
+        importCSVHelper.getParsedCSV(request, path, event -> {
+            if (event.isRight()) {
+                Buffer content = event.right().getValue();
+                parseCsv(request, path, content);
+            } else {
+                renderError(request);
             }
         });
     }

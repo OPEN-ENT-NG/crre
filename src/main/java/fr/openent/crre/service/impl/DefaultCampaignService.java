@@ -18,6 +18,8 @@ import org.entcore.common.sql.SqlResult;
 import java.util.List;
 import java.util.Map;
 
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+
 public class DefaultCampaignService extends SqlCrudService implements CampaignService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCampaignService.class);
 
@@ -74,20 +76,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 handler.handle(new Either.Left<>("An error occurred when retrieving campaigns"));
             }
         });
-        getCampaignsInfo(handlerFuture(campaignFuture));
-        //getCampaignEquipmentCount(handlerFuture(equipmentFuture));
-        getCampaignsPurses(handlerFuture(purseFuture));
-        getCampaignOrderStatusCount(handlerFuture(orderFuture));
-    }
-    private Handler<Either<String, JsonArray>> handlerFuture(Future<JsonArray> future) {
-        return event -> {
-            if (event.isRight()) {
-                future.complete(event.right().getValue());
-            } else {
-                LOGGER.error(event.left().getValue());
-                future.fail(event.left().getValue());
-            }
-        };
+        getCampaignsInfo(handlerJsonArray(campaignFuture));
+        //getCampaignEquipmentCount(handlerJsonArray(equipmentFuture));
+        getCampaignsPurses(handlerJsonArray(purseFuture));
+        getCampaignOrderStatusCount(handlerJsonArray(orderFuture));
     }
 
     private void getCampaignsPurses(Handler<Either<String, JsonArray>> handler) {
@@ -206,10 +198,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             }
         });
 
-        getCampaignsInfo(idStructure, handlerFuture(campaignFuture));
-        getCampaignsPurses(idStructure, handlerFuture(purseFuture));
-        getCampaignOrderStatusCount(idStructure, handlerFuture(orderFuture));
-        getBasketCampaigns(idStructure, handlerFuture(basketFuture));
+        getCampaignsInfo(idStructure, handlerJsonArray(campaignFuture));
+        getCampaignsPurses(idStructure, handlerJsonArray(purseFuture));
+        getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture));
+        getBasketCampaigns(idStructure, handlerJsonArray(basketFuture));
     }
 
     private void getBasketCampaigns(String idStructure, Handler<Either<String, JsonArray>> handler) {
@@ -240,32 +232,22 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
     public void create(final JsonObject campaign, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".campaign_id_seq') as id";
-        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    try {
-                        final Number id = event.right().getValue().getInteger("id");
-                        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                                .add(getCampaignCreationStatement(id, campaign));
-
-
-                        JsonArray groups = campaign.getJsonArray("groups");
-                        statements.add(getCampaignTagsGroupsRelationshipStatement(id, (JsonArray) groups));
-                        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-                            @Override
-                            public void handle(Message<JsonObject> event) {
-                                handler.handle(getTransactionHandler(event, id));
-                            }
-                        });
-                    } catch (ClassCastException e) {
-                        LOGGER.error("An error occurred when casting tags ids", e);
-                        handler.handle(new Either.Left<String, JsonObject>(""));
-                    }
-                } else {
-                    LOGGER.error("An error occurred when selecting next val");
-                    handler.handle(new Either.Left<String, JsonObject>(""));
+        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
+            if (event.isRight()) {
+                try {
+                    final Number id = event.right().getValue().getInteger("id");
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                            .add(getCampaignCreationStatement(id, campaign));
+                    JsonArray groups = campaign.getJsonArray("groups");
+                    statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
+                    sql.transaction(statements, event1 -> handler.handle(getTransactionHandler(event1, id)));
+                } catch (ClassCastException e) {
+                    LOGGER.error("An error occurred when casting tags ids", e);
+                    handler.handle(new Either.Left<>(""));
                 }
+            } else {
+                LOGGER.error("An error occurred when selecting next val");
+                handler.handle(new Either.Left<>(""));
             }
         }));
     }
@@ -275,14 +257,9 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .add(getCampaignUpdateStatement(id, campaign))
                 .add(getCampaignTagGroupRelationshipDeletion(id));
         JsonArray groups = campaign.getJsonArray("groups");
-        statements.add(getCampaignTagsGroupsRelationshipStatement(id, (JsonArray) groups));
+        statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
 
-        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(getTransactionHandler(event, id));
-            }
-        });
+        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
     }
 
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
@@ -290,12 +267,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .add(getCampaignsGroupRelationshipDeletion(ids))
                 .add(getCampaignsDeletion(ids));
 
-        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(getTransactionHandler(event,ids.get(0)));
-            }
-        });
+        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event,ids.get(0))));
     }
 
     @Override
@@ -358,12 +330,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .put("statement", query)
                 .put("values",params)
                 .put("action", "prepared"));
-        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(getTransactionHandler(event, id));
-            }
-        });
+        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
     }
 
     private JsonObject getCampaignTagsGroupsRelationshipStatement(Number id, JsonArray groups) {
@@ -441,35 +408,28 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .put("action", "prepared");
     }
     private JsonObject getCampaignsGroupRelationshipDeletion(List<Integer> ids) {
-        StringBuilder query = new StringBuilder();
+        String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_campaign " +
+                " WHERE id_campaign in  " +
+                Sql.listPrepared(ids.toArray());
         JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        query.append("DELETE FROM " + Crre.crreSchema + ".rel_group_campaign ")
-                .append(" WHERE id_campaign in  ")
-                .append(Sql.listPrepared(ids.toArray()));
-
         for (Integer id : ids) {
             value.add(id);
         }
-
         return new JsonObject()
-                .put("statement", query.toString())
+                .put("statement", query)
                 .put("values", value)
                 .put("action", "prepared");
     }
 
     private JsonObject getCampaignsDeletion(List<Integer> ids) {
-        StringBuilder query = new StringBuilder();
+        String query = "DELETE FROM " + Crre.crreSchema + ".campaign " +
+                " WHERE id in  " + Sql.listPrepared(ids.toArray());
         JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        query.append("DELETE FROM " + Crre.crreSchema + ".campaign ")
-                .append(" WHERE id in  ")
-                .append(Sql.listPrepared(ids.toArray()));
-
         for (Integer id : ids) {
             value.add(id);
         }
-
         return new JsonObject()
-                .put("statement", query.toString())
+                .put("statement", query)
                 .put("values", value)
                 .put("action", "prepared");
     }

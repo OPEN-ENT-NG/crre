@@ -5,13 +5,10 @@ import fr.openent.crre.export.TabHelper;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import java.util.ArrayList;
-
 public class ListLycee extends TabHelper {
-    private String numberValidation;
+    private final String numberValidation;
     public ListLycee(Workbook workbook, String numberValidation) {
         super(workbook,"Sommaire Commande");
         this.numberValidation = numberValidation;
@@ -21,70 +18,6 @@ public class ListLycee extends TabHelper {
     public void create(Handler<Either<String, Boolean>> handler) {
         excel.setDefaultFont();
         getDatas(event -> handleDatasDefault(event, handler));
-    }
-
-
-    @Override
-    protected void initDatas(Handler<Either<String, Boolean>> handler) {
-
-        ArrayList structuresId = new ArrayList<>();
-        for (int i = 0; i < datas.size(); i++) {
-            JsonObject data = datas.getJsonObject(i);
-                if(!structuresId.contains(data.getString("id_structure")))
-                    structuresId.add(structuresId.size(), data.getString("id_structure"));
-
-        }
-        getStructures(new JsonArray(structuresId), new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> repStructures) {
-//
-                boolean errorCatch= false;
-                if (repStructures.isRight()) {
-                    try {
-                        JsonArray structures = repStructures.right().getValue();
-                        setStructuresFromDatas(structures);
-                        if (datas.isEmpty()) {
-                            handler.handle(new Either.Left<>("No data in database"));
-                        } else {
-                            datas = sortByCity(datas);
-                            writeArray(handler);
-                        }
-                    }catch (Exception e){
-                        errorCatch = true;
-                    }
-                    if(errorCatch)
-                        handler.handle(new Either.Left<>("Error when writting files"));
-                    else
-                        handler.handle(new Either.Right<>(true));
-                } else {
-                    handler.handle(new Either.Left<>("Error when casting neo"));
-//
-
-                }
-            }
-//
-//
-        });
-
-    }
-
-    private void writeArray(Handler<Either<String, Boolean>> handler) {
-        excel.insertWithStyle(0,0,"UAI",excel.yellowLabel);
-        excel.insertWithStyle(1,0,"Nom de l'établissement",excel.yellowLabel);
-        excel.insertWithStyle(2,0,"Commune",excel.yellowLabel);
-        excel.insertWithStyle(3,0,"Tel",excel.yellowLabel);
-        excel.insertWithStyle(4,0,"Equipment",excel.yellowLabel);
-        excel.insertWithStyle(5,0,"Qté",excel.yellowLabel);
-            for(int i=0;i<datas.size();i++){
-                JsonObject data = datas.getJsonObject(i);
-                excel.insertCellTab(0,i+1,makeCellWithoutNull(data.getString("uai")));
-                excel.insertCellTab(1,i+1,makeCellWithoutNull(data.getString("nameEtab")));
-                excel.insertCellTab(2,i+1,makeCellWithoutNull(data.getString("city")));
-                excel.insertCellTab(3,i+1,makeCellWithoutNull(data.getString("phone")));
-                excel.insertCellTab(4,i+1,makeCellWithoutNull(data.getString("name")));
-                excel.insertCellTab(5,i+1,makeCellWithoutNull(data.getString("amount")));
-            }
-            excel.autoSize(6);
     }
 
     @Override

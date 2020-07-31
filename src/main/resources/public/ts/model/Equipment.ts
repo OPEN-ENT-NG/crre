@@ -213,14 +213,7 @@ export class Equipments extends Selection<Equipment> {
             this.all.map((equipment) => {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-                if (idCampaign) {
-                    equipment.options.toString() !== '[null]' && equipment.options !== null ?
-                        equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
-                        : equipment.options = [];
-                    equipment.technical_specs = equipment.technical_specs !== null
-                        ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(equipment.technical_specs.toString()))
-                        : equipment.technical_specs;
-                }
+                this.equipmentsOptionsTechnicalsSpecs(idCampaign, equipment);
             });
 
         } catch (e) {
@@ -228,6 +221,17 @@ export class Equipments extends Selection<Equipment> {
             throw e;
         } finally {
             this.loading = false;
+        }
+    }
+
+    private equipmentsOptionsTechnicalsSpecs(idCampaign: number, equipment: Equipment) {
+        if (idCampaign) {
+            equipment.options.toString() !== '[null]' && equipment.options !== null ?
+                equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
+                : equipment.options = [];
+            equipment.technical_specs = equipment.technical_specs !== null
+                ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(equipment.technical_specs.toString()))
+                : equipment.technical_specs;
         }
     }
 
@@ -242,14 +246,7 @@ export class Equipments extends Selection<Equipment> {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
                 equipment.priceTTC = equipment.price + (equipment.price * equipment.tax_amount / 100);
-                if (idCampaign) {
-                    equipment.options.toString() !== '[null]' && equipment.options !== null ?
-                        equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
-                        : equipment.options = [];
-                    equipment.technical_specs = equipment.technical_specs !== null
-                        ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(equipment.technical_specs.toString()))
-                        : equipment.technical_specs;
-                }
+                this.equipmentsOptionsTechnicalsSpecs(idCampaign, equipment);
             });
 
         } catch (e) {

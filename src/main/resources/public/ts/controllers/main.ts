@@ -118,14 +118,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.campaigns.sync();
                 Utils.safeApply($scope);
             },
-            createCampaigns: async () => {
-                if (template.isEmpty('administrator-main')) {
-                    $scope.redirectTo('/campaigns');
-                }
-                template.open('campaigns-main', 'administrator/campaign/campaign_form');
-                Utils.safeApply($scope);
-            },
-            updateCampaigns: async () => {
+            createOrUpdateCampaigns: async () => {
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/campaigns');
                 }
@@ -163,13 +156,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
-            campaignCatalog: async (params) => {
-                let idCampaign = params.idCampaign;
-                $scope.fromCatalog=true
-                $scope.idIsInteger(idCampaign);
-                if(!$scope.current.structure)
-                    await $scope.initStructures() ;
-                if(!$scope.campaign.id) {
+            selectCampaign: async function (idCampaign) {
+                if (!$scope.campaign.id) {
                     await $scope.campaigns.sync($scope.current.structure.id);
                     $scope.campaigns.all.forEach(campaign => {
                         if (campaign.id == idCampaign) {
@@ -177,6 +165,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                         }
                     });
                 }
+            }, campaignCatalog: async (params) => {
+                let idCampaign = params.idCampaign;
+                $scope.fromCatalog=true
+                $scope.idIsInteger(idCampaign);
+                if(!$scope.current.structure)
+                    await $scope.initStructures() ;
+                await this.selectCampaign(idCampaign);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
                 template.close('right-side');
@@ -207,14 +202,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.current.structure
                     ? await $scope.ordersClient.sync(null, [], idCampaign, $scope.current.structure.id)
                     : null;
-                if(!$scope.campaign.id) {
-                    await $scope.campaigns.sync($scope.current.structure.id);
-                    $scope.campaigns.all.forEach(campaign => {
-                        if (campaign.id == idCampaign) {
-                            $scope.campaign = campaign;
-                        }
-                    });
-                }
+                await this.selectCampaign(idCampaign);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/order/manage-order');
                 $scope.initCampaignOrderView();
@@ -230,15 +218,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if($scope.current.structure) {
                     await $scope.baskets.sync(idCampaign, $scope.current.structure.id);
                 }
-                if(!$scope.campaign.id) {
-                    await $scope.campaigns.sync($scope.current.structure.id);
-                    $scope.campaigns.all.forEach(campaign => {
-                        if (campaign.id == idCampaign) {
-                            $scope.campaign = campaign;
-                        }
-                    });
-                }
-
+                await this.selectCampaign(idCampaign);
                 Utils.safeApply($scope);
             },
             orderWaiting: async () => {
@@ -393,11 +373,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return moment(date).format(format);
         };
 
-        $scope.calculatePriceTTC = (price, tax_value, roundNumber?: number) => {
-            let priceFloat = parseFloat(price);
-            let taxFloat = parseFloat(tax_value);
-            let price_TTC = ((priceFloat + ((priceFloat * taxFloat) / 100)));
-            return (!isNaN(price_TTC)) ? (roundNumber ? price_TTC.toFixed(roundNumber) : price_TTC) : '';
+        $scope.calculatePriceTTC = (price, tax_value, roundNumber?: number) =>  {
+                Utils.calculatePriceTTC(price,tax_value,roundNumber);
         };
 
         /**

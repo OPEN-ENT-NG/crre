@@ -1,5 +1,5 @@
 import http from "axios";
-import {_, moment, notify} from "entcore";
+import {moment, notify} from "entcore";
 import {
     Campaign,
     Contract,

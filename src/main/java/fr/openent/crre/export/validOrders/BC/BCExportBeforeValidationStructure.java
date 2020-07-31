@@ -1,115 +1,92 @@
 package fr.openent.crre.export.validOrders.BC;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.controllers.OrderController;
 import fr.openent.crre.export.validOrders.PDF_OrderHElper;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static fr.openent.crre.utils.OrderUtils.getSumWithoutTaxes;
+import static fr.openent.crre.utils.OrderUtils.getTaxesTotal;
+
 public class BCExportBeforeValidationStructure extends PDF_OrderHElper {
-    private Logger log = LoggerFactory.getLogger(BCExportBeforeValidationStructure.class);
+    private final Logger log = LoggerFactory.getLogger(BCExportBeforeValidationStructure.class);
 
     public BCExportBeforeValidationStructure(EventBus eb, Vertx vertx, JsonObject config) {
         super(eb, vertx, config);
     }
 
-
-
     public void create(JsonArray validationNumbersArray, Handler<Either<String, Buffer>> exportHandler){
-        List<String> validationNumbers = validationNumbersArray.getList();
-        supplierService.getSupplierByValidationNumbers(new fr.wseduc.webutils.collections.JsonArray(validationNumbers), new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    JsonObject supplier = event.right().getValue();
-                    getOrdersData( exportHandler,"", "", "", supplier.getInteger("id"), new fr.wseduc.webutils.collections.JsonArray(validationNumbers),false,
-                            new Handler<JsonObject>() {
-                                @Override
-                                public void handle(JsonObject data) {
-                                    data.put("print_order", true);
-                                    data.put("print_certificates", false);
-                                    generatePDF(exportHandler, data,
-                                            "BC_Struct.xhtml", "CSF_",
-                                            new Handler<Buffer>() {
-                                                @Override
-                                                public void handle(final Buffer pdf) {
-                                                    exportHandler.handle(new Either.Right(pdf));
-                                                }
-                                            }
-                                    );
-                                }
-                            });
-                }else {
-                    log.error("error when getting supplier");
-                }
+        List validationNumbers = validationNumbersArray.getList();
+        supplierService.getSupplierByValidationNumbers(new fr.wseduc.webutils.collections.JsonArray(validationNumbers), event -> {
+            if (event.isRight()) {
+                JsonObject supplier = event.right().getValue();
+                getOrdersData( exportHandler,"", "", "", supplier.getInteger("id"), new fr.wseduc.webutils.collections.JsonArray(validationNumbers),false,
+                        data -> {
+                            data.put("print_order", true);
+                            data.put("print_certificates", false);
+                            generatePDF(exportHandler, null, data,
+                                    "BC_Struct.xhtml",
+                                    pdf -> exportHandler.handle(new Either.Right(pdf))
+                            );
+                        });
+            }else {
+                log.error("error when getting supplier");
             }
         });
     }
 
-
-
     @Override
     protected void retrieveOrderData(final Handler<Either<String, Buffer>> exportHandler, JsonArray ids,boolean groupByStructure,
                                      final Handler<JsonObject> handler) {
-        orderService.getOrders(ids, null, true, true, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonObject order = new JsonObject();
-                    ArrayList<String> listStruct = new ArrayList<>();
-                    JsonArray orders = OrderController.formatOrders(event.right().getValue());
-                    orders = sortByUai(orders);
+        orderService.getOrders(ids, null, true, true, event -> {
+            if (event.isRight()) {
+                JsonObject order = new JsonObject();
+                ArrayList<String> listStruct = new ArrayList<>();
+                JsonArray orders = OrderController.formatOrders(event.right().getValue());
+                orders = sortByUai(orders);
 
-                    sortOrdersBySturcuture(order, listStruct, orders);
+                sortOrdersBySturcuture(order, listStruct, orders);
 
-                    getSubtotalByStructure(order, listStruct);
+                getSubtotalByStructure(order, listStruct);
 
-                    structureService.getStructureById(new JsonArray(listStruct), new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight()) {
-                                JsonArray structures = event.right().getValue();
-                                JsonObject structure ;
-                                for (int i = 0; i < structures.size(); i++) {
-                                    structure = structures.getJsonObject(i);
-                                    JsonObject ordersByStructure = order.getJsonObject(structure.getString("id"));
-                                    ordersByStructure.put("name",structure.getString("name"));
-                                    ordersByStructure.put("uai",structure.getString("uai"));
-                                    ordersByStructure.put("address",structure.getString("address"));
-                                    ordersByStructure.put("phone",structure.getString("phone"));
-                                    order.put(structure.getString("id"),ordersByStructure);
+                structureService.getStructureById(new JsonArray(listStruct), event1 -> {
+                    if (event1.isRight()) {
+                        JsonArray structures = event1.right().getValue();
+                        JsonObject structure ;
+                        for (int i = 0; i < structures.size(); i++) {
+                            structure = structures.getJsonObject(i);
+                            JsonObject ordersByStructure = order.getJsonObject(structure.getString("id"));
+                            ordersByStructure.put("name",structure.getString("name"));
+                            ordersByStructure.put("uai",structure.getString("uai"));
+                            ordersByStructure.put("address",structure.getString("address"));
+                            ordersByStructure.put("phone",structure.getString("phone"));
+                            order.put(structure.getString("id"),ordersByStructure);
 
-                                }
-                                JsonArray ordersArray = new JsonArray();
-                                setOrdersToArray(ordersArray, listStruct, order);
-                                handler.handle(order);
-                            } else {
-                                log.error("An error occurred when collecting structures based on ids");
-                                exportHandler.handle(new Either.Left<>("An error occurred when collecting structures based on ids"));
-
-                            }
                         }
-                    });
+                        JsonArray ordersArray = new JsonArray();
+                        setOrdersToArray(ordersArray, listStruct, order);
+                        handler.handle(order);
+                    } else {
+                        log.error("An error occurred when collecting structures based on ids");
+                        exportHandler.handle(new Either.Left<>("An error occurred when collecting structures based on ids"));
 
-                } else {
-                    log.error("An error occurred when retrieving order data");
-                    exportHandler.handle(new Either.Left<>("An error occurred when retrieving order data"));
-                }
+                    }
+                });
+
+            } else {
+                log.error("An error occurred when retrieving order data");
+                exportHandler.handle(new Either.Left<>("An error occurred when retrieving order data"));
             }
         });
     }
@@ -157,14 +134,13 @@ public class BCExportBeforeValidationStructure extends PDF_OrderHElper {
     private JsonArray sortByUai(io.vertx.core.json.JsonArray values) {
         JsonArray sortedJsonArray = new JsonArray();
 
-        List<JsonObject> jsonValues = new ArrayList<JsonObject>();
+        List<JsonObject> jsonValues = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
             jsonValues.add(values.getJsonObject(i));
         }
 
-        Collections.sort(jsonValues, new Comparator<JsonObject>() {
+        jsonValues.sort(new Comparator<JsonObject>() {
             private static final String KEY_NAME = "id_structure";
-
             @Override
             public int compare(JsonObject a, JsonObject b) {
                 String valA = "";
@@ -179,7 +155,6 @@ public class BCExportBeforeValidationStructure extends PDF_OrderHElper {
                 } catch (NullPointerException e) {
                     log.error("error when sorting structures during export");
                 }
-
                 return valA.compareTo(valB);
             }
         });

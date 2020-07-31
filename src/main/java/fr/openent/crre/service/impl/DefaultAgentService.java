@@ -26,13 +26,17 @@ public class DefaultAgentService extends SqlCrudService implements AgentService 
         String query = "INSERT INTO " + Crre.crreSchema + ".agent(email, department, name, phone) " +
                 "VALUES (?, ?, ?, ?) RETURNING id;";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+        JsonArray params = addParamsAgent(agent);
+
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private JsonArray addParamsAgent(JsonObject agent) {
+        return new fr.wseduc.webutils.collections.JsonArray()
                 .add(agent.getString("email"))
                 .add(agent.getString("department"))
                 .add(agent.getString("name"))
                 .add(agent.getString("phone"));
-
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     public void updateAgent(Integer id, JsonObject agent, Handler<Either<String, JsonObject>> handler) {
@@ -40,12 +44,7 @@ public class DefaultAgentService extends SqlCrudService implements AgentService 
                 "SET email = ?, department = ?, name = ?, phone = ? " +
                 "WHERE id = ? RETURNING *;";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(agent.getString("email"))
-                .add(agent.getString("department"))
-                .add(agent.getString("name"))
-                .add(agent.getString("phone"))
-                .add(id);
+        JsonArray params = addParamsAgent(agent).add(id);
 
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }

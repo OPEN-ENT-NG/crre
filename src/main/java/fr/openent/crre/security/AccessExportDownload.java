@@ -16,32 +16,22 @@ public class AccessExportDownload implements ResourcesProvider {
     public void authorize(HttpServerRequest request, Binding binding, UserInfos userInfos, Handler<Boolean> handler) {
         request.pause();
         String id;
-
         MongoHelper mongo = new MongoHelper(Crre.CRRE_COLLECTION);
-
-
         id = request.getParam("fileId");
-
-
         if (id != null &&  WorkflowActionUtils.hasRight(userInfos, WorkflowActions.MANAGER_RIGHT.toString())
                 || WorkflowActionUtils.hasRight(userInfos, WorkflowActions.ADMINISTRATOR_RIGHT.toString())){
             JsonObject params = new JsonObject();
             params.put("fileId",id);
             params.put("userId",userInfos.getUserId());
-
-           mongo.getExport(params,new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if (event.isRight()) {
-                        request.resume();
-                        JsonArray result = event.right().getValue();
-                        handler.handle(result.size() == 1 && WorkflowActionUtils.hasRight(userInfos, WorkflowActions.MANAGER_RIGHT.toString()));
-
-                    } else {
-                        request.response().setStatusCode(500).end();
-                    }
-                }
-            });
+           mongo.getExport(params, event -> {
+               if (event.isRight()) {
+                   request.resume();
+                   JsonArray result = event.right().getValue();
+                   handler.handle(result.size() == 1 && WorkflowActionUtils.hasRight(userInfos, WorkflowActions.MANAGER_RIGHT.toString()));
+               } else {
+                   request.response().setStatusCode(500).end();
+               }
+           });
         } else {
             request.response().setStatusCode(400).end();
         }

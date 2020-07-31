@@ -25,32 +25,21 @@ public class BCExport extends PDF_OrderHElper {
 
 
     public void create(JsonArray validationNumbersArray, Handler<Either<String, Buffer>> exportHandler){
-        List<String> validationNumbers = validationNumbersArray.getList();
-        supplierService.getSupplierByValidationNumbers(new fr.wseduc.webutils.collections.JsonArray(validationNumbers), new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    JsonObject supplier = event.right().getValue();
-                    getOrdersData( exportHandler,"", "", "", supplier.getInteger("id"), new fr.wseduc.webutils.collections.JsonArray(validationNumbers),false,
-                            new Handler<JsonObject>() {
-                                @Override
-                                public void handle(JsonObject data) {
-                                    data.put("print_order", true);
-                                    data.put("print_certificates", false);
-                                    generatePDF(exportHandler, data,
-                                            "BC.xhtml", "CSF_",
-                                            new Handler<Buffer>() {
-                                                @Override
-                                                public void handle(final Buffer pdf) {
-                                                    exportHandler.handle(new Either.Right(pdf));
-                                                }
-                                            }
-                                    );
-                                }
-                            });
-                }else {
-                    log.error("error when getting supplier");
-                }
+        List validationNumbers = validationNumbersArray.getList();
+        supplierService.getSupplierByValidationNumbers(new fr.wseduc.webutils.collections.JsonArray(validationNumbers), event -> {
+            if (event.isRight()) {
+                JsonObject supplier = event.right().getValue();
+                getOrdersData( exportHandler,"", "", "", supplier.getInteger("id"), new fr.wseduc.webutils.collections.JsonArray(validationNumbers),false,
+                        data -> {
+                            data.put("print_order", true);
+                            data.put("print_certificates", false);
+                            generatePDF(exportHandler, null, data,
+                                    "BC.xhtml",
+                                    pdf -> exportHandler.handle(new Either.Right(pdf))
+                            );
+                        });
+            }else {
+                log.error("error when getting supplier");
             }
         });
     }

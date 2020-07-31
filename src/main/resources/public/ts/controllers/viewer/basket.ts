@@ -31,14 +31,9 @@ export const basketController = ng.controller('basketController',
             let totalPrice = 0;
             baskets.all.map((basket) => {
                 if (basket.equipment.status !== 'AVAILABLE') return false;
-                if (!$scope.hasOneSelected(baskets)) {
+                if (!$scope.hasOneSelected(baskets) || basket.selected) {
                     let basketItemPrice = $scope.calculatePriceOfBasket(basket, 2, false);
                     totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
-                } else {
-                    if (basket.selected) {
-                        let basketItemPrice = $scope.calculatePriceOfBasket(basket, 2, false);
-                        totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
-                    }
                 }
             });
             return (!isNaN(totalPrice)) ? (roundNumber ? totalPrice.toFixed(roundNumber) : totalPrice ) : '';
@@ -47,16 +42,9 @@ export const basketController = ng.controller('basketController',
             let totalPrice = 0;
             baskets.all.map((basket) => {
                 if (basket.equipment.status !== 'AVAILABLE') return false;
-                if (!$scope.hasOneSelected(baskets)) {
+                if (!$scope.hasOneSelected(baskets) || basket.selected) {
                     let basketItemPrice = $scope.calculatePriceOfBasketProposal(basket, 2, false);
                     totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
-                }
-
-                else {
-                    if (basket.selected) {
-                        let basketItemPrice = $scope.calculatePriceOfBasketProposal(basket, 2, false);
-                        totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
-                    }
                 }
             });
             return (!isNaN(totalPrice)) ? (roundNumber ? totalPrice.toFixed(roundNumber) : totalPrice) : '';
@@ -85,7 +73,6 @@ export const basketController = ng.controller('basketController',
             basket.display_price_editable = false;
             Utils.safeApply($scope);
             basket.updatePriceProposal();
-
         }
 
 

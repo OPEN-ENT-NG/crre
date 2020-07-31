@@ -65,7 +65,24 @@ export class Utils {
         if (date === null) return '-';
         return moment(date).format('DD/MM/YY');
     }
+
     static formatDatePost (date:Date) {
         return  moment(date).format('YYYY-MM-DD');
+    }
+
+    static generateRegexp (words: string[]): RegExp {
+        function escapeRegExp(str: string) {
+            return str.replace(/[\-\[\]\/{}()*+?.\\^$|]/g, '\\$&');
+        }
+        let reg;
+        if (words.length > 0) {
+            reg = '.*(';
+            words.map((word: string) => reg += `${escapeRegExp(word.toLowerCase())}|`);
+            reg = reg.slice(0, -1);
+            reg += ').*';
+        } else {
+            reg = '.*';
+        }
+        return new RegExp(reg);
     }
 }

@@ -38,7 +38,7 @@ export const orderController = ng.controller('orderController',
                 if(isPageOrderWaiting)await $scope.selectCampaignShow($scope.campaign);
                 $scope.search.filterWords.map((searchTerm: string, index: number): void => {
                     let searchItems: OrderClient[] = index === 0 ? $scope.displayedOrders.all : searchResult;
-                    regex = generateRegexp([searchTerm]);
+                    regex = Utils.generateRegexp([searchTerm]);
 
                     searchResult = _.filter(searchItems, (order: OrderClient) => {
                         return ('name_structure' in order ? regex.test(order.name_structure.toLowerCase()) : false)
@@ -112,6 +112,7 @@ export const orderController = ng.controller('orderController',
             model ? collection.selectAll() : collection.deselectAll();
             Utils.safeApply($scope);
         };
+
         $scope.calculateTotal = (orderClient: OrderClient, roundNumber: number) => {
             let totalPrice = $scope.calculatePriceOfEquipment(orderClient, false, roundNumber) * orderClient.amount;
             return totalPrice.toFixed(roundNumber);
@@ -157,41 +158,28 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-        function generateRegexp (words: string[]): RegExp {
-            function escapeRegExp(str: string) {
-                return str.replace(/[\-\[\]\/{}()*+?.\\^$|]/g, '\\$&');
-            }
-            let reg;
-            if (words.length > 0) {
-                reg = '.*(';
-                words.map((word: string) => reg += `${escapeRegExp(word.toLowerCase())}|`);
-                reg = reg.slice(0, -1);
-                reg += ').*';
-            } else {
-                reg = '.*';
-            }
-            return new RegExp(reg);
-        }
-
-
-
         $scope.pullFilterWord = (filterWord) => {
             $scope.search.filterWords = _.without( $scope.search.filterWords , filterWord);
             $scope.filterDisplayedOrders();
         };
-        $scope.validateOrders = async (orders: OrderClient[]) => {
-            let ordersToValidat  = new OrdersClient();
-            ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
-            let { status, data } = await ordersToValidat.updateStatus('VALID');
+
+        function openLightboxValidOrder(status, data, ordersToValidat: OrdersClient) {
             if (status === 200) {
                 $scope.orderValidationData = {
                     agents: _.uniq(data.agent),
                     number_validation: data.number_validation,
                     structures: _.uniq(_.pluck(ordersToValidat.all, 'name_structure'))
-                } ;
+                };
                 template.open('validOrder.lightbox', 'administrator/order/order-valid-confirmation');
                 $scope.display.lightbox.validOrder = true;
             }
+        }
+
+        $scope.validateOrders = async (orders: OrderClient[]) => {
+            let ordersToValidat  = new OrdersClient();
+            ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
+            let { status, data } = await ordersToValidat.updateStatus('VALID');
+            openLightboxValidOrder(status, data, ordersToValidat);
             $scope.getOrderWaitingFiltered($scope.campaign);
             Utils.safeApply($scope);
         };
@@ -324,10 +312,6 @@ export const orderController = ng.controller('orderController',
             });
             return arr;
         };
-        $scope.exportCSV = async() => {
-            let params = Utils.formatKeyToParameter($scope.ordersClient.selected, 'id');
-            window.location = `/crre/orders/export?${params}`;
-        };
 
         $scope.isValidOrdersWaitingSelection = () => {
             const orders: OrderClient[] = $scope.getSelectedOrders();
@@ -343,9 +327,12 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-        $scope.exportOrder = async (orders: OrderClient[]) => {
+        function isSentOrDone(orders: OrderClient[]) {
+            return _.where(orders, {status: 'SENT'}).length === orders.length || (_.where(orders, {status: 'DONE'}).length === orders.length) && $scope.validateSentOrders(orders);
+        }
 
-            if ((_.where(orders, { status : 'SENT' }).length === orders.length || (_.where(orders, { status : 'DONE' }).length === orders.length ) && $scope.validateSentOrders(orders))) {
+        $scope.exportOrder = async (orders: OrderClient[]) => {
+            if (isSentOrDone(orders)) {
                 let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
                 let  {status, data} =  await http.get(`/crre/order?bc_number=${orderNumber}`);
                 if(status === 201){
@@ -361,8 +348,7 @@ export const orderController = ng.controller('orderController',
         };
 
         $scope.exportOrderStruct = async (orders: OrderClient[]) => {
-
-            if ((_.where(orders, { status : 'SENT' }).length === orders.length || (_.where(orders, { status : 'DONE' }).length === orders.length ) && $scope.validateSentOrders(orders))) {
+            if (isSentOrDone(orders)) {
                 let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
                 let  {status, data} =  await http.get(`/crre/order/struct?bc_number=${orderNumber}`);
                 if(status === 201){
@@ -384,6 +370,7 @@ export const orderController = ng.controller('orderController',
             });
             Utils.safeApply($scope);
         };
+
         $scope.exportValidOrders = async  (orders: OrderClient[], fileType: string) => {
             let params = '';
             orders.map((order: OrderClient) => {
@@ -448,15 +435,7 @@ export const orderController = ng.controller('orderController',
             let ordersToValidat = new OrdersClient();
             ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
             let {status, data} = await ordersToValidat.updateStatus('IN PROGRESS');
-            if (status === 200) {
-                $scope.orderValidationData = {
-                    agents: _.uniq(data.agent),
-                    number_validation: data.number_validation,
-                    structures: _.uniq(_.pluck(ordersToValidat.all, 'name_structure'))
-                };
-                template.open('validOrder.lightbox', 'administrator/order/order-valid-confirmation');
-                $scope.display.lightbox.validOrder = true;
-            }
+            openLightboxValidOrder(status, data, ordersToValidat);
             await $scope.syncOrders('WAITING');
             Utils.safeApply($scope);
         };

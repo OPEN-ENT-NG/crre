@@ -263,7 +263,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "SET price_proposal = " + (price_proposal == null ? " null " : " ? ") +
                 "WHERE id = ?;";
         values = price_proposal == null ? new JsonArray().add(id) : new JsonArray().add(price_proposal).add(id);
-
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 

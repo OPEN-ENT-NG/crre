@@ -72,6 +72,10 @@ CREATE TABLE crre.tax (
   CONSTRAINT "Check_tax_value" CHECK (value >= 0::numeric)
 );
 
+INSERT INTO crre.tax (id, name, value) VALUES (1, 'TVA', 20);
+INSERT INTO crre.tax (id, name, value) VALUES (2, 'Taxe 15.0%', 15.0);
+INSERT INTO crre.tax (id, name, value) VALUES (3, 'Taxe 5.0%', 5.0);
+
 CREATE TABLE crre.equipment (
   id bigserial NOT NULL,
   name character varying(255) NOT NULL,

@@ -25,28 +25,23 @@ public class DefaultSupplierService extends SqlCrudService implements SupplierSe
     public void createSupplier(JsonObject agent, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Crre.crreSchema + ".supplier (email, address, name, phone) " +
                 "VALUES (?, ?, ?, ?) RETURNING id;";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(agent.getString("email"))
-                .add(agent.getString("address"))
-                .add(agent.getString("name"))
-                .add(agent.getString("phone"));
-
+        JsonArray params = addParamsSupplier(agent);
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private JsonArray addParamsSupplier(JsonObject person) {
+        return new fr.wseduc.webutils.collections.JsonArray()
+                .add(person.getString("email"))
+                .add(person.getString("address"))
+                .add(person.getString("name"))
+                .add(person.getString("phone"));
     }
 
     public void updateSupplier(Integer id, JsonObject supplier, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + Crre.crreSchema + ".supplier " +
                 "SET email = ?, address = ?, name = ?, phone = ? " +
                 "WHERE id = ? RETURNING *;";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(supplier.getString("email"))
-                .add(supplier.getString("address"))
-                .add(supplier.getString("name"))
-                .add(supplier.getString("phone"))
-                .add(id);
-
+        JsonArray params = addParamsSupplier(supplier);
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 

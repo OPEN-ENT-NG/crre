@@ -122,14 +122,7 @@ public class ExportHelper {
             if (newExport.isRight()) {
                 String idExport = newExport.right().getValue().getString("id");
                 try {
-                    Logging.insert(eb,
-                            request,
-                            Contexts.EXPORT.toString(),
-                            Actions.CREATE.toString(),
-                            idExport.toString(),
-                            new JsonObject().put("ids", idExport).put("fileName", titleFile));
-                    log.info("Send export request");
-                    Crre.launchWorker(eb);
+                    LogAndLauchWorker(eb, request, titleFile, idExport);
                     request.response().setStatusCode(201).end("Import started " + idExport);
                 } catch (Exception error) {
                     catchError(exportService, idExport, error);
@@ -138,6 +131,17 @@ public class ExportHelper {
                 log.error("Fail to insert file in SQL " + newExport.left());
             }
         });
+    }
+
+    private static void LogAndLauchWorker(EventBus eb, HttpServerRequest request, String titleFile, String idExport) {
+        Logging.insert(eb,
+                request,
+                Contexts.EXPORT.toString(),
+                Actions.CREATE.toString(),
+                idExport,
+                new JsonObject().put("ids", idExport).put("fileName", titleFile));
+        log.info("Send export request");
+        Crre.launchWorker(eb);
     }
 
     private static void mutliExport(EventBus eb, HttpServerRequest request, ExportService exportService, String typeObject, String extension, String action, JsonObject infoFile, String finalId, String titleFile, JsonObject finalParams, UserInfos user) {
@@ -149,14 +153,7 @@ public class ExportHelper {
                 if (newExport.isRight()) {
                     String idExport = newExport.right().getValue().getString("id");
                     try {
-                        Logging.insert(eb,
-                                request,
-                                Contexts.EXPORT.toString(),
-                                Actions.CREATE.toString(),
-                                idExport.toString(),
-                                new JsonObject().put("ids", idExport).put("fileName", titleFile));
-                        log.info("Send export request");
-                        Crre.launchWorker(eb);
+                        LogAndLauchWorker(eb, request, titleFile, idExport);
                     } catch (Exception error) {
                         catchError(exportService, idExport, error);
                     }

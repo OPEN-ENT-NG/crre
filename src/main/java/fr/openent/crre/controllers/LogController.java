@@ -84,7 +84,7 @@ public class LogController extends ControllerHelper {
         });
     }
 
-    private static String generateExport (HttpServerRequest request, JsonArray logs) {
+    static String generateExport(HttpServerRequest request, JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
           report.append(generateExportLine(request, logs.getJsonObject(i)));

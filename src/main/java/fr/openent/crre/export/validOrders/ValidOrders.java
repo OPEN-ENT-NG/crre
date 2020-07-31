@@ -1,14 +1,11 @@
 package fr.openent.crre.export.validOrders;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.export.ExportObject;
 import fr.openent.crre.export.validOrders.BC.*;
 import fr.openent.crre.export.validOrders.listLycee.ListLycee;
 import fr.openent.crre.export.validOrders.listLycee.RecapListLycee;
 import fr.openent.crre.helpers.ExportHelper;
 import fr.openent.crre.service.ExportService;
-import fr.openent.crre.service.SupplierService;
-import fr.openent.crre.service.impl.DefaultSupplierService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -16,8 +13,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -28,20 +23,15 @@ public class ValidOrders extends ExportObject {
     private String bcNumber;
     private String numberValidation="";
     private JsonObject params;
-    private ExportService exportService;
-    private Logger log = LoggerFactory.getLogger(ValidOrders.class);
-    private String idFile;
-    private SupplierService supplierService;
-    private JsonObject config;
-    private Vertx vertx;
-    private EventBus eb;
+    private final JsonObject config;
+    private final Vertx vertx;
+    private final EventBus eb;
 
     public ValidOrders(ExportService exportService, String idNewFile,EventBus eb, Vertx vertx, JsonObject config){
         super(exportService,idNewFile);
         this.vertx = vertx;
         this.config = config;
         this.eb = eb;
-        this.supplierService = new DefaultSupplierService(Crre.crreSchema, "supplier");
 
     }
     public ValidOrders(ExportService exportService, String param, String idNewFile,EventBus eb, Vertx vertx, JsonObject config,boolean HasNumberValidation) {
@@ -75,10 +65,6 @@ public class ValidOrders extends ExportObject {
 
     }
 
-
-
-
-
     public void exportBC(Handler<Either<String, Buffer>> handler) {
         if (this.params == null || this.params.isEmpty()) {
             ExportHelper.catchError(exportService, idFile, "number validations is not nullable");
@@ -87,10 +73,6 @@ public class ValidOrders extends ExportObject {
             new BCExport(eb,vertx,config).create(params.getJsonArray("numberValidations"),handler);
         }
     }
-
-
-
-
 
     public void exportBCDuringValidation(Handler<Either<String, Buffer>> handler) {
         if (this.params == null || this.params.isEmpty()) {
@@ -108,7 +90,7 @@ public class ValidOrders extends ExportObject {
             ExportHelper.catchError(exportService, idFile, "number validations is not nullable");
             handler.handle(new Either.Left<>("number validations is not nullable"));
         }else{
-            new BCExportAfterValidationStructure(eb,vertx,config).create(bcNumber,handler);
+            new PDF_OrderHElper(eb,vertx,config).create(bcNumber, true, handler);
         }
     }
     public void exportBCBeforeValidationByStructures(Handler<Either<String, Buffer>> handler) {
@@ -124,7 +106,7 @@ public class ValidOrders extends ExportObject {
             ExportHelper.catchError(exportService, idFile, "number validations is not nullable");
             handler.handle(new Either.Left<>("number validations is not nullable"));
         }else{
-            new BCExportAfterValidation(eb,vertx,config).create(bcNumber,handler);
+            new PDF_OrderHElper(eb,vertx,config).create(bcNumber, false,handler);
         }
     }
 }

@@ -11,8 +11,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import java.util.ArrayList;
 
 public class RecapListLycee extends TabHelper {
-    private String numberValidation;
-    private ArrayList<Integer> totalsXQty = new ArrayList<>();
+    private final String numberValidation;
+    private final ArrayList<Integer> totalsXQty = new ArrayList<>();
     public RecapListLycee(Workbook workbook, String numberValidation) {
         super(workbook,"Liste Commandes avec Prix");
         this.numberValidation = numberValidation;
@@ -24,49 +24,8 @@ public class RecapListLycee extends TabHelper {
         getDatas(event -> handleDatasDefault(event, handler));
     }
 
-
     @Override
-    protected void initDatas(Handler<Either<String, Boolean>> handler) {
-
-        ArrayList structuresId = new ArrayList<>();
-        for (int i = 0; i < datas.size(); i++) {
-            JsonObject data = datas.getJsonObject(i);
-            if(!structuresId.contains(data.getString("id_structure")))
-                structuresId.add(structuresId.size(), data.getString("id_structure"));
-
-        }
-        getStructures(new JsonArray(structuresId), new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> repStructures) {
-                boolean errorCatch= false;
-                if (repStructures.isRight()) {
-                    String errorMessage = "";
-                    try {
-                        JsonArray structures = repStructures.right().getValue();
-                        setStructuresFromDatas(structures);
-                        if (datas.isEmpty()) {
-                            handler.handle(new Either.Left<>("No data in database"));
-                        } else {
-                            datas = sortByCity(datas);
-                            writeArray(handler);
-                        }
-                    }catch (Exception e){
-                        errorCatch = true;
-                        errorMessage = e.getMessage();
-                    }
-                    if(errorCatch)
-                        handler.handle(new Either.Left<>("\n Error Exception in RecapListLycee : "+ errorMessage));
-                    else
-                        handler.handle(new Either.Right<>(true));
-                } else {
-                    handler.handle(new Either.Left<>("Error when casting neo"));
-                }
-            }
-        });
-
-    }
-
-    private void writeArray(Handler<Either<String, Boolean>> handler) {
+    protected void writeArray() {
         setTitle();
 
         String oldIdStruct = "";
@@ -96,7 +55,7 @@ public class RecapListLycee extends TabHelper {
             excel.insertWithStyle(5,currentI, Integer.parseInt(data.getString("amount")),excel.tabStringStyleRight);
 
             typeEquipment = data.getString("typeequipment");
-            Double priceAmount = Double.parseDouble(data.getString("price")) * Double.parseDouble(data.getString("amount"));
+            double priceAmount = Double.parseDouble(data.getString("price")) * Double.parseDouble(data.getString("amount"));
             if(typeEquipment.equals("EQUIPEMENT")) {
                 excel.insertWithStyle(6,currentI,priceAmount ,excel.tabStringStyleRight);
             }else{
@@ -131,7 +90,6 @@ public class RecapListLycee extends TabHelper {
         sizeMergeRegionLinesWithStyle(1,initx,currentI - 1 ,excel.tabStringStyleCenterBold);
         sizeMergeRegionLinesWithStyle(2,initx,currentI - 1 ,excel.tabStringStyleCenterBold);
         sizeMergeRegionLinesWithStyle(3,initx,currentI - 1 ,excel.tabStringStyleCenterBold);
-//        sizeMergeRegionLinesWithStyle(4,initx,currentI - 1 ,excel.tabStringStyleCenterBold);
         }
     }
 
@@ -170,9 +128,6 @@ public class RecapListLycee extends TabHelper {
 
     private void insertHeader() {
         String title ="MARCHE N°" + datas.getJsonObject(0).getString("market_reference") +" - "+ datas.getJsonObject(0).getString("market_name") + ", \n";
-        if(true == false)
-            title+= "BON DE COMMANDE N°"
-                    ;
         excel.insertWithStyle(2,0,title,excel.blackOnBlueHeader);
         sizeMergeRegionWithStyle(0,2,5,excel.blackOnBlueHeader);
     }

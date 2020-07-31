@@ -11,6 +11,8 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import static fr.openent.crre.security.AccesProjectPriority.rightAccess;
+
 public class AccessPriceProposalRight implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest request, Binding binding, UserInfos userInfos, Handler<Boolean> handler) {
@@ -21,22 +23,9 @@ public class AccessPriceProposalRight implements ResourcesProvider {
                 + " INNER JOIN " + Crre.crreSchema + ".contract ON contract.id = equipment.id_contract "
                 + " WHERE equipment.price_editable IS TRUE AND basket_equipment.id = ? ";
         id = request.getParam("idBasket");
-
-
         if (id != null) {
             JsonArray params = new JsonArray().add(id);
-                Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            request.resume();
-                            JsonArray result = event.right().getValue();
-                            handler.handle(result.size() == 1 && WorkflowActionUtils.hasRight(userInfos, WorkflowActions.ACCESS_RIGHT.toString()));
-                        } else {
-                            request.response().setStatusCode(500).end();
-                        }
-                    }
-                }));
+            rightAccess(request, userInfos, handler, query, params);
         } else {
             request.response().setStatusCode(400).end();
         }

@@ -1,7 +1,6 @@
 package fr.openent.crre.security;
 
 import fr.openent.crre.Crre;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
@@ -18,7 +17,7 @@ public class AccesProjectPriority implements ResourcesProvider {
         Integer idProject = Integer.parseInt(request.params().get("idProject"));
         Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
         String idStructure =request.getParam("structureId");
-        if(idCampaign == null || idStructure == null){
+        if(idStructure == null){
             request.response().setStatusCode(400).end();
             return;
         }
@@ -29,6 +28,10 @@ public class AccesProjectPriority implements ResourcesProvider {
                         "AND order_client_equipment.id_structure = ? " +
                         "AND project.id = ?;";
         JsonArray params = new JsonArray().add(idCampaign).add(idStructure).add(idProject);
+        rightAccess(request, userInfos, handler, query, params);
+    }
+
+    static void rightAccess(HttpServerRequest request, UserInfos userInfos, Handler<Boolean> handler, String query, JsonArray params) {
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(stringJsonArrayEither -> {
             if (stringJsonArrayEither.isRight()) {
                 request.resume();
@@ -38,6 +41,5 @@ public class AccesProjectPriority implements ResourcesProvider {
                 request.response().setStatusCode(500).end();
             }
         }));
-
     }
 }

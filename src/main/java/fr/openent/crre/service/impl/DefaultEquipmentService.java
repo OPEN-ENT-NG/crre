@@ -285,12 +285,15 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "INNER JOIN " + Crre.crreSchema + ".contract ON (contract.id = equip.id_contract) " +
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON (contract.id_supplier = supplier.id) " +
                 getTextFilter(filters);
+        returnSQLHandler(handler, params, query);
+    }
+
+    private void returnSQLHandler(Handler<Either<String, JsonObject>> handler, JsonArray params, String query) {
         Sql.getInstance().prepared(query, params, event -> {
             if (!"ok".equals(event.body().getString("status"))) {
                 handler.handle(new Either.Left<>("An error occurred when collecting equipment count"));
                 return;
             }
-
             handler.handle(new Either.Right<>(new JsonObject().put("count", calculPagesNumber(event.body().getJsonArray("results").getJsonArray(0).getInteger(0)))));
         });
     }
@@ -316,14 +319,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "WHERE rel_group_structure.id_structure = ? " +
                 ")" + queryFilter;
 
-        Sql.getInstance().prepared(query, values, event -> {
-            if (!"ok".equals(event.body().getString("status"))) {
-                handler.handle(new Either.Left<>("An error occurred when collecting equipment count"));
-                return;
-            }
-
-            handler.handle(new Either.Right<>(new JsonObject().put("count", calculPagesNumber(event.body().getJsonArray("results").getJsonArray(0).getInteger(0)))));
-        });
+        returnSQLHandler(handler, values, query);
     }
 
 
@@ -664,13 +660,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
         String query = "DELETE FROM " + Crre.crreSchema + ".equipment_option " +
                 " WHERE id in "+ Sql.listPrepared(deletedOptions.getList());
-        for (int i =0 ; i<deletedOptions.size(); i++) {
-            value.add((deletedOptions.getJsonObject(i)).getInteger("id"));
-        }
-        return new JsonObject()
-                .put(STATEMENT, query)
-                .put(VALUES, value)
-                .put(ACTION, PREPARED);
+        return addParamsDeletion(deletedOptions, value, query);
     }
     /**
      * Delete options of an equipment from baskets
@@ -680,14 +670,19 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
         String query = "DELETE FROM " + Crre.crreSchema + ".basket_option " +
                 " WHERE id_option in "+ Sql.listPrepared(deletedOptions.getList());
-        for (int i =0 ; i<deletedOptions.size(); i++) {
-            value.add((deletedOptions.getJsonObject(i)).getInteger("id") );
+        return addParamsDeletion(deletedOptions, value, query);
+    }
+
+    private JsonObject addParamsDeletion(JsonArray deletedOptions, JsonArray value, String query) {
+        for (int i = 0; i < deletedOptions.size(); i++) {
+            value.add((deletedOptions.getJsonObject(i)).getInteger("id"));
         }
         return new JsonObject()
                 .put(STATEMENT, query)
                 .put(VALUES, value)
                 .put(ACTION, PREPARED);
     }
+
     /**
      * Delete options of  equipments
      * @param ids : equipment ids

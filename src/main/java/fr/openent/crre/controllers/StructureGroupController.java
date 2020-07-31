@@ -15,11 +15,8 @@ import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -27,7 +24,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.io.ByteArrayInputStream;
@@ -47,9 +43,9 @@ import static org.entcore.common.utils.FileUtils.deleteImportPath;
  */
 public class StructureGroupController extends ControllerHelper {
 
-    private ImportCSVHelper importCSVHelper;
-    private StructureGroupService structureGroupService;
-    private StructureService structureService;
+    private final ImportCSVHelper importCSVHelper;
+    private final StructureGroupService structureGroupService;
+    private final StructureService structureService;
 
     public StructureGroupController(Vertx vertx) {
         super();
@@ -65,15 +61,12 @@ public class StructureGroupController extends ControllerHelper {
     public void groupStructure(final HttpServerRequest request) {
         final String importId = UUID.randomUUID().toString();
         final String path = config.getString("import-folder", "/tmp") + File.separator + importId;
-        importCSVHelper.getParsedCSV(request, path, false, new Handler<Either<String, Buffer>>() {
-            @Override
-            public void handle(Either<String, Buffer> event) {
-                if (event.isRight()) {
-                    Buffer content = event.right().getValue();
-                    parseCsv(request, path, content);
-                } else {
-                    renderError(request);
-                }
+        importCSVHelper.getParsedCSV(request, path, false, event -> {
+            if (event.isRight()) {
+                Buffer content = event.right().getValue();
+                parseCsv(request, path, content);
+            } else {
+                renderError(request);
             }
         });
     }
@@ -116,59 +109,46 @@ public class StructureGroupController extends ControllerHelper {
      * @param uais    UAIs list
      */
     private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais) {
-        structureService.getStructureByUAI(uais, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> uaisEvent) {
-                if (uaisEvent.isRight()) {
-                    vertx.fileSystem().readDir(path, new Handler<AsyncResult<List<String>>>() {
-                        @Override
-                        public void handle(AsyncResult<List<String>> event) {
-                            if (event.succeeded()) {
-                                String regexp = "([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(.csv)$";
-                                Pattern r = Pattern.compile(regexp);
-                                Matcher m = r.matcher(event.result().get(0));
-                                String name = m.find() ? m.group(0).replace(".csv", "") : UUID.randomUUID().toString();
-                                deleteImportPath(vertx, path);
+        structureService.getStructureByUAI(uais, uaisEvent -> {
+            if (uaisEvent.isRight()) {
+                vertx.fileSystem().readDir(path, event -> {
+                    if (event.succeeded()) {
+                        String regexp = "([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(.csv)$";
+                        Pattern r = Pattern.compile(regexp);
+                        Matcher m = r.matcher(event.result().get(0));
+                        String name = m.find() ? m.group(0).replace(".csv", "") : UUID.randomUUID().toString();
+                        deleteImportPath(vertx, path);
 
-                                JsonArray data = uaisEvent.right().getValue();
-                                JsonArray ids = new JsonArray();
-                                JsonObject o;
-                                String id;
-                                for (int i = 0; i < data.size(); i++) {
-                                    o = data.getJsonObject(i);
-                                    id = o.getString("id");
-                                    ids.add(id);
-                                }
-                                JsonObject object = new JsonObject();
-                                object.put("structures", ids);
-                                object.put("name", name);
-                                object.put("description", "");
-
-                                structureGroupService.create(object, new Handler<Either<String, JsonObject>>() {
-                                    @Override
-                                    public void handle(Either<String, JsonObject> event) {
-                                        if (event.isRight()) {
-                                            Renders.renderJson(request, new JsonObject());
-                                            UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                                                @Override
-                                                public void handle(UserInfos user) {
-                                                    Logging.add(eb, request, Contexts.STRUCTUREGROUP.toString(),
-                                                            Actions.IMPORT.toString(), m.group(0), object, user);
-                                                }
-                                            });
-                                        } else {
-                                            returnErrorMessage(request, new Throwable(event.left().getValue()), path);
-                                        }
-                                    }
-                                });
-                            } else {
-                                returnErrorMessage(request, event.cause(), path);
-                            }
+                        JsonArray data = uaisEvent.right().getValue();
+                        JsonArray ids = new JsonArray();
+                        JsonObject o;
+                        String id;
+                        for (int i = 0; i < data.size(); i++) {
+                            o = data.getJsonObject(i);
+                            id = o.getString("id");
+                            ids.add(id);
                         }
-                    });
-                } else {
-                    returnErrorMessage(request, new Throwable(uaisEvent.left().getValue()), path);
-                }
+                        JsonObject object = new JsonObject();
+                        object.put("structures", ids);
+                        object.put("name", name);
+                        object.put("description", "");
+
+                        structureGroupService.create(object, event1 -> {
+                            if (event1.isRight()) {
+                                Renders.renderJson(request, new JsonObject());
+                                UserUtils.getUserInfos(eb, request,
+                                        user -> Logging.add(Contexts.STRUCTUREGROUP.toString(),
+                                        Actions.IMPORT.toString(), m.group(0), object, user));
+                            } else {
+                                returnErrorMessage(request, new Throwable(event1.left().getValue()), path);
+                            }
+                        });
+                    } else {
+                        returnErrorMessage(request, event.cause(), path);
+                    }
+                });
+            } else {
+                returnErrorMessage(request, new Throwable(uaisEvent.left().getValue()), path);
             }
         });
     }
@@ -207,7 +187,6 @@ public class StructureGroupController extends ControllerHelper {
     @ApiDoc("List all goups of structures")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listByCampaign(final HttpServerRequest request) {
-
         try {
             Integer campaignId = Integer.parseInt(request.getParam("idCampaign"));
             structureGroupService.listStructureGroupsByCampaign(campaignId, arrayResponseHandler(request));
@@ -224,17 +203,13 @@ public class StructureGroupController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void create(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "structureGroup", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject structureGroup) {
-                structureGroupService.create(structureGroup, Logging.defaultResponseHandler(eb,
-                        request,
-                        Contexts.STRUCTUREGROUP.toString(),
-                        Actions.CREATE.toString(),
-                        null,
-                        structureGroup));
-            }
-        });
+        RequestUtils.bodyToJson(request, pathPrefix + "structureGroup",
+                structureGroup -> structureGroupService.create(structureGroup, Logging.defaultResponseHandler(eb,
+                request,
+                Contexts.STRUCTUREGROUP.toString(),
+                Actions.CREATE.toString(),
+                null,
+                structureGroup)));
     }
 
     @Put("/structure/group/:id")
@@ -243,21 +218,18 @@ public class StructureGroupController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void update(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "structureGroup", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject structureGroup) {
-                try {
-                    Integer id = Integer.parseInt(request.params().get("id"));
-                    structureGroupService.update(id, structureGroup, Logging.defaultResponseHandler(eb,
-                            request,
-                            Contexts.STRUCTUREGROUP.toString(),
-                            Actions.UPDATE.toString(),
-                            request.params().get("id"),
-                            structureGroup));
-                } catch (ClassCastException e) {
-                    log.error("An error occured when casting structureGroup id" + e);
-                    badRequest(request);
-                }
+        RequestUtils.bodyToJson(request, pathPrefix + "structureGroup", structureGroup -> {
+            try {
+                Integer id = Integer.parseInt(request.params().get("id"));
+                structureGroupService.update(id, structureGroup, Logging.defaultResponseHandler(eb,
+                        request,
+                        Contexts.STRUCTUREGROUP.toString(),
+                        Actions.UPDATE.toString(),
+                        request.params().get("id"),
+                        structureGroup));
+            } catch (ClassCastException e) {
+                log.error("An error occured when casting structureGroup id" + e);
+                badRequest(request);
             }
         });
     }
