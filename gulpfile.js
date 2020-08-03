@@ -33,7 +33,7 @@ gulp.task('webpack', ['copy-mdi-font'], () => {
 
 gulp.task('copy-mdi-font', ['copy-files'], function () {
     return gulp.src('./node_modules/@mdi/font/fonts/*')
-        .pipe(gulp.dest('./presences/src/main/resources/public/font/material-design/fonts'));
+        .pipe(gulp.dest('./crre/src/main/resources/public/font/material-design/fonts'));
 });
 
 

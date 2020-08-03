@@ -53,13 +53,12 @@
                     <i18n ng-show="equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n></h1>
 
                 <article class="domino"  ng-class="{ disabled: equipment.status !== 'AVAILABLE' }">
-                    <h2 ng-bind="calculatePriceOfEquipment(equipment, false, 2) | currency"></h2>
                     <div class="top" ng-class="{ item: display.equipment }">
                         <img ng-src="[[equipment.image]]" ng-show="equipment.image!==null && equipment.image!==undefined " />
                         <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.image===null || equipment.image===undefined "/>
                         <strong style="display: block; margin: 10px 0 5px 0;">[[equipment.name]]</strong>
                         <em class="metadata">[[equipment.contract_name]]</em>
-                        <p class="description">[[equipment.summary]]</p>
+                        <p class="description" ng-if="equipment.summary"><i></i><b> EAN : </b> [[equipment.summary]] </p>
                     </div>
                 </article>
             </div>

@@ -2,8 +2,7 @@ import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {_, notify} from 'entcore';
 import http from 'axios';
 import {Equipment, EquipmentOption, Structure, Utils} from './index';
-import * as ts from "typescript/lib/tsserverlibrary";
-import convertCompilerOptions = ts.server.convertCompilerOptions;
+
 
 export class Basket implements Selectable {
     id?: number;
@@ -39,7 +38,6 @@ export class Basket implements Selectable {
             options: options.length > 0 ?  _.pluck( options , 'id') : null ,
             id_campaign : this.id_campaign,
             id_structure : this.id_structure,
-            id_type : this.equipment.id_type
         };
     }
 
@@ -131,7 +129,7 @@ export class Baskets extends Selection<Basket> {
                     ? Mix.castArrayAs(EquipmentOption, JSON.parse(basket.options.toString()))
                     : [];
                 basket.equipment.options = basket.options;
-                basket.files = (basket.files.toString !== '[null]' && basket.files !== null) ? Utils.parsePostgreSQLJson(basket.files) : [];
+                basket.files = (basket.files.toString !== '[null]') ? Utils.parsePostgreSQLJson(basket.files) : [];
                 basket.equipment.options.map((option) => option.selected = true);
             });
         } catch (e) {

@@ -21,14 +21,8 @@
     "image": {
       "type": [ "string", "null" ]
     },
-    "id_contract": {
-      "type": "integer"
-    },
     "status": {
       "type": "string"
-    },
-    "id_type" : {
-      "type": "integer"
     },
     "reference" : {
       "type": "string"
@@ -38,9 +32,6 @@
     },
     "option_enabled" : {
       "type": "boolean"
-    },
-    "tags": {
-      "type": "array"
     },
     "options":{
       "type": "array"
@@ -57,9 +48,6 @@
     "optionsUpdate": {
       "type": ["array", "null" ]
     },
-    "warranty": {
-      "type": "integer"
-    },
     "price_editable": {
       "type": "boolean"
     }
@@ -67,8 +55,6 @@
   "required": [
     "name",
     "price",
-    "id_tax",
-    "id_contract",
-    "tags"
+    "id_tax"
   ]
 }

@@ -57,20 +57,21 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
     private String getTextFilter(List<String> filters) {
-        String filter = "", q;
+        StringBuilder filter = new StringBuilder();
+        String q;
         if (filters.size() > 0) {
-            filter = "WHERE ";
+            filter = new StringBuilder("WHERE ");
             for (int i = 0; i < filters.size(); i++) {
                 q = filters.get(i);
                 if (i > 0) {
-                    filter += "AND ";
+                    filter.append("AND ");
                 }
 
-                filter += "(LOWER(equip.name) ~ LOWER(?) OR LOWER(equip.reference) ~ LOWER(?) OR LOWER(supplier.name) ~ LOWER(?) OR LOWER(contract.name) ~ LOWER(?)) ";
+                filter.append("(LOWER(equip.name) ~ LOWER(?) OR LOWER(equip.reference) ~ LOWER(?) OR LOWER(supplier.name) ~ LOWER(?) OR LOWER(contract.name) ~ LOWER(?)) ");
             }
         }
 
-        return filter;
+        return filter.toString();
     }
 
     public void listEquipments(Integer page, String order, Boolean reverse, List<String> filters, Handler<Either<String, JsonArray>> handler) {
@@ -82,11 +83,9 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
             }
         }
 
-        String query = "SELECT equip.reference, equip.name, equip.id, equip.status,  equip.price, supplier.name as supplier_name, contract.name as contract_name, tax.value as tax_amount " +
+        String query = "SELECT equip.reference, equip.name, equip.id, equip.status, equip.price, tax.value as tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment equip " +
                 "INNER JOIN " + Crre.crreSchema + ".tax ON tax.id = equip.id_tax " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON (contract.id = equip.id_contract) " +
-                "INNER JOIN " + Crre.crreSchema + ".supplier ON (contract.id_supplier = supplier.id) " +
                 getTextFilter(filters) +
                 "ORDER by " + getSqlOrderValue(order) + " " + getSqlReverseString(reverse);
 
@@ -97,20 +96,18 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
     public void equipment(Integer idEquipment,  Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT equip.*, supplier.name as supplier_name, contract.name as contract_name, tax.value as tax_amount, " +
+        String query = "SELECT equip.*, tax.value as tax_amount, " +
                 "array_to_json(array_agg(opts.*)) as options " +
                 "FROM  " + Crre.crreSchema + ".equipment equip    " +
                 "LEFT JOIN " + Crre.crreSchema + ".equipment_option ON (equip.id = equipment_option.id_equipment) " +
                 "LEFT JOIN ( " +
-                "SELECT equipment.id as id_equipment, equipment.reference, equipment.id_type, equipment_option.id, equipment_option.id_option, equipment.name, equipment.price, equipment_option.amount, " +
+                "SELECT equipment.id as id_equipment, equipment.reference, equipment.id_type, equipment_option.id, equipment_option.id_option, equipment.name, equipment.price, equipment_option.amount " +
                 "equipment_option.required, tax.value as tax_amount, equipment_option.id_equipment as master_equipment, " +
                 "FROM " + Crre.crreSchema + ".equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".tax  ON (equipment.id_tax = tax.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".equipment_option  ON (equipment_option.id_option = equipment.id) " +
                 ") opts ON (equipment_option.id_option = opts.id_equipment AND opts.master_equipment = equip.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".tax ON tax.id = equip.id_tax " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON (contract.id = equip.id_contract) " +
-                "INNER JOIN " + Crre.crreSchema + ".supplier ON (contract.id_supplier = supplier.id) " +
                 "WHERE equip.id = ? " +
                 "GROUP BY (equip.id, tax.id, supplier.name, contract.name, tax.value) " +
                 "ORDER by equip.name ASC " +
@@ -122,7 +119,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
     @Override
     public void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT e.*,contract_type.name as contract_type_name, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options, contract.name as contract_name " +
+        String query = "SELECT e.*, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options " +
                 "FROM " + Crre.crreSchema + ".equipment e LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment_option option " +
@@ -130,8 +127,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
                 ") opts ON opts.id_equipment = e.id " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON (e.id_contract = contract.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".contract_type ON (contract.id_contract_type = contract_type.id) " +
 
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (" +
                 " rel_group_campaign.id_campaign = ? " +
@@ -156,31 +151,29 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     public void listEquipments(Integer idCampaign, String idStructure, Integer page, List<String> filters,
                                Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new JsonArray().add(idCampaign).add(idStructure);
-        String queryFilter = "";
+        StringBuilder queryFilter = new StringBuilder();
         if (!filters.isEmpty()) {
             for (String filter : filters) {
-                queryFilter += "AND (lower(e.name) ~ lower(?) OR lower(contract.name) ~ lower(?))";
+                queryFilter.append("AND (lower(e.name) ~ lower(?) OR lower(contract.name) ~ lower(?))");
                 values.add(filter).add(filter);
             }
         }
-        String query = "SELECT e.*,contract_type.name as contract_type_name, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options, contract.name as contract_name " +
-                "FROM " + Crre.crreSchema + ".equipment e LEFT JOIN ( " +
+        String query = "SELECT e.*, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options " +
+                "FROM " + Crre.crreSchema + ".equipment e " +
+                "LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment_option option " +
                 "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
                 ") opts ON opts.id_equipment = e.id " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON (e.id_contract = contract.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".contract_type ON (contract.id_contract_type = contract_type.id) " +
-
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON ( " +
                 "rel_group_campaign.id_campaign = ? " +
                 "AND rel_group_campaign.id_structure_group IN (" +
                 "SELECT structure_group.id FROM " + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON rel_group_structure.id_structure_group = structure_group.id " +
-                "WHERE rel_group_structure.id_structure = ?)) and e.catalog_enabled = true AND e.status != 'OUT_OF_STOCK' " + queryFilter +
-                "GROUP BY (e.id, tax.id , nametype, contract.name,contract_type.name )";
+                "WHERE rel_group_structure.id_structure = ?)) AND e.status != 'OUT_OF_STOCK' " + queryFilter +
+                "GROUP BY (e.id, tax.id)";
 
 
         if (page != null) {
@@ -305,17 +298,16 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     @Override
     public void getNumberPages(Integer idCampaign, String idStructure, List<String> filters, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new JsonArray().add(idCampaign).add(idStructure);
-        StringBuilder queryFilter = new StringBuilder("WHERE equipment.status != 'OUT_OF_STOCK' ");
+        StringBuilder queryFilter = new StringBuilder(" WHERE equipment.status != 'OUT_OF_STOCK' ");
         if (!filters.isEmpty()) {
             for (String filter : filters) {
-                queryFilter.append("AND lower(equipment.name) ~ lower(?) ");
+                queryFilter.append(" AND lower(equipment.name) ~ lower(?) ");
                 values.add(filter);
             }
         }
         String query = "SELECT count(equipment.id) " +
                 "FROM " + Crre.crreSchema + ".equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON " +
-                "AND rel_group_campaign.id_campaign = ? " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON rel_group_campaign.id_campaign = ? " +
                 "AND rel_group_campaign.id_structure_group IN ( " +
                 "SELECT structure_group.id " +
                 "FROM " + Crre.crreSchema + ".structure_group " +
@@ -418,8 +410,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     @Override
     public void search(String query,  List<String> listFields, Handler<Either<String, JsonArray>> handler) {
 
-        String sqlQuery = "SELECT e.id, e.name, e.summary, e.description, CAST(e.price AS NUMERIC) as price, t.value as tax_amount, t.id as id_tax, e.image, e.reference, e.warranty, " +
-                                    "e.id_type, e.option_enabled, et.name as nameType "+
+        String sqlQuery = "SELECT e.id, e.name, e.summary, e.description, CAST(e.price AS NUMERIC) as price, t.value as tax_amount, t.id as id_tax, e.image, e.reference, " +
+                                    " e.option_enabled "+
                 "FROM " + Crre.crreSchema + ".equipment as e " +
                 "INNER JOIN " + Crre.crreSchema + ".tax as t ON (e.id_tax = t.id) " +
                 "WHERE e.status = 'AVAILABLE' AND e.option_enabled = true ";
@@ -494,8 +486,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     private JsonObject getEquipmentCreationStatement(Number id, JsonObject equipment) {
         String insertEquipmentQuery =
                 "INSERT INTO " + Crre.crreSchema + ".equipment(id, name, summary, description, price, id_tax," +
-                        " image, id_contract, status, technical_specs, warranty, reference, id_type, option_enabled, price_editable) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?) RETURNING id;";
+                        " image, id_contract, status, technical_specs, reference, option_enabled, price_editable) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?) RETURNING id;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(id)
                 .add(equipment.getString("name"))
@@ -507,9 +499,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 .add(equipment.getInteger("id_contract"))
                 .add(equipment.getString("status"))
                 .add(equipment.getJsonArray("technical_specs"))
-                .add(equipment.getInteger("warranty"))
                 .add(equipment.getString("reference"))
-                .add(equipment.getInteger("id_type"))
                 .add(equipment.getBoolean("option_enabled"))
                 .add(equipment.getBoolean("price_editable"));
 
@@ -600,8 +590,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
      */
     private static JsonObject addRequiredOptionToBasketStatement(JsonArray idsBasket, Number optionId) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder insertQuery = new StringBuilder()
-                .append("INSERT INTO " + Crre.crreSchema + ".basket_option( ")
+        StringBuilder insertQuery = new StringBuilder().append("INSERT INTO ").append(Crre.crreSchema).append(".basket_option( ")
                 .append(" id_basket_equipment, id_option) " )
                 .append( " VALUES ");
         for (int i=0; i<idsBasket.size(); i++){
@@ -629,8 +618,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     private JsonObject getEquipmentUpdateStatement(Number id, JsonObject equipment) {
         String query = "UPDATE " + Crre.crreSchema + ".equipment SET " +
                 "name = ?, summary = ?, description = ?, price = ?, id_tax = ?, image = ?, " +
-                "id_contract = ?, status = ?, technical_specs = to_json(?::text), " +
-                "id_type = ?, catalog_enabled = ?, option_enabled = ?, price_editable = ?, reference = ? " +
+                "status = ?, technical_specs = to_json(?::text), " +
+                "catalog_enabled = ?, option_enabled = ?, price_editable = ?, reference = ? " +
                 "WHERE id = ?";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -640,10 +629,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 .add(equipment.getDouble("price"))
                 .add(equipment.getInteger("id_tax"))
                 .add(equipment.getString("image"))
-                .add(equipment.getInteger("id_contract"))
                 .add(equipment.getString("status"))
                 .add(equipment.getJsonArray("technical_specs"))
-                .add(equipment.getInteger("id_type"))
                 .add(equipment.getBoolean("catalog_enabled"))
                 .add(equipment.getBoolean("option_enabled"))
                 .add(equipment.getBoolean("price_editable"))
@@ -693,18 +680,15 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
      * @return Delete statement
      */
     private JsonObject getEquipmentsOptionsRelationshipDeletion(List<Integer> ids) {
-        StringBuilder query = new StringBuilder();
+        String query = "DELETE FROM " + Crre.crreSchema + ".equipment_option " +
+                " WHERE id_equipment in " +
+                Sql.listPrepared(ids.toArray());
         JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        query.append("DELETE FROM " + Crre.crreSchema + ".equipment_option ")
-                .append(" WHERE id_equipment in ")
-                .append(Sql.listPrepared(ids.toArray()));
-
         for (Integer id : ids) {
             value.add(id);
         }
-
         return new JsonObject()
-                .put(STATEMENT, query.toString())
+                .put(STATEMENT, query)
                 .put(VALUES, value)
                 .put(ACTION, PREPARED);
     }
@@ -715,18 +699,15 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
      * @return Delete statement
      */
     private JsonObject getEquipmentsDeletion(List<Integer> ids) {
-        StringBuilder query = new StringBuilder();
+        String query = "DELETE FROM " + Crre.crreSchema + ".equipment " +
+                " WHERE id in " +
+                Sql.listPrepared(ids.toArray());
         JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        query.append("DELETE FROM " + Crre.crreSchema + ".equipment ")
-                .append(" WHERE id in ")
-                .append(Sql.listPrepared(ids.toArray()));
-
         for (Integer id : ids) {
             value.add(id);
         }
-
         return new JsonObject()
-                .put(STATEMENT, query.toString())
+                .put(STATEMENT, query)
                 .put(VALUES, value)
                 .put(ACTION, PREPARED);
     }

@@ -156,22 +156,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
-            selectCampaign: async function (idCampaign) {
-                if (!$scope.campaign.id) {
-                    await $scope.campaigns.sync($scope.current.structure.id);
-                    $scope.campaigns.all.forEach(campaign => {
-                        if (campaign.id == idCampaign) {
-                            $scope.campaign = campaign;
-                        }
-                    });
-                }
-            }, campaignCatalog: async (params) => {
+            campaignCatalog: async (params) => {
                 let idCampaign = params.idCampaign;
                 $scope.fromCatalog=true
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
                     await $scope.initStructures() ;
-                await this.selectCampaign(idCampaign);
+                await $scope.selectCampaign(idCampaign);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
                 template.close('right-side');
@@ -202,7 +193,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.current.structure
                     ? await $scope.ordersClient.sync(null, [], idCampaign, $scope.current.structure.id)
                     : null;
-                await this.selectCampaign(idCampaign);
+                await $scope.selectCampaign(idCampaign);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/order/manage-order');
                 $scope.initCampaignOrderView();
@@ -218,7 +209,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if($scope.current.structure) {
                     await $scope.baskets.sync(idCampaign, $scope.current.structure.id);
                 }
-                await this.selectCampaign(idCampaign);
+                await $scope.selectCampaign(idCampaign);
                 Utils.safeApply($scope);
             },
             orderWaiting: async () => {
@@ -314,12 +305,25 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
             }
         });
+
+        $scope.selectCampaign = async function (idCampaign) {
+            if (!$scope.campaign.id) {
+                await $scope.campaigns.sync($scope.current.structure.id);
+                $scope.campaigns.all.forEach(campaign => {
+                    if (campaign.id == idCampaign) {
+                        $scope.campaign = campaign;
+                    }
+                });
+            }
+        };
+
         $scope.initInstructions = async ()=>{
             $scope.loadingArray = true;
             await $scope.instructions.sync();
             $scope.loadingArray = false;
         };
-        $scope.initCampaignOrderView=()=>{
+        $scope.
+            initCampaignOrderView=()=>{
             if( $scope.campaign.priority_enabled == true && $scope.campaign.priority_field == PRIORITY_FIELD.ORDER){
                 template.open('order-list', 'customer/campaign/order/orders-by-equipment');
             } else {
@@ -335,6 +339,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
             $scope.basket = new Basket($scope.equipment, idCampaign, structure);
         };
+
         $scope.idIsInteger = (id) => {
             try {
                 id = parseInt(id);

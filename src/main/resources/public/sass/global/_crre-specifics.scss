@@ -1,4 +1,3 @@
-
 @font-face {
   font-family: 'material-icons';
   src: url('/crre/public/fonts/materialdesignicons-webfont.eot');
@@ -13,6 +12,8 @@
 body.crre {
   @import 'components/index';
   @import 'fragments/index';
+
+  color: black;
 
   h4{
     &.highlighted {
@@ -356,8 +357,8 @@ body.crre {
   .catalog-list {
     .dominos .item {
       max-width: 500px;
-      width: 20%;
-      margin: 7px 0;
+      width: 12%;
+      margin: 10px 20px;
       box-shadow: none !important;
 
       &.list-item {
@@ -368,16 +369,15 @@ body.crre {
 
 
       article {
-        border: 2px #fff solid;
+        background-clip: unset !important;
       }
 
       h2 {
         margin-left: 5%;
       }
       .top {
-        padding-left: 5%;
-        padding-right: 5%;
-        height: 200px;
+        height: 190px;
+        background-color: unset;
 
         &.item {
           padding-left: 5% !important;
@@ -404,7 +404,10 @@ body.crre {
         p.description {
           font-size: 14px;
           margin: initial;
-          color: #555;
+          display: inline-flex;
+          > i {
+            background-image: url(/crre/public/img/scss/barcode.svg);
+          }
         }
       }
     }

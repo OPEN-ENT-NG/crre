@@ -266,11 +266,9 @@ export const configurationController = ng.controller('configurationController',
                 && equipment.price !== undefined
                 && equipment.price.toString().trim() !== ''
                 && !isNaN(parseFloat(equipment.price.toString()))
-                && equipment.id_contract !== undefined
+                //&& equipment.id_contract !== undefined
                 && equipment.id_tax !== undefined
                 && $scope.validEquipmentOptions(equipment.options)
-                && equipment.warranty !== undefined
-                && equipment.warranty >= 0
                 && (!equipment.id || equipment.reference)
         };
 

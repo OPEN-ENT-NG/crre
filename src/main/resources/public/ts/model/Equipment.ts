@@ -20,11 +20,9 @@ export class Equipment implements Selectable {
     selected: boolean;
     options: EquipmentOption[];
     deletedOptions?: EquipmentOption[];
-    warranty: number;
     catalog_enabled: boolean;
     option_enabled: boolean;
     price_editable: boolean;
-    id_type: number;
     eventer: Eventer;
     _loading: boolean;
     priceTTC?: number;
@@ -55,10 +53,8 @@ export class Equipment implements Selectable {
             price: parseFloat(this.price.toString()),
             id_tax: this.id_tax,
             status: this.status,
-            warranty: this.warranty,
             catalog_enabled: this.catalog_enabled,
             option_enabled: this.option_enabled,
-            id_type: this.id_type,
             reference : this.reference,
             price_editable: this.price_editable,
             image: this.image || null,

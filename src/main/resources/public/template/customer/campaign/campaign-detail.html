@@ -22,7 +22,7 @@
         </ul>
     </nav>
     <div class="twelve tabs vertical-spacing heading-tabs zero-mobile" >
-        <header class="horizontal-spacing"  ng-click="backHome()"  >
+        <header class="horizontal-spacing"  ng-click="backHome()">
             <i class="home"></i>
         </header>
         <header  ng-show="campaign.accessible" class="horizontal-spacing" ng-class="{selected: returnPath(selectedType) == 'catalog'}"  ng-click="openCatalog()"  >
@@ -41,10 +41,10 @@
                     [[campaign.nb_panier]]
             </span>
         </header>
-        <div class="purse-in-menue" ng-if="campaign.purse_enabled">
+<!--        <div class="purse-in-menue" ng-if="campaign.purse_enabled">
             <h4><i18n>purse</i18n> :</h4>&nbsp;
             <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
-        </div>
+        </div>-->
     </div>
 
     <div class="twelve-mobile tabs vertical-spacing heading-tabs mobile-navigation" >

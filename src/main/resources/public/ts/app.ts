@@ -52,9 +52,6 @@ routes.define(($routeProvider) => {
             .when('/contracts', {
                 action: 'manageContracts'
             })
-            .when('/tags', {
-                action: 'manageEquipmentTags'
-            })
             .when('/equipments', {
                 action: 'manageEquipments'
             })

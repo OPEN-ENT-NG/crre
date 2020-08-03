@@ -133,17 +133,13 @@ public class EquipmentController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void create(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "equipment", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject equipment) {
-                equipmentService.create(equipment, Logging.defaultResponseHandler(eb,
-                        request,
-                        Contexts.EQUIPMENT.toString(),
-                        Actions.CREATE.toString(),
-                        null,
-                        equipment));
-            }
-        });
+        RequestUtils.bodyToJson(request, pathPrefix + "equipment",
+                equipment -> equipmentService.create(equipment, Logging.defaultResponseHandler(eb,
+                request,
+                Contexts.EQUIPMENT.toString(),
+                Actions.CREATE.toString(),
+                null,
+                equipment)));
     }
 
     @Put("/equipment/:id")
@@ -152,42 +148,34 @@ public class EquipmentController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void update(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "equipment", new Handler<JsonObject>() {
-            @Override
-            public void handle(final JsonObject equipment) {
-                try {
-                    final Integer id = Integer.parseInt(request.params().get("id"));
-                    equipmentService.updateEquipment(id, equipment,
-                            new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> eventUpdateEquipment) {
-                                    if(eventUpdateEquipment.isRight()){
-                                        final Integer optionsCreate =  equipment
-                                                .getJsonArray("optionsCreate").size();
-                                        equipmentService.prepareUpdateOptions( optionsCreate , id,
-                                                new Handler<Either<String, JsonObject>>() {
-                                                    @Override
-                                                    public void handle(Either<String, JsonObject> resultObject) {
-                                                        if(resultObject.isRight()) {
-                                                            equipmentService.updateOptions( id, equipment,
-                                                                    resultObject.right().getValue(),
-                                                                    Logging.defaultResponseHandler(eb,
-                                                                            request,
-                                                                            Contexts.EQUIPMENT.toString(),
-                                                                            Actions.UPDATE.toString(),
-                                                                            request.params().get("id"),
-                                                                            equipment) );
-                                                        }else {
-                                                          log.error("An error occurred when preparing options update");
-                                                        }
-                                                    }
-                                                });
-                                    }
-                                }
-                            });
-                } catch (ClassCastException e) {
-                    log.error("An error occurred when casting equipment id", e);
-                }
+        RequestUtils.bodyToJson(request, pathPrefix + "equipment",
+                equipment -> {
+            try {
+                final Integer id = Integer.parseInt(request.params().get("id"));
+                equipmentService.updateEquipment(id, equipment,
+                        eventUpdateEquipment -> {
+                            if(eventUpdateEquipment.isRight()){
+                                final Integer optionsCreate =  equipment
+                                        .getJsonArray("optionsCreate").size();
+                                equipmentService.prepareUpdateOptions( optionsCreate , id,
+                                        resultObject -> {
+                                            if(resultObject.isRight()) {
+                                                equipmentService.updateOptions( id, equipment,
+                                                        resultObject.right().getValue(),
+                                                        Logging.defaultResponseHandler(eb,
+                                                                request,
+                                                                Contexts.EQUIPMENT.toString(),
+                                                                Actions.UPDATE.toString(),
+                                                                request.params().get("id"),
+                                                                equipment) );
+                                            }else {
+                                              log.error("An error occurred when preparing options update");
+                                            }
+                                        });
+                            }
+                        });
+            } catch (ClassCastException e) {
+                log.error("An error occurred when casting equipment id", e);
             }
         });
     }
@@ -221,15 +209,12 @@ public class EquipmentController extends ControllerHelper {
     public void importEquipment(final HttpServerRequest request) {
         final String importId = UUID.randomUUID().toString();
         final String path = config.getString("import-folder", "/tmp") + File.separator + importId;
-        importCSVHelper.getParsedCSV(request, path, new Handler<Either<String, Buffer>>() {
-            @Override
-            public void handle(Either<String, Buffer> event) {
-                if (event.isRight()) {
-                    Buffer content = event.right().getValue();
-                    parseEquipmentCsv(request, path, content);
-                } else {
-                    renderError(request);
-                }
+        importCSVHelper.getParsedCSV(request, path, event -> {
+            if (event.isRight()) {
+                Buffer content = event.right().getValue();
+                parseEquipmentCsv(request, path, content);
+            } else {
+                renderError(request);
             }
         });
     }

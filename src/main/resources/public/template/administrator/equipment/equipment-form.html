@@ -70,14 +70,6 @@
                             <input type="number" step="0.01" class="eleven" ng-model="equipment.price" required>
                         </span>
                     </label>
-                    <label class="five twelve-mobile vertical-spacing cell">
-                        <span class="four cell twelve-mobile">
-                            <i18n>crre.warranty</i18n> *
-                        </span>
-                        <span class="eight cell twelve-mobile">
-                            <input type="number" min="0" value="1" ng-model="equipment.warranty" class="eleven" required>
-                        </span>
-                    </label>
                 </div>
             </div>
             <div class="row twelve">
@@ -165,10 +157,14 @@
                                 </async-autocomplete>
                             </td>
                             <td class="two">
-                                <input type="number" step="0.01" class="twelve" ng-model="option.price" required/>
+                                <label>
+                                    <input type="number" step="0.01" class="twelve" ng-model="option.price" required/>
+                                </label>
                             </td>
                             <td class="one">
-                                <input type="text" ng-model="option.amount" integer-input class="twelve" required/>
+                                <label>
+                                    <input type="text" ng-model="option.amount" integer-input class="twelve" required/>
+                                </label>
                             </td>
                             <td class="two aligne-text-center">
                                 <span ng-bind="calculatePriceOption(option.price,option.id_tax,option.amount) | currency">
@@ -202,47 +198,12 @@
                     </table>
                     <input type="button" class="vertical-spacing" ng-click="addOptionLigne()" i18n-value="add" />
                 </article>
-
-            </div>
-            <div class="row twelve">
-                <h2 class="vertical-spacing">
-                    <i18n>crre.equipment.tag</i18n>
-                </h2>
-                <div class="row twelve vertical-spacing"
-                     ng-init="equipment.tags = equipment.tags || []">
-                    <div class="cell two twelve-mobile">
-                        <i18n>crre.equipment.tags</i18n> *
-                    </div>
-                    <div class="cell nine twelve-mobile">
-                        <div class="row">
-                            <select
-                                    ng-model="equipment._tag"
-                                    class="six twelve-mobile"
-                                    ng-change="addTagToEquipment(equipment._tag)"
-                                    ng-options="tag as tag.name for tag in tags.all |tagFilter:equipment.tags"
-                            >
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="select-blocks">
-                                <div ng-repeat="tag in equipment.tags"
-                                     ng-click="removeTagToEquipment(tag)"
-                                     class="labels-in-ligne">
-                                    <span class="color-tag" ng-style="{ 'background-color': tag.color }">
-                                        &nbsp;
-                                    </span>
-                                    <div > [[ tag.name ]] </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="row twelve">
                 <h2>
                     <i18n>crre.equipment.administration</i18n>
                 </h2>
-                <div class="row">
+<!--                <div class="row">
                     <h4 class="two cell twelve-mobile vertical-spacing"><i18n>crre.equipment.contract</i18n> *</h4>
                     <div class="nine cell twelve-mobile vertical-spacing">
                         <select
@@ -253,7 +214,7 @@
                         >
                         </select>
                     </div>
-                </div>
+                </div>-->
                 <div class="row vertical-spacing">
                     <h4 class="two cell twelve-mobile">
                         <i18n>crre.availability</i18n>
