@@ -294,7 +294,11 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 handler.handle(new Either.Left<>("An error occurred when collecting equipment count"));
                 return;
             }
-            handler.handle(new Either.Right<>(new JsonObject().put("count", calculPagesNumber(event.body().getJsonArray("results").getJsonArray(0).getInteger(0)))));
+            int count_result = event.body().getJsonArray("results").getJsonArray(0).getInteger(0);
+            if (count_result == 0) {
+                count_result = 1;
+            }
+            handler.handle(new Either.Right<>(new JsonObject().put("count", calculPagesNumber(count_result))));
         });
     }
 
