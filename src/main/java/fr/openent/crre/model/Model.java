@@ -1,6 +1,7 @@
 package fr.openent.crre.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -64,35 +65,36 @@ public abstract class Model {
         return result;
     }
 
-    public void create(Handler<AsyncResult<JsonObject>> handler) { // todo add handlers
+    public void create(Handler<Either<String, JsonObject>> handler) { // todo add handlers
         if(!Validator.validate(this, "CREATE")) {
-            handler.handle(Future.failedFuture("[Common@Model::create] Validation failed."));
+            handler.handle(new Either.Left<>("[Common@Model::create] Validation failed."));
             return;
         }
 
         Repository.create(this, result -> {
             if (result.failed()) {
-                handler.handle(Future.failedFuture("[Common@Model::create] Failed to create."));
+                handler.handle(new Either.Left<>("[Common@Model::create] Failed to create."));
                 return;
             }
             setFromJson(result.result());
-            handler.handle(Future.succeededFuture(toJsonObject()));
+            handler.handle(new Either.Right<>(toJsonObject()));
+            //handler.handle(Future.succeededFuture(toJsonObject()));
         });
     }
 
-    public void update(Handler<AsyncResult<JsonObject>> handler) { // todo add handlers
+    public void update(Handler<Either<String, JsonObject>> handler) { // todo add handlers
         if(!Validator.validate(this, "UPDATE")) {
-            handler.handle(Future.failedFuture("[Common@Model::update] Validation failed."));
+            handler.handle(new Either.Left<>("[Common@Model::update] Validation failed."));
             return;
         }
 
         Repository.update(this, result -> {
             if (result.failed()) {
-                handler.handle(Future.failedFuture("[Common@Model::create] Failed to update."));
+                handler.handle(new Either.Left<>("[Common@Model::update] Failed to update."));
                 return;
             }
             setFromJson(result.result());
-            handler.handle(Future.succeededFuture(toJsonObject()));
+            handler.handle(new Either.Right<>(toJsonObject()));
         });
     }
 

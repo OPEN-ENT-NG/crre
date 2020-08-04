@@ -1,6 +1,10 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.logging.Actions;
+import fr.openent.crre.logging.Contexts;
+import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.Campaign;
 import fr.openent.crre.service.CampaignService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -236,11 +240,23 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             if (event.isRight()) {
                 try {
                     final Number id = event.right().getValue().getInteger("id");
-                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                            .add(getCampaignCreationStatement(id, campaign));
-                    JsonArray groups = campaign.getJsonArray("groups");
-                    statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
-                    sql.transaction(statements, event1 -> handler.handle(getTransactionHandler(event1, id)));
+
+                    Campaign createCampaign = new Campaign();
+                    createCampaign.setFromJson(campaign);
+                    createCampaign.setId((int) id);
+
+                    createCampaign.create(resultObject -> {
+                        if(resultObject.isRight()) {
+                            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                            JsonArray groups = campaign.getJsonArray("groups");
+                            statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
+                            sql.transaction(statements, event1 -> handler.handle(getTransactionHandler(event1, id)));
+                        } else {
+                            LOGGER.error("An error occurred when creating campaign", resultObject.left().getValue());
+                            handler.handle(new Either.Left<>(""));
+                        }
+                    });
+
                 } catch (ClassCastException e) {
                     LOGGER.error("An error occurred when casting tags ids", e);
                     handler.handle(new Either.Left<>(""));
@@ -253,13 +269,23 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     public void update(final Integer id, JsonObject campaign,final Handler<Either<String, JsonObject>> handler){
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                .add(getCampaignUpdateStatement(id, campaign))
-                .add(getCampaignTagGroupRelationshipDeletion(id));
-        JsonArray groups = campaign.getJsonArray("groups");
-        statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
 
-        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
+        Campaign createCampaign = new Campaign();
+        createCampaign.setFromJson(campaign);
+        createCampaign.setId(id);
+
+        createCampaign.update(resultObject -> {
+            if(resultObject.isRight()) {
+                JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                        .add(getCampaignTagGroupRelationshipDeletion(id));
+                JsonArray groups = campaign.getJsonArray("groups");
+                statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
+                sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
+            } else {
+                LOGGER.error("An error occurred when creating campaign", resultObject.left().getValue());
+                handler.handle(new Either.Left<>(""));
+            }
+        });
     }
 
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
@@ -354,7 +380,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
     private JsonObject getCampaignTagGroupRelationshipDeletion(Number id) {
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_campaign " +
-                " WHERE id_campaign = ?;";
+                "WHERE id_campaign = ?;";
 
         return new JsonObject()
                 .put("statement", query)
