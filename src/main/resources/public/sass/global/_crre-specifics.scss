@@ -15,6 +15,8 @@ body.crre {
 
   color: black;
 
+  $secondary: #1794a5;
+
   h4{
     &.highlighted {
       border-bottom: solid 1px $solid-grey;
@@ -255,55 +257,89 @@ body.crre {
       -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
       background-color: #aaa;
     }
-    .left-detail-box{
-      padding: 1%;
-      left: 336px;
-      float: right;
-      display: block;
-      position: absolute;
-      width: calc(100% - 380px);
-      .bold{
-        font-weight: bold;
+    .search-bar{
+      border-radius: 50px;
+      height: 50px;
+      box-shadow: 0 0 5px $secondary;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      .search-icon{
+        margin: 0;
       }
-      img.img-equipment{
-        display: block;
-        max-height: 260px;
-        margin-left: auto;
-        margin-right: auto;
+      .input-search{
+        margin-bottom: 0;
+        border: unset;
+        box-shadow: none;
       }
-      .summary{
-        border-bottom: 1px #ccc solid;
-        border-bottom-right-radius: 6%;
-        border-bottom-left-radius: 6%;
-        padding: 2%;
-      }
-      .in-ligne{
-        display: inline-flex;
-      }
-      .add-basket{
-        h1{
-          margin:0;
-          line-height: 100px;
-        }
-        .quantity{
-          height: 50px;
-          line-height: 30px;
-          width: auto;
-          float: right;
+    }
+    .filterButton{
+      border-radius: 30em;
+      background-color: white;
+      border:solid 1px grey;
+      margin: 0.5em;
+      padding: 5px 15px;
+      color: black;
+    }
+  }
 
-          input{
-            text-align: center;
-          }
-          h4{
-            font-weight: 400 !important;
-            margin-right: 5px;
-            margin-top: 0;
-            width: auto;
-          }
+  .equipment-detail h1, a {
+    color: $secondary !important;
+  }
+
+  .padding-20{
+    padding:20px;
+  }
+
+  .detail-box{
+    padding: 1%;
+    left: 336px;
+    float: right;
+    display: block;
+    position: absolute;
+    width: calc(100% - 380px);
+    .bold{
+      font-weight: bold;
+    }
+    img.img-equipment{
+      display: block;
+      max-height: 260px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .summary{
+      border-bottom: 1px #ccc solid;
+      border-bottom-right-radius: 6%;
+      border-bottom-left-radius: 6%;
+      padding: 2%;
+    }
+    .in-ligne{
+      display: inline-flex;
+    }
+    .add-basket{
+      h1{
+        margin:0;
+        line-height: 100px;
+      }
+      .quantity{
+        height: 50px;
+        line-height: 30px;
+        width: auto;
+        float: right;
+
+        input{
+          text-align: center;
+        }
+        h4{
+          font-weight: 400 !important;
+          margin-right: 5px;
+          margin-top: 0;
+          width: auto;
         }
       }
     }
   }
+
   i.moins{
     height: 21px;
     display: inline-block;
@@ -933,6 +969,10 @@ body.crre {
   .vertical-spacing-5{
     margin-top: 5px;
     margin-bottom: 5px;
+  }
+  .vertical-spacing-20{
+    margin-top: 20px;
+    margin-bottom: 20px;
   }
   .listElementSelect{
     width: 90%;

@@ -25,7 +25,7 @@
         <header class="horizontal-spacing"  ng-click="backHome()">
             <i class="home"></i>
         </header>
-        <header  ng-show="campaign.accessible" class="horizontal-spacing" ng-class="{selected: returnPath(selectedType) == 'catalog'}"  ng-click="openCatalog()"  >
+        <header  ng-show="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog()"  >
             <i18n>CATALOG</i18n>
         </header>
         <header class="horizontal-spacing" ng-class="{selected: returnPath(selectedType) == 'order'}" ng-click="openOrder()" >
@@ -46,14 +46,11 @@
             <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
         </div>-->
     </div>
-
     <div class="twelve-mobile tabs vertical-spacing heading-tabs mobile-navigation" >
         <div class="purse-in-menue" ng-if="campaign.purse_enabled">
             <h4><i18n>purse</i18n> :</h4>&nbsp;
             <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
         </div>
     </div>
-
-
     <container template="campaign-main"></container>
 </div>

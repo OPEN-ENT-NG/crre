@@ -1,15 +1,18 @@
 <div ng-controller="catalogController" class="catalog">
-    <div class="cell twelve-mobile horizontal-spacing search-pagination four vertical-spacing-twice">
+    <div class="cell twelve horizontal-spacing search-pagination vertical-spacing-twice">
         <a ng-show="display.equipment" class="zero block-mobile"
             href="#/campaign/[[campaign.id]]/catalog">
             <i class="angle-double-left horizontal-spacing"></i>
             <i18n>back.to.catalog</i18n>
         </a>
         <div class="row twelve vertical-spacing" ng-show="!display.equipment">
-            <input class="row"
-                   type="text"
-                   ng-keyup="addFilter($event)"
-                   i18n-placeholder="add.a.filter"/></i>
+            <div class="search-bar">
+                <i class="search search-icon padding-20"></i>
+                <input class="twelve input-search"
+                       type="text"
+                       ng-keyup="addFilter($event)"
+                       i18n-placeholder="search.filter.catalog">
+            </div>
         </div>
     </div>
     <div class="row horizontal-spacing">
@@ -20,6 +23,32 @@
                 <div> [[ filter ]]</div>
             </div>
         </div>
+    </div>
+    <div class="row">
+        <button ng-click=""
+                class="filterButton">
+            <span>Disciplines</span>
+        </button>
+        <button ng-click=""
+                class="filterButton">
+            <span>Diplômes</span>
+        </button>
+        <button ng-click=""
+                class="filterButton">
+            <span>Niveaux</span>
+        </button>
+        <button ng-click=""
+                class="filterButton">
+            <span>Types de documents</span>
+        </button>
+        <button ng-click=""
+                class="filterButton">
+            <span>Éditeurs</span>
+        </button>
+        <button ng-click=""
+                class="filterButton">
+            <span>OS</span>
+        </button>
     </div>
     <nav class="prev-next vertical-spacing-four" ng-if="equipments.page_count > 1">
         <button ng-click="display.equipment = false; equipments.loadPrev(campaign.id, current.structure.id)"

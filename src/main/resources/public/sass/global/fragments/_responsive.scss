@@ -66,13 +66,11 @@
     }
   }
 
-  .catalog {
-    .left-detail-box {
-      left: 0 !important;
-      float: none !important;
-      width: 100% !important;
-      position: relative !important;
-    }
+  .detail-box {
+    left: 0 !important;
+    float: none !important;
+    width: 100% !important;
+    position: relative !important;
   }
 
   .empty-basket-message {

@@ -1,6 +1,6 @@
 button, input[type=button], a.button, input[type=submit], .drop-down-button
 label, .drop-down-button.hidden label {
-  background: #f71e35;
+  background: $red;
 }
 
 .responsive-table table thead td {
@@ -11,5 +11,6 @@ label, .drop-down-button.hidden label {
   color: black;
 }
 
-.tabs header:hover, .selected { 
+.tabs header:hover, .selected {
+  color:$secondary !important;
     }

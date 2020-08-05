@@ -165,7 +165,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.selectCampaign(idCampaign);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
-                template.close('right-side');
+                //template.close('right-side');
                 $scope.display.equipment = false;
                 Utils.safeApply($scope);
                 $scope.current.structure ? await $scope.equipments.sync(idCampaign, $scope.current.structure.id) : null;
@@ -181,7 +181,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if(!$scope.fromCatalog){
                     $scope.redirectTo(`/campaign/${idCampaign}/catalog`);
                 }
-                template.open('right-side', 'customer/campaign/catalog/equipment-detail');
+                template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
                 Utils.safeApply($scope);
             },
