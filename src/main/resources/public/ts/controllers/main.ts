@@ -361,6 +361,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager);
         };
 
+        $scope.isValidator = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator);
+        };
+
         $scope.isAdministrator = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator);
         };

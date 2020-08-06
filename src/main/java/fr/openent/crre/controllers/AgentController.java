@@ -28,7 +28,7 @@ import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayRespo
 
 public class AgentController extends ControllerHelper {
 
-    private AgentService agentService;
+    private final AgentService agentService;
 
     public AgentController () {
         super();
@@ -61,7 +61,9 @@ public class AgentController extends ControllerHelper {
 
     @Put("/agent/:id")
     @ApiDoc("Update an agent based on provided id")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    //@SecuredAction(value = "", type = ActionType.RESOURCE)
+    //TODO remettre la partie commenté et le droit validateur au bon endroit
+    @SecuredAction(Crre.VALIDATOR_RIGHT)
     @ResourceFilter(AdministratorRight.class)
     public void updateAgent (final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "agent", new Handler<JsonObject>() {
