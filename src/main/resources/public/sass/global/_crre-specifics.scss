@@ -264,10 +264,10 @@ body.crre {
       background-color: white;
       display: flex;
       align-items: center;
-      .search-icon{
+      > i {
         margin: 0;
       }
-      .input-search{
+      > input {
         margin-bottom: 0;
         border: unset;
         box-shadow: none;
@@ -280,6 +280,37 @@ body.crre {
       margin: 0.5em;
       padding: 5px 15px;
       color: black;
+      display: flex;
+      align-items: center;
+      > span {
+        padding: 0 15px;
+      }
+      > i {
+        margin: 0;
+        color: $secondary;
+        height: 25px;
+        width: 25px;
+        filter: invert(58%) sepia(79%) saturate(4662%) hue-rotate(156deg) brightness(88%) contrast(82%);
+      }
+      > i.school {
+        background-image: url(/crre/public/img/scss/school.svg);
+      }
+      > i.star-circle {
+        background-image: url(/crre/public/img/scss/star-circle.svg);
+      }
+      > i.book-variant {
+        background-image: url(/crre/public/img/scss/book-variant.svg);
+      }
+      > i.phone-infos {
+        background-image: url(/crre/public/img/scss/cellphone-information.svg);
+      }
+      > i.editor {
+        background-image: url(/crre/public/img/scss/editor.svg);
+      }
+      > i.arrow {
+        color: black;
+        filter: unset;
+      }
     }
   }
 

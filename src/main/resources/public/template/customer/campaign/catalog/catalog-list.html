@@ -7,8 +7,8 @@
         </a>
         <div class="row twelve vertical-spacing" ng-show="!display.equipment">
             <div class="search-bar">
-                <i class="search search-icon padding-20"></i>
-                <input class="twelve input-search"
+                <i class="search padding-20"></i>
+                <input class="twelve"
                        type="text"
                        ng-keyup="addFilter($event)"
                        i18n-placeholder="search.filter.catalog">
@@ -27,27 +27,39 @@
     <div class="row">
         <button ng-click=""
                 class="filterButton">
+            <i class="school"></i>
             <span>Disciplines</span>
+            <i class="arrow bottom"></i>
         </button>
         <button ng-click=""
                 class="filterButton">
+            <i class="star-circle"></i>
             <span>Diplômes</span>
+            <i class="arrow bottom"></i>
         </button>
         <button ng-click=""
                 class="filterButton">
+            <i class="star-circle"></i>
             <span>Niveaux</span>
+            <i class="arrow bottom"></i>
         </button>
         <button ng-click=""
                 class="filterButton">
+            <i class="book-variant"></i>
             <span>Types de documents</span>
+            <i class="arrow bottom"></i>
         </button>
         <button ng-click=""
                 class="filterButton">
+            <i class="editor"></i>
             <span>Éditeurs</span>
+            <i class="arrow bottom"></i>
         </button>
         <button ng-click=""
                 class="filterButton">
+            <i class="phone-infos"></i>
             <span>OS</span>
+            <i class="arrow bottom"></i>
         </button>
     </div>
     <nav class="prev-next vertical-spacing-four" ng-if="equipments.page_count > 1">

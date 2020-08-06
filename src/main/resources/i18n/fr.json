@@ -33,6 +33,7 @@
   "crre.catalog": "Catalogue",
   "crre.order.tracking": "Suivi des commandes",
   "crre.request.tracking": "Suivi des demandes",
+  "crre.request.mine": "Mes demandes",
   "crre.agent.add": "Ajouter un correspondant",
   "crre.agent.modify": "Modifier un correspondant",
   "crre.locality.agents": "Correspondants région",
