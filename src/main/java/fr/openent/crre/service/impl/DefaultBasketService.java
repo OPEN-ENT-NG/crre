@@ -61,12 +61,10 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
                 ") ep ON basket_option.id_option = ep.id " +
                 "INNER JOIN (" +
-                "SELECT equipment.*, tax.value tax_amount, contract.file " +
+                "SELECT equipment.*, tax.value tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".tax ON tax.id = equipment.id_tax " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON equipment.id_contract = contract.id " +
                 ") as e ON e.id = basket.id_equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON contract.id = e.id_contract " +
                 "WHERE basket.id_campaign = ? " +
                 "AND basket.id_structure = ? " +
                 "GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure, basket.id_type);";

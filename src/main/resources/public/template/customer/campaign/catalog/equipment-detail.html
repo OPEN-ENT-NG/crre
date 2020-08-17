@@ -1,8 +1,9 @@
-<div class="twelve equipment-detail">
+<div ng-controller="catalogController" class="catalog">
+    <div class="twelve equipment-detail">
     <div class="vertical-spacing-20">
         <a ng-show="display.equipment" href="#/campaign/[[campaign.id]]/catalog">
-            <i class="back nav-arrow horizontal-spacing"></i>
-            <i18n>back.to.catalog</i18n>
+            <i style = "color: #e6a618" class="back nav-arrow horizontal-spacing"></i>
+            <i18n style="font-weight: bold">back.to.catalog</i18n>
         </a>
     </div>
     <div class="card row padding-20" ng-show="display.equipment">
@@ -32,12 +33,70 @@
                                    ng-model="basket.amount"/>
                             <i class="plus" ng-click="amountIncrease()"></i>
                         </div>
-                        <div class="centered-text row"><input type="button"  ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" ng-disabled="!validArticle(basket.equipment)" /> </div>
+                        <div class="centered-text row"><input type="button" ng-disabled="!validArticle(basket.equipment)" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+
                     </div>
                 </article>
             </div>
         </div>
-
+        <div>
+            <h2>
+                <i18n>crre.information</i18n>
+            </h2>
+            <table class="table">
+                <tbody>
+                <tr>
+                    <td><i18n>crre.equipment.editor</i18n></td>
+                    <td>[[basket.equipment.editor_name]]</td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.author</i18n></td>
+                    <td>[[basket.equipment.author]]</td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.date</i18n></td>
+                    <td>[[basket.equipment.parution_date]]</td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.field</i18n></td>
+                    <td>[[basket.equipment.subject_name]]</td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.level</i18n></td>
+                    <td>[[basket.equipment.grade_name]]</td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.ean</i18n></td>
+                    <td>[[basket.equipment.ean]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h2>
+                <i18n>crre.equipment.details</i18n>
+            </h2>
+            <table class="table">
+                <tbody>
+                <tr>
+                    <td><i18n>crre.equipment.duration</i18n></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.end.availability</i18n></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.equipment.offer</i18n></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><i18n>crre.tax</i18n></td>
+                    <td>[[basket.equipment.tax_amount]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
         <div ng-show="basket.equipment.technical_specs.length !== 0">
             <h2>
                 <i18n>SPECIFICATIONS</i18n>
@@ -92,4 +151,5 @@
             </table>
         </div>
     </div>
+</div>
 </div>

@@ -37,11 +37,13 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Future<JsonArray> purseFuture = Future.future();
         Future<JsonArray> orderFuture = Future.future();
 
+
         CompositeFuture.all(campaignFuture, purseFuture, orderFuture).setHandler(event -> {
             if (event.succeeded()) {
                 JsonArray campaigns = campaignFuture.result();
                 JsonArray purses = purseFuture.result();
                 JsonArray orders = orderFuture.result();
+
 
                 JsonObject campaignMap = new JsonObject();
                 JsonObject object, campaign;
@@ -102,6 +104,15 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
     }
 
+    private void getCampaignsLicences(String idStructure, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT licences.amount, licences.initial_amount, id_campaign as id_campaign, name " +
+                "FROM " + Crre.crreSchema + ".purse " +
+                "LEFT JOIN " + Crre.crreSchema + ".licences ON id_purse = purse.id " +
+                "WHERE id_structure = ?";
+
+        Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
+    }
+
     private void getCampaignOrderStatusCount(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT count(*), id_campaign, status " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
@@ -146,13 +157,15 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Future<JsonArray> purseFuture = Future.future();
         Future<JsonArray> basketFuture = Future.future();
         Future<JsonArray> orderFuture = Future.future();
+        Future<JsonArray> licenceFuture = Future.future();
 
-        CompositeFuture.all(campaignFuture, purseFuture, basketFuture, orderFuture).setHandler(event -> {
+        CompositeFuture.all(campaignFuture, purseFuture, basketFuture, orderFuture, licenceFuture).setHandler(event -> {
             if (event.succeeded()) {
                 JsonArray campaigns = campaignFuture.result();
                 JsonArray baskets = basketFuture.result();
                 JsonArray purses = purseFuture.result();
                 JsonArray orders = orderFuture.result();
+                JsonArray licences = licenceFuture.result();
 
                 JsonObject campaignMap = new JsonObject();
                 JsonObject object, campaign;
@@ -170,7 +183,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         LOGGER.info("A basket is present on this structure but the structure is not linked to the campaign");
                     }
                 }
-
                 for (int i = 0; i < purses.size(); i++) {
                     object = purses.getJsonObject(i);
                     campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
@@ -179,6 +191,21 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         campaign.put("initial_purse_amount",object.getString("initial_amount"));
                     }catch (NullPointerException e){
                         LOGGER.info("A purse is present on this structure but the structure is not linked to the campaign");
+                    }
+                }
+
+                for (int i = 0; i < licences.size(); i++) {
+                    object = licences.getJsonObject(i);
+                    campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
+                    try {
+                            JsonArray arr = new JsonArray();
+                            arr.add(object);
+                            if(campaign.getInteger("id") == object.getInteger("id_campaign") && campaign.containsKey("purse_licence")) {
+                                arr = campaign.getJsonArray("purse_licence").add(object);
+                            }
+                            campaign.put("purse_licence", arr);
+                    } catch (NullPointerException e){
+                        LOGGER.info("A licence is present on this structure but the structure is not linked to the campaign");
                     }
                 }
                 for (int i = 0; i < orders.size(); i++) {
@@ -205,6 +232,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         getCampaignsInfo(idStructure, handlerJsonArray(campaignFuture));
         getCampaignsPurses(idStructure, handlerJsonArray(purseFuture));
         getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture));
+        getCampaignsLicences(idStructure, handlerJsonArray(licenceFuture));
         getBasketCampaigns(idStructure, handlerJsonArray(basketFuture));
     }
 

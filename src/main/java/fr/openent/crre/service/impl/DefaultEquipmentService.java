@@ -10,11 +10,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.elasticsearch.BulkRequest;
+import org.entcore.common.elasticsearch.ElasticSearch;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.util.List;
+
 
 public class DefaultEquipmentService extends SqlCrudService implements EquipmentService {
 
@@ -23,6 +26,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     private static final String VALUES = "values" ;
     private static final String ACTION = "action" ;
     private static final String PREPARED = "prepared" ;
+    public static final String EVENTS = "equipment";
 
     public DefaultEquipmentService(String schema, String table) {
         super(schema, table);
@@ -119,7 +123,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
     @Override
     public void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT e.*, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options " +
+        String query = "SELECT e.*, tax.value tax_amount, grade.name as grade_name, subject.name as subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
                 "FROM " + Crre.crreSchema + ".equipment e LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
                 "FROM " + Crre.crreSchema + ".equipment_option option " +
@@ -127,7 +131,11 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
                 ") opts ON opts.id_equipment = e.id " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
-
+                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (" +
                 " rel_group_campaign.id_campaign = ? " +
                 ((idStructure != null) ?
@@ -137,7 +145,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                                 " WHERE rel_group_structure.id_structure = ? )"
                         : ""
                 ) + ")and e.catalog_enabled = true AND e.status != 'OUT_OF_STOCK' " +
-                "GROUP BY (e.id, tax.id , nametype, contract.name,contract_type.name )";
+                "GROUP BY (e.id, tax.id , grade.id, subject.id nametype, contract.name,contract_type.name )";
 
         JsonArray values = new JsonArray().add(idCampaign);
         if (idStructure != null)
@@ -158,7 +166,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 values.add(filter).add(filter);
             }
         }
-        String query = "SELECT e.*, tax.value tax_amount, array_to_json(array_agg(DISTINCT opts)) as options " +
+        String query = "SELECT e.*, tax.value tax_amount, editor.name as editor_name, grade.name as grade_name, subject.name as subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
                 "FROM " + Crre.crreSchema + ".equipment e " +
                 "LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
@@ -167,13 +175,18 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
                 ") opts ON opts.id_equipment = e.id " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
+                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".editor ON (editor.id = e.id_editor) " +
+                "LEFT JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
+                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON ( " +
                 "rel_group_campaign.id_campaign = ? " +
                 "AND rel_group_campaign.id_structure_group IN (" +
                 "SELECT structure_group.id FROM " + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON rel_group_structure.id_structure_group = structure_group.id " +
                 "WHERE rel_group_structure.id_structure = ?)) AND e.status != 'OUT_OF_STOCK' " + queryFilter +
-                "GROUP BY (e.id, tax.id)";
+                "GROUP BY (e.id, tax.id, subject.id, grade.id, editor.id)";
 
 
         if (page != null) {
@@ -183,6 +196,51 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
+    /*public void test() {
+        sql.raw("Select * from crre.equipment", SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                final JsonArray results = event.right().getValue();
+                final int resultsSize = 0;
+                    final JsonArray eventsIds = new JsonArray();
+                    ElasticSearch es = ElasticSearch.getInstance();
+                    BulkRequest bulkRequest = es.bulk(EVENTS, ar -> {
+                if (ar.succeeded()) {
+                    JsonArray items = ar.result().getJsonArray("items");
+                    if (items.size() != resultsSize) {
+                        LOGGER.error("Error different sync length. Expected : " + resultsSize +
+                                " - Found : " + items.size());
+                        return;
+                    }
+                    int countWarningItems = 0;
+                    for (Object o: items) {
+                        final int itemStatus = ((JsonObject) o).getJsonObject("index").getInteger("status");
+                        if (itemStatus != 201) {
+                            if (itemStatus == 200) {
+                                countWarningItems++;
+                                //log.warn("Update event in ES : " + ((JsonObject) o).encode());
+                            } else {
+                                LOGGER.error("Error persisting event in ES : " + ((JsonObject) o).encode());
+                                return;
+                            }
+                        }
+                    }
+                    if (countWarningItems > 0) {
+                        LOGGER.warn("Update " + countWarningItems + " events in ES.");
+                    }
+                     
+                } else {
+                    LOGGER.error("Error sending events to elasticsearch", ar.cause());
+                }
+            });
+                    for (Object o : results) {
+                        JsonObject j = (JsonObject) o;
+                        eventsIds.add(j.getString("_id"));
+                        bulkRequest.index(j, null);
+                    }
+                    bulkRequest.end();
+        }
+    }));
+    }*/
 
     public void create(final JsonObject equipment, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".equipment_id_seq') as id";

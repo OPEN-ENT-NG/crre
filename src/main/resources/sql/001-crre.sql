@@ -72,6 +72,26 @@ CREATE TABLE crre.tax (
   CONSTRAINT "Check_tax_value" CHECK (value >= 0::numeric)
 );
 
+CREATE TABLE crre.distributor
+(
+    id bigserial NOT NULL,
+    name character varying NOT NULL,
+    CONSTRAINT distributor_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.editor (
+  id bigserial NOT NULL,
+  name character varying(255),
+  address character varying(255),
+  phone character varying(50),
+  email character varying(255),
+  id_distributor bigint,
+  CONSTRAINT editor_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_distributor_id FOREIGN KEY (id_distributor)
+  REFERENCES crre.distributor (id) MATCH SIMPLE
+  ON UPDATE NO ACTION ON DELETE CASCADE,
+);
+
 INSERT INTO crre.tax (id, name, value) VALUES (1, 'TVA', 20);
 INSERT INTO crre.tax (id, name, value) VALUES (2, 'Taxe 15.0%', 15.0);
 INSERT INTO crre.tax (id, name, value) VALUES (3, 'Taxe 5.0%', 5.0);
@@ -81,12 +101,15 @@ CREATE TABLE crre.equipment (
   name character varying(255) NOT NULL,
   summary character varying(300),
   description text,
+  author character varying(255),
   price numeric NOT NULL,
   id_tax bigint NOT NULL,
   image character varying(100),
   id_contract bigint,
+  id_editor bigint,
   status character varying(50),
   technical_specs json,
+  parution_date date,
   option_enabled boolean NOT NULL DEFAULT false,
   reference character varying(50),
   price_editable boolean NOT NULL DEFAULT false,
@@ -96,6 +119,9 @@ CREATE TABLE crre.equipment (
   ON UPDATE NO ACTION ON DELETE CASCADE ,
   CONSTRAINT fk_tax_id FOREIGN KEY (id_tax)
   REFERENCES crre.tax (id) MATCH SIMPLE
+  ON UPDATE NO ACTION ON DELETE CASCADE,
+  CONSTRAINT fk_editor_id FOREIGN KEY (id_editor)
+  REFERENCES crre.editor (id) MATCH SIMPLE
   ON UPDATE NO ACTION ON DELETE CASCADE,
   CONSTRAINT "Check_price_positive" CHECK (price >= 0::numeric)
 );
@@ -139,6 +165,26 @@ CREATE TABLE crre.logs (
     CONSTRAINT structure_group_pkey PRIMARY KEY (id)
 );
 
+	CREATE TABLE crre.subject
+(
+    id bigserial NOT NULL,
+    name character varying NOT NULL,
+    CONSTRAINT subject_pkey PRIMARY KEY (id)
+);
+
+	CREATE TABLE crre.collection
+(
+    id bigserial NOT NULL,
+    name character varying NOT NULL,
+    CONSTRAINT collection_pkey PRIMARY KEY (id)
+);
+	CREATE TABLE crre.grade
+(
+    id bigserial NOT NULL,
+    name character varying NOT NULL,
+    CONSTRAINT grade_pkey PRIMARY KEY (id)
+);
+
 	CREATE TABLE crre.campaign
 (
     id bigserial NOT NULL,
@@ -174,6 +220,45 @@ CREATE TABLE crre.rel_group_structure
         ON UPDATE NO ACTION ON DELETE NO ACTION
 );
 
+CREATE TABLE crre.rel_equipment_collection
+(
+    id_equipment bigint NOT NULL,
+    id_collection bigint NOT NULL,
+    CONSTRAINT rel_equipment_collection_pkey PRIMARY KEY (id_equipment, id_collection),
+    CONSTRAINT fk_id_equipment FOREIGN KEY (id_equipment)
+        REFERENCES crre.equipment (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE NO ACTION,
+    CONSTRAINT fk_id_collection FOREIGN KEY (id_collection)
+        REFERENCES crre.collection (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+
+CREATE TABLE crre.rel_equipment_subject
+(
+    id_equipment bigint NOT NULL,
+    id_subject bigint NOT NULL,
+    CONSTRAINT rel_equipment_subject_pkey PRIMARY KEY (id_equipment, id_subject),
+    CONSTRAINT fk_id_equipment FOREIGN KEY (id_equipment)
+        REFERENCES crre.equipment (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE NO ACTION,
+    CONSTRAINT fk_id_subject FOREIGN KEY (id_subject)
+        REFERENCES crre.subject (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+
+CREATE TABLE crre.rel_equipment_grade
+(
+    id_equipment bigint NOT NULL,
+    id_grade bigint NOT NULL,
+    CONSTRAINT rel_equipment_grade_pkey PRIMARY KEY (id_equipment, id_grade),
+    CONSTRAINT fk_id_equipment FOREIGN KEY (id_equipment)
+        REFERENCES crre.equipment (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE NO ACTION,
+    CONSTRAINT fk_id_grade FOREIGN KEY (id_grade)
+        REFERENCES crre.grade (id) MATCH SIMPLE
+        ON UPDATE NO ACTION ON DELETE NO ACTION
+);
+
 CREATE TABLE crre.purse(
   id bigserial NOT NULL,
   id_structure character varying(36),
@@ -188,6 +273,20 @@ CREATE TABLE crre.purse(
   CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric)
 );
 
+CREATE TABLE crre.licences
+(
+    id_purse bigint NOT NULL,
+    name character varying(36),
+    amount bigint,
+    initial_amount bigint,
+    id bigint NOT NULL,
+    CONSTRAINT licences_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_purse_id FOREIGN KEY (id_purse)
+        REFERENCES crre.purse (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+
 CREATE TABLE crre.basket_equipment (
     id bigserial NOT NULL,
     amount integer NOT NULL,
@@ -197,7 +296,7 @@ CREATE TABLE crre.basket_equipment (
     id_structure character varying NOT NULL,
     "comment" TEXT,
     price_proposal numeric,
-    id_type bigint NOT NULL DEFAULT 1,
+    id_type bigint DEFAULT 1,
     PRIMARY KEY (id),
     CONSTRAINT fk_equipment_id FOREIGN KEY (id_equipment)
         REFERENCES crre.equipment (id) MATCH SIMPLE

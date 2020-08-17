@@ -383,7 +383,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.calculatePriceTTC = (price, tax_value, roundNumber?: number) =>  {
-                Utils.calculatePriceTTC(price,tax_value,roundNumber);
+                return Utils.calculatePriceTTC(price,tax_value,roundNumber);
         };
 
         /**
