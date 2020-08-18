@@ -314,8 +314,37 @@ body.crre {
     }
   }
 
-  .equipment-detail h1, a {
-    color: $secondary !important;
+  .equipment-detail {
+    h1, h2, a {
+      color: $secondary !important;
+    }
+    h4,h3 {
+      color: black;
+    }
+    h3 {
+      font-weight: bold;
+    }
+    h4 {
+      font-weight: 400;
+    }
+    .editor {
+      color:lightgray;
+    }
+    table {
+      tr {
+        border: none;
+      }
+
+      tr:nth-child(2n) {
+        background-color: #f7f6f6;
+      }
+    }
+    i.back{
+      color: #e6a618
+    }
+    input[type="button"] {
+      float: right;
+    }
   }
 
   .padding-20{
@@ -371,31 +400,22 @@ body.crre {
     }
   }
 
-  i.moins{
-    height: 21px;
-    display: inline-block;
-    width: 15px;
-    position: relative;
-  }
   i.plus::before{
     content: '\e85e';
-    font-weight: bolder;
-    color: #2a9cc8;
+    color: $secondary;
     height: 21px;
     display: inline-block;
     line-height: 21px;
+    font-size: x-large;
+    padding: 0 15px;
   }
   i.moins::before{
     content: '-';
-    font-size: 3em;
-    color: $primary-dark;
-    position: absolute;
-    right: auto;
-    width: 15px;
-    height: 21px;
-    text-align: center;
-    top: -4px;
-    left: 0;
+    position: relative;
+    font-size: xxx-large;
+    padding: 0 20px;
+    top: 5px;
+    color: $secondary;
   }
 
   article.disabled {
@@ -466,7 +486,7 @@ body.crre {
         }
         h4 {
           position: relative;
-          margin: 0px;
+          margin: 0;
         }
         p.description {
           font-size: 14px;
@@ -475,6 +495,10 @@ body.crre {
           > i {
             background-image: url(/crre/public/img/scss/barcode.svg);
           }
+        }
+        strong {
+          display: block;
+          margin: 10px 0 5px 0;
         }
       }
     }

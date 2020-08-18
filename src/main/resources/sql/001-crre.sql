@@ -89,7 +89,7 @@ CREATE TABLE crre.editor (
   CONSTRAINT editor_pkey PRIMARY KEY (id),
   CONSTRAINT fk_distributor_id FOREIGN KEY (id_distributor)
   REFERENCES crre.distributor (id) MATCH SIMPLE
-  ON UPDATE NO ACTION ON DELETE CASCADE,
+  ON UPDATE NO ACTION ON DELETE CASCADE
 );
 
 INSERT INTO crre.tax (id, name, value) VALUES (1, 'TVA', 20);
@@ -113,6 +113,10 @@ CREATE TABLE crre.equipment (
   option_enabled boolean NOT NULL DEFAULT false,
   reference character varying(50),
   price_editable boolean NOT NULL DEFAULT false,
+  ean character varying(100),
+  offer character varying(300),
+  duration bigint,
+  end_availability date,
   CONSTRAINT equipment_pkey PRIMARY KEY (id),
   CONSTRAINT fk_contract_id FOREIGN KEY (id_contract)
   REFERENCES crre.contract (id) MATCH SIMPLE

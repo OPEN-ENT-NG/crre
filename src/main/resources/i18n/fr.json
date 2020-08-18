@@ -541,7 +541,7 @@
   "support.market": "Marché Support",
   "crre.contract.type.placeholder": "Sélectionner le marché support",
   "basket.price.null": "Prix TTC de l'équipement égal à zéro non autorisé",
-  "crre.error.purse.negative": "Le montant de la cagnotte ne doit pas être négatif après déduction des demandes déjà effectuées par l'établissement"
-
-
+  "crre.error.purse.negative": "Le montant de la cagnotte ne doit pas être négatif après déduction des demandes déjà effectuées par l'établissement",
+  "etablissement.price": "Prix établissement",
+  "per.student.per.year": " / élève / an"
 }

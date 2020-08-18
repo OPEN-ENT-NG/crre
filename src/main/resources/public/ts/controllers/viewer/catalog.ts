@@ -68,4 +68,12 @@ export const catalogController = ng.controller('catalogController',
         $scope.amountDecrease = () => {
             $scope.basket.amount -= 1;
         };
+        $scope.durationFormat = (nbr : number) =>  {
+            if(nbr == 0)
+                return "Illimitée";
+            else if(nbr == 1)
+                return nbr.toString() + " année scolaire";
+            else
+                return nbr.toString() + "années scolaires";
+        }
     }]);

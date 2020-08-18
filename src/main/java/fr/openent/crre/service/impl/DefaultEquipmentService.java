@@ -166,7 +166,11 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 values.add(filter).add(filter);
             }
         }
-        String query = "SELECT e.*, tax.value tax_amount, editor.name as editor_name, grade.name as grade_name, subject.name as subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
+        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, e.id_contract, " +
+                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
+                "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
+                "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
+                "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
                 "FROM " + Crre.crreSchema + ".equipment e " +
                 "LEFT JOIN ( " +
                 "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
@@ -186,7 +190,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "SELECT structure_group.id FROM " + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON rel_group_structure.id_structure_group = structure_group.id " +
                 "WHERE rel_group_structure.id_structure = ?)) AND e.status != 'OUT_OF_STOCK' " + queryFilter +
-                "GROUP BY (e.id, tax.id, subject.id, grade.id, editor.id)";
+                "GROUP BY (e.id, tax.id, editor.id)";
 
 
         if (page != null) {
