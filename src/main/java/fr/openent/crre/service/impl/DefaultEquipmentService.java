@@ -105,15 +105,16 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "FROM  " + Crre.crreSchema + ".equipment equip    " +
                 "LEFT JOIN " + Crre.crreSchema + ".equipment_option ON (equip.id = equipment_option.id_equipment) " +
                 "LEFT JOIN ( " +
-                "SELECT equipment.id as id_equipment, equipment.reference, equipment.id_type, equipment_option.id, equipment_option.id_option, equipment.name, equipment.price, equipment_option.amount " +
-                "equipment_option.required, tax.value as tax_amount, equipment_option.id_equipment as master_equipment, " +
+                "SELECT equipment.id as id_equipment, equipment.reference, equipment_option.id, " +
+                "equipment_option.id_option, equipment.name, equipment.price, equipment_option.amount, " +
+                "equipment_option.required, tax.value as tax_amount, equipment_option.id_equipment as master_equipment " +
                 "FROM " + Crre.crreSchema + ".equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".tax  ON (equipment.id_tax = tax.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".equipment_option  ON (equipment_option.id_option = equipment.id) " +
                 ") opts ON (equipment_option.id_option = opts.id_equipment AND opts.master_equipment = equip.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".tax ON tax.id = equip.id_tax " +
                 "WHERE equip.id = ? " +
-                "GROUP BY (equip.id, tax.id, supplier.name, contract.name, tax.value) " +
+                "GROUP BY (equip.id, tax.id, tax.value) " +
                 "ORDER by equip.name ASC " +
                 "LIMIT 50 OFFSET 0";
 
@@ -145,7 +146,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                                 " WHERE rel_group_structure.id_structure = ? )"
                         : ""
                 ) + ")and e.catalog_enabled = true AND e.status != 'OUT_OF_STOCK' " +
-                "GROUP BY (e.id, tax.id , grade.id, subject.id nametype, contract.name,contract_type.name )";
+                "GROUP BY (e.id, tax.id , grade.id, subject.id nametype )";
 
         JsonArray values = new JsonArray().add(idCampaign);
         if (idStructure != null)
@@ -166,7 +167,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 values.add(filter).add(filter);
             }
         }
-        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, e.id_contract, " +
+        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
                 "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
                 "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
                 "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +

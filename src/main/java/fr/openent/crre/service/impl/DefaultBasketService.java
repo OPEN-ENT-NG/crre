@@ -55,7 +55,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "LEFT JOIN " + Crre.crreSchema + ".basket_option ON basket_option.id_basket_equipment = basket.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_file ON basket.id = basket_file.id_basket_equipment " +
                 "LEFT JOIN (" +
-                "SELECT equipment_option.amount, equipment_option.required, equipment_option.id, tax.value as tax_amount, equipment_option.id_equipment, equipment.name, equipment.price , equipment.id_type " +
+                "SELECT equipment_option.amount, equipment_option.required, equipment_option.id, tax.value as tax_amount, equipment_option.id_equipment, equipment.name, equipment.price " +
                 "FROM " + Crre.crreSchema + ".equipment_option " +
                 "INNER JOIN " + Crre.crreSchema + ".equipment ON equipment_option.id_option = equipment.id " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +

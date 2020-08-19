@@ -38,25 +38,21 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     @Override
     public void listOrder(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT oe.id as id, oe.comment, oe.price_proposal,prj.preference as preference, prj.id as id_project, oe.id_project, oe.price, oe.tax_amount, oe.amount,oe.creation_date, oe.id_campaign," +
+        String query = "SELECT oe.id as id, oe.comment, oe.price_proposal, oe.price, oe.tax_amount, oe.amount,oe.creation_date, oe.id_campaign," +
                 " oe.id_structure, oe.name, oe.summary, oe.image, oe.status, oe.id_contract, oe.rank," +
-                " array_to_json(array_agg(order_opts)) as options, to_json(prj.*) as project,to_json(tt.*) as title," +
+                " array_to_json(array_agg(order_opts)) as options," +
                 " c.name as name_supplier, array_to_json(array_agg(DISTINCT order_file.*)) as files  " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +
                 "LEFT JOIN "+ Crre.crreSchema + ".order_client_options order_opts ON " +
                 "oe.id = order_opts.id_order_client_equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".project as prj ON oe.id_project = prj.id " +
-                "INNER JOIN " + Crre.crreSchema + ".title as tt ON tt.id = prj.id_title " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
                 "INNER JOIN (SELECT supplier.name, contract.id FROM " + Crre.crreSchema + ".supplier INNER JOIN "
                 + Crre.crreSchema + ".contract ON contract.id_supplier = supplier.id) c " +
                 "ON oe.id_contract = c.id WHERE id_campaign = ? AND id_structure = ? " +
-                "GROUP BY (prj.id , oe.id, tt.id, c.name,prj.preference,campaign.priority_enabled) " +
+                "GROUP BY ( oe.id, c.name,campaign.priority_enabled) " +
                 "ORDER BY CASE WHEN campaign.priority_enabled = false " +
-                "THEN oe.creation_date END ASC, " +
-                "CASE WHEN campaign.priority_enabled = true "+
-                "THEN preference END ASC";
+                "THEN oe.creation_date END ASC";
 
         values.add(idCampaign).add(idStructure);
 
@@ -66,11 +62,11 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public  void listOrder(String status, Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT oce.*, prj.id as id_project,prj.preference as preference , to_json(contract.*) contract,  to_json(ct.*) contract_type " +
+        String query = "SELECT oce.* , to_json(contract.*) contract,  to_json(ct.*) contract_type " +
                 ",to_json(supplier.*) supplier, " +
                 "to_json(campaign.* ) campaign,  array_to_json(array_agg( DISTINCT oco.*)) as options, " +
-                "array_to_json(array_agg( distinct structure_group.name)) as structure_groups,to_json(prj.*) as project," +
-                " to_json(  tt.*) as title, " + Crre.crreSchema + ".order.order_number ," +
+                "array_to_json(array_agg( distinct structure_group.name)) as structure_groups," +
+                Crre.crreSchema + ".order.order_number ," +
                 "             ROUND((( SELECT CASE          " +
                 "            WHEN oce.price_proposal IS NOT NULL THEN 0     " +
                 "            WHEN oce.override_region IS NULL THEN 0 " +
@@ -90,8 +86,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "Inner join " + Crre.crreSchema + ".contract_type ct ON ct.id = contract.id_contract_type "+
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON contract.id_supplier = supplier.id " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
-                "INNER JOIN " + Crre.crreSchema + ".project as prj ON oce.id_project = prj.id " +
-                "INNER JOIN " + Crre.crreSchema + ".title as tt ON tt.id = prj.id_title " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "LEFT OUTER JOIN " + Crre.crreSchema + ".order ON (oce.id_order = " + Crre.crreSchema + ".order.id) " +
@@ -99,27 +93,25 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "AND rel_group_campaign.id_structure_group = structure_group.id) " +
                 " LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "WHERE oce.status = ? " +
-                "GROUP BY (prj.preference, prj.id , oce.id, contract.id, ct.id, supplier.id, campaign.id, tt.id, " + Crre.crreSchema + ".order.order_number) ORDER BY oce.id_project DESC;";
+                "GROUP BY (oce.id, contract.id, ct.id, supplier.id, campaign.id, " + Crre.crreSchema + ".order.order_number);";
         sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void listOrders(List<Integer> ids, Handler<Either<String, JsonArray>> handler) {
 
-        String query = "SELECT oce.* , prj.id as id_project ,prj.preference as preference , oce.price * oce.amount as total_price , " +
+        String query = "SELECT oce.* , oce.price * oce.amount as total_price , " +
                 "to_json(contract.*) contract ,to_json(supplier.*) supplier, " +
-                "to_json(campaign.* ) campaign, to_json( prj.*) as project, to_json( tt.*) as title, " +
+                "to_json(campaign.* ) campaign, " +
                 "array_to_json(array_agg(  oco.*)) as options " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN "+ Crre.crreSchema + ".order_client_options oco " +
                 "ON oco.id_order_client_equipment = oce.id " +
                 "LEFT JOIN "+ Crre.crreSchema + ".contract ON oce.id_contract = contract.id " +
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON contract.id_supplier = supplier.id " +
-                "INNER JOIN " + Crre.crreSchema + ".project as prj ON oce.id_project = prj.id " +
-                "INNER JOIN " + Crre.crreSchema + ".title as tt ON tt.id = prj.id_title " +
                 "INNER JOIN "+ Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "WHERE oce.id in "+ Sql.listPrepared(ids.toArray()) +
-                " GROUP BY (prj.preference, prj.id , oce.id, tt.id, gr.id, contract.id, supplier.id, campaign.id) ORDER BY prj.preference, oce.id_project DESC; ";
+                " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id); ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Integer id : ids) {
@@ -294,7 +286,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         String closeCaseForPriceProposal="END ";
 
         String query = "SELECT oe.name as equipment_name, oe.amount as equipment_quantity, " +
-                "oe.creation_date as equipment_creation_date,title.name as project_name, oe.summary as equipment_summary, " +
+                "oe.creation_date as equipment_creation_date, oe.summary as equipment_summary, " +
                 "oe.status as equipment_status,cause_status, price_all_options, " +
                 "CASE count(price_all_options) " +
                 "WHEN 0 THEN "+price_proposal+"ROUND ((oe.price+( oe.tax_amount*oe.price)/100)*oe.amount,2) "+closeCaseForPriceProposal+
@@ -306,10 +298,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
                 "GROUP BY id_order_client_equipment)" +
                 " opts ON oe.id = opts.id_order_client_equipment " +
-                " INNER JOIN " + Crre.crreSchema + ".project on project.id = oe.id_project " +
-                "INNER JOIN " + Crre.crreSchema + ".title ON (project.id_title = title.id) " +
                 " WHERE id_campaign = ? AND id_structure = ?" +
-                " GROUP BY oe.id, price_all_options, title.name ORDER BY creation_date";
+                " GROUP BY oe.id, price_all_options ORDER BY creation_date";
 
         values.add(idCampaign).add(idStructure);
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
@@ -914,9 +904,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public void getOrder(Integer idOrder, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT oec.* , array_to_json( array_agg( project.* )) as project , array_to_json ( array_agg ( campaign.*)) as campaign " +
+        String query = "SELECT oec.* , array_to_json ( array_agg ( campaign.*)) as campaign " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oec " +
-                "INNER JOIN " + Crre.crreSchema + ".project on oec.id_project = project.id " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign on oec.id_campaign =  campaign.id " +
                 "where oec.id = ? " +
                 "group by oec.id";
@@ -959,22 +948,16 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "                                                         END)) AS price_single_ttc,  " +
                 "       to_json(contract.*) contract, " +
                 "       to_json(ct.*) contract_type, " +
-                "       to_json(campaign.*) campaign, " +
-                "       to_json(prj.*) AS project, " +
-                "       to_json(tt.*) AS title " +
+                "       to_json(campaign.*) campaign " +
                 "FROM  " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN  " + Crre.crreSchema + ".contract ON oce.id_contract = contract.id " +
                 "INNER JOIN  " + Crre.crreSchema + ".contract_type ct ON ct.id = contract.id_contract_type " +
                 "INNER JOIN  " + Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".project AS prj ON oce.id_project = prj.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".title AS tt ON tt.id = prj.id_title " +
                 "WHERE oce.status = '" + status + "' AND oce.id = ? " +
-                "GROUP BY (prj.id, " +
-                "          oce.id, " +
+                "GROUP BY (oce.id, " +
                 "          contract.id, " +
                 "          ct.id, " +
-                "          campaign.id, " +
-                "          tt.id)";
+                "          campaign.id)";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idOrder), SqlResult.validUniqueResultHandler(handler));
     }
