@@ -88,7 +88,22 @@ routes.define(($routeProvider) => {
             .when('/exports', {
                 action: 'exportList'
             });
-    } else {
+    }
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
+        $routeProvider.when('/campaign/:idCampaign/catalog', {
+            action: 'campaignCatalog'
+        })
+            .when('/campaign/:idCampaign/catalog/equipment/:idEquipment', {
+                action: 'equipmentDetail'
+            })
+            .when('/campaign/:idCampaign/order', {
+                action: 'campaignOrder'
+            })
+            .when('/campaign/:idCampaign/basket', {
+                action: 'campaignBasket'
+            });
+    }
+    else {
         $routeProvider
             .when('/campaign/:idCampaign/catalog', {
                 action: 'campaignCatalog'

@@ -501,7 +501,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         if ($scope.isManager() || $scope.isAdministrator()) {
             template.open('main-profile', 'administrator/management-main');
         }
-        else if ($scope.hasAccess() && !$scope.isManager() && !$scope.isAdministrator()) {
+        else if (($scope.hasAccess() || $scope.isValidator()) && !$scope.isManager() && !$scope.isAdministrator()) {
             // template.open('main-profile', 'customer/campaign/campaign-list');
         }
         Utils.safeApply($scope);

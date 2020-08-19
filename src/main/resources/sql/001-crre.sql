@@ -289,7 +289,7 @@ CREATE TABLE crre.licences
         REFERENCES crre.purse (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-)
+);
 
 CREATE TABLE crre.basket_equipment (
     id bigserial NOT NULL,
