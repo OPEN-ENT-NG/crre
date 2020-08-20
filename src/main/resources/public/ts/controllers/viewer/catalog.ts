@@ -74,6 +74,6 @@ export const catalogController = ng.controller('catalogController',
             else if(nbr == 1)
                 return nbr.toString() + " année scolaire";
             else
-                return nbr.toString() + "années scolaires";
+                return nbr.toString() + " années scolaires";
         }
     }]);
