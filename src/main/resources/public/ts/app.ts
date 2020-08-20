@@ -23,7 +23,7 @@ routes.define(($routeProvider) => {
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider.when('/campaigns/create', {
             action: 'createOrUpdateCampaigns'
-            })
+        })
             .when('/campaigns/update', {
                 action: 'createOrUpdateCampaigns'
             })
@@ -103,11 +103,10 @@ routes.define(($routeProvider) => {
                 action: 'campaignBasket'
             });
     }
-    else {
-        $routeProvider
-            .when('/campaign/:idCampaign/catalog', {
-                action: 'campaignCatalog'
-            })
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {
+        $routeProvider.when('/campaign/:idCampaign/catalog', {
+            action: 'campaignCatalog'
+        })
             .when('/campaign/:idCampaign/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'
             })
@@ -116,6 +115,15 @@ routes.define(($routeProvider) => {
             })
             .when('/campaign/:idCampaign/basket', {
                 action: 'campaignBasket'
+            });
+    }
+    else {
+        $routeProvider
+            .when('/campaign/:idCampaign/catalog', {
+                action: 'campaignCatalog'
+            })
+            .when('/campaign/:idCampaign/catalog/equipment/:idEquipment', {
+                action: 'equipmentDetail'
             });
     }
 

@@ -24,6 +24,7 @@ public class Crre extends BaseServer {
     public static final String ADMINISTRATOR_RIGHT = "crre.administrator";
     public static final String MANAGER_RIGHT = "crre.manager";
     public static final String VALIDATOR_RIGHT = "crre.validator";
+    public static final String PRESCRIPTOR_RIGHT = "crre.prescriptor";
     public static long timeout = 99999999999L;
     public static final String ORDERS = "ORDERS";
     public static final String INSTRUCTIONS = "INSTRUCTION";

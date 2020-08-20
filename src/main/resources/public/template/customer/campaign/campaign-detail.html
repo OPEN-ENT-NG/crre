@@ -2,7 +2,7 @@
     <nav class="vertical twelve-mobile mobile-navigation" side-nav>
         <ul>
             <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
-            <li><a ng-click="openCatalog()"><i18n>crre.CATALOG</i18n></a></li>
+            <li><a ng-click="openCatalog()"><i18n>crre.catalog</i18n></a></li>
             <li>
                 <a ng-click="openOrder()">
                     <i18n>crre.request.mine</i18n>
@@ -13,7 +13,7 @@
             </li>
             <li>
                 <a ng-click="openBasket()">
-                    <i18n>crre.BASKET</i18n>
+                    <i18n>crre.basket</i18n>
                     <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
                         [[campaign.nb_panier]]
                     </span>
@@ -28,14 +28,14 @@
         <header  ng-show="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog()"  >
             <i18n>crre.catalog</i18n>
         </header>
-        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order')}" ng-click="openOrder()" >
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order')}" ng-click="openOrder()" workflow="crre.prescriptor" >
             <span ng-show="campaign.purse_enabled"><i18n>crre.request.mine</i18n></span>
             <span ng-show="!campaign.purse_enabled"><i18n>crre.order.tracking</i18n></span>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
                     [[campaign.nb_order]]
             </span>
         </header>
-        <header  ng-if="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}" ng-click="openBasket()">
+        <header  ng-if="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}" ng-click="openBasket()" workflow="crre.prescriptor">
             <i18n>crre.basket</i18n>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
                     [[campaign.nb_panier]]

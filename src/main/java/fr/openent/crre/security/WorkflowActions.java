@@ -4,6 +4,7 @@ public enum WorkflowActions {
     ACCESS_RIGHT ("crre.access"),
     ADMINISTRATOR_RIGHT ("crre.administrator"),
     VALIDATOR_RIGHT ("crre.validator"),
+    PRESCRIPTOR_RIGHT ("crre.prescriptor"),
     MANAGER_RIGHT ("crre.manager");
 
     private final String actionName;

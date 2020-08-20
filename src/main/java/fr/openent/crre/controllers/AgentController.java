@@ -88,7 +88,8 @@ public class AgentController extends ControllerHelper {
 
     @Delete("/agent")
     @ApiDoc("Delete and agent based on provided id")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    //@SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(Crre.PRESCRIPTOR_RIGHT)
     @ResourceFilter(AdministratorRight.class)
     public void deleteAgent (HttpServerRequest request) {
         try{
