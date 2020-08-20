@@ -35,10 +35,8 @@ routes.define(($routeProvider) => {
             })
             .when('/structureGroups/create', {
                     action: 'createStructureGroup'
-            })
-            .when('/campaigns', {
-                action: 'manageCampaigns'
-            })
+                }
+            )
         ;
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager)) {
