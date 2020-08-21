@@ -14,27 +14,12 @@ body.crre {
   @import 'fragments/index';
 
   color: black;
-  $gray: #032030;
-  $red: #f71e35;
-  $primary: $gray;
+
   $secondary: #1794a5;
-  $accent: $secondary;
 
-  button, input[type=button], a.button, input[type=submit], .drop-down-button
-  label, .drop-down-button.hidden label {
-    background: $red;
-  }
-
-  .responsive-table table thead td {
-    color: white;
-  }
-
-  .responsive-table table tr {
+  .application-title{
     color: black;
-  }
-
-  .tabs header:hover, .selected {
-    color:$secondary !important;
+    font-weight: bold;
   }
 
   h4{
