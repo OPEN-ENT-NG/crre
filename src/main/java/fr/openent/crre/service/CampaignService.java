@@ -4,6 +4,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface CampaignService {
      * @param  idStructure of the structure
      * @param handler function handler returning data
      */
-    void listCampaigns(String idStructure, Handler<Either<String, JsonArray>> handler);
+    void listCampaigns(String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user);
     /**
      * Get a campaign information
      * @param id id campaign to get

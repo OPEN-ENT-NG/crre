@@ -18,6 +18,8 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,7 +48,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         );
     }
 
-    public void listBasket(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler){
+    public void listBasket(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT basket.id, basket.amount, basket.comment, basket.price_proposal::float , basket.processing_date, basket.id_campaign, basket.id_structure, " +
                 "array_to_json(array_agg( e.* )) as equipment," +
@@ -67,19 +69,20 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 ") as e ON e.id = basket.id_equipment " +
                 "WHERE basket.id_campaign = ? " +
                 "AND basket.id_structure = ? " +
+                "AND basket.owner_id = ? " +
                 "GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure);";
-        values.add(idCampaign).add(idStructure);
+        values.add(idCampaign).add(idStructure).add(user.getUserId());
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
-    public void create(final JsonObject basket, final Handler<Either<String, JsonObject>> handler) {
+    public void create(final JsonObject basket, UserInfos user, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".basket_equipment_id_seq') as id";
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
             if (event.isRight()) {
                 try {
                     final Number id = event.right().getValue().getInteger("id");
                     JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                            .add(getBasketEquipmentCreationStatement(id, basket));
+                            .add(getBasketEquipmentCreationStatement(id, basket, user));
 
                     JsonArray options = basket.getJsonArray("options");
                     int i = 0;
@@ -323,21 +326,22 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
      * @param basket basket Object
      * @return basket equipment relationship transaction statement
      */
-    private JsonObject getBasketEquipmentCreationStatement(Number id, JsonObject basket) {
+    private JsonObject getBasketEquipmentCreationStatement(Number id, JsonObject basket, UserInfos user) {
 
 
         String insertBasketEquipmentRelationshipQuery =
                 "INSERT INTO " + Crre.crreSchema + ".basket_equipment(" +
-                        "id, amount, processing_date, id_equipment, id_campaign, id_structure)" +
-                        "VALUES (?, ?, ?, ?, ?, ?);";
-
+                        "id, amount, processing_date, id_equipment, id_campaign, id_structure, owner_id, owner_name)" +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(id)
                 .add(basket.getInteger("amount"))
                 .add(basket.getString("processing_date"))
                 .add(basket.getInteger("equipment"))
                 .add(basket.getInteger("id_campaign"))
-                .add(basket.getString("id_structure"));
+                .add(basket.getString("id_structure"))
+                .add(user.getUserId())
+                .add(user.getUsername());
 
 
         return new JsonObject()

@@ -46,7 +46,7 @@ public class CampaignController extends ControllerHelper {
                 String idStructure = request.params().contains("idStructure")
                         ? request.params().get("idStructure")
                         : null;
-                campaignService.listCampaigns(idStructure, arrayResponseHandler(request));
+                campaignService.listCampaigns(idStructure, arrayResponseHandler(request), user);
             }else{
                 campaignService.listCampaigns(arrayResponseHandler(request));
             }

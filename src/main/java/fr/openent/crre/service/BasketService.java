@@ -5,6 +5,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.user.UserInfos;
 
 public interface BasketService {
     /**
@@ -12,7 +13,7 @@ public interface BasketService {
      * @param basket basket item to create
      * @param handler function handler returning data
      */
-     void create(JsonObject basket, Handler<Either<String, JsonObject>> handler);
+     void create(JsonObject basket, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * List  basket list of a campaign and a structure
@@ -20,7 +21,7 @@ public interface BasketService {
      * @param idStructure structure identifier
      * @param handler function handler returning data
      */
-     void listBasket(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler);
+     void listBasket(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user);
 
     /**
      * Delete a basket item

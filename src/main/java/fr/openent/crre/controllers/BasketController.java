@@ -19,6 +19,8 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -36,17 +38,19 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("List  basket liste of a campaigne and a structure")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void list(HttpServerRequest request) {
-        try {
-            Integer idCampaign = request.params().contains("idCampaign")
-                    ? Integer.parseInt(request.params().get("idCampaign"))
-                    : null;
-            String idStructure = request.params().contains("idStructure")
-                    ? request.params().get("idStructure")
-                    : null;
-            basketService.listBasket( idCampaign, idStructure, arrayResponseHandler(request));
-        } catch (ClassCastException e) {
-            log.error("An error occurred casting campaign id", e);
-        }
+        UserUtils.getUserInfos(eb, request, user -> {
+            try {
+                Integer idCampaign = request.params().contains("idCampaign")
+                        ? Integer.parseInt(request.params().get("idCampaign"))
+                        : null;
+                String idStructure = request.params().contains("idStructure")
+                        ? request.params().get("idStructure")
+                        : null;
+                basketService.listBasket(idCampaign, idStructure, arrayResponseHandler(request), user);
+            } catch (ClassCastException e) {
+                log.error("An error occurred casting campaign id", e);
+            }
+        });
     }
 
     @Post("/basket/campaign/:idCampaign")
@@ -54,11 +58,16 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value =  "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void create(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "basket", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject basket) {
-                basketService.create(basket, defaultResponseHandler(request) );
-            }
+
+        UserUtils.getUserInfos(eb, request, user -> {
+            RequestUtils.bodyToJson(request, pathPrefix + "basket", new Handler<JsonObject>() {
+                @Override
+                public void handle(JsonObject basket) {
+
+                    basketService.create(basket, user, defaultResponseHandler(request) );
+                }
+            });
+
         });
     }
 

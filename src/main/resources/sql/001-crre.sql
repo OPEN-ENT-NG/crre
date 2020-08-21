@@ -301,6 +301,8 @@ CREATE TABLE crre.basket_equipment (
     "comment" TEXT,
     price_proposal numeric,
     id_type bigint DEFAULT 1,
+    owner_id character varying,
+    owner_name character varying(255),
     PRIMARY KEY (id),
     CONSTRAINT fk_equipment_id FOREIGN KEY (id_equipment)
         REFERENCES crre.equipment (id) MATCH SIMPLE

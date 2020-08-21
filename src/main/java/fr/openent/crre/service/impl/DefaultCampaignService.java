@@ -18,6 +18,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 import java.util.Map;
@@ -152,7 +153,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
     }
 
-    public void listCampaigns(String idStructure,  Handler<Either<String, JsonArray>> handler) {
+    public void listCampaigns(String idStructure,  Handler<Either<String, JsonArray>> handler, UserInfos user) {
         Future<JsonArray> campaignFuture = Future.future();
         Future<JsonArray> purseFuture = Future.future();
         Future<JsonArray> basketFuture = Future.future();
@@ -218,6 +219,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     }
                 }
 
+
                 JsonArray campaignList = new JsonArray();
                 for (Map.Entry<String, Object> aCampaign : campaignMap) {
                     campaignList.add(aCampaign.getValue());
@@ -233,17 +235,18 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         getCampaignsPurses(idStructure, handlerJsonArray(purseFuture));
         getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture));
         getCampaignsLicences(idStructure, handlerJsonArray(licenceFuture));
-        getBasketCampaigns(idStructure, handlerJsonArray(basketFuture));
+        getBasketCampaigns(idStructure, handlerJsonArray(basketFuture), user);
     }
 
-    private void getBasketCampaigns(String idStructure, Handler<Either<String, JsonArray>> handler) {
+    private void getBasketCampaigns(String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user) {
         String query = "SELECT COUNT(basket_equipment.id) as nb_panier, campaign.id as id_campaign " +
                 "FROM " + Crre.crreSchema + ".basket_equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (campaign.id = basket_equipment.id_campaign) " +
                 "WHERE id_structure = ? " +
+                "AND basket_equipment.owner_id = ? " +
                 "GROUP BY campaign.id;";
 
-        Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(user.getUserId()), SqlResult.validResultHandler(handler));
     }
 
     public void getCampaign(Integer id, Handler<Either<String, JsonObject>> handler){
