@@ -453,6 +453,7 @@ body.crre {
       width: 12%;
       margin: 10px 20px;
       box-shadow: none !important;
+      font-size: 12px;
 
       &.list-item {
         width: 90% !important;
@@ -495,7 +496,7 @@ body.crre {
           margin: 0;
         }
         p.description {
-          font-size: 14px;
+          font-size: 12px;
           margin: initial;
           display: inline-flex;
           > i {
@@ -1182,4 +1183,8 @@ thead > tr > td > label input[type=checkbox]:checked+span::before, thead > tr > 
 .flexbox {
   display: flex;
   align-items: center;
+}
+
+.paddingTop {
+  padding-top: 80px;
 }

@@ -63,6 +63,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             main: async () => {
                 if ($scope.isManager() || $scope.isAdministrator()) {
                     $scope.redirectTo('/campaigns');
+                }
+                // à changer en fonction de l'adresse qu'aura le catalogue
+                else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isManager() && !$scope.isAdministrator()) {
+                    $scope.redirectTo('/campaign/1/catalog');
                 } else {
                     await $scope.initStructures();
                     await $scope.initCampaign($scope.current.structure);

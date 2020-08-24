@@ -16,7 +16,6 @@
         <article class="twelve cell"
                  ng-class="{disabled : !campaign.accessible}"
                  ng-repeat="campaign in campaigns.all track by $index">
-            <div class="ten cell eight-mobile" >
                 <h3 ng-class="!campaign.accessible ? 'title-disabled' : ''" >[[campaign.name]]</h3>
                 <div>
                     <p ng-bind-html="campaign.description" class="small-text"></p>
@@ -45,7 +44,7 @@
                                 </em>
                             </p>
                         </div>
-                        <div class="twelve-mobile right-magnet"  >
+                        <div class="twelve-mobile right-magnet paddingTop"  >
                             <div class="twelve-mobile cell ">
                                 <input type="button"
                                        class="button"
@@ -73,7 +72,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
             </div>
         </article>
     </div>
