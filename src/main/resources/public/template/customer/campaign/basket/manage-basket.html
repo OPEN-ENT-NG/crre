@@ -1,7 +1,7 @@
 <div  ng-controller="basketController">
     <div ng-show="baskets.all.length > 0">
         <div class="vertical-spacing-twice right-magnet twelve-mobile">
-            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><i18n>total</i18n> :
+            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><i18n>Total</i18n> :
                 <span class="color-orange" ng-bind="calculatePriceOfEquipmentsProposal(baskets, 2)| currency"></span>
             </h3>
             <input type="button" ng-click="takeClientProject(baskets)" i18n-value="crre.take.order"
@@ -16,7 +16,8 @@
             <div ng-repeat="basket in baskets.all track by $index" class="row">
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="basket.equipment.status !== 'AVAILABLE'">
                     <i18n ng-show="basket.equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
-                    <i18n ng-show="basket.equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n></h1>
+                    <i18n ng-show="basket.equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n>
+                </h1>
                 <article class="basket-item twelve cell"
                          ng-class="{ openedOptions: display.equipmentOption[$index], disabled: basket.equipment.status !== 'AVAILABLE' }">
                     <div class="cell width-40">

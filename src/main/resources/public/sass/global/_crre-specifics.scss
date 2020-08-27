@@ -448,64 +448,88 @@ body.crre {
   }
 
   .catalog-list {
-    .dominos .item {
-      max-width: 500px;
-      width: 12%;
-      margin: 10px 20px;
-      box-shadow: none !important;
-      font-size: 12px;
+    .dominos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
 
-      &.list-item {
-        width: 90% !important;
-        box-sizing: content-box;
-        margin: 0 auto;
-      }
+      .item {
+        max-width: 500px;
+        width: 14.66666666%;
+        margin: 1% 1% 0 1%;
+        box-shadow: none !important;
+        font-size: 14px;
 
-
-      article {
-        background-clip: unset !important;
-      }
-
-      h2 {
-        margin-left: 5%;
-      }
-      .top {
-        height: 190px;
-        background-color: unset;
-
-        &.item {
-          padding-left: 5% !important;
-          padding-right: 5% !important;
-          min-height: 200px;
-          padding-bottom: 5% !important;
-          height: auto !important;
-          width: 100% !important;
+        @media screen and (max-width: $tablette) {
+          max-width: unset !important;
+          width: 48% !important;
+        }
+        @media screen and (max-width: 550px) {
+          max-width: unset !important;
+          width: 98% !important;
         }
 
-        img {
-          position: relative;
-          height: auto;
-          width: 80%;
-          display: block;
+        &.list-item {
+          width: 90% !important;
+          box-sizing: content-box;
           margin: 0 auto;
-          max-height: 130px;
-          max-width: 160px;
         }
-        h4 {
-          position: relative;
-          margin: 0;
+
+
+        article {
+          background-clip: unset !important;
         }
-        p.description {
-          font-size: 12px;
-          margin: initial;
-          display: inline-flex;
-          > i {
-            background-image: url(/crre/public/img/scss/barcode.svg);
+
+        h2 {
+          margin-left: 5%;
+        }
+        .top {
+          height: 190px;
+          background-color: unset;
+
+          &.item {
+            padding-left: 5% !important;
+            padding-right: 5% !important;
+            min-height: 200px;
+            padding-bottom: 5% !important;
+            height: auto !important;
+            width: 100% !important;
           }
-        }
-        strong {
-          display: block;
-          margin: 10px 0 5px 0;
+
+          .image-container {
+            height: 60%;
+          }
+
+          img {
+            position: relative;
+            display: block;
+            margin: 0 auto;
+            height: 100%;
+            width: auto;
+          }
+          h4 {
+            position: relative;
+            margin: 0;
+          }
+          p.description {
+            font-size: 12px;
+            margin: initial;
+            display: inline-flex;
+            > i {
+              background-image: url(/crre/public/img/scss/barcode.svg);
+              background-size: 17px;
+              background-repeat: no-repeat;
+              position: relative;
+              top: 3px;
+            }
+            > b {
+              white-space: nowrap;
+            }
+          }
+          strong {
+            display: block;
+            margin: 10px 0 5px 0;
+          }
         }
       }
     }
@@ -949,10 +973,6 @@ body.crre {
   }
 
   .domino.loading-domino {
-    .image-container {
-      height: 100px;
-    }
-
     .loading-bar {
       position: absolute;
       top: 0;
@@ -966,7 +986,7 @@ body.crre {
     }
 
     .grey-matter {
-      max-height: 18px;
+      max-height: 14px;
     }
 
     .top {

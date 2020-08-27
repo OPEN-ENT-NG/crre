@@ -78,25 +78,24 @@
             <i class="open-right"></i>
         </button>
     </nav>
-    <div class="cell catalog-list" ng-class="{twelve: !display.equipment, 'border-list': display.equipment}"
-         ng-if="!equipments.loading">
+    <div class="cell catalog-list twelve" ng-if="!equipments.loading">
         <div class="dominos item_hover_accent_list">
-            <div class="item six-mobile" ng-class="{
-                    disabled: equipment.status!== 'AVAILABLE',
-                    'list-item': display.equipment
-                 }"
+            <div class="item six-mobile"
+                 ng-class="{disabled: equipment.status!== 'AVAILABLE', 'list-item': display.equipment}"
                  ng-repeat="equipment in equipments.all"
                  ng-click="openEquipment(equipment)">
 
-                <div ng-class="{disabled: equipment.status!== 'AVAILABLE'} "></div>
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">
-                    <i18n ng-show="equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
-                    <i18n ng-show="equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n></h1>
+                    <i18n ng-if="equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
+                    <i18n ng-if="equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n>
+                </h1>
 
                 <article class="domino"  ng-class="{ disabled: equipment.status !== 'AVAILABLE' }">
                     <div class="top" ng-class="{ item: display.equipment }">
+                        <div class="image-container">
                         <img ng-src="[[equipment.image]]" ng-show="equipment.image!==null && equipment.image!==undefined " />
                         <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.image===null || equipment.image===undefined "/>
+                        </div>
                         <strong class="ellipsis">[[equipment.name]]</strong>
                         <em class="metadata">[[equipment.contract_name]]</em>
                         <p class="description" ng-if="equipment.ean"><i></i> <b> EAN :  </b> [[equipment.ean]] </p>
@@ -105,28 +104,18 @@
             </div>
         </div>
     </div>
-    <div class="cell catalog-list" ng-if="equipments.loading">
+    <div class="cell catalog-list twelve" ng-if="equipments.loading">
         <div class="dominos item_hover_accent_list loading-domino">
-            <div class="item six-mobile"
-                 ng-repeat="x in [].constructor(15) track by $index">
+            <div class="item six-mobile" ng-repeat="x in [].constructor(15) track by $index">
                 <article class="domino loading-domino">
                     <div class="loading-bar" ng-class="{loading: equipments.loading}"></div>
-                    <h2>
-                        <div class="grey-matter max-75">&nbsp;</div>
-                    </h2>
                     <div class="top">
                         <div class="image-container">
                             <div class="grey-matter grey-image">&nbsp;</div>
                         </div>
-                        <h4 class="vertical-spacing">
-                            <div class="grey-matter">&nbsp;</div>
-                        </h4>
-                        <div class="vertical-spacing-twice summary">
-                            <div class="grey-matter">&nbsp;</div>
-                        </div>
-                        <div class="vertical-spacing-twice summary">
-                            <div class="grey-matter max-60">&nbsp;</div>
-                        </div>
+                        <strong class="grey-matter">&nbsp;</strong>
+                        <p class="grey-matter max-60">&nbsp;</p>
+                        <p class="grey-matter max-60">&nbsp;</p>
                     </div>
                 </article>
             </div>

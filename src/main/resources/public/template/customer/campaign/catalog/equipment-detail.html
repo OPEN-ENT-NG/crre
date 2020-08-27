@@ -38,7 +38,7 @@
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.image===null || basket.equipment.image===undefined "/>
             </div>
             <div class="editor" ng-show="basket.equipment.editor_name !== null" >
-                <p ng-bind-html="basket.equipment.editor_name"></p>
+                <div ng-bind-html="basket.equipment.editor_name"></div>
             </div>
             <div ng-show="basket.equipment.description !== null" >
                 <p ng-bind-html="basket.equipment.description"></p>
