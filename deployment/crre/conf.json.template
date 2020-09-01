@@ -30,6 +30,11 @@
         },
          "mail": {
             "enableMail": ${crreEnableMail}
-         }
+         },
+         "elasticsearch": true,
+         "elasticsearchConfig" : {
+            "server-uri": "${elasticServerURI}",
+            "index": "${elasticCRREIndexName}"
+            }
       }
     }

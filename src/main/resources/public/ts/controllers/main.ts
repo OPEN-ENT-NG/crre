@@ -26,8 +26,8 @@ import {
 } from '../model';
 import {Mix} from "entcore-toolkit";
 
-export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
-    ($scope, route, $location, $rootScope) => {
+export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope', '$timeout',
+    ($scope, route, $location, $rootScope, $timeout) => {
         template.open('main', 'main');
 
         $scope.display = {
@@ -188,6 +188,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
                 Utils.safeApply($scope);
+                $timeout(function() {
+                    $scope.display.equipment = true;
+                    Utils.safeApply($scope);
+                }, 50)
             },
             campaignOrder: async (params) => {
                 let idCampaign = params.idCampaign;

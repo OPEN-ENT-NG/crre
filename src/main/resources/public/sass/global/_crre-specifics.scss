@@ -469,6 +469,10 @@ body.crre {
           width: 98% !important;
         }
 
+        .domino{
+          padding-bottom: 0;
+        }
+
         &.list-item {
           width: 90% !important;
           box-sizing: content-box;
@@ -484,7 +488,6 @@ body.crre {
           margin-left: 5%;
         }
         .top {
-          height: 190px;
           background-color: unset;
 
           &.item {

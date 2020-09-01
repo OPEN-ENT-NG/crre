@@ -106,17 +106,14 @@
             <h2>
                 <i18n>SPECIFICATIONS</i18n>
             </h2>
-            <div class="row technical-specs">
-                <div class="technical-spec twelve row"
-                     ng-repeat="technicalSpec in basket.equipment.technical_specs">
-                    <div class="five cell horizontal-spacing bold">
-                        [[technicalSpec.name]]
-                    </div>
-                    <div class="six cell horizontal-spacing">
-                        [[technicalSpec.value]]
-                    </div>
-                </div>
-            </div>
+            <table class="table twelve">
+                <tbody>
+                <tr ng-repeat="technicalSpec in basket.equipment.technical_specs">
+                    <td class="one"><strong>[[technicalSpec.name]]</strong></td>
+                    <td>[[technicalSpec.value]]</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
         <div class="twelve cell" ng-show="basket.equipment.options.length !== 0">
             <h2><i18n>crre.equipment.options</i18n></h2>
