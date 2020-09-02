@@ -25,27 +25,28 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.io.*;
+import java.net.URLDecoder;
+import java.util.*;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
+import static jdk.nashorn.internal.objects.NativeArray.push;
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
     private final ImportCSVHelper importCSVHelper;
+    private ArrayList<String> filter_array;
+    private HashMap<String, ArrayList<String>> query_filter;
 
     public EquipmentController(Vertx vertx) {
         super();
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
+        this.filter_array = new ArrayList<String> ();
+        this.query_filter = new HashMap<String, ArrayList<String>>();
     }
 
     @Get("/equipments")
@@ -68,9 +69,7 @@ public class EquipmentController extends ControllerHelper {
         List<String> queries = params.getAll("q");
         if (params.contains("idCampaign") && params.contains("idStructure")) {
             try {
-                Integer idCampaign = Integer.parseInt(params.get("idCampaign"));
-                String idStructure = params.get("idStructure");
-                equipmentService.getNumberPages(idCampaign, idStructure, queries, defaultResponseHandler(request));
+                equipmentService.getNumberPagesCatalog(queries, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
                 badRequest(request);
                 log.error("An error occured while casting campaign identifier", e);
@@ -93,22 +92,80 @@ public class EquipmentController extends ControllerHelper {
             log.error("An error occurred casting campaign id", e);
         }
     }
-    @Get("/equipments/campaign/:idCampaign")
+    @Get("/equipments/catalog")
     @ApiDoc("List equipments of campaign in database")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
             Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
-            Integer idCampaign = request.params().contains("idCampaign")
-                    ? Integer.parseInt(request.params().get("idCampaign"))
-                    : null;
-            String idStructure = request.params().contains("idStructure")
-                    ? request.params().get("idStructure")
-                    : null;
             List<String> filters = request.params().getAll("q");
-            equipmentService.listEquipments(idCampaign, idStructure, page, filters, arrayResponseHandler(request));
+            equipmentService.listEquipments(page, filters, arrayResponseHandler(request));
+            equipmentService.test();
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
+        }
+    }
+
+    @Get("/equipments/subjects")
+    @ApiDoc("List subjects")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void listSubjects(final HttpServerRequest request) {
+        try {
+            equipmentService.listSubjects(arrayResponseHandler(request));
+        } catch (ClassCastException e) {
+            log.error("An error occurred casting campaign id", e);
+        }
+    }
+
+    @Get("/equipments/grades")
+    @ApiDoc("List grades")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void listGrades(final HttpServerRequest request) {
+        try {
+            equipmentService.listGrades(arrayResponseHandler(request));
+        } catch (ClassCastException e) {
+            log.error("An error occurred casting campaign id", e);
+        }
+    }
+
+    @Get("/equipments/catalog/search/:word")
+    @ApiDoc("Search an equipment by keyword")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void SearchEquipment(final HttpServerRequest request) {
+        try {
+            String word = request.getParam("word");
+            equipmentService.searchWord(word, arrayResponseHandler(request));
+        } catch (ClassCastException e) {
+            log.error("An error occurred searching article", e);
+        }
+    }
+
+    @Get("/equipments/catalog/filter/:filter/:word")
+    @ApiDoc("Search an equipment by keyword")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void FilterEquipment(final HttpServerRequest request) throws UnsupportedEncodingException {
+        try {
+            String word = URLDecoder.decode(request.getParam("word"), "UTF-8");
+            String filter = request.getParam("filter");
+
+/*            if(this.query_filter.containsKey(filter)) {
+                this.query_filter.remove(filter);
+            }*/
+
+
+                if(this.query_filter.containsKey(filter)) {
+                    if(this.query_filter.get(filter).contains(word)) {
+                        this.query_filter.get(filter).remove(word);
+                    } else {
+                        this.query_filter.get(filter).add(word);
+                    }
+                } else {
+                    this.query_filter.put(filter, new ArrayList<String>(Arrays.asList(word)));
+                }
+
+            equipmentService.filterWord(this.query_filter, arrayResponseHandler(request));
+        } catch (ClassCastException e) {
+            log.error("An error occurred searching article", e);
         }
     }
 

@@ -64,9 +64,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if ($scope.isManager() || $scope.isAdministrator()) {
                     $scope.redirectTo('/campaigns');
                 }
-                // à changer en fonction de l'adresse qu'aura le catalogue
+
                 else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isManager() && !$scope.isAdministrator()) {
-                    $scope.redirectTo('/campaign/1/catalog');
+                    $scope.redirectTo(`/equipments/catalog`);
                 } else {
                     await $scope.initStructures();
                     await $scope.initCampaign($scope.current.structure);
@@ -160,30 +160,21 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
-            campaignCatalog: async (params) => {
-                let idCampaign = params.idCampaign;
+           showCatalog: async (params) => {
                 $scope.fromCatalog=true
-                $scope.idIsInteger(idCampaign);
-                if(!$scope.current.structure)
-                    await $scope.initStructures() ;
-                await $scope.selectCampaign(idCampaign);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
                 //template.close('right-side');
                 $scope.display.equipment = false;
                 Utils.safeApply($scope);
-                $scope.current.structure ? await $scope.equipments.sync(idCampaign, $scope.current.structure.id) : null;
+                await $scope.equipments.sync(true, undefined, undefined );
             },
             equipmentDetail: async (params) => {
-                let idCampaign = params.idCampaign;
                 let idEquipment = params.idEquipment;
-                $scope.idIsInteger(idCampaign);
                 $scope.idIsInteger(idEquipment);
-                $scope.current.structure
-                    ? await $scope.initBasketItem(parseInt(idEquipment), parseInt(idCampaign), $scope.current.structure.id)
-                    : null;
+                await $scope.initBasketItem(parseInt(idEquipment));
                 if(!$scope.fromCatalog){
-                    $scope.redirectTo(`/campaign/${idCampaign}/catalog`);
+                    $scope.redirectTo(`/equipments/catalog`);
                 }
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
@@ -194,6 +185,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 }, 50)
             },
             campaignOrder: async (params) => {
+
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
@@ -339,13 +331,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-        $scope.initBasketItem = async (idEquipment: number, idCampaign: number, structure) => {
+        $scope.initBasketItem = async (idEquipment: number) => {
             $scope.equipment = _.findWhere($scope.equipments.all, {id: idEquipment});
             if ($scope.equipment === undefined && !isNaN(idEquipment)) {
                 $scope.equipment = new Equipment();
                 await $scope.equipment.sync(idEquipment);
             }
-            $scope.basket = new Basket($scope.equipment, idCampaign, structure);
+            $scope.basket = new Basket($scope.equipment);
         };
 
         $scope.idIsInteger = (id) => {

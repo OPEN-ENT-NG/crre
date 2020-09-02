@@ -16,7 +16,12 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import static fr.openent.crre.helpers.ElasticSearchHelper.filter;
+import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearch;
 
 
 public class DefaultEquipmentService extends SqlCrudService implements EquipmentService {
@@ -31,6 +36,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     public DefaultEquipmentService(String schema, String table) {
         super(schema, table);
     }
+
 
     private String getSqlOrderValue(String field) {
         String typeField;
@@ -78,6 +84,15 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         return filter.toString();
     }
 
+    public void searchWord(String word, Handler<Either<String, JsonArray>> handler) {
+        plainTextSearch(word, handler);
+    }
+
+
+    public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
+        filter(test, handler);
+    }
+
     public void listEquipments(Integer page, String order, Boolean reverse, List<String> filters, Handler<Either<String, JsonArray>> handler) {
         JsonArray params = new JsonArray();
 
@@ -122,6 +137,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         this.sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idEquipment), SqlResult.validResultHandler(handler));
     }
 
+
+
     @Override
     public void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT e.*, tax.value tax_amount, grade.name as grade_name, subject.name as subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
@@ -157,9 +174,11 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
 
-    public void listEquipments(Integer idCampaign, String idStructure, Integer page, List<String> filters,
+    public void listEquipments(Integer page, List<String> filters,
                                Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new JsonArray().add(idCampaign).add(idStructure);
+
+
+        JsonArray values = new JsonArray();
         StringBuilder queryFilter = new StringBuilder();
         if (!filters.isEmpty()) {
             for (String filter : filters) {
@@ -185,12 +204,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "LEFT JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
                 "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
                 "LEFT JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON ( " +
-                "rel_group_campaign.id_campaign = ? " +
-                "AND rel_group_campaign.id_structure_group IN (" +
-                "SELECT structure_group.id FROM " + Crre.crreSchema + ".structure_group " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON rel_group_structure.id_structure_group = structure_group.id " +
-                "WHERE rel_group_structure.id_structure = ?)) AND e.status != 'OUT_OF_STOCK' " + queryFilter +
+                "WHERE e.status != 'OUT_OF_STOCK'" + queryFilter +
                 "GROUP BY (e.id, tax.id, editor.id)";
 
 
@@ -201,52 +215,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
-    /*public void test() {
-        sql.raw("Select * from crre.equipment", SqlResult.validResultHandler(event -> {
-            if (event.isRight()) {
-                final JsonArray results = event.right().getValue();
-                final int resultsSize = 0;
-                    final JsonArray eventsIds = new JsonArray();
-                    ElasticSearch es = ElasticSearch.getInstance();
-                    BulkRequest bulkRequest = es.bulk(EVENTS, ar -> {
-                if (ar.succeeded()) {
-                    JsonArray items = ar.result().getJsonArray("items");
-                    if (items.size() != resultsSize) {
-                        LOGGER.error("Error different sync length. Expected : " + resultsSize +
-                                " - Found : " + items.size());
-                        return;
-                    }
-                    int countWarningItems = 0;
-                    for (Object o: items) {
-                        final int itemStatus = ((JsonObject) o).getJsonObject("index").getInteger("status");
-                        if (itemStatus != 201) {
-                            if (itemStatus == 200) {
-                                countWarningItems++;
-                                //log.warn("Update event in ES : " + ((JsonObject) o).encode());
-                            } else {
-                                LOGGER.error("Error persisting event in ES : " + ((JsonObject) o).encode());
-                                return;
-                            }
-                        }
-                    }
-                    if (countWarningItems > 0) {
-                        LOGGER.warn("Update " + countWarningItems + " events in ES.");
-                    }
-                     
-                } else {
-                    LOGGER.error("Error sending events to elasticsearch", ar.cause());
-                }
-            });
-                    for (Object o : results) {
-                        JsonObject j = (JsonObject) o;
-                        eventsIds.add(j.getString("_id"));
-                        bulkRequest.index(j, null);
-                    }
-                    bulkRequest.end();
-        }
-    }));
-    }*/
-
     public void create(final JsonObject equipment, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".equipment_id_seq') as id";
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
@@ -359,8 +327,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
     @Override
-    public void getNumberPages(Integer idCampaign, String idStructure, List<String> filters, Handler<Either<String, JsonObject>> handler) {
-        JsonArray values = new JsonArray().add(idCampaign).add(idStructure);
+    public void getNumberPagesCatalog(List<String> filters, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new JsonArray();
         StringBuilder queryFilter = new StringBuilder(" WHERE equipment.status != 'OUT_OF_STOCK' ");
         if (!filters.isEmpty()) {
             for (String filter : filters) {
@@ -370,12 +338,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         }
         String query = "SELECT count(equipment.id) " +
                 "FROM " + Crre.crreSchema + ".equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON rel_group_campaign.id_campaign = ? " +
-                "AND rel_group_campaign.id_structure_group IN ( " +
-                "SELECT structure_group.id " +
-                "FROM " + Crre.crreSchema + ".structure_group " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_structure.id_structure_group = structure_group.id) " +
-                "WHERE rel_group_structure.id_structure = ? " +
                 ")" + queryFilter;
 
         returnSQLHandler(handler, values, query);
@@ -427,7 +389,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 statements.add(addRequiredOptionToBasketStatement(
                         resultsObject.getJsonArray("id_basket_equipments"),
                         option.getInteger("id")
-                        ));
+                ));
             }
         }
         if (statements.size() > 0) {
@@ -474,7 +436,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     public void search(String query,  List<String> listFields, Handler<Either<String, JsonArray>> handler) {
 
         String sqlQuery = "SELECT e.id, e.name, e.summary, e.description, CAST(e.price AS NUMERIC) as price, t.value as tax_amount, t.id as id_tax, e.image, e.reference, " +
-                                    " e.option_enabled "+
+                " e.option_enabled "+
                 "FROM " + Crre.crreSchema + ".equipment as e " +
                 "INNER JOIN " + Crre.crreSchema + ".tax as t ON (e.id_tax = t.id) " +
                 "WHERE e.status = 'AVAILABLE' AND e.option_enabled = true ";
@@ -774,4 +736,93 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 .put(VALUES, value)
                 .put(ACTION, PREPARED);
     }
+
+    public void test() {
+        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
+                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
+                "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
+                "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
+                "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
+                "FROM " + Crre.crreSchema + ".equipment e " +
+                "LEFT JOIN ( " +
+                "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
+                "FROM " + Crre.crreSchema + ".equipment_option option " +
+                "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
+                ") opts ON opts.id_equipment = e.id " +
+                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
+                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".editor ON (editor.id = e.id_editor) " +
+                "LEFT JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
+                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
+                "GROUP BY (e.id, tax.id, editor.id)";
+        sql.raw(query, SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                final JsonArray results = event.right().getValue();
+                final int resultsSize = results.size();
+                final JsonArray eventsIds = new JsonArray();
+                ElasticSearch es = ElasticSearch.getInstance();
+                BulkRequest bulkRequest = es.bulk(EVENTS, ar -> {
+                    if (ar.succeeded()) {
+                        JsonArray items = ar.result().getJsonArray("items");
+                        if (items.size() != resultsSize) {
+                            LOGGER.error("Error different sync length. Expected : " + resultsSize +
+                                    " - Found : " + items.size());
+                            return;
+                        }
+                        int countWarningItems = 0;
+                        for (Object o : items) {
+                            final int itemStatus = ((JsonObject) o).getJsonObject("index").getInteger("status");
+                            if (itemStatus != 201) {
+                                if (itemStatus == 200) {
+                                    countWarningItems++;
+                                    //log.warn("Update event in ES : " + ((JsonObject) o).encode());
+                                } else {
+                                    LOGGER.error("Error persisting event in ES : " + ((JsonObject) o).encode());
+                                    return;
+                                }
+                            }
+                        }
+                        if (countWarningItems > 0) {
+                            LOGGER.warn("Update " + countWarningItems + " events in ES.");
+                        }
+
+                    } else {
+                        LOGGER.error("Error sending events to elasticsearch", ar.cause());
+                    }
+                });
+                for (Object o : results) {
+                    JsonObject j = (JsonObject) o;
+                    j.put("_id", j.getInteger("id"));
+                    eventsIds.add(j.getInteger("id"));
+                    bulkRequest.index(j, null);
+                }
+                bulkRequest.end();
+            }
+        }));
+    }
+
+    public void listSubjects(final Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT name " +
+                "FROM " + Crre.crreSchema + ".subject";
+        sql.raw(query, SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                handler.handle(event);
+            }
+        }));
+    }
+
+
+    public void listGrades(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT name " +
+                "FROM " + Crre.crreSchema + ".grade";
+        sql.raw(query, SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                handler.handle(event);
+            }
+        }));
+    }
+
 }
+

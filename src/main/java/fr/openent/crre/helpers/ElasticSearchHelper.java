@@ -15,7 +15,7 @@ public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
     private static final Integer PAGE_SIZE = 10000;
     private static final String RESOURCE_TYPE_NAME = "equipment";
-    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("id", "name", "ean");
+    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("id", "name", "ean", "editor_name", "grade_name", "subject_name", "author");
 
     private ElasticSearchHelper() {
         throw new IllegalStateException("Utility class");
@@ -61,7 +61,26 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), handler);
     }
 
-    private static void executeEsSearch(JsonObject query, Handler<AsyncResult<JsonArray>> handler) {
+    public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
+
+
+        JsonArray term = new JsonArray();
+
+        Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
+
+        for (Map.Entry<String, ArrayList<String>> me : set) {
+            term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
+        }
+            JsonObject filter = new JsonObject()
+                    .put("filter", term);
+
+            JsonObject queryObject = new JsonObject()
+                    .put("bool", filter);
+
+            search(esQueryObject(queryObject), handler);
+        }
+
+    private static void executeEsSearch (JsonObject query, Handler<AsyncResult<JsonArray>> handler) {
         ElasticSearch.getInstance().search(RESOURCE_TYPE_NAME, query, search -> {
             if (search.failed()) {
                 handler.handle(Future.failedFuture(search.cause()));

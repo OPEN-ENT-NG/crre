@@ -57,7 +57,7 @@ export const configurationController = ng.controller('configurationController',
 
         $scope.filterEquipments = (type: string, reverse: boolean) => {
             $scope.equipments.page = 0;
-            $scope.equipments.sync(undefined, undefined, undefined, {type, reverse});
+            $scope.equipments.sync(true, undefined, undefined, {type, reverse});
             $scope.sort.equipment.reverse = reverse;
             $scope.sort.equipment.type = type;
         };
@@ -300,7 +300,7 @@ export const configurationController = ng.controller('configurationController',
             if (event && (event.which === 13 || event.keyCode === 13) && event.target.value.trim() !== '') {
                 $scope.equipments.sort.filters = [...$scope.equipments.sort.filters, event.target.value];
                 $scope.equipments.page = 0;
-                $scope.equipments.sync(undefined, undefined, undefined, $scope.sort.equipment);
+                $scope.equipments.sync(true, undefined, undefined, $scope.sort.equipment);
                 event.target.value = '';
             }
         };
@@ -308,7 +308,7 @@ export const configurationController = ng.controller('configurationController',
         $scope.dropEquipmentFilter = (filter: string) => {
             $scope.equipments.sort.filters = _.without($scope.equipments.sort.filters, filter);
             $scope.equipments.page = 0;
-            $scope.equipments.sync(undefined, undefined, undefined, $scope.sort.equipment);
+            $scope.equipments.sync(true, undefined, undefined, $scope.sort.equipment);
         };
 
         $scope.addTechnicalSpec = (equipment: Equipment) => {

@@ -155,6 +155,8 @@ export interface Equipments {
     _loading: boolean;
     all: Equipment[];
     page_count: number;
+    subjects: String[];
+    grades: String[];
 
     sort: {
         type: string,
@@ -169,6 +171,8 @@ export class Equipments extends Selection<Equipment> {
         super([]);
         this.eventer = new Eventer();
         this.page = 0;
+        this.subjects = [];
+        this.grades = [];
         this._loading = false;
         this.sort = {
             type: 'name',
@@ -189,27 +193,60 @@ export class Equipments extends Selection<Equipment> {
         }
     }
 
-    async getPageCount(idCampaign?: number, idStructure?: string) {
-        let filter: string = idCampaign && idStructure ? `?idCampaign=${idCampaign}&idStructure=${idStructure}` : '?';
+    async getPageCount() {
+        let filter: string = '?';
         filter += `${Utils.formatGetParameters({q: this.sort.filters})}`;
         const {data} = await http.get(`/crre/equipments/pages/count${filter}`);
         this.page_count = data.count;
     }
 
-    async sync(idCampaign?: number, idStructure?: string, page: number = this.page, filter = this.sort) {
+    async getSearchEquipment(word: string){
+        const {data} = await http.get(`/crre/equipments/catalog/search/${word}`);
+        this.all = Mix.castArrayAs(Equipment, data);
+        this.all.map((equipment) => {
+            equipment.price = parseFloat(equipment.price.toString());
+            equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
+            /*this.equipmentsOptionsTechnicalsSpecs(true, equipment);*/
+        });
+    }
+
+    async getFilterEquipment(filter: string, filter_word: string[]){
+        const {data} = await http.get(`/crre/equipments/catalog/filter/${filter}/${filter_word}`);
+        this.all = Mix.castArrayAs(Equipment, data);
+        this.all.map((equipment) => {
+            equipment.price = parseFloat(equipment.price.toString());
+            equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
+            /*this.equipmentsOptionsTechnicalsSpecs(true, equipment);*/
+        });
+    }
+
+    async getSubjects(){
+        const {data} = await http.get(`/crre/equipments/subjects`);
+        this.subjects = data;
+    }
+
+    async getGrades(){
+        const {data} = await http.get(`/crre/equipments/grades`);
+        this.grades = data;
+    }
+
+    async sync(isCatalog?: boolean, page: number = this.page, filter = this.sort) {
         this.loading = true;
         try {
-            await this.getPageCount(idCampaign, idStructure);
+            await this.getPageCount();
             const queriesFilter = Utils.formatGetParameters({q: filter.filters});
-            const uri: string = idCampaign
-                ? `/crre/equipments/campaign/${idCampaign}?idStructure=${idStructure}&page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`
-                : `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+            let uri: string;
+            if (isCatalog) {
+                uri = `/crre/equipments/catalog`;
+            } else {
+                uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+            }
             let {data} = await http.get(uri);
             this.all = Mix.castArrayAs(Equipment, data);
             this.all.map((equipment) => {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-                this.equipmentsOptionsTechnicalsSpecs(idCampaign, equipment);
+                this.equipmentsOptionsTechnicalsSpecs(isCatalog, equipment);
             });
 
         } catch (e) {
@@ -220,8 +257,8 @@ export class Equipments extends Selection<Equipment> {
         }
     }
 
-    private equipmentsOptionsTechnicalsSpecs(idCampaign: number, equipment: Equipment) {
-        if (idCampaign) {
+    private equipmentsOptionsTechnicalsSpecs(isCatalog:boolean, equipment: Equipment) {
+        if(isCatalog) {
             equipment.options.toString() !== '[null]' && equipment.options !== null ?
                 equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
                 : equipment.options = [];
@@ -231,18 +268,18 @@ export class Equipments extends Selection<Equipment> {
         }
     }
 
-    async syncAll(idCampaign: number, idStructure?: string) {
+    async syncAll(idStructure?: string) {
         try {
             const uri: string = idStructure
-                ? `/crre/equipments/admin/${idCampaign}?idStructure=${idStructure}`
-                : `/crre/equipments/admin/${idCampaign}`;
+                ? `/crre/equipments/admin/?idStructure=${idStructure}`
+                : `/crre/equipments/admin/`;
             let {data} = await http.get(uri);
             this.all = Mix.castArrayAs(Equipment, data);
             this.all.map((equipment) => {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
                 equipment.priceTTC = equipment.price + (equipment.price * equipment.tax_amount / 100);
-                this.equipmentsOptionsTechnicalsSpecs(idCampaign, equipment);
+                this.equipmentsOptionsTechnicalsSpecs(false, equipment);
             });
 
         } catch (e) {
@@ -261,12 +298,12 @@ export class Equipments extends Selection<Equipment> {
         return this._loading;
     }
 
-    loadNext(idCampaign?: number, idStructure?: string, filter?: { type: string, reverse: boolean, filters: string[] }) {
-        return this.sync(idCampaign, idStructure, ++this.page, filter);
+    loadNext(isCatalog? : boolean, filter?: { type: string, reverse: boolean, filters: string[] }) {
+        return this.sync(isCatalog, ++this.page, filter);
     }
 
-    loadPrev(idCampaign?: number, idStructure?: string, filter?: { type: string, reverse: boolean; filters: string[] }) {
-        return this.sync(idCampaign, idStructure, --this.page, filter);
+    loadPrev(isCatalog? : boolean, filter?: { type: string, reverse: boolean; filters: string[] }) {
+        return this.sync(isCatalog, --this.page, filter);
     }
 
     async setStatus (status: string): Promise<void> {
