@@ -23,6 +23,7 @@ export class Utils {
         }
     }
 
+
     static formatKeyToParameter (values: any[], key: string): string {
         let params: string = '';
         values.map((value) => params += value.hasOwnProperty(key) ? `${key}=${value[key]}&` : '');

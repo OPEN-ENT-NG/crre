@@ -21,7 +21,7 @@ export class Basket implements Selectable {
 
     files?: any;
 
-    constructor (equipment: Equipment , id_campaign: number, id_structure: string ) {
+    constructor (equipment: Equipment , id_campaign?: number, id_structure?: string ) {
         this.equipment = Mix.castAs(Equipment, equipment) ;
         this.id_campaign = id_campaign;
         this.id_structure = id_structure;

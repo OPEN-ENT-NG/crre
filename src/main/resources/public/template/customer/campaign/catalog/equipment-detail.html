@@ -1,7 +1,7 @@
 <div ng-controller="catalogController" class="catalog">
     <div class="twelve equipment-detail">
     <div class="vertical-spacing-20">
-        <a ng-show="display.equipment" href="#/campaign/[[campaign.id]]/catalog">
+        <a ng-show="display.equipment" href="#/equipments/catalog">
             <i class="back nav-arrow horizontal-spacing"></i>
             <strong><i18n>back.to.catalog</i18n></strong>
         </a>
@@ -14,7 +14,7 @@
                     <h4 class="cell"><i18n>etablissement.price</i18n></h4>
                     <h3 class="right-text">[[calculatePriceOfEquipment(basket.equipment, true, 0) | currency]]<i18n>per.student.per.year</i18n></h3>
                 </div>
-                <div class="twelve cell">
+                <div class="twelve cell" workflow="crre.prescriptor">
                     <div class="quantity">
                         <h4 class="cell"><i18n>crre.quantity</i18n></h4>
                         <div class="right-text">

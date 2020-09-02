@@ -4,7 +4,7 @@
             <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
             <li><a ng-click="openCatalog()"><i18n>crre.catalog</i18n></a></li>
             <li>
-                <a ng-click="openOrder()">
+                <a ng-click="openOrder(campaign.id)">
                     <i18n>crre.request.mine</i18n>
                     <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
                         [[campaign.nb_order]]
@@ -12,7 +12,7 @@
                 </a>
             </li>
             <li>
-                <a ng-click="openBasket()">
+                <a ng-click="openBasket(campaign.id)">
                     <i18n>crre.basket</i18n>
                     <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
                         [[campaign.nb_panier]]
@@ -25,26 +25,26 @@
         <header class="horizontal-spacing"  ng-click="backHome()">
             <i class="home"></i>
         </header>
-        <header  ng-show="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog()"  >
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog()"  >
             <i18n>crre.catalog</i18n>
         </header>
-        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order')}" ng-click="openOrder()" workflow="crre.prescriptor" >
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order')}" ng-click="openOrder(campaign.id)" workflow="crre.prescriptor" >
             <span ng-show="campaign.purse_enabled"><i18n>crre.request.mine</i18n></span>
             <span ng-show="!campaign.purse_enabled"><i18n>crre.order.tracking</i18n></span>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
                     [[campaign.nb_order]]
             </span>
         </header>
-        <header  ng-if="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}" ng-click="openBasket()" workflow="crre.prescriptor">
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}" ng-click="openBasket(campaign.id)" workflow="crre.prescriptor">
             <i18n>crre.basket</i18n>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
                     [[campaign.nb_panier]]
             </span>
         </header>
-        <header  ng-if="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('validate')}" workflow="crre.validator">
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('validate')}" workflow="crre.validator">
             <i18n>crre.request.validate</i18n>
         </header>
-        <header  ng-if="campaign.accessible" class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('history')}" workflow="crre.validator">
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('history')}" workflow="crre.validator">
             <i18n>crre.structure.history</i18n>
         </header>
 <!--        <div class="purse-in-menue" ng-if="campaign.purse_enabled">

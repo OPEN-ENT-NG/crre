@@ -318,6 +318,44 @@ body.crre {
         filter: unset;
       }
     }
+
+    .columns-popup-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .columns-popup {
+      position: absolute;
+      right: 10%;
+      top: 82%;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      background-color: white;
+      min-width: 160px;
+      border-radius: 5px;
+      height: 0px;
+      -webkit-transition: height 0.15s linear;
+      -moz-transition: height 0.15s linear;
+      -ms-transition: height 0.15s linear;
+      -o-transition: height 0.15s linear;
+      transition: height 0.15s linear;
+    }
+    .columns-popup.open {
+      padding: 10px;
+      border: 1px $primary solid;
+      height: unset;
+      -webkit-transition: height 0.15s linear;
+      -moz-transition: height 0.15s linear;
+      -ms-transition: height 0.15s linear;
+      -o-transition: height 0.15s linear;
+      transition: height 0.15s linear;
+    }
+    .columns-popup-button {
+      font-size: 20px;
+    }
+    .columns-popup-items{
+      margin: 10px;
+    }
   }
 
   .equipment-detail {

@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public interface EquipmentService {
@@ -21,13 +23,11 @@ public interface EquipmentService {
 
     /**
      * List equipments of Campaign and a structure  in database
-     * @param idCampaign campaign identifier
-     * @param idStructure structure identifier
      * @param page Page number
      * @param filters Filter list
      * @param handler function handler returning data
      */
-    void listEquipments(Integer idCampaign, String idStructure, Integer page, List<String> filters,
+    void listEquipments(Integer page, List<String> filters,
                         Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -107,17 +107,27 @@ public interface EquipmentService {
      * @param filters Filters list
      * @param handler Function handler returning data
      */
-    void getNumberPages(List<String> filters, Handler<Either<String, JsonObject>> handler);
+    void getNumberPagesCatalog(List<String> filters, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get equipment pages number
      *
-     * @param idCampaign  Campaign identifier
-     * @param idStructure Structure identifier
      * @param filters     Filter list
      * @param handler     Function handler returning data
      */
-    void getNumberPages(Integer idCampaign, String idStructure, List<String> filters, Handler<Either<String, JsonObject>> handler);
+    void getNumberPages(List<String> filters, Handler<Either<String, JsonObject>> handler);
 
     void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler);
+
+    void searchWord(String word, Handler<Either<String, JsonArray>> handler);
+
+    void test();
+
+    void listSubjects(Handler<Either<String, JsonArray>> handler);
+
+    void listGrades(Handler<Either<String, JsonArray>> handler);
+
+    void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
+
+    void searchAll(Handler<Either<String, JsonArray>> handler);
 }

@@ -90,10 +90,10 @@ routes.define(($routeProvider) => {
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
-        $routeProvider.when('/campaign/:idCampaign/catalog', {
+        $routeProvider.when('/equipments/catalog', {
             action: 'campaignCatalog'
         })
-            .when('/campaign/:idCampaign/catalog/equipment/:idEquipment', {
+            .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'
             })
             .when('/campaign/:idCampaign/order', {
@@ -104,10 +104,10 @@ routes.define(($routeProvider) => {
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {
-        $routeProvider.when('/campaign/:idCampaign/catalog', {
+        $routeProvider.when('/equipments/catalog', {
             action: 'campaignCatalog'
         })
-            .when('/campaign/:idCampaign/catalog/equipment/:idEquipment', {
+            .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'
             })
             .when('/campaign/:idCampaign/order', {
@@ -118,11 +118,10 @@ routes.define(($routeProvider) => {
             });
     }
     else {
-        $routeProvider
-            .when('/campaign/:idCampaign/catalog', {
-                action: 'campaignCatalog'
-            })
-            .when('/campaign/:idCampaign/catalog/equipment/:idEquipment', {
+        $routeProvider.when('/equipments/catalog', {
+            action: 'showCatalog'
+        })
+            .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'
             });
     }

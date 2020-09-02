@@ -64,9 +64,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if ($scope.isManager() || $scope.isAdministrator()) {
                     $scope.redirectTo('/campaigns');
                 }
-                // à changer en fonction de l'adresse qu'aura le catalogue
+
                 else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isManager() && !$scope.isAdministrator()) {
-                    $scope.redirectTo('/campaign/1/catalog');
+                    $scope.redirectTo(`/equipments/catalog`);
                 } else {
                     await $scope.initStructures();
                     await $scope.initCampaign($scope.current.structure);
@@ -160,8 +160,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
+           showCatalog: async (params) => {
+                $scope.fromCatalog=true
+                template.open('main-profile', 'customer/campaign/campaign-detail');
+                template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
+                //template.close('right-side');
+                $scope.display.equipment = false;
+                Utils.safeApply($scope);
+                await $scope.equipments.sync(true, undefined, undefined );
+            },
             campaignCatalog: async (params) => {
-                let idCampaign = params.idCampaign;
+                let idCampaign = $scope.campaign.id;
                 $scope.fromCatalog=true
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
@@ -172,18 +181,18 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 //template.close('right-side');
                 $scope.display.equipment = false;
                 Utils.safeApply($scope);
-                $scope.current.structure ? await $scope.equipments.sync(idCampaign, $scope.current.structure.id) : null;
+                $scope.current.structure ? await $scope.equipments.sync(true, undefined, undefined ) : null;
             },
             equipmentDetail: async (params) => {
-                let idCampaign = params.idCampaign;
                 let idEquipment = params.idEquipment;
-                $scope.idIsInteger(idCampaign);
                 $scope.idIsInteger(idEquipment);
-                $scope.current.structure
-                    ? await $scope.initBasketItem(parseInt(idEquipment), parseInt(idCampaign), $scope.current.structure.id)
-                    : null;
+                if($scope.campaign.id) {
+                    await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
+                } else {
+                    await $scope.initBasketItem(parseInt(idEquipment));
+                }
                 if(!$scope.fromCatalog){
-                    $scope.redirectTo(`/campaign/${idCampaign}/catalog`);
+                    $scope.redirectTo(`/equipments/catalog`);
                 }
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
@@ -194,6 +203,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 }, 50)
             },
             campaignOrder: async (params) => {
+
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
@@ -330,8 +340,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             await $scope.instructions.sync();
             $scope.loadingArray = false;
         };
-        $scope.
-            initCampaignOrderView=()=>{
+        $scope.initCampaignOrderView=()=>{
             if( $scope.campaign.priority_enabled == true && $scope.campaign.priority_field == PRIORITY_FIELD.ORDER){
                 template.open('order-list', 'customer/campaign/order/orders-by-equipment');
             } else {
@@ -407,13 +416,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
          */
         $scope.calculatePriceOfEquipment = (equipment: any, selectedOptions: boolean, roundNumber: number = 2) => {
             let price = parseFloat((equipment.price_proposal)? equipment.price_proposal : $scope.calculatePriceTTC(equipment.price, equipment.tax_amount));
-            if(!equipment.price_proposal){
+/*            if(!equipment.price_proposal){
                 equipment.options.map((option) => {
                     (option.required === true || (selectedOptions ? option.selected === true : false))
                         ? price += parseFloat($scope.calculatePriceTTC(option.price, option.tax_amount))
                         : null;
                 });
-            }
+            }*/
 
             return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price) : price;
         };

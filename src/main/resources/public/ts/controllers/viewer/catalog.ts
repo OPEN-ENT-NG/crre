@@ -12,14 +12,25 @@ export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
         $scope.alloptionsSelected = false;
         $scope.equipment = new Equipment();
+        $scope.subjects = [];
+        $scope.showPopUpColumns = false;
         $scope.addFilter = (event) => {
-            if (event && (event.which === 13 || event.keyCode === 13 )) {
-                $scope.equipments.sort.filters.push(event.target.value);
+                //$scope.equipments.sort.filters.push(event.target.value);
+                $scope.equipments.getSearchEquipment(event.target.value);
                 $scope.equipments.page = 0;
-                $scope.equipments.sync($routeParams.idCampaign, $scope.current.structure.id);
-                event.target.value = '';
-            }
+                $scope.$apply();
         };
+
+        $scope.getFilter = (filter: string, filter_word: string) => {
+            //$scope.equipments.sort.filters.push(event.target.value);
+            $scope.equipments.getFilterEquipment(filter, filter_word);
+            $scope.equipments.page = 0;
+            $scope.$apply();
+        };
+
+
+
+
         $scope.addfilterWords = (filterWrod) => {
             if (filterWrod !== '') {
                 $scope.search.filterWrods = _.union($scope.search.filterWrods, [filterWrod]);
@@ -30,12 +41,13 @@ export const catalogController = ng.controller('catalogController',
 
         $scope.dropEquipmentFilter = (filter: string) => {
             $scope.equipments.sort.filters = _.without($scope.equipments.sort.filters, filter);
-            $scope.equipments.sync($routeParams.idCampaign, $scope.current.structure.id);
+            $scope.equipments.sync();
         };
 
         $scope.openEquipment = (equipment: Equipment) => {
             if (equipment.status === 'AVAILABLE') {
-                $scope.redirectTo(`/campaign/${$routeParams.idCampaign}/catalog/equipment/${equipment.id}`);
+                $scope.redirectTo(`/equipments/catalog/equipment/${equipment.id}`);
+                $scope.display.equipment = true;
             }
         };
         $scope.validArticle = (equipment: Equipment) => {
@@ -67,6 +79,15 @@ export const catalogController = ng.controller('catalogController',
         $scope.amountDecrease = () => {
             $scope.basket.amount -= 1;
         };
+
+        $scope.getSubject = () => {
+           $scope.equipments.getSubjects();
+        };
+
+        $scope.getGrade = () => {
+            $scope.equipments.getGrades();
+        };
+
         $scope.durationFormat = (nbr : number) =>  {
             if(nbr == 0)
                 return "Illimitée";
