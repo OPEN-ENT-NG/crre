@@ -193,7 +193,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     await $scope.initBasketItem(parseInt(idEquipment));
                 }
                 if(!$scope.fromCatalog){
-                    $scope.redirectTo(`/equipments/catalog`);
+                    $scope.redirectTo(`/campaign/${idCampaign}/catalog`);
                 }
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
@@ -204,7 +204,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 }, 50)
             },
             campaignOrder: async (params) => {
-
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
