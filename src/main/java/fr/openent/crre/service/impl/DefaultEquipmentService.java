@@ -485,6 +485,10 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         Sql.getInstance().prepared(sqlQuery, params, SqlResult.validResultHandler(handler));
     }
 
+    public void getNextPageItems(String scroll_id, Handler<Either<String, JsonObject>> handler) {
+        getPageItems(scroll_id, handler);
+    }
+
 
 
     /**

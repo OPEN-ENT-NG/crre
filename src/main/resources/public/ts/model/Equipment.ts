@@ -152,6 +152,7 @@ export class TechnicalSpec {
 export interface Equipments {
     eventer: Eventer;
     page: number;
+    scroll_id: string;
     _loading: boolean;
     all: Equipment[];
     page_count: number;
@@ -173,6 +174,7 @@ export class Equipments extends Selection<Equipment> {
         this.page = 0;
         this.subjects = [];
         this.grades = [];
+        this.scroll_id = "";
         this._loading = false;
         this.sort = {
             type: 'name',
@@ -230,23 +232,34 @@ export class Equipments extends Selection<Equipment> {
         this.grades = data;
     }
 
-    async sync(isCatalog?: boolean, page: number = this.page, filter = this.sort) {
+    async sync(isCatalog?: boolean, page: number = this.page, filter = this.sort, onScrolling? : boolean) {
         this.loading = true;
         try {
             await this.getPageCount();
-            const queriesFilter = Utils.formatGetParameters({q: filter.filters});
-            let uri: string;
-            if (isCatalog) {
-                uri = `/crre/equipments/catalog`;
-            } else {
-                uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+
+            if (onScrolling) {
+                this.all = this.all.concat(this.all.slice(0, 12));
+                let {data} = await http.get(`/crre/equipments/nextPageItems?scroll_id=${this.scroll_id}`);
+                this.all = this.all.concat(Mix.castArrayAs(Equipment, data[1]));
+                this.scroll_id = data.scroll_id;
             }
-            let {data} = await http.get(uri);
-            this.all = Mix.castArrayAs(Equipment, data);
+            else {
+                const queriesFilter = Utils.formatGetParameters({q: filter.filters});
+                let uri: string;
+                if (isCatalog) {
+                    uri = `/crre/equipments/catalog`;
+                } else {
+                    uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+                }
+                let {data} = await http.get(uri);
+                this.all = Mix.castArrayAs(Equipment, data);
+            }
+
+
             this.all.map((equipment) => {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-                //this.equipmentsOptionsTechnicalsSpecs(isCatalog, equipment);
+                // this.equipmentsOptionsTechnicalsSpecs(isCatalog, equipment);
             });
 
         } catch (e) {
@@ -279,7 +292,7 @@ export class Equipments extends Selection<Equipment> {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
                 equipment.priceTTC = equipment.price + (equipment.price * equipment.tax_amount / 100);
-                this.equipmentsOptionsTechnicalsSpecs(false, equipment);
+                // this.equipmentsOptionsTechnicalsSpecs(false, equipment);
             });
 
         } catch (e) {
@@ -304,6 +317,10 @@ export class Equipments extends Selection<Equipment> {
 
     loadPrev(isCatalog? : boolean, filter?: { type: string, reverse: boolean; filters: string[] }) {
         return this.sync(isCatalog, --this.page, filter);
+    }
+
+    scrollPage(isCatalog?: boolean, filter?: { type: string, reverse: boolean; filters: string[] }) {
+        return this.sync(isCatalog, this.page, filter, true);
     }
 
     async setStatus (status: string): Promise<void> {

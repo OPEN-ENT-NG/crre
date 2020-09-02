@@ -10,6 +10,7 @@ import {Basket, Equipment, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
+        $scope.nbNewItems = 10;
         $scope.alloptionsSelected = false;
         $scope.equipment = new Equipment();
         $scope.subjects = [];
@@ -95,5 +96,13 @@ export const catalogController = ng.controller('catalogController',
                 return nbr.toString() + " année scolaire";
             else
                 return nbr.toString() + " années scolaires";
+        };
+        $scope.onBottomScroll = () => {
+            console.log("at the bottom");
+            $scope.scrollHeight = window.scrollY;
+            $scope.display.equipment = false;
+            $scope.equipments.scrollPage();
+            Utils.safeApply($scope);
+            window.scrollTo(0,$scope.scrollHeight);
         };
     }]);

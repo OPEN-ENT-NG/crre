@@ -94,6 +94,8 @@ public interface EquipmentService {
      */
     void search(String query,  List<String> listFields, Handler<Either<String, JsonArray>> handler);
 
+    void getNextPageItems(String scroll_id,  Handler<Either<String, JsonObject>> handler);
+
     /**
      * Create equipments due to an import
      *

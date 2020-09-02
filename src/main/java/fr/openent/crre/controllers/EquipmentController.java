@@ -403,4 +403,15 @@ public class EquipmentController extends ControllerHelper {
             badRequest(request);
         }
     }
+
+    @Get("/equipments/nextPageItems")
+    @ApiDoc("Get next results items from the search")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getNextPageItems(HttpServerRequest request) {
+        if (request.params().contains("scroll_id")) {
+            equipmentService.getNextPageItems(request.params().get("scroll_id"), defaultResponseHandler(request));
+        } else {
+            badRequest(request);
+        }
+    }
 }
