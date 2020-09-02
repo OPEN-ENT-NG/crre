@@ -91,6 +91,73 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         search_All(handler);
     }
 
+
+    public void syncES() {
+        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
+                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
+                "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
+                "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
+                "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
+                "FROM " + Crre.crreSchema + ".equipment e " +
+                "LEFT JOIN ( " +
+                "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
+                "FROM " + Crre.crreSchema + ".equipment_option option " +
+                "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
+                ") opts ON opts.id_equipment = e.id " +
+                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
+                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".editor ON (editor.id = e.id_editor) " +
+                "LEFT JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
+                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
+                "GROUP BY (e.id, tax.id, editor.id)";
+        sql.raw(query, SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                final JsonArray results = event.right().getValue();
+                final int resultsSize = results.size();
+                final JsonArray eventsIds = new JsonArray();
+                ElasticSearch es = ElasticSearch.getInstance();
+                BulkRequest bulkRequest = es.bulk(EVENTS, ar -> {
+                    if (ar.succeeded()) {
+                        JsonArray items = ar.result().getJsonArray("items");
+                        if (items.size() != resultsSize) {
+                            LOGGER.error("Error different sync length. Expected : " + resultsSize +
+                                    " - Found : " + items.size());
+                            return;
+                        }
+                        int countWarningItems = 0;
+                        for (Object o : items) {
+                            final int itemStatus = ((JsonObject) o).getJsonObject("index").getInteger("status");
+                            if (itemStatus != 201) {
+                                if (itemStatus == 200) {
+                                    countWarningItems++;
+                                    //log.warn("Update event in ES : " + ((JsonObject) o).encode());
+                                } else {
+                                    LOGGER.error("Error persisting event in ES : " + ((JsonObject) o).encode());
+                                    return;
+                                }
+                            }
+                        }
+                        if (countWarningItems > 0) {
+                            LOGGER.warn("Update " + countWarningItems + " events in ES.");
+                        }
+
+                    } else {
+                        LOGGER.error("Error sending events to elasticsearch", ar.cause());
+                    }
+                });
+                for (Object o : results) {
+                    JsonObject j = (JsonObject) o;
+                    j.put("_id", j.getInteger("id"));
+                    eventsIds.add(j.getInteger("id"));
+                    bulkRequest.index(j, null);
+                }
+                bulkRequest.end();
+            }
+        }));
+    }
+
     public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
         filter(test, handler);
     }
@@ -704,71 +771,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 .put(ACTION, PREPARED);
     }
 
-    public void test() {
-        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
-                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
-                "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
-                "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
-                "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
-                "FROM " + Crre.crreSchema + ".equipment e " +
-                "LEFT JOIN ( " +
-                "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
-                "FROM " + Crre.crreSchema + ".equipment_option option " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
-                ") opts ON opts.id_equipment = e.id " +
-                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
-                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
-                "LEFT JOIN " + Crre.crreSchema + ".editor ON (editor.id = e.id_editor) " +
-                "LEFT JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
-                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
-                "LEFT JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
-                "GROUP BY (e.id, tax.id, editor.id)";
-        sql.raw(query, SqlResult.validResultHandler(event -> {
-            if (event.isRight()) {
-                final JsonArray results = event.right().getValue();
-                final int resultsSize = results.size();
-                final JsonArray eventsIds = new JsonArray();
-                ElasticSearch es = ElasticSearch.getInstance();
-                BulkRequest bulkRequest = es.bulk(EVENTS, ar -> {
-                    if (ar.succeeded()) {
-                        JsonArray items = ar.result().getJsonArray("items");
-                        if (items.size() != resultsSize) {
-                            LOGGER.error("Error different sync length. Expected : " + resultsSize +
-                                    " - Found : " + items.size());
-                            return;
-                        }
-                        int countWarningItems = 0;
-                        for (Object o : items) {
-                            final int itemStatus = ((JsonObject) o).getJsonObject("index").getInteger("status");
-                            if (itemStatus != 201) {
-                                if (itemStatus == 200) {
-                                    countWarningItems++;
-                                    //log.warn("Update event in ES : " + ((JsonObject) o).encode());
-                                } else {
-                                    LOGGER.error("Error persisting event in ES : " + ((JsonObject) o).encode());
-                                    return;
-                                }
-                            }
-                        }
-                        if (countWarningItems > 0) {
-                            LOGGER.warn("Update " + countWarningItems + " events in ES.");
-                        }
-
-                    } else {
-                        LOGGER.error("Error sending events to elasticsearch", ar.cause());
-                    }
-                });
-                for (Object o : results) {
-                    JsonObject j = (JsonObject) o;
-                    j.put("_id", j.getInteger("id"));
-                    eventsIds.add(j.getInteger("id"));
-                    bulkRequest.index(j, null);
-                }
-                bulkRequest.end();
-            }
-        }));
-    }
 
     public void listSubjects(final Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT name " +

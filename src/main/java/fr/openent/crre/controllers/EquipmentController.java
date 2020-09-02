@@ -98,7 +98,19 @@ public class EquipmentController extends ControllerHelper {
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
             equipmentService.searchAll(arrayResponseHandler(request));
-/*            equipmentService.test();*/
+            equipmentService.syncES();
+
+        } catch (ClassCastException e) {
+            log.error("An error occurred casting campaign id", e);
+        }
+    }
+
+    @Get("/equipments/catalog/syncES")
+    @ApiDoc("Sync equipments from database to ES")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void syncES() {
+        try {
+            equipmentService.syncES();
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);

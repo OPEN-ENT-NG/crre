@@ -121,8 +121,6 @@ public interface EquipmentService {
 
     void searchWord(String word, Handler<Either<String, JsonArray>> handler);
 
-    void test();
-
     void listSubjects(Handler<Either<String, JsonArray>> handler);
 
     void listGrades(Handler<Either<String, JsonArray>> handler);
@@ -130,4 +128,6 @@ public interface EquipmentService {
     void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
 
     void searchAll(Handler<Either<String, JsonArray>> handler);
+
+    void syncES();
 }
