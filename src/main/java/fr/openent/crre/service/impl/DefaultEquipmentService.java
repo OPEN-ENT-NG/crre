@@ -36,7 +36,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         super(schema, table);
     }
 
-
     private String getSqlOrderValue(String field) {
         String typeField;
         switch (field) {
@@ -144,8 +143,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
         this.sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idEquipment), SqlResult.validResultHandler(handler));
     }
-
-
 
     @Override
     public void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
@@ -416,6 +413,10 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         JsonArray params = new JsonArray().add(query);
 
         Sql.getInstance().prepared(sqlQuery, params, SqlResult.validResultHandler(handler));
+    }
+
+    public void getNextPageItems(String scroll_id, Handler<Either<String, JsonObject>> handler) {
+        getPageItems(scroll_id, handler);
     }
 
 
