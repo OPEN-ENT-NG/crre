@@ -39,6 +39,25 @@ public class ElasticSearchHelper {
         });
     }
 
+    public static void search_All(Handler<Either<String, JsonArray>> handler) {
+        JsonObject query = new JsonObject()
+                .put("from", 0)
+                .put("size", 10000)
+                .put("query", new JsonObject().put("match_all", new JsonObject()));
+
+        executeEsSearch(query, ar -> {
+            if (ar.failed()) {
+                handler.handle(new Either.Left<>(ar.cause().toString()));
+            } else {
+                JsonArray result = new JsonArray();
+                for (Object article:ar.result()) {
+                    result.add(((JsonObject)article).getJsonObject("_source"));
+                }
+                handler.handle(new Either.Right<>(result));
+            }
+        });
+    }
+
 
     public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
@@ -105,10 +124,4 @@ public class ElasticSearchHelper {
                 .put("size", PAGE_SIZE);
     }
 
-    private static JsonObject regexpField(String field, String query) {
-        JsonObject regexp = new JsonObject()
-                .put(field, formatRegexp(query));
-
-        return new JsonObject().put("regexp", regexp);
-    }
 }

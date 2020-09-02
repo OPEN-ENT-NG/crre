@@ -20,8 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.filter;
-import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearch;
+import static fr.openent.crre.helpers.ElasticSearchHelper.*;
 
 
 public class DefaultEquipmentService extends SqlCrudService implements EquipmentService {
@@ -88,6 +87,9 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         plainTextSearch(word, handler);
     }
 
+    public void searchAll(Handler<Either<String, JsonArray>> handler) {
+        search_All(handler);
+    }
 
     public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
         filter(test, handler);
@@ -114,6 +116,12 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         }
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
+
+    @Override
+    public void listEquipments(Integer page, List<String> filters, Handler<Either<String, JsonArray>> handler) {
+
+    }
+
     public void equipment(Integer idEquipment,  Handler<Either<String, JsonArray>> handler){
         String query = "SELECT equip.*, tax.value as tax_amount, " +
                 "array_to_json(array_agg(opts.*)) as options " +
@@ -174,47 +182,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
 
-    public void listEquipments(Integer page, List<String> filters,
-                               Handler<Either<String, JsonArray>> handler) {
-
-
-        JsonArray values = new JsonArray();
-        StringBuilder queryFilter = new StringBuilder();
-        if (!filters.isEmpty()) {
-            for (String filter : filters) {
-                queryFilter.append("AND (lower(e.name) ~ lower(?) OR lower(contract.name) ~ lower(?))");
-                values.add(filter).add(filter);
-            }
-        }
-        String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
-                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
-                "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
-                "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
-                "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
-                "FROM " + Crre.crreSchema + ".equipment e " +
-                "LEFT JOIN ( " +
-                "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
-                "FROM " + Crre.crreSchema + ".equipment_option option " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
-                ") opts ON opts.id_equipment = e.id " +
-                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
-                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
-                "LEFT JOIN " + Crre.crreSchema + ".editor ON (editor.id = e.id_editor) " +
-                "LEFT JOIN " + Crre.crreSchema + ".grade ON (grade.id = rel_equipment_grade.id_grade) " +
-                "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_subject ON (rel_equipment_subject.id_equipment = e.id) " +
-                "LEFT JOIN " + Crre.crreSchema + ".subject ON (subject.id = rel_equipment_subject.id_subject) " +
-                "WHERE e.status != 'OUT_OF_STOCK'" + queryFilter +
-                "GROUP BY (e.id, tax.id, editor.id)";
-
-
-        if (page != null) {
-            query += " LIMIT " + Crre.PAGE_SIZE + " OFFSET ?";
-            values.add(Crre.PAGE_SIZE * page);
-        }
-
-        sql.prepared(query, values, SqlResult.validResultHandler(handler));
-    }
     public void create(final JsonObject equipment, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".equipment_id_seq') as id";
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {

@@ -97,10 +97,9 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
-            List<String> filters = request.params().getAll("q");
-            equipmentService.listEquipments(page, filters, arrayResponseHandler(request));
-            equipmentService.test();
+            equipmentService.searchAll(arrayResponseHandler(request));
+/*            equipmentService.test();*/
+
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }
