@@ -15,23 +15,6 @@
             </div>
         </div>
     </div>
-
-<!--    ng-change="saveColumnsPreferences()-->
-
-
-    <div class="columns-popup-wrapper right-magnet">
-        <div ng-init="getGrade()" ng-click="showPopUpColumns = !showPopUpColumns" class="right-magnet columns-popup-button">
-            <span ng-show="showPopUpColumns === true">&#x25B2;</span>
-            <span ng-hide="showPopUpColumns === true">&#x25BC;</span>
-        </div>
-        <div ng-class="{'open' : showPopUpColumns === true}" class="right-magnet columns-popup">
-            <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
-                <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter('grade_name', grade.name)">
-                <span>[[grade.name]]</span>
-            </label>
-        </div>
-    </div>
-
     <div class="row horizontal-spacing">
         <div class="select-blocks">
             <div ng-repeat="filter in equipments.sort.filters"
@@ -41,17 +24,17 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <button ng-click=""
+    <div class="row" ng-init="getFilters()">
+        <button ng-click="showPopUpColumnsSubject = !showPopUpColumnsSubject"
                 class="filterButton">
             <i class="school"></i>
             <span>Disciplines</span>
             <div class="columns-popup-wrapper right-magnet">
-                <div ng-init="getSubject()" ng-click="showPopUpColumns = !showPopUpColumns" class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumns === true">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumns === true">&#x25BC;</span>
+                <div class="right-magnet columns-popup-button">
+                    <span ng-show="showPopUpColumnsSubject">&#x25B2;</span>
+                    <span ng-hide="showPopUpColumnsSubject">&#x25BC;</span>
                 </div>
-                <div ng-class="{'open' : showPopUpColumns === true}" class="right-magnet columns-popup">
+                <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet first-column-popup columns-popup">
                     <label class="columns-popup-items" ng-repeat="subject in equipments.subjects">
                         <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter('subject_name', subject.name)">
                         <span>[[subject.name]]</span>
@@ -59,35 +42,54 @@
                 </div>
             </div>
         </button>
-        <button ng-click=""
+        <button ng-click="showPopUpColumnsDiplomes = !showPopUpColumnsDiplomes"
                 class="filterButton">
             <i class="star-circle"></i>
             <span>Diplômes</span>
-            <i class="arrow bottom"></i>
         </button>
-        <button ng-click=""
+        <button ng-click="showPopUpColumnsGrade = !showPopUpColumnsGrade"
                 class="filterButton">
             <i class="star-circle"></i>
             <span>Niveaux</span>
-            <i class="arrow bottom"></i>
+            <div class="columns-popup-wrapper right-magnet">
+                <div class="right-magnet columns-popup-button">
+                    <span ng-show="showPopUpColumnsGrade">&#x25B2;</span>
+                    <span ng-hide="showPopUpColumnsGrade">&#x25BC;</span>
+                </div>
+                <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
+                    <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
+                        <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter('grade_name', grade.name)">
+                        <span>[[grade.name]]</span>
+                    </label>
+                </div>
+            </div>
         </button>
-        <button ng-click=""
+        <button ng-click="showPopUpColumnsDocumentsTypes = !showPopUpColumnsDocumentsTypes"
                 class="filterButton">
             <i class="book-variant"></i>
             <span>Types de documents</span>
-            <i class="arrow bottom"></i>
         </button>
-        <button ng-click=""
+        <button ng-click="showPopUpColumnsEditor = !showPopUpColumnsEditor"
                 class="filterButton">
             <i class="editor"></i>
             <span>Éditeurs</span>
-            <i class="arrow bottom"></i>
+            <div class="columns-popup-wrapper right-magnet">
+                <div class="right-magnet columns-popup-button">
+                    <span ng-show="showPopUpColumnsEditor">&#x25B2;</span>
+                    <span ng-hide="showPopUpColumnsEditor">&#x25BC;</span>
+                </div>
+                <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
+                    <label class="columns-popup-items" ng-repeat="editor in equipments.editors">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter('editor_name', editor.name)">
+                        <span>[[editor.name]]</span>
+                    </label>
+                </div>
+            </div>
         </button>
-        <button ng-click=""
+        <button ng-click="showPopUpColumnsOS = !showPopUpColumnsOS"
                 class="filterButton">
             <i class="phone-infos"></i>
             <span>OS</span>
-            <i class="arrow bottom"></i>
         </button>
     </div>
 <!--    <nav class="prev-next vertical-spacing-four" ng-if="equipments.page_count > 1">-->

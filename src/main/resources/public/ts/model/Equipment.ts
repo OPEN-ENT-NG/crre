@@ -158,6 +158,7 @@ export interface Equipments {
     page_count: number;
     subjects: String[];
     grades: String[];
+    editors: String[];
 
     sort: {
         type: string,
@@ -222,14 +223,11 @@ export class Equipments extends Selection<Equipment> {
         });
     }
 
-    async getSubjects(){
-        const {data} = await http.get(`/crre/equipments/subjects`);
-        this.subjects = data;
-    }
-
-    async getGrades(){
-        const {data} = await http.get(`/crre/equipments/grades`);
-        this.grades = data;
+    async getFilters(){
+        const {data} = await http.get(`/crre/equipments/filters`);
+        this.subjects = data.subjects;
+        this.grades = data.grades;
+        this.editors = data.editors;
     }
 
     async sync(isCatalog?: boolean, page: number = this.page, filter = this.sort, onScrolling? : boolean) {

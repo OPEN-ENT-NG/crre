@@ -117,23 +117,12 @@ public class EquipmentController extends ControllerHelper {
         }
     }
 
-    @Get("/equipments/subjects")
-    @ApiDoc("List subjects")
+    @Get("/equipments/filters")
+    @ApiDoc("List filtes")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listSubjects(final HttpServerRequest request) {
         try {
-            equipmentService.listSubjects(arrayResponseHandler(request));
-        } catch (ClassCastException e) {
-            log.error("An error occurred casting campaign id", e);
-        }
-    }
-
-    @Get("/equipments/grades")
-    @ApiDoc("List grades")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void listGrades(final HttpServerRequest request) {
-        try {
-            equipmentService.listGrades(arrayResponseHandler(request));
+            equipmentService.listFilters(defaultResponseHandler(request));
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }

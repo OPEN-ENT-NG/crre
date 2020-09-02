@@ -193,7 +193,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     await $scope.initBasketItem(parseInt(idEquipment));
                 }
                 if(!$scope.fromCatalog){
-                    $scope.redirectTo(`/campaign/${idCampaign}/catalog`);
+                    $scope.redirectTo(`/equipments/catalog`);
                 }
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);

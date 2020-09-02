@@ -1,9 +1,6 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
-import fr.openent.crre.logging.Actions;
-import fr.openent.crre.logging.Contexts;
-import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.Campaign;
 import fr.openent.crre.service.CampaignService;
 import fr.wseduc.webutils.Either;

@@ -14,7 +14,8 @@ export const catalogController = ng.controller('catalogController',
         $scope.alloptionsSelected = false;
         $scope.equipment = new Equipment();
         $scope.subjects = [];
-        $scope.showPopUpColumns = false;
+        $scope.showPopUpColumnsGrade = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsSubject =
+            $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsDiplomes = false;
         $scope.addFilter = (event) => {
                 //$scope.equipments.sort.filters.push(event.target.value);
                 $scope.equipments.getSearchEquipment(event.target.value);
@@ -81,12 +82,8 @@ export const catalogController = ng.controller('catalogController',
             $scope.basket.amount -= 1;
         };
 
-        $scope.getSubject = () => {
-           $scope.equipments.getSubjects();
-        };
-
-        $scope.getGrade = () => {
-            $scope.equipments.getGrades();
+        $scope.getFilters = () => {
+           $scope.equipments.getFilters();
         };
 
         $scope.durationFormat = (nbr : number) =>  {

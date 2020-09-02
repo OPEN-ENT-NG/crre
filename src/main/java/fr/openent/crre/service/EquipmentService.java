@@ -123,9 +123,7 @@ public interface EquipmentService {
 
     void searchWord(String word, Handler<Either<String, JsonArray>> handler);
 
-    void listSubjects(Handler<Either<String, JsonArray>> handler);
-
-    void listGrades(Handler<Either<String, JsonArray>> handler);
+    void listFilters(Handler<Either<String, JsonObject>> handler);
 
     void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
 

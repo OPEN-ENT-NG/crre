@@ -4,6 +4,8 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.service.EquipmentService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -21,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 
 
 public class DefaultEquipmentService extends SqlCrudService implements EquipmentService {
@@ -776,25 +779,63 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
 
-    public void listSubjects(final Handler<Either<String, JsonArray>> handler) {
+    private void listSubjects(final Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT name " +
                 "FROM " + Crre.crreSchema + ".subject";
         sql.raw(query, SqlResult.validResultHandler(event -> {
             if (event.isRight()) {
                 handler.handle(event);
+            } else {
+                handler.handle(new Either.Left<>("Get listSubjects SQL not working : " + event.left().toString()));
             }
         }));
     }
 
 
-    public void listGrades(Handler<Either<String, JsonArray>> handler) {
+    private void listGrades(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT name " +
                 "FROM " + Crre.crreSchema + ".grade";
         sql.raw(query, SqlResult.validResultHandler(event -> {
             if (event.isRight()) {
                 handler.handle(event);
+            } else {
+                handler.handle(new Either.Left<>("Get listGrades SQL not working : " + event.left().toString()));
             }
         }));
+    }
+
+    private void listEditors(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT name " +
+                "FROM " + Crre.crreSchema + ".editor";
+        sql.raw(query, SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                handler.handle(event);
+            } else {
+                handler.handle(new Either.Left<>("Get listEditors SQL not working : " + event.left().toString()));
+            }
+        }));
+    }
+
+    public void listFilters(Handler<Either<String, JsonObject>> handler) {
+        Future<JsonArray> listSubjectFuture = Future.future();
+        Future<JsonArray> listGradeFuture = Future.future();
+        Future<JsonArray> listEditorFuture = Future.future();
+
+
+        CompositeFuture.all(listSubjectFuture, listGradeFuture, listEditorFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonObject filters = new JsonObject().put("grades", listGradeFuture.result())
+                        .put("subjects", listSubjectFuture.result())
+                        .put("editors", listEditorFuture.result());
+                handler.handle(new Either.Right<>(filters));
+
+            } else {
+                handler.handle(new Either.Left<>("An error occurred when retrieving campaigns"));
+            }
+        });
+        listGrades(handlerJsonArray(listGradeFuture));
+        listSubjects(handlerJsonArray(listSubjectFuture));
+        listEditors(handlerJsonArray(listEditorFuture));
     }
 
 }
