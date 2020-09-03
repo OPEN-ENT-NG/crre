@@ -1,4 +1,4 @@
-<div ng-controller="catalogController" class="catalog" bottom-scroll="onBottomScroll()">
+<div ng-controller="catalogController" class="catalog" bottom-scroll="nbItemsDisplay = nbItemsDisplay + pageSize">
     <div class="cell twelve horizontal-spacing search-pagination vertical-spacing-twice">
         <a ng-show="display.equipment" class="zero block-mobile"
             href="#/equipments/catalog">
@@ -112,7 +112,7 @@
         <div class="dominos item_hover_accent_list">
             <div class="item six-mobile"
                  ng-class="{disabled: equipment.status!== 'AVAILABLE', 'list-item': display.equipment}"
-                 ng-repeat="equipment in equipments.all track by $index"
+                 ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay track by $index"
                  ng-click="openEquipment(equipment)">
 
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">

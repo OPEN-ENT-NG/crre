@@ -84,7 +84,7 @@ public interface EquipmentService {
      *          ids allocated to create new options
      */
     void prepareUpdateOptions (Number numberOptionsCreate, Number idEquipment,
-                                Handler<Either<String, JsonObject>> handler);
+                               Handler<Either<String, JsonObject>> handler);
 
     /**
      * Search equipment based on query. Search field are name and reference
@@ -93,8 +93,6 @@ public interface EquipmentService {
      * @param handler Function handler returning data
      */
     void search(String query,  List<String> listFields, Handler<Either<String, JsonArray>> handler);
-
-    void getNextPageItems(String scroll_id,  Handler<Either<String, JsonObject>> handler);
 
     /**
      * Create equipments due to an import
@@ -121,13 +119,13 @@ public interface EquipmentService {
 
     void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler);
 
-    void searchWord(String word, Handler<Either<String, JsonArray>> handler);
+    void searchWord(String word, Handler<Either<String, JsonArray>> handler, Integer page);
 
     void listFilters(Handler<Either<String, JsonObject>> handler);
 
-    void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
+    void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler, Integer page);
 
-    void searchAll(Handler<Either<String, JsonArray>> handler);
+    void searchAll(Integer page, Handler<Either<String, JsonArray>> handler);
 
     void syncES();
 }

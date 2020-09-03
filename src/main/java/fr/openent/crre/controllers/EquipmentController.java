@@ -38,14 +38,12 @@ public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
     private final ImportCSVHelper importCSVHelper;
-    private ArrayList<String> filter_array;
     private HashMap<String, ArrayList<String>> query_filter;
 
     public EquipmentController(Vertx vertx) {
         super();
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
-        this.filter_array = new ArrayList<String> ();
         this.query_filter = new HashMap<String, ArrayList<String>>();
     }
 
@@ -97,8 +95,9 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            equipmentService.searchAll(arrayResponseHandler(request));
-            equipmentService.syncES();
+            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
+            equipmentService.searchAll(page, arrayResponseHandler(request));
+            //equipmentService.syncES();
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
@@ -122,6 +121,7 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listSubjects(final HttpServerRequest request) {
         try {
+            this.query_filter.clear();
             equipmentService.listFilters(defaultResponseHandler(request));
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
@@ -134,7 +134,8 @@ public class EquipmentController extends ControllerHelper {
     public void SearchEquipment(final HttpServerRequest request) {
         try {
             String word = request.getParam("word");
-            equipmentService.searchWord(word, arrayResponseHandler(request));
+            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
+            equipmentService.searchWord(word, arrayResponseHandler(request), page);
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);
         }
@@ -147,23 +148,28 @@ public class EquipmentController extends ControllerHelper {
         try {
             String word = URLDecoder.decode(request.getParam("word"), "UTF-8");
             String filter = request.getParam("filter");
-
-/*            if(this.query_filter.containsKey(filter)) {
-                this.query_filter.remove(filter);
-            }*/
-
-
-                if(this.query_filter.containsKey(filter)) {
-                    if(this.query_filter.get(filter).contains(word)) {
+            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
+                if (this.query_filter.containsKey(filter)) {
+                    // filter already checked
+                    if (this.query_filter.get(filter).contains(word)) {
                         this.query_filter.get(filter).remove(word);
+                        if(this.query_filter.get(filter).isEmpty()) {
+                            this.query_filter.remove(filter);
+                        }
                     } else {
+                        // new filter
                         this.query_filter.get(filter).add(word);
                     }
                 } else {
                     this.query_filter.put(filter, new ArrayList<String>(Arrays.asList(word)));
                 }
 
-            equipmentService.filterWord(this.query_filter, arrayResponseHandler(request));
+                // empty filter
+                if (this.query_filter.isEmpty()) {
+                    equipmentService.searchAll(page, arrayResponseHandler(request));
+                } else {
+                    equipmentService.filterWord(this.query_filter, arrayResponseHandler(request), page);
+                }
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);
         }
@@ -192,11 +198,11 @@ public class EquipmentController extends ControllerHelper {
     public void create(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "equipment",
                 equipment -> equipmentService.create(equipment, Logging.defaultResponseHandler(eb,
-                request,
-                Contexts.EQUIPMENT.toString(),
-                Actions.CREATE.toString(),
-                null,
-                equipment)));
+                        request,
+                        Contexts.EQUIPMENT.toString(),
+                        Actions.CREATE.toString(),
+                        null,
+                        equipment)));
     }
 
     @Put("/equipment/:id")
@@ -207,34 +213,34 @@ public class EquipmentController extends ControllerHelper {
     public void update(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "equipment",
                 equipment -> {
-            try {
-                final Integer id = Integer.parseInt(request.params().get("id"));
-                equipmentService.updateEquipment(id, equipment,
-                        eventUpdateEquipment -> {
-                            if(eventUpdateEquipment.isRight()){
-                                final Integer optionsCreate =  equipment
-                                        .getJsonArray("optionsCreate").size();
-                                equipmentService.prepareUpdateOptions( optionsCreate , id,
-                                        resultObject -> {
-                                            if(resultObject.isRight()) {
-                                                equipmentService.updateOptions( id, equipment,
-                                                        resultObject.right().getValue(),
-                                                        Logging.defaultResponseHandler(eb,
-                                                                request,
-                                                                Contexts.EQUIPMENT.toString(),
-                                                                Actions.UPDATE.toString(),
-                                                                request.params().get("id"),
-                                                                equipment) );
-                                            }else {
-                                              log.error("An error occurred when preparing options update");
-                                            }
-                                        });
-                            }
-                        });
-            } catch (ClassCastException e) {
-                log.error("An error occurred when casting equipment id", e);
-            }
-        });
+                    try {
+                        final Integer id = Integer.parseInt(request.params().get("id"));
+                        equipmentService.updateEquipment(id, equipment,
+                                eventUpdateEquipment -> {
+                                    if(eventUpdateEquipment.isRight()){
+                                        final Integer optionsCreate =  equipment
+                                                .getJsonArray("optionsCreate").size();
+                                        equipmentService.prepareUpdateOptions( optionsCreate , id,
+                                                resultObject -> {
+                                                    if(resultObject.isRight()) {
+                                                        equipmentService.updateOptions( id, equipment,
+                                                                resultObject.right().getValue(),
+                                                                Logging.defaultResponseHandler(eb,
+                                                                        request,
+                                                                        Contexts.EQUIPMENT.toString(),
+                                                                        Actions.UPDATE.toString(),
+                                                                        request.params().get("id"),
+                                                                        equipment) );
+                                                    }else {
+                                                        log.error("An error occurred when preparing options update");
+                                                    }
+                                                });
+                                    }
+                                });
+                    } catch (ClassCastException e) {
+                        log.error("An error occurred when casting equipment id", e);
+                    }
+                });
     }
 
     @Put("/equipments/:status")
@@ -387,18 +393,7 @@ public class EquipmentController extends ControllerHelper {
         if (request.params().contains("q") && request.params().get("q").trim() != "" && request.params().contains("field")) {
             String query = request.getParam("q");
             List<String> params = request.params().getAll("field");
-                equipmentService.search(query,params, arrayResponseHandler(request));
-        } else {
-            badRequest(request);
-        }
-    }
-
-    @Get("/equipments/nextPageItems")
-    @ApiDoc("Get next results items from the search")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getNextPageItems(HttpServerRequest request) {
-        if (request.params().contains("scroll_id")) {
-            equipmentService.getNextPageItems(request.params().get("scroll_id"), defaultResponseHandler(request));
+            equipmentService.search(query,params, arrayResponseHandler(request));
         } else {
             badRequest(request);
         }

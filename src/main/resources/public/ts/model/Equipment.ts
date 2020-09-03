@@ -203,8 +203,7 @@ export class Equipments extends Selection<Equipment> {
         this.page_count = data.count;
     }
 
-    async getSearchEquipment(word: string){
-        const {data} = await http.get(`/crre/equipments/catalog/search/${word}`);
+    async syncEquip (data: any, onScroll: boolean) {
         this.all = Mix.castArrayAs(Equipment, data);
         this.all.map((equipment) => {
             equipment.price = parseFloat(equipment.price.toString());
@@ -212,15 +211,16 @@ export class Equipments extends Selection<Equipment> {
             /*this.equipmentsOptionsTechnicalsSpecs(true, equipment);*/
         });
     }
+    async getFilterEquipments(word: string, filter?: string, onScroll: boolean = false){
+        let uri: string;
+        if(filter) {
+            uri = (`/crre/equipments/catalog/filter/${word}/${filter}?page=${this.page}`);
+        } else {
+            uri = (`/crre/equipments/catalog/search/${word}?page=${this.page}`);
+        }
+        let {data} = await http.get(uri);
+        this.syncEquip(data, onScroll);
 
-    async getFilterEquipment(filter: string, filter_word: string[]){
-        const {data} = await http.get(`/crre/equipments/catalog/filter/${filter}/${filter_word}`);
-        this.all = Mix.castArrayAs(Equipment, data);
-        this.all.map((equipment) => {
-            equipment.price = parseFloat(equipment.price.toString());
-            equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-            /*this.equipmentsOptionsTechnicalsSpecs(true, equipment);*/
-        });
     }
 
     async getFilters(){
@@ -230,35 +230,19 @@ export class Equipments extends Selection<Equipment> {
         this.editors = data.editors;
     }
 
-    async sync(isCatalog?: boolean, page: number = this.page, filter = this.sort, onScrolling? : boolean) {
+    async sync(isCatalog?: boolean, onScroll:boolean = false) {
         this.loading = true;
         try {
-            await this.getPageCount();
-
-            if (onScrolling) {
-                this.all = this.all.concat(this.all.slice(0, 12));
-                let {data} = await http.get(`/crre/equipments/nextPageItems?scroll_id=${this.scroll_id}`);
-                this.all = this.all.concat(Mix.castArrayAs(Equipment, data[1]));
-                this.scroll_id = data.scroll_id;
-            }
-            else {
-                const queriesFilter = Utils.formatGetParameters({q: filter.filters});
-                let uri: string;
-                if (isCatalog) {
-                    uri = `/crre/equipments/catalog`;
-                } else {
-                    uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
-                }
-                let {data} = await http.get(uri);
-                this.all = Mix.castArrayAs(Equipment, data);
-            }
-
-
-            this.all.map((equipment) => {
-                equipment.price = parseFloat(equipment.price.toString());
-                equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-                // this.equipmentsOptionsTechnicalsSpecs(isCatalog, equipment);
-            });
+// /*            await this.getPageCount();*/
+//             const queriesFilter = Utils.formatGetParameters({q: filter.filters});
+//             let uri: string;
+//             if (isCatalog) {
+//                 uri = `/crre/equipments/catalog?page=${page}`;
+//             } else {
+//                 uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+//             }
+            let {data} = await http.get(`/crre/equipments/catalog?page=${this.page}`);
+            this.syncEquip(data, onScroll);
 
         } catch (e) {
             notify.error('crre.equipment.sync.err');
@@ -309,16 +293,22 @@ export class Equipments extends Selection<Equipment> {
         return this._loading;
     }
 
-    loadNext(isCatalog? : boolean, filter?: { type: string, reverse: boolean, filters: string[] }) {
-        return this.sync(isCatalog, ++this.page, filter);
+    loadNext(isCatalog? : boolean) {
+        return this.sync(isCatalog);
     }
 
-    loadPrev(isCatalog? : boolean, filter?: { type: string, reverse: boolean; filters: string[] }) {
-        return this.sync(isCatalog, --this.page, filter);
+    loadPrev(isCatalog? : boolean) {
+        return this.sync(isCatalog);
     }
 
-    scrollPage(isCatalog?: boolean, filter?: { type: string, reverse: boolean; filters: string[] }) {
-        return this.sync(isCatalog, this.page, filter, true);
+    scrollPage(isCatalog?: boolean, callAPI?: string, word?: string, filter? :string) {
+        this.page ++;
+        switch (callAPI) {
+            case "search": return this.getFilterEquipments(word, undefined, true); break;
+            case "filter": return this.getFilterEquipments(word, filter, true); break;
+            default: return this.sync(isCatalog, true); break;
+
+        }
     }
 
     async setStatus (status: string): Promise<void> {

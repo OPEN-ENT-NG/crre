@@ -86,12 +86,12 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         return filter.toString();
     }
 
-    public void searchWord(String word, Handler<Either<String, JsonArray>> handler) {
-        plainTextSearch(word, handler);
+    public void searchWord(String word, Handler<Either<String, JsonArray>> handler, Integer page) {
+        plainTextSearch(word, handler, page);
     }
 
-    public void searchAll(Handler<Either<String, JsonArray>> handler) {
-        search_All(handler);
+    public void searchAll(Integer page, Handler<Either<String, JsonArray>> handler) {
+        search_All(page, handler);
     }
 
 
@@ -161,8 +161,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         }));
     }
 
-    public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
-        filter(test, handler);
+    public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler, Integer page) {
+        filter(test, handler, page);
     }
 
     public void listEquipments(Integer page, String order, Boolean reverse, List<String> filters, Handler<Either<String, JsonArray>> handler) {
@@ -487,12 +487,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
         Sql.getInstance().prepared(sqlQuery, params, SqlResult.validResultHandler(handler));
     }
-
-    public void getNextPageItems(String scroll_id, Handler<Either<String, JsonObject>> handler) {
-        getPageItems(scroll_id, handler);
-    }
-
-
 
     /**
      * Returns transaction handler. Manage response based on PostgreSQL event

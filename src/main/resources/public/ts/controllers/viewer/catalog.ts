@@ -10,23 +10,34 @@ import {Basket, Equipment, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
-        $scope.nbNewItems = 10;
+        $scope.pageSize = 2;
+        $scope.nbItemsDisplay = $scope.pageSize;
+        $scope.word = "*";
+        $scope.filter = "";
         $scope.alloptionsSelected = false;
         $scope.equipment = new Equipment();
         $scope.subjects = [];
+        $scope.callAPI = "searchAll";
         $scope.showPopUpColumnsGrade = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsSubject =
             $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsDiplomes = false;
         $scope.addFilter = (event) => {
-                //$scope.equipments.sort.filters.push(event.target.value);
-                $scope.equipments.getSearchEquipment(event.target.value);
-                $scope.equipments.page = 0;
-                $scope.$apply();
+            //$scope.equipments.sort.filters.push(event.target.value);
+            $scope.callAPI = "search";
+            $scope.word = event.target.value;
+            $scope.equipments.page = 0;
+            $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.equipments.getFilterEquipments(event.target.value);
+            $scope.$apply();
         };
 
-        $scope.getFilter = (filter: string, filter_word: string) => {
+        $scope.getFilter = (word: string, filter: string) => {
             //$scope.equipments.sort.filters.push(event.target.value);
-            $scope.equipments.getFilterEquipment(filter, filter_word);
+            $scope.callAPI = "filter";
+            $scope.word = word;
+            $scope.filter = filter;
             $scope.equipments.page = 0;
+            $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.equipments.getFilterEquipments(word, filter);
             $scope.$apply();
         };
 
@@ -95,11 +106,11 @@ export const catalogController = ng.controller('catalogController',
                 return nbr.toString() + " années scolaires";
         };
         $scope.onBottomScroll = () => {
-            console.log("at the bottom");
-            $scope.scrollHeight = window.scrollY;
-            $scope.display.equipment = false;
-            $scope.equipments.scrollPage();
-            Utils.safeApply($scope);
-            window.scrollTo(0,$scope.scrollHeight);
+            // console.log("at the bottom");
+            // $scope.scrollHeight = window.scrollY;
+            // $scope.display.equipment = false;
+            // $scope.equipments.scrollPage(true, $scope.callAPI, $scope.word, $scope.filter);
+            // Utils.safeApply($scope);
+            // window.scrollTo(0,$scope.scrollHeight);
         };
     }]);
