@@ -167,11 +167,9 @@ export interface Equipments {
 }
 
 export class Equipments extends Selection<Equipment> {
-
     constructor() {
         super([]);
         this.eventer = new Eventer();
-        this.page = 0;
         this.subjects = [];
         this.grades = [];
         this._loading = false;
@@ -181,7 +179,6 @@ export class Equipments extends Selection<Equipment> {
             filters: []
         };
     }
-
 
     async delete (equipments: Equipment[]): Promise<void> {
         try {
@@ -194,31 +191,32 @@ export class Equipments extends Selection<Equipment> {
         }
     }
 
-    async getPageCount() {
-        let filter: string = '?';
-        filter += `${Utils.formatGetParameters({q: this.sort.filters})}`;
-        const {data} = await http.get(`/crre/equipments/pages/count${filter}`);
-        this.page_count = data.count;
-    }
-
     async syncEquip (data: any) {
         this.all = Mix.castArrayAs(Equipment, data);
         this.all.map((equipment) => {
             equipment.price = parseFloat(equipment.price.toString());
-            equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-            /*this.equipmentsOptionsTechnicalsSpecs(true, equipment);*/
+            // equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
+            // this.equipmentsOptionsTechnicalsSpecs(true, equipment);
         });
     }
-    async getFilterEquipments(word: string, filter?: string){
-        let uri: string;
-        if(filter) {
-            uri = (`/crre/equipments/catalog/filter/${word}/${filter}`);
-        } else {
-            uri = (`/crre/equipments/catalog/search/${word}`);
-        }
-        let {data} = await http.get(uri);
-        this.syncEquip(data);
 
+    async getFilterEquipments(word: string, filter?: string){
+        this.loading = true;
+        try {
+            let uri: string;
+            if(filter) {
+                uri = (`/crre/equipments/catalog/filter/${word}/${filter}`);
+            } else {
+                uri = (`/crre/equipments/catalog/search/${word}`);
+            }
+            let {data} = await http.get(uri);
+            this.syncEquip(data);
+        } catch (e) {
+            notify.error('crre.equipment.sync.err');
+            throw e;
+        } finally {
+            this.loading = false;
+        }
     }
 
     async getFilters(){
@@ -231,10 +229,10 @@ export class Equipments extends Selection<Equipment> {
     async sync() {
         this.loading = true;
         try {
- /*              await this.getPageCount();
-                const queriesFilter = Utils.formatGetParameters({q: filter.filters});
-                 uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
-             } */
+            // old
+            // const queriesFilter = Utils.formatGetParameters({q: filter.filters});
+            // let uri = `/crre/equipments?order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+            
             let {data} = await http.get(`/crre/equipments/catalog`);
             this.syncEquip(data);
 
@@ -287,14 +285,6 @@ export class Equipments extends Selection<Equipment> {
         return this._loading;
     }
 
-    loadNext() {
-        return this.sync();
-    }
-
-    loadPrev() {
-        return this.sync();
-    }
-
     async setStatus (status: string): Promise<void> {
         try {
             let params = Utils.formatKeyToParameter(this.selected, 'id');
@@ -304,6 +294,7 @@ export class Equipments extends Selection<Equipment> {
             throw e;
         }
     }
+    
 /*    async search(text: String, fieldName: String) {
         try {
             if ((text.trim() === '' || !text) || (fieldName.trim() === '' || !fieldName)) return;

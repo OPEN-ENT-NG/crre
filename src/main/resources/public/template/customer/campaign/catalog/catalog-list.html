@@ -92,27 +92,11 @@
             <span>OS</span>
         </button>
     </div>
-<!--    <nav class="prev-next vertical-spacing-four" ng-if="equipments.page_count > 1">-->
-<!--        <button ng-click="display.equipment = false; equipments.loadPrev(campaign.id, current.structure.id)"-->
-<!--                ng-disabled="equipments.page === 0">-->
-<!--            <i class="left-open"></i>-->
-<!--        </button>-->
-<!--        <span class="pagination">-->
-<!--				<span>[[ equipments.page + 1 ]]</span>-->
-<!--				<i18n class="zero-mobile"><i18n>crre.pages.separator</i18n></i18n>-->
-<!--				<span class="zero-desktop">/</span>-->
-<!--				<span>[[ equipments.page_count ]]</span>-->
-<!--			</span>-->
-<!--        <button ng-click="display.equipment = false; equipments.loadNext(campaign.id, current.structure.id);"-->
-<!--                ng-disabled="equipments.page + 1 === equipments.page_count">-->
-<!--            <i class="open-right"></i>-->
-<!--        </button>-->
-<!--    </nav>-->
     <div class="cell catalog-list twelve">
         <div class="dominos item_hover_accent_list">
             <div class="item six-mobile"
                  ng-class="{disabled: equipment.status!== 'AVAILABLE', 'list-item': display.equipment}"
-                 ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay track by $index"
+                 ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay"
                  ng-click="openEquipment(equipment)">
 
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">
@@ -149,23 +133,5 @@
             </div>
         </div>
     </div>
-<!--    <div class="cell catalog-list twelve" ng-if="equipments.loading">-->
-<!--        <div class="dominos item_hover_accent_list loading-domino">-->
-<!--            <div class="item six-mobile" ng-repeat="x in [].constructor(equipments.all.length + 6) track by $index">-->
-<!--                <article class="domino loading-domino">-->
-<!--                    <div class="loading-bar" ng-class="{loading: equipments.loading}"></div>-->
-<!--                    <div class="top">-->
-<!--                        <div class="image-container">-->
-<!--                            <div class="grey-matter grey-image">&nbsp;</div>-->
-<!--                        </div>-->
-<!--                        <div class="data-container">-->
-<!--                            <strong class="grey-matter">&nbsp;</strong>-->
-<!--                            <p class="grey-matter max-60">&nbsp;</p>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </article>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
     <container template="right-side"></container>
 </div>

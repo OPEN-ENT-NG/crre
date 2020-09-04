@@ -17,6 +17,10 @@ import {
 
 export const configurationController = ng.controller('configurationController',
     ['$scope', ($scope) => {
+        $scope.pageSize = 20;
+        $scope.nbItemsDisplay = $scope.pageSize;
+        $scope.itemsFilter = 'name';
+        $scope.filterOrder = false;
         $scope.COMBO_LABELS = COMBO_LABELS;
         $scope.display = {
             lightbox: {
@@ -56,8 +60,17 @@ export const configurationController = ng.controller('configurationController',
         $scope.search = {};
 
         $scope.filterEquipments = (type: string, reverse: boolean) => {
-            $scope.equipments.page = 0;
-            $scope.equipments.sync(true, undefined, undefined, {type, reverse});
+            $scope.nbItemsDisplay = $scope.pageSize;
+            // $scope.equipments.sync(true, undefined, undefined, {type, reverse});
+            switch(type) {
+                case 'name': $scope.itemsFilter = 'name'; break;
+                case 'price': $scope.itemsFilter = 'price'; break;
+                case 'supplier': $scope.itemsFilter = 'supplier_name'; break;
+                case 'contract': $scope.itemsFilter = 'contract_name'; break;
+                case 'status': $scope.itemsFilter = 'status'; break;
+                default: $scope.itemsFilter = 'reference'; break;
+            }
+            $scope.filterOrder = reverse;
             $scope.sort.equipment.reverse = reverse;
             $scope.sort.equipment.type = type;
         };
@@ -299,7 +312,7 @@ export const configurationController = ng.controller('configurationController',
         $scope.addEquipmentFilter = (event?) => {
             if (event && (event.which === 13 || event.keyCode === 13) && event.target.value.trim() !== '') {
                 $scope.equipments.sort.filters = [...$scope.equipments.sort.filters, event.target.value];
-                $scope.equipments.page = 0;
+                $scope.nbItemsDisplay = $scope.pageSize;
                 $scope.equipments.sync(true, undefined, undefined, $scope.sort.equipment);
                 event.target.value = '';
             }
@@ -307,7 +320,7 @@ export const configurationController = ng.controller('configurationController',
 
         $scope.dropEquipmentFilter = (filter: string) => {
             $scope.equipments.sort.filters = _.without($scope.equipments.sort.filters, filter);
-            $scope.equipments.page = 0;
+            $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipments.sync(true, undefined, undefined, $scope.sort.equipment);
         };
 
@@ -547,10 +560,10 @@ export const configurationController = ng.controller('configurationController',
         };
         $scope.searchOptionByName =(searchText : string, model: EquipmentOption)=>{
             $scope.searchOption(searchText,'name',model, 'search');
-        }
+        };
         $scope.searchOptionByReference= (searchText: string, model: EquipmentOption) => {
             $scope.searchOption(searchText,'reference',model, 'searchReference');
-        }
+        };
 
         $scope.selectOption = function (model: EquipmentOption, option: Equipment) {
             const alreadyAdded = _.findWhere($scope.equipment.options, {id_option: option.id_option});

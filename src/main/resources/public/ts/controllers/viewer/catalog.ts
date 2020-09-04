@@ -10,7 +10,7 @@ import {Basket, Equipment, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
-        $scope.pageSize = 2;
+        $scope.pageSize = 20;
         $scope.nbItemsDisplay = $scope.pageSize;
         $scope.alloptionsSelected = false;
         $scope.equipment = new Equipment();
