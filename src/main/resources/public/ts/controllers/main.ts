@@ -58,7 +58,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.equipments.eventer.on('loading::true', $scope.$apply);
         $scope.equipments.eventer.on('loading::false', $scope.$apply);
         $scope.loadingArray = false;
-        $scope.scrollHeight = 0;
 
         route({
             main: async () => {

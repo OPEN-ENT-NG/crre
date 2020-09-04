@@ -95,8 +95,7 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
-            equipmentService.searchAll(page, arrayResponseHandler(request));
+            equipmentService.searchAll(arrayResponseHandler(request));
             //equipmentService.syncES();
 
         } catch (ClassCastException e) {
@@ -134,8 +133,7 @@ public class EquipmentController extends ControllerHelper {
     public void SearchEquipment(final HttpServerRequest request) {
         try {
             String word = request.getParam("word");
-            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
-            equipmentService.searchWord(word, arrayResponseHandler(request), page);
+            equipmentService.searchWord(word, arrayResponseHandler(request));
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);
         }
@@ -148,7 +146,6 @@ public class EquipmentController extends ControllerHelper {
         try {
             String word = URLDecoder.decode(request.getParam("word"), "UTF-8");
             String filter = request.getParam("filter");
-            Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
                 if (this.query_filter.containsKey(filter)) {
                     // filter already checked
                     if (this.query_filter.get(filter).contains(word)) {
@@ -166,9 +163,9 @@ public class EquipmentController extends ControllerHelper {
 
                 // empty filter
                 if (this.query_filter.isEmpty()) {
-                    equipmentService.searchAll(page, arrayResponseHandler(request));
+                    equipmentService.searchAll(arrayResponseHandler(request));
                 } else {
-                    equipmentService.filterWord(this.query_filter, arrayResponseHandler(request), page);
+                    equipmentService.filterWord(this.query_filter, arrayResponseHandler(request));
                 }
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);

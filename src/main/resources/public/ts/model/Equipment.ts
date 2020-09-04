@@ -152,7 +152,6 @@ export class TechnicalSpec {
 export interface Equipments {
     eventer: Eventer;
     page: number;
-    scroll_id: string;
     _loading: boolean;
     all: Equipment[];
     page_count: number;
@@ -175,7 +174,6 @@ export class Equipments extends Selection<Equipment> {
         this.page = 0;
         this.subjects = [];
         this.grades = [];
-        this.scroll_id = "";
         this._loading = false;
         this.sort = {
             type: 'name',
@@ -203,7 +201,7 @@ export class Equipments extends Selection<Equipment> {
         this.page_count = data.count;
     }
 
-    async syncEquip (data: any, onScroll: boolean) {
+    async syncEquip (data: any) {
         this.all = Mix.castArrayAs(Equipment, data);
         this.all.map((equipment) => {
             equipment.price = parseFloat(equipment.price.toString());
@@ -211,15 +209,15 @@ export class Equipments extends Selection<Equipment> {
             /*this.equipmentsOptionsTechnicalsSpecs(true, equipment);*/
         });
     }
-    async getFilterEquipments(word: string, filter?: string, onScroll: boolean = false){
+    async getFilterEquipments(word: string, filter?: string){
         let uri: string;
         if(filter) {
-            uri = (`/crre/equipments/catalog/filter/${word}/${filter}?page=${this.page}`);
+            uri = (`/crre/equipments/catalog/filter/${word}/${filter}`);
         } else {
-            uri = (`/crre/equipments/catalog/search/${word}?page=${this.page}`);
+            uri = (`/crre/equipments/catalog/search/${word}`);
         }
         let {data} = await http.get(uri);
-        this.syncEquip(data, onScroll);
+        this.syncEquip(data);
 
     }
 
@@ -230,19 +228,15 @@ export class Equipments extends Selection<Equipment> {
         this.editors = data.editors;
     }
 
-    async sync(isCatalog?: boolean, onScroll:boolean = false) {
+    async sync() {
         this.loading = true;
         try {
-// /*            await this.getPageCount();*/
-//             const queriesFilter = Utils.formatGetParameters({q: filter.filters});
-//             let uri: string;
-//             if (isCatalog) {
-//                 uri = `/crre/equipments/catalog?page=${page}`;
-//             } else {
-//                 uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
-//             }
-            let {data} = await http.get(`/crre/equipments/catalog?page=${this.page}`);
-            this.syncEquip(data, onScroll);
+ /*              await this.getPageCount();
+                const queriesFilter = Utils.formatGetParameters({q: filter.filters});
+                 uri = `/crre/equipments?page=${page}&order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
+             } */
+            let {data} = await http.get(`/crre/equipments/catalog`);
+            this.syncEquip(data);
 
         } catch (e) {
             notify.error('crre.equipment.sync.err');
@@ -293,22 +287,12 @@ export class Equipments extends Selection<Equipment> {
         return this._loading;
     }
 
-    loadNext(isCatalog? : boolean) {
-        return this.sync(isCatalog);
+    loadNext() {
+        return this.sync();
     }
 
-    loadPrev(isCatalog? : boolean) {
-        return this.sync(isCatalog);
-    }
-
-    scrollPage(isCatalog?: boolean, callAPI?: string, word?: string, filter? :string) {
-        this.page ++;
-        switch (callAPI) {
-            case "search": return this.getFilterEquipments(word, undefined, true); break;
-            case "filter": return this.getFilterEquipments(word, filter, true); break;
-            default: return this.sync(isCatalog, true); break;
-
-        }
+    loadPrev() {
+        return this.sync();
     }
 
     async setStatus (status: string): Promise<void> {
@@ -320,8 +304,7 @@ export class Equipments extends Selection<Equipment> {
             throw e;
         }
     }
-
-    async search(text: String, fieldName: String) {
+/*    async search(text: String, fieldName: String) {
         try {
             if ((text.trim() === '' || !text) || (fieldName.trim() === '' || !fieldName)) return;
             const {data} = await http.get(`/crre/equipments/search?q=${text}&field=${fieldName}`);
@@ -330,7 +313,7 @@ export class Equipments extends Selection<Equipment> {
             notify.error('crre.option.search.err');
             throw err;
         }
-    }
+    }*/
 
 }
 

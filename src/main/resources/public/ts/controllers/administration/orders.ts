@@ -133,12 +133,12 @@ export const orderController = ng.controller('orderController',
             });
             return json;
         };
-        $scope.addFilter = (filterWord: string, event?) => {
+/*        $scope.addFilter = (filterWord: string, event?) => {
             if (event && (event.which === 13 || event.keyCode === 13 )) {
                 $scope.addFilterWords(filterWord);
                 $scope.filterDisplayedOrders();
             }
-        };
+        };*/
 
         $scope.switchAllOrders = () => {
             $scope.displayedOrders.all.map((order) => order.selected = $scope.allOrdersSelected);
@@ -150,7 +150,7 @@ export const orderController = ng.controller('orderController',
             return structureGroups.join(', ');
         };
 
-        $scope.addFilterWords = (filterWord) => {
+/*        $scope.addFilterWords = (filterWord) => {
             if (filterWord !== '') {
                 $scope.search.filterWords = _.union($scope.search.filterWords, [filterWord]);
                 $scope.search.filterWord = '';
@@ -161,7 +161,7 @@ export const orderController = ng.controller('orderController',
         $scope.pullFilterWord = (filterWord) => {
             $scope.search.filterWords = _.without( $scope.search.filterWords , filterWord);
             $scope.filterDisplayedOrders();
-        };
+        };*/
 
         function openLightboxValidOrder(status, data, ordersToValidat: OrdersClient) {
             if (status === 200) {

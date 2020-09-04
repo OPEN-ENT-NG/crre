@@ -12,25 +12,6 @@ import java.util.List;
 public interface EquipmentService {
 
     /**
-     * List all equipments in database
-     * @param page page number
-     * @param order order name
-     * @param reverse reverse list
-     * @param filters search queries
-     * @param handler function handler returning data
-     */
-    void listEquipments(Integer page, String order, Boolean reverse, List<String> filters, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * List equipments of Campaign and a structure  in database
-     * @param page Page number
-     * @param filters Filter list
-     * @param handler function handler returning data
-     */
-    void listEquipments(Integer page, List<String> filters,
-                        Handler<Either<String, JsonArray>> handler);
-
-    /**
      * Get an Equipment information's
      * @param idEquipment equipment identifier
      * @param handler function handler returning data
@@ -119,13 +100,15 @@ public interface EquipmentService {
 
     void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler);
 
-    void searchWord(String word, Handler<Either<String, JsonArray>> handler, Integer page);
+    void searchWord(String word, Handler<Either<String, JsonArray>> handler);
 
     void listFilters(Handler<Either<String, JsonObject>> handler);
 
-    void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler, Integer page);
+    void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
 
-    void searchAll(Integer page, Handler<Either<String, JsonArray>> handler);
+    void searchAll(Handler<Either<String, JsonArray>> handler);
 
     void syncES();
+
+    void listEquipments(Integer page, String order, Boolean reverse, List<String> queries, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

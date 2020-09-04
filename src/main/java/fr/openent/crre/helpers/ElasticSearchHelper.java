@@ -39,7 +39,7 @@ public class ElasticSearchHelper {
         });
     }
 
-    public static void search_All(Integer page, Handler<Either<String, JsonArray>> handler) {
+    public static void search_All(Handler<Either<String, JsonArray>> handler) {
         JsonObject query = new JsonObject()
                 .put("from", 0)
                 .put("size", PAGE_SIZE)
@@ -59,7 +59,7 @@ public class ElasticSearchHelper {
     }
 
 
-    public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler, Integer page) {
+    public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
         for (String field : PLAIN_TEXT_FIELDS) {
             JsonObject regexp = new JsonObject()
@@ -77,10 +77,10 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put("bool", bool);
 
-        search(esQueryObject(queryObject, page), handler);
+        search(esQueryObject(queryObject), handler);
     }
 
-    public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler, Integer page) {
+    public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
 
 
         JsonArray term = new JsonArray();
@@ -96,7 +96,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put("bool", filter);
 
-        search(esQueryObject(queryObject, page), handler);
+        search(esQueryObject(queryObject), handler);
     }
 
     private static void executeEsSearch (JsonObject query, Handler<AsyncResult<JsonArray>> handler) {
@@ -117,7 +117,7 @@ public class ElasticSearchHelper {
                 .getJsonArray("hits", new JsonArray()).getList();
     }
 
-    private static JsonObject esQueryObject(JsonObject query, Integer page) {
+    private static JsonObject esQueryObject(JsonObject query) {
         return new JsonObject()
                 .put("query", query)
                 .put("from", 0)

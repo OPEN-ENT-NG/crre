@@ -86,12 +86,12 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         return filter.toString();
     }
 
-    public void searchWord(String word, Handler<Either<String, JsonArray>> handler, Integer page) {
-        plainTextSearch(word, handler, page);
+    public void searchWord(String word, Handler<Either<String, JsonArray>> handler) {
+        plainTextSearch(word, handler);
     }
 
-    public void searchAll(Integer page, Handler<Either<String, JsonArray>> handler) {
-        search_All(page, handler);
+    public void searchAll(Handler<Either<String, JsonArray>> handler) {
+        search_All(handler);
     }
 
 
@@ -161,8 +161,8 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         }));
     }
 
-    public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler, Integer page) {
-        filter(test, handler, page);
+    public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
+        filter(test, handler);
     }
 
     public void listEquipments(Integer page, String order, Boolean reverse, List<String> filters, Handler<Either<String, JsonArray>> handler) {
@@ -187,10 +187,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    @Override
-    public void listEquipments(Integer page, List<String> filters, Handler<Either<String, JsonArray>> handler) {
-
-    }
 
     public void equipment(Integer idEquipment,  Handler<Either<String, JsonArray>> handler){
         String query = "SELECT equip.*, tax.value as tax_amount, " +
