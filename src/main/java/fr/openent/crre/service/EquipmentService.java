@@ -108,7 +108,9 @@ public interface EquipmentService {
 
     void searchAll(Handler<Either<String, JsonArray>> handler);
 
-    void syncES();
+    //void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler);
+
+    void syncES(Handler<Either<String, JsonArray>> handler);
 
     void listEquipments(Integer page, String order, Boolean reverse, List<String> queries, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

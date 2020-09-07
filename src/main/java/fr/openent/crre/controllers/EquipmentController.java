@@ -38,6 +38,7 @@ public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
     private final ImportCSVHelper importCSVHelper;
+    private String query_word;
     private HashMap<String, ArrayList<String>> query_filter;
 
     public EquipmentController(Vertx vertx) {
@@ -45,6 +46,7 @@ public class EquipmentController extends ControllerHelper {
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
         this.query_filter = new HashMap<String, ArrayList<String>>();
+        this.query_word = "";
     }
 
     @Get("/equipments")
@@ -106,9 +108,9 @@ public class EquipmentController extends ControllerHelper {
     @Get("/equipments/catalog/syncES")
     @ApiDoc("Sync equipments from database to ES")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void syncES() {
+    public void syncES(final HttpServerRequest request) {
         try {
-            equipmentService.syncES();
+            equipmentService.syncES(arrayResponseHandler(request));
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
@@ -132,8 +134,12 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void SearchEquipment(final HttpServerRequest request) {
         try {
-            String word = request.getParam("word");
-            equipmentService.searchWord(word, arrayResponseHandler(request));
+            //Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
+            this.query_word = request.getParam("word");
+            equipmentService.searchWord(this.query_word, arrayResponseHandler(request));
+/*            if(page > 0) {
+            equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
+            }*/
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);
         }
@@ -144,29 +150,35 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void FilterEquipment(final HttpServerRequest request) throws UnsupportedEncodingException {
         try {
+            //Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
             String word = URLDecoder.decode(request.getParam("word"), "UTF-8");
             String filter = request.getParam("filter");
-                if (this.query_filter.containsKey(filter)) {
-                    // filter already checked
-                    if (this.query_filter.get(filter).contains(word)) {
-                        this.query_filter.get(filter).remove(word);
-                        if(this.query_filter.get(filter).isEmpty()) {
-                            this.query_filter.remove(filter);
-                        }
-                    } else {
-                        // new filter
-                        this.query_filter.get(filter).add(word);
+            if (this.query_filter.containsKey(filter)) {
+                // filter already checked
+                if (this.query_filter.get(filter).contains(word)) {
+                    this.query_filter.get(filter).remove(word);
+                    if (this.query_filter.get(filter).isEmpty()) {
+                        this.query_filter.remove(filter);
                     }
                 } else {
-                    this.query_filter.put(filter, new ArrayList<String>(Arrays.asList(word)));
+                    // new filter
+                    this.query_filter.get(filter).add(word);
                 }
+            } else {
+                this.query_filter.put(filter, new ArrayList<String>(Arrays.asList(word)));
+            }
 
-                // empty filter
-                if (this.query_filter.isEmpty()) {
-                    equipmentService.searchAll(arrayResponseHandler(request));
-                } else {
+            // empty filter
+            if (this.query_filter.isEmpty()) {
+                equipmentService.searchAll(arrayResponseHandler(request));
+            } else {
+/*                if (page > 0) {
+                    equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
+                } else {*/
                     equipmentService.filterWord(this.query_filter, arrayResponseHandler(request));
-                }
+                //}
+
+            }
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);
         }

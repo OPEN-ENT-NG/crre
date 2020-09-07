@@ -94,8 +94,12 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         search_All(handler);
     }
 
+/*    public void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {
+        searchfilter(result, query, handler);
+    }*/
 
-    public void syncES() {
+
+    public void syncES(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
                 "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
                 "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
@@ -158,6 +162,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 }
                 bulkRequest.end();
             }
+            handler.handle(event);
         }));
     }
 
