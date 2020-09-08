@@ -94,9 +94,9 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         search_All(handler);
     }
 
-/*    public void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {
+    public void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {
         searchfilter(result, query, handler);
-    }*/
+    }
 
 
     public void syncES(Handler<Either<String, JsonArray>> handler) {

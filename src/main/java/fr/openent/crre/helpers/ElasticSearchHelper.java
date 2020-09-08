@@ -62,9 +62,8 @@ public class ElasticSearchHelper {
     public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
         for (String field : PLAIN_TEXT_FIELDS) {
-            JsonObject regexp = new JsonObject()
-                    .put(field, formatRegexp(query));
-            should.add(new JsonObject().put("regexp", regexp));
+            JsonObject regexp = regexpField(field, query);
+            should.add(regexp);
         }
 
         JsonObject regexpBool = new JsonObject()
@@ -81,8 +80,6 @@ public class ElasticSearchHelper {
     }
 
     public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
-
-
         JsonArray term = new JsonArray();
 
         Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
@@ -95,6 +92,33 @@ public class ElasticSearchHelper {
 
         JsonObject queryObject = new JsonObject()
                 .put("bool", filter);
+
+        search(esQueryObject(queryObject), handler);
+    }
+
+    public static void searchfilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {
+        JsonArray term = new JsonArray();
+        JsonArray should = new JsonArray();
+
+        for (String field : PLAIN_TEXT_FIELDS) {
+            JsonObject regexp = regexpField(field, query);
+            should.add(regexp);
+        }
+
+
+        Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
+
+        for (Map.Entry<String, ArrayList<String>> me : set) {
+            term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
+        }
+        JsonObject request = new JsonObject()
+                .put("filter", term)
+                .put("minimum_should_match", 1)
+                .put("should", should);
+
+        JsonObject queryObject = new JsonObject()
+                .put("bool", request);
+
 
         search(esQueryObject(queryObject), handler);
     }
@@ -124,4 +148,11 @@ public class ElasticSearchHelper {
                 .put("size", PAGE_SIZE);
     }
 
+
+    private static JsonObject regexpField(String field, String query) {
+        JsonObject regexp = new JsonObject()
+                .put(field, formatRegexp(query));
+
+        return new JsonObject().put("regexp", regexp);
+    }
 }

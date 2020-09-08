@@ -205,9 +205,9 @@ export class Equipments extends Selection<Equipment> {
         try {
             let uri: string;
             if(filter) {
-                uri = (`/crre/equipments/catalog/filter/${word}/${filter}`);
+                uri = (`/crre/equipments/catalog/filter?filter=${filter}&word=${word}`);
             } else {
-                uri = (`/crre/equipments/catalog/search/${word}`);
+                uri = (`/crre/equipments/catalog/search?word=${word}`);
             }
             let {data} = await http.get(uri);
             this.syncEquip(data);

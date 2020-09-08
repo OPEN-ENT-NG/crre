@@ -36,7 +36,7 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet first-column-popup columns-popup">
                     <label class="columns-popup-items" ng-repeat="subject in equipments.subjects">
-                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter('subject_name', subject.name)">
+                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'subject_name')">
                         <span>[[subject.name]]</span>
                     </label>
                 </div>
@@ -58,7 +58,7 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
                     <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
-                        <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter('grade_name', grade.name)">
+                        <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'grade_name')">
                         <span>[[grade.name]]</span>
                     </label>
                 </div>
@@ -80,7 +80,7 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items" ng-repeat="editor in equipments.editors">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter('editor_name', editor.name)">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editor_name')">
                         <span>[[editor.name]]</span>
                     </label>
                 </div>

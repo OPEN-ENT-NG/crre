@@ -129,28 +129,27 @@ public class EquipmentController extends ControllerHelper {
         }
     }
 
-    @Get("/equipments/catalog/search/:word")
+    @Get("/equipments/catalog/search")
     @ApiDoc("Search an equipment by keyword")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void SearchEquipment(final HttpServerRequest request) {
         try {
-            //Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
-            this.query_word = request.getParam("word");
-            equipmentService.searchWord(this.query_word, arrayResponseHandler(request));
-/*            if(page > 0) {
-            equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
-            }*/
-        } catch (ClassCastException e) {
+            this.query_word = URLDecoder.decode(request.getParam("word"), "UTF-8");
+            if(!this.query_filter.isEmpty()) {
+                equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
+            } else {
+                equipmentService.searchWord(this.query_word, arrayResponseHandler(request));
+            }
+        } catch (ClassCastException | UnsupportedEncodingException e) {
             log.error("An error occurred searching article", e);
         }
     }
 
-    @Get("/equipments/catalog/filter/:filter/:word")
+    @Get("/equipments/catalog/filter")
     @ApiDoc("Search an equipment by keyword")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void FilterEquipment(final HttpServerRequest request) throws UnsupportedEncodingException {
         try {
-            //Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
             String word = URLDecoder.decode(request.getParam("word"), "UTF-8");
             String filter = request.getParam("filter");
             if (this.query_filter.containsKey(filter)) {
@@ -170,14 +169,17 @@ public class EquipmentController extends ControllerHelper {
 
             // empty filter
             if (this.query_filter.isEmpty()) {
-                equipmentService.searchAll(arrayResponseHandler(request));
-            } else {
-/*                if (page > 0) {
+                if(!(this.query_word == "")) {
                     equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
-                } else {*/
+                } else {
+                    equipmentService.searchAll(arrayResponseHandler(request));
+                }
+            } else {
+                if(!(this.query_word == "")) {
+                    equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
+                } else {
                     equipmentService.filterWord(this.query_filter, arrayResponseHandler(request));
-                //}
-
+                }
             }
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);
