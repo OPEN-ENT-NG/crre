@@ -225,8 +225,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     public void takeOrder(final HttpServerRequest request, final JsonArray baskets, Integer idCampaign,
-                          String idStructure, final String nameStructure,
-                          Integer idProject, JsonArray baskets_objects, final Handler<Either<String, JsonObject>> handler) {
+                          String idStructure, final String nameStructure, JsonArray baskets_objects, final Handler<Either<String, JsonObject>> handler) {
         try {
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -238,7 +237,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     statements.add(purseService.updatePurseAmountStatement(Double.valueOf(basket.getString("total_price")),
                             idCampaign, idStructure, "-"));
                 }
-                statements.add(getInsertEquipmentOrderStatement(basket, idProject));
+                statements.add(getInsertEquipmentOrderStatement(basket));
                 if(! "[null]".equals( basket.getString("options"))) {
                     statements.add(getInsertEquipmentOptionsStatement(basket));
                     statements.add(getDeletionBasketsOptionsStatments(basket.getInteger("id_basket")));
@@ -374,19 +373,18 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     /**
      * Basket to order
      * @param basket
-     * @param idProject
      * @return
      */
-    private JsonObject getInsertEquipmentOrderStatement(JsonObject basket, Integer idProject) {
+    private JsonObject getInsertEquipmentOrderStatement(JsonObject basket) {
         StringBuilder queryEquipmentOrder;
         JsonArray params;
         try {
             queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
                     .append(" (id, price, tax_amount, amount,  id_campaign, id_structure, name, summary," +
                             " description, image, technical_spec, status, " +
-                            " id_contract, equipment_key, comment, id_project, price_proposal, rank ) VALUES ")
-                    .append(" (?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?, ?, ").append(getTheLastRankOrder()).append("); ");
-            params = getObjects(basket, idProject);
+                            " id_contract, equipment_key, comment, price_proposal, rank ) VALUES ")
+                    .append(" (?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?, ").append(getTheLastRankOrder()).append("); ");
+            params = getObjects(basket);
             params.add(Double.valueOf(basket.getString("price_proposal")))
                     .add(basket.getInteger("id_campaign"))
                     .add(basket.getString("id_structure"))
@@ -396,11 +394,11 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
                     .append(" (id, price, tax_amount, amount,  id_campaign, id_structure, name, summary," +
                             " description, image, technical_spec, status, " +
-                            " id_contract, equipment_key, comment, price_proposal, id_project, rank ) VALUES ")
-                    .append(" (?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, null, ?, ")
+                            " id_contract, equipment_key, comment, price_proposal, rank ) VALUES ")
+                    .append(" (?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, null, ?, ")
                     .append(getTheLastRankOrder())
                     .append( "); ");
-            params = getObjects(basket, idProject);
+            params = getObjects(basket);
             params.add(basket.getInteger("id_campaign"))
                     .add(basket.getString("id_structure"));
         }
@@ -411,7 +409,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
     }
 
-    private JsonArray getObjects(JsonObject basket, Integer idProject) {
+    private JsonArray getObjects(JsonObject basket) {
         JsonArray params;
         params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -429,8 +427,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 .add("WAITING")
                 .add(basket.getInteger("id_contract"))
                 .add(basket.getInteger("id_equipment"))
-                .add(basket.getString("comment"))
-                .add(idProject);
+                .add(basket.getString("comment"));
         return params;
     }
 

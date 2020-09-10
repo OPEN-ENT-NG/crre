@@ -344,7 +344,7 @@ CREATE TABLE crre.order_client_equipment (
     image character varying(100),
     technical_spec json,
     status character varying(50) NOT NULL,
-    id_contract bigint  NOT NULL,
+    id_contract bigint NULL,
     equipment_key bigint,
     cause_status character varying(300),
     "number_validation" character varying(50),

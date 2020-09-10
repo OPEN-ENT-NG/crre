@@ -111,7 +111,6 @@ public class EquipmentController extends ControllerHelper {
     public void syncES(final HttpServerRequest request) {
         try {
             equipmentService.syncES(arrayResponseHandler(request));
-
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }

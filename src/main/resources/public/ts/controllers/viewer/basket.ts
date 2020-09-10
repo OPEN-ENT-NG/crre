@@ -14,9 +14,17 @@ export const basketController = ng.controller('basketController',
             grade: "",
         };
 
+        $scope.amountIncrease = () => {
+            $scope.basket.amount += 1;
+        };
+        $scope.amountDecrease = () => {
+            if($scope.basket.amount)
+                $scope.basket.amount -= 1;
+        };
+
         $scope.isProposed = (basket: Basket) => {
             return (basket.price_proposal);
-        }
+        };
 
         $scope.hasOneSelected = (baskets: Baskets) => {
             let hasSelected = false;
@@ -26,7 +34,7 @@ export const basketController = ng.controller('basketController',
                 }
             })
             return hasSelected;
-        }
+        };
         $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber?: number) => {
             let totalPrice = 0;
             baskets.all.map((basket) => {
@@ -153,9 +161,9 @@ export const basketController = ng.controller('basketController',
             Utils.safeApply($scope);
         }
 
-        $scope.takeClientOrder = async (baskets: Baskets, idProject: number) => {
+        $scope.takeClientOrder = async (baskets: Baskets) => {
             $scope.totalPriceOrder = $scope.calculatePriceOfEquipments(baskets, 2);
-            let {status, data} = await baskets.takeOrder(parseInt($routeParams.idCampaign), $scope.current.structure, idProject);
+            let {status, data} = await baskets.takeOrder(parseInt($routeParams.idCampaign), $scope.current.structure);
             $scope.totalPrice = $scope.calculatePriceOfEquipments(baskets, 2);
 
             //   $scope.totalPriceProposal = $scope.calculatePriceOfEquipmentsProposal(baskets, 2)
@@ -181,7 +189,7 @@ export const basketController = ng.controller('basketController',
                 && _.findWhere( equipmentsBasket, {status : 'OUT_OF_STOCK'}) === undefined
                 &&  _.findWhere( equipmentsBasket, {status : 'UNAVAILABLE'}) === undefined;
         };
-        $scope.takeClientProject = async (baskets: Baskets) => {
+        $scope.checkPrice = async (baskets: Baskets) => {
             let priceIs0 = false;
             baskets.all.forEach(basket =>{
                 console.log(basket)
@@ -192,18 +200,9 @@ export const basketController = ng.controller('basketController',
             if(priceIs0){
                 toasts.warning("basket.price.null")
             }else{
-                template.open('basket.project', 'customer/campaign/basket/project-confirmation');
-                $scope.display.lightbox.createProject = true;
+                $scope.takeClientOrder(baskets);
             }
-
-
         }
-        $scope.cancelProjectCreate = () => {
-            $scope.display.lightbox.createProject = false;
-            template.close('basket.project');
-            Utils.safeApply($scope);
-        }
-
 
         $scope.openAddDocumentsLightbox = (basket: Basket) => {
             $scope.basket = basket;

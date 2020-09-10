@@ -9,9 +9,6 @@
     "structure_name":{
       "type": "string"
     },
-    "id_project": {
-      "type": "number"
-    },
     "baskets": {
       "type": "array"
     }
@@ -19,7 +16,6 @@
   "required": [
     "id_structure",
     "structure_name",
-    "id_project",
     "baskets"
   ]
 }

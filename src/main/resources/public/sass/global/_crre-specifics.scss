@@ -22,6 +22,10 @@ body.crre {
     font-weight: bold;
   }
 
+  input[type=button].cancel{
+    color: $red
+  }
+
   h4{
     &.highlighted {
       border-bottom: solid 1px $solid-grey;
@@ -432,27 +436,34 @@ body.crre {
     .in-ligne{
       display: inline-flex;
     }
-    .add-basket{
-      h1{
-        margin:0;
-        line-height: 100px;
-      }
-      .quantity{
-        height: 50px;
-        line-height: 30px;
-        width: auto;
-        float: right;
+  }
 
-        input{
-          text-align: center;
-        }
-        h4{
-          font-weight: 400 !important;
-          margin-right: 5px;
-          margin-top: 0;
-          width: auto;
-        }
-      }
+  .add-basket{
+    h1{
+      margin:0;
+      line-height: 100px;
+    }
+    h3{
+      font-weight: bold;
+      color: black;
+      font-size: 28px;
+    }
+  }
+
+  .quantity{
+    height: 50px;
+    line-height: 30px;
+    width: auto;
+
+    input{
+      text-align: center;
+      font-size: 23px;
+    }
+    h4{
+      font-weight: 400 !important;
+      margin-right: 5px;
+      margin-top: 0;
+      width: auto;
     }
   }
 
@@ -772,6 +783,18 @@ body.crre {
     .basket-item{
       margin-bottom: 15px;
       height: auto;
+      border-radius: 10px;
+
+      .commentDelete {
+        margin-top: 10px;
+
+        .addComment{
+          margin-top: 10px;
+          span {
+            color: $primary;
+          }
+        }
+      }
 
       .width-40 {
         width: 40px;
@@ -1076,12 +1099,22 @@ body.crre {
     margin-top: 5px;
   }
   .price-field {
+    h4 {
+      font-weight: normal;
+      font-size: 20px;
+      color: black;
+      margin-top: 0;
+    }
+    h3{
+      font-weight: bold;
+      color: black;
+      font-size: 28px;
+    }
+    input{
+      font-size: 23px;
+    }
     i {
       margin-left: 10px;
-
-      &:before {
-        font-size: 20px !important;
-      }
 
       &.notes-icon {
         color: $primary-dark;

@@ -78,7 +78,8 @@ export const catalogController = ng.controller('catalogController',
             $scope.basket.amount += 1;
         };
         $scope.amountDecrease = () => {
-            $scope.basket.amount -= 1;
+            if($scope.basket.amount)
+                $scope.basket.amount -= 1;
         };
 
         $scope.getFilters = () => {

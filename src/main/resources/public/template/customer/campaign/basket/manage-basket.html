@@ -1,14 +1,14 @@
 <div  ng-controller="basketController">
     <div ng-show="baskets.all.length > 0">
         <div class="vertical-spacing-twice right-magnet twelve-mobile">
-            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><i18n>Total</i18n> :
-                <span class="color-orange" ng-bind="calculatePriceOfEquipmentsProposal(baskets, 2)| currency"></span>
+            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><span style="color: black;"><i18n>Total.in</i18n><i18n>money.symbol</i18n> :</span>
+                <span ng-bind="calculatePriceOfEquipmentsProposal(baskets, 2)| currency"></span>
             </h3>
-            <input type="button" ng-click="takeClientProject(baskets)" i18n-value="crre.take.order"
+            <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.order"
                    ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
                    ng-if="campaign.purse_enabled"/>
 
-            <input type="button" ng-click="takeClientProject(baskets)" i18n-value="crre.take.request"
+            <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.request"
                    ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
                    ng-if="!campaign.purse_enabled"/>
         </div>
@@ -38,7 +38,7 @@
                             <div class="cell eight">
                                 <div class="eleven centered">
                                     <h3>[[basket.equipment.name]]</h3>
-                                    <p ng-bind-html="basket.equipment.summary"></p>
+                                    <p ng-bind-html="basket.equipment.description"></p>
                                     <a ng-init="display.equipmentOption[$index] = false"
                                        ng-click="displayOptions($index)"
                                        ng-show="basket.options.length > 0">
@@ -52,36 +52,25 @@
                             </div>
                             <div class="three cell text-right">
                                 <div class="vertical-spacing-twice price-field">
-                                    <span ng-if="isProposed(basket) || basket.display_price_editable"> <i18n>crre.priceProposal</i18n> :</span>
-                                    <span ng-if="!isProposed(basket) && !basket.display_price_editable"><i18n>price</i18n> :</span>
-                                    <input type="number"
-                                           class="number-input"
-                                           ng-keypress="avoidDecimals($event)"
-                                           step="0.01"
-                                           min="0"
-                                           ng-if="basket.display_price_editable"
-                                           ng-model="basket.price_proposal"
-                                           ng-blur="updateBasketPriceProposal(basket)"/>
-
-                                    <span ng-bind="priceDisplay(basket) | currency" class="price-label"
-                                          ng-if="!basket.display_price_editable"></span>
-                                    <i class="notes-icon" tooltip="crre.price.edit"
-                                       ng-show="basket.equipment.price_editable && !basket.display_price_editable"
-                                       ng-click="displayPriceEdition(basket)"></i>
-                                    <i class="refused-status" tooltip="crre.price.reset"
-                                       ng-show="basket.display_price_editable"
-                                       ng-click="resetPriceProposal(basket)"></i>
+                                    <h1>
+                                        <span ng-bind="calculatePriceOfBasketProposal(basket , 2, true) | currency"></span>
+                                    </h1>
+                                    <h4 class="cell"><i18n>etablissement.price</i18n></h4>
+                                    <h3 class="right-text">[[priceDisplay(basket) | currency]]<i18n>per.student.per.year</i18n></h3>
+                                    <div class="quantity">
+                                        <h4 class="cell" style="margin-left: 94px;"><i18n>crre.quantity</i18n></h4>
+                                        <div class="right-text">
+                                            <i class="moins" ng-click="amountDecrease()"></i>
+                                            <input type="number"
+                                                   step="1"
+                                                   min="0"
+                                                   ng-keypress="avoidDecimals($event)"
+                                                   class="numberWithoutArrow two"
+                                                   ng-model="basket.amount"/>
+                                            <i class="plus" ng-click="amountIncrease()"></i>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="vertical-spacing-twice">
-                                    <i18n>crre.quantity</i18n>
-                                    :
-                                    <input type="number" step="1" min="0" ng-model="basket.amount"
-                                           class="number-input"
-                                           ng-keypress="avoidDecimals($event)"
-                                           ng-blur="updateBasketAmount(basket)"/>
-                                    <!--p ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></p-->
-                                </div>
-
                             </div>
                         </div>
                         <div ng-show="basket.options.length > 0 && display.equipmentOption[$index]">
@@ -142,43 +131,35 @@
                                 </ul>
                             </div>
                         </div>
-                        <div class="twelve cell vertical-spacing-four">
-                            <div class="row">
-                                <h4 class="cell">
-                                    <i18n>comment</i18n>
-                                    :
-                                </h4>
-                                <button class="right-magnet" ng-if="basket.comment === null || basket.comment===''"
-                                        ng-click="basket.commentOnEdition = true">
-                                    <i18n>crre.basket.add-comment</i18n>
-                                </button>
-                                <button class="right-magnet" ng-if="basket.comment && basket.comment!=='' && basket.commentOnEdition === false"
-                                        ng-click="basket.commentOnEdition = true">
-                                    <i18n>crre.update.comment</i18n>
-                                </button>
-                            </div>
-                            <div class="row" ng-init="basket.commentOnEdition = false">
-                                <p ng-if="(basket.comment === null || basket.comment.trim() === '') && basket.commentOnEdition === false">
+                        <div class="twelve cell commentDelete">
+                            <div class="row" ng-init="basket.commentOnEdition = false;">
+                                <span ng-if="(basket.comment === null || basket.comment.trim() === '') && !basket.commentOnEdition"
+                                        style="font-style: italic">
                                     <i18n>crre.basket.no-comment</i18n>
-                                </p>
-                                <p ng-if="basket.comment !== null && basket.commentOnEdition === false"
+                                </span>
+                                <span ng-if="basket.comment !== null && !basket.commentOnEdition"
                                    ng-click="basket.commentOnEdition = true" tooltip="Modifier le commentaire">
                                     [[basket.comment]]
-                                </p>
+                                </span>
                                 <textarea style="resize: none;" ng-model="basket.comment"
                                           auto-height
-                                          ng-if="basket.commentOnEdition === true"
+                                          ng-if="basket.commentOnEdition"
                                           ng-blur="basket.commentOnEdition = false; updateBasketComment(basket)"></textarea>
                             </div>
-                        </div>
-                        <div class="row border top">
-                            <div class="cell">
-                                <input type="button" ng-click="displayLightboxDelete(basket)"
-                                       class="right-magnet cancel vertical-spacing" i18n-value="delete"/>
+                            <div class="row addComment">
+                                <span ng-if="basket.comment === null || basket.comment===''"
+                                        ng-click="basket.commentOnEdition = true">
+                                    <i18n>crre.basket.add-comment</i18n>
+                                </span>
+                                <span ng-if="basket.comment && basket.comment!=='' && !basket.commentOnEdition"
+                                        ng-click="basket.commentOnEdition = true">
+                                    <i18n>crre.update.comment</i18n>
+                                </span>
+                                <div class="cell right-magnet">
+                                    <input type="button" ng-click="displayLightboxDelete(basket)"
+                                           class="right-magnet cancel" i18n-value="delete"/>
+                                </div>
                             </div>
-                            <h1 class="right-magnet vertical-spacing">
-                                <span ng-bind="calculatePriceOfBasketProposal(basket , 2, true) | currency"></span>
-                            </h1>
                         </div>
                     </div>
                 </article>
@@ -199,10 +180,6 @@
 
     <lightbox show="display.lightbox.confirmOrder" on-close="cancelConfirmOrder()">
         <container template="basket.order"></container>
-    </lightbox>
-
-    <lightbox show="display.lightbox.createProject" on-close="cancelProjectCreate()">
-        <container template="basket.project"></container>
     </lightbox>
 
     <lightbox show="display.lightbox.addDocuments" on-close="display.lightbox.addDocuments = false">

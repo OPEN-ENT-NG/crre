@@ -278,7 +278,8 @@ export class Equipments extends Selection<Equipment> {
 
     set loading(state: boolean) {
         this._loading = state;
-        this.eventer.trigger(`loading::${this._loading}`);
+        if(this.eventer)
+            this.eventer.trigger(`loading::${this._loading}`);
     }
 
     get loading() {

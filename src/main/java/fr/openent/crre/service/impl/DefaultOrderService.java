@@ -41,16 +41,14 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         String query = "SELECT oe.id as id, oe.comment, oe.price_proposal, oe.price, oe.tax_amount, oe.amount,oe.creation_date, oe.id_campaign," +
                 " oe.id_structure, oe.name, oe.summary, oe.image, oe.status, oe.id_contract, oe.rank," +
                 " array_to_json(array_agg(order_opts)) as options," +
-                " c.name as name_supplier, array_to_json(array_agg(DISTINCT order_file.*)) as files  " +
+                "array_to_json(array_agg(DISTINCT order_file.*)) as files  " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +
                 "LEFT JOIN "+ Crre.crreSchema + ".order_client_options order_opts ON " +
                 "oe.id = order_opts.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
-                "INNER JOIN (SELECT supplier.name, contract.id FROM " + Crre.crreSchema + ".supplier INNER JOIN "
-                + Crre.crreSchema + ".contract ON contract.id_supplier = supplier.id) c " +
-                "ON oe.id_contract = c.id WHERE id_campaign = ? AND id_structure = ? " +
-                "GROUP BY ( oe.id, c.name,campaign.priority_enabled) " +
+                "WHERE id_campaign = ? AND id_structure = ? " +
+                "GROUP BY ( oe.id,campaign.priority_enabled) " +
                 "ORDER BY CASE WHEN campaign.priority_enabled = false " +
                 "THEN oe.creation_date END ASC";
 

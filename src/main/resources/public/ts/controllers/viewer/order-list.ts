@@ -16,13 +16,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             },
             list: $scope.campaign.priority_field
         };
-        $scope.menu = [{
-            name:'crre.by.project',
-            value:PRIORITY_FIELD.PROJECT
-        },{
-            name:'crre.by.equipment',
-            value:PRIORITY_FIELD.ORDER
-        }];
 
         $scope.exportCSV = () => {
             let idCampaign = $scope.ordersClient.all[0].id_campaign;
@@ -92,7 +85,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             }
         };
 
-        $scope.switchOrderClient = async (order: OrderClient, index: number, projectId: number, to: string) =>{
+        $scope.switchOrderClient = async (order: OrderClient, index: number, to: string) =>{
             let ordersJson = await $scope.getOrdersRanksSwitchedToJson( index, to);
             await $scope.ordersClient.updateOrderRanks(ordersJson,order.id_structure, order.id_campaign);
             $scope.ordersClient.all = _.sortBy($scope.ordersClient.all, (order)=> order.rank != null ? order.rank : $scope.ordersClient.all.length );
@@ -134,14 +127,5 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 preference: $scope.ordersClient.projects.all[index + rang].preference
             }]
         };
-
-        $scope.switchView = (display)=> {
-            if(display == PRIORITY_FIELD.ORDER){
-                template.open('order-list', 'customer/campaign/order/orders-by-equipment');
-            }else{
-                template.open('order-list', 'customer/campaign/order/orders-by-project');
-            }
-            Utils.safeApply($scope);
-        }
 
     }]);

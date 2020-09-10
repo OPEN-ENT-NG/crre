@@ -8,14 +8,14 @@
         <div class="cell priority-manager order vertical-spacing" ng-if="campaign.orderPriorityEnable()">
             <div ng-if="campaign.accessible" class="priority_carree UP cell row" tooltip="crre.order.priority.up"
                  ng-show=" $index>0 && $index <= (orders.length - 1)"
-                 ng-click="switchOrderClient(orderClient,$index, project.id, 'up') ">
+                 ng-click="switchOrderClient(orderClient,$index, 'up') ">
             </div>
             <div class="priority_number cell">
                 [[$index + 1]]
             </div>
             <div  ng-if="campaign.accessible" class="priority_carree DOWN cell row" tooltip="crre.order.priority.down"
                   ng-show=" $index>=0 && $index < (orders.length - 1)"
-                  ng-click="switchOrderClient(orderClient,$index, project.id, 'down')">
+                  ng-click="switchOrderClient(orderClient,$index, 'down')">
             </div>
         </div>
     </div>
@@ -30,11 +30,7 @@
             <div class="cell seven">
                 <div class="eleven centered">
                     <h3>[[orderClient.name]]</h3>
-                    <p ng-bind-html="orderClient.summary"></p>
-                    <div class="project">
-                        <i18n>crre.output.project</i18n>
-                        [[ orderClient.project.title['name'] ]]
-                    </div>
+                    <p ng-bind-html="orderClient.description"></p>
                     <a ng-init="display.ordersClientOption[$index] = false"
                        ng-click="displayEquipmentOption($index)"
                        ng-show="orderClient.options.length > 0">

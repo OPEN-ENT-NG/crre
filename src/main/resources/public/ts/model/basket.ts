@@ -137,7 +137,7 @@ export class Baskets extends Selection<Basket> {
         }
     }
 
-    async takeOrder(idCampaign: number, Structure: Structure, idProject: number) {
+    async takeOrder(idCampaign: number, Structure: Structure) {
         try {
             let baskets = [];
             let newlistBaskets = new Selection<Basket>([]);
@@ -154,7 +154,6 @@ export class Baskets extends Selection<Basket> {
             let data = {
                 id_structure: Structure.id,
                 structure_name: Structure.name,
-                id_project: idProject,
                 baskets: baskets
             };
 

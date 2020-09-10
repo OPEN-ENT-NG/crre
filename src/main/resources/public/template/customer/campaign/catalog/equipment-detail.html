@@ -16,19 +16,19 @@
                 </div>
                 <div class="twelve cell" workflow="crre.prescriptor">
                     <div class="quantity">
-                        <h4 class="cell"><i18n>crre.quantity</i18n></h4>
+                        <h4 class="cell" style="margin-left: 83px"><i18n>crre.quantity</i18n></h4>
                         <div class="right-text">
                             <i class="moins" ng-click="amountDecrease()"></i>
                             <input type="number"
                                    step="1"
                                    min="0"
                                    ng-keypress="avoidDecimals($event)"
-                                   class="numberWithoutArrow one"
+                                   class="numberWithoutArrow two"
                                    ng-model="basket.amount"/>
                             <i class="plus" ng-click="amountIncrease()"></i>
                         </div>
                     </div>
-                    <div class="row"><input type="button" ng-disabled="!validArticle(basket.equipment)" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                    <div class="row vertical-spacing"><input type="button" ng-disabled="!validArticle(basket.equipment)" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
                 </div>
             </div>
         </div>

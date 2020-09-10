@@ -26,9 +26,6 @@
     },
     "id_program": {
       "type": ["number", "null"]
-    },
-    "id_project": {
-      "type": "number"
     }
   },
   "required": [
