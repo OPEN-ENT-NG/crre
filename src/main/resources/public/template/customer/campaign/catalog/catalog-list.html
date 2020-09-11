@@ -25,7 +25,7 @@
         </div>
     </div>
     <div class="row" ng-init="getFilters()">
-        <button ng-click="showPopUpColumnsSubject = !showPopUpColumnsSubject"
+        <button ng-click="initPopUpFilters('showPopUpColumnsSubject')"
                 class="filterButton">
             <i class="school"></i>
             <span>Disciplines</span>
@@ -42,12 +42,12 @@
                 </div>
             </div>
         </button>
-        <button ng-click="showPopUpColumnsDiplomes = !showPopUpColumnsDiplomes"
+        <button ng-click="initPopUpFilters('showPopUpColumnsDiplomes')"
                 class="filterButton">
             <i class="star-circle"></i>
             <span>Diplômes</span>
         </button>
-        <button ng-click="showPopUpColumnsGrade = !showPopUpColumnsGrade"
+        <button ng-click="initPopUpFilters('showPopUpColumnsGrade')"
                 class="filterButton">
             <i class="star-circle"></i>
             <span>Niveaux</span>
@@ -64,12 +64,12 @@
                 </div>
             </div>
         </button>
-        <button ng-click="showPopUpColumnsDocumentsTypes = !showPopUpColumnsDocumentsTypes"
+        <button ng-click="initPopUpFilters('showPopUpColumnsDocumentsTypes')"
                 class="filterButton">
             <i class="book-variant"></i>
             <span>Types de documents</span>
         </button>
-        <button ng-click="showPopUpColumnsEditor = !showPopUpColumnsEditor"
+        <button ng-click="initPopUpFilters('showPopUpColumnsEditor')"
                 class="filterButton">
             <i class="editor"></i>
             <span>Éditeurs</span>
@@ -86,7 +86,7 @@
                 </div>
             </div>
         </button>
-        <button ng-click="showPopUpColumnsOS = !showPopUpColumnsOS"
+        <button ng-click="initPopUpFilters('showPopUpColumnsOS')"
                 class="filterButton">
             <i class="phone-infos"></i>
             <span>OS</span>
@@ -110,7 +110,7 @@
                             <img ng-src="[[equipment.image]]" ng-show="equipment.image!==null && equipment.image!==undefined " />
                             <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.image===null || equipment.image===undefined "/>
                         </div>
-                        <div class="data-container">
+                        <div>
                             <strong class="ellipsis">[[equipment.name]]</strong>
                             <p class="description" ng-if="equipment.ean"><i></i> <b> EAN :  </b> [[equipment.ean]] </p>
                         </div>

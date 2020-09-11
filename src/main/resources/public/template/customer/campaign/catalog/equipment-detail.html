@@ -8,7 +8,7 @@
     </div>
     <div class="card row padding-20" ng-show="display.equipment">
         <h1 class="eight cell">[[basket.equipment.name]] </h1>
-        <div class="three cell right-magnet twelve-mobile" >
+        <div class="four cell right-magnet twelve-mobile" >
             <div class="add-basket centered row twelve vertical-spacing twelve-mobile">
                 <div class="twelve cell">
                     <h4 class="cell"><i18n>etablissement.price</i18n></h4>
@@ -32,8 +32,8 @@
                 </div>
             </div>
         </div>
-        <div class="eight cell">
-            <div class="two cell twelve-mobile">
+        <div class="eight cell twelve-mobile">
+            <div class="two cell twelve-mobile" style="margin-right: 10px;">
                 <img class="img-equipment" ng-src="[[basket.equipment.image]]" ng-show="basket.equipment.image!==null && basket.equipment.image!==undefined " />
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.image===null || basket.equipment.image===undefined "/>
             </div>

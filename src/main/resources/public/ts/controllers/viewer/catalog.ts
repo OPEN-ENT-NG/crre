@@ -10,13 +10,15 @@ import {Basket, Equipment, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
-        $scope.pageSize = 20;
-        $scope.nbItemsDisplay = $scope.pageSize;
-        $scope.alloptionsSelected = false;
-        $scope.equipment = new Equipment();
-/*        $scope.subjects = [];*/
-        $scope.showPopUpColumnsGrade = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsSubject =
-            $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsDiplomes = false;
+        this.init = () => {
+            $scope.pageSize = 20;
+            $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.alloptionsSelected = false;
+            $scope.equipment = new Equipment();
+            /*        $scope.subjects = [];*/
+            $scope.initPopUpFilters();
+        }
+
         $scope.addFilter = (event) => {
             //$scope.equipments.sort.filters.push(event.target.value);
             $scope.word = event.target.value;
@@ -94,4 +96,26 @@ export const catalogController = ng.controller('catalogController',
             else
                 return nbr.toString() + " années scolaires";
         };
+
+        $scope.initPopUpFilters = (filter?:string) => {
+            let value = $scope.$eval(filter);
+
+            $scope.showPopUpColumnsGrade = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsSubject =
+                $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsDiplomes = false;
+
+            if (!value) {
+                switch (filter) {
+                    case 'showPopUpColumnsSubject': $scope.showPopUpColumnsSubject = true; break;
+                    case 'showPopUpColumnsDiplomes': $scope.showPopUpColumnsDiplomes = true; break;
+                    case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
+                    case 'showPopUpColumnsDocumentsTypes': $scope.showPopUpColumnsDocumentsTypes = true; break;
+                    case 'showPopUpColumnsEditor': $scope.showPopUpColumnsEditor = true; break;
+                    case 'showPopUpColumnsOS': $scope.showPopUpColumnsOS = true; break;
+                    default: break;
+                }
+            }
+
+        };
+
+        this.init();
     }]);

@@ -49,7 +49,8 @@ curl -X PUT "http://localhost:9200/catalog" -H 'Content-Type: application/json' 
                     "normalizer": "lower_normalizer"
                 },
                 "parution_date": {
-                    "type": "date"
+                    "type": "keyword",
+                    "normalizer": "lower_normalizer"
                 },
                 "option_enabled": {
                     "type": "boolean"
@@ -62,7 +63,8 @@ curl -X PUT "http://localhost:9200/catalog" -H 'Content-Type: application/json' 
                     "type": "boolean"
                 },
                 "offer": {
-                    "type": "boolean"
+                    "type": "keyword",
+                    "normalizer": "lower_normalizer"
                 },
                 "duration": {
                     "type": "integer"
@@ -86,7 +88,10 @@ curl -X PUT "http://localhost:9200/catalog" -H 'Content-Type: application/json' 
                 "subject_name": {
                     "type": "keyword",
                     "normalizer": "lower_normalizer"
-                }
+                },
+		"technical_specs": {
+		    "type": "nested"
+		}
             }
         }
     }
