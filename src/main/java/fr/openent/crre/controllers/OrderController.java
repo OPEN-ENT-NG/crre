@@ -7,10 +7,7 @@ import fr.openent.crre.helpers.ExportHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.AccessOrderCommentRight;
-import fr.openent.crre.security.AccessOrderRight;
-import fr.openent.crre.security.AccessUpdateOrderOnClosedCampaigne;
-import fr.openent.crre.security.ManagerRight;
+import fr.openent.crre.security.*;
 import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.*;
 import fr.openent.crre.utils.SqlQueryUtils;
@@ -20,7 +17,6 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.request.RequestUtils;
@@ -72,15 +68,31 @@ public class OrderController extends ControllerHelper {
         exportService = new DefaultExportServiceService(storage);
     }
 
-    @Get("/orders/:idCampaign/:idStructure")
-    @ApiDoc("Get the list of orders by idCampaign and idstructure")
+    @Get("/orders/mine/:idCampaign/:idStructure")
+    @ApiDoc("Get my list of orders by idCampaign and idstructure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessOrderRight.class)
-    public void listOrdersByCampaignByStructure(final HttpServerRequest request){
+    public void listMyOrdersByCampaignByStructure(final HttpServerRequest request){
+        try {
+            UserUtils.getUserInfos(eb, request, user -> {
+                Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
+                String idStructure = request.params().get("idStructure");
+                orderService.listOrder(idCampaign,idStructure, user, arrayResponseHandler(request));
+            });
+        }catch (ClassCastException e ){
+            log.error("An error occured when casting campaign id ",e);
+        }
+    }
+
+    @Get("/orders/mine/:idCampaign/:idStructure")
+    @ApiDoc("Get my list of orders by idCampaign and idstructure")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessOrderRight.class)
+    public void listAllOrdersByCampaignByStructure(final HttpServerRequest request){
         try {
             Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
             String idStructure = request.params().get("idStructure");
-            orderService.listOrder(idCampaign,idStructure, arrayResponseHandler(request));
+            orderService.listOrder(idCampaign,idStructure, null, arrayResponseHandler(request));
         }catch (ClassCastException e ){
             log.error("An error occured when casting campaign id ",e);
         }
@@ -107,7 +119,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders")
     @ApiDoc("Get the list of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void listOrders (final HttpServerRequest request){
         if (request.params().contains("status")) {
             final String status = request.params().get("status");
@@ -219,17 +231,17 @@ public class OrderController extends ControllerHelper {
                 if (deletableEvent.isRight() && deletableEvent.right().getValue().getInteger("count") == 0) {
                     orderService.orderForDelete(idOrder, order -> {
                         if (order.isRight()) {
-                            orderService.deleteOrder(idOrder, order.right().getValue(), idStructure,
-                                    Logging.defaultResponseHandler(eb, request, Contexts.ORDER.toString(),
-                                            Actions.DELETE.toString(), "idOrder", order.right().getValue()));
+                            UserUtils.getUserInfos(eb, request, user -> {
+                                orderService.deleteOrder(idOrder, order.right().getValue(), idStructure, user,
+                                        Logging.defaultResponseHandler(eb, request, Contexts.ORDER.toString(),
+                                                Actions.DELETE.toString(), "idOrder", order.right().getValue()));
+                            });
                         }
                     });
                 } else {
                     badRequest(request);
                 }
             });
-
-
         } catch (ClassCastException e){
             log.error("An error occurred when casting order id", e);
             badRequest(request);

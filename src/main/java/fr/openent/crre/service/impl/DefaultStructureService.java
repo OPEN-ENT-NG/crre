@@ -30,10 +30,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         neo4j.execute(query, new JsonObject(), Neo4jResult.validResultHandler(handler));
     }
 
-    public void getStructureTypes(Handler<Either<String,JsonArray>> handler) {
-        String query = "SELECT * FROM "+ Crre.crreSchema +".specific_structures";
-        sql.prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
-    }
     @Override
     public void getStructureByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure) WHERE s.UAI IN {uais} return s.id as id, s.UAI as uai";

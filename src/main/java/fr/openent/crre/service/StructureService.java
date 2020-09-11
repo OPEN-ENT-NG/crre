@@ -12,8 +12,6 @@ public interface StructureService {
      */
     void getStructures(Handler<Either<String,JsonArray>> handler);
 
-    void getStructureTypes(Handler<Either<String,JsonArray>> handler);
-
     void getStructureByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler);
 
     void getStructureById(JsonArray ids, Handler<Either<String, JsonArray>> handler);

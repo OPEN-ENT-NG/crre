@@ -36,7 +36,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrder(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
+    public void listOrder(Integer idCampaign, String idStructure, UserInfos user,  Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT oe.id as id, oe.comment, oe.price_proposal, oe.price, oe.tax_amount, oe.amount,oe.creation_date, oe.id_campaign," +
                 " oe.id_structure, oe.name, oe.summary, oe.image, oe.status, oe.id_contract, oe.rank," +
@@ -47,12 +47,17 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "oe.id = order_opts.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
-                "WHERE id_campaign = ? AND id_structure = ? " +
-                "GROUP BY ( oe.id,campaign.priority_enabled) " +
+                "WHERE id_campaign = ? AND id_structure = ?";
+        if(user != null){
+            query += "AND user_id = ? ";
+        }
+        query +="GROUP BY ( oe.id,campaign.priority_enabled) " +
                 "ORDER BY CASE WHEN campaign.priority_enabled = false " +
                 "THEN oe.creation_date END ASC";
 
         values.add(idCampaign).add(idStructure);
+        if(user != null)
+            values.add(user.getUserId());
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
 
@@ -60,11 +65,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public  void listOrder(String status, Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT oce.* , to_json(contract.*) contract,  to_json(ct.*) contract_type " +
-                ",to_json(supplier.*) supplier, " +
-                "to_json(campaign.* ) campaign,  array_to_json(array_agg( DISTINCT oco.*)) as options, " +
+        String query = "SELECT oce.* , to_json(campaign.* ) campaign,  array_to_json(array_agg( DISTINCT oco.*)) as options, " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups," +
-                Crre.crreSchema + ".order.order_number ," +
                 "             ROUND((( SELECT CASE          " +
                 "            WHEN oce.price_proposal IS NOT NULL THEN 0     " +
                 "            WHEN oce.override_region IS NULL THEN 0 " +
@@ -80,18 +82,14 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "FROM " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_options oco " +
                 "ON oco.id_order_client_equipment = oce.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".contract ON oce.id_contract = contract.id " +
-                "Inner join " + Crre.crreSchema + ".contract_type ct ON ct.id = contract.id_contract_type "+
-                "INNER JOIN " + Crre.crreSchema + ".supplier ON contract.id_supplier = supplier.id " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
-                "LEFT OUTER JOIN " + Crre.crreSchema + ".order ON (oce.id_order = " + Crre.crreSchema + ".order.id) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) " +
                 " LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "WHERE oce.status = ? " +
-                "GROUP BY (oce.id, contract.id, ct.id, supplier.id, campaign.id, " + Crre.crreSchema + ".order.order_number);";
+                "GROUP BY (oce.id, campaign.id);";
         sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
     }
 
@@ -339,7 +337,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public void deleteOrder(final Integer idOrder, JsonObject order,
-                            final String idStructure, final Handler<Either<String, JsonObject>> handler) {
+                            final String idStructure, UserInfos user, final Handler<Either<String, JsonObject>> handler) {
         Integer idCampaign = order.getInteger("id_campaign");
         String getCampaignPurseEnabledQuery = "SELECT purse_enabled FROM " + Crre.crreSchema + ".campaign WHERE id = ?";
         JsonArray params = new JsonArray().add(idCampaign);
@@ -358,7 +356,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                     if (purseEnabled) {
                         statements.add(getNewPurse(idCampaign, idStructure));
                     }
-                    statements.add(getNewNbOrder(idCampaign, idStructure));
+                    statements.add(getNewNbOrder(idCampaign, idStructure, user));
 
                     sql.transaction(statements, event1 -> {
                         JsonArray results1 = event1.body().getJsonArray("results");
@@ -702,14 +700,14 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 .put("values",params)
                 .put("action", "prepared");
     }
-    private JsonObject getNewNbOrder(Integer idCampaign, String idStructure) {
+    private JsonObject getNewNbOrder(Integer idCampaign, String idStructure, UserInfos user) {
 
         String query = "SELECT count(id) FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "WHERE id_campaign = ? " +
-                "AND id_structure = ? AND status != 'VALID';";
+                "AND id_structure = ? AND status != 'VALID' AND user_id = ?;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(idCampaign).add(idStructure);
+                .add(idCampaign).add(idStructure).add(user.getUserId());
 
         return  new JsonObject()
                 .put("statement",query)

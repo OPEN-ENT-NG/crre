@@ -17,7 +17,7 @@ import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayRespo
  */
 public class StructureController extends ControllerHelper {
 
-    private DefaultStructureService structureService;
+    private final DefaultStructureService structureService;
 
     public StructureController(){
         super();
@@ -29,12 +29,6 @@ public class StructureController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getStructures(HttpServerRequest request){
         structureService.getStructures(arrayResponseHandler(request));
-    }
-    @Get("/structures/type")
-    @ApiDoc("Returns all structure's type")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getStructureTypes(HttpServerRequest request){
-        structureService.getStructureTypes(arrayResponseHandler(request));
     }
 
 }

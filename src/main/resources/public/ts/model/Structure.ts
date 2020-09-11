@@ -41,13 +41,6 @@ export class Structures  extends Selection<Structure> {
         let {data} = await http.get(`/crre/structures`);
         this.all = Mix.castArrayAs(Structure, data);
     }
-    async getStructureType() : Promise<void> {
-        let {data} = await http.get(`/crre/structures/type`);
-        this.all.map((structure)=>{
-            let type = _.findWhere(data, {id: structure.id});
-            structure.type = type ? type.type : 'LYC';
-        })
-    }
 
     async syncUserStructures (): Promise<void> {
         let { data } = await http.get('/crre/user/structures');

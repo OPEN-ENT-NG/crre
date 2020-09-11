@@ -98,11 +98,11 @@ export class OrderUtils {
 
     static calculatePriceTTC( roundNumber?: number, order?:Order|OrderClient|OrderRegion):number|any {
         let price = parseFloat(Utils.calculatePriceTTC(order.price , order.tax_amount).toString());
-        if (order.options !== undefined) {
+/*        if (order.options !== undefined) {
             order.options.map((option) => {
                 price += parseFloat(Utils.calculatePriceTTC(option.price , option.tax_amount).toString() );
             });
-        }
+        }*/
         return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price ) : price ;
     }
     static initParentOrder( order:Order):Object{

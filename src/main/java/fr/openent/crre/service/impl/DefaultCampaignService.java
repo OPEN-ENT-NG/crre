@@ -119,14 +119,14 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
-    private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler) {
+    private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user) {
         String query = "SELECT campaign.id as id_campaign, COUNT(order_client_equipment.id) as nb_order " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE id_structure = ? " +
+                "WHERE id_structure = ? AND user_id = ? " +
                 "GROUP BY campaign.id;";
 
-        Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(user.getUserId()), SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignsInfo(Handler<Either<String, JsonArray>> handler) {
@@ -230,7 +230,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
         getCampaignsInfo(idStructure, handlerJsonArray(campaignFuture));
         getCampaignsPurses(idStructure, handlerJsonArray(purseFuture));
-        getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture));
+        getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture), user);
         getCampaignsLicences(idStructure, handlerJsonArray(licenceFuture));
         getBasketCampaigns(idStructure, handlerJsonArray(basketFuture), user);
     }

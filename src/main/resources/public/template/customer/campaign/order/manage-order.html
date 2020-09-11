@@ -1,8 +1,6 @@
 <div ng-controller="orderPersonnelController">
     <div ng-show="ordersClient.all.length > 0" class="basket-list">
         <h1>
-            <span ng-if="campaign.purse_enabled"><i18n>crre.orderEquipment.manage.title</i18n></span>
-            <span ng-if="!campaign.purse_enabled"><i18n>crre.requestsEquipment.manage.title</i18n></span>
             <button class="right-magnet" ng-click="exportCSV()"><i18n>crre.orderEquipment.manage.exportCSV</i18n></button>
         </h1>
         <container template="order-list"></container>

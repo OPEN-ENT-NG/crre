@@ -16,9 +16,10 @@ public interface OrderService {
      * List orders of a campaign and a structure in data base
      * @param idCampaign campaign identifier
      * @param idStructure structure identifier
+     * @param user user who is connected
      * @param handler function handler returning data
      */
-    void listOrder(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler);
+    void listOrder(Integer idCampaign, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
     void listExport(Integer idCampaign, String idStructure,Handler<Either<String, JsonArray>> handler);
     /**
@@ -58,9 +59,10 @@ public interface OrderService {
      * @param idOrder id of the order item
      * @param order order to delete
      * @param idstructure id structure
+     * @param user
      * @param handler function returning data
      */
-    void deleteOrder( Integer idOrder, JsonObject order, String idstructure,
+    void deleteOrder( Integer idOrder, JsonObject order, String idstructure, UserInfos user,
                       Handler<Either<String,JsonObject>> handler);
 
     /**

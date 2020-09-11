@@ -193,7 +193,7 @@ export class OrdersClient extends Selection<OrderClient> {
         try {
             this.id_project_use = -1;
             if (idCampaign && idStructure) {
-                const { data } = await http.get(  `/crre/orders/${idCampaign}/${idStructure}` );
+                const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
                 this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
             } else {
@@ -236,10 +236,10 @@ export class OrdersClient extends Selection<OrderClient> {
 
     makeOrderNotValid(order:OrderClient):void{
         order.tax_amount = parseFloat(order.tax_amount.toString());
-        order.contract = Mix.castAs(Contract,  JSON.parse(order.contract.toString()));
+/*        order.contract = Mix.castAs(Contract,  JSON.parse(order.contract.toString()));
         order.contract_type = Mix.castAs(ContractType,  JSON.parse(order.contract_type.toString()));
         order.supplier = Mix.castAs(Supplier,  JSON.parse(order.supplier.toString()));
-        order.id_supplier = order.supplier.id;
+        order.id_supplier = order.supplier.id;*/
         order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
         order.rank = order.rank ? parseInt(order.rank.toString()) : null ;
         order.creation_date = moment(order.creation_date).format('L');

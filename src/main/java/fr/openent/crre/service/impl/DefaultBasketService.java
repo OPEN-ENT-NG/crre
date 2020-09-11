@@ -224,7 +224,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         }));
     }
 
-    public void takeOrder(final HttpServerRequest request, final JsonArray baskets, Integer idCampaign,
+    public void takeOrder(final HttpServerRequest request, final JsonArray baskets, Integer idCampaign, UserInfos user,
                           String idStructure, final String nameStructure, JsonArray baskets_objects, final Handler<Either<String, JsonObject>> handler) {
         try {
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
@@ -237,7 +237,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     statements.add(purseService.updatePurseAmountStatement(Double.valueOf(basket.getString("total_price")),
                             idCampaign, idStructure, "-"));
                 }
-                statements.add(getInsertEquipmentOrderStatement(basket));
+                statements.add(getInsertEquipmentOrderStatement(basket, user.getUserId()));
                 if(! "[null]".equals( basket.getString("options"))) {
                     statements.add(getInsertEquipmentOptionsStatement(basket));
                     statements.add(getDeletionBasketsOptionsStatments(basket.getInteger("id_basket")));
@@ -247,7 +247,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     statements.add(deleteFilesFromBasket(basket.getInteger("id_basket")));
                 }
             }
-            statements.add(getDeletionBasketsEquipmentStatments(idCampaign, idStructure, baskets_objects, purse_enabled));
+            statements.add(getDeletionBasketsEquipmentStatments(idCampaign, idStructure, baskets_objects, purse_enabled, user));
             sql.transaction(statements, event -> {
                 JsonObject results = event.body().getJsonArray("results")
                         .getJsonObject(event.body().getJsonArray("results").size()-1);
@@ -373,34 +373,37 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     /**
      * Basket to order
      * @param basket
+     * @param userId
      * @return
      */
-    private JsonObject getInsertEquipmentOrderStatement(JsonObject basket) {
+    private JsonObject getInsertEquipmentOrderStatement(JsonObject basket, String userId) {
         StringBuilder queryEquipmentOrder;
         JsonArray params;
         try {
             queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
                     .append(" (id, price, tax_amount, amount,  id_campaign, id_structure, name, summary," +
                             " description, image, technical_spec, status, " +
-                            " id_contract, equipment_key, comment, price_proposal, rank ) VALUES ")
-                    .append(" (?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?, ").append(getTheLastRankOrder()).append("); ");
+                            " id_contract, equipment_key, comment, price_proposal, rank, user_id ) VALUES ")
+                    .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?, ").append(getTheLastRankOrder()).append(", ?); ");
             params = getObjects(basket);
             params.add(Double.valueOf(basket.getString("price_proposal")))
                     .add(basket.getInteger("id_campaign"))
                     .add(basket.getString("id_structure"))
+                    .add(userId)
             ;
 
         } catch (java.lang.NullPointerException e) {
             queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
                     .append(" (id, price, tax_amount, amount,  id_campaign, id_structure, name, summary," +
                             " description, image, technical_spec, status, " +
-                            " id_contract, equipment_key, comment, price_proposal, rank ) VALUES ")
-                    .append(" (?, ?, ?,  ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, null, ?, ")
+                            " id_contract, equipment_key, comment, price_proposal, rank, user_id ) VALUES ")
+                    .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, null, ")
                     .append(getTheLastRankOrder())
-                    .append( "); ");
+                    .append( ", ?); ");
             params = getObjects(basket);
             params.add(basket.getInteger("id_campaign"))
-                    .add(basket.getString("id_structure"));
+                    .add(basket.getString("id_structure"))
+                    .add(userId);
         }
         return new JsonObject()
                 .put("statement", queryEquipmentOrder.toString())
@@ -451,7 +454,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             JsonObject option = options.getJsonObject(i);
             params.add( option.getDouble("tax_amount"))
                     .add(option.getDouble("price"))
-                    .add( basket.getInteger("id_order"))
+                    .add(basket.getInteger("id_order"))
                     .add(option.getString("name"))
                     .add(option.getInteger("amount"))
                     .add(option.getBoolean("required"));
@@ -471,7 +474,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 .put("action", "prepared");
     }
 
-    private static JsonObject getDeletionBasketsEquipmentStatments(Integer idCampaign, String idStructure, JsonArray baskets, Boolean purse_enabled) {
+    private static JsonObject getDeletionBasketsEquipmentStatments(Integer idCampaign, String idStructure, JsonArray baskets,
+                                                                   Boolean purse_enabled, UserInfos user) {
         String basketFilter = baskets.size() > 0 ? "AND basket_equipment.id IN " + Sql.listPrepared(baskets.getList()) : "";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -483,6 +487,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         if (purse_enabled) {
             params.add(idCampaign).add(idStructure);
         }
+        params.add(user.getUserId());
         String queryEquipmentOrder = " DELETE FROM " + Crre.crreSchema + ".basket_equipment " +
                 " WHERE id_campaign = ? AND id_structure = ? " + basketFilter + " RETURNING " +
                 getReturningQueryOfTakeOrder(purse_enabled);
@@ -499,14 +504,15 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     " where p.id_campaign = ? " +
                     " AND p.id_structure = ? " +
                     " AND  o.id_campaign = ? " +
-                    " AND o.id_structure = ? AND o.status != 'VALID' " +
+                    " AND o.id_structure = ? AND o.status != 'VALID' AND o.user_id = ? " +
                     " GROUP BY(p.amount) )";
         } else {
             return "(SELECT row_to_json(row(count(o.id)))\n" +
                     "FROM " + Crre.crreSchema + ".order_client_equipment o " +
                     "WHERE  o.id_campaign = ? " +
                     "  AND o.id_structure = ? " +
-                    "  AND o.status != 'VALID')";
+                    "  AND o.status != 'VALID'" +
+                    "  AND o.user_id = ?)";
         }
     }
     /**

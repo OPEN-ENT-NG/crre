@@ -355,6 +355,7 @@ CREATE TABLE crre.order_client_equipment (
     rank numeric,
     override_region boolean DEFAULT false,
     id_type bigint NOT NULL DEFAULT 1,
+    user_id character varying(100) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
         REFERENCES crre.campaign (id) MATCH SIMPLE

@@ -67,9 +67,6 @@ routes.define(($routeProvider) => {
             .when('/order/update/:idOrder', {
                 action: 'updateOrder'
             })
-            .when('/order/waiting', {
-                action: 'orderWaiting'
-            })
             .when('/order/sent', {
                 action: 'orderSent'
             })
@@ -98,6 +95,9 @@ routes.define(($routeProvider) => {
             })
             .when('/campaign/:idCampaign/order', {
                 action: 'campaignOrder'
+            })
+            .when('/order/:idCampaign/waiting', {
+                action: 'orderWaiting'
             })
             .when('/campaign/:idCampaign/basket', {
                 action: 'campaignBasket'

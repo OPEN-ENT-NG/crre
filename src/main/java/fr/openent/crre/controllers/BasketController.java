@@ -11,7 +11,6 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -19,7 +18,6 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -58,15 +56,9 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value =  "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void create(final HttpServerRequest request) {
-
         UserUtils.getUserInfos(eb, request, user -> {
-            RequestUtils.bodyToJson(request, pathPrefix + "basket", new Handler<JsonObject>() {
-                @Override
-                public void handle(JsonObject basket) {
-
-                    basketService.create(basket, user, defaultResponseHandler(request) );
-                }
-            });
+            RequestUtils.bodyToJson(request, pathPrefix + "basket",
+                    basket -> basketService.create(basket, user, defaultResponseHandler(request) ));
 
         });
     }
@@ -94,16 +86,13 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PersonnelRight.class)
     public void updateAmount(final HttpServerRequest  request){
-        RequestUtils.bodyToJson(request, pathPrefix + "basket", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject basket) {
-                try {
-                    Integer id = Integer.parseInt(request.params().get("idBasket"));
-                    Integer amount = basket.getInteger("amount") ;
-                    basketService.updateAmount(id, amount,  defaultResponseHandler(request));
-                } catch (ClassCastException e) {
-                    log.error("An error occurred when casting basket id", e);
-                }
+        RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
+            try {
+                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                Integer amount = basket.getInteger("amount") ;
+                basketService.updateAmount(id, amount,  defaultResponseHandler(request));
+            } catch (ClassCastException e) {
+                log.error("An error occurred when casting basket id", e);
             }
         });
     }
@@ -113,20 +102,17 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessOrderCommentRight.class)
     public void updateComment(final HttpServerRequest request){
-        RequestUtils.bodyToJson(request,  new Handler<JsonObject>(){
-            @Override
-            public void handle(JsonObject basket){
-                if (!basket.containsKey("comment")) {
-                    badRequest(request);
-                    return;
-                }
-                try {
-                    Integer id = Integer.parseInt(request.params().get("idBasket"));
-                    String comment = basket.getString("comment");
-                    basketService.updateComment(id, comment, defaultResponseHandler(request));
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
+        RequestUtils.bodyToJson(request, basket -> {
+            if (!basket.containsKey("comment")) {
+                badRequest(request);
+                return;
+            }
+            try {
+                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                String comment = basket.getString("comment");
+                basketService.updateComment(id, comment, defaultResponseHandler(request));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -136,24 +122,20 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessPriceProposalRight.class)
     public void updatePriceProposal(final HttpServerRequest request) {
-
-        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject basket) {
-                if (!basket.containsKey("price_proposal")) {
-                    badRequest(request);
-                    return;
-                }
-                try {
-                    Integer id = Integer.parseInt(request.params().get("idBasket"));
-                    Double price_proposal = basket.getDouble("price_proposal");
-                    basketService.updatePriceProposal(id, price_proposal, defaultResponseHandler(request));
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                } catch (java.lang.NullPointerException e) {
-                    Integer id = Integer.parseInt(request.params().get("idBasket"));
-                    basketService.updatePriceProposal(id, null, defaultResponseHandler(request));
-                }
+        RequestUtils.bodyToJson(request, basket -> {
+            if (!basket.containsKey("price_proposal")) {
+                badRequest(request);
+                return;
+            }
+            try {
+                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                Double price_proposal = basket.getDouble("price_proposal");
+                basketService.updatePriceProposal(id, price_proposal, defaultResponseHandler(request));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {
+                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                basketService.updatePriceProposal(id, null, defaultResponseHandler(request));
             }
         });
     }
@@ -172,15 +154,16 @@ public class BasketController extends ControllerHelper {
                 basketService.listebasketItemForOrder(idCampaign, idStructure, baskets,
                         listBasket -> {
                             if(listBasket.isRight() && listBasket.right().getValue().size() > 0){
-                                basketService.takeOrder(request , listBasket.right().getValue(),
-                                        idCampaign, idStructure, nameStructure, baskets,
-                                        Logging.defaultCreateResponsesHandler(eb,
-                                                request,
-                                                Contexts.ORDER.toString(),
-                                                Actions.CREATE.toString(),
-                                                "id_order",
-                                                listBasket.right().getValue()));
-
+                                UserUtils.getUserInfos(eb, request, user -> {
+                                    basketService.takeOrder(request , listBasket.right().getValue(),
+                                            idCampaign, user, idStructure, nameStructure, baskets,
+                                            Logging.defaultCreateResponsesHandler(eb,
+                                                    request,
+                                                    Contexts.ORDER.toString(),
+                                                    Actions.CREATE.toString(),
+                                                    "id_order",
+                                                    listBasket.right().getValue()));
+                                });
                             }else{
                                 log.error("An error occurred when listing Baskets");
                                 badRequest(request);

@@ -28,7 +28,8 @@
         <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog()"  >
             <i18n>crre.catalog</i18n>
         </header>
-        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order')}" ng-click="openOrder(campaign.id)" workflow="crre.prescriptor" >
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order') && selectedType.split('/').includes('campaign')}"
+                ng-click="openOrder(campaign.id)" workflow="crre.prescriptor" >
             <span ng-show="campaign.purse_enabled"><i18n>crre.request.mine</i18n></span>
             <span ng-show="!campaign.purse_enabled"><i18n>crre.order.tracking</i18n></span>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
@@ -41,7 +42,9 @@
                     [[campaign.nb_panier]]
             </span>
         </header>
-        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('validate')}" workflow="crre.validator">
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('waiting')}"
+                 ng-click="openWaitingOrder(campaign.id)"
+                 workflow="crre.validator">
             <i18n>crre.request.validate</i18n>
         </header>
         <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('history')}" workflow="crre.validator">
@@ -59,4 +62,8 @@
         </div>
     </div>
     <container template="campaign-main"></container>
+    <container ng-show="!loadingArray" template="administrator-main"></container>
+    <lightbox show="display.lightbox.lightBoxIsOpen" on-close="cancelSelectCampaign(true)">
+        <container template="selectCampaign"></container>
+    </lightbox>
 </div>
