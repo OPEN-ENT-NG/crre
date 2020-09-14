@@ -89,9 +89,9 @@ curl -X PUT "http://localhost:9200/catalog" -H 'Content-Type: application/json' 
                     "type": "keyword",
                     "normalizer": "lower_normalizer"
                 },
-		"technical_specs": {
-		    "type": "nested"
-		}
+                "technical_specs": {
+                    "type": "nested"
+                }
             }
         }
     }

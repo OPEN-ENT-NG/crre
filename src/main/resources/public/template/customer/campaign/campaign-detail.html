@@ -46,6 +46,9 @@
                  ng-click="openWaitingOrder(campaign.id)"
                  workflow="crre.validator">
             <i18n>crre.request.validate</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.nb_order_waiting > 0">
+                        [[campaign.nb_order_waiting]]
+            </span>
         </header>
         <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('history')}" workflow="crre.validator">
             <i18n>crre.structure.history</i18n>

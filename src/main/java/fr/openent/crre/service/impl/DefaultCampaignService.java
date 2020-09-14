@@ -2,6 +2,8 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.model.Campaign;
+import fr.openent.crre.security.WorkflowActionUtils;
+import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.CampaignService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -70,7 +72,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
                 }
-            JsonArray campaignList = new JsonArray();
+                JsonArray campaignList = new JsonArray();
                 for (Map.Entry<String, Object> aCampaign : campaignMap) {
                     campaignList.add(aCampaign.getValue());
                 }
@@ -119,14 +121,14 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
-    private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user) {
-        String query = "SELECT campaign.id as id_campaign, COUNT(order_client_equipment.id) as nb_order " +
+    private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT campaign.id as id_campaign, user_id, status, COUNT(order_client_equipment.id) as nb_order " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE id_structure = ? AND user_id = ? " +
-                "GROUP BY campaign.id;";
+                "WHERE id_structure = ?" +
+                "GROUP BY campaign.id, user_id, status;";
 
-        Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(user.getUserId()), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignsInfo(Handler<Either<String, JsonArray>> handler) {
@@ -175,8 +177,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 for (int i = 0; i < baskets.size(); i++) {
                     object = baskets.getJsonObject(i);
                     try {
-                    campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
-                    campaign.put("nb_panier", object.getLong("nb_panier"));
+                        campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
+                        campaign.put("nb_panier", object.getLong("nb_panier"));
                     }catch (NullPointerException e){
                         LOGGER.info("A basket is present on this structure but the structure is not linked to the campaign");
                     }
@@ -196,12 +198,12 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     object = licences.getJsonObject(i);
                     campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
                     try {
-                            JsonArray arr = new JsonArray();
-                            arr.add(object);
-                            if(campaign.getInteger("id") == object.getInteger("id_campaign") && campaign.containsKey("purse_licence")) {
-                                arr = campaign.getJsonArray("purse_licence").add(object);
-                            }
-                            campaign.put("purse_licence", arr);
+                        JsonArray arr = new JsonArray();
+                        arr.add(object);
+                        if(campaign.getInteger("id") == object.getInteger("id_campaign") && campaign.containsKey("purse_licence")) {
+                            arr = campaign.getJsonArray("purse_licence").add(object);
+                        }
+                        campaign.put("purse_licence", arr);
                     } catch (NullPointerException e){
                         LOGGER.info("A licence is present on this structure but the structure is not linked to the campaign");
                     }
@@ -210,7 +212,18 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     object = orders.getJsonObject(i);
                     try {
                         campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
-                        campaign.put("nb_order", object.getLong("nb_order"));
+                        if(user.getUserId().equals(object.getString("user_id"))) {
+                            if(!campaign.containsKey("nb_order"))
+                                campaign.put("nb_order", object.getLong("nb_order"));
+                            else
+                                campaign.put("nb_order", campaign.getLong("nb_order")+ object.getLong("nb_order"));
+                        }
+                        if(object.getString("status").equals("WAITING") &&
+                                WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString()))
+                            if(!campaign.containsKey("nb_order_waiting"))
+                                campaign.put("nb_order_waiting", object.getLong("nb_order"));
+                            else
+                                campaign.put("nb_order_waiting", campaign.getLong("nb_order_waiting")+ object.getLong("nb_order"));
                     }catch (NullPointerException e){
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
@@ -230,7 +243,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
         getCampaignsInfo(idStructure, handlerJsonArray(campaignFuture));
         getCampaignsPurses(idStructure, handlerJsonArray(purseFuture));
-        getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture), user);
+        getCampaignOrderStatusCount(idStructure, handlerJsonArray(orderFuture));
         getCampaignsLicences(idStructure, handlerJsonArray(licenceFuture));
         getBasketCampaigns(idStructure, handlerJsonArray(basketFuture), user);
     }

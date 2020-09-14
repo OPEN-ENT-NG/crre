@@ -37,10 +37,17 @@
                                 </em>
                             </p>
                             <p class="small-text-align" ng-show="campaign.nb_order && campaign.nb_order !== 0">
-                                <em class="small-text"Ajoute>
+                                <em class="small-text">
                                     [[campaign.nb_order]]
                                     <i18n ng-show="campaign.nb_order > 1">crre.demands.waiting</i18n>
                                     <i18n ng-show="campaign.nb_order === 1">crre.demand.waiting</i18n>
+                                </em>
+                            </p>
+                            <p class="small-text-align" ng-show="campaign.nb_order_waiting && campaign.nb_order_waiting !== 0">
+                                <em class="small-text">
+                                    [[campaign.nb_order_waiting]]
+                                    <i18n ng-show="campaign.nb_order_waiting > 1">crre.demands.waiting.toValidate</i18n>
+                                    <i18n ng-show="campaign.nb_order_waiting === 1">crre.demand.waiting.toValidate</i18n>
                                 </em>
                             </p>
                         </div>

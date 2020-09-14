@@ -463,6 +463,8 @@
   "crre.access.catalog": "Accéder au catalogue",
   "crre.demands.waiting": "demandes en attente",
   "crre.demand.waiting": "demande en attente",
+  "crre.demands.waiting.toValidate": "demandes en attente de validation",
+  "crre.demand.waiting.toValidate": "demande en attente de validation",
   "crre.demand.empty": "Aucune demande",
   "crre.operation.form.empty": "Aucune opération disponible",
   "crre.order.update": "Modifier une demande",
