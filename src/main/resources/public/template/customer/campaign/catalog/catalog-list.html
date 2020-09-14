@@ -96,7 +96,7 @@
         <div class="dominos item_hover_accent_list">
             <div class="item six-mobile"
                  ng-class="{disabled: equipment.status!== 'AVAILABLE', 'list-item': display.equipment}"
-                 ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay"
+                 ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay track by $index"
                  ng-click="openEquipment(equipment)">
 
                 <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">
@@ -117,7 +117,7 @@
                     </div>
                 </article>
             </div>
-            <div class="item six-mobile" ng-repeat="x in [].constructor(nbNewItems) track by $index" ng-if="equipments.loading">
+            <div class="item six-mobile" ng-repeat="x in [].constructor(pageSize) track by $index" ng-if="equipments.loading">
                 <article class="domino loading-domino">
                     <div class="loading-bar" ng-class="{loading: equipments.loading}"></div>
                     <div class="top">

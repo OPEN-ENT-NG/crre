@@ -102,7 +102,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="twelve cell" ng-show="basket.equipment.technical_specs.length !== 0">
+        <div class="twelve cell" ng-show="Array.isArray(basket.equipment.technical_specs) && basket.equipment.technical_specs.length">
             <h2>
                 <i18n>SPECIFICATIONS</i18n>
             </h2>
@@ -115,7 +115,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="twelve cell" ng-show="basket.equipment.options.length !== 0">
+        <div class="twelve cell" ng-show="Array.isArray(basket.equipment.options) && basket.equipment.options.length">
             <h2><i18n>crre.equipment.options</i18n></h2>
             <table class="twelve">
                 <thead>
