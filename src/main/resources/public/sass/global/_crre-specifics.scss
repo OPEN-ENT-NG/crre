@@ -86,6 +86,7 @@ body.crre {
 
   .table-selector {
     width: 40px;
+    text-align: center;
   }
 
   .text-right {
@@ -880,9 +881,80 @@ body.crre {
       display: inline-block;
     }
   }
-  .order-client-validation{
-    tfoot{
-      font-weight: bold;
+  .order-client-validation {
+    .validate-order {
+      background-color: #f44336;
+      color: white;
+      border-radius: 3px;
+      box-shadow: #aaa 0px 4px 4px 0px;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+    .flex-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+    .flex-center {
+       display: flex;
+       justify-content: center;
+    }
+    table {
+      table-layout: fixed;
+
+      .main-selector input[type=checkbox]:checked+span::before {
+        border-color: white;
+      }
+
+      input[type=checkbox]+span::before {
+        border-radius: 5px;
+        background: white;
+      }
+      input[type=checkbox]:checked+span::before {
+        border-radius: 5px;
+        background: transparent !important;
+        border-color: rgb(3, 32, 48);
+      }
+
+      thead {
+        line-height: 60px;
+        tr {
+          background: rgb(3, 32, 48);
+        }
+      }
+      tbody {
+        tr {
+          background: rgb(247, 246, 246);
+          td {
+            max-height: 70px;
+
+            .order {
+              max-height: inherit;
+              display: flex;
+              align-items: center;
+              flex-wrap: nowrap;
+
+              img {
+                max-height: inherit;
+                margin: 0 10px;
+              }
+            }
+          }
+        }
+      }
+      tfoot{
+        font-weight: bold;
+        line-height: 50px;
+        tr {
+          background: rgb(193, 197, 215);
+          color: white;
+        }
+      }
+    }
+    .tot-cards {
+      margin: 0 auto;
     }
   }
 
@@ -1294,4 +1366,8 @@ thead > tr > td > label input[type=checkbox]:checked+span::before, thead > tr > 
 
 .paddingTop {
   padding-top: 80px;
+}
+
+.center {
+  text-align: center;
 }

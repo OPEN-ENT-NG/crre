@@ -1,13 +1,43 @@
 export const orderWaiting = [
     {
+        name:'date',
+        fieldName:'id',
+        display: true
+    },
+    {
+        name:'EQUIPMENT',
+        fieldName:'name',
+        display: true
+    },
+    {
+        name: 'Propriétaire',
+        fieldName: 'user_id',
+        display: true
+    },
+    {
+        name:'crre.amount',
+        fieldName:'amount',
+        display: true
+    },
+    {
+        name: 'crre.amountTTC',
+        fieldName: 'price',
+        display: true
+    },
+    {
+        name:'comment',
+        fieldName:'comment',
+        display: true
+    },
+    {
         name: 'UAI',
         fieldName: 'structure.uai',
-        display: true,
+        display: false
     },
     {
         name:'Structure',
         fieldName: 'structure.name',
-        display: true
+        display: false
     },
     {
         name:'crre.type',
@@ -17,37 +47,22 @@ export const orderWaiting = [
     {
         name:'Commune',
         fieldName:'structure.city',
-        display: true
+        display: false
     },
     {
         name:'campaign',
         fieldName:'campaign.name',
-        display: true
+        display: false
     },
     {
         name:'N° Prio',
         fieldName: 'rankOrder',
-        display: true
-    },
-    {
-        name:'EQUIPMENT',
-        fieldName:'name',
-        display: true
-    },
-    {
-        name:'comment',
-        fieldName:'comment',
-        display: true
-    },
-    {
-        name:'crre.amount',
-        fieldName:'amount',
-        display: true
+        display: false
     },
     {
         name:'crre.unit.price.ttc',
         fieldName:'priceUnitedTTC',
-        display: true
+        display: false
     },
     {
         name: 'files',
@@ -57,7 +72,7 @@ export const orderWaiting = [
     {
         name:'crre.contract.type.name',
         fieldName:'contract_type.name',
-        display: true
+        display: false
     },
     {
         name:'Academy',
@@ -85,11 +100,6 @@ export const orderWaiting = [
         display: false
     },
     {
-        name:'date',
-        fieldName:'id',
-        display: false
-    },
-    {
         name:'crre.room',
         fieldName:'project.room',
         display: false
@@ -113,10 +123,5 @@ export const orderWaiting = [
         name:'crre.program',
         fieldName:'program',
         display: false
-    },
-    {
-        name: 'crre.amountTTC',
-        fieldName: 'price',
-        display: true,
     }
 ];
