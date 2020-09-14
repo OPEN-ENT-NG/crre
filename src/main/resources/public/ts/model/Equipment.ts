@@ -1,5 +1,5 @@
 import {Utils} from './index';
-import {_, notify} from 'entcore';
+import {_, notify, toasts} from 'entcore';
 import {Eventer, Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 
@@ -204,13 +204,19 @@ export class Equipments extends Selection<Equipment> {
         this.loading = true;
         try {
             let uri: string;
-            if(filter) {
-                uri = (`/crre/equipments/catalog/filter?filter=${filter}&word=${word}`);
+            var format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
+            if(!format.test(word)) {
+                if(filter) {
+                    uri = (`/crre/equipments/catalog/filter?filter=${filter}&word=${word}`);
+                } else {
+                    uri = (`/crre/equipments/catalog/search?word=${word}`);
+                }
+                let {data} = await http.get(uri);
+                this.syncEquip(data);
             } else {
-                uri = (`/crre/equipments/catalog/search?word=${word}`);
+                toasts.warning('crre.equipment.special');
             }
-            let {data} = await http.get(uri);
-            this.syncEquip(data);
+
         } catch (e) {
             notify.error('crre.equipment.sync.err');
             throw e;

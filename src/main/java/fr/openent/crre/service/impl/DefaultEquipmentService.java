@@ -101,7 +101,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
     public void syncES(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT e.id, e.name, e.summary, e.description, e.author, e.price, e.id_tax, e.image, " +
-                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'month yyyy') parution_date, e.option_enabled, " +
+                "e.id_editor, e.status, e.technical_specs, to_char(parution_date, 'dd/MM/yyyy ') parution_date, e.option_enabled, " +
                 "e.reference,e.price_editable, e.ean, e.offer, e.duration, to_char(end_availability, 'dd/MM/yyyy ') end_availability, " +
                 "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
                 "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
@@ -156,6 +156,9 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 });
                 for (Object o : results) {
                     JsonObject j = (JsonObject) o;
+                    JsonArray technical_specs =  new JsonArray(j.getString("technical_specs"));
+                    j.remove("technical_specs");
+                    j.put("technical_specs", technical_specs);
                     j.put("_id", j.getInteger("id"));
                     eventsIds.add(j.getInteger("id"));
                     bulkRequest.index(j, null);
