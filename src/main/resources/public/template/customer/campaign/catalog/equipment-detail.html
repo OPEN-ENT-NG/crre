@@ -102,7 +102,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="twelve cell" ng-show="Array.isArray(basket.equipment.technical_specs) && basket.equipment.technical_specs.length">
+        <div class="twelve cell" ng-if="basket.equipment.technical_specs && basket.equipment.technical_specs.length > 0">
             <h2>
                 <i18n>SPECIFICATIONS</i18n>
             </h2>
@@ -111,43 +111,6 @@
                 <tr ng-repeat="technicalSpec in basket.equipment.technical_specs">
                     <td class="one"><strong>[[technicalSpec.name]]</strong></td>
                     <td>[[technicalSpec.value]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="twelve cell" ng-show="Array.isArray(basket.equipment.options) && basket.equipment.options.length">
-            <h2><i18n>crre.equipment.options</i18n></h2>
-            <table class="twelve">
-                <thead>
-                <td class="one">
-                    <label class="checkbox" ng-show="thereAreOptionalOptions(basket.equipment)">
-                        <input type="checkbox"
-                               ng-change="switchAll(alloptionsSelected, basket.equipment.options)"
-                               ng-model="alloptionsSelected">
-                        <span></span>
-                    </label>
-                </td>
-                <td >
-                    &nbsp;
-                </td>
-                <td class="three">
-                    <i18n>crre.price.TTC</i18n>
-                </td>
-                </thead>
-                <tbody>
-                <tr  ng-repeat="option in basket.equipment.options">
-                    <td  class="one">
-                        <label class="checkbox"  ng-show="!option.required">
-                            <input type="checkbox" ng-model="option.selected">
-                            <span></span>
-                        </label>
-                        <label class="checkbox"  ng-show="option.required" >
-                            <input type="checkbox" checked disabled>
-                            <span></span>
-                        </label>
-                    </td>
-                    <td >[[option.name]]</td>
-                    <td class="three"><span ng-bind="calculatePriceTTC(option.price, option.tax_amount, 2) | currency"></span></td>
                 </tr>
                 </tbody>
             </table>
