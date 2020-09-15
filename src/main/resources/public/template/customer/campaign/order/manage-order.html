@@ -1,9 +1,20 @@
 <div ng-controller="orderPersonnelController">
     <div ng-show="ordersClient.all.length > 0" class="basket-list">
-        <h1>
-            <button class="right-magnet" ng-click="exportCSV()"><i18n>crre.orderEquipment.manage.exportCSV</i18n></button>
-        </h1>
-        <container template="order-list"></container>
+        <div class="row" style="margin-bottom: 20px">
+            <div class="cell two" style="margin-top: 8px;">
+                <div class="search-bar order-search-bar">
+                    <i class="search padding-5"></i>
+                    <input class="twelve"
+                           type="text"
+                           ng-keyup=""
+                           i18n-placeholder="search.filter.order">
+                </div>
+            </div>
+            <h1>
+                <button class="right-magnet" ng-click="exportCSV()"><i18n>crre.orderEquipment.manage.exportCSV</i18n></button>
+            </h1>
+        </div>
+        <container template="order-list" class="order-client-validation"></container>
     </div>
     <article ng-show = "ordersClient.all.length === 0 " class="centered-text row">
         <p><i18n>crre.orderEquipment.manage.empty.order</i18n></p>

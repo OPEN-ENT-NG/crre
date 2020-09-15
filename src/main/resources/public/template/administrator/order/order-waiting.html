@@ -1,32 +1,28 @@
 <div ng-controller="orderController" class="order-client-validation">
-    <div class="row">
-        <div class="cell twelve-mobile horizontal-spacing search-pagination four">
-            <div class="row twelve vertical-spacing">
-                <input  class="row"
-                        type="text"
-                        ng-model="search.filterWord"
-                        ng-keydown="addFilter(search.filterWord, $event)"
-                        i18n-placeholder="add.a.filter" />
-
-                <i class="search flex-row" ng-click="addFilter(search.filterWord)"></i>
-            </div>
-            <div class="row horizontal-spacing">
-                <div class="select-blocks">
-                    <div ng-repeat="filterWord in search.filterWords"
-                         ng-click="pullFilterWord(filterWord)"
-                         class="labels-in-ligne">
-                        <div > [[ filterWord ]] </div>
-                    </div>
-                </div>
+    <div class="row" style="margin-bottom: 20px">
+        <div class="cell two" style="margin-top: 8px;">
+            <div class="search-bar order-search-bar">
+                <i class="search padding-5"></i>
+                <input class="twelve"
+                       type="text"
+                       ng-keyup=""
+                       i18n-placeholder="search.filter.order">
             </div>
         </div>
         <div class="cell twelve-mobile six catalog">
-            <button ng-click="" class="filterButton">
-                <i class="phone-infos"></i><span>OS</span>
+            <button ng-click=""
+                    class="filterButton">
+                <i class="school"></i>
+                <span>Enseignants</span>
+            </button>
+            <button ng-click=""
+                    class="filterButton">
+                <i class="star-circle"></i>
+                <span>Tout type</span>
             </button>
         </div>
-        <div class="cell twelve-mobile two flex-center">
-            <button ng-click="" class="validate-order">Passer la commande</button>
+        <div class="cell twelve-mobile right-magnet">
+            <button ng-click="" class="validate-order"><i18n>crre.take.order.2</i18n></button>
         </div>
     </div>
     <div class="flex-row">
@@ -130,22 +126,14 @@
               show="display.lightbox.validOrder">
         <container template="validOrder.lightbox"></container>
     </lightbox>
-    <parameter-table ng-change="savePreference()" ng-model="tableFields"></parameter-table>
     <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
         <div class="toggle">
             <div class="row">
-                <button ng-click="validateOrders(getSelectedOrders())" ng-disabled="!isValidOrdersWaitingSelection()">
-                    <i18n>Validate</i18n>
-                </button>
-                <button ng-click="updateOrder(ordersClient.selected[0])"
-                        ng-show=" ordersClient.selected.length ===  1">
-                    <i18n>modify</i18n>
+                <button ng-click="">
+                    <i18n>Denied</i18n>
                 </button>
                 <button ng-click="exportCSV()" >
                     <i18n>crre.logs.csv.export</i18n>
-                </button>
-                <button ng-click="selectOperationForOrder()">
-                    <i18n>crre.order.operation.select</i18n>
                 </button>
             </div>
         </div>

@@ -18,7 +18,6 @@ export * from './Notification';
 export * from './OrderClient';
 export * from './tableFields';
 export * from './OrderRegion';
-export * from './tableFields';
 export * from './export';
 export * from './Order';
 export * from './Userbook';

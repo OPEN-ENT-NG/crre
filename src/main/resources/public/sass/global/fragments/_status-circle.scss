@@ -22,10 +22,8 @@
   }
 
   &.WAITING {
-    background: $grey;
-
+    background: $yellow;
     > i {
-
       background-image: url(/crre/public/img/scss/send.svg);
     }
   }
@@ -70,11 +68,17 @@
   }
 
   &.VALID{
-    background: $yellow;
+    background: $green;
     >i{
       background-image: url(/crre/public/img/scss/check.svg);
     }
   }
+}
+
+.myOrder{
+  width: 15px;
+  height: 15px;
+  margin-top: 5px;
 }
 
 

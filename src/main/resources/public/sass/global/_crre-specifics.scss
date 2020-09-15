@@ -267,22 +267,6 @@ body.crre {
       -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
       background-color: #aaa;
     }
-    .search-bar{
-      border-radius: 50px;
-      height: 50px;
-      box-shadow: 0 0 5px $secondary;
-      background-color: white;
-      display: flex;
-      align-items: center;
-      > i {
-        margin: 0;
-      }
-      > input {
-        margin-bottom: 0;
-        border: unset;
-        box-shadow: none;
-      }
-    }
 
     button:focus::before{
       animation: none;
@@ -375,6 +359,30 @@ body.crre {
     }
   }
 
+  .search-bar{
+    border-radius: 50px;
+    height: 50px;
+    box-shadow: 0 0 5px $secondary;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    > i {
+      margin: 0;
+    }
+    > input {
+      margin-bottom: 0;
+      border: unset;
+      box-shadow: none;
+    }
+  }
+
+  .order-search-bar{
+    box-shadow: none;
+    border: solid 1px lightgray;
+    border-radius: 30px;
+    height: 30px;
+  }
+
   .equipment-detail {
     h1, h2, a {
       color: $secondary !important;
@@ -410,6 +418,10 @@ body.crre {
 
   .padding-20{
     padding:20px;
+  }
+
+  .padding-5{
+    padding:5px;
   }
 
   .detail-box{

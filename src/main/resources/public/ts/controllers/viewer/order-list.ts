@@ -1,5 +1,5 @@
 import {_, moment, ng, template, toasts} from 'entcore';
-import {OrderClient, OrdersClient, PRIORITY_FIELD, Utils} from '../../model';
+import {OrderClient, OrdersClient, orderWaiting, Utils} from '../../model';
 
 
 declare let window: any;
@@ -16,6 +16,8 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             },
             list: $scope.campaign.priority_field
         };
+
+        $scope.tableFields = orderWaiting;
 
         $scope.exportCSV = () => {
             let idCampaign = $scope.ordersClient.all[0].id_campaign;
