@@ -1,7 +1,7 @@
 <div ng-controller="orderPersonnelController">
     <div ng-show="ordersClient.all.length > 0" class="basket-list">
-        <div class="row" style="margin-bottom: 20px">
-            <div class="cell two" style="margin-top: 8px;">
+        <div class="row margin-top-20">
+            <div class="cell two margin-top-8">
                 <div class="search-bar order-search-bar">
                     <i class="search padding-5"></i>
                     <input class="twelve"
@@ -25,9 +25,7 @@
     <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
         <div class="toggle">
             <div class="row">
-
-                <button
-                        ng-click="displayLightboxDelete(ordersClient.selected)">
+                <button ng-click="displayLightboxDelete(ordersClient.selected)">
                     <i18n>delete</i18n>
                 </button>
             </div>

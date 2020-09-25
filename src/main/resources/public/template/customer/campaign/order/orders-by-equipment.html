@@ -2,13 +2,13 @@
     <table class="twelve-mobile twelve">
         <thead>
         <tr>
-            <td><div class="smallTabElem center">Date</div></td>
-            <td><div class="tabElem">Panier</div></td>
+            <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
+            <td><div class="tabElem"><i18n>crre.basket</i18n></div></td>
             <td><div class="tabElem"></div></td>
-            <td><div class="smallTabElem center">Nombre d'articles</div></td>
-            <td><div class="smallTabElem center">Total</div></td>
+            <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
             <td><div class="tabElem"></div></td>
-            <td><div class="smallTabElem">Statut</div></td>
+            <td><div class="smallTabElem"><i18n>crre.operation.status</i18n></div></td>
         </tr>
         </thead>
         <tbody>
@@ -28,7 +28,7 @@
                 <div class="smallTabElem">
                     <div tooltip="[[order.status]]" class="[[order.status]] status-circle  cell row myOrder">
                     </div>
-                    <span ng-bind="lang.translate(order.status)" style="vertical-align: -webkit-baseline-middle;"></span>
+                    <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align"></span>
                 </div>
             </td>
         </tr>

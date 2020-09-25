@@ -1,6 +1,6 @@
 <div ng-controller="orderController" class="order-client-validation">
-    <div class="row" style="margin-bottom: 20px">
-        <div class="cell two" style="margin-top: 8px;">
+    <div class="row margin-top-20">
+        <div class="cell two margin-top-8">
             <div class="search-bar order-search-bar">
                 <i class="search padding-5"></i>
                 <input class="twelve"
@@ -13,12 +13,12 @@
             <button ng-click=""
                     class="filterButton">
                 <i class="school"></i>
-                <span>Enseignants</span>
+                <span><i18n>Teachers</i18n></span>
             </button>
             <button ng-click=""
                     class="filterButton">
                 <i class="star-circle"></i>
-                <span>Tout type</span>
+                <span><i18n>All.type</i18n></span>
             </button>
         </div>
         <div class="cell twelve-mobile right-magnet">
@@ -44,12 +44,12 @@
                 <!--                    <i class="up-open" ng-show="sort.order.type === field.fieldName && !sort.order.reverse"></i>-->
                 <!--                    <i class="down-open" ng-show="sort.order.type === field.fieldName && sort.order.reverse"></i>-->
                 <!--                </td>-->
-                <td><div class="smallTabElem center">Date</div></td>
-                <td><div class="smallTabElem">Panier</div></td>
-                <td><div class="smallTabElem">Propriétaire</div></td>
-                <td><div class="smallTabElem center">Quantité</div></td>
-                <td><div class="smallTabElem center">Total</div></td>
-                <td><div class="smallTabElem">Commentaire</div></td>
+                <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
+                <td><div class="smallTabElem"><i18n>crre.basket</i18n></div></td>
+                <td><div class="smallTabElem"><i18n>Owner</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
+                <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
             </tr>
             </thead>
             <tbody>

@@ -1,6 +1,6 @@
 <div ng-controller="catalogController" class="catalog">
     <div class="twelve equipment-detail">
-    <div class="vertical-spacing-20">
+    <div class="margin-top-20 margin-bottom-20">
         <a ng-show="display.equipment" href="#/equipments/catalog">
             <i class="back nav-arrow horizontal-spacing"></i>
             <strong><i18n>back.to.catalog</i18n></strong>
@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="eight cell twelve-mobile">
-            <div class="two cell twelve-mobile" style="margin-right: 10px;">
+            <div class="two cell twelve-mobile margin-right-10">
                 <img class="img-equipment" ng-src="[[basket.equipment.image]]" ng-show="basket.equipment.image!==null && basket.equipment.image!==undefined " />
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.image===null || basket.equipment.image===undefined "/>
             </div>

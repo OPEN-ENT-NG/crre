@@ -17,8 +17,7 @@ body.crre {
 
   $secondary: #1794a5;
 
-  .application-title{
-    color: black;
+  .bold-font-weight{
     font-weight: bold;
   }
 
@@ -1223,9 +1222,20 @@ body.crre {
     margin-top: 5px;
     margin-bottom: 5px;
   }
-  .vertical-spacing-20{
+  .margin-top-20{
     margin-top: 20px;
+  }
+  .margin-top-8{
+    margin-top: 8px;
+  }
+  .margin-bottom-20{
     margin-bottom: 20px;
+  }
+  .webkit-vertical-align{
+    vertical-align: -webkit-baseline-middle;
+  }
+  .margin-right-10{
+    margin-right: 10px;
   }
   .listElementSelect{
     width: 90%;
