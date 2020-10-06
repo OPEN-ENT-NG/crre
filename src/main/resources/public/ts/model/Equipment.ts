@@ -110,9 +110,9 @@ export class Equipment implements Selectable {
             this.options.toString() !== '[null]' && this.options !== null ?
                 this.options = Mix.castArrayAs(EquipmentOption, JSON.parse(this.options.toString()))
                 : this.options = [];
-            this.technical_specs = this.technical_specs !== null && this.technical_specs.toString() !== '[null]'
+/*            this.technical_specs = this.technical_specs !== null && this.technical_specs.toString() !== '[null]'
                 ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(this.technical_specs))
-                : this.technical_specs;
+                : this.technical_specs;*/
         } catch (e) {
             console.error(e);
             notify.error('crre.equipment.sync.err');

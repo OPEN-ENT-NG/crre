@@ -197,26 +197,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
 
     public void equipment(Integer idEquipment,  Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT equip.*, tax.value as tax_amount, " +
-                "array_to_json(array_agg(opts.*)) as options " +
-                "FROM  " + Crre.crreSchema + ".equipment equip    " +
-                "LEFT JOIN " + Crre.crreSchema + ".equipment_option ON (equip.id = equipment_option.id_equipment) " +
-                "LEFT JOIN ( " +
-                "SELECT equipment.id as id_equipment, equipment.reference, equipment_option.id, " +
-                "equipment_option.id_option, equipment.name, equipment.price, equipment_option.amount, " +
-                "equipment_option.required, tax.value as tax_amount, equipment_option.id_equipment as master_equipment " +
-                "FROM " + Crre.crreSchema + ".equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".tax  ON (equipment.id_tax = tax.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment_option  ON (equipment_option.id_option = equipment.id) " +
-                ") opts ON (equipment_option.id_option = opts.id_equipment AND opts.master_equipment = equip.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".tax ON tax.id = equip.id_tax " +
-                "WHERE equip.id = ? " +
-                "GROUP BY (equip.id, tax.id, tax.value) " +
-                "ORDER by equip.name ASC " +
-                "LIMIT 50 OFFSET 0";
-
-
-        this.sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idEquipment), SqlResult.validResultHandler(handler));
+        searchById(idEquipment, handler);
     }
 
 

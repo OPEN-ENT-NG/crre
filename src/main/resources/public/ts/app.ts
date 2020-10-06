@@ -88,7 +88,7 @@ routes.define(($routeProvider) => {
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
         $routeProvider.when('/equipments/catalog', {
-            action: 'campaignCatalog'
+            action: 'showCatalog'
         })
             .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'
@@ -105,7 +105,7 @@ routes.define(($routeProvider) => {
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {
         $routeProvider.when('/equipments/catalog', {
-            action: 'campaignCatalog'
+            action: 'showCatalog'
         })
             .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'

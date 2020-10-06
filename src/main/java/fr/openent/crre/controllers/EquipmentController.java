@@ -98,7 +98,6 @@ public class EquipmentController extends ControllerHelper {
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
             equipmentService.searchAll(arrayResponseHandler(request));
-            //equipmentService.syncES();
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);

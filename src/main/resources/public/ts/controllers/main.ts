@@ -167,7 +167,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.display.equipment = false;
                 Utils.safeApply($scope);
                 await $scope.equipments.sync(true, undefined, undefined );
-            },
+            },// a delete surement inutile => showCatalog
             campaignCatalog: async (params) => {
                 let idCampaign = $scope.campaign.id;
                 $scope.fromCatalog=true
@@ -175,7 +175,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if(!$scope.current.structure)
                     await $scope.initStructures() ;
                 await $scope.selectCampaign(idCampaign);
-                template.close('administrator-main');
+                //template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
                 //template.close('right-side');
@@ -191,9 +191,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 } else {
                     await $scope.initBasketItem(parseInt(idEquipment));
                 }
-                if(!$scope.fromCatalog){
+/*                if(!$scope.fromCatalog){
                     $scope.redirectTo(`/equipments/catalog`);
-                }
+                }*/
+                template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
                 Utils.safeApply($scope);
