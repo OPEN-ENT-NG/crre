@@ -4,6 +4,9 @@
             <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><span style="color: black;"><i18n>Total.in</i18n><i18n>money.symbol</i18n> :</span>
                 <span ng-bind="calculatePriceOfEquipmentsProposal(baskets, 2)| currency"></span>
             </h3>
+            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><span style="color: black;">Quantité totale :</span>
+                <span ng-bind="calculateQuantityOfBasket(baskets)"></span>
+            </h3>
             <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.order"
                    ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
                    ng-if="campaign.purse_enabled"/>

@@ -58,6 +58,17 @@ export const basketController = ng.controller('basketController',
             return (!isNaN(totalPrice)) ? (roundNumber ? totalPrice.toFixed(roundNumber) : totalPrice) : '';
         };
 
+        $scope.calculateQuantityOfBasket = (baskets: Baskets) => {
+            let quantity = 0;
+            baskets.all.map((basket) => {
+                if (basket.equipment.status !== 'AVAILABLE') return false;
+                if (!$scope.hasOneSelected(baskets) || basket.selected) {
+                    quantity += basket.amount;
+                }
+            });
+            return quantity;
+        };
+
         $scope.calculatePriceOfBasket = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
             let equipmentPrice = $scope.calculatePriceOfEquipment(basket.equipment, true, roundNumber);
             equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * basket.amount;
