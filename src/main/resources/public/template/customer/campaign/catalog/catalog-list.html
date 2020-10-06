@@ -92,6 +92,25 @@
             <span>OS</span>
         </button>
     </div>
+    <div class="row">
+        <div style="margin:0.5em">
+            <div class="cell field ng-scope" ng-repeat="subject in equipments.subjects | filter: { isChecked: true }">
+                <span ng-show="$first && subject.isChecked" style="font-weight: bold">&nbsp;Disciplines : </span>
+                <span ng-if="subject.isChecked">[[subject.name]]</span>
+                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
+            <div class="cell field ng-scope" ng-repeat="grade in equipments.grades | filter: { isChecked: true }">
+                <span ng-show="$first && grade.isChecked" style="font-weight: bold">&nbsp;Niveaux : </span>
+                <span ng-if="grade.isChecked">[[grade.name]]</span>
+                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
+            <div class="cell field ng-scope" ng-repeat="editor in equipments.editors | filter: { isChecked: true }">
+                <span ng-show="$first && editor.isChecked" style="font-weight: bold">&nbsp;Editeur : </span>
+                <span ng-if="editor.isChecked">[[editor.name]]</span>
+                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
+        </div>
+    </div>
     <div class="cell catalog-list twelve">
         <div class="dominos item_hover_accent_list">
             <div class="item six-mobile"
