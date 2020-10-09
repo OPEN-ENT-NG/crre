@@ -14,13 +14,15 @@ export const basketController = ng.controller('basketController',
             grade: "",
         };
 
-        $scope.amountIncrease = () => {
+/*        $scope.amountIncrease = (basket: Basket) => {
             $scope.basket.amount += 1;
+            $scope.$apply();
         };
         $scope.amountDecrease = () => {
             if($scope.basket.amount)
                 $scope.basket.amount -= 1;
-        };
+            $scope.$apply();
+        };*/
 
         $scope.isProposed = (basket: Basket) => {
             return (basket.price_proposal);
@@ -172,13 +174,14 @@ export const basketController = ng.controller('basketController',
             Utils.safeApply($scope);
         }
 
-        $scope.takeClientOrder = async (baskets: Baskets) => {
-            $scope.totalPriceOrder = $scope.calculatePriceOfEquipments(baskets, 2);
-            let {status, data} = await baskets.takeOrder(parseInt($routeParams.idCampaign), $scope.current.structure);
-            $scope.totalPrice = $scope.calculatePriceOfEquipments(baskets, 2);
+        $scope.takeClientOrder = async (basket_name: string) => {
+            $scope.totalPriceOrder = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
+            let {status, data} = await $scope.baskets_test.takeOrder(parseInt($routeParams.idCampaign), $scope.current.structure, basket_name);
+            $scope.totalPrice = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
 
             //   $scope.totalPriceProposal = $scope.calculatePriceOfEquipmentsProposal(baskets, 2)
-            await baskets.sync(parseInt($routeParams.idCampaign), $scope.current.structure.id);
+            await $scope.baskets_test.sync(parseInt($routeParams.idCampaign), $scope.current.structure.id);
+            $scope.cancelConfirmBasketName();
             status === 200 ?  $scope.confirmOrder(data) :  null ;
         };
         $scope.confirmOrder = (data) => {
@@ -189,11 +192,26 @@ export const basketController = ng.controller('basketController',
             $scope.display.lightbox.confirmOrder = true;
             Utils.safeApply($scope);
         };
+
+        $scope.confirmBasketName = () => {
+            template.open('basket.name', 'customer/campaign/basket/basket-name-confirmation');
+            $scope.display.lightbox.confirmbasketName = true;
+            Utils.safeApply($scope);
+        };
+
         $scope.cancelConfirmOrder = () => {
             $scope.display.lightbox.confirmOrder = false;
             template.close('basket.order');
             Utils.safeApply($scope);
         };
+
+        $scope.cancelConfirmBasketName = () => {
+            $scope.display.lightbox.confirmbasketName = false;
+            template.close('basket.name');
+            Utils.safeApply($scope);
+        };
+
+
         $scope.validOrder = (baskets: Baskets) => {
             let equipmentsBasket = _.pluck(baskets.all, 'equipment' );
             return $scope.calculatePriceOfEquipments(baskets) <= $scope.campaign.purse_amount
@@ -211,7 +229,9 @@ export const basketController = ng.controller('basketController',
             if(priceIs0){
                 toasts.warning("basket.price.null")
             }else{
-                $scope.takeClientOrder(baskets);
+                $scope.baskets_test = baskets;
+                $scope.confirmBasketName();
+
             }
         }
 

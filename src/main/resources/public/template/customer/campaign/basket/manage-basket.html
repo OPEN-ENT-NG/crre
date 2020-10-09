@@ -63,14 +63,14 @@
                                     <div class="quantity">
                                         <h4 class="cell" style="margin-left: 94px;"><i18n>crre.quantity</i18n></h4>
                                         <div class="right-text">
-                                            <i class="moins" ng-click="amountDecrease()"></i>
+                                            <i class="moins" ng-click="basket.amountDecrease()"></i>
                                             <input type="number"
                                                    step="1"
                                                    min="0"
                                                    ng-keypress="avoidDecimals($event)"
                                                    class="numberWithoutArrow two"
                                                    ng-model="basket.amount"/>
-                                            <i class="plus" ng-click="amountIncrease()"></i>
+                                            <i class="plus" ng-click="basket.amountIncrease()"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -183,6 +183,10 @@
 
     <lightbox show="display.lightbox.confirmOrder" on-close="cancelConfirmOrder()">
         <container template="basket.order"></container>
+    </lightbox>
+
+    <lightbox show="display.lightbox.confirmbasketName" on-close="cancelConfirmBasketName()">
+        <container template="basket.name"></container>
     </lightbox>
 
     <lightbox show="display.lightbox.addDocuments" on-close="display.lightbox.addDocuments = false">

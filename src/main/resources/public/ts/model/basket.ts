@@ -17,6 +17,7 @@ export class Basket implements Selectable {
     price_proposal?: number;
     price_editable: boolean;
     display_price_editable: boolean;
+    basket_name: string;
 
 
     files?: any;
@@ -110,6 +111,16 @@ export class Basket implements Selectable {
     downloadFile(file) {
         window.open(`/crre/basket/${this.id}/file/${file.id}`);
     }
+
+    amountIncrease = () => {
+        this.amount += 1;
+    };
+
+    amountDecrease = () => {
+        if(this.amount)
+            this.amount -= 1;
+    };
+
 }
 
 export class Baskets extends Selection<Basket> {
@@ -137,7 +148,7 @@ export class Baskets extends Selection<Basket> {
         }
     }
 
-    async takeOrder(idCampaign: number, Structure: Structure) {
+    async takeOrder(idCampaign: number, Structure: Structure, basket_name: string) {
         try {
             let baskets = [];
             let newlistBaskets = new Selection<Basket>([]);
@@ -154,7 +165,8 @@ export class Baskets extends Selection<Basket> {
             let data = {
                 id_structure: Structure.id,
                 structure_name: Structure.name,
-                baskets: baskets
+                baskets: baskets,
+                basket_name: basket_name
             };
 
             return await http.post(`/crre/baskets/to/orders/${idCampaign}`, data);

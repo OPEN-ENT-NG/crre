@@ -11,11 +11,15 @@
     },
     "baskets": {
       "type": "array"
+    },
+    "basket_name": {
+      "type": "string"
     }
   },
   "required": [
     "id_structure",
     "structure_name",
-    "baskets"
+    "baskets",
+    "basket_name"
   ]
 }

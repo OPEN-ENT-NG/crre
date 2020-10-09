@@ -150,13 +150,14 @@ public class BasketController extends ControllerHelper {
                 final Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
                 final String idStructure = object.getString("id_structure");
                 final String nameStructure = object.getString("structure_name");
+                final String nameBasket = object.getString("basket_name");
                 JsonArray baskets = object.containsKey("baskets") ? object.getJsonArray("baskets") : new JsonArray();
                 basketService.listebasketItemForOrder(idCampaign, idStructure, baskets,
                         listBasket -> {
                             if(listBasket.isRight() && listBasket.right().getValue().size() > 0){
                                 UserUtils.getUserInfos(eb, request, user -> {
                                     basketService.takeOrder(request , listBasket.right().getValue(),
-                                            idCampaign, user, idStructure, nameStructure, baskets,
+                                            idCampaign, user, idStructure, nameStructure, baskets, nameBasket,
                                             Logging.defaultCreateResponsesHandler(eb,
                                                     request,
                                                     Contexts.ORDER.toString(),

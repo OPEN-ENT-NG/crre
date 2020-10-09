@@ -39,7 +39,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listOrder(Integer idCampaign, String idStructure, UserInfos user,  Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT oe.id as id, oe.comment, oe.price_proposal, oe.price, oe.tax_amount, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, oe.id_campaign," +
-                " oe.id_structure, oe.name, oe.summary, oe.image, oe.status, oe.id_contract, oe.rank," +
+                " oe.id_structure, oe.name, oe.summary, oe.image, oe.status, oe.id_contract, oe.rank, " +
                 " array_to_json(array_agg(order_opts)) as options," +
                 "array_to_json(array_agg(DISTINCT order_file.*)) as files  " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +

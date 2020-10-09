@@ -1,0 +1,14 @@
+<div ng-if="campaign.purse_enabled" class="confirm-order">
+    <div class="row">
+        <h1>Validation du panier</h1>
+        <form>
+            Nom du panier<br>
+            <input type="text" ng-model="firstname">
+        </form>
+    </div>
+
+    <div class="row">
+        <input type="submit" class="button right-magnet " ng-click="takeClientOrder(firstname)" i18n-value="Confirmer"/>
+        <input type="button" class="cancel right-magnet " ng-click="cancelConfirmBasketName()" i18n-value="Annuler"/>
+    </div>
+</div>

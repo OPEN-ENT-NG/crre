@@ -56,10 +56,11 @@ public interface BasketService {
      * @param idStructure the id of the structure
      * @param nameStructure the name of the structure
      * @param objects
+     * @param nameBasket
      * @param handler function handler returning data
      */
     void takeOrder(HttpServerRequest request, JsonArray baskets, Integer idCampaign, UserInfos user,
-                   String idStructure, String nameStructure, JsonArray objects, Handler<Either<String, JsonObject>> handler);
+                   String idStructure, String nameStructure, JsonArray objects, String nameBasket, Handler<Either<String, JsonObject>> handler);
     /**
      * List  basket list of a campaign and a structure to transform to an order
      * @param idCampaign id of the campaign
