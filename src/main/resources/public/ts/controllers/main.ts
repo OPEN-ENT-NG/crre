@@ -334,11 +334,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.loadingArray = false;
         };
         $scope.initCampaignOrderView=()=>{
-            if( $scope.campaign.priority_enabled == true && $scope.campaign.priority_field == PRIORITY_FIELD.ORDER){
-                template.open('order-list', 'customer/campaign/order/orders-by-equipment');
-            } else {
-                template.open('order-list', 'customer/campaign/order/orders-by-project');
-            }
+            template.open('order-list', 'customer/campaign/order/orders-list');
+            // if( $scope.campaign.priority_enabled == true && $scope.campaign.priority_field == PRIORITY_FIELD.ORDER){
+            //     template.open('order-list', 'customer/campaign/order/orders-by-equipment');
+            // } else {
+            //     template.open('order-list', 'customer/campaign/order/orders-by-project');
+            // }
         };
 
         $scope.initBasketItem = async (idEquipment: number, idCampaign: number, structure) => {

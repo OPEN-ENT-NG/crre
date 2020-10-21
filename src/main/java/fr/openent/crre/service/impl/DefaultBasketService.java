@@ -75,6 +75,23 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
+
+    public void getBasketOrder(Integer idBasketOrder, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id = ?";
+        values.add(idBasketOrder);
+
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
+    public void getMyBasketOrders(Handler<Either<String, JsonArray>> handler, UserInfos user){
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "SELECT * FROM" + Crre.crreSchema + ".basket_order WHERE id_user = ?";
+        values.add(user.getUserId());
+
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
     public void create(final JsonObject basket, UserInfos user, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".basket_equipment_id_seq') as id";
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
@@ -232,11 +249,9 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             int amount = 0;
             double total = 0;
             for (int i = 0; i < baskets.size(); i++) {
-
                 basket_data = baskets.getJsonObject(i);
                 total += basket_data.getInteger("amount") * (Double.parseDouble(basket_data.getString("price")) * (1 + Double.parseDouble(basket_data.getString("tax_amount")) / 100));
                 amount += basket_data.getInteger("amount") ;
-
             }
             test.add(getInsertBasketName(user, idStructure, idCampaign, nameBasket, total, amount));
 
@@ -308,8 +323,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
         String insertBasketNameQuery =
                 "INSERT INTO " + Crre.crreSchema + ".basket_order(" +
-                        "name, id_structure, id_campaign, name_user, id_user, total, amount)" +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?) returning id;";
+                        "name, id_structure, id_campaign, name_user, id_user, total, amount, created)" +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) returning id;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(basket_name)
                 .add(idStructure)

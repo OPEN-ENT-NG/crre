@@ -34,7 +34,7 @@ export const basketController = ng.controller('basketController',
                 if (basket.selected) {
                     hasSelected = true;
                 }
-            })
+            });
             return hasSelected;
         };
         $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber?: number) => {
@@ -94,7 +94,7 @@ export const basketController = ng.controller('basketController',
             basket.display_price_editable = false;
             Utils.safeApply($scope);
             basket.updatePriceProposal();
-        }
+        };
 
 
         $scope.calculatePriceOfBasketUnity = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
@@ -110,13 +110,13 @@ export const basketController = ng.controller('basketController',
             } else {
                 return basket.price_proposal;
             }
-        }
+        };
 
         $scope.displayPriceEdition = (basket: Basket) => {
 
             basket.display_price_editable = true;
             Utils.safeApply($scope);
-        }
+        };
 
 
         $scope.calculeDeliveryDate = () => {
@@ -165,14 +165,14 @@ export const basketController = ng.controller('basketController',
             }
             await basket.updateComment();
             Utils.safeApply($scope);
-        }
+        };
 
         $scope.updateBasketPriceProposal = (basket: Basket) => {
             basket.updatePriceProposal();
-            console.log(basket)
+            console.log(basket);
             basket.display_price_editable = false;
             Utils.safeApply($scope);
-        }
+        };
 
         $scope.takeClientOrder = async (basket_name: string) => {
             $scope.totalPriceOrder = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
@@ -221,11 +221,11 @@ export const basketController = ng.controller('basketController',
         $scope.checkPrice = async (baskets: Baskets) => {
             let priceIs0 = false;
             baskets.all.forEach(basket =>{
-                console.log(basket)
+                console.log(basket);
                 if(basket.price_proposal === null && basket.equipment.price === 0 || basket.price_proposal === 0 ){
                     priceIs0 = true;
                 }
-            })
+            });
             if(priceIs0){
                 toasts.warning("basket.price.null")
             }else{
@@ -233,7 +233,7 @@ export const basketController = ng.controller('basketController',
                 $scope.confirmBasketName();
 
             }
-        }
+        };
 
         $scope.openAddDocumentsLightbox = (basket: Basket) => {
             $scope.basket = basket;

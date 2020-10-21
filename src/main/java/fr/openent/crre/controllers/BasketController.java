@@ -33,7 +33,7 @@ public class BasketController extends ControllerHelper {
         this.basketService = new DefaultBasketService(Crre.crreSchema, "basket", vertx, slackConfiguration, mail);
     }
     @Get("/basket/:idCampaign/:idStructure")
-    @ApiDoc("List  basket liste of a campaigne and a structure")
+    @ApiDoc("List baskets of a campaign and a structure")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void list(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
@@ -45,6 +45,35 @@ public class BasketController extends ControllerHelper {
                         ? request.params().get("idStructure")
                         : null;
                 basketService.listBasket(idCampaign, idStructure, arrayResponseHandler(request), user);
+            } catch (ClassCastException e) {
+                log.error("An error occurred casting campaign id", e);
+            }
+        });
+    }
+
+    @Get("/basket/:idBasketOrder")
+    @ApiDoc("Get basket order thanks to the id")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getBasketOrder(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            try {
+                Integer idBasketOrder = request.params().contains("idBasketOrder")
+                        ? Integer.parseInt(request.params().get("idBasketOrder"))
+                        : null;
+                basketService.getBasketOrder(idBasketOrder, arrayResponseHandler(request));
+            } catch (ClassCastException e) {
+                log.error("An error occurred casting campaign id", e);
+            }
+        });
+    }
+
+    @Get("/basket/allMyOrders")
+    @ApiDoc("Get basket order thanks to the id")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getMyBasketOrders(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            try {
+                basketService.getMyBasketOrders(arrayResponseHandler(request), user);
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
             }
@@ -141,7 +170,7 @@ public class BasketController extends ControllerHelper {
     }
 
     @Post("/baskets/to/orders/:idCampaign")
-    @ApiDoc("create an order liste from basket")
+    @ApiDoc("Create an order list from basket")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void takeOrder(final HttpServerRequest  request){

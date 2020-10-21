@@ -174,4 +174,23 @@ export class Baskets extends Selection<Basket> {
             notify.error('crre.order.create.err');
         }
     }
+
+    async getOrderById(idOrder: number) {
+        try {
+            return await http.get(`/crre/basket/${idOrder}`);
+        }
+        catch {
+            notify.error('crre.order.getOne.err');
+        }
+    }
+
+    async getMyOrders () {
+        try {
+            let { data } = await http.get(`/crre/basket/allMyOrders`);
+            return Mix.castArrayAs(Basket, data);
+        }
+        catch {
+            notify.error('crre.order.getMine.err');
+        }
+    }
 }

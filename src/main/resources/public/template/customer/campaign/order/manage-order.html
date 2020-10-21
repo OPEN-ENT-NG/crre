@@ -16,7 +16,7 @@
         </div>
         <container template="order-list" class="order-client-validation"></container>
     </div>
-    <article ng-show = "ordersClient.all.length === 0 " class="centered-text row">
+    <article ng-show = "ordersClient.all.length <= 0 " class="centered-text row">
         <p><i18n>crre.orderEquipment.manage.empty.order</i18n></p>
     </article>
     <lightbox show="display.lightbox.deleteOrder" on-close="cancelOrderEquipmentDelete()">

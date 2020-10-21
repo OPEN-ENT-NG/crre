@@ -25,6 +25,7 @@ export const orderController = ng.controller('orderController',
             filterWord : '',
             filterWords : []
         };
+
         $scope.filterDisplayedOrders = async () => {
             let searchResult = [];
             let regex;
@@ -78,6 +79,21 @@ export const orderController = ng.controller('orderController',
 
             }
         };
+
+        const initBaskets = () => {
+            let baskets = [];
+            let basketRecup = [];
+            $scope.displayedOrders.forEach(async function(order) {
+                if (!basketRecup.find(id => id === order.id_basket)) {
+                    let response = await $scope.baskets.getOrderById(order.id_basket);
+                    console.log(response.data[0]);
+                    baskets.push(response.data[0]);
+                    basketRecup.push(order.id);
+                }
+            });
+            return baskets;
+        };
+        $scope.basketOrders = initBaskets();
 
         $scope.initPreferences = ()  => {
             if(isPageOrderWaiting)

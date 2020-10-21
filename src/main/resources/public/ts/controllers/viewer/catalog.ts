@@ -17,7 +17,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipment = new Equipment();
             /*        $scope.subjects = [];*/
             $scope.initPopUpFilters();
-        }
+        };
 
         $scope.addFilter = (event) => {
             //$scope.equipments.sort.filters.push(event.target.value);
@@ -88,7 +88,7 @@ export const catalogController = ng.controller('catalogController',
            $scope.equipments.getFilters();
         };
 
-        $scope.durationFormat = (nbr : number) =>  {
+        $scope.durationFormat = (nbr : number) => {
             if(nbr == 0)
                 return "Illimitée";
             else if(nbr == 1)
