@@ -130,7 +130,7 @@ export class Baskets extends Selection<Basket> {
         this.basketsToOrder = new Selection<Basket>([]);
     }
 
-    async sync (idCampaign: number , idStructure: string ) {
+    async sync (idCampaign: number, idStructure: string ) {
         try {
             let { data } = await http.get(`/crre/basket/${idCampaign}/${idStructure}`);
             this.all = Mix.castArrayAs(Basket, data);
@@ -174,23 +174,92 @@ export class Baskets extends Selection<Basket> {
             notify.error('crre.order.create.err');
         }
     }
+}
 
-    async getOrderById(idOrder: number) {
+export class BasketOrder implements Selectable {
+    id?: number;
+    name: string;
+    id_structure: string;
+    id_campaign: number;
+    name_user: string;
+    id_user: string;
+    total: number;
+    amount: number;
+    created: string| Date;
+    selected: boolean;
+
+    constructor (id_campaign?: number, id_structure?: string, id_user?: string) {
+        this.id_campaign = id_campaign;
+        this.id_structure = id_structure;
+        this.id_user = id_user;
+        this.amount = 1;
+    }
+
+    toJson () {
+        return {
+            id: this.id,
+            name: this.name,
+            id_structure: this.id_structure,
+            id_campaign: this.id_campaign,
+            name_user: this.name_user,
+            id_user: this.id_user,
+            total: this.total,
+            amount: this.amount,
+            created: this.created,
+            selected: this.selected
+        };
+    }
+}
+
+export class BasketsOrders extends Selection<BasketOrder> {
+    constructor() {
+        super([]);
+    }
+
+    async sync (idCampaign: number) {
         try {
-            return await http.get(`/crre/basket/${idOrder}`);
-        }
-        catch {
-            notify.error('crre.order.getOne.err');
+            let { data } = await http.get(`/crre/basketOrder/${idCampaign}`);
+            this.all = Mix.castArrayAs(BasketOrder, data);
+        } catch (e) {
+            notify.error('crre.basket.sync.err');
         }
     }
 
-    async getMyOrders () {
-        try {
-            let { data } = await http.get(`/crre/basket/allMyOrders`);
-            return Mix.castArrayAs(Basket, data);
-        }
-        catch {
-            notify.error('crre.order.getMine.err');
-        }
-    }
+    // async getAllBasketOrders (idCampaign: number) {
+    //     try {
+    //         let {data} = await http.get(`/crre/basket/${idCampaign}`);
+    //         this.all = Mix.castArrayAs(Basket, data);
+    //         this.all.map((basket) => {
+    //             basket.equipment = Mix.castAs(Equipment, JSON.parse(basket.equipment.toString())[0]);
+    //             basket.options = basket.options.toString() !== '[null]' && basket.options !== null
+    //                 ? Mix.castArrayAs(EquipmentOption, JSON.parse(basket.options.toString()))
+    //                 : [];
+    //             basket.equipment.options = basket.options;
+    //             basket.files = (basket.files.toString !== '[null]') ? Utils.parsePostgreSQLJson(basket.files) : [];
+    //             basket.equipment.options.map((option) => option.selected = true);
+    //         });
+    //     }
+    //     catch (e) {
+    //         notify.error('crre.order.getAll.err');
+    //     }
+    // }
+    //
+    // async getOrderById(idOrder: number) {
+    //     try {
+    //         return await http.get(`/crre/basket/${idOrder}`);
+    //     }
+    //     catch {
+    //         notify.error('crre.order.getOne.err');
+    //     }
+    // }
+    //
+    // async getMyOrders () {
+    //     try {
+    //         let { data } = await http.get(`/crre/basket/allMyOrders`);
+    //         return Mix.castArrayAs(Basket, data);
+    //     }
+    //     catch {
+    //         notify.error('crre.order.getMine.err');
+    //     }
+    // }
 }

@@ -1,4 +1,4 @@
-import {_, $,idiom as lang,angular, model, ng, template, toasts} from 'entcore';
+import {_, $, idiom as lang, angular, model, ng, template, toasts, moment} from 'entcore';
 import http from "axios";
 import { Campaign, OrderClient, OrdersClient, orderWaiting, PRIORITY_FIELD, Utils } from '../../model';
 import {Mix} from 'entcore-toolkit';
@@ -17,7 +17,7 @@ export const orderController = ng.controller('orderController',
             $scope.displayedOrdersSent = $scope.displayedOrders;
         $scope.sort = {
             order : {
-                type: 'name_structure',
+                type: 'created',
                 reverse: false
             }
         };
@@ -25,6 +25,7 @@ export const orderController = ng.controller('orderController',
             filterWord : '',
             filterWords : []
         };
+
 
         $scope.filterDisplayedOrders = async () => {
             let searchResult = [];
@@ -80,21 +81,6 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-        const initBaskets = () => {
-            let baskets = [];
-            let basketRecup = [];
-            $scope.displayedOrders.forEach(async function(order) {
-                if (!basketRecup.find(id => id === order.id_basket)) {
-                    let response = await $scope.baskets.getOrderById(order.id_basket);
-                    console.log(response.data[0]);
-                    baskets.push(response.data[0]);
-                    basketRecup.push(order.id);
-                }
-            });
-            return baskets;
-        };
-        $scope.basketOrders = initBaskets();
-
         $scope.initPreferences = ()  => {
             if(isPageOrderWaiting)
                 if ($scope.preferences && $scope.preferences.preference) {
@@ -123,6 +109,18 @@ export const orderController = ng.controller('orderController',
                 type: 'ORDER'
             }
         };
+
+
+        const initBaskets = async () => {
+            await $scope.basketsOrders.sync($scope.campaign.id);
+            Utils.safeApply($scope);
+        };
+        initBaskets();
+
+        $scope.formatDate = (date: string) => {
+            return moment(date).format('DD-MM-YYYY');
+        };
+
 
         $scope.switchAll = (model: boolean, collection) => {
             model ? collection.selectAll() : collection.deselectAll();

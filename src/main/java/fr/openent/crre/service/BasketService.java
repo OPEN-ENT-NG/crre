@@ -32,6 +32,13 @@ public interface BasketService {
 
     /**
      * List  basket list of a campaign and a structure
+     * @param idCampaign campaign identifier
+     * @param handler function handler returning data
+     */
+    void getBasketsOrders(Integer idCampaign, Handler<Either<String, JsonArray>> handler, UserInfos user);
+
+    /**
+     * List  basket list of a campaign and a structure
      * @param handler function handler returning data
      */
     void getMyBasketOrders(Handler<Either<String, JsonArray>> handler, UserInfos user);

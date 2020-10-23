@@ -12,6 +12,20 @@
         </tr>
         </thead>
         <tbody>
+        <tr ng-repeat="basket in basketsOrders.all">
+            <td workflow="crre.validator" class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="basket.selected">
+                    <span></span>
+                </label>
+            </td>
+            <td><div class="smallTabElem center">[[formatDate(basket.created)]]</div></td>
+            <td ><div class="tabElem order">[[basket.name]]</div></td>
+            <td><div class="tabElem">[[basket.name_user]]</div></td>
+            <td><div class="smallTabElem center"> [[basket.amount]]</div></td>
+            <td><div class="smallTabElem center">[[basket.total]]</div></td>
+            <td><div class="tabElem"></div></td>
+        </tr>
         <tr ng-repeat="order in ordersClient.all track by $index" post-ng-repeat>
             <td ng-if="tableFields[0].display"><div class="smallTabElem center">[[order.creation_date]]</div></td>
             <td ng-if="tableFields[1].display"><div class="tabElem order">

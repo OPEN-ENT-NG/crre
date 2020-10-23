@@ -3,6 +3,8 @@ import {
     Agents,
     Basket,
     Baskets,
+    BasketOrder,
+    BasketsOrders,
     Campaign,
     Campaigns,
     Contracts,
@@ -53,6 +55,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.orderClient = new OrderClient();
         $scope.orderRegion = new OrderRegion();
         $scope.displayedOrders = new OrdersClient();
+        $scope.basketsOrders = new BasketsOrders();
         $scope.exports = new Exports([]);
         $scope.ub = new Userbook();
         $scope.equipments.eventer.on('loading::true', $scope.$apply);

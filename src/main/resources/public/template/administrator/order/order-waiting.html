@@ -26,7 +26,7 @@
         </div>
     </div>
     <div class="flex-row">
-        <table class="twelve-mobile twelve">
+        <table class="twelve-mobile ten">
             <thead>
             <tr>
                 <td workflow="crre.validator" class="table-selector main-selector">
@@ -53,6 +53,20 @@
             </tr>
             </thead>
             <tbody>
+            <tr ng-repeat="basket in basketsOrders.all">
+                <td workflow="crre.validator" class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="basket.selected">
+                        <span></span>
+                    </label>
+                </td>
+                <td><div class="smallTabElem center">[[formatDate(basket.created)]]</div></td>
+                <td ><div class="tabElem order">[[basket.name]]</div></td>
+                <td><div class="tabElem">[[basket.name_user]]</div></td>
+                <td><div class="smallTabElem center"> [[basket.amount]]</div></td>
+                <td><div class="smallTabElem center">[[basket.total]]</div></td>
+                <td><div class="tabElem"></div></td>
+            </tr>
             <tr ng-repeat="order in displayedOrders.all | orderBy:sort.order.type:sort.order.reverse" post-ng-repeat>
                 <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
@@ -105,7 +119,7 @@
             </tr>
             </tbody>
             <tfoot>
-            <tr >
+            <tr>
                 <td colspan="4">
                     <i18n class="center">totals</i18n>
                 </td>
@@ -116,11 +130,11 @@
                 <td></td>
             </tr>
             </tfoot>
-        </table> <!-- Put to "ten" when column on the right will be back -->
-<!--        <div class="twelve-mobile tot-cards center two">-->
-<!--            <h2>TOTAL DEMANDES</h2>-->
-<!--            <div ng-repeat="test in [1,2,3,4,5,6,7,8,9,10]">test</div>-->
-<!--        </div>-->
+        </table>
+        <div class="twelve-mobile tot-cards center two">
+            <h2>TOTAL DEMANDES</h2>
+            <div ng-repeat="test in [1,2,3,4,5,6,7,8,9,10]">test</div>
+        </div>
     </div>
     <lightbox on-close="closedLighbtox();"
               show="display.lightbox.validOrder">

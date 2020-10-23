@@ -913,7 +913,8 @@ body.crre {
        justify-content: center;
     }
     table {
-      table-layout: fixed;
+      table-layout: auto;
+      white-space: nowrap;
 
       .main-selector input[type=checkbox]:checked+span::before {
         border-color: white;
@@ -940,6 +941,7 @@ body.crre {
           background: rgb(247, 246, 246);
           td {
             max-height: 70px;
+            max-width: 200px;
 
             .order {
               max-height: inherit;

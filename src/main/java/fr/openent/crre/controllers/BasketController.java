@@ -51,7 +51,7 @@ public class BasketController extends ControllerHelper {
         });
     }
 
-    @Get("/basket/:idBasketOrder")
+    @Get("/basketOrder/:idBasketOrder")
     @ApiDoc("Get basket order thanks to the id")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getBasketOrder(HttpServerRequest request) {
@@ -67,7 +67,23 @@ public class BasketController extends ControllerHelper {
         });
     }
 
-    @Get("/basket/allMyOrders")
+    @Get("/basketOrder/:idCampaign")
+    @ApiDoc("Get baskets orders of my structures")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getBasketsOrders(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            try {
+                Integer idCampaign = request.params().contains("idCampaign")
+                        ? Integer.parseInt(request.params().get("idCampaign"))
+                        : null;
+                basketService.getBasketsOrders(idCampaign, arrayResponseHandler(request), user);
+            } catch (ClassCastException e) {
+                log.error("An error occurred casting campaign id", e);
+            }
+        });
+    }
+
+    @Get("/basketOrder/allMyOrders")
     @ApiDoc("Get basket order thanks to the id")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getMyBasketOrders(HttpServerRequest request) {

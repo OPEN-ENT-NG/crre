@@ -84,6 +84,20 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
+    public void getBasketsOrders(Integer idCampaign, Handler<Either<String, JsonArray>> handler, UserInfos user) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id_campaign = ? AND id_structure IN (";
+        values.add(idCampaign);
+
+        for (String idStruct : user.getStructures()) {
+            query += "?,";
+            values.add(idStruct);
+        }
+        query = query.substring(0, query.length() - 1) + ")";
+
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
     public void getMyBasketOrders(Handler<Either<String, JsonArray>> handler, UserInfos user){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT * FROM" + Crre.crreSchema + ".basket_order WHERE id_user = ?";

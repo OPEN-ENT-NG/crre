@@ -19,6 +19,12 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
 
         $scope.tableFields = orderWaiting;
 
+        const initBaskets = async () => {
+            await $scope.basketsOrders.sync($scope.campaign.id);
+            Utils.safeApply($scope);
+        };
+        initBaskets();
+
         $scope.exportCSV = () => {
             let idCampaign = $scope.ordersClient.all[0].id_campaign;
             let idStructure = $scope.ordersClient.all[0].id_structure;
