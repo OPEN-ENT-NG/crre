@@ -236,6 +236,26 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
+    async getMyOrders () {
+        try {
+            let { data } = await http.get(`/crre/basketOrder/allMyOrders`);
+            this.all = Mix.castArrayAs(BasketOrder, data);
+        }
+        catch {
+            notify.error('crre.order.getMine.err');
+        }
+    }
+
+    async getStructureHistory () {
+        try {
+            let { data } = await http.get(`/crre/basketOrder/history`);
+            this.all = Mix.castArrayAs(BasketOrder, data);
+        }
+        catch {
+            notify.error('crre.order.getMine.err');
+        }
+    }
+
     // async getAllBasketOrders (idCampaign: number) {
     //     try {
     //         let {data} = await http.get(`/crre/basket/${idCampaign}`);
@@ -261,16 +281,6 @@ export class BasketsOrders extends Selection<BasketOrder> {
     //     }
     //     catch {
     //         notify.error('crre.order.getOne.err');
-    //     }
-    // }
-    //
-    // async getMyOrders () {
-    //     try {
-    //         let { data } = await http.get(`/crre/basket/allMyOrders`);
-    //         return Mix.castArrayAs(Basket, data);
-    //     }
-    //     catch {
-    //         notify.error('crre.order.getMine.err');
     //     }
     // }
 }

@@ -30,6 +30,11 @@ export const orderWaiting = [
         display: true
     },
     {
+        name:'status',
+        fieldName:'status',
+        display: true
+    },
+    {
         name: 'UAI',
         fieldName: 'structure.uai',
         display: false

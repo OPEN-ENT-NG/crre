@@ -19,12 +19,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
 
         $scope.tableFields = orderWaiting;
 
-        const initBaskets = async () => {
-            await $scope.basketsOrders.sync($scope.campaign.id);
-            Utils.safeApply($scope);
-        };
-        initBaskets();
-
         $scope.exportCSV = () => {
             let idCampaign = $scope.ordersClient.all[0].id_campaign;
             let idStructure = $scope.ordersClient.all[0].id_structure;
@@ -145,4 +139,36 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             }]
         };
 
+
+
+
+        // Functions specific for baskets interactions
+
+        $scope.displayedBasketsOrders = [];
+        const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+        const synchroMyBaskets = async () : Promise<void> => {
+            await $scope.displayedOrders.sync(null, [], $routeParams.idCampaign, $scope.current.structure.id);
+            await $scope.basketsOrders.getMyOrders();
+            formatDisplayedBasketOrders();
+            Utils.safeApply($scope);
+        };
+        synchroMyBaskets();
+
+        const formatDisplayedBasketOrders = () : void  => {
+            $scope.basketsOrders.forEach(function (basketOrder) {
+                let displayedBasket = basketOrder;
+                displayedBasket.name_user = displayedBasket.name_user.toUpperCase();
+                displayedBasket.total = currencyFormatter.format(basketOrder.total);
+                displayedBasket.created = moment(basketOrder.created).format('DD-MM-YYYY').toString();
+                displayedBasket.expanded = false;
+                displayedBasket.orders = [];
+                $scope.displayedOrders.forEach(function (order) {
+                    if (order.id_basket === basketOrder.id) {
+                        displayedBasket.orders.push(order);
+                    }
+                });
+                $scope.displayedBasketsOrders.push(displayedBasket);
+            });
+        };
     }]);

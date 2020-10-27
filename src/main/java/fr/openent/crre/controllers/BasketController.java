@@ -69,7 +69,7 @@ public class BasketController extends ControllerHelper {
     }
 
     @Get("/basketOrder/:idCampaign")
-    @ApiDoc("Get baskets orders of my structures")
+    @ApiDoc("Get baskets orders of my structures for this campaign")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getBasketsOrders(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
@@ -85,9 +85,22 @@ public class BasketController extends ControllerHelper {
     }
 
     @Get("/basketOrder/allMyOrders")
-    @ApiDoc("Get basket order thanks to the id")
+    @ApiDoc("Get all my baskets orders")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getMyBasketOrders(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            try {
+                basketService.getMyBasketOrders(arrayResponseHandler(request), user);
+            } catch (ClassCastException e) {
+                log.error("An error occurred casting campaign id", e);
+            }
+        });
+    }
+
+    @Get("/basketOrder/history")
+    @ApiDoc("Get all my baskets orders")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getStructureHistoryBaskets(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 basketService.getMyBasketOrders(arrayResponseHandler(request), user);

@@ -24,24 +24,30 @@ public interface BasketService {
     void listBasket(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user);
 
     /**
-     * List  basket list of a campaign and a structure
+     * Get a basket thanks to its id
      * @param idBasketOrder campaign identifier
      * @param handler function handler returning data
      */
     void getBasketOrder(Integer idBasketOrder, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * List  basket list of a campaign and a structure
+     * Get all baskets orders of a campaign
      * @param idCampaign campaign identifier
      * @param handler function handler returning data
      */
     void getBasketsOrders(Integer idCampaign, Handler<Either<String, JsonArray>> handler, UserInfos user);
 
     /**
-     * List  basket list of a campaign and a structure
+     * Get all my baskets orders
      * @param handler function handler returning data
      */
     void getMyBasketOrders(Handler<Either<String, JsonArray>> handler, UserInfos user);
+
+    /**
+     * Get all the baskets orders of my structures
+     * @param handler function handler returning data
+     */
+    void getStructureHistoryBaskets(Handler<Either<String, JsonArray>> handler, UserInfos user);
 
     /**
      * Delete a basket item

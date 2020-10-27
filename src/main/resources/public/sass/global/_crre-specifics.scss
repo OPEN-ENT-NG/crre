@@ -928,18 +928,31 @@ body.crre {
         border-radius: 5px;
         background: transparent !important;
         border-color: rgb(3, 32, 48);
+        transform: rotate(40deg) translate(-1px, -1px);
       }
 
       thead {
         line-height: 60px;
         tr {
           background: rgb(3, 32, 48);
+          
+          td {
+            padding: 10px;
+          }
         }
       }
       tbody {
-        tr {
+        .line {
+          background: white;
+        }
+        .subline {
           background: rgb(247, 246, 246);
+        }
+        tr {
+          border-bottom: 1px solid #d8d7d7;
+          
           td {
+            height: 70px;
             max-height: 70px;
             max-width: 200px;
 

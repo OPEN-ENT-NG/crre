@@ -110,18 +110,6 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-
-        const initBaskets = async () => {
-            await $scope.basketsOrders.sync($scope.campaign.id);
-            Utils.safeApply($scope);
-        };
-        initBaskets();
-
-        $scope.formatDate = (date: string) => {
-            return moment(date).format('DD-MM-YYYY');
-        };
-
-
         $scope.switchAll = (model: boolean, collection) => {
             model ? collection.selectAll() : collection.deselectAll();
             Utils.safeApply($scope);
@@ -479,6 +467,59 @@ export const orderController = ng.controller('orderController',
             await $scope.selectCampaignShow(campaign);
             $scope.search.filterWords = [];
         };
+
+
+        // Functions specific for baskets interactions
+
+        $scope.displayedBasketsOrders = [];
+        const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+        const synchroBaskets = async () : Promise<void> => {
+            await $scope.basketsOrders.sync($scope.campaign.id);
+            formatDisplayedBasketOrders();
+            Utils.safeApply($scope);
+        };
+        synchroBaskets();
+
+        const formatDisplayedBasketOrders = () : void  => {
+            $scope.basketsOrders.forEach(function (basketOrder) {
+                let displayedBasket = basketOrder;
+                displayedBasket.name_user = displayedBasket.name_user.toUpperCase();
+                displayedBasket.total = currencyFormatter.format(basketOrder.total);
+                displayedBasket.created = moment(basketOrder.created).format('DD-MM-YYYY').toString();
+                displayedBasket.expanded = false;
+                displayedBasket.orders = [];
+                $scope.displayedOrders.forEach(function (order) {
+                    if (order.id_basket === basketOrder.id) {
+                        displayedBasket.orders.push(order);
+                    }
+                });
+                $scope.displayedBasketsOrders.push(displayedBasket);
+            });
+        };
+
+        $scope.switchAllSublines = (basket) : void => {
+            basket.orders.forEach(function (order) {
+                order.selected = basket.selected;
+            });
+        };
+
+        $scope.checkParentSwitch = (basket, checker) : void => {
+            if (checker) {
+                let testAllTrue = true;
+                basket.orders.forEach(function (order) {
+                    if (!order.selected) {
+                        testAllTrue = false;
+                    }
+                });
+                basket.selected = testAllTrue;
+            }
+            else {
+                basket.selected = false;
+            }
+        };
+
+
 
         angular.element(document).ready(function(){
             let elements = document.getElementsByClassName('vertical-array-scroll');
