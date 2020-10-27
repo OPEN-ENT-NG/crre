@@ -1,0 +1,8 @@
+<div>
+        <h1><i18n>crre.campaign.choice</i18n></h1>
+    <select ng-model="campaign1" ng-options="campaign.name for campaign in campaigns.all"></select>
+    <div class="row">
+        <input type="submit" class="button right-magnet " ng-click="addBasketItem(basket, campaign1, current.structure.id)" i18n-value="Confirmer"/>
+        <input type="button" class="cancel right-magnet " ng-click="cancelChooseCampaign()" i18n-value="Annuler"/>
+    </div>
+</div>

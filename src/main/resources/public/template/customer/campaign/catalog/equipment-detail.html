@@ -28,7 +28,8 @@
                             <i class="plus" ng-click="amountIncrease()"></i>
                         </div>
                     </div>
-                    <div class="row vertical-spacing"><input type="button" ng-disabled="!validArticle(basket.equipment)" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                    <div class="row vertical-spacing"><input type="button" ng-show="basket.id_campaign == undefined" ng-disabled="!validArticle(basket.equipment)" ng-click="chooseCampaign(basket)" i18n-value="crre.add.to.basket" /> </div>
+                    <div class="row vertical-spacing"><input type="button" ng-show="!(basket.id_campaign == undefined)" ng-disabled="!validArticle(basket.equipment) && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
                 </div>
             </div>
         </div>
@@ -117,4 +118,7 @@
         </div>
     </div>
 </div>
+    <lightbox show="display.lightbox.choosecampaign" on-close="cancelChooseCampaign()">
+        <container template="campaign.name"></container>
+    </lightbox>
 </div>

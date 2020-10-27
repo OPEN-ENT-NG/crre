@@ -4,8 +4,8 @@
 /**
  * Created by rahnir on 18/01/2018.
  */
-import {_, ng} from 'entcore';
-import {Basket, Equipment, Utils} from '../../model';
+import {_, ng, template} from 'entcore';
+import {Basket, Campaign, Equipment, Utils} from '../../model';
 
 
 export const catalogController = ng.controller('catalogController',
@@ -64,7 +64,30 @@ export const catalogController = ng.controller('catalogController',
         $scope.thereAreOptionalOptions = (equipment: Equipment) => {
             return !(_.findWhere(equipment.options, {required : false}) === undefined) ;
         };
-        $scope.addBasketItem = async (basket: Basket) => {
+        $scope.chooseCampaign = async (basket: Basket) => {
+            await $scope.initStructures();
+            await $scope.initCampaign($scope.current.structure);
+            template.open('campaign.name', 'customer/campaign/basket/campaign-name-confirmation');
+            $scope.display.lightbox.choosecampaign = true;
+            Utils.safeApply($scope);
+        };
+        $scope.cancelChooseCampaign = () => {
+            $scope.display.lightbox.choosecampaign = false;
+            template.close('campaign.name');
+            Utils.safeApply($scope);
+        };
+
+        $scope.setCampaignId = (campaign: Campaign) => {
+          $scope.campaign = campaign;
+        }
+        $scope.addBasketItem = async (basket: Basket, campaign?: Campaign, id_structure?: string) => {
+            if(basket.id_campaign === undefined && campaign.accessible) {
+                basket.id_campaign = campaign.id;
+                basket.id_structure= id_structure;
+                $scope.$emit('eventEmitedCampaign', campaign);
+                $scope.campaign = campaign;
+                $scope.display.lightbox.choosecampaign = false;
+            }
             let { status } = await basket.create();
             if (status === 200 && basket.amount > 0 ) {
                 if( $scope.campaign.nb_panier)
