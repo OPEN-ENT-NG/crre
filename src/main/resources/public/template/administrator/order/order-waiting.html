@@ -132,8 +132,16 @@
             </tfoot>
         </table>
         <div class="twelve-mobile tot-cards center two">
-            <h2>TOTAL DEMANDES</h2>
-            <div ng-repeat="test in [1,2,3,4,5,6,7,8,9,10]">test</div>
+            <h2><i18n>total.request</i18n></h2>
+            <div>
+                Total : <span ng-bind="getTotal()"></span>
+            </div>
+            <div>
+                Initial : <span ng-bind="campaign.purse_amount"></span>
+            </div>
+            <div>
+                Reste : <span ng-bind="campaign.purse_amount - getTotal()"></span>
+            </div>
         </div>
     </div>
     <lightbox on-close="closedLighbtox();"

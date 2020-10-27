@@ -140,13 +140,22 @@ export const orderController = ng.controller('orderController',
             $scope.ub.putPreferences("ordersWaitingDisplay", $scope.jsonPref($scope.tableFields));
         };
 
-        $scope.jsonPref = (prefs) =>{
+        $scope.jsonPref = (prefs) => {
             let json = {};
             prefs.forEach(pref =>{
                 json[pref.fieldName]= pref.display;
             });
             return json;
         };
+
+        $scope.getTotal = () => {
+            let total = 0;
+            $scope.basketsOrders.all.forEach(basket => {
+             total += basket.total;
+            });
+            return total;
+        }
+
 /*        $scope.addFilter = (filterWord: string, event?) => {
             if (event && (event.which === 13 || event.keyCode === 13 )) {
                 $scope.addFilterWords(filterWord);
