@@ -19,7 +19,6 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.entcore.common.user.UserUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -239,6 +238,26 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         Sql.getInstance().prepared(query, params, SqlResult.validRowsResultHandler(handler));
     }
 
+    @Override
+    public void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT distinct bo.* " +
+                          "FROM " + Crre.crreSchema + ".basket_order bo " +
+                          "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
+                          "WHERE bo.id_campaign = ? AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.name ~* ?) AND bo.id_structure IN (";
+
+        values.add(id_campaign);
+        values.add(query);
+        values.add(query);
+        values.add(query);
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
     @Override
     public void getFile(Integer basketId, String fileId, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT * FROM " + Crre.crreSchema + ".basket_file WHERE id = ? AND id_basket_equipment = ?";

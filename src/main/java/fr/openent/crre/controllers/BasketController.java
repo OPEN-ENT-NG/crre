@@ -22,6 +22,7 @@ import org.entcore.common.user.UserUtils;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
+import static java.lang.Integer.parseInt;
 
 public class BasketController extends ControllerHelper {
     private final BasketService basketService;
@@ -39,7 +40,7 @@ public class BasketController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer idCampaign = request.params().contains("idCampaign")
-                        ? Integer.parseInt(request.params().get("idCampaign"))
+                        ? parseInt(request.params().get("idCampaign"))
                         : null;
                 String idStructure = request.params().contains("idStructure")
                         ? request.params().get("idStructure")
@@ -58,7 +59,7 @@ public class BasketController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer idBasketOrder = request.params().contains("idBasketOrder")
-                        ? Integer.parseInt(request.params().get("idBasketOrder"))
+                        ? parseInt(request.params().get("idBasketOrder"))
                         : null;
                 basketService.getBasketOrder(idBasketOrder, arrayResponseHandler(request));
             } catch (ClassCastException e) {
@@ -74,7 +75,7 @@ public class BasketController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer idCampaign = request.params().contains("idCampaign")
-                        ? Integer.parseInt(request.params().get("idCampaign"))
+                        ? parseInt(request.params().get("idCampaign"))
                         : null;
                 basketService.getBasketsOrders(idCampaign, arrayResponseHandler(request), user);
             } catch (ClassCastException e) {
@@ -92,6 +93,21 @@ public class BasketController extends ControllerHelper {
                 basketService.getMyBasketOrders(arrayResponseHandler(request), user);
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
+            }
+        });
+    }
+
+    @Get("/basketOrder/search")
+    @ApiDoc("Search order through name")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void search(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+                String query = request.getParam("q");
+                int id_campaign = parseInt(request.getParam("id"));
+                basketService.search(query, user, id_campaign, arrayResponseHandler(request));
+            } else {
+                badRequest(request);
             }
         });
     }
@@ -115,7 +131,7 @@ public class BasketController extends ControllerHelper {
     public void delete(HttpServerRequest request) {
         try {
             Integer idBasket = request.params().contains("idBasket")
-                    ? Integer.parseInt(request.params().get("idBasket"))
+                    ? parseInt(request.params().get("idBasket"))
                     : null;
             basketService.delete( idBasket, defaultResponseHandler(request));
 
@@ -133,7 +149,7 @@ public class BasketController extends ControllerHelper {
     public void updateAmount(final HttpServerRequest  request){
         RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
             try {
-                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                Integer id = parseInt(request.params().get("idBasket"));
                 Integer amount = basket.getInteger("amount") ;
                 basketService.updateAmount(id, amount,  defaultResponseHandler(request));
             } catch (ClassCastException e) {
@@ -153,7 +169,7 @@ public class BasketController extends ControllerHelper {
                 return;
             }
             try {
-                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                Integer id = parseInt(request.params().get("idBasket"));
                 String comment = basket.getString("comment");
                 basketService.updateComment(id, comment, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
@@ -173,13 +189,13 @@ public class BasketController extends ControllerHelper {
                 return;
             }
             try {
-                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                Integer id = parseInt(request.params().get("idBasket"));
                 Double price_proposal = basket.getDouble("price_proposal");
                 basketService.updatePriceProposal(id, price_proposal, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             } catch (NullPointerException e) {
-                Integer id = Integer.parseInt(request.params().get("idBasket"));
+                Integer id = parseInt(request.params().get("idBasket"));
                 basketService.updatePriceProposal(id, null, defaultResponseHandler(request));
             }
         });
@@ -192,7 +208,7 @@ public class BasketController extends ControllerHelper {
     public void takeOrder(final HttpServerRequest  request){
         RequestUtils.bodyToJson( request, pathPrefix + "basketToOrder", object -> {
             try {
-                final Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
+                final Integer idCampaign = parseInt(request.params().get("idCampaign"));
                 final String idStructure = object.getString("id_structure");
                 final String nameStructure = object.getString("structure_name");
                 final String nameBasket = object.getString("basket_name");
@@ -234,7 +250,7 @@ public class BasketController extends ControllerHelper {
                 return;
             }
             try {
-                Integer basketId = Integer.parseInt(request.getParam("id"));
+                Integer basketId = parseInt(request.getParam("id"));
                 String fileId = entries.getString("_id");
                 String filename = entries.getJsonObject("metadata").getString("filename");
                 basketService.addFileToBasket(basketId, fileId, filename, event -> {
@@ -259,7 +275,7 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PostBasketFileRight.class)
     public void deleteFileFromBasket(HttpServerRequest request) {
-        Integer basketId = Integer.parseInt(request.getParam("id"));
+        Integer basketId = parseInt(request.getParam("id"));
         String fileId = request.getParam("fileId");
 
         basketService.deleteFileFromBasket(basketId, fileId, event -> {
@@ -289,7 +305,7 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Download specific file")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getFile(HttpServerRequest request) {
-        Integer basketId = Integer.parseInt(request.getParam("id"));
+        Integer basketId = parseInt(request.getParam("id"));
         String fileId = request.getParam("fileId");
         basketService.getFile(basketId, fileId, event -> {
             if (event.isRight()) {

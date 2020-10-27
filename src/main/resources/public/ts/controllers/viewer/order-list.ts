@@ -31,6 +31,15 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             window.location = `/crre/orders/export/${idCampaign}/${idStructure}`;
         };
 
+        $scope.searchByName =  async (name: string) => {
+            if(name != "") {
+               await $scope.basketsOrders.search(name, $scope.campaign.id);
+            } else {
+                await $scope.basketsOrders.sync($scope.campaign.id);
+            }
+            Utils.safeApply($scope);
+        }
+
         $scope.hasAProposalPrice = (orderClient: OrderClient) => {
 
             return (orderClient.price_proposal);

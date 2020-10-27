@@ -125,4 +125,14 @@ public interface BasketService {
      * @param handler  Function handler returning data
      */
     void getFile(Integer basketId, String fileId, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Search basket from a query (name, user_name or article)
+     *
+     * @param query searching query (name, user_name or article)
+     * @param user   user object
+     * @param id_campaign  campaign identifier
+     * @param arrayResponseHandler  Function handler returning data
+     */
+    void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

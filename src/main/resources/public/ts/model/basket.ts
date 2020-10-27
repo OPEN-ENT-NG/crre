@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {_, notify} from 'entcore';
 import http from 'axios';
-import {Equipment, EquipmentOption, Structure, Utils} from './index';
+import {Equipment, EquipmentOption, Order, Structure, Utils} from './index';
 
 
 export class Basket implements Selectable {
@@ -222,6 +222,17 @@ export class BasketsOrders extends Selection<BasketOrder> {
             this.all = Mix.castArrayAs(BasketOrder, data);
         } catch (e) {
             notify.error('crre.basket.sync.err');
+        }
+    }
+
+    async search(text: String, id_campaign: number) {
+        try {
+            if ((text.trim() === '' || !text)) return;
+            const {data} = await http.get(`/crre/basketOrder/search?q=${text}&id=${id_campaign}`);
+            this.all = Mix.castArrayAs(BasketOrder, data);
+        } catch (err) {
+            notify.error('crre.basket.sync.err');
+            throw err;
         }
     }
 

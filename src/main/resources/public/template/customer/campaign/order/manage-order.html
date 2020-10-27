@@ -6,7 +6,8 @@
                     <i class="search padding-5"></i>
                     <input class="twelve"
                            type="text"
-                           ng-keyup=""
+                           ng-model="query_name"
+                           ng-keyup="searchByName(query_name)"
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>
