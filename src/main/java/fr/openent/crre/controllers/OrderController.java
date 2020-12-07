@@ -261,7 +261,7 @@ public class OrderController extends ControllerHelper {
                         .putHeader("Content-Type", "text/csv; charset=utf-8")
                         .putHeader("Content-Disposition", "attachment; filename=orders.csv")
                         .end(LogController.generateExport(request, event.right().getValue()));
-            }else{
+            } else {
                 log.error("An error occurred when collecting orders");
                 renderError(request);
             }
@@ -361,6 +361,35 @@ public class OrderController extends ControllerHelper {
                                 log.error("An error occurred when casting order id", e);
                             }
                         }));
+
+    }
+
+    @Put("/orders/refused")
+    @ApiDoc("validate orders ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void refuseOrders (final HttpServerRequest request){
+        RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
+                orders -> {
+                            try {
+                                List<String> params = new ArrayList<>();
+                                for (Object id: orders.getJsonArray("ids") ) {
+                                    params.add( id.toString());
+                                }
+
+                                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
+                                orderService.rejectOrders(ids,
+                                        Logging.defaultResponsesHandler(eb,
+                                                request,
+                                                Contexts.ORDER.toString(),
+                                                Actions.UPDATE.toString(),
+                                                params,
+                                                null));
+
+                            } catch (ClassCastException e) {
+                                log.error("An error occurred when casting order id", e);
+                            }
+                        });
 
     }
 
@@ -533,6 +562,26 @@ public class OrderController extends ControllerHelper {
                 Integer id = Integer.parseInt(request.params().get("idOrder"));
                 String comment = order.getString("comment");
                 orderService.updateComment(id, comment, defaultResponseHandler(request));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Put("/order/:idOrder/amount")
+    @ApiDoc("Update an order's amount")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessOrderCommentRight.class)
+    public void updateAmounts(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, order -> {
+            if (!order.containsKey("amount")) {
+                badRequest(request);
+                return;
+            }
+            try {
+                Integer id = Integer.parseInt(request.params().get("idOrder"));
+                Integer amount = order.getInteger("amount");
+                orderService.updateAmount(id, amount, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }

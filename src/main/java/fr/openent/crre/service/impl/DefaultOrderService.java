@@ -87,10 +87,16 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) " +
-                " LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
-                "WHERE oce.status = ? " +
-                "GROUP BY (oce.id, campaign.id);";
-        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
+                " LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment ";
+                if(!status.contains("ALL")) {
+                    query += "WHERE oce.status = ? ";
+                }
+                query += "GROUP BY (oce.id, campaign.id);";
+                if(!status.contains("ALL")) {
+                    sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
+                } else {
+                    sql.raw(query, SqlResult.validResultHandler(handler));
+                }
     }
 
     @Override
@@ -231,6 +237,41 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         this.sql.prepared(query, validationNumbers, SqlResult.validUniqueResultHandler(handler));
     }
 
+    @Override
+    public void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
+                " SET amount = ? " +
+                " WHERE id = ?; ";
+        values.add(amount).add(id);
+
+        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
+    }
+
+
+/*    @Override
+    public void updateTotalAmount(Integer id, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = " UPDATE " + Crre.crreSchema + ".basket_order bo " +
+                " SET amount = subquery.sum " +
+                " FROM (SELECT bo.id, sum(oe.amount) "+
+                " FROM " + Crre.crreSchema + ".basket_order bo " +
+                " JOIN " + Crre.crreSchema + ".order_client_equipment oe " +
+                " ON (bo.id = oe.id_basket) " +
+                " WHERE bo.id = (SELECT bo.id " +
+                " FROM " + Crre.crreSchema + ".basket_order bo " +
+                " JOIN " + Crre.crreSchema + ".order_client_equipment oe " +
+                " ON (bo.id = oe.id_basket) " +
+                " WHERE oe.id = ?) " +
+                " GROUP BY bo.id) AS subquery" +
+                " WHERE bo.id = subquery.id" +
+                " RETURNING bo.*;";
+
+        values.add(id);
+
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+    }*/
     @Override
     public void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -520,6 +561,17 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 .put("statement", query)
                 .put("values", params)
                 .put("action", "prepared");
+    }
+    @Override
+    public void rejectOrders(List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
+        String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
+                " SET status = 'REJECTED' " +
+                " WHERE id in " + Sql.listPrepared(ids.toArray()) +" ; ";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        for (Integer id : ids) {
+            params.add(id);
+        }
+        sql.prepared(query, params, SqlResult.validRowsResultHandler(handler));
     }
 
     private JsonObject getUpdateClientOrderStatement(JsonArray validationNumbers) {

@@ -5,7 +5,8 @@
                 <i class="search padding-5"></i>
                 <input class="twelve"
                        type="text"
-                       ng-keyup=""
+                       ng-model="query_name"
+                       ng-keyup="searchByName(query_name)"
                        i18n-placeholder="search.filter.order">
             </div>
         </div>
@@ -120,10 +121,14 @@
               show="display.lightbox.validOrder">
         <container template="validOrder.lightbox"></container>
     </lightbox>
+    <lightbox on-close="closedLighbtox();"
+              show="display.lightbox.refuseOrder">
+        <container template="refuseOrder.lightbox"></container>
+    </lightbox>
     <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
         <div class="toggle">
             <div class="row">
-                <button ng-click="">
+                <button ng-click="refuseOrders()">
                     <i18n>Denied</i18n>
                 </button>
                 <button ng-click="exportCSV()" >

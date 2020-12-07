@@ -1,5 +1,5 @@
 import {_, moment, ng, template, toasts} from 'entcore';
-import {OrderClient, OrdersClient, orderWaiting, Utils} from '../../model';
+import {Basket, BasketOrder, OrderClient, OrdersClient, orderWaiting, Utils} from '../../model';
 
 
 declare let window: any;
@@ -28,8 +28,10 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
                await $scope.basketsOrders.search(name, $scope.campaign.id);
+               formatDisplayedBasketOrders();
             } else {
                 await $scope.basketsOrders.sync($scope.campaign.id);
+                formatDisplayedBasketOrders();
             }
             Utils.safeApply($scope);
         }
@@ -60,6 +62,14 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             }
             orderClient.updateComment();
         };
+
+        $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
+            await orderClient.updateAmount(amount);
+            await basketOrder.updateAllAmount();
+            $scope.$apply()
+        };
+
+
 
 
         $scope.displayLightboxDelete = (orderEquipments: OrdersClient) => {
@@ -156,6 +166,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         synchroMyBaskets();
 
         const formatDisplayedBasketOrders = () : void  => {
+            $scope.displayedBasketsOrders = [];
             $scope.basketsOrders.forEach(function (basketOrder) {
                 let displayedBasket = basketOrder;
                 displayedBasket.name_user = displayedBasket.name_user.toUpperCase();

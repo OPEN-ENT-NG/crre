@@ -209,6 +209,17 @@ export class BasketOrder implements Selectable {
             selected: this.selected
         };
     }
+
+    async updateAllAmount():Promise<void>{
+    try {
+        let {data} = await http.get(`/crre/basketOrder/${this.id}/amount`);
+        this.amount = data.amount;
+    }
+    catch {
+        notify.error('crre.order.getMine.err');
+    }
+}
+
 }
 
 export class BasketsOrders extends Selection<BasketOrder> {
@@ -235,6 +246,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             throw err;
         }
     }
+
 
     async getMyOrders () {
         try {

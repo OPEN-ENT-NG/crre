@@ -94,9 +94,24 @@ export class OrderClient implements Order  {
         window.open(`/crre/order/${this.id}/file/${file.id}`);
     }
 
+    async updateAmount(amount: number):Promise<void>{
+        try {
+            await http.put(`/crre/order/${this.id}/amount`,{ amount: amount });
+        }
+        catch {
+            notify.error('crre.order.getMine.err');
+        }
+    }
+
     async updateStatusOrder(status: String, id:number = this.id):Promise<void>{
         try {
             await http.put(`/crre/order/${id}`, {status: status});
+/*            let params = '';
+            orders.map((order) => {
+                params += `number_validation=${order.number_validation}&`;
+            });
+            params = params.slice(0, -1);
+            await http.delete(`/crre/orders/valid?${params}`);*/
         } catch (e) {
             notify.error('crre.order.update.err');
         }

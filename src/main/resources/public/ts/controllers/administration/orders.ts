@@ -1,6 +1,6 @@
 import {_, $, idiom as lang, angular, model, ng, template, toasts, moment} from 'entcore';
 import http from "axios";
-import { Campaign, OrderClient, OrdersClient, orderWaiting, PRIORITY_FIELD, Utils } from '../../model';
+import {Campaign, Order, OrderClient, OrdersClient, orderWaiting, PRIORITY_FIELD, Utils} from '../../model';
 import {Mix} from 'entcore-toolkit';
 
 
@@ -139,7 +139,7 @@ export const orderController = ng.controller('orderController',
         $scope.getTotal = () => {
             let total = 0;
             $scope.basketsOrders.all.forEach(basket => {
-             total += basket.total;
+             total += parseFloat(basket.total.replace(/[^0-9.,-]+/g,""));
             });
             return total;
         }
@@ -160,6 +160,17 @@ export const orderController = ng.controller('orderController',
         $scope.getStructureGroupsList = (structureGroups: string[]): string => {
             return structureGroups.join(', ');
         };
+
+        $scope.searchByName =  async (name: string) => {
+            if(name != "") {
+                await $scope.basketsOrders.search(name, $scope.campaign.id);
+                formatDisplayedBasketOrders();
+            } else {
+                await $scope.basketsOrders.sync($scope.campaign.id);
+                formatDisplayedBasketOrders();
+            }
+            Utils.safeApply($scope);
+        }
 
 /*        $scope.addFilterWords = (filterWord) => {
             if (filterWord !== '') {
@@ -186,6 +197,22 @@ export const orderController = ng.controller('orderController',
             }
         }
 
+        function openLightboxRefuseOrder(status, data, ordersToValidat: OrdersClient) {
+                template.open('refuseOrder.lightbox', 'administrator/order/order-refuse-confirmation');
+                $scope.display.lightbox.refuseOrder = true;
+        }
+
+
+        $scope.refuseOrders = async () => {
+            let ordersToRefuse  = new OrdersClient();
+            ordersToRefuse.all = Mix.castArrayAs(OrderClient, $scope.ordersClient.selected);
+            let { status, data } = await ordersToRefuse.updateStatus('REFUSED');
+            openLightboxRefuseOrder(status, data, $scope.ordersClient.selected);
+            $scope.getOrderWaitingFiltered($scope.campaign);
+            await $scope.syncOrders('WAITING');
+            Utils.safeApply($scope);
+        };
+
         $scope.validateOrders = async (orders: OrderClient[]) => {
             let ordersToValidat  = new OrdersClient();
             ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
@@ -206,6 +233,12 @@ export const orderController = ng.controller('orderController',
                 })
                 $scope.operationId = undefined;
             }
+            Utils.safeApply($scope);
+        };
+
+        $scope.cancelRefusedOrder = () => {
+            $scope.display.lightbox.refuseOrder = false;
+            template.close('refuseOrder.lightbox');
             Utils.safeApply($scope);
         };
 
@@ -313,6 +346,7 @@ export const orderController = ng.controller('orderController',
             let params = Utils.formatKeyToParameter($scope.ordersClient.selected, 'id');
             window.location = `/crre/orders/export?${params}`;
         };
+
 
         $scope.getUsername = () => model.me.username;
 
@@ -482,6 +516,7 @@ export const orderController = ng.controller('orderController',
         synchroBaskets();
 
         const formatDisplayedBasketOrders = () : void  => {
+            $scope.displayedBasketsOrders = [];
             $scope.basketsOrders.forEach(function (basketOrder) {
                 let displayedBasket = basketOrder;
                 displayedBasket.name_user = displayedBasket.name_user.toUpperCase();

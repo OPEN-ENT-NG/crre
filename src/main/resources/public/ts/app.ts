@@ -101,6 +101,9 @@ routes.define(($routeProvider) => {
             })
             .when('/campaign/:idCampaign/basket', {
                 action: 'campaignBasket'
+            })
+            .when('/order/:idCampaign/historic', {
+                action: 'orderHistoric'
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {

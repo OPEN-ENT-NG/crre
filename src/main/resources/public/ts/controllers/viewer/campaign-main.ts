@@ -14,6 +14,9 @@ export const campaignMainController = ng.controller('campaignMainController',
         $scope.openWaitingOrder = (id: number) => {
             $scope.redirectTo(`/order/${id}/waiting`);
         };
+        $scope.openHistoric = (id: number) => {
+            $scope.redirectTo(`/order/${id}/historic`);
+        };
         $scope.backHome = () => {
             $scope.redirectTo(`/`);
         };

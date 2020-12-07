@@ -13,6 +13,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
@@ -82,6 +83,22 @@ public class BasketController extends ControllerHelper {
                 log.error("An error occurred casting campaign id", e);
             }
         });
+    }
+
+    @Get("/basketOrder/:idBasketOrder/amount")
+    @ApiDoc("Update an order's amount")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void updateAmounts(final HttpServerRequest request) {
+            try {
+                Integer id = Integer.parseInt(request.params().get("idBasketOrder"));
+                basketService.updateAllAmount(id, event -> {
+                    if (event.isRight()) {
+                        final JsonObject orders = event.right().getValue();
+                        renderJson(request, orders);
+                    }});
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
     }
 
     @Get("/basketOrder/allMyOrders")
@@ -164,8 +181,13 @@ public class BasketController extends ControllerHelper {
             try {
                 Integer id = parseInt(request.params().get("idBasket"));
                 Integer amount = basket.getInteger("amount") ;
-                basketService.updateAmount(id, amount,  defaultResponseHandler(request));
-            } catch (ClassCastException e) {
+                basketService.updateAmount(id, amount, event -> {
+                    if (event.isRight()) {
+                        final String orders = event.left().getValue();
+                        renderJson(request, new JsonObject(orders));
+                    }
+                });
+                } catch (ClassCastException e) {
                 log.error("An error occurred when casting basket id", e);
             }
         });

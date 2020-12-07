@@ -270,6 +270,23 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
+
+    @Override
+    public void updateAllAmount(Integer id, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = " UPDATE " + Crre.crreSchema + ".basket_order bo " +
+                " SET amount = " +
+                " (SELECT SUM(oce.amount)" +
+                " FROM " + Crre.crreSchema + ".basket_order bo" +
+                " JOIN " + Crre.crreSchema + ".order_client_equipment oce " +
+                " ON (bo.id = oce.id_basket) " +
+                " WHERE bo.id = ?) " +
+                " WHERE id = ? " +
+                " RETURNING bo.*;";
+        values.add(id).add(id);
+        sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler));
+    }
+
     @Override
     public void getFile(Integer basketId, String fileId, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT * FROM " + Crre.crreSchema + ".basket_file WHERE id = ? AND id_basket_equipment = ?";

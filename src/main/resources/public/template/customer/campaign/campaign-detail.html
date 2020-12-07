@@ -53,6 +53,7 @@
             </span>
         </header>
         <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('history')}"
+                 ng-click="openHistoric(campaign.id)"
                  workflow="crre.validator">
             <i18n>crre.structure.history</i18n>
         </header>

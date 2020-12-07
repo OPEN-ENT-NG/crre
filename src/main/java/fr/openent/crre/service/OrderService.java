@@ -28,6 +28,9 @@ public interface OrderService {
      * @param handler Function handler returning data
      */
     void listOrder(String status, Handler<Either<String, JsonArray>> handler);
+
+    void rejectOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
+
     /**
      * Valid order ( change status to 'VALID', add validation number to the order,
      * then send mail to Agents )
@@ -145,6 +148,8 @@ public interface OrderService {
      * @param handler Function handler returning data
      */
     void cancelValidation(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
+
+    void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler);
 
     void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> eitherHandler);
 

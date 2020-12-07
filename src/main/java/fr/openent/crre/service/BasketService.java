@@ -141,4 +141,6 @@ public interface BasketService {
      * @param arrayResponseHandler  Function handler returning data
      */
     void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void updateAllAmount(Integer id, Handler<Either<String, JsonObject>> handler);
 }

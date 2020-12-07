@@ -251,6 +251,22 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     await $scope.openLightSelectCampaign();
                 Utils.safeApply($scope);
             },
+            orderHistoric: async (params) => {
+                let idCampaign = params.idCampaign;
+                $scope.idIsInteger(idCampaign);
+                if(!$scope.current.structure)
+                    await $scope.initStructures();
+                await $scope.selectCampaign(idCampaign);
+                $scope.preferences = await $scope.ub.getPreferences();
+                let campaignPref;
+                campaignPref = $scope.campaign;
+                if (campaignPref) {
+                    await $scope.initOrders('ALL');
+                    $scope.selectCampaignShow(campaignPref);
+                } else
+                    await $scope.openLightSelectCampaign();
+                Utils.safeApply($scope);
+            },
             orderSent: async () => {
                 template.open('administrator-main', 'administrator/order/order-sent');
                 $scope.structures = new Structures();
@@ -453,7 +469,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.displayedOrders.all = $scope.ordersClient.all;
         };
 
-        $scope.initOrders = async (status) => {
+        $scope.initOrders = async (status: string) => {
             await $scope.initOrderStructures();
             await $scope.syncOrders(status);
             Utils.safeApply($scope);
