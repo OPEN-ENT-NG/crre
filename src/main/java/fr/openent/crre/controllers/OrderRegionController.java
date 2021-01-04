@@ -4,6 +4,7 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.ManagerRight;
+import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderService;
@@ -19,7 +20,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
+import sun.java2d.pipe.ValidatePipe;
 
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class OrderRegionController extends BaseController {
@@ -39,7 +42,7 @@ public class OrderRegionController extends BaseController {
     @Post("/region/order")
     @ApiDoc("Create an order with id order client when admin or manager")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void createWithOrderClientAdminOrder(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, event -> RequestUtils.bodyToJson(request,
                 order -> RequestUtils.bodyToJson(request,
@@ -51,7 +54,7 @@ public class OrderRegionController extends BaseController {
     @Put("/region/order/:id")
     @ApiDoc("Update an order when admin or manager")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void updateAdminOrder(final HttpServerRequest request) {
         int idOrder = Integer.parseInt(request.getParam("id"));
         UserUtils.getUserInfos(eb, request, event -> RequestUtils.bodyToJson(request,
@@ -64,15 +67,15 @@ public class OrderRegionController extends BaseController {
     @Post("/region/orders/")
     @ApiDoc("Create orders from a region")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void createAdminOrder(final HttpServerRequest request) {
         try{
             UserUtils.getUserInfos(eb, request, user -> {
                 RequestUtils.bodyToJson(request, orders -> {
                     if (!orders.isEmpty()) {
                         JsonArray ordersList = orders.getJsonArray("orders");
-                        Integer id_title = ordersList.getJsonObject(0).getInteger("title_id");
-                        orderRegionService.createProject(id_title, idProject -> {
+                        String title = "Commande XXX";
+                        orderRegionService.createProject(title, idProject -> {
                             if(idProject.isRight()){
                                 Integer idProjectRight = idProject.right().getValue().getInteger("id");
                                 Logging.insert(eb,
@@ -80,7 +83,7 @@ public class OrderRegionController extends BaseController {
                                         null,
                                         Actions.CREATE.toString(),
                                         idProjectRight.toString(),
-                                        new JsonObject().put("id", idProjectRight).put("id_title", id_title));
+                                        new JsonObject().put("id", idProjectRight).put("title", title));
                                 for(int i = 0 ; i<ordersList.size() ; i++){
                                     JsonObject newOrder = ordersList.getJsonObject(i);
                                     orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, orderCreated -> {
@@ -116,7 +119,7 @@ public class OrderRegionController extends BaseController {
     @Delete("/region/:id/order")
     @ApiDoc("delete order by id order region ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void deleteOrderRegion(final HttpServerRequest request) {
         int idRegion = Integer.parseInt(request.getParam("id"));
         orderRegionService.deleteOneOrderRegion(idRegion, Logging.defaultResponseHandler(eb,
@@ -130,16 +133,41 @@ public class OrderRegionController extends BaseController {
     @Get("/orderRegion/:id/order")
     @ApiDoc("get order by id order region ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void getOneOrder(HttpServerRequest request) {
         int idOrder = Integer.parseInt(request.getParam("id"));
         orderRegionService.getOneOrderRegion(idOrder, defaultResponseHandler(request));
     }
 
+    @Get("/orderRegion/orders")
+    @ApiDoc("get all orders ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void getAllOrder(HttpServerRequest request) {
+        orderRegionService.getAllOrderRegion(arrayResponseHandler(request));
+    }
+
+    @Get("/orderRegion/orders/:id")
+    @ApiDoc("get all orders by project ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void getAllOrderByProject(HttpServerRequest request) {
+        int idProject = Integer.parseInt(request.getParam("id"));
+        orderRegionService.getAllOrderRegionByProject(idProject, arrayResponseHandler(request));
+    }
+
+    @Get("/orderRegion/projects")
+    @ApiDoc("get all projects ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void getAllProjects(HttpServerRequest request) {
+        orderRegionService.getAllProjects(arrayResponseHandler(request));
+    }
+
     @Put("/order/region/:idOperation/operation")
     @ApiDoc("update operation in orders region")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(ValidatorRight.class)
     public void updateOperation(final HttpServerRequest request) {
         badRequest(request);
     }

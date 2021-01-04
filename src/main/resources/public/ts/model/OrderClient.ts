@@ -51,6 +51,7 @@ export class OrderClient implements Order  {
     id_contract:number;
     id_order:number;
     id_project:number;
+    id_basket:number;
     id_supplier: string;
     name:string;
     name_structure: string;

@@ -141,13 +141,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (order.getInteger("rank") != -1) {
             queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
                     " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment,  id_project, rank) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                    " comment, id_order_client_equipment,  id_project, rank) " +
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
         } else {
             queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
                     " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment,  id_project) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                    " comment, id_order_client_equipment, id_project) " +
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
         }
 
         params = new fr.wseduc.webutils.collections.JsonArray()
@@ -167,6 +167,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getInteger("id_campaign"))
                 .add(order.getString("id_structure"))
                 .add(order.getString("comment"))
+                .add(order.getInteger("id_order_client_equipment"))
                 .add(id_project);
         if (order.getInteger("rank") != -1) {
             params.add(order.getInteger("rank"));
@@ -174,19 +175,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().prepared(queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void createProject( Integer id_title, Handler<Either<String, JsonObject>> handler) {
+    public void createProject( String title, Handler<Either<String, JsonObject>> handler) {
         JsonArray params;
 
         String queryProjectEquipment = "" +
-                "INSERT INTO " + Crre.crreSchema + ".project " +
-                "( id_title ) VALUES " +
+                    "INSERT INTO " + Crre.crreSchema + ".project " +
+                "( title ) VALUES " +
                 "( ? )  RETURNING id ;";
         params = new fr.wseduc.webutils.collections.JsonArray();
 
-        params.add(id_title);
+        params.add(title);
 
         Sql.getInstance().prepared(queryProjectEquipment, params, SqlResult.validUniqueResultHandler(handler));
     }
+
 
     @Override
     public void deleteOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler) {
@@ -206,7 +208,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "       to_json(contract.*) contract, " +
                 "       to_json(ct.*) contract_type, " +
                 "       to_json(campaign.*) campaign, " +
-                "       to_json(prj.*) AS project, " +
                 "       to_json(tt.*) AS title, " +
                 "       to_json(oce.*) AS order_parent " +
                 "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
@@ -214,7 +215,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN  " + Crre.crreSchema + ".contract ON ore.id_contract = contract.id " +
                 "INNER JOIN  " + Crre.crreSchema + ".contract_type ct ON ct.id = contract.id_contract_type " +
                 "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".project AS prj ON ore.id_project = prj.id " +
                 "INNER JOIN  " + Crre.crreSchema + ".title AS tt ON tt.id = prj.id_title " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
@@ -229,4 +229,55 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
         Sql.getInstance().prepared(query, new JsonArray().add(idOrder), SqlResult.validUniqueResultHandler(handler));
     }
+
+    @Override
+    public void getAllOrderRegion(Handler<Either<String, JsonArray>> handler) {
+        String query = "" +
+                "SELECT ore.*, " +
+                "       ore.price AS price_single_ttc, " +
+                "       to_json(campaign.*) campaign, " +
+                "       p.title AS title, " +
+                "       to_json(oce.*) AS order_parent, " +
+                "       bo.name AS basket_name " +
+                "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
+                "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
+                "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
+                "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
+                "WHERE ore.status = 'IN PROGRESS'  ";
+        sql.raw(query, SqlResult.validResultHandler(handler));
+    }
+
+
+    @Override
+    public void getAllOrderRegionByProject(int idProject, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        String query = "" +
+                "SELECT ore.*, " +
+                "       ore.price AS price_single_ttc, " +
+                "       to_json(campaign.*) campaign, " +
+                "       p.title AS title, " +
+                "       to_json(oce.*) AS order_parent, " +
+                "       bo.name AS basket_name " +
+                "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
+                "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
+                "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
+                "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
+                "WHERE ore.status = 'IN PROGRESS' and ore.id_project = ? ";
+        Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public void getAllProjects(Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        String query = "" +
+                "SELECT * " +
+                "FROM  " + Crre.crreSchema + ".project ";
+        sql.raw(query, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+
 }

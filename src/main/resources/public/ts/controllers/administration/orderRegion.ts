@@ -223,59 +223,14 @@ export const orderRegionController = ng.controller('orderRegionController',
             Utils.safeApply($scope);
         };
 
-
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
-            $scope.orderToCreate.rows.map(row => {
-                if (checkRow(row)) {
-                    if (row.structure instanceof StructureGroup) {
-                        row.structure.structures.map(s => {
-                            let orderRegionTemp = new OrderRegion();
-                            orderRegionTemp.id_campaign = $scope.orderToCreate.campaign.id;
-                            orderRegionTemp.id_structure = s;
-                            orderRegionTemp.title_id = $scope.orderToCreate.project;
-                            orderRegionTemp.id_operation = $scope.orderToCreate.operation;
-                            orderRegionTemp.equipment_key = row.equipment.id;
-                            orderRegionTemp.equipment = row.equipment;
-                            orderRegionTemp.comment = row.comment;
-                            orderRegionTemp.amount = row.amount;
-                            orderRegionTemp.price = row.price;
-                            orderRegionTemp.name = row.equipment.name;
-                            orderRegionTemp.technical_spec = row.equipment.technical_specs;
-                            orderRegionTemp.id_contract = row.equipment.id_contract;
-                            if (!row.rank){
-                                orderRegionTemp.rank = 0;
-                            } else {
-                                orderRegionTemp.rank = row.rank;
-                            }
-                            let struct = $scope.structures.all.find(struct => s.id === struct.id);
-                            (struct) ? orderRegionTemp.name_structure = struct.name : orderRegionTemp.name_structure = "";
-                            ordersToCreate.all.push(orderRegionTemp);
-                        })
-                    } else {
+            $scope.ordersClient.all.forEach(order => {
                         let orderRegionTemp = new OrderRegion();
-                        orderRegionTemp.id_campaign = $scope.orderToCreate.campaign.id;
-                        orderRegionTemp.id_structure = row.structure.id;
-                        orderRegionTemp.title_id = $scope.orderToCreate.project;
-                        orderRegionTemp.equipment = row.equipment;
-                        orderRegionTemp.equipment_key = row.equipment.id;
-                        orderRegionTemp.id_operation = $scope.orderToCreate.operation;
-                        orderRegionTemp.comment = row.comment;
-                        orderRegionTemp.amount = row.amount;
-                        orderRegionTemp.price = row.price;
-                        orderRegionTemp.name = row.equipment.name;
-                        orderRegionTemp.technical_spec = row.equipment.technical_specs;
-                        orderRegionTemp.id_contract = row.equipment.id_contract;
-                        orderRegionTemp.name_structure = row.structure.name;
-                        if (!row.rank){
-                            orderRegionTemp.rank = 0;
-                        } else {
-                            orderRegionTemp.rank = row.rank;
-                        }
+                        orderRegionTemp.createFromOrderClient(order);
                         ordersToCreate.all.push(orderRegionTemp);
-                    }
-                }
-            });
+                    });
+
             let {status} = await ordersToCreate.create();
             if (status === 201) {
                 toasts.confirm('crre.order.region.create.message');

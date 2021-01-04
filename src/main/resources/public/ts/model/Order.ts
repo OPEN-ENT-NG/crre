@@ -56,6 +56,8 @@ export class Order implements OrderImp{
     structure: Structure;
     tax_amount: number;
     typeOrder:string;
+    basket_name?:string;
+    user_name?:string;
 
     constructor(order: Order, structures:Structures){
         this.amount  = order.amount? parseInt(order.amount.toString()) : null;

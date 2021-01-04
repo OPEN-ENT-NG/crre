@@ -194,7 +194,9 @@ export class BasketOrder implements Selectable {
         this.id_user = id_user;
         this.amount = 1;
     }
-
+    setIdBasket (id_basket: number) {
+        this.id = id_basket;
+    }
     toJson () {
         return {
             id: this.id,

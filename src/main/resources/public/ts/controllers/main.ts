@@ -24,7 +24,7 @@ import {
     Suppliers,
     Taxes,
     Userbook,
-    Utils,
+    Utils, OrdersRegion,
 } from '../model';
 import {Mix} from "entcore-toolkit";
 
@@ -55,6 +55,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.orderClient = new OrderClient();
         $scope.orderRegion = new OrderRegion();
         $scope.displayedOrders = new OrdersClient();
+        $scope.displayedOrdersRegion = new OrdersRegion();
         $scope.basketsOrders = new BasketsOrders();
         $scope.exports = new Exports([]);
         $scope.ub = new Userbook();
@@ -246,7 +247,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 campaignPref = $scope.campaign;
                 if (campaignPref) {
                     await $scope.initOrders('WAITING');
-                    $scope.selectCampaignShow(campaignPref);
+                    $scope.selectCampaignShow(campaignPref, "WAITING");
                 } else
                     await $scope.openLightSelectCampaign();
                 Utils.safeApply($scope);
@@ -262,7 +263,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 campaignPref = $scope.campaign;
                 if (campaignPref) {
                     await $scope.initOrders('ALL');
-                    $scope.selectCampaignShow(campaignPref);
+                    $scope.selectCampaignShow(campaignPref, "HISTORIC");
                 } else
                     await $scope.openLightSelectCampaign();
                 Utils.safeApply($scope);
@@ -505,31 +506,41 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.initOrders('WAITING');
             Utils.safeApply($scope);
         };
-        $scope.selectCampaignShow = (campaign?: Campaign): void => {
-            $scope.ub.putPreferences("ordersWaitingCampaign", campaign.id);
+        $scope.selectCampaignShow = (campaign?: Campaign, type?: string): void => {
+            if(type == "WAITING" ) {
+                $scope.ub.putPreferences("ordersWaitingCampaign", campaign.id);
+            } else {
+                $scope.ub.putPreferences("ordersHistoricCampaign", campaign.id);
+            }
+
             $scope.display.lightbox.lightBoxIsOpen = false;
             template.close('selectCampaign');
             if(campaign){
                 $scope.campaign = campaign;
                 $scope.displayedOrders.all = $scope.ordersClient.all
                     .filter( order => order.campaign.id === campaign.id || campaign.id === -1);
-                $scope.cancelSelectCampaign(false);
+                $scope.cancelSelectCampaign(false, type);
             } else {
                 $scope.campaign = $scope.allCampaignsSelect;
-                $scope.cancelSelectCampaign(true);
+                $scope.cancelSelectCampaign(true, type);
             }
         };
         $scope.getOrderWaitingFiltered = async (campaign:Campaign):Promise<void> =>{
             await $scope.initOrders('WAITING');
-            $scope.selectCampaignShow(campaign);
+            $scope.selectCampaignShow(campaign, "WAITING");
         };
-        $scope.cancelSelectCampaign = (initOrder: boolean):void => {
+        $scope.cancelSelectCampaign = (initOrder: boolean, type:string):void => {
             if(initOrder) {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
             }
             template.close('campaign-main')
             template.open('main-profile', 'customer/campaign/campaign-detail');
-            template.open('administrator-main', 'administrator/order/order-waiting');
+            if(type == "WAITING") {
+                template.open('administrator-main', 'administrator/order/order-waiting');
+            } else {
+                template.open('administrator-main', 'administrator/order/order-historic');
+            }
+
             Utils.safeApply($scope);
         };
 

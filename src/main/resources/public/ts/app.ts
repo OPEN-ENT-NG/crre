@@ -37,12 +37,6 @@ routes.define(($routeProvider) => {
                     action: 'createStructureGroup'
                 }
             )
-        ;
-    }
-    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager)) {
-        $routeProvider.when('/campaigns', {
-            action: 'manageCampaigns'
-        })
             .when('/agents', {
                 action: 'manageAgents'
             })
@@ -63,25 +57,12 @@ routes.define(($routeProvider) => {
             })
             .when('/campaigns/:idCampaign/titles', {
                 action: 'manageTitles'
-            })
-            .when('/order/update/:idOrder', {
-                action: 'updateOrder'
-            })
-            .when('/order/sent', {
-                action: 'orderSent'
-            })
-            .when('/order/valid', {
-                action: 'orderClientValided'
-            })
-            .when('/order/preview', {
-                action: 'previewOrder'
-            })
-            .when('/order/operation/update/:idOrder/:typeOrder', {
-                action: 'updateLinkedOrder'
-            })
-            .when('/order/region/create', {
-                action: 'createRegionOrder'
-            })
+            });
+    }
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager)) {
+        $routeProvider.when('/campaigns', {
+            action: 'manageCampaigns'
+        })
             .when('/exports', {
                 action: 'exportList'
             });
@@ -102,9 +83,28 @@ routes.define(($routeProvider) => {
             .when('/campaign/:idCampaign/basket', {
                 action: 'campaignBasket'
             })
+            .when('/order/region/create', {
+                action: 'createRegionOrder'
+            })
+            .when('/order/update/:idOrder', {
+                action: 'updateOrder'
+            })
+            .when('/order/sent', {
+                action: 'orderSent'
+            })
+            .when('/order/valid', {
+                action: 'orderClientValided'
+            })
+            .when('/order/preview', {
+                action: 'previewOrder'
+            })
+            .when('/order/operation/update/:idOrder/:typeOrder', {
+                action: 'updateLinkedOrder'
+            })
             .when('/order/:idCampaign/historic', {
                 action: 'orderHistoric'
             });
+
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {
         $routeProvider.when('/equipments/catalog', {

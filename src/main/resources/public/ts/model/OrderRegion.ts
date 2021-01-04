@@ -9,9 +9,9 @@ import {
     Structures, Supplier, TechnicalSpec,
     Utils,
     OrderClient,
-    Equipment
+    Equipment, BasketOrder
 } from "./index";
-import {Selection} from "entcore-toolkit";
+import {Mix, Selection} from "entcore-toolkit";
 
 
 export class OrderRegion implements Order  {
@@ -70,7 +70,7 @@ export class OrderRegion implements Order  {
     toJson():any {
         return {
             amount: this.amount,
-            name: this.equipment.name,
+            name: this.name,
             price: this.price,
             summary: this.summary,
             description: (this.description) ? this.description : "",
@@ -87,7 +87,7 @@ export class OrderRegion implements Order  {
             id_campaign: this.id_campaign,
             id_structure: this.id_structure,
             id_project: this.id_project,
-            equipment_key: this.equipment.id? this.equipment.id : this.equipment_key,
+            equipment_key: this.equipment_key,
             comment: (this.comment) ? this.comment : "",
             ...(this.rank && {rank: this.rank}),
             technical_specs: (Utils.parsePostgreSQLJson(this.technical_spec) === null || Utils.parsePostgreSQLJson(this.technical_spec).length === 0) ?
@@ -127,11 +127,11 @@ export class OrderRegion implements Order  {
         this.id_structure = order.id_structure;
         this.id_project = order.id_project;
         this.comment = order.comment;
-        this.price = order.price_single_ttc;
+        this.price = order.priceUnitedTTC;
         this.rank = order.rank;
         this.structure = order.structure;
         this.id_operation = order.id_operation;
-        this.equipment = order.equipment;
+        this.equipment_key = order.equipment_key;
     }
 
 
@@ -185,6 +185,17 @@ export class OrdersRegion extends Selection<OrderRegion> {
     constructor() {
         super([]);
     }
+
+    async sync () {
+        try {
+            let { data } = await http.get(`/crre/orderRegion/orders`);
+            this.all = Mix.castArrayAs(OrderRegion, data);
+        } catch (e) {
+            notify.error('crre.basket.sync.err');
+        }
+    }
+
+
 
     async create():Promise<any> {
         let orders = [];

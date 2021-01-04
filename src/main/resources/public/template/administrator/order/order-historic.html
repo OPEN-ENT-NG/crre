@@ -22,22 +22,12 @@
                 <span><i18n>All.type</i18n></span>
             </button>
         </div>
-        <div class="cell twelve-mobile right-magnet">
-            <button ng-click="createOrder()" class="validate-order"><i18n>crre.take.order.2</i18n></button>
-        </div>
     </div>
     <div class="flex-row">
-        <table class="twelve-mobile nine">
+        <table class="twelve-mobile ten">
             <thead>
             <tr>
-                <td workflow="crre.validator" class="table-selector main-selector">
-                    <label class="checkbox">
-                        <input type="checkbox"
-                               ng-change="switchAllOrders()"
-                               ng-model="allOrdersSelected">
-                        <span></span>
-                    </label>
-                </td>
+
                 <!--                <td ng-repeat="field in tableFields "-->
                 <!--                    ng-hide="!field.display"-->
                 <!--                    ng-click="sort.order.type = field.fieldName; sort.order.reverse = !sort.order.reverse">-->
@@ -46,32 +36,40 @@
                 <!--                    <i class="down-open" ng-show="sort.order.type === field.fieldName && sort.order.reverse"></i>-->
                 <!--                </td>-->
                 <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>Ressource</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>Owner</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>crre.basket</i18n></div></td>
+                <td><div class="smallTabElem"><i18n>Demande</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
+                <td><div class="smallTabElem"><i18n>Statut</i18n></div></td>
             </tr>
             </thead>
-            <tbody>
-            <tr ng-repeat="order in ordersClient.all | orderBy:sort.order.type:sort.order.reverse"
-                 class="subline" post-ng-repeat>
-                <td workflow="crre.validator" class="table-selector">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
-                        <span></span>
-                    </label>
-                </td>
+            <tbody ng-repeat="project in projects">
+            <tr>
+                <td><div class="smallTabElem">[[project.creation_date]]</div></td>
+                <td><div class="smallTabElem">[[project.title]]</div></td>
+                <td><div class="tabElem"></div></td>
+                <td><div class="smallTabElem">[[project.amount]]</div></td>
+                <td><div class="smallTabElem">[[project.total]]</div></td>
+                <td><div class="tabElem"></div></td>
+                <td><div class="smallTabElem">
+                    <div tooltip="[[project.status]]" class="[[project.status]] status-circle  cell row myOrder">
+                    </div>
+                    <span ng-bind="lang.translate(project.status)" class="webkit-vertical-align"></span>
+                </div></td>
+
+            </tr>
+            <tr ng-repeat="order in project.orders | orderBy:sort.order.type:sort.order.reverse" class="subline" post-ng-repeat>
                 <td ng-if="tableFields[0].display"><div class="smallTabElem">[[order.creation_date]]</div></td>
                 <td ng-if="tableFields[1].display"><div class="tabElem order">
-                    <img src="[[order.image]]"/><div>[[order.name]]</div>
+                    <img class="img-equipment" ng-src="[[order.image]]"/>
                 </div></td>
-                <td ng-if="tableFields[2].display"><div class="tabElem">[[order.user_name]]</div></td>
-                <td ng-if="tableFields[3].display"><div class="tabElem">[[order.basket_name]]</div></td>
-                <td ng-if="tableFields[4].display"><div class="smallTabElem center"><input type="number" name="input" ng-change="updateAmount(order, order.amount)" ng-model="order.amount"></div></td>
-                <td ng-if="tableFields[5].display"><div class="smallTabElem center"><span ng-bind="order.priceTotalTTC | currency"></span></div></td>
-                <td ng-if="tableFields[6].display">
+                <td ng-if="tableFields[2].display"><div class="tabElem order">
+                    <div>[[order.name]]</div>
+                </div></td>
+                <td ng-if="tableFields[3].display"><div class="tabElem">[[order.owner_name]]</div></td>
+                <td ng-if="tableFields[4].display"><div class="tabElem">[[order.basket_name]]</div></td>
+                <td ng-if="tableFields[5].display"><div class="smallTabElem center"> [[order.amount]]</div></td>
+                <td ng-if="tableFields[6].display"><div class="smallTabElem center"><span ng-bind="order.price * order.amount | currency"></span></div></td>
+                <td ng-if="tableFields[7].display">
                     <div ng-init="tableFields[7].fullDisplay = false"
                          class="tabElem"
                          ng-class="{ellipsis:!tableFields[7].fullDisplay}"
@@ -81,7 +79,7 @@
             </tbody>
             <tfoot>
             <tr>
-                <td colspan="5">
+                <td colspan="4">
                     <i18n class="center">totals</i18n>
                 </td>
                 <td ng-if="tableFields[3].display" colspan="[[countColSpan('price') - 1]]"> <div class="smallTabElem center">[[displayedOrders.calculTotalAmount()]]</div></td>
@@ -92,20 +90,6 @@
             </tr>
             </tfoot>
         </table>
-        <div class="twelve-mobile tot-cards center two">
-            <h2><i18n>total.request</i18n></h2>
-                <div class = "total-container">
-                    <div>
-                        Total : <span ng-bind="getTotal()"></span>
-                    </div>
-                    <div>
-                        Initial : <span ng-bind="campaign.purse_amount"></span>
-                    </div>
-                    <div>
-                        Reste : <span ng-bind="campaign.purse_amount - getTotal()"></span>
-                    </div>
-            </div>
-        </div>
     </div>
     <lightbox on-close="closedLighbtox();"
               show="display.lightbox.validOrder">

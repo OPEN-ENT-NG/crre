@@ -65,7 +65,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public  void listOrder(String status, Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT oce.* , to_json(campaign.* ) campaign,  array_to_json(array_agg( DISTINCT oco.*)) as options, " +
+        String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  array_to_json(array_agg( DISTINCT oco.*)) as options, " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups," +
                 "             ROUND((( SELECT CASE          " +
                 "            WHEN oce.price_proposal IS NOT NULL THEN 0     " +
@@ -82,6 +82,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "FROM " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_options oco " +
                 "ON oco.id_order_client_equipment = oce.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo " +
+                "ON bo.id = oce.id_basket " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
@@ -91,7 +93,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 if(!status.contains("ALL")) {
                     query += "WHERE oce.status = ? ";
                 }
-                query += "GROUP BY (oce.id, campaign.id);";
+                query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id);";
                 if(!status.contains("ALL")) {
                     sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
                 } else {

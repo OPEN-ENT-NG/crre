@@ -1,6 +1,16 @@
-import {_, $, idiom as lang, angular, model, ng, template, toasts, moment} from 'entcore';
+import {$, _, angular, idiom as lang, model, moment, ng, notify, template, toasts} from 'entcore';
 import http from "axios";
-import {Campaign, Order, OrderClient, OrdersClient, orderWaiting, PRIORITY_FIELD, Utils} from '../../model';
+import {
+    BasketOrder,
+    Campaign,
+    OrderClient,
+    OrderRegion,
+    OrdersClient,
+    OrdersRegion,
+    orderWaiting,
+    PRIORITY_FIELD,
+    Utils
+} from '../../model';
 import {Mix} from 'entcore-toolkit';
 
 
@@ -10,6 +20,7 @@ export const orderController = ng.controller('orderController',
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.allOrdersSelected = false;
         $scope.tableFields = orderWaiting;
+        $scope.projects = [];
         let isPageOrderWaiting = $location.path() === "/order/waiting";
         let isPageOrderSent = $location.path() === "/order/sent";
 
@@ -80,6 +91,33 @@ export const orderController = ng.controller('orderController',
 
             }
         };
+        $scope.createOrder = async ():Promise<void> => {
+            let ordersToCreate = new OrdersRegion();
+            if($scope.ordersClient.selectedElements.length > 0) {
+                $scope.ordersClient.selectedElements.forEach(order => {
+                    let orderRegionTemp = new OrderRegion();
+                    orderRegionTemp.createFromOrderClient(order);
+                    ordersToCreate.all.push(orderRegionTemp);
+                });
+            } else {
+                $scope.ordersClient.all.forEach(order => {
+                    let orderRegionTemp = new OrderRegion();
+                    orderRegionTemp.createFromOrderClient(order);
+                    ordersToCreate.all.push(orderRegionTemp);
+                });
+            }
+
+
+            let {status} = await ordersToCreate.create();
+            if (status === 201) {
+                toasts.confirm('crre.order.region.create.message');
+                $scope.orderToCreate = new OrderRegion();
+            }
+            else {
+                notify.error('crre.admin.order.create.err');
+            }
+            Utils.safeApply($scope);
+        }
 
         $scope.initPreferences = ()  => {
             if(isPageOrderWaiting)
@@ -120,6 +158,22 @@ export const orderController = ng.controller('orderController',
             return totalPrice.toFixed(roundNumber);
         };
 
+        $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
+            let totalPrice = 0;
+            orders.forEach(order => {
+                totalPrice += order.amount * order.price_single_ttc;
+            });
+            return totalPrice.toFixed(roundNumber);
+        };
+
+        $scope.calculateAmountRegion = (orders: OrderRegion[]) => {
+            let totalAmount = 0;
+            orders.forEach(order => {
+                totalAmount += order.amount;
+            });
+            return totalAmount;
+        };
+
         $scope.savePreference = () =>{
             let elements = document.getElementsByClassName('vertical-array-scroll');
             if(elements[0])
@@ -138,11 +192,13 @@ export const orderController = ng.controller('orderController',
 
         $scope.getTotal = () => {
             let total = 0;
-            $scope.basketsOrders.all.forEach(basket => {
+            $scope.ordersClient.all.forEach(basket => {
              total += parseFloat(basket.total.replace(/[^0-9.,-]+/g,""));
             });
             return total;
         }
+
+
 
 /*        $scope.addFilter = (filterWord: string, event?) => {
             if (event && (event.which === 13 || event.keyCode === 13 )) {
@@ -392,6 +448,32 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         };
 
+        $scope.getOrdersByProject = async(id: number) => {
+            try {
+                let { data } = await http.get(`/crre/orderRegion/orders/${id}`);
+                return Mix.castArrayAs(OrderRegion, data);
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
+        $scope.getProjects = async() => {
+            try {
+                let { data } = await http.get(`/crre/orderRegion/projects`);
+                $scope.projects = data;
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
+        $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
+            await orderClient.updateAmount(amount);
+            let basket = new BasketOrder();
+            basket.setIdBasket(orderClient.id_basket);
+            await basket.updateAllAmount();
+            $scope.$apply()
+        };
+
         $scope.exportOrderStruct = async (orders: OrderClient[]) => {
             if (isSentOrDone(orders)) {
                 let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
@@ -506,10 +588,24 @@ export const orderController = ng.controller('orderController',
         // Functions specific for baskets interactions
 
         $scope.displayedBasketsOrders = [];
+        $scope.displayedOrdersRegionOrders = [];
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
         const synchroBaskets = async () : Promise<void> => {
             await $scope.basketsOrders.sync($scope.campaign.id);
+            //await $scope.displayedOrdersRegion.sync();
+            await $scope.getProjects();
+            for (const project of $scope.projects) {
+                project.orders = await $scope.getOrdersByProject(project.id);
+                project.orders.map(order => {
+                    order.creation_date =  moment(order.creation_date.created).format('DD-MM-YYYY').toString();
+                });
+                project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
+                project.amount = $scope.calculateAmountRegion(project.orders);
+                project.creation_date = moment(project.orders[0].creation_date).format('DD-MM-YYYY').toString();
+                project.status = project.orders[0].status;
+            }
+
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);
         };

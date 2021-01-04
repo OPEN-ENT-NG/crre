@@ -17,6 +17,11 @@ public interface OrderRegionService {
 
     void getOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
 
-    void createProject (Integer idProject,  Handler<Either<String, JsonObject>> handler);
+    void getAllOrderRegion(Handler<Either<String, JsonArray>> handler);
 
+    void createProject (String title,  Handler<Either<String, JsonObject>> handler);
+
+    void getAllOrderRegionByProject(int idProject, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void getAllProjects(Handler<Either<String, JsonArray>> arrayResponseHandler);
 }
