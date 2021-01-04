@@ -37,8 +37,10 @@
                 <!--                </td>-->
                 <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
                 <td><div class="smallTabElem"><i18n>Demande</i18n></div></td>
+                <td><div class="tabElem"></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
+                <td><div class="tabElem"></div></td>
                 <td><div class="smallTabElem"><i18n>Statut</i18n></div></td>
             </tr>
             </thead>
@@ -60,20 +62,17 @@
             <tr ng-repeat="order in project.orders | orderBy:sort.order.type:sort.order.reverse" class="subline" post-ng-repeat>
                 <td ng-if="tableFields[0].display"><div class="smallTabElem">[[order.creation_date]]</div></td>
                 <td ng-if="tableFields[1].display"><div class="tabElem order">
-                    <img class="img-equipment" ng-src="[[order.image]]"/>
+                    <img src="[[order.image]]"/><div>[[order.name]]</div>
                 </div></td>
-                <td ng-if="tableFields[2].display"><div class="tabElem order">
-                    <div>[[order.name]]</div>
-                </div></td>
-                <td ng-if="tableFields[3].display"><div class="tabElem">[[order.owner_name]]</div></td>
-                <td ng-if="tableFields[4].display"><div class="tabElem">[[order.basket_name]]</div></td>
-                <td ng-if="tableFields[5].display"><div class="smallTabElem center"> [[order.amount]]</div></td>
-                <td ng-if="tableFields[6].display"><div class="smallTabElem center"><span ng-bind="order.price * order.amount | currency"></span></div></td>
-                <td ng-if="tableFields[7].display">
-                    <div ng-init="tableFields[7].fullDisplay = false"
+                <td ng-if="tableFields[2].display"><div class="tabElem">[[order.owner_name]]</div></td>
+                <td ng-if="tableFields[3].display"><div class="tabElem">[[order.basket_name]]</div></td>
+                <td ng-if="tableFields[4].display"><div class="smallTabElem center"> [[order.amount]]</div></td>
+                <td ng-if="tableFields[5].display"><div class="smallTabElem center"><span ng-bind="order.price * order.amount | currency"></span></div></td>
+                <td ng-if="tableFields[6].display">
+                    <div ng-init="tableFields[6].fullDisplay = false"
                          class="tabElem"
-                         ng-class="{ellipsis:!tableFields[7].fullDisplay}"
-                         ng-click="tableFields[7].fullDisplay = !tableFields[7].fullDisplay"> [[order.comment || '-']]</div>
+                         ng-class="{ellipsis:!tableFields[6].fullDisplay}"
+                         ng-click="tableFields[6].fullDisplay = !tableFields[6].fullDisplay"> [[order.comment || '-']]</div>
                 </td>
             </tr>
             </tbody>
