@@ -313,6 +313,10 @@ body.crre {
       }
     }
 
+    .right {
+      margin-right: 15px;
+    }
+
     .columns-popup-wrapper {
       position: relative;
       display: contents;
@@ -1256,7 +1260,7 @@ body.crre {
     vertical-align: -webkit-baseline-middle;
   }
   .margin-right-10{
-    margin-right: 10px;
+    margin-right: 10px !important;
   }
   .listElementSelect{
     width: 90%;
