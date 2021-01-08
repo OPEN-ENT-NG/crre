@@ -40,6 +40,7 @@ import java.util.*;
 import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
+import static java.lang.Integer.parseInt;
 
 
 public class OrderController extends ControllerHelper {
@@ -165,6 +166,21 @@ public class OrderController extends ControllerHelper {
     public void getOrderPDF (final HttpServerRequest request) {
         final String orderNumber = request.params().get("bc_number");
         ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_AFTER_VALIDATION, "_BC_" + orderNumber);
+    }
+
+    @Get("/orders/search")
+    @ApiDoc("Search order through name")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void search(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+                String query = request.getParam("q");
+                int id_campaign = parseInt(request.getParam("id"));
+                orderService.search(query, user, id_campaign, arrayResponseHandler(request));
+            } else {
+                badRequest(request);
+            }
+        });
     }
 
     @Get("/order/struct")

@@ -1,4 +1,4 @@
-<div ng-controller="orderController" class="order-client-validation">
+<div ng-controller="orderRegionController" class="order-client-validation">
     <div class="row margin-top-20">
         <div class="cell two margin-top-8">
             <div class="search-bar order-search-bar">
@@ -46,11 +46,11 @@
             </thead>
             <tbody ng-repeat="project in projects">
             <tr>
-                <td><div class="smallTabElem">[[project.creation_date]]</div></td>
-                <td><div class="smallTabElem">[[project.title]]</div></td>
+                <td><div class="smallTabElem center">[[project.creation_date]]</div></td>
+                <td><div class="tabElem">[[project.title]]</div></td>
                 <td><div class="tabElem"></div></td>
-                <td><div class="smallTabElem">[[project.amount]]</div></td>
-                <td><div class="smallTabElem">[[project.total]]</div></td>
+                <td><div class="smallTabElem center">[[project.amount]]</div></td>
+                <td><div class="smallTabElem center">[[project.total]]</div></td>
                 <td><div class="tabElem"></div></td>
                 <td><div class="smallTabElem">
                     <div tooltip="[[project.status]]" class="[[project.status]] status-circle  cell row myOrder">
@@ -59,24 +59,21 @@
                 </div></td>
 
             </tr>
-            <tr ng-repeat="order in project.orders | orderBy:sort.order.type:sort.order.reverse" class="subline" post-ng-repeat>
-                <td ng-if="tableFields[0].display"><div class="smallTabElem">[[order.creation_date]]</div></td>
-                <td ng-if="tableFields[1].display"><div class="tabElem order">
+            <tr ng-repeat="order in project.orders" class="subline" post-ng-repeat>
+                <td><div class="smallTabElem">[[order.creation_date]]</div></td>
+                <td><div class="tabElem order">
                     <img src="[[order.image]]"/><div>[[order.name]]</div>
                 </div></td>
-                <td ng-if="tableFields[2].display"><div class="tabElem">[[order.owner_name]]</div></td>
-                <td ng-if="tableFields[3].display"><div class="tabElem">[[order.basket_name]]</div></td>
-                <td ng-if="tableFields[4].display"><div class="smallTabElem center"> [[order.amount]]</div></td>
-                <td ng-if="tableFields[5].display"><div class="smallTabElem center"><span ng-bind="order.price * order.amount | currency"></span></div></td>
-                <td ng-if="tableFields[6].display">
-                    <div ng-init="tableFields[6].fullDisplay = false"
-                         class="tabElem"
-                         ng-class="{ellipsis:!tableFields[6].fullDisplay}"
-                         ng-click="tableFields[6].fullDisplay = !tableFields[6].fullDisplay"> [[order.comment || '-']]</div>
+                <td><div class="tabElem">[[order.owner_name]]</div></td>
+                <td><div class="tabElem">[[order.basket_name]]</div></td>
+                <td><div class="smallTabElem center"> [[order.amount]]</div></td>
+                <td><div class="smallTabElem center"><span ng-bind="order.price | currency"></span></div></td>
+                <td>
+                    <div class="tabElem"> [[order.comment || '-']]</div>
                 </td>
             </tr>
             </tbody>
-            <tfoot>
+<!--            <tfoot>
             <tr>
                 <td colspan="4">
                     <i18n class="center">totals</i18n>
@@ -87,23 +84,12 @@
                 </td>
                 <td></td>
             </tr>
-            </tfoot>
+            </tfoot>-->
         </table>
     </div>
-    <lightbox on-close="closedLighbtox();"
-              show="display.lightbox.validOrder">
-        <container template="validOrder.lightbox"></container>
-    </lightbox>
-    <lightbox on-close="closedLighbtox();"
-              show="display.lightbox.refuseOrder">
-        <container template="refuseOrder.lightbox"></container>
-    </lightbox>
     <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
         <div class="toggle">
             <div class="row">
-                <button ng-click="refuseOrders()">
-                    <i18n>Denied</i18n>
-                </button>
                 <button ng-click="exportCSV()" >
                     <i18n>crre.logs.csv.export</i18n>
                 </button>

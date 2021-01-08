@@ -3,7 +3,6 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.ManagerRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderRegionService;
@@ -20,10 +19,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
-import sun.java2d.pipe.ValidatePipe;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
+import static java.lang.Integer.parseInt;
 
 public class OrderRegionController extends BaseController {
 
@@ -162,6 +161,20 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void getAllProjects(HttpServerRequest request) {
         orderRegionService.getAllProjects(arrayResponseHandler(request));
+    }
+
+    @Get("/orders/search")
+    @ApiDoc("Search order through name")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void search(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+                String query = request.getParam("q");
+                orderRegionService.search(query, arrayResponseHandler(request));
+            } else {
+                badRequest(request);
+            }
+        });
     }
 
     @Put("/order/region/:idOperation/operation")

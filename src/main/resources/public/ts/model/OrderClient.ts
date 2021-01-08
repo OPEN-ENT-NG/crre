@@ -1,6 +1,7 @@
 import {_, idiom as lang, model, moment, notify} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {
+    BasketOrder,
     Campaign,
     Contract,
     ContractType,
@@ -81,6 +82,8 @@ export class OrderClient implements Order  {
             throw e;
         }
     }
+
+
 
 
     async delete ():Promise<any> {
@@ -204,6 +207,24 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
+    async search(text: String, id_campaign: number) {
+        try {
+            if ((text.trim() === '' || !text)) return;
+            const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}`);
+            this.all = Mix.castArrayAs(OrderClient, data);
+            for (let order of this.all) {
+                let equipment = new Equipment();
+                await equipment.sync(order.equipment_key);
+                order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                order.name = equipment.name;
+                order.image = equipment.image;
+                order.creation_date = moment(order.creation_date).format('L');
+            }
+        } catch (err) {
+            notify.error('crre.basket.sync.err');
+            throw err;
+        }
+    }
 
     async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string):Promise<void> {
         try {
@@ -211,14 +232,27 @@ export class OrdersClient extends Selection<OrderClient> {
             if (idCampaign && idStructure) {
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
-                this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
+                for (let order of this.all) {
+                    let equipment = new Equipment();
+                    await equipment.sync(order.equipment_key);
+                    //order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                    order.price = equipment.price;
+                    order.name = equipment.name;
+                    order.image = equipment.image;
+                }
+                    this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
             } else {
                 const { data } = await http.get(  `/crre/orders?status=${status}`);
                 this.all = Mix.castArrayAs(OrderClient, data);
-                this.all.map((order: OrderClient) => {
+                for (let order of this.all) {
+                    let equipment = new Equipment();
+                    await equipment.sync(order.equipment_key);
+                    order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                    order.price = equipment.price;
+                    order.name = equipment.name;
+                    order.image = equipment.image;
                     order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
                     order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                    order.price = parseFloat(status === 'VALID' ? order.price.toString().replace(',', '.') : order.price.toString());
                     order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
                     order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
                     if(order.files.length > 1 )
@@ -228,7 +262,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     if (status !== 'VALID') {
                         this.makeOrderNotValid(order);
                     }
-                });
+                }
             }
         } catch (e) {
             notify.error('crre.order.sync.err');

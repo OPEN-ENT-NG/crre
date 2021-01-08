@@ -104,6 +104,14 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), handler);
     }
 
+    public static void searchByIds(String[] ids, Handler<Either<String, JsonArray>> handler) {
+
+        JsonObject queryObject = new JsonObject();
+        //JsonObject match = new JsonObject().put("id", id);
+       /* queryObject.put("match", match);
+        search(esQueryObject(queryObject), handler);*/
+    }
+
 
 
     public static void searchfilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {

@@ -2,7 +2,7 @@ import {$, _, angular, idiom as lang, model, moment, ng, notify, template, toast
 import http from "axios";
 import {
     BasketOrder,
-    Campaign,
+    Campaign, Equipment,
     OrderClient,
     OrderRegion,
     OrdersClient,
@@ -32,10 +32,7 @@ export const orderController = ng.controller('orderController',
                 reverse: false
             }
         };
-        $scope.search = {
-            filterWord : '',
-            filterWords : []
-        };
+
 
 
         $scope.filterDisplayedOrders = async () => {
@@ -158,21 +155,6 @@ export const orderController = ng.controller('orderController',
             return totalPrice.toFixed(roundNumber);
         };
 
-        $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
-            let totalPrice = 0;
-            orders.forEach(order => {
-                totalPrice += order.amount * order.price_single_ttc;
-            });
-            return totalPrice.toFixed(roundNumber);
-        };
-
-        $scope.calculateAmountRegion = (orders: OrderRegion[]) => {
-            let totalAmount = 0;
-            orders.forEach(order => {
-                totalAmount += order.amount;
-            });
-            return totalAmount;
-        };
 
         $scope.savePreference = () =>{
             let elements = document.getElementsByClassName('vertical-array-scroll');
@@ -219,27 +201,16 @@ export const orderController = ng.controller('orderController',
 
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
-                await $scope.basketsOrders.search(name, $scope.campaign.id);
-                formatDisplayedBasketOrders();
+                await $scope.ordersClient.search(name, $scope.campaign.id);
+                /*await http.get(`/crre/orderRegion/projects`, { params: {
+                    storeIds: [1,2,3].join(',')
+                }});*/
             } else {
-                await $scope.basketsOrders.sync($scope.campaign.id);
-                formatDisplayedBasketOrders();
+                await $scope.ordersClient.sync('WAITING');
             }
             Utils.safeApply($scope);
         }
 
-/*        $scope.addFilterWords = (filterWord) => {
-            if (filterWord !== '') {
-                $scope.search.filterWords = _.union($scope.search.filterWords, [filterWord]);
-                $scope.search.filterWord = '';
-                Utils.safeApply($scope);
-            }
-        };
-
-        $scope.pullFilterWord = (filterWord) => {
-            $scope.search.filterWords = _.without( $scope.search.filterWords , filterWord);
-            $scope.filterDisplayedOrders();
-        };*/
 
         function openLightboxValidOrder(status, data, ordersToValidat: OrdersClient) {
             if (status === 200) {
@@ -448,10 +419,18 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         };
 
-        $scope.getOrdersByProject = async(id: number) => {
+/*        $scope.getOrdersByProject = async(id: number) => {
             try {
                 let { data } = await http.get(`/crre/orderRegion/orders/${id}`);
-                return Mix.castArrayAs(OrderRegion, data);
+                let orders = Mix.castArrayAs(OrderRegion, data)
+                for (let order of orders) {
+                    let equipment = new Equipment();
+                    await equipment.sync(order.equipment_key);
+                    order.price = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                    order.name = equipment.name;
+                    order.image = equipment.image;
+                }
+                return orders;
             } catch (e) {
                 notify.error('crre.basket.sync.err');
             }
@@ -464,7 +443,7 @@ export const orderController = ng.controller('orderController',
             } catch (e) {
                 notify.error('crre.basket.sync.err');
             }
-        }
+        }*/
 
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
             await orderClient.updateAmount(amount);
@@ -594,17 +573,6 @@ export const orderController = ng.controller('orderController',
         const synchroBaskets = async () : Promise<void> => {
             await $scope.basketsOrders.sync($scope.campaign.id);
             //await $scope.displayedOrdersRegion.sync();
-            await $scope.getProjects();
-            for (const project of $scope.projects) {
-                project.orders = await $scope.getOrdersByProject(project.id);
-                project.orders.map(order => {
-                    order.creation_date =  moment(order.creation_date.created).format('DD-MM-YYYY').toString();
-                });
-                project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
-                project.amount = $scope.calculateAmountRegion(project.orders);
-                project.creation_date = moment(project.orders[0].creation_date).format('DD-MM-YYYY').toString();
-                project.status = project.orders[0].status;
-            }
 
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);

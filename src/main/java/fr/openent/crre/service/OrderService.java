@@ -194,4 +194,6 @@ public interface OrderService {
     void getOneOrderClient(int idOrderClient,String status,  Handler<Either<String, JsonObject>> handler);
 
     void getOrderBCParams(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
+
+    void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

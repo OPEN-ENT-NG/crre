@@ -1,4 +1,4 @@
-import {_, idiom as lang, ng, notify, template, toasts} from 'entcore';
+import {_, idiom as lang, moment, ng, notify, template, toasts} from 'entcore';
 import {
     OrderRegion,
     OrdersRegion,
@@ -8,8 +8,10 @@ import {
     Structures,
     Utils,
     Equipments,
-    Contracts
+    Contracts, Equipment
 } from "../../model";
+import http from "axios";
+import {Mix} from "entcore-toolkit";
 
 declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
@@ -24,6 +26,68 @@ export const orderRegionController = ng.controller('orderRegionController',
             },
         };
         $scope.translate = (key: string):string => lang.translate(key);
+
+        $scope.getOrdersByProject = async(id: number) => {
+            try {
+                let { data } = await http.get(`/crre/orderRegion/orders/${id}`);
+                let orders = Mix.castArrayAs(OrderRegion, data)
+                for (let order of orders) {
+                    let equipment = new Equipment();
+                    await equipment.sync(order.equipment_key);
+                    order.price = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                    order.name = equipment.name;
+                    order.image = equipment.image;
+                }
+                return orders;
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
+        $scope.getProjects = async() => {
+            try {
+                let { data } = await http.get(`/crre/orderRegion/projects`);
+                $scope.projects = data;
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
+        $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
+            let totalPrice = 0;
+            orders.forEach(order => {
+                totalPrice += order.amount * order.price_single_ttc;
+            });
+            return totalPrice.toFixed(roundNumber);
+        };
+
+        $scope.calculateAmountRegion = (orders: OrderRegion[]) => {
+            let totalAmount = 0;
+            orders.forEach(order => {
+                totalAmount += order.amount;
+            });
+            return totalAmount;
+        };
+
+        const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+        const synchroRegionOrders = async () : Promise<void> => {
+            await $scope.basketsOrders.sync($scope.campaign.id);
+            //await $scope.displayedOrdersRegion.sync();
+            await $scope.getProjects();
+            for (const project of $scope.projects) {
+                project.orders = await $scope.getOrdersByProject(project.id);
+                project.orders.map(order => {
+                    order.creation_date =  moment(order.creation_date.created).format('DD-MM-YYYY').toString();
+                });
+                project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
+                project.amount = $scope.calculateAmountRegion(project.orders);
+                project.creation_date = moment(project.orders[0].creation_date).format('DD-MM-YYYY').toString();
+                project.status = project.orders[0].status;
+            }
+
+            Utils.safeApply($scope);
+        };
+        synchroRegionOrders();
 
         $scope.updateCampaign = async ():Promise<void> => {
             $scope.orderToCreate.rows = undefined;
