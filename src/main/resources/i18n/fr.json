@@ -338,7 +338,7 @@
   "crre.basket.file.delete.success": "Document supprimé",
   "crre.basket.file.name": "Documents ajoutés",
   "crre.basket.delete.message": "L'équipement suivant sera retiré de votre panier",
-  "crre.basket.name": "Nom du panier",
+  "crre.basket.name": "Nom du panier :",
   "crre.agent.create.err": "Erreur lors de la création d'un correspondant région",
   "crre.agent.update.err": "Erreur lors de la mise à jour d'un correspondant région",
   "crre.agent.delete.err": "Erreur lors de la suppression d'un correspondant région",
