@@ -1,9 +1,9 @@
 <div  ng-controller="basketController">
     <div ng-show="baskets.all.length > 0">
         <div class="vertical-spacing-twice right-magnet twelve-mobile">
-            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><span style="color: black;"><i18n>Total.in</i18n><i18n>money.symbol</i18n> :</span>
+<!--            <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><span style="color: black;"><i18n>Total.in</i18n><i18n>money.symbol</i18n> :</span>
                 <span ng-bind="calculatePriceOfEquipmentsProposal(baskets, 2)| currency"></span>
-            </h3>
+            </h3>-->
             <h3 class="cell horizontal-margin horizontal-spacing ng-binding"><span style="color: black;">Quantité totale :</span>
                 <span ng-bind="calculateQuantityOfBasket(baskets)"></span>
             </h3>
@@ -55,9 +55,9 @@
                             </div>
                             <div class="three cell text-right">
                                 <div class="vertical-spacing-twice price-field">
-                                    <h1>
+                 <!--                   <h1>
                                         <span ng-bind="calculatePriceOfBasketProposal(basket , 2, true) | currency"></span>
-                                    </h1>
+                                    </h1>-->
                                     <h4 class="cell"><i18n>etablissement.price</i18n></h4>
                                     <h3 class="right-text">[[priceDisplay(basket) | currency]]<i18n>per.student.per.year</i18n></h3>
                                     <div class="quantity">

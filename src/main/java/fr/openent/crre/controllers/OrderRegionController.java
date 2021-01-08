@@ -163,7 +163,7 @@ public class OrderRegionController extends BaseController {
         orderRegionService.getAllProjects(arrayResponseHandler(request));
     }
 
-    @Get("/orders/search")
+/*    @Get("/orders/search")
     @ApiDoc("Search order through name")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void search(HttpServerRequest request) {
@@ -175,7 +175,7 @@ public class OrderRegionController extends BaseController {
                 badRequest(request);
             }
         });
-    }
+    }*/
 
     @Put("/order/region/:idOperation/operation")
     @ApiDoc("update operation in orders region")
