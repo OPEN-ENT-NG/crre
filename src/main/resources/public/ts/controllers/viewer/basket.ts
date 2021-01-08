@@ -186,7 +186,7 @@ export const basketController = ng.controller('basketController',
         };
         $scope.confirmOrder = (data) => {
             $scope.campaign.nb_panier = $scope.baskets.all.length;
-            $scope.campaign.nb_order = data.nb_order;
+            $scope.campaign.nb_order = $scope.campaign.nb_order + 1;
             $scope.campaign.purse_amount = data.amount;
             template.open('basket.order', 'customer/campaign/basket/order-confirmation');
             $scope.display.lightbox.confirmOrder = true;

@@ -67,7 +67,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     object = orders.getJsonObject(i);
                     try {
                         campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
-                        campaign.put("nb_orders_" + object.getString("status").toLowerCase(), object.getLong("count"));
+                        campaign.put("nb_order", object.getLong("nb_order"));
+                        campaign.put("nb_order_waiting", object.getInteger("nb_order_waiting"));
                     }catch (NullPointerException e){
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
@@ -114,21 +115,36 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignOrderStatusCount(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT count(*), id_campaign, status " +
+        String sub_query_waiting_order = "(SELECT COUNT(order_client_equipment.id) as nb_order_waiting " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
-                "GROUP BY id_campaign, status;";
+                "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
+                "WHERE status = 'WAITING' " +
+                "GROUP BY campaign.id, user_id, status) ";
+
+        String query = "SELECT campaign.id as id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, " +
+                sub_query_waiting_order +
+                "FROM " + Crre.crreSchema + ".basket_order bo " +
+                "INNER JOIN " + Crre.crreSchema + ".campaign ON (bo.id_campaign = campaign.id) " +
+                "GROUP BY campaign.id, id_user;";
 
         Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT campaign.id as id_campaign, user_id, status, COUNT(order_client_equipment.id) as nb_order " +
+        String sub_query_waiting_order = "(SELECT COUNT(order_client_equipment.id) as nb_order_waiting " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE id_structure = ?" +
-                "GROUP BY campaign.id, user_id, status;";
+                "WHERE id_structure = ? AND status = 'WAITING' " +
+                "GROUP BY campaign.id, user_id, status) ";
 
-        Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
+        String query = "SELECT campaign.id as id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, " +
+                sub_query_waiting_order +
+                "FROM " + Crre.crreSchema + ".basket_order bo " +
+                "INNER JOIN " + Crre.crreSchema + ".campaign ON (bo.id_campaign = campaign.id) " +
+                "WHERE id_structure = ? " +
+                "GROUP BY campaign.id, id_user;";
+
+        Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(idStructure), SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignsInfo(Handler<Either<String, JsonArray>> handler) {
@@ -216,14 +232,13 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                             if(!campaign.containsKey("nb_order"))
                                 campaign.put("nb_order", object.getLong("nb_order"));
                             else
-                                campaign.put("nb_order", campaign.getLong("nb_order")+ object.getLong("nb_order"));
+                                campaign.put("nb_order", object.getLong("nb_order"));
                         }
-                        if(object.getString("status").equals("WAITING") &&
-                                WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString()))
+                        if(WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString()))
                             if(!campaign.containsKey("nb_order_waiting"))
-                                campaign.put("nb_order_waiting", object.getLong("nb_order"));
+                                campaign.put("nb_order_waiting", object.getInteger("nb_order_waiting"));
                             else
-                                campaign.put("nb_order_waiting", campaign.getLong("nb_order_waiting")+ object.getLong("nb_order"));
+                                campaign.put("nb_order_waiting", object.getInteger("nb_order_waiting"));
                     }catch (NullPointerException e){
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
