@@ -108,6 +108,7 @@ export const orderController = ng.controller('orderController',
             let {status} = await ordersToCreate.create();
             if (status === 201) {
                 toasts.confirm('crre.order.region.create.message');
+                $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selectedElements.length;
                 $scope.orderToCreate = new OrderRegion();
             }
             else {
@@ -235,9 +236,6 @@ export const orderController = ng.controller('orderController',
             ordersToRefuse.all = Mix.castArrayAs(OrderClient, $scope.ordersClient.selected);
             let { status, data } = await ordersToRefuse.updateStatus('REFUSED');
             openLightboxRefuseOrder(status, data, $scope.ordersClient.selected);
-            $scope.getOrderWaitingFiltered($scope.campaign);
-            await $scope.syncOrders('WAITING');
-            Utils.safeApply($scope);
         };
 
         $scope.validateOrders = async (orders: OrderClient[]) => {
@@ -263,9 +261,12 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         };
 
-        $scope.cancelRefusedOrder = () => {
+        $scope.confirmRefuseOrder = async () => {
             $scope.display.lightbox.refuseOrder = false;
             template.close('refuseOrder.lightbox');
+            $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selected.length;
+            $scope.getOrderWaitingFiltered($scope.campaign);
+            await $scope.syncOrders('WAITING');
             Utils.safeApply($scope);
         };
 
@@ -450,6 +451,7 @@ export const orderController = ng.controller('orderController',
             let basket = new BasketOrder();
             basket.setIdBasket(orderClient.id_basket);
             await basket.updateAllAmount();
+            orderClient.amount = amount;
             $scope.$apply()
         };
 
@@ -618,6 +620,11 @@ export const orderController = ng.controller('orderController',
             }
         };
 
+        $scope.cancelRefuseOrder = () => {
+            $scope.display.lightbox.refuseOrder = false;
+            template.close('refuseOrder.lightbox');
+            Utils.safeApply($scope);
+        };
 
 
         angular.element(document).ready(function(){

@@ -177,16 +177,18 @@ export const basketController = ng.controller('basketController',
         $scope.takeClientOrder = async (basket_name: string) => {
             $scope.totalPriceOrder = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
             let {status, data} = await $scope.baskets_test.takeOrder(parseInt($routeParams.idCampaign), $scope.current.structure, basket_name);
-            $scope.totalPrice = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
-
-            //   $scope.totalPriceProposal = $scope.calculatePriceOfEquipmentsProposal(baskets, 2)
-            await $scope.baskets_test.sync(parseInt($routeParams.idCampaign), $scope.current.structure.id);
-            $scope.cancelConfirmBasketName();
-            status === 200 ?  $scope.confirmOrder(data) :  null ;
+            if(status === 200) {
+                $scope.confirmOrder(data)
+                $scope.totalPrice = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
+                //   $scope.totalPriceProposal = $scope.calculatePriceOfEquipmentsProposal(baskets, 2)
+                await $scope.baskets_test.sync(parseInt($routeParams.idCampaign), $scope.current.structure.id);
+                $scope.cancelConfirmBasketName();
+            }
         };
         $scope.confirmOrder = (data) => {
-            $scope.campaign.nb_panier = $scope.baskets.all.length;
             $scope.campaign.nb_order = $scope.campaign.nb_order + 1;
+            $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting + $scope.baskets.all.length;
+            $scope.campaign.nb_panier = 0;
             $scope.campaign.purse_amount = data.amount;
             template.open('basket.order', 'customer/campaign/basket/order-confirmation');
             $scope.display.lightbox.confirmOrder = true;

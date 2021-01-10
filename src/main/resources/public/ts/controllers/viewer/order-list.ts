@@ -30,7 +30,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                await $scope.basketsOrders.search(name, $scope.campaign.id);
                formatDisplayedBasketOrders();
             } else {
-                await $scope.basketsOrders.sync($scope.campaign.id);
+                await $scope.basketsOrders.getMyOrders();
                 formatDisplayedBasketOrders();
             }
             Utils.safeApply($scope);
