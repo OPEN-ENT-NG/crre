@@ -256,12 +256,13 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         String sqlquery = "SELECT distinct bo.* " +
                           "FROM " + Crre.crreSchema + ".basket_order bo " +
                           "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
-                          "WHERE bo.id_campaign = ? AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.name ~* ?) AND bo.id_structure IN (";
+                          "WHERE bo.id_campaign = ? AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.name ~* ?) AND id_user = ? AND bo.id_structure IN (";
 
         values.add(id_campaign);
         values.add(query);
         values.add(query);
         values.add(query);
+        values.add(user.getUserId());
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);

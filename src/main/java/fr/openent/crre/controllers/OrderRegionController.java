@@ -160,7 +160,9 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void getAllProjects(HttpServerRequest request) {
-        orderRegionService.getAllProjects(arrayResponseHandler(request));
+        UserUtils.getUserInfos(eb, request, user -> {
+            orderRegionService.getAllProjects(user, arrayResponseHandler(request));
+        });
     }
 
 /*    @Get("/orders/search")
