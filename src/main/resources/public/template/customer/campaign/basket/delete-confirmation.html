@@ -20,42 +20,20 @@
             </div>
             <div class="nine cell basket-equipment">
                 <h3>[[basketToDelete.equipment.name]]</h3>
-                <p ng-bind-html="basketToDelete.equipment.summary"></p>
+                <p ng-bind-html="basketToDelete.equipment.description"></p>
                 <p>
             </div>
         </div>
-        <div class="row options-head" ng-show="basketToDelete.options.length > 0">
-            <h4 class="highlighted">
-                <i18n>multi-combo.options</i18n>
-            </h4>
-            <table class="twelve option-table">
-                <thead>
-                <tr>
-                    <td><i18n>First.name</i18n></td>
-                    <td><i18n>crre.unit.price</i18n></td>
-                    <td><i18n>crre.quantity</i18n></td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr ng-repeat="option in basketToDelete.options">
-                    <td>[[option.name]]</td>
-                    <td>[[calculatePriceTTC(option.price, option.tax_amount, 2) ]]</td>
-                    <td>[[option.amount]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
 
         <div class="twelve">
             <h4 class="highlighted">
                 <i18n>crre.order</i18n>
             </h4>
             <p>
-                <span> <i18n>crre.quantity</i18n> :</span><strong>[[basketToDelete.amount]]</strong>
+                <span> <i18n>crre.quantity</i18n> : </span><strong>[[basketToDelete.amount]]</strong>
             </p>
             <p>
-                <span><i18n>price</i18n> :</span><strong
+                <span><i18n>price</i18n> : </span><strong
                     ng-bind="calculatePriceOfBasket(basketToDelete , 2, true) | currency"></strong>
             </p>
         </div>
@@ -63,6 +41,6 @@
     </div>
     <div class="right-magnet">
         <input type="button" class="cancel" ng-click="cancelBasketDelete()" i18n-value="cancel"/>
-        <input type="submit" class="button" ng-click="deleteBasket(basketToDelete)"/>
+        <input type="submit" class="button" ng-click="deleteBasket(basketToDelete)" i18n-value="confirm"/>
     </div>
 </div>

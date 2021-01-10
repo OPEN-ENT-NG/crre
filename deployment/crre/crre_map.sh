@@ -1,5 +1,5 @@
 #!/bin/bash
-curl -X PUT "http://localhost:9200/catalog" -H 'Content-Type: application/json' -d'
+curl -X PUT "http://localdev:9200/catalog" -H 'Content-Type: application/json' -d'
 {
     "index": {
       "blocks": {
