@@ -242,6 +242,13 @@ body.crre {
       text-align:center;
     }
   }
+
+  i.comment-icon {
+    background-image: url(/crre/public/img/scss/comment.svg);
+    background-repeat: no-repeat;
+    padding: 5px 12px;
+  }
+
   .catalog{
     div.twelve{
       input.row{

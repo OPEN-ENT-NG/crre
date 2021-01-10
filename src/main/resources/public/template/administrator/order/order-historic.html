@@ -69,7 +69,11 @@
                 <td><div class="smallTabElem center"> [[order.amount]]</div></td>
                 <td><div class="smallTabElem center"><span ng-bind="order.price | currency"></span></div></td>
                 <td>
-                    <div class="tabElem"> [[order.comment || '-']]</div>
+                    <div class="smallTabElem"
+                         tooltip="[[order.comment]]"
+                         ng-if="order.comment">
+                        <i class="comment-icon"></i>
+                    </div>
                 </td>
             </tr>
             </tbody>
