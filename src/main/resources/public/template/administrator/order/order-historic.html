@@ -36,12 +36,12 @@
                 <!--                    <i class="down-open" ng-show="sort.order.type === field.fieldName && sort.order.reverse"></i>-->
                 <!--                </td>-->
                 <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>Demande</i18n></div></td>
-                <td><div class="tabElem"></div></td>
+                <td><div class="tabElem"><i18n>Demande</i18n></div></td>
+                <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
                 <td><div class="tabElem"></div></td>
-                <td><div class="smallTabElem"><i18n>Statut</i18n></div></td>
+                <td><div class="tabElem"><i18n>Statut</i18n></div></td>
             </tr>
             </thead>
             <tbody ng-repeat="project in projects">
@@ -52,7 +52,7 @@
                 <td><div class="smallTabElem center">[[project.amount]]</div></td>
                 <td><div class="smallTabElem center">[[project.total]]</div></td>
                 <td><div class="tabElem"></div></td>
-                <td><div class="smallTabElem">
+                <td><div class="tabElem">
                     <div tooltip="[[project.status]]" class="[[project.status]] status-circle  cell row myOrder">
                     </div>
                     <span ng-bind="lang.translate(project.status)" class="webkit-vertical-align"></span>
@@ -60,11 +60,11 @@
 
             </tr>
             <tr ng-repeat="order in project.orders" class="subline" post-ng-repeat>
-                <td><div class="smallTabElem">[[order.creation_date]]</div></td>
+                <td><div class="smallTabElem center">[[order.creation_date]]</div></td>
                 <td><div class="tabElem order">
                     <img src="[[order.image]]"/><div>[[order.name]]</div>
                 </div></td>
-                <td><div class="tabElem">[[order.owner_name]]</div></td>
+                <td><div class="smallTabElem center">[[order.owner_name]]</div></td>
                 <td><div class="tabElem">[[order.basket_name]]</div></td>
                 <td><div class="smallTabElem center"> [[order.amount]]</div></td>
                 <td><div class="smallTabElem center"><span ng-bind="order.price | currency"></span></div></td>
