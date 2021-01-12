@@ -201,11 +201,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
+                $scope.display.equipment = true;
                 Utils.safeApply($scope);
-                $timeout(function() {
-                    $scope.display.equipment = true;
-                    Utils.safeApply($scope);
-                }, 50)
             },
             campaignOrder: async (params) => {
                 let idCampaign = params.idCampaign;

@@ -50,7 +50,6 @@ export const catalogController = ng.controller('catalogController',
         $scope.openEquipment = (equipment: Equipment) => {
             if (equipment.status === 'AVAILABLE') {
                 $scope.redirectTo(`/equipments/catalog/equipment/${equipment.id}`);
-                $scope.display.equipment = true;
             }
         };
         $scope.validArticle = (equipment: Equipment) => {
