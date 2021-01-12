@@ -519,7 +519,7 @@
   "crre.goTo.exports": "Mes exports",
   "crre.order.operation.delete": "Demande(s) retirée(s) de cette opération",
   "crre.admin.order.get.err": "Une erreur est survenue lors de la récupération d'une demande",
-  "IN PROGRESS": "Demande en cours de traitement",
+  "IN PROGRESS": "Demande en cours de traitement",
   "crre.type": "Type",
   "crre.exportNotificationCP": "Export Notification Equipement",
   "delete.export.question": "Voulez vous supprimer les exports suivants ?",
@@ -569,5 +569,7 @@
   "Grades": "Niveaux",
   "Types.of.documents": "Types de documents",
   "Editors": "Éditeurs",
-  "First.name": "Nom"
+  "First.name": "Nom",
+  "crre.reassort": "Réassort",
+  "crre.not.reassort": "Non réassort"
 }

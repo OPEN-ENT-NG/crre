@@ -43,6 +43,19 @@ body.crre {
     display: none;
   }
 
+  .breakLines{
+    white-space: normal;
+  }
+  .centerCircleMobile{
+    @media screen and (max-width: $tablette) {
+      margin-left: 50%;
+    }
+  }
+
+  .leftPadding10{
+    padding-left: 10px;
+  }
+
   .responsive-table {
     table {
       thead {
@@ -249,6 +262,20 @@ body.crre {
     padding: 5px 12px;
   }
 
+  i.check-circle {
+    padding: 5px 12px;
+    background-repeat: no-repeat;
+    filter: invert(58%) sepia(79%) saturate(4662%) hue-rotate(156deg) brightness(88%) contrast(82%);
+    background-image: url(/crre/public/img/scss/check-circle.svg);
+  }
+
+  i.close-circle {
+    padding: 5px 12px;
+    background-repeat: no-repeat;
+    background-image: url(/crre/public/img/scss/close-circle.svg);
+    filter: invert(0.65);
+  }
+
   .catalog{
     div.twelve{
       input.row{
@@ -313,6 +340,9 @@ body.crre {
       }
       > i.editor {
         background-image: url(/crre/public/img/scss/editor.svg);
+      }
+      > i.user {
+        background-image: url(/crre/public/img/scss/account.svg);
       }
       > i.arrow {
         color: black;
@@ -497,13 +527,13 @@ body.crre {
     display: inline-block;
     line-height: 21px;
     font-size: x-large;
-    padding: 0 15px;
+    padding: 0 0 0 5px;
   }
   i.moins::before{
     content: '-';
     position: relative;
     font-size: xxx-large;
-    padding: 0 20px;
+    padding: 0 5px 0 0;
     top: 5px;
     color: $secondary;
   }

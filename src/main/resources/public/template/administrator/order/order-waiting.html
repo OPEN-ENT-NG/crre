@@ -13,13 +13,18 @@
         <div class="cell twelve-mobile six catalog">
             <button ng-click=""
                     class="filterButton">
-                <i class="school"></i>
+                <i class="user"></i>
                 <span><i18n>Teachers</i18n></span>
             </button>
             <button ng-click=""
                     class="filterButton">
                 <i class="star-circle"></i>
-                <span><i18n>All.type</i18n></span>
+                <span><i18n>crre.reassort</i18n></span>
+            </button>
+            <button ng-click=""
+                    class="filterButton">
+                <i class="school"></i>
+                <span><i18n>Grades</i18n></span>
             </button>
         </div>
         <div class="cell twelve-mobile right-magnet">
@@ -40,10 +45,11 @@
                     </label>
                 </td>
                 <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
-                <td><div class="tabElem"><i18n>Ressource</i18n></div></td>
-                <td><div class="tabElem"><i18n>Owner</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>crre.basket</i18n></div></td>
-                <td><div class="tabElem center"><i18n>crre.quantity</i18n></div></td>
+                <td><div class="tabElem center"><i18n>Ressource</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>Owner</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.basket</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.reassort</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
                 <td><div class="smallTabElem">  </div></td>
             </tr>
@@ -57,15 +63,35 @@
                         <span></span>
                     </label>
                 </td>
-                <td ng-if="tableFields[0].display"><div class="smallTabElem">[[order.creation_date]]</div></td>
-                <td ng-if="tableFields[1].display"><div class="tabElem order">
-                    <img src="[[order.image]]"/><div class="ellipsis">[[order.name]]</div>
-                </div></td>
-                <td ng-if="tableFields[2].display"><div class="tabElem ellipsis">[[order.user_name]]</div></td>
-                <td ng-if="tableFields[3].display"><div class="tabElem">[[order.basket_name]]</div></td>
-                <td ng-if="tableFields[4].display"><div class="tabElem center"><i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount - 1)"></i><input type="number" class="four-small" name="input" ng-disabled="order.status === 'IN PROGRESS'" ng-change="updateAmount(order, order.amount)" ng-model="order.amount"><i class="plus" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount + 1)"></i></div></td>
-                <td ng-if="tableFields[5].display"><div class="smallTabElem center"><span ng-bind="order.priceTotalTTC | currency"></span></div></td>
+                <td ng-if="tableFields[0].display"><div class="smallTabElem center">[[order.creation_date]]</div></td>
+                <td ng-if="tableFields[1].display">
+                    <div class="tabElem order">
+                        <img src="[[order.image]]"/>
+                        <div class="breakLines">[[order.name]]</div>
+                    </div>
+                </td>
+                <td ng-if="tableFields[2].display"><div class="smallTabElem center breakLines">[[order.user_name]]</div></td>
+                <td ng-if="tableFields[3].display"><div class="smallTabElem center breakLines">[[order.basket_name]]</div></td>
+                <td ng-if="tableFields[4].display">
+                    <div class="smallTabElem center">
+                        <i class="check-circle" ng-if="order.reassort"></i>
+                        <i class="close-circle" ng-if="!order.reassort"></i>
+                    </div>
+                </td>
+                <td ng-if="tableFields[5].display">
+                    <div class="smallTabElem center">
+                        <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount - 1)"></i>
+                        <input type="number" class="nine-small" name="input" ng-disabled="order.status === 'IN PROGRESS'"
+                               ng-change="updateAmount(order, order.amount)" ng-model="order.amount">
+                        <i class="plus" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount + 1)"></i>
+                    </div>
+                </td>
                 <td ng-if="tableFields[6].display">
+                    <div class="smallTabElem center leftPadding10">
+                        <span ng-bind="order.priceTotalTTC | currency"></span>
+                    </div>
+                </td>
+                <td ng-if="tableFields[7].display">
                     <div class="smallTabElem center"
                          tooltip="[[order.comment]]"
                          ng-if="order.comment">
@@ -79,10 +105,11 @@
                 <td colspan="5">
                     <i18n class="center">totals</i18n>
                 </td>
-                <td ng-if="tableFields[3].display" colspan="[[countColSpan('price') - 1]]"> <div class="smallTabElem center">[[displayedOrders.calculTotalAmount()]]</div></td>
-                <td ng-if="tableFields[4].display" >
-                    <div class="smallTabElem center"> [[displayedOrders.calculTotalPriceTTC() | currency]]</div>
+                <td ng-if="tableFields[4].display" colspan="[[countColSpan('price') - 1]]"> <div class="smallTabElem center">[[displayedOrders.calculTotalAmount()]]</div></td>
+                <td ng-if="tableFields[5].display" >
+                    <div class="smallTabElem center leftPadding10"> [[displayedOrders.calculTotalPriceTTC() | currency]]</div>
                 </td>
+                <td></td>
                 <td></td>
             </tr>
             </tfoot>

@@ -1,105 +1,102 @@
 <div class="flex-row">
     <table class="twelve-mobile twelve">
         <thead>
-            <tr>
-                <td class="table-selector main-selector">
-                    <label class="checkbox">
-                        <input type="checkbox"
-                               ng-change="switchAllOrders(allOrdersListSelected)"
-                               ng-model="allOrdersListSelected">
-                        <span></span>
-                    </label>
-                </td>
-                <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
-                <td><div class="tabElem"><i18n>crre.basket</i18n></div></td>
-                <td><div class="tabElem"></div></td>
-                <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
-                <td><div class="smallTabElem center"><i18n>Total Licences</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>crre.operation.status</i18n></div></td>
-            </tr>
+        <tr>
+            <td class="table-selector main-selector">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-change="switchAllOrders(allOrdersListSelected)"
+                           ng-model="allOrdersListSelected">
+                    <span></span>
+                </label>
+            </td>
+            <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
+            <td><div class="tabElem"><i18n>crre.basket</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>Total Licences</i18n></div></td>
+            <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>crre.operation.status</i18n></div></td>
+        </tr>
         </thead>
         <tbody ng-repeat="basket in displayedBasketsOrders | orderBy:sort.order.type:sort.order.reverse">
-            <tr ng-click="basket.expanded=!basket.expanded" class="line">
-                <td class="table-selector">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket)">
-                        <span></span>
-                    </label>
-                </td>
-                <td><div class="smallTabElem center">[[basket.created]]</div></td>
-                <td><div class="tabElem order">[[basket.name]]</div></td>
-                <td><div class="tabElem"></div></td>
-                <td><div class="smallTabElem center">[[basket.amount]]</div></td>
-                <td><div class="smallTabElem center">[[basket.amount]]</div></td>
-                <td><div class="tabElem"></div></td>
-                <td>
-                    <div class="smallTabElem">
-                        <div tooltip="[[basket.status]]" class="[[basket.status]] status-circle  cell row myOrder"></div>
-                        <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align"></span>
-                    </div>
-                </td>
-            </tr>
-            <tr ng-repeat="order in basket.orders | orderBy:sort.order.type:sort.order.reverse"
-                ng-if="basket.expanded" class="subline" post-ng-repeat>
-                <td class="table-selector">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
-                        <span></span>
-                    </label>
-                </td>
+        <tr ng-click="basket.expanded=!basket.expanded" class="line">
+            <td class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket)">
+                    <span></span>
+                </label>
+            </td>
+            <td><div class="smallTabElem center">[[basket.created]]</div></td>
+            <td><div class="tabElem order">[[basket.name]]</div></td>
+            <td><div class="smallTabElem center">[[basket.amount]]</div></td>
+            <td><div class="smallTabElem center">[[basket.amount]]</div></td>
+            <td><div class="tabElem"></div></td>
+            <td>
+                <div class="smallTabElem center">
+                    <div tooltip="[[basket.status]]" class="[[basket.status]] status-circle  cell row myOrder"></div>
+                    <span ng-bind="lang.translate(basket.status) zero-mobile" class="webkit-vertical-align"></span>
+                </div>
+            </td>
+        </tr>
+        <tr ng-repeat="order in basket.orders | orderBy:sort.order.type:sort.order.reverse"
+            ng-if="basket.expanded" class="subline" post-ng-repeat>
+            <td class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
+                    <span></span>
+                </label>
+            </td>
             <td ng-if="tableFields[0].display"><div class="smallTabElem"></div></td>
-            <td ng-if="tableFields[1].display"><div class="tabElem order">
-                <img src="[[order.image]]"/><div>[[order.name]]</div>
-            </div></td>
-            <td ng-if="tableFields[2].display"><div class="tabElem"></div></td>
-            <td ng-if="tableFields[3].display"><div class="smallTabElem center"><i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount - 1)"></i><input type="number" class="six-small" ng-disabled="order.status === 'IN PROGRESS'" name="input"  ng-change="updateAmount(basket, order, order.amount)" ng-model="order.amount"><i class="plus" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount +1)"></i></div></td>
-            <td ng-if="tableFields[4].display"><div class="smallTabElem center"><span ng-bind="order.price | currency"></span></div></td>
+            <td ng-if="tableFields[1].display">
+                <div class="tabElem order">
+                    <img src="[[order.image]]"/>
+                    <div class="breakLines">[[order.name]]</div>
+                </div>
+            </td>
+            <td ng-if="tableFields[2].display"><div class="smallTabElem center"><i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount - 1)"></i><input type="number" class="nine-small" ng-disabled="order.status === 'IN PROGRESS'" name="input"  ng-change="updateAmount(basket, order, order.amount)" ng-model="order.amount"><i class="plus" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount +1)"></i></div></td>
+            <td ng-if="tableFields[3].display"><div class="smallTabElem center"><span ng-bind="order.price | currency"></span></div></td>
+            <td ng-if="tableFields[4].display">
+                <div ng-init="tableFields[5].fullDisplay = false"
+                     class="tabElem"
+                     ng-class="{ellipsis:!tableFields[5].fullDisplay}"
+                     ng-click="tableFields[5].fullDisplay = !tableFields[5].fullDisplay"> [[order.comment || '-']]</div>
+            </td>
             <td ng-if="tableFields[5].display">
-                <div ng-init="tableFields[6].fullDisplay = false"
-                    class="tabElem"
-                    ng-class="{ellipsis:!tableFields[6].fullDisplay}"
-                    ng-click="tableFields[6].fullDisplay = !tableFields[6].fullDisplay"> [[order.comment || '-']]</div>
-            </td>
-            <td ng-if="tableFields[6].display">
-                <div class="smallTabElem">
-                    <div tooltip="[[order.status]]" class="[[order.status]] status-circle  cell row myOrder">
-                    </div>
-                    <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align"></span>
+                <div class="smallTabElem center ellipsis" tooltip="[[order.status]]">
+                    <div class="[[order.status]] status-circle cell row myOrder centerCircleMobile"></div>
+                    <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                 </div>
             </td>
-
-
-            <td ng-if="tableFields[7].display"><div class="smallTabElem"> [[order.structure.uai]]</div></td>
-            <td ng-if="tableFields[8].display"><div class="tabElem"> [[order.structure.name]]</div></td>
-            <td ng-if="tableFields[9].display"><div class="tabElem"> [[order.structure.type_etab]]</div></td>
-            <td ng-if="tableFields[10].display"><div class="tabElem"> [[order.structure.city]]</div></td>
-            <td ng-if="tableFields[11].display"><div class="tabElem"> [[order.campaign.name]]</div></td>
-            <td ng-if="tableFields[12].display"><div class="smallTabElem"> [[order.rankOrder]]</div></td>
-            <td ng-if="tableFields[13].display"><div class="smallTabElem"><span ng-bind="order.priceUnitedTTC | currency"></span></div></td>
-            <td ng-if="tableFields[14].display"><div class="tabElem">
-                <div ng-if="order.files.length > 0" class="twelve">
-                    <div ng-repeat="file in order.files" class="twelve basket-file row">
-                        <a class="cell twelve" ng-click="order.downloadFile(file)">[[
-                            file.name ||
-                            file.filename ]]</a>
-                    </div>
-                </div>
-            </div></td>
-            <td ng-if="tableFields[15].display"><div class="tabElem">[[order.contract_type.name]]</div></td>
-            <td ng-if="tableFields[16].display"><div class="tabElem">[[order.structure.academy]]</div></td>
-            <td ng-if="tableFields[17].display"><div class="smallTabElem">[[order.structure.type]]</div></td>
-            <td ng-if="tableFields[18].display"><div class="tabElem">[[order.contract.name]]</div></td>
-            <td ng-if="tableFields[19].display"><div class="tabElem">[[order.project.title.name.toString() ]]</div></td>
-            <td ng-if="tableFields[20].display"><div class="tabElem">[[getStructureGroupsList(order.structure_groups)]]</div></td>
-            <td ng-if="tableFields[21].display"><div class="smallTabElem">[[order.project.room || '-']]</div></td>
-            <td ng-if="tableFields[22].display"><div class="smallTabElem">[[order.project.building || '-']]</div></td>
-            <td ng-if="tableFields[23].display"><div ng-init="tableFields[19].fullDisplay = false"
-                                                     class="tabElem"
-                                                     ng-class="{ellipsis:!tableFields[19].fullDisplay}"
-                                                     ng-click="tableFields[19].fullDisplay = !tableFields[19].fullDisplay">[[order.project.description || '-']]</div></td>
-            <td ng-if="tableFields[24].display"><div class="smallTabElem">[[order.structure.department]]</div></td>
-            <td ng-if="tableFields[25].display"><div class="tabElem">[[order.program]]</div></td>
+            <!--            <td ng-if="tableFields[7].display"><div class="smallTabElem"> [[order.structure.uai]]</div></td>
+                        <td ng-if="tableFields[8].display"><div class="tabElem"> [[order.structure.name]]</div></td>
+                        <td ng-if="tableFields[9].display"><div class="tabElem"> [[order.structure.type_etab]]</div></td>
+                        <td ng-if="tableFields[10].display"><div class="tabElem"> [[order.structure.city]]</div></td>
+                        <td ng-if="tableFields[11].display"><div class="tabElem"> [[order.campaign.name]]</div></td>
+                        <td ng-if="tableFields[12].display"><div class="smallTabElem"> [[order.rankOrder]]</div></td>
+                        <td ng-if="tableFields[13].display"><div class="smallTabElem"><span ng-bind="order.priceUnitedTTC | currency"></span></div></td>
+                        <td ng-if="tableFields[14].display"><div class="tabElem">
+                            <div ng-if="order.files.length > 0" class="twelve">
+                                <div ng-repeat="file in order.files" class="twelve basket-file row">
+                                    <a class="cell twelve" ng-click="order.downloadFile(file)">[[
+                                        file.name ||
+                                        file.filename ]]</a>
+                                </div>
+                            </div>
+                        </div></td>
+                        <td ng-if="tableFields[15].display"><div class="tabElem">[[order.contract_type.name]]</div></td>
+                        <td ng-if="tableFields[16].display"><div class="tabElem">[[order.structure.academy]]</div></td>
+                        <td ng-if="tableFields[17].display"><div class="smallTabElem">[[order.structure.type]]</div></td>
+                        <td ng-if="tableFields[18].display"><div class="tabElem">[[order.contract.name]]</div></td>
+                        <td ng-if="tableFields[19].display"><div class="tabElem">[[order.project.title.name.toString() ]]</div></td>
+                        <td ng-if="tableFields[20].display"><div class="tabElem">[[getStructureGroupsList(order.structure_groups)]]</div></td>
+                        <td ng-if="tableFields[21].display"><div class="smallTabElem">[[order.project.room || '-']]</div></td>
+                        <td ng-if="tableFields[22].display"><div class="smallTabElem">[[order.project.building || '-']]</div></td>
+                        <td ng-if="tableFields[23].display"><div ng-init="tableFields[19].fullDisplay = false"
+                                                                 class="tabElem"
+                                                                 ng-class="{ellipsis:!tableFields[19].fullDisplay}"
+                                                                 ng-click="tableFields[19].fullDisplay = !tableFields[19].fullDisplay">[[order.project.description || '-']]</div></td>
+                        <td ng-if="tableFields[24].display"><div class="smallTabElem">[[order.structure.department]]</div></td>
+                        <td ng-if="tableFields[25].display"><div class="tabElem">[[order.program]]</div></td>-->
         </tr>
         </tbody>
     </table>

@@ -35,6 +35,11 @@ export const orderWaiting = [
         display: true
     },
     {
+        name: 'Réassort',
+        fieldName: 'crre.reassort',
+        display: true
+    },
+    {
         name: 'UAI',
         fieldName: 'structure.uai',
         display: false
