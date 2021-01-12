@@ -21,7 +21,7 @@ public interface OrderService {
      */
     void listOrder(Integer idCampaign, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
-    void listExport(Integer idCampaign, String idStructure,Handler<Either<String, JsonArray>> handler);
+    void listExport(List<Integer> idsOrders, Handler<Either<String, JsonArray>> catalog);
     /**
      * Get the list of all orders
      * @param status order status to retrieve

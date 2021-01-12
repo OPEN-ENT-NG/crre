@@ -24,4 +24,6 @@ public interface OrderRegionService {
     void getAllOrderRegionByProject(int idProject, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getAllProjects(UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void search(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

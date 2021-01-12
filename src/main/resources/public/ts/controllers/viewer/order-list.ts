@@ -1,5 +1,14 @@
-import {_, moment, ng, template, toasts} from 'entcore';
-import {Basket, BasketOrder, OrderClient, OrdersClient, orderWaiting, Utils} from '../../model';
+import {_, http, moment, ng, template, toasts} from 'entcore';
+import {
+    Basket,
+    BasketOrder,
+    OrderClient,
+    OrderRegion,
+    OrdersClient,
+    OrdersRegion,
+    orderWaiting,
+    Utils
+} from '../../model';
 
 
 declare let window: any;
@@ -16,14 +25,27 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             },
             list: $scope.campaign.priority_field
         };
-
+        $scope.allOrdersListSelected = false;
         $scope.tableFields = orderWaiting;
+        ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
 
         $scope.exportCSV = () => {
-            let idCampaign = $scope.ordersClient.all[0].id_campaign;
-            let idStructure = $scope.ordersClient.all[0].id_structure;
-            window.location = `/crre/orders/export/${idCampaign}/${idStructure}`;
-        };
+            var order_selected = [];
+            $scope.displayedBasketsOrders.forEach(function (basket) {
+                basket.orders.forEach(function (order) {
+                    if(order.selected) {
+                        order_selected.push(order);
+                    }
+                });
+            });
+            if(order_selected.length == 0) {
+                order_selected = $scope.ordersClient.all;
+            }
+            let params_id_order = Utils.formatKeyToParameter(order_selected, 'id');
+            let equipments_key = order_selected.map( (value) => value.equipment_key).filter( (value, index, _arr) => _arr.indexOf(value) == index);
+            let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map( s => ({equipment_key:s})), "equipment_key");
+            window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
+        }
 
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
@@ -39,6 +61,32 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         $scope.hasAProposalPrice = (orderClient: OrderClient) => {
 
             return (orderClient.price_proposal);
+        };
+
+        $scope.switchAllOrders = (allOrdersListSelected : boolean) => {
+            $scope.displayedBasketsOrders.map((basket) => {basket.selected = allOrdersListSelected;
+                basket.orders.forEach(function (order) {
+                    order.selected = allOrdersListSelected;
+                });
+            });
+        };
+        $scope.switchAllOrdersBasket = (basket) => {
+            basket.orders.map((order) => order.selected = basket.selected);
+        };
+
+        $scope.checkParentSwitch = (basket, checker) : void => {
+            if (checker) {
+                let testAllTrue = true;
+                basket.orders.forEach(function (order) {
+                    if (!order.selected) {
+                        testAllTrue = false;
+                    }
+                });
+                basket.selected = testAllTrue;
+            }
+            else {
+                basket.selected = false;
+            }
         };
 
         $scope.displayEquipmentOption = (index: number) => {

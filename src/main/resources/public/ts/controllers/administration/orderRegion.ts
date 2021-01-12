@@ -53,6 +53,25 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
+        $scope.getProjectsSearch = async(name: string) => {
+            try {
+                let { data } = await http.get(`/crre/ordersRegion/search?q=${name}`);
+                $scope.projects = data;
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
+        $scope.searchByName =  async (name: string) => {
+            if(name != "") {
+                await $scope.getProjectsSearch(name);
+                await synchroRegionOrders(true);
+            } else {
+                await synchroRegionOrders();
+            }
+            Utils.safeApply($scope);
+        }
+
         $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
             let totalPrice = 0;
             orders.forEach(order => {
@@ -70,10 +89,12 @@ export const orderRegionController = ng.controller('orderRegionController',
         };
 
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
-        const synchroRegionOrders = async () : Promise<void> => {
-            await $scope.basketsOrders.sync($scope.campaign.id);
+        const synchroRegionOrders = async (isSearching: boolean = false) : Promise<void> => {
+            //await $scope.basketsOrders.sync($scope.campaign.id);
             //await $scope.displayedOrdersRegion.sync();
-            await $scope.getProjects();
+            if(!isSearching) {
+                await $scope.getProjects();
+            }
             for (const project of $scope.projects) {
                 project.orders = await $scope.getOrdersByProject(project.id);
                 project.orders.map(order => {

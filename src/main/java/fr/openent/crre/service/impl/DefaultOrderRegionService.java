@@ -288,5 +288,28 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-
+    @Override
+    public void search(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+            String sqlquery = "SELECT DISTINCT (p.*) " +
+                    "FROM  " + Crre.crreSchema + ".project p " +
+                    "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                    "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                    "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ) AND ore.id_structure IN ( ";
+            // liste id filtrer
+            // call es avec la liste d'id + query du nom du manuel
+            // liste manuel qui correspondent a ma recherche
+            //
+            values.add(query);
+            values.add(query);
+            values.add(query);
+            for (String idStruct : user.getStructures()) {
+                sqlquery += "?,";
+                values.add(idStruct);
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+            sqlquery = sqlquery + " ORDER BY p.id ";
+            sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+        }
 }

@@ -17,12 +17,11 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -35,8 +34,13 @@ import org.entcore.common.user.UserUtils;
 
 import java.math.BigDecimal;
 import java.text.*;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -264,25 +268,72 @@ public class OrderController extends ControllerHelper {
         }
     }
 
-    @Get("/orders/export/:idCampaign/:idStructure")
+    @Get("/orders/exports")
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessOrderRight.class)
+    @ResourceFilter(PrescriptorRight.class)
     public void export (final HttpServerRequest request){
-        Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
-        String idStructure = request.params().get("idStructure");
-        orderService.listExport(idCampaign, idStructure, event -> {
-            if(event.isRight()){
-                request.response()
-                        .putHeader("Content-Type", "text/csv; charset=utf-8")
-                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                        .end(LogController.generateExport(request, event.right().getValue()));
-            } else {
-                log.error("An error occurred when collecting orders");
-                renderError(request);
-            }
+        List<String> params = request.params().getAll("id");
+        List<String> params2 = request.params().getAll("equipment_key");
+        List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
+        List<Integer> idsEquipment = SqlQueryUtils.getIntegerIds(params2);
+        Future<JsonArray> equipmentFuture = Future.future();
+        Future<JsonArray> orderClientFuture = Future.future();
+
+        CompositeFuture.all(equipmentFuture, orderClientFuture).setHandler(event -> {
+                    if (event.succeeded()) {
+                        JsonArray equipments = equipmentFuture.result();
+                        JsonArray orderClients = orderClientFuture.result();
+                        JsonObject orderMap = new JsonObject();
+                        JsonArray orders = new JsonArray();
+                        JsonObject order, equipment;
+                        boolean check = true;
+                        int j = 0;
+                        for (int i = 0; i < orderClients.size(); i++) {
+                            order = orderClients.getJsonObject(i);
+                            check = true;
+                            j = 0;
+                            while(check && j < equipments.size()) {
+                                if(equipments.getJsonObject(j).getInteger("id") == order.getInteger("equipment_key")) {
+                                    orderMap = new JsonObject();
+                                    equipment = equipments.getJsonObject(j);
+                                    orderMap.put("name", equipment.getString("name"));
+                                    orderMap.put("id", order.getInteger("id"));
+                                    DecimalFormat df = new DecimalFormat("0.00");
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                                    orderMap.put("creation_date", creation_date);
+                                    orderMap.put("ean", equipment.getString("ean"));
+                                    orderMap.put("status", order.getString("status"));
+                                    orderMap.put("basket_name", order.getString("basket_name"));
+                                    orderMap.put("comment", order.getString("comment"));
+                                    orderMap.put("amount", order.getInteger("amount"));
+                                    orderMap.put("total", df.format(Float.parseFloat(order.getString("price")) * (1 + Float.parseFloat(order.getString("tax_amount"))/100)  * order.getInteger("amount")));
+                                    orders.add(orderMap);
+                                    check = false;
+                                }
+                                j++;
+                            }
+                        }
+                        request.response()
+                                .putHeader("Content-Type", "text/csv; charset=utf-8")
+                                .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                                .end(LogController.generateExport(request, orders));
+                    }
         });
 
+        getEquipment(idsEquipment, handlerJsonArray(equipmentFuture));
+        getOrderEquipmentEquipment(idsOrders, handlerJsonArray(orderClientFuture));
+
+    }
+
+    private void getOrderEquipmentEquipment(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        orderService.listExport(idsOrders, handlerJsonArray);
+    }
+
+    private void getEquipment(List<Integer> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        searchByIds(idsEquipment, handlerJsonArray);
     }
 
     private static String getExportHeader(HttpServerRequest request){

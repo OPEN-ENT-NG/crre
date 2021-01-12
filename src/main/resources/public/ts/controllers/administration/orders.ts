@@ -108,7 +108,11 @@ export const orderController = ng.controller('orderController',
             let {status} = await ordersToCreate.create();
             if (status === 201) {
                 toasts.confirm('crre.order.region.create.message');
-                $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selectedElements.length;
+                if($scope.ordersClient.selectedElements.length > 0) {
+                    $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selectedElements.length;
+                } else {
+                    $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.all.length;
+                }
                 $scope.orderToCreate = new OrderRegion();
             }
             else {
@@ -203,9 +207,6 @@ export const orderController = ng.controller('orderController',
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
                 await $scope.ordersClient.search(name, $scope.campaign.id);
-                /*await http.get(`/crre/orderRegion/projects`, { params: {
-                    storeIds: [1,2,3].join(',')
-                }});*/
             } else {
                 await $scope.ordersClient.sync('WAITING');
             }
@@ -370,10 +371,18 @@ export const orderController = ng.controller('orderController',
                 window.URL.revokeObjectURL(link.href);
             }, 100);
         };
-        $scope.exportCSV = async() => {
-            let params = Utils.formatKeyToParameter($scope.ordersClient.selected, 'id');
-            window.location = `/crre/orders/export?${params}`;
-        };
+        $scope.exportCSV = () => {
+            let order_selected;
+            if($scope.ordersClient.selectedElements.length == 0) {
+                order_selected = $scope.ordersClient.all;
+            } else {
+                order_selected = $scope.ordersClient.selectedElements;
+            }
+            let params_id_order = Utils.formatKeyToParameter(order_selected, 'id');
+            let equipments_key = order_selected.map( (value) => value.equipment_key).filter( (value, index, _arr) => _arr.indexOf(value) == index);
+            let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map( s => ({equipment_key:s})), "equipment_key");
+            window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
+        }
 
 
         $scope.getUsername = () => model.me.username;

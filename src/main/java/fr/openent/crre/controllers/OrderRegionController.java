@@ -18,7 +18,12 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -73,7 +78,8 @@ public class OrderRegionController extends BaseController {
                 RequestUtils.bodyToJson(request, orders -> {
                     if (!orders.isEmpty()) {
                         JsonArray ordersList = orders.getJsonArray("orders");
-                        String title = "Commande XXX";
+                        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                        String title = "Commande_" + date + "_" + orders.size();
                         orderRegionService.createProject(title, idProject -> {
                             if(idProject.isRight()){
                                 Integer idProjectRight = idProject.right().getValue().getInteger("id");
@@ -165,19 +171,19 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-/*    @Get("/orders/search")
+    @Get("/ordersRegion/search")
     @ApiDoc("Search order through name")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
                 String query = request.getParam("q");
-                orderRegionService.search(query, arrayResponseHandler(request));
+                orderRegionService.search(query, user, arrayResponseHandler(request));
             } else {
                 badRequest(request);
             }
         });
-    }*/
+    }
 
     @Put("/order/region/:idOperation/operation")
     @ApiDoc("update operation in orders region")

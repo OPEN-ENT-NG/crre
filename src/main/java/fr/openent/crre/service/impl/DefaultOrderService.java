@@ -315,32 +315,19 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
 
     @Override
-    public void listExport(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
+    public void listExport(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String price_proposal= "CASE WHEN oe.price_proposal IS NOT NULL THEN " +
-                "ROUND (oe.price_proposal*oe.amount,2) " +
-                "ELSE ";
-
-        String closeCaseForPriceProposal="END ";
-
-        String query = "SELECT oe.name as equipment_name, oe.amount as equipment_quantity, " +
-                "oe.creation_date as equipment_creation_date, oe.summary as equipment_summary, " +
-                "oe.status as equipment_status,cause_status, price_all_options, " +
-                "CASE count(price_all_options) " +
-                "WHEN 0 THEN "+price_proposal+"ROUND ((oe.price+( oe.tax_amount*oe.price)/100)*oe.amount,2) "+closeCaseForPriceProposal+
-                "ELSE "+price_proposal+"ROUND((price_all_options +( oe.price + ROUND((oe.tax_amount*oe.price)/100,2)))*oe.amount,2) " +closeCaseForPriceProposal+
-                "END as price_total_equipment "+
+        String query = "SELECT oe.price, oe.tax_amount, oe.amount, oe.creation_date, oe.status, oe.equipment_key, bo.name as basket_name " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +
-                "LEFT JOIN (SELECT ROUND (SUM(( price +( tax_amount*price)/100)*amount),2) as price_all_options," +
-                " id_order_client_equipment FROM "+ Crre.crreSchema + ".order_client_options " +
+                "LEFT JOIN "+ Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE oe.id IN ( ";
 
-                "GROUP BY id_order_client_equipment)" +
-                " opts ON oe.id = opts.id_order_client_equipment " +
-                " WHERE id_campaign = ? AND id_structure = ?" +
-                " GROUP BY oe.id, price_all_options ORDER BY creation_date";
-
-        values.add(idCampaign).add(idStructure);
+        for (int id : idsOrders) {
+            query += "?,";
+            values.add(id);
+        }
+        query = query.substring(0, query.length() - 1) + ")";
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 

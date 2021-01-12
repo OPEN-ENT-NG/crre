@@ -94,22 +94,25 @@ public class LogController extends ControllerHelper {
 
     private static String getExportHeader (HttpServerRequest request) {
         return I18n.getInstance().translate("date", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("user", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("action", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("context", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("resource", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("value", getHost(request), I18n.acceptLanguage(request))
+                I18n.getInstance().translate("basket", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
                 + "\n";
     }
 
     private static String generateExportLine (HttpServerRequest request, JsonObject log) {
-        return log.getString("date") + ";" +
-                log.getString("username") + ";" +
-                log.getString("action") + ";" +
-                I18n.getInstance().translate(log.getString("context"), getHost(request),
-                        I18n.acceptLanguage(request)) + ";" +
-                log.getString("item") + ";" +
-                (log.getString("value") != null ? log.getString("value").replace("\\\"", "\"") : "")
+        return log.getString("creation_date") + ";" +
+                log.getString("basket_name") + ";" +
+                log.getString("name") + ";" +
+                log.getString("ean") + ";" +
+                log.getInteger("amount").toString() + ";" +
+                log.getString("total") + ";" +
+                log.getString("comment") + ";" +
+                (log.getString("status") != null ? log.getString("status").replace("\\\"", "\"") : "")
                 + "\n";
     }
 }

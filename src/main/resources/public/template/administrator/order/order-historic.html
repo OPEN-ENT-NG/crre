@@ -24,7 +24,7 @@
         </div>
     </div>
     <div class="flex-row">
-        <table class="twelve-mobile ten">
+        <table class="twelve-mobile twelve">
             <thead>
             <tr>
 
@@ -47,7 +47,7 @@
             <tbody ng-repeat="project in projects">
             <tr>
                 <td><div class="smallTabElem center">[[project.creation_date]]</div></td>
-                <td><div class="tabElem">[[project.title]]</div></td>
+                <td><div class="tabElem ellipsis">[[project.title]]</div></td>
                 <td><div class="tabElem"></div></td>
                 <td><div class="smallTabElem center">[[project.amount]]</div></td>
                 <td><div class="smallTabElem center">[[project.total]]</div></td>
@@ -62,7 +62,7 @@
             <tr ng-repeat="order in project.orders" class="subline" post-ng-repeat>
                 <td><div class="smallTabElem center">[[order.creation_date]]</div></td>
                 <td><div class="tabElem order">
-                    <img src="[[order.image]]"/><div>[[order.name]]</div>
+                    <img src="[[order.image]]"/><div class="ellipsis">[[order.name]]</div>
                 </div></td>
                 <td><div class="smallTabElem center">[[order.owner_name]]</div></td>
                 <td><div class="tabElem">[[order.basket_name]]</div></td>
