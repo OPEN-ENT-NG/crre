@@ -171,6 +171,40 @@ public class OrderRegionController extends BaseController {
         });
     }
 
+    @Get("/ordersRegion/projects/filter")
+    @ApiDoc("get all projects ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void getProjectsDate(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            String startDate = request.getParam("startDate");
+            String endDate = request.getParam("endDate");
+            orderRegionService.filter(user, startDate, endDate, arrayResponseHandler(request));
+        });
+    }
+
+    @Get("/ordersRegion/projects/search_filter")
+    @ApiDoc("get all projects search and filter")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void getProjectsDateSearch(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+                String query = request.getParam("q");
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
+                orderRegionService.searchName(query, equipments -> {
+                    if(equipments.right().getValue().size() > 0) {
+                        orderRegionService.filterSearch(user, equipments.right().getValue(), query, startDate, endDate, arrayResponseHandler(request));
+                    } else {
+                        orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, arrayResponseHandler(request));
+                    }
+                });
+
+            }
+        });
+    }
+
     @Get("/ordersRegion/search")
     @ApiDoc("Search order through name")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)

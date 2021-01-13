@@ -30,4 +30,10 @@ public interface OrderRegionService {
     void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
+
+    void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

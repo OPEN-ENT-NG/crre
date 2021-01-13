@@ -62,14 +62,62 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
+        $scope.getProjectsSearchFilter = async(name: string, startDate: Date, endDate: Date) => {
+            try {
+                startDate = moment(startDate).format('YYYY-MM-DD').toString();
+                endDate = moment(endDate).format('YYYY-MM-DD').toString();
+                let { data } = await http.get(`/crre/ordersRegion/projects/search_filter?q=${name}&startDate=${startDate}&endDate=${endDate}`);
+                $scope.projects = data;
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
+        $scope.getProjectsFilter = async(startDate: Date, endDate: Date) => {
+            try {
+                startDate = moment(startDate).format('YYYY-MM-DD').toString();
+                endDate = moment(endDate).format('YYYY-MM-DD').toString();
+                let { data } = await http.get(`/crre/ordersRegion/projects/filter?startDate=${startDate}&endDate=${endDate}`);
+                $scope.projects = data;
+            } catch (e) {
+                notify.error('crre.basket.sync.err');
+            }
+        }
+
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
-                await $scope.getProjectsSearch(name);
-                await synchroRegionOrders(true);
+                if(!$scope.filters.hasOwnProperty("startDate") && !$scope.filters.hasOwnProperty("endDate")) {
+                    await $scope.getProjectsSearch(name);
+                    await synchroRegionOrders(true);
+                } else {
+                    if(moment($scope.filters.startDate).isSameOrBefore(moment($scope.filters.endDate))) {
+                        await $scope.getProjectsSearchFilter(name, $scope.filters.startDate, $scope.filters.endDate);
+                        await synchroRegionOrders(true);
+                    }
+                }
             } else {
                 await synchroRegionOrders();
             }
             Utils.safeApply($scope);
+        }
+
+        $scope.filterByDate = async () => {
+            if($scope.filters.hasOwnProperty("startDate") && $scope.filters.hasOwnProperty("endDate")) {
+                if(moment($scope.filters.startDate).isSameOrBefore(moment($scope.filters.endDate))) {
+                    if($scope.query_name == "" || $scope.query_name == null) {
+                        await $scope.getProjectsFilter($scope.filters.startDate, $scope.filters.endDate)
+                        await synchroRegionOrders(true);
+                    } else {
+                        await $scope.getProjectsSearchFilter($scope.query_name, $scope.filters.startDate, $scope.filters.endDate);
+                        await synchroRegionOrders(true);
+                    }
+
+                } else {
+                    notify.error('crre.date.err');
+                }
+
+            }
+
         }
 
         $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {

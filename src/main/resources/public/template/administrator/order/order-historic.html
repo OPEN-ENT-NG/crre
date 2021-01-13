@@ -8,7 +8,7 @@
                 <i class="diary-calendar"></i>
                 <date-picker
                         ng-model="filters.startDate"
-                        ng-change=""
+                        ng-change="filterByDate()"
                         class="input-date-picker-style">
                 </date-picker>
             </div>
@@ -20,7 +20,7 @@
                 <i class="diary-calendar"></i>
                 <date-picker
                         ng-model="filters.endDate"
-                        ng-change="updateFilter()"
+                        ng-change="filterByDate()"
                         class="input-date-picker-style">
                 </date-picker>
             </div>

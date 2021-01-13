@@ -347,4 +347,82 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
         plainTextSearchName(word, handler);
     }
+
+    public void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "" +
+                "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.id_structure IN ( ";
+        values.add(startDate);
+        values.add(endDate);
+        for (String idStruct : user.getStructures()) {
+            query += "?,";
+            values.add(idStruct);
+        }
+        query = query.substring(0, query.length() - 1) + ")";
+        query = query + " ORDER BY p.id ";
+        sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE ore.creation_date BETWEEN ? AND ? AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN ( ";
+
+        values.add(startDate);
+        values.add(endDate);
+        values.add(query);
+        values.add(query);
+        values.add(query);
+
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += ") AND ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery = sqlquery + " ORDER BY p.id ";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE ore.creation_date BETWEEN ? AND ? AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ";
+
+        values.add(startDate);
+        values.add(endDate);
+        values.add(query);
+        values.add(query);
+        values.add(query);
+
+        sqlquery += ") AND ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery = sqlquery + " ORDER BY p.id ";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+
 }
