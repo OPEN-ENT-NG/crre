@@ -25,5 +25,9 @@ public interface OrderRegionService {
 
     void getAllProjects(UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void search(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void search(String query, UserInfos user, JsonArray equipTab, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void searchName(String word, Handler<Either<String, JsonArray>> handler);
 }

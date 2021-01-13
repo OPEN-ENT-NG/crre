@@ -98,11 +98,11 @@ export const orderRegionController = ng.controller('orderRegionController',
             for (const project of $scope.projects) {
                 project.orders = await $scope.getOrdersByProject(project.id);
                 project.orders.map(order => {
-                    order.creation_date =  moment(order.creation_date.created).format('DD-MM-YYYY').toString();
+                    order.creation_date =  moment(order.creation_date).format('DD-MM-YYYY').toString();
                 });
                 project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
                 project.amount = $scope.calculateAmountRegion(project.orders);
-                project.creation_date = moment(project.orders[0].creation_date).format('DD-MM-YYYY').toString();
+                project.creation_date = project.orders[0].creation_date;
                 project.status = project.orders[0].status;
             }
 

@@ -195,5 +195,10 @@ public interface OrderService {
 
     void getOrderBCParams(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
 
-    void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void searchWithoutEquip(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void searchName(String word, Handler<Either<String, JsonArray>> handler);
+
 }

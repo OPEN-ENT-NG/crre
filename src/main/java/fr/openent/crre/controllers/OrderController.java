@@ -180,7 +180,13 @@ public class OrderController extends ControllerHelper {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
                 String query = request.getParam("q");
                 int id_campaign = parseInt(request.getParam("id"));
-                orderService.search(query, user, id_campaign, arrayResponseHandler(request));
+                orderService.searchName(query, equipments -> {
+                    if(equipments.right().getValue().size() > 0) {
+                        orderService.search(query, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                    } else {
+                        orderService.searchWithoutEquip(query, user, id_campaign, arrayResponseHandler(request));
+                    }
+                });
             } else {
                 badRequest(request);
             }

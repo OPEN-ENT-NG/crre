@@ -456,12 +456,14 @@ export const orderController = ng.controller('orderController',
         }*/
 
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
-            await orderClient.updateAmount(amount);
-            let basket = new BasketOrder();
-            basket.setIdBasket(orderClient.id_basket);
-            await basket.updateAllAmount();
-            orderClient.amount = amount;
-            $scope.$apply()
+            if(amount.toString() != 'undefined' || amount != null) {
+                await orderClient.updateAmount(amount);
+                let basket = new BasketOrder();
+                basket.setIdBasket(orderClient.id_basket);
+                await basket.updateAllAmount();
+                orderClient.amount = amount;
+                $scope.$apply()
+            }
         };
 
         $scope.exportOrderStruct = async (orders: OrderClient[]) => {

@@ -13,6 +13,8 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
+
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
     public DefaultOrderRegionService(String table) {
@@ -289,21 +291,26 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void search(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void search(String query, UserInfos user, JsonArray equipTab, Handler<Either<String, JsonArray>> arrayResponseHandler) {
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
             String sqlquery = "SELECT DISTINCT (p.*) " +
                     "FROM  " + Crre.crreSchema + ".project p " +
                     "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                     "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                     "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                    "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ) AND ore.id_structure IN ( ";
-            // liste id filtrer
-            // call es avec la liste d'id + query du nom du manuel
-            // liste manuel qui correspondent a ma recherche
-            //
+                    "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN ( ";
+
             values.add(query);
             values.add(query);
             values.add(query);
+
+            for (int i = 0; i < equipTab.size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonObject(i).getInteger("id"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+            sqlquery += ") AND ore.id_structure IN ( ";
             for (String idStruct : user.getStructures()) {
                 sqlquery += "?,";
                 values.add(idStruct);
@@ -312,4 +319,32 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             sqlquery = sqlquery + " ORDER BY p.id ";
             sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
         }
+
+    @Override
+    public void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ";
+
+        values.add(query);
+        values.add(query);
+        values.add(query);
+
+        sqlquery += ") AND ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery = sqlquery + " ORDER BY p.id ";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
+        plainTextSearchName(word, handler);
+    }
 }

@@ -20,6 +20,8 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
+
 public class DefaultOrderService extends SqlCrudService implements OrderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
@@ -1012,7 +1014,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void searchWithoutEquip(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
@@ -1029,6 +1031,37 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name " +
+                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+
+        values.add(id_campaign);
+        values.add(query);
+        values.add(query);
+
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += ") AND oe.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
+        plainTextSearchName(word, handler);
     }
 }
 

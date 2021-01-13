@@ -112,10 +112,12 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         };
 
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
-            await orderClient.updateAmount(amount);
-            await basketOrder.updateAllAmount();
-            orderClient.amount = amount;
-            $scope.$apply()
+            if(amount.toString() != 'undefined' || amount != null) {
+                await orderClient.updateAmount(amount);
+                await basketOrder.updateAllAmount();
+                orderClient.amount = amount;
+                $scope.$apply()
+            }
         };
 
 

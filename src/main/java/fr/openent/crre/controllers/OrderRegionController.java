@@ -178,7 +178,14 @@ public class OrderRegionController extends BaseController {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
                 String query = request.getParam("q");
-                orderRegionService.search(query, user, arrayResponseHandler(request));
+                orderRegionService.searchName(query, equipments -> {
+                    if(equipments.right().getValue().size() > 0) {
+                        orderRegionService.search(query, user, equipments.right().getValue(), arrayResponseHandler(request));
+                    } else {
+                        orderRegionService.searchWithoutEquip(query, user, arrayResponseHandler(request));
+                    }
+                });
+
             } else {
                 badRequest(request);
             }

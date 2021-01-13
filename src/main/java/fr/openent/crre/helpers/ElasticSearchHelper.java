@@ -79,6 +79,24 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), handler);
     }
 
+    public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
+        JsonArray should = new JsonArray();
+            JsonObject regexp = regexpField("name", query);
+            should.add(regexp);
+
+        JsonObject regexpBool = new JsonObject()
+                .put("should", should);
+        JsonArray must = new JsonArray()
+                .add(new JsonObject().put("bool", regexpBool));
+
+        JsonObject bool = new JsonObject()
+                .put("must", must);
+        JsonObject queryObject = new JsonObject()
+                .put("bool", bool);
+
+        search(esQueryObject(queryObject), handler);
+    }
+
     public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
 
