@@ -81,7 +81,7 @@
                 <td ng-if="tableFields[5].display">
                     <div class="smallTabElem center">
                         <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount - 1)"></i>
-                        <input type="number" class="nine-small" name="input" ng-disabled="order.status === 'IN PROGRESS'"
+                        <input type="number" class="quantity-input" name="input" ng-disabled="order.status === 'IN PROGRESS'"
                                ng-change="updateAmount(order, order.amount)" ng-model="order.amount">
                         <i class="plus" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount + 1)"></i>
                     </div>

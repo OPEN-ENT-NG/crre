@@ -276,6 +276,30 @@ body.crre {
     filter: invert(0.65);
   }
 
+  i.diary-calendar {
+    padding: 3px 12px;
+    margin: 5px;
+    background-repeat: no-repeat;
+    background-image: url(/crre/public/img/scss/calendar-range.svg);
+    filter: invert(28%) sepia(65%) saturate(6052%) hue-rotate(341deg) brightness(95%) contrast(104%);
+  }
+
+  .quantity-input {
+    width: 45px;
+  }
+
+  .date-picker-style {
+    display: inline-block;
+    background: white;
+    border-radius: 3px;
+  }
+
+  .input-date-picker-style {
+    width: 80px;
+    margin: 0;
+    border: none;
+  }
+
   .catalog{
     div.twelve{
       input.row{

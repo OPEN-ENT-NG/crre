@@ -1,8 +1,29 @@
 <div ng-controller="orderRegionController" class="order-client-validation">
-    <div class="row margin-top-20">
-        <div class="cell four vertical-spacing">
-            <div class="cell four"><i18n>crre.order.generation.date</i18n> :</div>
-            <div class="cell eight"><date-picker ng-model="orderToSend.dateGeneration" ></date-picker></div>
+    <div class="row margin-top-20 vertical-spacing-twice">
+        <div class="cell five-small margin-top-8">
+            <i18n>from</i18n>
+            &#58;&nbsp;
+            <!-- start date -->
+            <div class="date-picker-style">
+                <i class="diary-calendar"></i>
+                <date-picker
+                        ng-model="filters.startDate"
+                        ng-change=""
+                        class="input-date-picker-style">
+                </date-picker>
+            </div>
+            &nbsp;&nbsp;&nbsp;
+            <i18n>to</i18n>
+            &#58;&nbsp;
+            <!-- end date -->
+            <div class="date-picker-style">
+                <i class="diary-calendar"></i>
+                <date-picker
+                        ng-model="filters.endDate"
+                        ng-change="updateFilter()"
+                        class="input-date-picker-style">
+                </date-picker>
+            </div>
         </div>
         <div class="cell two margin-top-8">
             <div class="search-bar order-search-bar">
@@ -19,40 +40,47 @@
         <table class="twelve">
             <thead>
             <tr>
-
-                <!--                <td ng-repeat="field in tableFields "-->
-                <!--                    ng-hide="!field.display"-->
-                <!--                    ng-click="sort.order.type = field.fieldName; sort.order.reverse = !sort.order.reverse">-->
-                <!--                    <div class="smallTabElem">  [[lang.translate(field.name)]] </div>-->
-                <!--                    <i class="up-open" ng-show="sort.order.type === field.fieldName && !sort.order.reverse"></i>-->
-                <!--                    <i class="down-open" ng-show="sort.order.type === field.fieldName && sort.order.reverse"></i>-->
-                <!--                </td>-->
+                <td class="table-selector main-selector"></td>
                 <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
                 <td><div class="tabElem"><i18n>Demande</i18n></div></td>
                 <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem"></div></td>
+                <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
-                <td><div class="smallTabElem"><i18n>Statut</i18n></div></td>
                 <td><div class="smallTabElem"></div></td>
+                <td><div class="smallTabElem center"><i18n>Statut</i18n></div></td>
             </tr>
             </thead>
             <tbody ng-repeat="project in projects">
             <tr>
+                <td class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersProject(project)">
+                        <span></span>
+                    </label>
+                </td>
                 <td><div class="smallTabElem center">[[project.creation_date]]</div></td>
                 <td><div class="tabElem">[[project.title]]</div></td>
                 <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem"></div></td>
+                <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem center">[[project.amount]]</div></td>
                 <td><div class="smallTabElem center">[[project.total]]</div></td>
+                <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem center ellipsis" tooltip="[[order.status]]">
                     <div tooltip="[[project.status]]" class="[[project.status]] status-circle  cell row myOrder centerCircleMobile">
                     </div>
                     <span ng-bind="lang.translate(project.status)" class="webkit-vertical-align zero-mobile"></span>
                 </div></td>
-                <td><div class="smallTabElem"></div></td>
             </tr>
             <tr ng-repeat="order in project.orders" class="subline" post-ng-repeat>
+                <td class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project, order.selected)">
+                        <span></span>
+                    </label>
+                </td>
                 <td><div class="smallTabElem center">[[order.creation_date]]</div></td>
                 <td>
                     <div class="tabElem order">
@@ -77,27 +105,16 @@
                         <i class="comment-icon"></i>
                     </div>
                 </td>
-            </tr>
-            </tbody>
-<!--            <tfoot>
-            <tr>
-                <td colspan="4">
-                    <i18n class="center">totals</i18n>
-                </td>
-                <td ng-if="tableFields[3].display" colspan="[[countColSpan('price') - 1]]"> <div class="smallTabElem center">[[displayedOrders.calculTotalAmount()]]</div></td>
-                <td ng-if="tableFields[4].display" >
-                    <div class="smallTabElem center"> [[displayedOrders.calculTotalPriceTTC() | currency]]</div>
-                </td>
                 <td></td>
             </tr>
-            </tfoot>-->
+            </tbody>
         </table>
     </div>
     <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
         <div class="toggle">
             <div class="row">
-                <button ng-click="exportCSV()" >
-                    <i18n>crre.logs.csv.export</i18n>
+                <button ng-click="reSubmit()" >
+                    <i18n>crre.resubmit</i18n>
                 </button>
             </div>
         </div>

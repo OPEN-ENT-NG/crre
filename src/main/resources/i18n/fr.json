@@ -571,5 +571,8 @@
   "Editors": "Éditeurs",
   "First.name": "Nom",
   "crre.reassort": "Réassort",
-  "crre.not.reassort": "Non réassort"
+  "crre.not.reassort": "Non réassort",
+  "from": "Du",
+  "to": "Au",
+  "crre.resubmit": "Resoumettre"
 }
