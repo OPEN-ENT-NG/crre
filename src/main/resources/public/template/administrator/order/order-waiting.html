@@ -29,7 +29,6 @@
         </div>
         <div class="cell twelve-mobile right-magnet">
             <button ng-click="createOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
-            <button class="right-magnet" ng-click="exportCSV()"><i18n>crre.orderEquipment.manage.exportCSV</i18n></button>
         </div>
     </div>
     <div class="flex-row">
@@ -142,6 +141,9 @@
             <div class="row">
                 <button ng-click="refuseOrders()">
                     <i18n>Denied</i18n>
+                </button>
+                <button ng-click="exportCSV()">
+                    <i18n>crre.orderEquipment.manage.exportCSV</i18n>
                 </button>
             </div>
         </div>

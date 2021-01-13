@@ -45,6 +45,12 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             let equipments_key = order_selected.map( (value) => value.equipment_key).filter( (value, index, _arr) => _arr.indexOf(value) == index);
             let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map( s => ({equipment_key:s})), "equipment_key");
             window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
+            $scope.displayedBasketsOrders.forEach(function (basket) {
+                basket.selected = false;
+                basket.orders.forEach(function (order) {
+                    order.selected = false;
+                });
+            });
         }
 
         $scope.searchByName =  async (name: string) => {
@@ -70,6 +76,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 });
             });
         };
+
         $scope.switchAllOrdersBasket = (basket) => {
             basket.orders.map((order) => order.selected = basket.selected);
         };

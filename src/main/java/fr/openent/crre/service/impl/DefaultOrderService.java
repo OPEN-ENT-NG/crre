@@ -320,7 +320,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listExport(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT oe.price, oe.tax_amount, oe.amount, oe.creation_date, oe.status, oe.equipment_key, bo.name as basket_name " +
+        String query = "SELECT oe.price, oe.tax_amount, oe.amount, oe.creation_date, oe.status, oe.equipment_key, oe.comment, bo.name as basket_name " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +
                 "LEFT JOIN "+ Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "WHERE oe.id IN ( ";

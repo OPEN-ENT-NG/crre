@@ -290,17 +290,17 @@ public class OrderController extends ControllerHelper {
                     if (event.succeeded()) {
                         JsonArray equipments = equipmentFuture.result();
                         JsonArray orderClients = orderClientFuture.result();
-                        JsonObject orderMap = new JsonObject();
+                        JsonObject orderMap;
                         JsonArray orders = new JsonArray();
                         JsonObject order, equipment;
-                        boolean check = true;
-                        int j = 0;
+                        boolean check;
+                        int j;
                         for (int i = 0; i < orderClients.size(); i++) {
                             order = orderClients.getJsonObject(i);
                             check = true;
                             j = 0;
                             while(check && j < equipments.size()) {
-                                if(equipments.getJsonObject(j).getInteger("id") == order.getInteger("equipment_key")) {
+                                if(equipments.getJsonObject(j).getInteger("id").equals(order.getInteger("equipment_key"))) {
                                     orderMap = new JsonObject();
                                     equipment = equipments.getJsonObject(j);
                                     orderMap.put("name", equipment.getString("name"));
@@ -341,71 +341,6 @@ public class OrderController extends ControllerHelper {
     private void getEquipment(List<Integer> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
         searchByIds(idsEquipment, handlerJsonArray);
     }
-
-    private static String getExportHeader(HttpServerRequest request){
-        if(request.params().contains("idCampaign")) {
-            return I18n.getInstance().translate("creation.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("price.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("name.project", getHost(request), I18n.acceptLanguage(request))
-                    + "\n";
-        }else if (request.params().contains("id")) {
-            return I18n.getInstance().translate("Structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("contract", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("supplier", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("creation.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("campaign", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate("price.equipment", getHost(request), I18n.acceptLanguage(request))
-                    + "\n";
-
-        }else{ return ""; }
-    }
-
-
-    private static String generateExportLine(HttpServerRequest request, JsonObject order)  {
-        SimpleDateFormat formatterDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        SimpleDateFormat formatterDateCsv = new SimpleDateFormat("dd/MM/yyyy");
-        Date orderDate = null;
-
-        if(request.params().contains("idCampaign")) {
-            try {
-                orderDate = formatterDate.parse( order.getString("equipment_creation_date"));
-
-            } catch (ParseException e) {
-                log.error( "Error current format date" + e);
-            }
-            return formatterDateCsv.format(orderDate) + ";" +
-                    order.getString("equipment_name") + ";" +
-                    order.getInteger("equipment_quantity") + ";" +
-                    order.getString("price_total_equipment") + " " + I18n.getInstance().
-                    translate("money.symbol", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    I18n.getInstance().translate(order.getString("equipment_status"), getHost(request),
-                            I18n.acceptLanguage(request)) + ";" +
-                    order.getString("project_name") + ";" +
-
-                    "\n";
-        }else if (request.params().contains("id")){
-            try {
-                orderDate = formatterDate.parse( order.getString("date"));
-
-            } catch (ParseException e) {
-                log.error( "Error current format date" + e);
-            }
-            return order.getString("uaiNameStructure") + ";" +
-                    order.getString("namecontract") + ";" +
-                    order.getString("namesupplier") + ";" +
-                    order.getInteger("qty") + ";" +
-                    formatterDateCsv.format(orderDate) + ";" +
-                    order.getString("namecampaign") + ";" +
-                    order.getString("pricetotal") + " " + I18n.getInstance().
-                    translate("money.symbol", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                    "\n";
-        }else {return " ";}
-    }
-
 
     @Put("/orders/valid")
     @ApiDoc("validate orders ")
