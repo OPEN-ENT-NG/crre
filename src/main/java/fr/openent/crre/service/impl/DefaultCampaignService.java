@@ -119,7 +119,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
                 "WHERE status = 'WAITING' " +
-                "GROUP BY campaign.id, user_id, status) ";
+                "GROUP BY campaign.id, status) ";
 
         String query = "SELECT campaign.id as id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, " +
                 sub_query_waiting_order +
@@ -135,7 +135,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 "FROM " + Crre.crreSchema + ".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
                 "WHERE id_structure = ? AND status = 'WAITING' " +
-                "GROUP BY campaign.id, user_id, status) ";
+                "GROUP BY campaign.id, status) ";
 
         String query = "SELECT campaign.id as id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, " +
                 sub_query_waiting_order +
