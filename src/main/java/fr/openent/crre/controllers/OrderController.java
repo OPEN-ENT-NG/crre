@@ -32,7 +32,9 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLDecoder;
 import java.text.*;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -178,15 +180,20 @@ public class OrderController extends ControllerHelper {
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
-                String query = request.getParam("q");
-                int id_campaign = parseInt(request.getParam("id"));
-                orderService.searchName(query, equipments -> {
-                    if(equipments.right().getValue().size() > 0) {
-                        orderService.search(query, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
-                    } else {
-                        orderService.searchWithoutEquip(query, user, id_campaign, arrayResponseHandler(request));
-                    }
-                });
+                try {
+                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    int id_campaign = parseInt(request.getParam("id"));
+                    orderService.searchName(query, equipments -> {
+                        if(equipments.right().getValue().size() > 0) {
+                            orderService.search(query, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                        } else {
+                            orderService.searchWithoutEquip(query, user, id_campaign, arrayResponseHandler(request));
+                        }
+                    });
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+
             } else {
                 badRequest(request);
             }

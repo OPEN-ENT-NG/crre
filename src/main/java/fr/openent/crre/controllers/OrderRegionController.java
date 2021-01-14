@@ -21,6 +21,8 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -190,17 +192,20 @@ public class OrderRegionController extends BaseController {
     public void getProjectsDateSearch(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
-                String query = request.getParam("q");
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                orderRegionService.searchName(query, equipments -> {
-                    if(equipments.right().getValue().size() > 0) {
-                        orderRegionService.filterSearch(user, equipments.right().getValue(), query, startDate, endDate, arrayResponseHandler(request));
-                    } else {
-                        orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, arrayResponseHandler(request));
-                    }
-                });
-
+                try {
+                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    String startDate = request.getParam("startDate");
+                    String endDate = request.getParam("endDate");
+                    orderRegionService.searchName(query, equipments -> {
+                        if(equipments.right().getValue().size() > 0) {
+                            orderRegionService.filterSearch(user, equipments.right().getValue(), query, startDate, endDate, arrayResponseHandler(request));
+                        } else {
+                            orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, arrayResponseHandler(request));
+                        }
+                    });
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -211,14 +216,18 @@ public class OrderRegionController extends BaseController {
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
-                String query = request.getParam("q");
-                orderRegionService.searchName(query, equipments -> {
-                    if(equipments.right().getValue().size() > 0) {
-                        orderRegionService.search(query, user, equipments.right().getValue(), arrayResponseHandler(request));
-                    } else {
-                        orderRegionService.searchWithoutEquip(query, user, arrayResponseHandler(request));
-                    }
-                });
+                try {
+                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    orderRegionService.searchName(query, equipments -> {
+                        if(equipments.right().getValue().size() > 0) {
+                            orderRegionService.search(query, user, equipments.right().getValue(), arrayResponseHandler(request));
+                        } else {
+                            orderRegionService.searchWithoutEquip(query, user, arrayResponseHandler(request));
+                        }
+                    });
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
 
             } else {
                 badRequest(request);

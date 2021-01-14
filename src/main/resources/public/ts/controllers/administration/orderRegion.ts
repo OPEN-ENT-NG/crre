@@ -25,6 +25,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 validOrder: false,
             },
         };
+        $scope.filters = [];
         $scope.translate = (key: string):string => lang.translate(key);
 
         $scope.getOrdersByProject = async(id: number) => {
