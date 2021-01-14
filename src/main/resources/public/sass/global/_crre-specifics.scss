@@ -300,6 +300,13 @@ body.crre {
     border: none;
   }
 
+  .min-width-date-picker {
+    min-width: 350px;
+    @media screen and (max-width: $tablette) {
+      min-width:unset;
+    }
+  }
+
   .catalog{
     div.twelve{
       input.row{
