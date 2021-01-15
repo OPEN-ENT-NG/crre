@@ -200,6 +200,37 @@ public class OrderController extends ControllerHelper {
         });
     }
 
+    /*@Get("/orders/filter")
+    @ApiDoc("Filter order")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void filter(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+                try {
+                    List<String> params = new ArrayList<String>();
+                    String q = "";
+                    if (request.params().contains("grade")) {
+                        params = request.params().getAll("grade");
+                    }
+
+                    if (request.params().contains("q") && request.params().get("q").trim() != "") {
+                        q = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    }
+
+                    int id_campaign = parseInt(request.getParam("id"));
+                    String finalQ = q;
+                    orderService.filterGrade(params, q, equipments -> {
+                        if (equipments.right().getValue().size() > 0) {
+                            orderService.search(finalQ, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                        } else {
+                            orderService.searchWithoutEquip(finalQ, user, id_campaign, arrayResponseHandler(request));
+                        }
+                    });
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+        });
+    }*/
+
     @Get("/order/struct")
     @ApiDoc("Get the pdf of orders by structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

@@ -1073,13 +1073,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         plainTextSearchName(word, handler);
     }
 
-    @Override
+/*    @Override
     public void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler) {
         if(query == "") {
             filter_waiting(filter, null, handler);
         } else {
             filter_waiting(filter, query, handler);
         }
-    }
+    }*/
 }
 
