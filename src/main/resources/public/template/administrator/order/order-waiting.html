@@ -99,24 +99,12 @@
                 </td>
             </tr>
             </tbody>
-            <tfoot>
-            <tr>
-                <td colspan="6">
-                    <i18n class="center">totals</i18n>
-                </td>
-                <td ng-if="tableFields[4].display" colspan="[[countColSpan('price') - 1]]"> <div class="smallTabElem center">[[displayedOrders.calculTotalAmount()]]</div></td>
-                <td ng-if="tableFields[5].display" >
-                    <div class="smallTabElem center leftPadding10"> [[displayedOrders.calculTotalPriceTTC() | currency]]</div>
-                </td>
-                <td></td>
-            </tr>
-            </tfoot>
         </table>
         <div class="twelve-mobile tot-cards center two">
             <h2><i18n>total.request</i18n></h2>
                 <div class = "total-container">
                     <div>
-                        Total : <span ng-bind="getTotal()"></span>
+                        Total : <span ng-bind="displayedOrders.calculTotalAmount()"></span>
                     </div>
                     <div>
                         Initial : <span ng-bind="campaign.purse_amount"></span>

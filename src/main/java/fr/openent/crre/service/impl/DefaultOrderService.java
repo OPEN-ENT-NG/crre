@@ -119,8 +119,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON contract.id_supplier = supplier.id " +
                 "INNER JOIN "+ Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "WHERE oce.id in "+ Sql.listPrepared(ids.toArray()) +
-                " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id); " +
-                "ORDER BY oce.id; ";
+                " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id) " +
+                "ORDER BY oce.id;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Integer id : ids) {

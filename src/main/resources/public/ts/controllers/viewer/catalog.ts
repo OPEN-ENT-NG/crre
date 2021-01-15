@@ -15,7 +15,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.alloptionsSelected = false;
             $scope.equipment = new Equipment();
-            /*        $scope.subjects = [];*/
+            $scope.subjects = [];
             $scope.initPopUpFilters();
         };
 
@@ -27,10 +27,10 @@ export const catalogController = ng.controller('catalogController',
             $scope.$apply();
         };
 
-        $scope.getFilter = (word: string, filter: string) => {
+        $scope.getFilter = async (word: string, filter: string) => {
             //$scope.equipments.sort.filters.push(event.target.value);
             $scope.nbItemsDisplay = $scope.pageSize;
-            $scope.equipments.getFilterEquipments(word, filter);
+            await $scope.equipments.getFilterEquipments(word, filter);
             $scope.$apply();
         };
 

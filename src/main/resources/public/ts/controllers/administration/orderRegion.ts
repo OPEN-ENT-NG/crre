@@ -3,7 +3,6 @@ import {
     OrderRegion,
     OrdersRegion,
     Structure,
-    StructureGroup,
     StructureGroups,
     Structures,
     Utils,
@@ -26,8 +25,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             },
         };
         $scope.filters = [];
-        $scope.filters.startDate = moment("01-01-2021")._d;
-        $scope.filters.endDate = moment("12-31-2021")._d;
+        $scope.filters.startDate = moment().add(-1, 'years')._d;
+        $scope.filters.endDate = moment()._d;
         $scope.translate = (key: string):string => lang.translate(key);
 
         $scope.getOrdersByProject = async(id: number) => {

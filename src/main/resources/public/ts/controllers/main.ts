@@ -3,7 +3,6 @@ import {
     Agents,
     Basket,
     Baskets,
-    BasketOrder,
     BasketsOrders,
     Campaign,
     Campaigns,
@@ -17,7 +16,6 @@ import {
     OrderClient,
     OrderRegion,
     OrdersClient, OrderUtils,
-    PRIORITY_FIELD,
     StructureGroups,
     Structures,
     Supplier,
@@ -163,29 +161,32 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
-           showCatalog: async (params) => {
+            showCatalog: async () => {
                 $scope.fromCatalog=true
+                $scope.equipments = new Equipments();
+                template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
-                //template.close('right-side');
+                template.close('right-side');
                 $scope.display.equipment = false;
-                Utils.safeApply($scope);
                 await $scope.equipments.sync(true, undefined, undefined );
-            },// a delete surement inutile => showCatalog
-            campaignCatalog: async (params) => {
+                Utils.safeApply($scope);
+
+            },
+            campaignCatalog: async () => {
                 let idCampaign = $scope.campaign.id;
                 $scope.fromCatalog=true
                 $scope.idIsInteger(idCampaign);
+                $scope.equipments = new Equipments();
                 if(!$scope.current.structure)
                     await $scope.initStructures() ;
                 await $scope.selectCampaign(idCampaign);
-                //template.close('administrator-main');
+                template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
-                //template.close('right-side');
                 $scope.display.equipment = false;
-                Utils.safeApply($scope);
                 $scope.current.structure ? await $scope.equipments.sync(true, undefined, undefined ) : null;
+                Utils.safeApply($scope);
             },
             equipmentDetail: async (params) => {
                 let idEquipment = params.idEquipment;
@@ -195,9 +196,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 } else {
                     await $scope.initBasketItem(parseInt(idEquipment));
                 }
-/*                if(!$scope.fromCatalog){
-                    $scope.redirectTo(`/equipments/catalog`);
-                }*/
+                /*                if(!$scope.fromCatalog){
+                                    $scope.redirectTo(`/equipments/catalog`);
+                                }*/
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 window.scrollTo(0, 0);
@@ -415,7 +416,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.calculatePriceTTC = (price, tax_value, roundNumber?: number) =>  {
-                return Utils.calculatePriceTTC(price,tax_value,roundNumber);
+            return Utils.calculatePriceTTC(price,tax_value,roundNumber);
         };
 
         /**
@@ -427,13 +428,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
          */
         $scope.calculatePriceOfEquipment = (equipment: any, selectedOptions: boolean, roundNumber: number = 2) => {
             let price = parseFloat((equipment.price_proposal)? equipment.price_proposal : $scope.calculatePriceTTC(equipment.price, equipment.tax_amount));
-/*            if(!equipment.price_proposal){
-                equipment.options.map((option) => {
-                    (option.required === true || (selectedOptions ? option.selected === true : false))
-                        ? price += parseFloat($scope.calculatePriceTTC(option.price, option.tax_amount))
-                        : null;
-                });
-            }*/
+            /*            if(!equipment.price_proposal){
+                            equipment.options.map((option) => {
+                                (option.required === true || (selectedOptions ? option.selected === true : false))
+                                    ? price += parseFloat($scope.calculatePriceTTC(option.price, option.tax_amount))
+                                    : null;
+                            });
+                        }*/
 
             return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price) : price;
         };
