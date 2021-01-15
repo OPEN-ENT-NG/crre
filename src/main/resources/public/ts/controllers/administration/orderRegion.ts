@@ -26,6 +26,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             },
         };
         $scope.filters = [];
+        $scope.filters.startDate = moment("01-01-2021")._d;
+        $scope.filters.endDate = moment("12-31-2021")._d;
         $scope.translate = (key: string):string => lang.translate(key);
 
         $scope.getOrdersByProject = async(id: number) => {

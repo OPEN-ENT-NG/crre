@@ -1,4 +1,4 @@
-import {_, idiom as lang, model, moment, notify} from 'entcore';
+import {_, idiom as lang, model, moment, notify, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {
     BasketOrder,
@@ -235,7 +235,6 @@ export class OrdersClient extends Selection<OrderClient> {
                 for (let order of this.all) {
                     let equipment = new Equipment();
                     await equipment.sync(order.equipment_key);
-                    //order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
                     order.price = equipment.price;
                     order.name = equipment.name;
                     order.image = equipment.image;

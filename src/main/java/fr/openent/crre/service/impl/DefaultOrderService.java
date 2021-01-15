@@ -20,6 +20,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
@@ -1035,14 +1036,19 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     public void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name " +
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
 
         values.add(id_campaign);
-        values.add(query);
-        values.add(query);
+        if(query != "") {
+            values.add(query);
+            values.add(query);
+        } else {
+            values.add("bo.name");
+            values.add("bo.name_user");
+        }
 
         for (int i = 0; i < equipTab.size(); i++) {
             sqlquery += "?,";
@@ -1062,6 +1068,15 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
         plainTextSearchName(word, handler);
+    }
+
+    @Override
+    public void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler) {
+        if(query == "") {
+            filter_waiting(filter, null, handler);
+        } else {
+            filter_waiting(filter, query, handler);
+        }
     }
 }
 
