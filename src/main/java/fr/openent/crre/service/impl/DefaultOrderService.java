@@ -20,7 +20,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
+//import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
@@ -96,7 +96,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 if(!status.contains("ALL")) {
                     query += "WHERE oce.status = ? ";
                 }
-                query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id);";
+                query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id) " +
+                         "ORDER BY oce.id; ";
                 if(!status.contains("ALL")) {
                     sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
                 } else {
@@ -118,7 +119,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".supplier ON contract.id_supplier = supplier.id " +
                 "INNER JOIN "+ Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "WHERE oce.id in "+ Sql.listPrepared(ids.toArray()) +
-                " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id); ";
+                " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id); " +
+                "ORDER BY oce.id; ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Integer id : ids) {
@@ -1030,6 +1032,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery += " ORDER BY oce.id;";
 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
@@ -1062,7 +1065,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-
+        sqlquery += " ORDER BY oce.id;";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
