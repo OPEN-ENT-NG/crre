@@ -97,7 +97,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                     query += "WHERE oce.status = ? ";
                 }
                 query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id) " +
-                         "ORDER BY oce.id; ";
+                         "ORDER BY oce.id DESC; ";
                 if(!status.contains("ALL")) {
                     sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
                 } else {
@@ -120,7 +120,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN "+ Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "WHERE oce.id in "+ Sql.listPrepared(ids.toArray()) +
                 " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id) " +
-                "ORDER BY oce.id;";
+                "ORDER BY oce.id DESC; ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Integer id : ids) {
@@ -1032,7 +1032,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += " ORDER BY oce.id;";
+        sqlquery += " ORDER BY oe.id DESC;";
 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
@@ -1065,7 +1065,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += " ORDER BY oce.id;";
+        sqlquery += " ORDER BY oe.id DESC;";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 

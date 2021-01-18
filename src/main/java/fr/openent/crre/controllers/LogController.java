@@ -98,21 +98,25 @@ public class LogController extends ControllerHelper {
                 I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("price.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.20", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
                 + "\n";
     }
 
     private static String generateExportLine (HttpServerRequest request, JsonObject log) {
-        return log.getString("creation_date") + ";" +
-                log.getString("basket_name") + ";" +
-                log.getString("name") + ";" +
-                log.getString("ean") + ";" +
-                log.getInteger("amount").toString() + ";" +
-                log.getString("total") + ";" +
-                log.getString("comment") + ";" +
-                (log.getString("status") != null ? log.getString("status").replace("\\\"", "\"") : "")
+        return  (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
+                (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
+                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
+                (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
+                (log.getString("total_ht") != null ? log.getString("total_ht") : "") + ";" +
+                (log.getString("total_ttc_5_5") != null ? log.getString("total_ttc_5_5") : "") + ";" +
+                (log.getString("total_ttc_20") != null ? log.getString("total_ttc_20") : "") + ";" +
+                (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
+                (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
                 + "\n";
     }
 }

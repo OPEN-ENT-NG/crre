@@ -69,7 +69,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "WHERE basket.id_campaign = ? " +
                 "AND basket.id_structure = ? " +
                 "AND basket.owner_id = ? " +
-                "GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure);";
+                "GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure) " +
+                "ORDER BY basket.id DESC;";
         values.add(idCampaign).add(idStructure).add(user.getUserId());
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
@@ -93,13 +94,14 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             values.add(idStruct);
         }
         query = query.substring(0, query.length() - 1) + ")";
+        query += " ORDER BY basket_order.id DESC;";
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     public void getMyBasketOrders(Handler<Either<String, JsonArray>> handler, UserInfos user){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b WHERE b.id_user = ? ORDER BY b.id";
+        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b WHERE b.id_user = ? ORDER BY b.id DESC";
         values.add(user.getUserId());
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
@@ -268,6 +270,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery += " ORDER BY bo.id DESC;";
 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }

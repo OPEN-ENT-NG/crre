@@ -550,6 +550,15 @@ body.crre {
       width: auto;
     }
   }
+  i.plus_medium::before{
+    content: '\e85e';
+    color: $secondary;
+    height: 21px;
+    display: inline-block;
+    line-height: 21px;
+    font-size: medium;
+    padding: 0 0 0 5px;
+  }
 
   i.plus::before{
     content: '\e85e';
@@ -1024,8 +1033,8 @@ body.crre {
           border-bottom: 1px solid #d8d7d7;
           
           td {
-            height: 70px;
-            max-height: 70px;
+            height: 35px;
+            max-height: 35px;
             max-width: 200px;
 
             .order {

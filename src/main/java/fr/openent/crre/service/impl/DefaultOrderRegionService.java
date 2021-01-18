@@ -286,7 +286,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         query = query.substring(0, query.length() - 1) + ")";
-        query = query + " ORDER BY p.id ";
+        query = query + " ORDER BY p.id DESC ";
         sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -316,7 +316,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 values.add(idStruct);
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-            sqlquery = sqlquery + " ORDER BY p.id ";
+            sqlquery = sqlquery + " ORDER BY p.id DESC ";
             sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
         }
 
@@ -340,7 +340,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery = sqlquery + " ORDER BY p.id ";
+        sqlquery = sqlquery + " ORDER BY p.id DESC";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -362,7 +362,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         query = query.substring(0, query.length() - 1) + ")";
-        query = query + " ORDER BY p.id ";
+        query = query + " ORDER BY p.id DESC ";
         sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -394,7 +394,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery = sqlquery + " ORDER BY p.id ";
+        sqlquery = sqlquery + " ORDER BY p.id DESC ";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -420,7 +420,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery = sqlquery + " ORDER BY p.id ";
+        sqlquery = sqlquery + " ORDER BY p.id DESC ";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 

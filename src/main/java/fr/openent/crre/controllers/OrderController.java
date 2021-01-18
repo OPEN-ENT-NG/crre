@@ -353,7 +353,9 @@ public class OrderController extends ControllerHelper {
                                     orderMap.put("basket_name", order.getString("basket_name"));
                                     orderMap.put("comment", order.getString("comment"));
                                     orderMap.put("amount", order.getInteger("amount"));
-                                    orderMap.put("total", df.format(Float.parseFloat(order.getString("price")) * (1 + Float.parseFloat(order.getString("tax_amount"))/100)  * order.getInteger("amount")));
+                                    orderMap.put("total_ht", df.format(Float.parseFloat(order.getString("price")) * order.getInteger("amount")));
+                                    orderMap.put("total_ttc_20", df.format(Float.parseFloat(order.getString("price")) * (1.2)  * order.getInteger("amount")));
+                                    orderMap.put("total_ttc_5_5", df.format(Float.parseFloat(order.getString("price")) * (1.055)  * order.getInteger("amount")));
                                     orders.add(orderMap);
                                     check = false;
                                 }
