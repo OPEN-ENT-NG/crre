@@ -69,6 +69,8 @@ export class OrderClient implements Order  {
     image:string;
     status:string;
     technical_spec:TechnicalSpec;
+    user_name:string;
+    user_id:string;
 
     constructor() {
         this.typeOrder= "client";

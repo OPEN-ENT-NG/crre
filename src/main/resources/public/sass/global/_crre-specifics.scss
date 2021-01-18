@@ -988,6 +988,7 @@ body.crre {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+        justify-content: space-between;
       }
     .flex-center {
        display: flex;
@@ -1061,13 +1062,13 @@ body.crre {
       }
     }
     .tot-cards {
-      margin: 0 auto;
+      width: 15%;
+      min-width: 175px;
     }
     .total-container {
       background: white;
-      box-shadow: 2px 3px 3px grey;
-      padding-bottom: 10px;
-      padding-top: 10px;
+      box-shadow: 0 5px 5px rgba(0,0,0,0.13);
+      padding: 10px;
     }
   }
 

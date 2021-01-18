@@ -28,6 +28,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filters.startDate = moment().add(-1, 'years')._d;
         $scope.filters.endDate = moment()._d;
         $scope.translate = (key: string):string => lang.translate(key);
+        $scope.displayToggle=false;
 
         $scope.getOrdersByProject = async(id: number) => {
             try {
@@ -375,6 +376,50 @@ export const orderRegionController = ng.controller('orderRegionController',
                 notify.error('crre.admin.order.create.err');
             }
             Utils.safeApply($scope);
+        }
+
+        $scope.getTotalHistoric = () => {
+            let total = 0;
+            $scope.projects.forEach(basket => {
+                total += parseFloat(basket.total.replace(/[^0-9.,-]+/g,""));
+            });
+            return total;
+        }
+
+        $scope.getTotalAmountHistoric = () => {
+            let total = 0;
+            $scope.projects.forEach(basket => {
+                total += parseFloat(basket.amount);
+            });
+            return total;
+        }
+
+        $scope.switchDisplayToggle = () => {
+            let orderSelected = false
+            $scope.projects.forEach(project => {
+                if(project.orders.some(order => order.selected)){
+                    orderSelected = true;
+                }
+            });
+            $scope.displayToggle = $scope.projects.some(project => project.selected) || orderSelected;
+            $scope.$apply();
+        }
+
+        $scope.switchAllOrders = (project) => {
+            project.orders.forEach(order => {
+                order.selected = project.selected;
+            });
+            $scope.switchDisplayToggle();
+        }
+
+        $scope.checkParentSwitch = (project) => {
+            let all = true;
+            project.orders.forEach(order => {
+                if(!order.selected)
+                    all = order.selected;
+            });
+            project.selected = all;
+            $scope.switchDisplayToggle();
         }
     }
     ]);

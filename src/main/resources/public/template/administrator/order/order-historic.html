@@ -37,7 +37,7 @@
         </div>
     </div>
     <div class="flex-row">
-        <table class="twelve">
+        <table class="twelve-mobile ten">
             <thead>
             <tr>
                 <td class="table-selector main-selector"></td>
@@ -56,7 +56,7 @@
             <tr>
                 <td class="table-selector">
                     <label class="checkbox">
-                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersProject(project)">
+                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrders(project)">
                         <span></span>
                     </label>
                 </td>
@@ -77,7 +77,7 @@
             <tr ng-repeat="order in project.orders" class="subline" post-ng-repeat>
                 <td class="table-selector">
                     <label class="checkbox">
-                        <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project, order.selected)">
+                        <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project)">
                         <span></span>
                     </label>
                 </td>
@@ -109,8 +109,40 @@
             </tr>
             </tbody>
         </table>
+        <div class="twelve-mobile tot-cards two">
+            <h2 class="bold-font-weight center" style="color: black; margin-bottom: 15px"><i18n>total.request</i18n></h2>
+            <div class = "total-container">
+                <div>
+                    Licences consommées
+                    <h1 style="color: black; margin-bottom: 10px" class="bold-font-weight" ng-bind="getTotalAmountHistoric()"></h1>
+                </div>
+                <div style="margin-bottom: 10px">
+                    Licences initiales
+                    <div class="bold-font-weight" style="line-height: 20px" ng-bind="5000"></div>
+                    <div style="font-size: small; line-height: 16px;">2nde : 2700</div>
+                    <div style="font-size: small; line-height: 16px;">1ere : 1500</div>
+                    <div style="font-size: small; line-height: 16px;">Tale : 800</div>
+                </div>
+                <div class="color-red">
+                    Licences restantes
+                    <h1 class="bold-font-weight color-red" style="margin-bottom: 0;" ng-bind="5000 - getTotalAmountHistoric()"></h1>
+                </div>
+            </div>
+            <div class = "total-container vertical-spacing">
+                <div>
+                    Total en €
+                    <h1 style="color: black; margin-bottom: 10px" class="bold-font-weight" ng-bind="getTotalHistoric() | currency"></h1>
+                </div>
+                <div>
+                    initiale : <span ng-bind="campaign.purse_amount | currency"></span>
+                </div>
+                <div class="color-red">
+                    reste : <span ng-bind="campaign.purse_amount - getTotalHistoric() | currency"></span>
+                </div>
+            </div>
+        </div>
     </div>
-    <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
+    <section class="toggle-buttons" ng-class="{ hide: !displayToggle }">
         <div class="toggle">
             <div class="row">
                 <button ng-click="reSubmit()" >

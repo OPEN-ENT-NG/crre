@@ -32,7 +32,7 @@
         </div>
     </div>
     <div class="flex-row">
-        <table class="twelve-mobile nine">
+        <table class="twelve-mobile ten">
             <thead>
             <tr>
                 <td workflow="crre.validator" class="table-selector main-selector">
@@ -55,7 +55,7 @@
             </thead>
             <tbody>
             <tr ng-repeat="order in ordersClient.all | orderBy:sort.order.type:sort.order.reverse"
-                 class="subline" post-ng-repeat>
+                class="subline" post-ng-repeat>
                 <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
@@ -100,18 +100,36 @@
             </tr>
             </tbody>
         </table>
-        <div class="twelve-mobile tot-cards center two">
-            <h2><i18n>total.request</i18n></h2>
-                <div class = "total-container">
-                    <div>
-                        Total : <span ng-bind="displayedOrders.calculTotalAmount()"></span>
-                    </div>
-                    <div>
-                        Initial : <span ng-bind="campaign.purse_amount"></span>
-                    </div>
-                    <div>
-                        Reste : <span ng-bind="campaign.purse_amount - getTotal()"></span>
-                    </div>
+        <div class="twelve-mobile tot-cards two">
+            <h2 class="bold-font-weight center" style="color: black; margin-bottom: 15px"><i18n>total.request</i18n></h2>
+            <div class = "total-container">
+                <div>
+                    Licences consommées
+                    <h1 style="color: black; margin-bottom: 10px" class="bold-font-weight" ng-bind="displayedOrders.calculTotalAmount()"></h1>
+                </div>
+                <div style="margin-bottom: 10px">
+                    Licences initiales
+                    <div class="bold-font-weight" style="line-height: 20px" ng-bind="5000"></div>
+                    <div style="font-size: small; line-height: 16px;">2nde : 2700</div>
+                    <div style="font-size: small; line-height: 16px;">1ere : 1500</div>
+                    <div style="font-size: small; line-height: 16px;">Tale : 800</div>
+                </div>
+                <div class="color-red">
+                    Licences restantes
+                    <h1 class="bold-font-weight color-red" style="margin-bottom: 0;" ng-bind="5000 - getTotalAmount()"></h1>
+                </div>
+            </div>
+            <div class = "total-container vertical-spacing">
+                <div>
+                    Total en €
+                    <h1 style="color: black; margin-bottom: 10px" class="bold-font-weight" ng-bind="displayedOrders.calculTotalPriceTTC() | currency"></h1>
+                </div>
+                <div>
+                    initiale : <span ng-bind="campaign.purse_amount | currency"></span>
+                </div>
+                <div class="color-red">
+                    reste : <span ng-bind="campaign.purse_amount - getTotal() | currency"></span>
+                </div>
             </div>
         </div>
     </div>

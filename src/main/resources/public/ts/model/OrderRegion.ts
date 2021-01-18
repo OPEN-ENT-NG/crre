@@ -62,6 +62,8 @@ export class OrderRegion implements Order  {
     status:string;
     technical_spec:TechnicalSpec;
     title_id ?: number;
+    user_name:string;
+    user_id:string;
 
     constructor() {
         this.typeOrder = "region";
@@ -100,6 +102,8 @@ export class OrderRegion implements Order  {
                 }),
             id_operation: this.id_operation,
             rank: this.rank -1,
+            user_name: this.user_name,
+            user_id: this.user_id,
         }
     }
 
@@ -132,6 +136,8 @@ export class OrderRegion implements Order  {
         this.structure = order.structure;
         this.id_operation = order.id_operation;
         this.equipment_key = order.equipment_key;
+        this.user_name = order.user_name;
+        this.user_id = order.user_id;
     }
 
 

@@ -179,13 +179,19 @@ export const orderController = ng.controller('orderController',
 
         $scope.getTotal = () => {
             let total = 0;
-            $scope.ordersClient.all.forEach(basket => {
+            $scope.basketsOrders.all.forEach(basket => {
              total += parseFloat(basket.total.replace(/[^0-9.,-]+/g,""));
             });
             return total;
         }
 
-
+        $scope.getTotalAmount = () => {
+            let total = 0;
+            $scope.basketsOrders.all.forEach(basket => {
+                total += parseFloat(basket.amount);
+            });
+            return total;
+        }
 
 /*        $scope.addFilter = (filterWord: string, event?) => {
             if (event && (event.which === 13 || event.keyCode === 13 )) {
