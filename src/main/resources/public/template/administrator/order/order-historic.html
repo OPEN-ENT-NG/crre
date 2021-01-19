@@ -110,34 +110,34 @@
             </tbody>
         </table>
         <div class="twelve-mobile tot-cards two">
-            <h2 class="bold-font-weight center" style="color: black; margin-bottom: 15px"><i18n>total.request</i18n></h2>
+            <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
             <div class = "total-container">
                 <div>
-                    Licences consommées
-                    <h1 style="color: black; margin-bottom: 10px" class="bold-font-weight" ng-bind="getTotalAmountHistoric()"></h1>
+                    <i18n>crre.consummed.licences</i18n>
+                    <h1 class="bold-font-weight" ng-bind="getTotalAmountHistoric()"></h1>
                 </div>
-                <div style="margin-bottom: 10px">
-                    Licences initiales
-                    <div class="bold-font-weight" style="line-height: 20px" ng-bind="5000"></div>
-                    <div style="font-size: small; line-height: 16px;">2nde : 2700</div>
-                    <div style="font-size: small; line-height: 16px;">1ere : 1500</div>
-                    <div style="font-size: small; line-height: 16px;">Tale : 800</div>
+                <div class="licences">
+                    <i18n>crre.initial.licences</i18n>
+                    <div class="bold-font-weight big" ng-bind="campaign.nb_licences_total"></div>
+                    <div class="small"><i18n>crre.second.class</i18n>[[campaign.nb_licences_2de]]</div>
+                    <div class="small"><i18n>crre.premiere.class</i18n>[[campaign.nb_licences_1ere]]</div>
+                    <div class="small"><i18n>crre.terminal.class</i18n>[[campaign.nb_licences_Tale]]</div>
                 </div>
                 <div class="color-red">
-                    Licences restantes
-                    <h1 class="bold-font-weight color-red" style="margin-bottom: 0;" ng-bind="5000 - getTotalAmountHistoric()"></h1>
+                    <i18n>crre.remain.licences</i18n>
+                    <h1 class="bold-font-weight color-red no-margin-bottom" ng-bind="campaign.nb_licences_total - getTotalAmountHistoric()"></h1>
                 </div>
             </div>
             <div class = "total-container vertical-spacing">
                 <div>
-                    Total en €
-                    <h1 style="color: black; margin-bottom: 10px" class="bold-font-weight" ng-bind="getTotalHistoric() | currency"></h1>
+                    <i18n>crre.total.in.euros</i18n>
+                    <h1 class="bold-font-weight" ng-bind="getTotalHistoric() | currency"></h1>
                 </div>
                 <div>
-                    initiale : <span ng-bind="campaign.purse_amount | currency"></span>
+                    <i18n>crre.initial</i18n><span ng-bind="campaign.initial_purse_amount | currency"></span>
                 </div>
                 <div class="color-red">
-                    reste : <span ng-bind="campaign.purse_amount - getTotalHistoric() | currency"></span>
+                    <i18n>crre.remained</i18n><span ng-bind="campaign.initial_purse_amount - getTotalHistoric() | currency"></span>
                 </div>
             </div>
         </div>

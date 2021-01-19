@@ -129,7 +129,7 @@ export class OrderClient implements Order  {
             amount: data.amount,
             cause_status: data.cause_status,
             comment: data.comment,
-            creation_date: data.creation_date,
+            creation_date: moment(data.creation_date).format('DD-MM-YYYY').toString(),
             description: data.description,
             equipment_key: data.equipment_key,
             id: data.id,
@@ -263,6 +263,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     if (status !== 'VALID') {
                         this.makeOrderNotValid(order);
                     }
+                    order.creation_date= moment(order.creation_date,'DD/MM/YYYY').format('DD-MM-YYYY');
                 }
             }
         } catch (e) {

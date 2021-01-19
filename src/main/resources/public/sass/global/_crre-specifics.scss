@@ -221,7 +221,7 @@ body.crre {
     }
   }
   .color-red {
-    color: $red;
+    color: $red !important;
   }
   .color-orange {
     color: $orange;
@@ -1064,11 +1064,32 @@ body.crre {
     .tot-cards {
       width: 15%;
       min-width: 175px;
-    }
-    .total-container {
-      background: white;
-      box-shadow: 0 5px 5px rgba(0,0,0,0.13);
-      padding: 10px;
+      >h2{
+        color: black;
+        margin-bottom: 15px
+      }
+      h1{
+        color: black;
+        margin: 0 0 10px 0;
+      }
+      .licences{
+        margin-bottom: 10px;
+        .big{
+          line-height: 20px;
+        }
+        .small{
+          font-size: small;
+          line-height: 16px;
+        }
+      }
+      .no-margin-bottom{
+        margin-bottom: 0;
+      }
+      .total-container {
+        background: white;
+        box-shadow: 0 5px 5px rgba(0,0,0,0.13);
+        padding: 10px;
+      }
     }
   }
 

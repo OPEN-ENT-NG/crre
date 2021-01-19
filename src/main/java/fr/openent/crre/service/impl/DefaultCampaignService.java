@@ -209,17 +209,20 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         LOGGER.info("A purse is present on this structure but the structure is not linked to the campaign");
                     }
                 }
-
                 for (int i = 0; i < licences.size(); i++) {
                     object = licences.getJsonObject(i);
                     campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
                     try {
                         JsonArray arr = new JsonArray();
                         arr.add(object);
-                        if(campaign.getInteger("id") == object.getInteger("id_campaign") && campaign.containsKey("purse_licence")) {
+                        if(campaign.getInteger("id").equals(object.getInteger("id_campaign")) && campaign.containsKey("purse_licence")) {
                             arr = campaign.getJsonArray("purse_licence").add(object);
                         }
-                        campaign.put("purse_licence", arr);
+                        campaign.put("purse_licence", arr); // à voir ce qu'on utilise!!
+                        campaign.put("nb_licences_total", 5000);
+                        campaign.put("nb_licences_2de", 2700);
+                        campaign.put("nb_licences_1ere", 1500);
+                        campaign.put("nb_licences_Tale", 800);
                     } catch (NullPointerException e){
                         LOGGER.info("A licence is present on this structure but the structure is not linked to the campaign");
                     }
@@ -243,8 +246,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
                 }
-
-
                 JsonArray campaignList = new JsonArray();
                 for (Map.Entry<String, Object> aCampaign : campaignMap) {
                     campaignList.add(aCampaign.getValue());

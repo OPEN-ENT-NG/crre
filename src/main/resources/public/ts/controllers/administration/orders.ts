@@ -114,6 +114,7 @@ export const orderController = ng.controller('orderController',
                     $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.all.length;
                 }
                 $scope.orderToCreate = new OrderRegion();
+                await $scope.syncOrders('WAITING');
             }
             else {
                 notify.error('crre.admin.order.create.err');
@@ -256,7 +257,6 @@ export const orderController = ng.controller('orderController',
         $scope.cancelBasketDelete = () => {
             $scope.display.lightbox.validOrder = false;
             template.close('validOrder.lightbox');
-            let indexToSplice = 0
             if($scope.operationId) {
                 $scope.ordersClient.selected.map(orderSelected =>{
                     $scope.displayedOrders.all = $scope.displayedOrders.all.filter(order => order.id !== orderSelected.id)
@@ -438,34 +438,8 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         };
 
-/*        $scope.getOrdersByProject = async(id: number) => {
-            try {
-                let { data } = await http.get(`/crre/orderRegion/orders/${id}`);
-                let orders = Mix.castArrayAs(OrderRegion, data)
-                for (let order of orders) {
-                    let equipment = new Equipment();
-                    await equipment.sync(order.equipment_key);
-                    order.price = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                    order.name = equipment.name;
-                    order.image = equipment.image;
-                }
-                return orders;
-            } catch (e) {
-                notify.error('crre.basket.sync.err');
-            }
-        }
-
-        $scope.getProjects = async() => {
-            try {
-                let { data } = await http.get(`/crre/orderRegion/projects`);
-                $scope.projects = data;
-            } catch (e) {
-                notify.error('crre.basket.sync.err');
-            }
-        }*/
-
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
-            if(amount.toString() != 'undefined' || amount != null) {
+            if(amount.toString() != 'undefined') {
                 await orderClient.updateAmount(amount);
                 let basket = new BasketOrder();
                 basket.setIdBasket(orderClient.id_basket);
@@ -645,13 +619,4 @@ export const orderController = ng.controller('orderController',
             template.close('refuseOrder.lightbox');
             Utils.safeApply($scope);
         };
-
-
-        angular.element(document).ready(function(){
-            let elements = document.getElementsByClassName('vertical-array-scroll');
-            if(elements[0]) {
-                elements[0].scrollLeft = 9000000000000;
-            }
-            Utils.safeApply($scope);
-        });
     }]);

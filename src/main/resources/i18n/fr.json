@@ -578,5 +578,14 @@
   "crre.not.reassort": "Non réassort",
   "from": "Du",
   "to": "Au",
-  "crre.resubmit": "Resoumettre"
+  "crre.resubmit": "Resoumettre",
+  "crre.consummed.licences": "Licences consommées",
+  "crre.initial.licences": "Licences initiales",
+  "crre.second.class": "2nde : ",
+  "crre.premiere.class": "1ere : ",
+  "crre.terminal.class": "Tale : ",
+  "crre.remain.licences": "Licences restantes",
+  "crre.total.in.euros": "Total en €",
+  "crre.initial": "initiale : ",
+  "crre.remained": "reste : "
 }
