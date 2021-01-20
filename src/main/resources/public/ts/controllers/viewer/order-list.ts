@@ -1,11 +1,8 @@
-import {_, http, moment, ng, template, toasts} from 'entcore';
+import {_, moment, ng, template, toasts} from 'entcore';
 import {
-    Basket,
     BasketOrder,
     OrderClient,
-    OrderRegion,
     OrdersClient,
-    OrdersRegion,
     orderWaiting,
     Utils
 } from '../../model';

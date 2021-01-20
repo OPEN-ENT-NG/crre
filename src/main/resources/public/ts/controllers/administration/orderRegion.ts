@@ -1,4 +1,4 @@
-import {_, idiom as lang, moment, ng, notify, template, toasts} from 'entcore';
+import {idiom as lang, moment, ng, notify, template, toasts} from 'entcore';
 import {
     OrderRegion,
     OrdersRegion,
@@ -7,14 +7,13 @@ import {
     Structures,
     Utils,
     Equipments,
-    Contracts, Equipment
+    Contracts
 } from "../../model";
 import http from "axios";
-import {Mix} from "entcore-toolkit";
 
 declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
-    ['$scope', '$location', '$routeParams', ($scope, $location, $routeParams) => {
+    ['$scope', ($scope) => {
 
         $scope.orderToCreate = new OrderRegion();
         $scope.structure_groups = new StructureGroups();
@@ -29,23 +28,6 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filters.endDate = moment()._d;
         $scope.translate = (key: string):string => lang.translate(key);
         $scope.displayToggle=false;
-
-        $scope.getOrdersByProject = async(id: number) => {
-            try {
-                let { data } = await http.get(`/crre/orderRegion/orders/${id}`);
-                let orders = Mix.castArrayAs(OrderRegion, data)
-                for (let order of orders) {
-                    let equipment = new Equipment();
-                    await equipment.sync(order.equipment_key);
-                    order.price = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                    order.name = equipment.name;
-                    order.image = equipment.image;
-                }
-                return orders;
-            } catch (e) {
-                notify.error('crre.basket.sync.err');
-            }
-        }
 
         $scope.getProjects = async() => {
             try {
@@ -146,11 +128,17 @@ export const orderRegionController = ng.controller('orderRegionController',
             if(!isSearching) {
                 await $scope.getProjects();
             }
+            let params = '';
+            $scope.projects.map((project) => {
+                params += `project_id=${project.id}&`;
+            });
+            params = params.slice(0, -1);
+            let { data } = await http.get(`/crre/ordersRegion/orders?${params}`);
+            for(const orders of data){
+                const idProject = orders[0].id_project
+                $scope.projects.find(project => project.id == idProject).orders = orders;
+            }
             for (const project of $scope.projects) {
-                project.orders = await $scope.getOrdersByProject(project.id);
-                project.orders.map(order => {
-                    order.creation_date =  moment(order.creation_date).format('DD-MM-YYYY').toString();
-                });
                 project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
                 project.amount = $scope.calculateAmountRegion(project.orders);
                 project.creation_date = project.orders[0].creation_date;

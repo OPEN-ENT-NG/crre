@@ -128,14 +128,14 @@
                     <i18n>crre.initial</i18n><span ng-bind="campaign.initial_purse_amount | currency"></span>
                 </div>
                 <div class="color-red">
-                    <i18n>crre.remained</i18n><span ng-bind="campaign.initial_purse_amount - getTotal() | currency"></span>
+                    <i18n>crre.remained</i18n><span ng-bind="campaign.purse_amount - displayedOrders.calculTotalPriceTTC() | currency"></span>
                 </div>
             </div>
         </div>
     </div>
     <lightbox on-close="closedLighbtox();"
               show="display.lightbox.validOrder">
-        <container template="validOrder.lightbox"></container>
+        <container template="validOrder.lightbox"></container>hi
     </lightbox>
     <lightbox on-close="closedLighbtox();"
               show="display.lightbox.refuseOrder">

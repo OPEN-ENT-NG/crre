@@ -333,10 +333,10 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 Boolean purse_enabled = baskets.getJsonObject(0).getBoolean("purse_enabled");
                 for (int i = 0; i < baskets.size(); i++) {
                     basket = baskets.getJsonObject(i);
-                    if (purse_enabled) {
+/*                    if (purse_enabled) {
                         statements.add(purseService.updatePurseAmountStatement(Double.valueOf(basket.getString("total_price")),
                                 idCampaign, idStructure, "-"));
-                    }
+                    } cela n'est pas au bon endroit il faut le faire quand le valideur valide la commande */
                     statements.add(getInsertEquipmentOrderStatement(basket, user.getUserId(), id_basket));
                     if(! "[null]".equals( basket.getString("options"))) {
                         statements.add(getInsertEquipmentOptionsStatement(basket));

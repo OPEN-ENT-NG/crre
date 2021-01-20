@@ -178,14 +178,6 @@ export const orderController = ng.controller('orderController',
             return json;
         };
 
-        $scope.getTotal = () => {
-            let total = 0;
-            $scope.basketsOrders.all.forEach(basket => {
-             total += parseFloat(basket.total.replace(/[^0-9.,-]+/g,""));
-            });
-            return total;
-        }
-
         $scope.getTotalAmount = () => {
             let total = 0;
             $scope.basketsOrders.all.forEach(basket => {

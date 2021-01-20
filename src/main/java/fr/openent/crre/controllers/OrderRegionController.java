@@ -1,5 +1,6 @@
 package fr.openent.crre.controllers;
 
+import fr.openent.crre.export.validOrders.listLycee.ListLycee;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -10,26 +11,35 @@ import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
-import static java.lang.Integer.parseInt;
 
 public class OrderRegionController extends BaseController {
 
@@ -71,52 +81,51 @@ public class OrderRegionController extends BaseController {
     }
 
     @Post("/region/orders/")
-    @ApiDoc("Create orders from a region")
+    @ApiDoc("Create orders for region")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void createAdminOrder(final HttpServerRequest request) {
         try{
-            UserUtils.getUserInfos(eb, request, user -> {
-                RequestUtils.bodyToJson(request, orders -> {
-                    if (!orders.isEmpty()) {
-                        JsonArray ordersList = orders.getJsonArray("orders");
-                        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                        String title = "Commande_" + date + "_" + orders.size();
-                        orderRegionService.createProject(title, idProject -> {
-                            if(idProject.isRight()){
-                                Integer idProjectRight = idProject.right().getValue().getInteger("id");
-                                Logging.insert(eb,
-                                        request,
-                                        null,
-                                        Actions.CREATE.toString(),
-                                        idProjectRight.toString(),
-                                        new JsonObject().put("id", idProjectRight).put("title", title));
-                                for(int i = 0 ; i<ordersList.size() ; i++){
-                                    JsonObject newOrder = ordersList.getJsonObject(i);
-                                    orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, orderCreated -> {
-                                        if(orderCreated.isRight()){
-                                            Number idReturning = orderCreated.right().getValue().getInteger("id");
-                                            Logging.insert(eb,
-                                                    request,
-                                                    Contexts.ORDERREGION.toString(),
-                                                    Actions.CREATE.toString(),
-                                                    idReturning.toString(),
-                                                    new JsonObject().put("order region", newOrder));
-                                        } else {
-                                            LOGGER.error("An error when you want get id after create order region " + orderCreated.left());
-                                            request.response().setStatusCode(400).end();
-                                        }
-                                    });
+            UserUtils.getUserInfos(eb, request, user ->
+                    RequestUtils.bodyToJson(request, orders -> {
+                        if (!orders.isEmpty()) {
+                            JsonArray ordersList = orders.getJsonArray("orders");
+                            String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                            String title = "Commande_" + date + "_" + orders.size();
+                            orderRegionService.createProject(title, idProject -> {
+                                if(idProject.isRight()){
+                                    Integer idProjectRight = idProject.right().getValue().getInteger("id");
+                                    Logging.insert(eb,
+                                            request,
+                                            null,
+                                            Actions.CREATE.toString(),
+                                            idProjectRight.toString(),
+                                            new JsonObject().put("id", idProjectRight).put("title", title));
+                                    for(int i = 0 ; i<ordersList.size() ; i++){
+                                        JsonObject newOrder = ordersList.getJsonObject(i);
+                                        orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, orderCreated -> {
+                                            if(orderCreated.isRight()){
+                                                Number idReturning = orderCreated.right().getValue().getInteger("id");
+                                                Logging.insert(eb,
+                                                        request,
+                                                        Contexts.ORDERREGION.toString(),
+                                                        Actions.CREATE.toString(),
+                                                        "null",
+                                                        new JsonObject().put("order region", newOrder));
+                                            } else {
+                                                LOGGER.error("An error when you want get id after create order region " + orderCreated.left());
+                                                request.response().setStatusCode(400).end();
+                                            }
+                                        });
+                                    }
+                                    request.response().setStatusCode(201).end();
+                                } else {
+                                    LOGGER.error("An error when you want get id after create project " + idProject.left());
+                                    request.response().setStatusCode(400).end();
                                 }
-                                request.response().setStatusCode(201).end();
-                            } else {
-                                LOGGER.error("An error when you want get id after create project " + idProject.left());
-                                request.response().setStatusCode(400).end();
-                            }
-                        });
-                    }
-                });
-            });
+                            });
+                        }
+                    }));
         } catch( Exception e){
             LOGGER.error("An error when you want create order region and project", e);
             request.response().setStatusCode(400).end();
@@ -230,6 +239,73 @@ public class OrderRegionController extends BaseController {
                 }
 
             } else {
+                badRequest(request);
+            }
+        });
+    }
+
+    @Get("/ordersRegion/orders")
+    @ApiDoc("get all orders of each project")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getOrdersByProjects(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            List<String> projectIds = request.params().getAll("project_id");
+            List<Future> futures = new ArrayList<>();
+            for(String id : projectIds){
+                Future<JsonArray> projectIdFuture = Future.future();
+                futures.add(projectIdFuture);
+                int idProject = Integer.parseInt(id);
+                orderRegionService.getAllOrderRegionByProject(idProject, handlerJsonArray(projectIdFuture));
+            }
+            getCompositeFutureAllOrderRegionByProject(request, futures);
+        });
+    }
+
+    private CompositeFuture getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, List<Future> futures) {
+        return CompositeFuture.all(futures).setHandler(event -> {
+            if (event.succeeded()) {
+                List<JsonArray> resultsList = event.result().list();
+                List<Integer> listIdsEquipment = new ArrayList<>();
+                for (JsonArray orders : resultsList) {
+                    for (Object order : orders) {
+                        listIdsEquipment.add(((JsonObject) order).getInteger("id"));
+                    }
+                }
+                getSearchByIds(request, resultsList, listIdsEquipment);
+            } else {
+                log.error(event.cause());
+                badRequest(request);
+            }
+        });
+    }
+
+    private void getSearchByIds(HttpServerRequest request, List<JsonArray> resultsList, List<Integer> listIdsEquipment) {
+        searchByIds(listIdsEquipment, equipments -> {
+            if (equipments.isRight()) {
+                JsonArray finalResult = new JsonArray();
+                for (JsonArray orders : resultsList) {
+                    finalResult.add(orders);
+                    for (Object order : orders) {
+                        JsonObject orderJson = (JsonObject) order;
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
+                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                        orderJson.put("creation_date",creation_date);
+                        int idEquipment = orderJson.getInteger("id");
+                        for (Object equipment : equipments.right().getValue()) {
+                            JsonObject equipmentJson = (JsonObject) equipment;
+                            if (idEquipment == equipmentJson.getInteger("id")) {
+                                double price = (Double.parseDouble(equipmentJson.getString("price")) * (1 + Double.parseDouble(equipmentJson.getString("tax_amount")) / 100)) * orderJson.getInteger("amount");
+                                orderJson.put("price", price);
+                                orderJson.put("name", equipmentJson.getString("name"));
+                                orderJson.put("image", equipmentJson.getString("image"));
+                            }
+                        }
+                    }
+                }
+                renderJson(request, finalResult);
+            } else {
+                log.error(equipments.left());
                 badRequest(request);
             }
         });

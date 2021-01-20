@@ -185,18 +185,15 @@ public class PurseController extends ControllerHelper {
         try {
             final Integer campaignId = Integer.parseInt(request.params().get("id"));
             purseService.launchImport(campaignId,
-                    statementsValues, new Handler<Either<String, JsonObject>>() {
-                        @Override
-                        public void handle(Either<String, JsonObject> event) {
-                            if (event.isRight()) {
-                                Renders.renderJson(request, event.right().getValue());
-                                JsonObject contentObject = new JsonObject().put("content", contentFile);
-                                Logging.insert(eb, request, Contexts.PURSE.toString(),
-                                        Actions.IMPORT.toString(), campaignId.toString(), contentObject);
-                                deleteImportPath(vertx, path);
-                            } else {
-                                returnErrorMessage(request, new Throwable(event.left().getValue()), path);
-                            }
+                    statementsValues, event -> {
+                        if (event.isRight()) {
+                            Renders.renderJson(request, event.right().getValue());
+                            JsonObject contentObject = new JsonObject().put("content", contentFile);
+                            Logging.insert(eb, request, Contexts.PURSE.toString(),
+                                    Actions.IMPORT.toString(), campaignId.toString(), contentObject);
+                            deleteImportPath(vertx, path);
+                        } else {
+                            returnErrorMessage(request, new Throwable(event.left().getValue()), path);
                         }
                     });
         } catch (NumberFormatException e) {

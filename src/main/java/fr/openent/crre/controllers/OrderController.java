@@ -91,19 +91,6 @@ public class OrderController extends ControllerHelper {
         }
     }
 
-    @Get("/orders/mine/:idCampaign/:idStructure")
-    @ApiDoc("Get my list of orders by idCampaign and idstructure")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessOrderRight.class)
-    public void listAllOrdersByCampaignByStructure(final HttpServerRequest request){
-        try {
-            Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
-            String idStructure = request.params().get("idStructure");
-            orderService.listOrder(idCampaign,idStructure, null, arrayResponseHandler(request));
-        }catch (ClassCastException e ){
-            log.error("An error occured when casting campaign id ",e);
-        }
-    }
     @Put("/order/rank/move")
     @ApiDoc("Update the rank of tow orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -130,7 +117,7 @@ public class OrderController extends ControllerHelper {
     public void listOrders (final HttpServerRequest request){
         if (request.params().contains("status")) {
             final String status = request.params().get("status");
-            if ("valid".equals(status.toLowerCase())) {
+            if ("valid".equalsIgnoreCase(status)) {
                 final JsonArray statusList = new fr.wseduc.webutils.collections.JsonArray().add(status).add("SENT").add("DONE");
                 orderService.getOrdersGroupByValidationNumber(statusList, event -> {
                     if (event.isRight()) {

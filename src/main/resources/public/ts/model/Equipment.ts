@@ -250,7 +250,7 @@ export class Equipments extends Selection<Equipment> {
         }
     }
 
-    private equipmentsOptionsTechnicalsSpecs(isCatalog:boolean, equipment: Equipment) {
+    private static equipmentsOptionsTechnicalsSpecs(isCatalog:boolean, equipment: Equipment) {
         if(isCatalog) {
             equipment.options.toString() !== '[null]' && equipment.options !== null ?
                 equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))

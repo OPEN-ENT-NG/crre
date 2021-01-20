@@ -137,6 +137,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void createOrdersRegion(JsonObject order, UserInfos user, Number id_project, Handler<Either<String, JsonObject>> handler) {
         JsonArray params;
+        final double cons = 100.0;
+        String updatePurseQuery = "UPDATE  " + Crre.crreSchema + ".purse " +
+                "SET amount = amount - ?  " +
+                "WHERE id_campaign = ? " +
+                "AND id_structure = ? ;";
+
         String queryOrderRegionEquipment = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment\" ";
 
@@ -153,6 +159,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
 
         params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(Math.round((order.getDouble("price") * cons)/cons))
+                .add(order.getInteger("id_campaign"))
+                .add(order.getString("id_structure"))
                 .add(order.getDouble("price"))
                 .add(order.getInteger("amount"))
                 .add(order.getString("creation_date"))
@@ -174,7 +183,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (order.getInteger("rank") != -1) {
             params.add(order.getInteger("rank"));
         }
-        Sql.getInstance().prepared(queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updatePurseQuery + queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     public void createProject( String title, Handler<Either<String, JsonObject>> handler) {

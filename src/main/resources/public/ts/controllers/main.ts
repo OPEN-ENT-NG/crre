@@ -260,7 +260,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 let campaignPref;
                 campaignPref = $scope.campaign;
                 if (campaignPref) {
-                    await $scope.initOrders('ALL');
+                    //await $scope.initOrders('ALL');
                     $scope.selectCampaignShow(campaignPref, "HISTORIC");
                 } else
                     await $scope.openLightSelectCampaign();
