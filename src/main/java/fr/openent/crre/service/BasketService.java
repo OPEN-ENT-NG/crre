@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.List;
+
 public interface BasketService {
     /**
      * Create a basket item
@@ -140,7 +142,20 @@ public interface BasketService {
      * @param id_campaign  campaign identifier
      * @param arrayResponseHandler  Function handler returning data
      */
-    void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void updateAllAmount(Integer id, Handler<Either<String, JsonObject>> handler);
+
+    void searchName(String word, Handler<Either<String, JsonArray>> handler);
+
+    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler);
+
+
 }

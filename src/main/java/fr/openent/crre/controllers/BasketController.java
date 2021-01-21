@@ -11,6 +11,8 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
@@ -21,6 +23,12 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
+
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Integer.parseInt;
@@ -133,11 +141,89 @@ public class BasketController extends ControllerHelper {
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
-                String query = request.getParam("q");
-                int id_campaign = parseInt(request.getParam("id"));
-                basketService.search(query, user, id_campaign, arrayResponseHandler(request));
+                try {
+                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    int id_campaign = parseInt(request.getParam("id"));
+                    basketService.searchName(query, equipments -> {
+                        if(equipments.right().getValue().size() > 0) {
+                            basketService.search(query, null, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                        } else {
+                            basketService.searchWithoutEquip(query, null, user, id_campaign, arrayResponseHandler(request));
+                        }
+                    });
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             } else {
                 badRequest(request);
+            }
+        });
+    }
+
+    @Get("/basketOrder/filter")
+    @ApiDoc("Filter order")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void filter(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            try {
+                List<String> params = new ArrayList<String>();
+                String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
+                if (request.params().contains("grade_name")) {
+                    params = request.params().getAll("grade_name");
+                }
+
+                // Récupération de tout les filtres hors grade
+                JsonArray filters = new JsonArray();
+                int length = request.params().entries().size();
+                for (int i = 0; i < length; i++) {
+                    if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("grade_name"))
+                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                }
+                // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
+                if (request.params().contains("q")) {
+                    q = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                }
+                int id_campaign = parseInt(request.getParam("id"));
+                String finalQ = q;
+                // Si nous avons des filtres de grade
+                if (params.size() > 0) {
+                    Future<JsonArray> equipmentGradeFuture = Future.future();
+                    Future<JsonArray> equipmentGradeAndQFuture = Future.future();
+
+                    CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
+                        if (event.succeeded()) {
+                            JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
+                            JsonArray equipmentsGradeAndQ = equipmentGradeAndQFuture.result(); // Tout les équipement correspondant aux grades et à la query
+                            JsonArray allEquipments = new JsonArray();
+                            allEquipments.add(equipmentsGrade);
+                            allEquipments.add(equipmentsGradeAndQ);
+                            // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
+                            if (equipmentsGrade.size() > 0) {
+                                if (request.params().contains("q")) {
+                                    basketService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, arrayResponseHandler(request));
+                                } else {
+                                    basketService.filter(filters, user, equipmentsGrade, id_campaign, arrayResponseHandler(request));
+                                }
+                            } else {
+                                basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, arrayResponseHandler(request));
+                            }
+                        }
+                    });
+                    basketService.filterGrade(params, null, handlerJsonArray(equipmentGradeFuture));
+                    basketService.filterGrade(params, q, handlerJsonArray(equipmentGradeAndQFuture));
+                } else {
+                    // Recherche avec les filtres autres que grade
+                    basketService.searchName(finalQ, equipments -> {
+                        if (equipments.right().getValue().size() > 0) {
+                            basketService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                        } else {
+                            basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, arrayResponseHandler(request));
+                        }
+                    });
+                }
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
         });
     }

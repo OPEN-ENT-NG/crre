@@ -23,7 +23,10 @@ import org.entcore.common.user.UserInfos;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
+import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class DefaultBasketService extends SqlCrudService implements BasketService {
@@ -253,25 +256,179 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     @Override
-    public void search(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                           "FROM " + Crre.crreSchema + ".basket_order bo " +
                           "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
-                          "WHERE bo.id_campaign = ? AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.name ~* ?) AND id_user = ? AND bo.id_structure IN (";
-
+                          "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
         values.add(id_campaign);
-        values.add(query);
-        values.add(query);
-        values.add(query);
         values.add(user.getUserId());
+        if (query != "") {
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+            values.add(query);
+            values.add(query);
+        } else {
+            sqlquery += "AND (bo.name ~* bo.name OR bo.name_user ~* bo.name_user OR oe.equipment_key IN (";
+        }
+
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery += ") AND bo.id_structure IN ( ";
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
         sqlquery += " ORDER BY bo.id DESC;";
 
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT distinct bo.* " +
+                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE bo.id_campaign = ? AND bo.id_user = ? AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
+        values.add(id_campaign);
+        values.add(user.getUserId());
+        values.add(query);
+        values.add(query);
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY bo.id DESC;";
+
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT distinct bo.* " +
+                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
+
+        values.add(id_campaign);
+        values.add(user.getUserId());
+        sqlquery += " AND oe.equipment_key IN (";
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += " AND oe.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY bo.id DESC;";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT distinct bo.* " +
+                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
+        values.add(id_campaign);
+        values.add(user.getUserId());
+        values.add(query);
+        values.add(query);
+        if(equipTab.getJsonArray(1).isEmpty()){
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ?) ";
+        } else {
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+            for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonArray(1).getJsonObject(i).getInteger("id"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+            sqlquery += ")";
+        }
+
+        sqlquery += " AND oe.equipment_key IN (";
+        for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonArray(0).getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += " AND bo.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY bo.id DESC;";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -701,6 +858,19 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             total += Double.parseDouble((baskets.getJsonObject(i)).getString("total_price"));
         }
         return total;
+    }
+
+    public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
+        plainTextSearchName(word, handler);
+    }
+
+    @Override
+    public void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler) {
+        if(query == "") {
+            filter_waiting(filter, null, handler);
+        } else {
+            filter_waiting(filter, query, handler);
+        }
     }
 
 
