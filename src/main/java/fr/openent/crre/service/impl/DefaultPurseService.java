@@ -202,6 +202,22 @@ public class DefaultPurseService implements PurseService {
     }
 
     @Override
+    public void updatePurseAmount(Double price, Integer idCampaign, String idStructure,String operation, Handler<Either<String, JsonObject>> handler) {
+        final double cons = 100.0;
+        String updateQuery = "UPDATE  " + Crre.crreSchema + ".purse " +
+                "SET amount = amount " +  operation + " ?  " +
+                "WHERE id_campaign = ? " +
+                "AND id_structure = ? ;";
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(Math.round(price * cons)/cons)
+                .add(idCampaign)
+                .add(idStructure);
+
+        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
     public void checkPurses(Integer id, Handler<Either<String, JsonArray>> handler) {
         String query = "WITH values  " +
                 "     AS (SELECT orders.id,  " +

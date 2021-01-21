@@ -46,10 +46,17 @@ body.crre {
   .breakLines{
     white-space: normal;
   }
+
   .centerCircleMobile{
     @media screen and (max-width: $tablette) {
       margin-left: 50%;
     }
+  }
+
+  .centerInputAmount{
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .leftPadding10{
@@ -549,6 +556,9 @@ body.crre {
       margin-top: 0;
       width: auto;
     }
+    i.moins::before{
+      top: 5px;
+    }
   }
   i.plus_medium::before{
     content: '\e85e';
@@ -574,7 +584,6 @@ body.crre {
     position: relative;
     font-size: xxx-large;
     padding: 0 5px 0 0;
-    top: 5px;
     color: $secondary;
   }
 
@@ -1326,6 +1335,9 @@ body.crre {
 
       &.refused-status {
         color: $red;
+      }
+      &.moins::before{
+        top: 5px;
       }
     }
   }

@@ -146,36 +146,38 @@ export const orderController = ng.controller('orderController',
 
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
+            let total = 0;
             if($scope.ordersClient.selectedElements.length > 0) {
                 $scope.ordersClient.selectedElements.forEach(order => {
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
+                    total += order.priceTotalTTC
                 });
             } else {
                 $scope.ordersClient.all.forEach(order => {
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
+                    total += order.priceTotalTTC
                 });
             }
-
-
-            let {status} = await ordersToCreate.create();
-            if (status === 201) {
-                toasts.confirm('crre.order.region.create.message');
-                if($scope.ordersClient.selectedElements.length > 0) {
-                    $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selectedElements.length;
-                } else {
-                    $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.all.length;
+            ordersToCreate.create().then(async data =>{
+                if (data.status === 201) {
+                    toasts.confirm('crre.order.region.create.message');
+                    $scope.campaign.purse_amount -= total;
+                    if($scope.ordersClient.selectedElements.length > 0) {
+                        $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selectedElements.length;
+                    } else {
+                        $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.all.length;
+                    }
+                    $scope.orderToCreate = new OrderRegion();
+                    await $scope.syncOrders('WAITING');
                 }
-                $scope.orderToCreate = new OrderRegion();
-                await $scope.syncOrders('WAITING');
-            }
-            else {
-                notify.error('crre.admin.order.create.err');
-            }
-            Utils.safeApply($scope);
+                else {
+                    notify.error('crre.admin.order.create.err');
+                }
+            })
         }
 
 /*        $scope.initPreferences = ()  => {
@@ -345,14 +347,12 @@ export const orderController = ng.controller('orderController',
 
         };
         $scope.syncOrders = async (status: string) =>{
-            $scope.displayedOrders.all = [];
             await $scope.ordersClient.sync(status, $scope.structures.all);
             $scope.displayedOrders.all = $scope.ordersClient.all;
             $scope.displayedOrders.all.map(order => {
                     order.selected = false;
-                }
-            );
-
+            });
+            Utils.safeApply($scope);
         };
 
         $scope.windUpOrders = async (orders: OrderClient[]) => {

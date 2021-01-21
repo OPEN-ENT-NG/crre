@@ -51,10 +51,10 @@
                 </div>
             </button>
         </div>
-    </div>
         <div class="cell twelve-mobile right-magnet">
             <button ng-click="createOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
         </div>
+    </div>
     <div class="row">
         <div style="margin:0.5em">
             <div class="cell field ng-scope" ng-repeat="teacher in users | filter: { isChecked: true }">
@@ -116,7 +116,7 @@
                     </div>
                 </td>
                 <td ng-if="tableFields[5].display">
-                    <div class="smallTabElem center">
+                    <div class="smallTabElem center centerInputAmount">
                         <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount - 1)"></i>
                         <input type="number" class="quantity-input" name="input" ng-disabled="order.status === 'IN PROGRESS'"
                                ng-change="updateAmount(order, order.amount)" ng-model="order.amount">

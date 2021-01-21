@@ -1,23 +1,21 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.export.validOrders.listLycee.ListLycee;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
+import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderService;
+import fr.openent.crre.service.impl.DefaultPurseService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -26,8 +24,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.LocalDate;
@@ -38,6 +34,7 @@ import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -45,13 +42,14 @@ public class OrderRegionController extends BaseController {
 
 
     private final OrderRegionService orderRegionService;
+    private final PurseService purseService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
 
 
     public OrderRegionController() {
         this.orderRegionService = new DefaultOrderRegionService("equipment");
-
+        this.purseService = new DefaultPurseService();
     }
 
 
@@ -102,23 +100,36 @@ public class OrderRegionController extends BaseController {
                                             idProjectRight.toString(),
                                             new JsonObject().put("id", idProjectRight).put("title", title));
                                     for(int i = 0 ; i<ordersList.size() ; i++){
+                                        List<Future> futures = new ArrayList<>();
+                                        Future<JsonObject> purseUpdateFuture = Future.future();
+                                        futures.add(purseUpdateFuture);
+                                        Future<JsonObject> createOrdersRegionFuture = Future.future();
+                                        futures.add(createOrdersRegionFuture);
                                         JsonObject newOrder = ordersList.getJsonObject(i);
-                                        orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, orderCreated -> {
-                                            if(orderCreated.isRight()){
-                                                Number idReturning = orderCreated.right().getValue().getInteger("id");
+                                        purseService.updatePurseAmount(newOrder.getDouble("price"),
+                                                newOrder.getInteger("id_campaign"),
+                                                newOrder.getString("id_structure"),"-",
+                                                handlerJsonObject(purseUpdateFuture) );
+                                        orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, handlerJsonObject(createOrdersRegionFuture));
+                                        int finalI = i;
+                                        CompositeFuture.all(futures).setHandler(event -> {
+                                            if (event.succeeded()) {
+                                                Number idReturning = createOrdersRegionFuture.result().getInteger("id");
                                                 Logging.insert(eb,
                                                         request,
                                                         Contexts.ORDERREGION.toString(),
                                                         Actions.CREATE.toString(),
-                                                        "null",
+                                                        idReturning.toString(),
                                                         new JsonObject().put("order region", newOrder));
+                                                if(finalI == ordersList.size()-1){
+                                                    request.response().setStatusCode(201).end();
+                                                }
                                             } else {
-                                                LOGGER.error("An error when you want get id after create order region " + orderCreated.left());
+                                                LOGGER.error("An error when you want get id after create order region ",event.cause());
                                                 request.response().setStatusCode(400).end();
                                             }
                                         });
                                     }
-                                    request.response().setStatusCode(201).end();
                                 } else {
                                     LOGGER.error("An error when you want get id after create project " + idProject.left());
                                     request.response().setStatusCode(400).end();
