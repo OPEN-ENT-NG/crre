@@ -7,6 +7,7 @@ export * from './colors';
 export * from './Utils';
 export * from './Equipment';
 export * from './Tax';
+export * from './Filter';
 export * from './comboLabels';
 export * from './Log';
 export * from './Campaign';

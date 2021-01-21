@@ -27,6 +27,7 @@ export class Equipment implements Selectable {
     _loading: boolean;
     priceTTC?: number;
     contract_type_name:string;
+    grade_name: string;
 
     constructor (name?: string, price?: number) {
         this.eventer = new Eventer();

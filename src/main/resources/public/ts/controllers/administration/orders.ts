@@ -2,14 +2,14 @@ import {$, _, angular, idiom as lang, model, moment, ng, notify, template, toast
 import http from "axios";
 import {
     BasketOrder,
-    Campaign, Equipment,
-    OrderClient,
+    Campaign, Equipment, OrderClient,
     OrderRegion,
     OrdersClient,
     OrdersRegion,
     orderWaiting,
     PRIORITY_FIELD,
-    Utils
+    Utils,
+    Filter, Filters
 } from '../../model';
 import {Mix} from 'entcore-toolkit';
 
@@ -21,6 +21,8 @@ export const orderController = ng.controller('orderController',
         $scope.allOrdersSelected = false;
         $scope.tableFields = orderWaiting;
         $scope.projects = [];
+        $scope.users = [];
+        $scope.filters = new Filters();
         let isPageOrderWaiting = $location.path() === "/order/waiting";
         let isPageOrderSent = $location.path() === "/order/sent";
 
@@ -31,6 +33,9 @@ export const orderController = ng.controller('orderController',
                 type: 'created',
                 reverse: false
             }
+        }
+        this.init = () => {
+            $scope.initPopUpFilters();
         };
 
 
@@ -88,6 +93,57 @@ export const orderController = ng.controller('orderController',
 
             }
         };
+
+        $scope.initPopUpFilters = (filter?:string) => {
+            let value = $scope.$eval(filter);
+            $scope.showPopUpColumnsGrade = false;
+            $scope.showPopUpColumnsTeacher = false;
+            if (!value) {
+                switch (filter) {
+                    case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
+                    case 'showPopUpColumnsTeacher': $scope.showPopUpColumnsTeacher = true; break;
+                    default: break;
+                }
+            }
+        };
+
+        $scope.getFilter = async (word: string, filter: string) => {
+            let newFilter = new Filter();
+            newFilter.name = filter;
+            newFilter.value = word;
+            if ($scope.filters.all.some(f => f.value === word)) {
+                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1)
+            } else {
+                $scope.filters.all.push(newFilter);
+            }
+            if($scope.filters.all.length > 0) {
+                if (!!$scope.query_name) {
+                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name);
+                } else {
+                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id);
+                }
+            } else {
+                if (!!$scope.query_name) {
+                    await $scope.ordersClient.search($scope.query_name, $scope.campaign.id);
+                } else {
+                    await $scope.ordersClient.sync('WAITING');
+                }
+            }
+
+            Utils.safeApply($scope);
+        };
+
+        $scope.getAllFilters = () => {
+            $scope.equipments.getFilters();
+            $scope.ordersClient.all.forEach(function (order) {
+                if(!$scope.users.includes(order.user_name)) {
+                    $scope.users.push({user_name: order.user_name});
+                }
+            });
+            $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.user_name === v.user_name)) === i)
+        };
+
+
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
             if($scope.ordersClient.selectedElements.length > 0) {
@@ -205,9 +261,18 @@ export const orderController = ng.controller('orderController',
 
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
-                await $scope.ordersClient.search(name, $scope.campaign.id);
+                if($scope.filters.all.length == 0) {
+                    await $scope.ordersClient.search(name, $scope.campaign.id);
+                } else {
+                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, name);
+                }
             } else {
-                await $scope.ordersClient.sync('WAITING');
+                if($scope.filters.all.length == 0) {
+                    await $scope.ordersClient.sync('WAITING');
+                } else {
+                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id);
+                }
+
             }
             Utils.safeApply($scope);
         }
@@ -611,4 +676,15 @@ export const orderController = ng.controller('orderController',
             template.close('refuseOrder.lightbox');
             Utils.safeApply($scope);
         };
+
+
+        angular.element(document).ready(function(){
+            let elements = document.getElementsByClassName('vertical-array-scroll');
+            if(elements[0]) {
+                elements[0].scrollLeft = 9000000000000;
+            }
+            Utils.safeApply($scope);
+        });
+
+        this.init();
     }]);

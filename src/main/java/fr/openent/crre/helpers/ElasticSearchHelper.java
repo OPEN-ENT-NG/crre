@@ -97,6 +97,38 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), handler);
     }
 
+    public static void filter_waiting(List<String> filters, String query, Handler<Either<String, JsonArray>> handler) {
+        JsonArray term = new JsonArray();
+        JsonArray should = new JsonArray();
+        JsonObject queryObject = new JsonObject();
+
+        if (query != null) {
+            JsonObject regexp = regexpField("name", query);
+            should.add(regexp);
+        }
+        ArrayList<String> filter_tab = new ArrayList<String>();
+        for (String filter : filters) {
+            filter_tab.add(filter);
+        }
+        term.add(new JsonObject().put("terms", new JsonObject().put("grade_name", new JsonArray(filter_tab))));
+
+
+
+        if(query != null) {
+            JsonObject request = new JsonObject()
+                    .put("filter", term)
+                    .put("minimum_should_match", 1)
+                    .put("should", should);
+
+            queryObject.put("bool", request);
+        } else {
+            JsonObject filter = new JsonObject()
+                    .put("filter", term);
+            queryObject.put("bool", filter);
+        }
+        search(esQueryObject(queryObject), handler);
+    }
+
     public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
 

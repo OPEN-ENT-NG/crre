@@ -21,6 +21,7 @@ import org.entcore.common.user.UserInfos;
 import java.util.List;
 
 //import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
+import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
@@ -97,7 +98,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                     query += "WHERE oce.status = ? ";
                 }
                 query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id) " +
-                         "ORDER BY oce.id DESC; ";
+                         "ORDER BY oce.creation_date DESC; ";
                 if(!status.contains("ALL")) {
                     sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(status), SqlResult.validResultHandler(handler));
                 } else {
@@ -120,7 +121,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN "+ Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
                 "WHERE oce.id in "+ Sql.listPrepared(ids.toArray()) +
                 " GROUP BY ( oce.id, gr.id, contract.id, supplier.id, campaign.id) " +
-                "ORDER BY oce.id DESC; ";
+                "ORDER BY oce.creation_date DESC; ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Integer id : ids) {
@@ -1017,9 +1018,9 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void searchWithoutEquip(String query, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name " +
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
@@ -1032,25 +1033,39 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += " ORDER BY oe.id DESC;";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY creation_date DESC;";
 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    public void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount " +
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' ";
 
         values.add(id_campaign);
-        if(query != "") {
+        if (query != "") {
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
             values.add(query);
             values.add(query);
         } else {
-            values.add("bo.name");
-            values.add("bo.name_user");
+            sqlquery += "AND (bo.name ~* bo.name OR bo.name_user ~* bo.name_user OR oe.equipment_key IN (";
         }
 
         for (int i = 0; i < equipTab.size(); i++) {
@@ -1058,14 +1073,121 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(equipTab.getJsonObject(i).getInteger("id"));
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-
         sqlquery += ") AND oe.id_structure IN ( ";
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += " ORDER BY oe.id DESC;";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY creation_date DESC;";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
+                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' ";
+        values.add(id_campaign);
+        values.add(query);
+        values.add(query);
+        if(equipTab.getJsonArray(1).isEmpty()){
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ?) ";
+        } else {
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+            for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonArray(1).getJsonObject(i).getInteger("id"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+            sqlquery += ")";
+        }
+
+        sqlquery += " AND oe.equipment_key IN (";
+        for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonArray(0).getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += " AND oe.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY creation_date DESC;";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
+                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' ";
+        values.add(id_campaign);
+
+
+        sqlquery += " AND oe.equipment_key IN (";
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getInteger("id"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += " AND oe.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += "bo." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
+        sqlquery += " ORDER BY creation_date DESC;";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -1073,13 +1195,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         plainTextSearchName(word, handler);
     }
 
-/*    @Override
+    @Override
     public void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler) {
         if(query == "") {
             filter_waiting(filter, null, handler);
         } else {
             filter_waiting(filter, query, handler);
         }
-    }*/
+    }
 }
 

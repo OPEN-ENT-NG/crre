@@ -18,7 +18,6 @@ import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
@@ -36,7 +35,6 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.text.*;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -172,9 +170,9 @@ public class OrderController extends ControllerHelper {
                     int id_campaign = parseInt(request.getParam("id"));
                     orderService.searchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
-                            orderService.search(query, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                            orderService.search(query, null, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
                         } else {
-                            orderService.searchWithoutEquip(query, user, id_campaign, arrayResponseHandler(request));
+                            orderService.searchWithoutEquip(query, null, user, id_campaign, arrayResponseHandler(request));
                         }
                     });
                 } catch (UnsupportedEncodingException e) {
@@ -187,36 +185,73 @@ public class OrderController extends ControllerHelper {
         });
     }
 
-    /*@Get("/orders/filter")
+    @Get("/orders/filter")
     @ApiDoc("Filter order")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
                 try {
                     List<String> params = new ArrayList<String>();
-                    String q = "";
-                    if (request.params().contains("grade")) {
-                        params = request.params().getAll("grade");
+                    String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
+                    if (request.params().contains("grade_name")) {
+                        params = request.params().getAll("grade_name");
                     }
 
-                    if (request.params().contains("q") && request.params().get("q").trim() != "") {
+                    // Récupération de tout les filtres hors grade
+                    JsonArray filters = new JsonArray();
+                    int length = request.params().entries().size();
+                    for (int i = 0; i < length; i++) {
+                        if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("grade_name"))
+                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                    }
+                    // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
+                    if (request.params().contains("q")) {
                         q = URLDecoder.decode(request.getParam("q"), "UTF-8");
                     }
-
                     int id_campaign = parseInt(request.getParam("id"));
                     String finalQ = q;
-                    orderService.filterGrade(params, q, equipments -> {
-                        if (equipments.right().getValue().size() > 0) {
-                            orderService.search(finalQ, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
-                        } else {
-                            orderService.searchWithoutEquip(finalQ, user, id_campaign, arrayResponseHandler(request));
-                        }
-                    });
+                    // Si nous avons des filtres de grade
+                    if (params.size() > 0) {
+                        Future<JsonArray> equipmentGradeFuture = Future.future();
+                        Future<JsonArray> equipmentGradeAndQFuture = Future.future();
+
+                        CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
+                            if (event.succeeded()) {
+                                JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
+                                JsonArray equipmentsGradeAndQ = equipmentGradeAndQFuture.result(); // Tout les équipement correspondant aux grades et à la query
+                                JsonArray allEquipments = new JsonArray();
+                                allEquipments.add(equipmentsGrade);
+                                allEquipments.add(equipmentsGradeAndQ);
+                                // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
+                                if (equipmentsGrade.size() > 0) {
+                                    if (request.params().contains("q")) {
+                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, arrayResponseHandler(request));
+                                    } else {
+                                        orderService.filter(filters, user, equipmentsGrade, id_campaign, arrayResponseHandler(request));
+                                    }
+                                } else {
+                                    orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, arrayResponseHandler(request));
+                                }
+                            }
+                        });
+                        orderService.filterGrade(params, null, handlerJsonArray(equipmentGradeFuture));
+                        orderService.filterGrade(params, q, handlerJsonArray(equipmentGradeAndQFuture));
+                    } else {
+                        // Recherche avec les filtres autres que grade
+                        orderService.searchName(finalQ, equipments -> {
+                            if (equipments.right().getValue().size() > 0) {
+                                orderService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                            } else {
+                                orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, arrayResponseHandler(request));
+                            }
+                        });
+                    }
+
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
         });
-    }*/
+    }
 
     @Get("/order/struct")
     @ApiDoc("Get the pdf of orders by structure")

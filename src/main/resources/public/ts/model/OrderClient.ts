@@ -5,7 +5,7 @@ import {
     Campaign,
     Contract,
     ContractType,
-    Equipment,
+    Equipment, Filter,
     Order,
     OrderRegion,
     OrderUtils,
@@ -71,6 +71,7 @@ export class OrderClient implements Order  {
     technical_spec:TechnicalSpec;
     user_name:string;
     user_id:string;
+    grade: string;
 
     constructor() {
         this.typeOrder= "client";
@@ -228,6 +229,61 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
+    async filterOrder(text: String, id_campaign: number) {
+        try {
+            if ((text.trim() === '' || !text)) return;
+            const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}`);
+            this.all = Mix.castArrayAs(OrderClient, data);
+            for (let order of this.all) {
+                let equipment = new Equipment();
+                await equipment.sync(order.equipment_key);
+                order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                order.name = equipment.name;
+                order.image = equipment.image;
+                order.creation_date = moment(order.creation_date).format('L');
+            }
+        } catch (err) {
+            notify.error('crre.basket.sync.err');
+            throw err;
+        }
+    }
+
+    async filter_order(filters: Filter[], id_campaign: number, word?: string){
+        try {
+            let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
+            let params = "";
+            filters.forEach(function (f, index) {
+                params += f.name + "=" + f.value;
+                if(index != filters.length - 1) {
+                    params += "&";
+                }});
+            let url;
+            if(!format.test(word)) {
+                if(word) {
+                    url = `/crre/orders/filter?q=${word}&id=${id_campaign}&${params}`;
+                } else {
+                    url = `/crre/orders/filter?id=${id_campaign}&${params}`;
+                }
+                let {data} = await http.get(url);
+                this.all = Mix.castArrayAs(OrderClient, data);
+                for (let order of this.all) {
+                    let equipment = new Equipment();
+                    await equipment.sync(order.equipment_key);
+                    order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                    order.name = equipment.name;
+                    order.image = equipment.image;
+                    order.creation_date = moment(order.creation_date).format('L');
+                }
+            } else {
+                toasts.warning('crre.equipment.special');
+            }
+        } catch (e) {
+            notify.error('crre.equipment.sync.err');
+            throw e;
+        } finally {
+        }
+    }
+
     async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string):Promise<void> {
         try {
             this.id_project_use = -1;
@@ -240,6 +296,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     order.price = equipment.price;
                     order.name = equipment.name;
                     order.image = equipment.image;
+                    order.grade = equipment.grade_name;
                 }
                     this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
             } else {
@@ -252,6 +309,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     order.price = equipment.price;
                     order.name = equipment.name;
                     order.image = equipment.image;
+                    order.grade = equipment.grade_name;
                     order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
                     order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                     order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
