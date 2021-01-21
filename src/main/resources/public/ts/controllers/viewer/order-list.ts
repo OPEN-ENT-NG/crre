@@ -213,7 +213,11 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
         const synchroMyBaskets = async () : Promise<void> => {
-            await $scope.displayedOrders.sync(null, [], $routeParams.idCampaign, $scope.current.structure.id);
+            if($scope.ordersClient.all.length > 0){
+                $scope.displayedOrders = $scope.ordersClient.all;
+            }else{
+                await $scope.displayedOrders.sync(null, [], $routeParams.idCampaign, $scope.current.structure.id);
+            }
             await $scope.basketsOrders.getMyOrders();
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);

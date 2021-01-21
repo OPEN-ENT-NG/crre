@@ -178,7 +178,7 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         }
 
-        $scope.initPreferences = ()  => {
+/*        $scope.initPreferences = ()  => {
             if(isPageOrderWaiting)
                 if ($scope.preferences && $scope.preferences.preference) {
                     let loadedPreferences = JSON.parse($scope.preferences.preference);
@@ -194,7 +194,7 @@ export const orderController = ng.controller('orderController',
                 }
         };
 
-        $scope.initPreferences();
+        $scope.initPreferences();*/
         $scope.display = {
             ordersClientOptionOption : [],
             lightbox : {
@@ -218,13 +218,13 @@ export const orderController = ng.controller('orderController',
         };
 
 
-        $scope.savePreference = () =>{
+/*        $scope.savePreference = () =>{
             let elements = document.getElementsByClassName('vertical-array-scroll');
             if(elements[0])
                 elements[0].scrollLeft = $(".vertical-array-scroll").scrollLeft() ;
             Utils.safeApply($scope);
             $scope.ub.putPreferences("ordersWaitingDisplay", $scope.jsonPref($scope.tableFields));
-        };
+        };*/
 
         $scope.jsonPref = (prefs) => {
             let json = {};
@@ -607,10 +607,10 @@ export const orderController = ng.controller('orderController',
             }
             return order.rank = lang.translate("crre.order.not.prioritized");
         };
-        $scope.updateOrder = (order: OrderClient) => {
+/*        $scope.updateOrder = (order: OrderClient) => {
             $scope.ub.putPreferences("searchFields", $scope.search.filterWords);
             $scope.redirectTo(`/order/update/${order.id}`);
-        };
+        };*/
         $scope.selectCampaignAndInitFilter = async (campaign: Campaign) =>{
             await $scope.selectCampaignShow(campaign);
             $scope.search.filterWords = [];

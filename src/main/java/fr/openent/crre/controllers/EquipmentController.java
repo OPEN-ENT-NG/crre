@@ -13,9 +13,7 @@ import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -29,9 +27,9 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.util.*;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
-import static jdk.nashorn.internal.objects.NativeArray.push;
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class EquipmentController extends ControllerHelper {
@@ -39,13 +37,13 @@ public class EquipmentController extends ControllerHelper {
     private final EquipmentService equipmentService;
     private final ImportCSVHelper importCSVHelper;
     private String query_word;
-    private HashMap<String, ArrayList<String>> query_filter;
+    private final HashMap<String, ArrayList<String>> query_filter;
 
     public EquipmentController(Vertx vertx) {
         super();
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
-        this.query_filter = new HashMap<String, ArrayList<String>>();
+        this.query_filter = new HashMap<>();
         this.query_word = "";
     }
 
@@ -58,7 +56,16 @@ public class EquipmentController extends ControllerHelper {
         String order = request.params().contains("order") ? request.getParam("order") : "name";
         Boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
         List<String> queries = request.params().getAll("q");
-        equipmentService.listEquipments(page, order, reverse, queries, arrayResponseHandler(request));
+        List<String> orderIds = request.params().getAll("order_id");
+        if(orderIds.isEmpty())
+            equipmentService.listEquipments(page, order, reverse, queries, arrayResponseHandler(request));
+        else{
+            List<Integer> orderIdsInt = new ArrayList<>();
+            for(String orderId : orderIds){
+                orderIdsInt.add(Integer.parseInt(orderId));
+            }
+            searchByIds(orderIdsInt, arrayResponseHandler(request));
+        }
     }
 
     @Get("/equipments/pages/count")

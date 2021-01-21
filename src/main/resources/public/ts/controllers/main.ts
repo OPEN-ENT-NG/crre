@@ -56,7 +56,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.displayedOrdersRegion = new OrdersRegion();
         $scope.basketsOrders = new BasketsOrders();
         $scope.exports = new Exports([]);
-        $scope.ub = new Userbook();
+        //$scope.ub = new Userbook();
         $scope.equipments.eventer.on('loading::true', $scope.$apply);
         $scope.equipments.eventer.on('loading::false', $scope.$apply);
         $scope.loadingArray = false;
@@ -240,7 +240,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if(!$scope.current.structure)
                     await $scope.initStructures();
                 await $scope.selectCampaign(idCampaign);
-                $scope.preferences = await $scope.ub.getPreferences();
+                //$scope.preferences = await $scope.ub.getPreferences();
                 let campaignPref;
                 campaignPref = $scope.campaign;
                 if (campaignPref) {
@@ -256,7 +256,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if(!$scope.current.structure)
                     await $scope.initStructures();
                 await $scope.selectCampaign(idCampaign);
-                $scope.preferences = await $scope.ub.getPreferences();
+                //$scope.preferences = await $scope.ub.getPreferences();
                 let campaignPref;
                 campaignPref = $scope.campaign;
                 if (campaignPref) {
@@ -505,18 +505,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             Utils.safeApply($scope);
         };
         $scope.selectCampaignShow = (campaign?: Campaign, type?: string): void => {
-            if(type == "WAITING" ) {
+/*            if(type == "WAITING" ) {
                 $scope.ub.putPreferences("ordersWaitingCampaign", campaign.id);
             } else {
                 $scope.ub.putPreferences("ordersHistoricCampaign", campaign.id);
-            }
-
+            }*/
             $scope.display.lightbox.lightBoxIsOpen = false;
             template.close('selectCampaign');
             if(campaign){
                 $scope.campaign = campaign;
                 $scope.displayedOrders.all = $scope.ordersClient.all
-                    .filter( order => order.campaign.id === campaign.id || campaign.id === -1);
+                    .filter( order => order.id_campaign === campaign.id || campaign.id === -1);
                 $scope.cancelSelectCampaign(false, type);
             } else {
                 $scope.campaign = $scope.allCampaignsSelect;

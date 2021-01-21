@@ -368,17 +368,21 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.getTotalHistoric = () => {
             let total = 0;
-            $scope.projects.forEach(basket => {
-                total += parseFloat(basket.total.replace(/[^0-9.,-]+/g,""));
-            });
+            if($scope.projects) {
+                $scope.projects.forEach(basket => {
+                    total += parseFloat(basket.total.replace(/[^0-9.,-]+/g, ""));
+                });
+            }
             return total;
         }
 
         $scope.getTotalAmountHistoric = () => {
             let total = 0;
-            $scope.projects.forEach(basket => {
-                total += parseFloat(basket.amount);
-            });
+            if($scope.projects) {
+                $scope.projects.forEach(basket => {
+                    total += parseFloat(basket.amount);
+                });
+            }
             return total;
         }
 

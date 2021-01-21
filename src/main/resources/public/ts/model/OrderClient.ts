@@ -290,43 +290,54 @@ export class OrdersClient extends Selection<OrderClient> {
             if (idCampaign && idStructure) {
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
-                for (let order of this.all) {
-                    let equipment = new Equipment();
-                    await equipment.sync(order.equipment_key);
-                    order.price = equipment.price;
-                    order.name = equipment.name;
-                    order.image = equipment.image;
-                    order.grade = equipment.grade_name;
-                }
+                this.getEquipments(this.all).then(equipments =>{
+                    for (let order of this.all) {
+                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                        order.price = equipment.price;
+                        order.name = equipment.name;
+                        order.image = equipment.image;
+                        order.grade = equipment.grade_name;
+                    }
                     this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
+                });
             } else {
                 const { data } = await http.get(  `/crre/orders?status=${status}`);
                 this.all = Mix.castArrayAs(OrderClient, data);
-                for (let order of this.all) {
-                    let equipment = new Equipment();
-                    await equipment.sync(order.equipment_key);
-                    order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                    order.price = equipment.price;
-                    order.name = equipment.name;
-                    order.image = equipment.image;
-                    order.grade = equipment.grade_name;
-                    order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
-                    order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                    order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
-                    order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
-                    if(order.files.length > 1 )
-                        order.files.sort(function (a, b) {
-                            return  a.filename.localeCompare(b.filename);
-                        });
-                    if (status !== 'VALID') {
-                        this.makeOrderNotValid(order);
+                await this.getEquipments(this.all).then(equipments =>{
+                    for (let order of this.all) {
+                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                        order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                        order.price = equipment.price;
+                        order.name = equipment.name;
+                        order.image = equipment.image;
+                        order.grade = equipment.grade_name;
+                        order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
+                        order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
+                        order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
+                        order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
+                        if(order.files.length > 1 )
+                            order.files.sort(function (a, b) {
+                                return  a.filename.localeCompare(b.filename);
+                            });
+                        if (status !== 'VALID') {
+                            this.makeOrderNotValid(order);
+                        }
+                        order.creation_date= moment(order.creation_date,'DD/MM/YYYY').format('DD-MM-YYYY');
                     }
-                    order.creation_date= moment(order.creation_date,'DD/MM/YYYY').format('DD-MM-YYYY');
-                }
+                });
             }
         } catch (e) {
             notify.error('crre.order.sync.err');
         }
+    }
+
+    getEquipments (orders):Promise<any>{
+        let params = '';
+        orders.map((order) => {
+            params += `order_id=${order.equipment_key}&`;
+        });
+        params = params.slice(0, -1);
+        return http.get(`/crre/equipments?${params}`);
     }
 
     syncWithIdsCampaignAndStructure(idCampaign:number, idStructure:string):void{
