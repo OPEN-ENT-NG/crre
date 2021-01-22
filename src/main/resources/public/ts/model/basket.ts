@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {_, notify} from 'entcore';
+import {_, moment, notify, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, EquipmentOption, Order, Structure, Utils} from './index';
+import {Equipment, EquipmentOption, Filter, Order, OrderClient, Structure, Utils} from './index';
 
 
 export class Basket implements Selectable {
@@ -246,6 +246,34 @@ export class BasketsOrders extends Selection<BasketOrder> {
         } catch (err) {
             notify.error('crre.basket.sync.err');
             throw err;
+        }
+    }
+
+
+    async filter_order(filters: Filter[], id_campaign: number, word?: string){
+        try {
+            let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
+            let params = "";
+            filters.forEach(function (f, index) {
+                params += f.name + "=" + f.value;
+                if(index != filters.length - 1) {
+                    params += "&";
+                }});
+            let url;
+            if(!format.test(word)) {
+                if(word) {
+                    url = `/crre/basketOrder/filter?q=${word}&id=${id_campaign}&${params}`;
+                } else {
+                    url = `/crre/basketOrder/filter?id=${id_campaign}&${params}`;
+                }
+                let {data} = await http.get(url);
+                this.all = Mix.castArrayAs(BasketOrder, data);
+            } else {
+                toasts.warning('crre.equipment.special');
+            }
+        } catch (e) {
+            notify.error('crre.equipment.sync.err');
+            throw e;
         }
     }
 

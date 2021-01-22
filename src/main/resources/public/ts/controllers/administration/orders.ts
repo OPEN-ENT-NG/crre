@@ -21,8 +21,6 @@ export const orderController = ng.controller('orderController',
         $scope.allOrdersSelected = false;
         $scope.tableFields = orderWaiting;
         $scope.projects = [];
-        $scope.users = [];
-        $scope.filters = new Filters();
         let isPageOrderWaiting = $location.path() === "/order/waiting";
         let isPageOrderSent = $location.path() === "/order/sent";
 
@@ -35,6 +33,8 @@ export const orderController = ng.controller('orderController',
             }
         }
         this.init = () => {
+            $scope.users = [];
+            $scope.filters = new Filters();
             $scope.initPopUpFilters();
         };
 
@@ -266,9 +266,8 @@ export const orderController = ng.controller('orderController',
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
                 if($scope.filters.all.length == 0) {
-                    await $scope.ordersClient.search(name, $scope.campaign.id).then(data => {
-                        Utils.safeApply($scope);
-                    });
+                    await $scope.ordersClient.search(name, $scope.campaign.id);
+                    Utils.safeApply($scope);
                 } else {
                     await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, name);
                     Utils.safeApply($scope);
@@ -637,7 +636,6 @@ export const orderController = ng.controller('orderController',
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);
         };
-        synchroBaskets();
 
         const formatDisplayedBasketOrders = () : void  => {
             $scope.displayedBasketsOrders = [];

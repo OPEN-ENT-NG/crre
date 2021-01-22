@@ -22,7 +22,7 @@ import {
     Suppliers,
     Taxes,
     Userbook,
-    Utils, OrdersRegion,
+    Utils, OrdersRegion, Filters,
 } from '../model';
 import {Mix} from "entcore-toolkit";
 
@@ -55,6 +55,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.displayedOrders = new OrdersClient();
         $scope.displayedOrdersRegion = new OrdersRegion();
         $scope.basketsOrders = new BasketsOrders();
+        $scope.users = [];
+        $scope.filters = new Filters();
         $scope.exports = new Exports([]);
         //$scope.ub = new Userbook();
         $scope.equipments.eventer.on('loading::true', $scope.$apply);
