@@ -215,33 +215,15 @@ export class OrdersClient extends Selection<OrderClient> {
             if ((text.trim() === '' || !text)) return;
             const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}`);
             this.all = Mix.castArrayAs(OrderClient, data);
-            for (let order of this.all) {
-                let equipment = new Equipment();
-                await equipment.sync(order.equipment_key);
-                order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                order.name = equipment.name;
-                order.image = equipment.image;
-                order.creation_date = moment(order.creation_date).format('L');
-            }
-        } catch (err) {
-            notify.error('crre.basket.sync.err');
-            throw err;
-        }
-    }
-
-    async filterOrder(text: String, id_campaign: number) {
-        try {
-            if ((text.trim() === '' || !text)) return;
-            const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}`);
-            this.all = Mix.castArrayAs(OrderClient, data);
-            for (let order of this.all) {
-                let equipment = new Equipment();
-                await equipment.sync(order.equipment_key);
-                order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                order.name = equipment.name;
-                order.image = equipment.image;
-                order.creation_date = moment(order.creation_date).format('L');
-            }
+            await this.getEquipments(this.all).then(equipments =>{
+                for (let order of this.all) {
+                    let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                    order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                    order.name = equipment.name;
+                    order.image = equipment.image;
+                    order.creation_date = moment(order.creation_date).format('L');
+                }
+            });
         } catch (err) {
             notify.error('crre.basket.sync.err');
             throw err;
@@ -266,14 +248,15 @@ export class OrdersClient extends Selection<OrderClient> {
                 }
                 let {data} = await http.get(url);
                 this.all = Mix.castArrayAs(OrderClient, data);
-                for (let order of this.all) {
-                    let equipment = new Equipment();
-                    await equipment.sync(order.equipment_key);
-                    order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                    order.name = equipment.name;
-                    order.image = equipment.image;
-                    order.creation_date = moment(order.creation_date).format('L');
-                }
+                await this.getEquipments(this.all).then(equipments =>{
+                    for (let order of this.all) {
+                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                        order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                        order.name = equipment.name;
+                        order.image = equipment.image;
+                        order.creation_date = moment(order.creation_date).format('L');
+                    }
+                });
             } else {
                 toasts.warning('crre.equipment.special');
             }
@@ -290,7 +273,7 @@ export class OrdersClient extends Selection<OrderClient> {
             if (idCampaign && idStructure) {
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
-                this.getEquipments(this.all).then(equipments =>{
+                await this.getEquipments(this.all).then(equipments =>{
                     for (let order of this.all) {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                         order.price = equipment.price;

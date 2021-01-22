@@ -119,18 +119,20 @@ export const orderController = ng.controller('orderController',
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {
                     await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name);
+                    Utils.safeApply($scope);
                 } else {
                     await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id);
+                    Utils.safeApply($scope);
                 }
             } else {
                 if (!!$scope.query_name) {
-                    await $scope.ordersClient.search($scope.query_name, $scope.campaign.id);
+                    await $scope.ordersClient.search($scope.query_name, $scope.campaign.id)
+                    Utils.safeApply($scope);
                 } else {
                     await $scope.ordersClient.sync('WAITING');
+                    Utils.safeApply($scope);
                 }
             }
-
-            Utils.safeApply($scope);
         };
 
         $scope.getAllFilters = () => {
@@ -264,15 +266,20 @@ export const orderController = ng.controller('orderController',
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
                 if($scope.filters.all.length == 0) {
-                    await $scope.ordersClient.search(name, $scope.campaign.id);
+                    await $scope.ordersClient.search(name, $scope.campaign.id).then(data => {
+                        Utils.safeApply($scope);
+                    });
                 } else {
                     await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, name);
+                    Utils.safeApply($scope);
                 }
             } else {
                 if($scope.filters.all.length == 0) {
                     await $scope.ordersClient.sync('WAITING');
+                    Utils.safeApply($scope);
                 } else {
                     await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id);
+                    Utils.safeApply($scope);
                 }
 
             }

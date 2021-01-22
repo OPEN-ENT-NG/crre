@@ -73,7 +73,7 @@
         </tr>
         </thead>
         <tbody ng-if="!equipments.loading">
-            <tr ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay | orderBy:itemsFilter:filterOrder">
+            <tr ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay | orderBy:itemsFilter:search">
                 <td workflow="crre.administrator">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="equipment.selected">

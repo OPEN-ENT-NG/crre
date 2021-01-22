@@ -551,7 +551,7 @@ export const configurationController = ng.controller('configurationController',
                     delete equipment.id;
                 });
                 model[varName] = options;
-                $scope.$apply();
+                Utils.safeApply($scope);
             } catch (err) {
                 console.error(err);
                 model.search = [];

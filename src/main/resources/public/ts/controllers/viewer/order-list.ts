@@ -52,13 +52,14 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
 
         $scope.searchByName =  async (name: string) => {
             if(name != "") {
-               await $scope.basketsOrders.search(name, $scope.campaign.id);
-               formatDisplayedBasketOrders();
+                await $scope.basketsOrders.search(name, $scope.campaign.id);
+                formatDisplayedBasketOrders();
+                Utils.safeApply($scope);
             } else {
                 await $scope.basketsOrders.getMyOrders();
                 formatDisplayedBasketOrders();
+                Utils.safeApply($scope);
             }
-            Utils.safeApply($scope);
         }
 
         $scope.hasAProposalPrice = (orderClient: OrderClient) => {
