@@ -111,8 +111,8 @@
                 <td ng-if="tableFields[3].display"><div class="smallTabElem center breakLines">[[order.basket_name]]</div></td>
                 <td ng-if="tableFields[4].display">
                     <div class="smallTabElem center">
-                        <i class="check-circle" ng-if="order.reassort"></i>
-                        <i class="close-circle" ng-if="!order.reassort"></i>
+                        <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort" ng-click="updateReassort(order)"></i>
+                        <i class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort" ng-click="updateReassort(order)"></i>
                     </div>
                 </td>
                 <td ng-if="tableFields[5].display">

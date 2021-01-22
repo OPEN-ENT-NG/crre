@@ -64,6 +64,7 @@ export class OrderRegion implements Order  {
     title_id ?: number;
     user_name:string;
     user_id:string;
+    reassort: boolean;
 
     constructor() {
         this.typeOrder = "region";
@@ -104,6 +105,7 @@ export class OrderRegion implements Order  {
             rank: this.rank -1,
             user_name: this.user_name,
             user_id: this.user_id,
+            reassort: this.reassort
         }
     }
 
@@ -138,6 +140,7 @@ export class OrderRegion implements Order  {
         this.equipment_key = order.equipment_key;
         this.user_name = order.user_name;
         this.user_id = order.user_id;
+        this.reassort = order.reassort;
     }
 
 

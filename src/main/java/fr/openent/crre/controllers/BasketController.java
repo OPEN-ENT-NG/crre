@@ -15,7 +15,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
@@ -293,6 +292,26 @@ public class BasketController extends ControllerHelper {
                 Integer id = parseInt(request.params().get("idBasket"));
                 String comment = basket.getString("comment");
                 basketService.updateComment(id, comment, defaultResponseHandler(request));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Put("/basket/:idBasket/reassort")
+    @ApiDoc("Update a basket's reassort")
+    @SecuredAction(Crre.REASSORT_RIGHT)
+    @ResourceFilter(AccessOrderReassortRight.class)
+    public void updateReassort(final HttpServerRequest request){
+        RequestUtils.bodyToJson(request, basket -> {
+            if (!basket.containsKey("reassort")) {
+                badRequest(request);
+                return;
+            }
+            try {
+                Integer id = parseInt(request.params().get("idBasket"));
+                Boolean reassort = basket.getBoolean("reassort");
+                basketService.updateReassort(id, reassort, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }

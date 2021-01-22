@@ -658,6 +658,26 @@ public class OrderController extends ControllerHelper {
         });
     }
 
+    @Put("/order/:idOrder/reassort")
+    @ApiDoc("Update an order's reassort")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessOrderReassortRight.class)
+    public void updateReassort(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, order -> {
+            if (!order.containsKey("reassort")) {
+                badRequest(request);
+                return;
+            }
+            try {
+                Integer id = Integer.parseInt(request.params().get("idOrder"));
+                Boolean reassort = order.getBoolean("reassort");
+                orderService.updateReassort(id, reassort, defaultResponseHandler(request));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private void retrieveContract(final HttpServerRequest request, JsonArray ids,
                                   final Handler<JsonObject> handler) {
         contractService.getContract(ids, event -> {

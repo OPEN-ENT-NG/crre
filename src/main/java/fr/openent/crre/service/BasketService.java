@@ -76,6 +76,15 @@ public interface BasketService {
     void updateComment(Integer idBasket, String comment, Handler<Either<String, JsonObject>> handler );
 
     /**
+     * Update a basket's reassort
+     *
+     * @param idBasket
+     * @param reassort
+     * @param handler
+     */
+    void updateReassort(Integer idBasket, Boolean reassort, Handler<Either<String, JsonObject>> handler );
+
+    /**
      * transform basket to an order
      * @param request the request
      * @param baskets list of basket's items to transform

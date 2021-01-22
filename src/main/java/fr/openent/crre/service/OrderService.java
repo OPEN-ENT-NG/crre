@@ -151,6 +151,8 @@ public interface OrderService {
 
     void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler);
 
+    void updateReassort(Integer id, Boolean reassort, Handler<Either<String, JsonObject>> handler);
+
     void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> eitherHandler);
 
     /**

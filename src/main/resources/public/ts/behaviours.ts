@@ -7,7 +7,8 @@ Behaviours.register('crre', {
             administrator: 'fr.openent.crre.controllers.AgentController|createAgent',
             manager: 'fr.openent.crre.controllers.AgentController|getAgents',
             prescriptor: 'fr.openent.crre.controllers.AgentController|deleteAgent',
-            validator: 'fr.openent.crre.controllers.AgentController|updateAgent'
+            validator: 'fr.openent.crre.controllers.AgentController|updateAgent',
+            reassort: 'fr.openent.crre.controllers.BasketController|updateReassort'
         },
         resource: {}
     }

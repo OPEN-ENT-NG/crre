@@ -73,6 +73,14 @@
                                             <i class="plus" ng-click="basket.amountIncrease()"></i>
                                         </div>
                                     </div>
+                                    <div class="right-text">
+                                        <label class="checkbox">
+                                            <input type="checkbox" ng-model="basket.reassort"
+                                                   ng-checked="basket.reassort" ng-click="basket.updateReassort()"
+                                                   ng-disabled="!canUpdateReassort()">
+                                            <span><i18n>&nbsp;&nbsp;&nbsp;crre.reassort</i18n></span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

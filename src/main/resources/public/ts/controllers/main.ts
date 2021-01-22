@@ -404,6 +404,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor);
         };
 
+        $scope.canUpdateReassort = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.reassort);
+        };
+
         $scope.redirectTo = (path: string) => {
             $scope.selectedType = path;
             $location.path(path);

@@ -279,7 +279,7 @@ public class OrderRegionController extends BaseController {
                 List<Integer> listIdsEquipment = new ArrayList<>();
                 for (JsonArray orders : resultsList) {
                     for (Object order : orders) {
-                        listIdsEquipment.add(((JsonObject) order).getInteger("id"));
+                        listIdsEquipment.add(((JsonObject) order).getInteger("equipment_key"));
                     }
                 }
                 getSearchByIds(request, resultsList, listIdsEquipment);

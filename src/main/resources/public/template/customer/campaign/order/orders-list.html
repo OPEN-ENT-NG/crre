@@ -15,6 +15,7 @@
             <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>Total Licences</i18n></div></td>
             <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>crre.reassort</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>crre.operation.status</i18n></div></td>
         </tr>
         </thead>
@@ -30,6 +31,7 @@
             <td><div class="tabElem order">[[basket.name]]</div></td>
             <td><div class="smallTabElem center">[[basket.amount]]</div></td>
             <td><div class="smallTabElem center">[[basket.amount]]</div></td>
+            <td><div class="tabElem"></div></td>
             <td><div class="tabElem"></div></td>
             <td>
                 <div class="smallTabElem center">
@@ -73,6 +75,14 @@
                      ng-click="tableFields[5].fullDisplay = !tableFields[5].fullDisplay"> [[order.comment || '-']]</div>
             </td>
             <td ng-if="tableFields[5].display">
+                <div class="smallTabElem center">
+                    <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"
+                       ng-click="order.status !== 'IN PROGRESS' && updateReassort(order)"></i>
+                    <i class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort"
+                       ng-click="order.status !== 'IN PROGRESS' && updateReassort(order)"></i>
+                </div>
+            </td>
+            <td ng-if="tableFields[6].display">
                 <div class="smallTabElem center ellipsis" tooltip="[[order.status]]">
                     <div class="[[order.status]] status-circle cell row myOrder centerCircleMobile"></div>
                     <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>

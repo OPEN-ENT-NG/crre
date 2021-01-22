@@ -208,7 +208,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         };
 
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
-            if(amount.toString() != 'undefined' || amount != null) {
+            if(amount.toString() != 'undefined') {
                 await orderClient.updateAmount(amount);
                 await basketOrder.updateAllAmount();
                 orderClient.amount = amount;
@@ -216,8 +216,14 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             }
         };
 
-
-
+        $scope.updateReassort = async (orderClient: OrderClient) => {
+            orderClient.reassort = !orderClient.reassort;
+            await orderClient.updateReassort();
+            /*            let basket = new BasketOrder();
+                        basket.setIdBasket(orderClient.id_basket);
+                        await basket.updateReassort();*/
+            $scope.$apply()
+        };
 
         $scope.displayLightboxDelete = (orderEquipments: OrdersClient) => {
             template.open('orderClient.delete', 'customer/campaign/order/delete-confirmation');

@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {_, moment, notify, toasts} from 'entcore';
+import {_, notify, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, EquipmentOption, Filter, Order, OrderClient, Structure, Utils} from './index';
+import {Equipment, EquipmentOption, Filter, Structure, Utils} from './index';
 
 
 export class Basket implements Selectable {
@@ -18,6 +18,7 @@ export class Basket implements Selectable {
     price_editable: boolean;
     display_price_editable: boolean;
     basket_name: string;
+    reassort:boolean;
 
 
     files?: any;
@@ -66,6 +67,7 @@ export class Basket implements Selectable {
             throw e;
         }
     }
+
     async updateAmount () {
         try {
             http.put(`/crre/basket/${this.id}/amount`, this.toJson());
@@ -74,9 +76,19 @@ export class Basket implements Selectable {
             throw e;
         }
     }
+
     async updateComment(){
         try{
             http.put(`/crre/basket/${this.id}/comment`, { comment: this.comment });
+        }catch (e){
+            notify.error('crre.basket.update.err');
+            throw e;
+        }
+    }
+
+    async updateReassort(){
+        try{
+            http.put(`/crre/basket/${this.id}/reassort`, { reassort: this.reassort });
         }catch (e){
             notify.error('crre.basket.update.err');
             throw e;
@@ -213,14 +225,14 @@ export class BasketOrder implements Selectable {
     }
 
     async updateAllAmount():Promise<void>{
-    try {
-        let {data} = await http.get(`/crre/basketOrder/${this.id}/amount`);
-        this.amount = data.amount;
+        try {
+            let {data} = await http.get(`/crre/basketOrder/${this.id}/amount`);
+            this.amount = data.amount;
+        }
+        catch {
+            notify.error('crre.order.getMine.err');
+        }
     }
-    catch {
-        notify.error('crre.order.getMine.err');
-    }
-}
 
 }
 

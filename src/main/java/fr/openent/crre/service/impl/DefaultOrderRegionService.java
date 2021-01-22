@@ -142,13 +142,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (order.getInteger("rank") != -1) {
             queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
                     " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment, id_order_client_equipment,  id_project, rank) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                    " comment, id_order_client_equipment,  id_project, reassort, rank) " +
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
         } else {
             queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
                     " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment, id_order_client_equipment, id_project) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                    " comment, id_order_client_equipment, id_project, reassort) " +
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
         }
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -169,7 +169,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getString("id_structure"))
                 .add(order.getString("comment"))
                 .add(order.getInteger("id_order_client_equipment"))
-                .add(id_project);
+                .add(id_project)
+                .add(order.getBoolean("reassort"));
         if (order.getInteger("rank") != -1) {
             params.add(order.getInteger("rank"));
         }

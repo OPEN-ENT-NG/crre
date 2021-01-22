@@ -512,6 +512,15 @@ export const orderController = ng.controller('orderController',
             }
         };
 
+        $scope.updateReassort = async (orderClient: OrderClient) => {
+            orderClient.reassort = !orderClient.reassort;
+            await orderClient.updateReassort();
+/*            let basket = new BasketOrder();
+            basket.setIdBasket(orderClient.id_basket);
+            await basket.updateReassort();*/
+            $scope.$apply()
+        };
+
         $scope.exportOrderStruct = async (orders: OrderClient[]) => {
             if (isSentOrDone(orders)) {
                 let orderNumber = _.uniq(_.pluck(orders, 'order_number'));

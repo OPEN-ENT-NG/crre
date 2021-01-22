@@ -3,7 +3,6 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.service.BasketService;
 import fr.openent.crre.service.NotificationService;
-import fr.openent.crre.service.PurseService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
@@ -34,12 +33,10 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultBasketService.class);
 
     private static NotificationService notificationService;
-    private final PurseService purseService;
     private static JsonObject mail;
 
     public DefaultBasketService(String schema, String table, Vertx vertx, JsonObject slackConfiguration,JsonObject mail) {
         super(schema, table);
-        this.purseService = new DefaultPurseService();
         DefaultBasketService.mail = mail;
         notificationService = new SlackService(
                 vertx,
@@ -165,7 +162,6 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler) );
     }
 
-
     public void updateComment(Integer idBasket, String comment, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String commentParameter = "".equals(comment.trim()) ? "null" : "?";
@@ -180,6 +176,16 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 
+    public void updateReassort(Integer idBasket, Boolean reassort, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = " UPDATE " + Crre.crreSchema + ".basket_equipment " +
+                " SET reassort = ? WHERE id = ?; ";
+
+        values.add(reassort);
+        values.add(idBasket);
+
+        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
+    }
 
     public void updatePriceProposal(Integer id, Double price_proposal, Handler<Either<String, JsonObject>> eitherHandler) {
         JsonArray values;
@@ -195,18 +201,22 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                                         Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String basketFilter = baskets.size() > 0 ? "AND basket.id IN " + Sql.listPrepared(baskets.getList()) : "";
-        String query = "SELECT  basket.id id_basket, (basket.price_proposal * basket.amount) as price_proposal ,basket.amount, basket.comment, basket.processing_date,  basket.id_campaign," +
-                "basket.id_structure, e.id id_equipment, e.name,e.summary, e.description, e.price, e.image, e.id_contract, e.status, jsonb(e.technical_specs) technical_specs, e.tax_amount, nextval('" + Crre.crreSchema + ".order_client_equipment_id_seq' ) as id_order, Case Count(ep) " +
+        String query = "SELECT  basket.id id_basket, (basket.price_proposal * basket.amount) as price_proposal ,basket.amount, " +
+                "basket.comment, basket.processing_date, basket.id_campaign, basket.id_structure, basket.reassort," +
+                "e.id id_equipment, e.name,e.summary, e.description, e.price, e.image, e.id_contract, e.status, jsonb(e.technical_specs) technical_specs," +
+                "e.tax_amount, nextval('" + Crre.crreSchema + ".order_client_equipment_id_seq' ) as id_order, Case Count(ep) " +
                 "when 0 " +
                 "then ROUND((e.price + ((e.price *  e.tax_amount) /100)), 2) * basket.amount " +
                 "else (ROUND(e.price + ((e.price *  e.tax_amount) /100), 2) + SUM(ep.total_option_price)) * basket.amount " +
-                "END as total_price, array_to_json(array_agg(DISTINCT ep.*)) as options, array_to_json(array_agg(DISTINCT basket_file.*)) as files, campaign.purse_enabled " +
+                "END as total_price, array_to_json(array_agg(DISTINCT ep.*)) as options, " +
+                "array_to_json(array_agg(DISTINCT basket_file.*)) as files, campaign.purse_enabled " +
                 "FROM  " + Crre.crreSchema + ".basket_equipment basket " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (basket.id_campaign = campaign.id) " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_option ON basket_option.id_basket_equipment = basket.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_file ON basket.id = basket_file.id_basket_equipment " +
                 "LEFT JOIN (" +
-                "SELECT equipment_option.*, equipment.name, equipment.price, tax.value tax_amount, ROUND(equipment.price + ((equipment.price * tax.value)/100), 2) as total_option_price " +
+                "SELECT equipment_option.*, equipment.name, equipment.price, tax.value tax_amount, " +
+                "ROUND(equipment.price + ((equipment.price * tax.value)/100), 2) as total_option_price " +
                 "FROM " + Crre.crreSchema + ".equipment_option " +
                 "INNER JOIN " + Crre.crreSchema + ".equipment ON equipment_option.id_option = equipment.id " +
                 "INNER JOIN  " + Crre.crreSchema + ".tax ON tax.id = equipment.id_tax " +
@@ -219,7 +229,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 ") as e ON e.id = basket.id_equipment " +
                 "WHERE basket.id_campaign = ? " +
                 "AND basket.id_structure = ? " + basketFilter +
-                "GROUP BY (basket.id, basket.amount, basket.processing_date,basket.id_campaign, basket.id_structure, e.id, e.price, e.name, e.summary, e.description, " +
+                "GROUP BY (basket.id, basket.amount, basket.processing_date,basket.id_campaign, basket.id_structure, " +
+                "e.id, e.price, e.name, e.summary, e.description, " +
                 "e.price, e.image, e.id_contract, e.status, jsonb(e.technical_specs),  e.tax_amount, campaign.purse_enabled);";
         values.add(idCampaign).add(idStructure);
 
@@ -465,7 +476,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     public void takeOrder(final HttpServerRequest request, final JsonArray baskets, Integer idCampaign, UserInfos user,
-                          String idStructure, final String nameStructure, JsonArray baskets_objects, String nameBasket, final Handler<Either<String, JsonObject>> handler) {
+                          String idStructure, final String nameStructure, JsonArray baskets_objects, String nameBasket,
+                          final Handler<Either<String, JsonObject>> handler) {
         try {
             JsonArray test = new fr.wseduc.webutils.collections.JsonArray();
             JsonObject basket_data;
@@ -666,29 +678,30 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
                     .append(" (id, price, tax_amount, amount,  id_campaign, id_structure, name, summary," +
                             " description, image, technical_spec, status, " +
-                            " id_contract, equipment_key, comment, price_proposal, rank, user_id, id_basket ) VALUES ")
-                    .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?, ").append(getTheLastRankOrder()).append(", ?, ?); ");
+                            " id_contract, equipment_key, comment, price_proposal, rank, user_id, id_basket, reassort ) VALUES ")
+                    .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, ?, ").append(getTheLastRankOrder()).append(", ?, ?, ?); ");
             params = getObjects(basket);
             params.add(Double.valueOf(basket.getString("price_proposal")))
                     .add(basket.getInteger("id_campaign"))
                     .add(basket.getString("id_structure"))
                     .add(userId)
                     .add(id_basket)
-            ;
+                    .add(basket.getBoolean("reassort"));
 
         } catch (java.lang.NullPointerException e) {
             queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
                     .append(" (id, price, tax_amount, amount,  id_campaign, id_structure, name, summary," +
                             " description, image, technical_spec, status, " +
-                            " id_contract, equipment_key, comment, price_proposal, rank, user_id, id_basket ) VALUES ")
+                            " id_contract, equipment_key, comment, price_proposal, rank, user_id, id_basket, reassort ) VALUES ")
                     .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_json(?::text), ?, ?, ?, ?, null, ")
                     .append(getTheLastRankOrder())
-                    .append( ", ?, ?); ");
+                    .append( ", ?, ?, ?); ");
             params = getObjects(basket);
             params.add(basket.getInteger("id_campaign"))
                     .add(basket.getString("id_structure"))
                     .add(userId)
-                    .add(id_basket);
+                    .add(id_basket)
+                    .add(basket.getBoolean("reassort"));
         }
         return new JsonObject()
                 .put("statement", queryEquipmentOrder.toString())

@@ -220,10 +220,10 @@ export const basketController = ng.controller('basketController',
                 && _.findWhere( equipmentsBasket, {status : 'OUT_OF_STOCK'}) === undefined
                 &&  _.findWhere( equipmentsBasket, {status : 'UNAVAILABLE'}) === undefined;
         };
+
         $scope.checkPrice = async (baskets: Baskets) => {
             let priceIs0 = false;
             baskets.all.forEach(basket =>{
-                console.log(basket);
                 if(basket.price_proposal === null && basket.equipment.price === 0 || basket.price_proposal === 0 ){
                     priceIs0 = true;
                 }
@@ -233,7 +233,6 @@ export const basketController = ng.controller('basketController',
             }else{
                 $scope.baskets_test = baskets;
                 $scope.confirmBasketName();
-
             }
         };
 

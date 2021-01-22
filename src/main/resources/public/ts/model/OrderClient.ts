@@ -72,6 +72,7 @@ export class OrderClient implements Order  {
     user_name:string;
     user_id:string;
     grade: string;
+    reassort: boolean;
 
     constructor() {
         this.typeOrder= "client";
@@ -104,6 +105,15 @@ export class OrderClient implements Order  {
     async updateAmount(amount: number):Promise<void>{
         try {
             await http.put(`/crre/order/${this.id}/amount`,{ amount: amount });
+        }
+        catch {
+            notify.error('crre.order.getMine.err');
+        }
+    }
+
+    async updateReassort():Promise<void>{
+        try {
+            await http.put(`/crre/order/${this.id}/reassort`,{ reassort: this.reassort });
         }
         catch {
             notify.error('crre.order.getMine.err');
@@ -281,7 +291,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         order.image = equipment.image;
                         order.grade = equipment.grade_name;
                     }
-                    this.syncWithIdsCampaignAndStructure(idCampaign, idStructure);
+                    this.syncWithIdsCampaignAndStructure();
                 });
             } else {
                 const { data } = await http.get(  `/crre/orders?status=${status}`);
@@ -323,7 +333,7 @@ export class OrdersClient extends Selection<OrderClient> {
         return http.get(`/crre/equipments?${params}`);
     }
 
-    syncWithIdsCampaignAndStructure(idCampaign:number, idStructure:string):void{
+    syncWithIdsCampaignAndStructure():void{
         this.all.map((order) => {
             order.price = parseFloat(order.price.toString());
             order.price_proposal = order.price_proposal? parseFloat( order.price_proposal.toString()) : null;
