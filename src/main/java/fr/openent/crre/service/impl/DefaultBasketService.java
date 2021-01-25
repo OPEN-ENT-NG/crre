@@ -299,7 +299,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
                 String value = filters.getJsonObject(i).getString(key);
-                sqlquery += "bo." + key + " = " + "?";
+                sqlquery += !key.equals("reassort") ? "bo." + key + " = " + "?" : "oe." + key + " = " + "?";
                 values.add(value);
                 if(!(i == filters.size() - 1)) {
                     sqlquery += " OR ";
@@ -334,7 +334,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
                 String value = filters.getJsonObject(i).getString(key);
-                sqlquery += "bo." + key + " = " + "?";
+                sqlquery += !key.equals("reassort") ? "bo." + key + " = " + "?" : "oe." + key + " = " + "?";
                 values.add(value);
                 if(!(i == filters.size() - 1)) {
                     sqlquery += " OR ";
@@ -376,7 +376,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
                 String value = filters.getJsonObject(i).getString(key);
-                sqlquery += "bo." + key + " = " + "?";
+                sqlquery += !key.equals("reassort") ? "bo." + key + " = " + "?" : "oe." + key + " = " + "?";
                 values.add(value);
                 if(!(i == filters.size() - 1)) {
                     sqlquery += " OR ";
@@ -430,7 +430,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
                 String value = filters.getJsonObject(i).getString(key);
-                sqlquery += "bo." + key + " = " + "?";
+                sqlquery += !key.equals("reassort") ? "bo." + key + " = " + "?" : "oe." + key + " = " + "?";
                 values.add(value);
                 if(!(i == filters.size() - 1)) {
                     sqlquery += " OR ";

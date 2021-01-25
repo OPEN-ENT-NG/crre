@@ -28,10 +28,22 @@
                     </div>
                 </div>
             </button>
-            <button ng-click=""
+            <button ng-click="initPopUpFilters('showPopUpColumnsReassort')"
                     class="filterButton">
                 <i class="star-circle"></i>
                 <span><i18n>crre.reassort</i18n></span>
+                <div class="columns-popup-wrapper right-magnet">
+                    <div class="right-magnet columns-popup-button">
+                        <span ng-show="showPopUpColumnsReassort">&#x25B2;</span>
+                        <span ng-hide="showPopUpColumnsReassort">&#x25BC;</span>
+                    </div>
+                    <div ng-class="{'open' : showPopUpColumnsReassort}" class="right-magnet columns-popup">
+                        <label class="columns-popup-items" ng-repeat="reassort in reassorts">
+                            <input type="checkbox" ng-model = "reassort.isChecked" ng-change="getFilter(reassort.reassort, 'reassort')">
+                            <span ng-bind="lang.translate(reassort.reassort)"></span>
+                        </label>
+                    </div>
+                </div>
             </button>
             <button ng-click="initPopUpFilters('showPopUpColumnsGrade')"
                     class="filterButton">

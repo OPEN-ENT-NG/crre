@@ -28,6 +28,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
 
         this.init = () => {
             $scope.users = [];
+            $scope.reassorts = [{reassort: "true"}, {reassort: "false"}];
             $scope.filters = new Filters();
             $scope.initPopUpFilters();
         };
@@ -72,10 +73,12 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             let value = $scope.$eval(filter);
             $scope.showPopUpColumnsGrade = false;
             $scope.showPopUpColumnsTeacher = false;
+            $scope.showPopUpColumnsReassort = false;
             if (!value) {
                 switch (filter) {
                     case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
                     case 'showPopUpColumnsTeacher': $scope.showPopUpColumnsTeacher = true; break;
+                    case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
                     default: break;
                 }
             }

@@ -34,6 +34,7 @@ export const orderController = ng.controller('orderController',
         }
         this.init = () => {
             $scope.users = [];
+            $scope.reassorts = [{reassort: true}, {reassort: false}];
             $scope.filters = new Filters();
             $scope.initPopUpFilters();
         };
@@ -98,10 +99,12 @@ export const orderController = ng.controller('orderController',
             let value = $scope.$eval(filter);
             $scope.showPopUpColumnsGrade = false;
             $scope.showPopUpColumnsTeacher = false;
+            $scope.showPopUpColumnsReassort = false;
             if (!value) {
                 switch (filter) {
                     case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
                     case 'showPopUpColumnsTeacher': $scope.showPopUpColumnsTeacher = true; break;
+                    case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
                     default: break;
                 }
             }
@@ -144,6 +147,10 @@ export const orderController = ng.controller('orderController',
             });
             $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.user_name === v.user_name)) === i)
         };
+
+        $scope.getStudents = () => {
+            let json = ''
+        }
 
 
         $scope.createOrder = async ():Promise<void> => {
