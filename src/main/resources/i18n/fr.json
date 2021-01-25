@@ -187,6 +187,7 @@
   "crre.basket.deleted.article": "est supprimé de votre panier",
   "crre.basket.deleted.articles": "sont supprimé de votre panier",
   "crre.basket.added.articles": "sont ajoutés à votre panier",
+  "crre.basket.added.articles.error": "Une erreur est survenue dans l'ajout de ressource(s) dans votre panier",
   "crre.basket.added.article": "est ajouté à votre panier",
   "crre.confirm.order.message1": "Votre commande d'un montant de ",
   "crre.confirm.order.message2": " est désormais en attente de traitement par votre Valideur. Consultez l'onglet \"",

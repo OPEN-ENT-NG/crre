@@ -7,7 +7,7 @@ import {
     Structures,
     Utils,
     Equipments,
-    Contracts
+    Contracts, Basket, Equipment
 } from "../../model";
 import http from "axios";
 
@@ -350,10 +350,10 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
             $scope.ordersClient.all.forEach(order => {
-                        let orderRegionTemp = new OrderRegion();
-                        orderRegionTemp.createFromOrderClient(order);
-                        ordersToCreate.all.push(orderRegionTemp);
-                    });
+                let orderRegionTemp = new OrderRegion();
+                orderRegionTemp.createFromOrderClient(order);
+                ordersToCreate.all.push(orderRegionTemp);
+            });
 
             let {status} = await ordersToCreate.create();
             if (status === 201) {
@@ -413,5 +413,54 @@ export const orderRegionController = ng.controller('orderRegionController',
             project.selected = all;
             $scope.switchDisplayToggle();
         }
+
+        $scope.uncheckAll = () => {
+            $scope.projects.forEach(project => {
+                project.selected = false;
+                project.orders.forEach( async order => {
+                    order.selected = false;
+                });
+            });
+        }
+
+        $scope.reSubmit = async () => {
+            let statusOK = true;
+            let totalAmount = 0;
+            let promesses = []
+            $scope.projects.forEach(project => {
+                project.orders.forEach( async order => {
+                    if(order.selected) {
+                        let equipment = new Equipment();
+                        equipment.id = order.equipment_key;
+                        let basket = new Basket(equipment, $scope.campaign.id, $scope.current.structure.id);
+                        basket.amount = order.amount;
+                        totalAmount += order.amount;
+                        promesses.push(basket.create());
+                    }
+                });
+            });
+            let responses = await Promise.all(promesses);
+            if(responses[0].status) {
+                for (let i = 0; i < responses.length; i++) {
+                    if (responses[i].status === 200) {
+                        if ($scope.campaign.nb_panier)
+                            $scope.campaign.nb_panier += 1;
+                        else
+                            $scope.campaign.nb_panier = 1;
+                    } else {
+                        statusOK = false;
+                    }
+                }
+                if (statusOK) {
+                    let messageForMany = totalAmount + ' ' + lang.translate('articles') + ' ' +
+                        lang.translate('crre.basket.added.articles');
+                    toasts.confirm(messageForMany);
+                } else {
+                    toasts.warning('crre.basket.added.articles.error')
+                }
+                $scope.uncheckAll();
+                Utils.safeApply($scope);
+            }
+        };
     }
     ]);
