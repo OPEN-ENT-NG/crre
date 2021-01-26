@@ -33,7 +33,7 @@ public interface OrderRegionService {
 
     void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

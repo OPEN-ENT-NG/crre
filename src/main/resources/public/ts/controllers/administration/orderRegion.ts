@@ -7,9 +7,10 @@ import {
     Structures,
     Utils,
     Equipments,
-    Contracts, Basket, Equipment
+    Contracts, Basket, Equipment, Filter, Filters
 } from "../../model";
 import http from "axios";
+import {Mix} from "entcore-toolkit";
 
 declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
@@ -23,11 +24,17 @@ export const orderRegionController = ng.controller('orderRegionController',
                 validOrder: false,
             },
         };
-        $scope.filters = [];
-        $scope.filters.startDate = moment().add(-1, 'years')._d;
-        $scope.filters.endDate = moment()._d;
+        $scope.filtersDate = [];
+        $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
+        $scope.filtersDate.endDate = moment()._d;
         $scope.translate = (key: string):string => lang.translate(key);
         $scope.displayToggle=false;
+
+        this.init = () => {
+            $scope.reassorts = [{reassort: true}, {reassort: false}];
+            $scope.filters = new Filters();
+            $scope.initPopUpFilters();
+        };
 
         $scope.getProjects = async() => {
             try {
@@ -38,14 +45,14 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.getProjectsSearch = async(name: string) => {
+/*        $scope.getProjectsSearch = async(name: string) => {
             try {
                 let { data } = await http.get(`/crre/ordersRegion/search?q=${name}`);
                 $scope.projects = data;
             } catch (e) {
                 notify.error('crre.basket.sync.err');
             }
-        }
+        }*/
 
         $scope.getProjectsSearchFilter = async(name: string, startDate: Date, endDate: Date) => {
             try {
@@ -58,25 +65,50 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.getProjectsFilter = async(startDate: Date, endDate: Date) => {
+/*        $scope.getProjectsFilterDate = async(startDate: Date, endDate: Date) => {
             try {
                 startDate = moment(startDate).format('YYYY-MM-DD').toString();
                 endDate = moment(endDate).format('YYYY-MM-DD').toString();
-                let { data } = await http.get(`/crre/ordersRegion/projects/filter?startDate=${startDate}&endDate=${endDate}`);
+                let {data} = await http.get(`/crre/ordersRegion/projects/filter?startDate=${startDate}&endDate=${endDate}`);
                 $scope.projects = data;
             } catch (e) {
                 notify.error('crre.basket.sync.err');
             }
-        }
+        }*/
 
-        $scope.searchByName =  async (name: string) => {
-            if(name != "") {
+        $scope.getFilter = async (word: string, filter: string) => {
+            let newFilter = new Filter();
+            newFilter.name = filter;
+            newFilter.value = word;
+            if ($scope.filters.all.some(f => f.value === word)) {
+                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1)
+            } else {
+                $scope.filters.all.push(newFilter);
+            }
+            if($scope.filters.all.length > 0) {
+                if (!!$scope.query_name) {
+                    await $scope.filter_order();
+                    await synchroRegionOrders(true);
+                    Utils.safeApply($scope);
+                } else {
+                    await $scope.filter_order();
+                    await synchroRegionOrders(true);
+                    Utils.safeApply($scope);
+                }
+            } else {
+                await $scope.searchByName($scope.query_name);
+                Utils.safeApply($scope);
+            }
+        };
+
+/*        $scope.searchByName =  async (name: string) => {
+            if(!!name) {
                 if(!$scope.filters.hasOwnProperty("startDate") && !$scope.filters.hasOwnProperty("endDate")) {
                     await $scope.getProjectsSearch(name);
                     await synchroRegionOrders(true);
                 } else {
-                    if(moment($scope.filters.startDate).isSameOrBefore(moment($scope.filters.endDate))) {
-                        await $scope.getProjectsSearchFilter(name, $scope.filters.startDate, $scope.filters.endDate);
+                    if(moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+                        await $scope.getProjectsSearchFilter(name, $scope.filtersDate.startDate, $scope.filtersDate.endDate);
                         await synchroRegionOrders(true);
                     }
                 }
@@ -84,26 +116,83 @@ export const orderRegionController = ng.controller('orderRegionController',
                 await synchroRegionOrders();
             }
             Utils.safeApply($scope);
-        }
+        }*/
 
-        $scope.filterByDate = async () => {
-            if($scope.filters.hasOwnProperty("startDate") && $scope.filters.hasOwnProperty("endDate")) {
-                if(moment($scope.filters.startDate).isSameOrBefore(moment($scope.filters.endDate))) {
-                    if($scope.query_name == "" || $scope.query_name == null) {
-                        await $scope.getProjectsFilter($scope.filters.startDate, $scope.filters.endDate)
-                        await synchroRegionOrders(true);
-                    } else {
-                        await $scope.getProjectsSearchFilter($scope.query_name, $scope.filters.startDate, $scope.filters.endDate);
-                        await synchroRegionOrders(true);
-                    }
-
+        $scope.searchByName =  async (name: string) => {
+            if(!!name) {
+                if($scope.filters.all.length == 0) {
+                    await $scope.getProjectsSearchFilter(name, $scope.filtersDate.startDate, $scope.filtersDate.endDate);
+                    await synchroRegionOrders(true);
+                    Utils.safeApply($scope);
                 } else {
-                    notify.error('crre.date.err');
+                    await $scope.filter_order();
+                    await synchroRegionOrders(true);
+                    Utils.safeApply($scope);
+                }
+            } else {
+                if($scope.filters.all.length == 0) {
+                    await synchroRegionOrders();
+                    Utils.safeApply($scope);
+                } else {
+                    await $scope.filter_order();
+                    await synchroRegionOrders(true);
+                    Utils.safeApply($scope);
                 }
 
             }
-
+            Utils.safeApply($scope);
         }
+
+        $scope.filterByDate = async () => {
+                if(moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+                    await $scope.filter_order();
+                    await synchroRegionOrders(true);
+                } else {
+                    notify.error('crre.date.err');
+                }
+        }
+
+        $scope.filter_order = async() => {
+            try {
+                let params = "";
+                let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
+                let url;
+                let word = $scope.query_name;
+                let filters = $scope.filters.all;
+                filters.forEach(function (f, index) {
+                    params += f.name + "=" + f.value;
+                    if(index != filters.length - 1) {
+                        params += "&";
+                    }});
+                let startDate = moment($scope.filtersDate.startDate).format('YYYY-MM-DD').toString();
+                let endDate = moment($scope.filtersDate.endDate).format('YYYY-MM-DD').toString();
+                if(!format.test(word)) {
+                    if (!!word) {
+                        url = `/crre/ordersRegion/projects/search_filter?startDate=${startDate}&endDate=${endDate}&q=${word}&${params}`;
+                    } else {
+                        url = `/crre/ordersRegion/projects/search_filter?startDate=${startDate}&endDate=${endDate}&${params}`;
+                    }
+                } else {
+                    toasts.warning('crre.equipment.special');
+                }
+                let { data } = await http.get(url);
+                $scope.projects = data;
+            } catch (e) {
+                notify.error('crre.equipment.sync.err');
+                throw e;
+            }
+        }
+
+        $scope.initPopUpFilters = (filter?:string) => {
+            let value = $scope.$eval(filter);
+            $scope.showPopUpColumnsReassort = false;
+            if (!value) {
+                switch (filter) {
+                    case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
+                    default: break;
+                }
+            }
+        };
 
         $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
             let totalPrice = 0;
@@ -462,5 +551,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 Utils.safeApply($scope);
             }
         };
+        this.init();
     }
     ]);

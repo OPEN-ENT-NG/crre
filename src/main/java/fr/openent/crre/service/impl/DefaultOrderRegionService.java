@@ -368,20 +368,26 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT DISTINCT (p.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN ( ";
+                "WHERE ore.creation_date BETWEEN ? AND ? ";
 
         values.add(startDate);
         values.add(endDate);
-        values.add(query);
-        values.add(query);
-        values.add(query);
+        if (query != "") {
+            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN (";
+            values.add(query);
+            values.add(query);
+            values.add(query);
+        } else {
+            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name OR ore.equipment_key IN (";
+        }
+
 
         for (int i = 0; i < equipTab.size(); i++) {
             sqlquery += "?,";
@@ -395,12 +401,26 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += !key.equals("reassort") ? "b." + key + " = " + "?" : "ore." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
         sqlquery = sqlquery + " ORDER BY p.id DESC ";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     @Override
-    public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT DISTINCT (p.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
@@ -421,6 +441,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                sqlquery += !key.equals("reassort") ? "b." + key + " = " + "?" : "ore." + key + " = " + "?";
+                values.add(value);
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " OR ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
         sqlquery = sqlquery + " ORDER BY p.id DESC ";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }

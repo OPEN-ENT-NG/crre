@@ -7,7 +7,7 @@
             <div class="date-picker-style">
                 <i class="diary-calendar"></i>
                 <date-picker
-                        ng-model="filters.startDate"
+                        ng-model="filtersDate.startDate"
                         ng-change="filterByDate()"
                         class="input-date-picker-style">
                 </date-picker>
@@ -19,7 +19,7 @@
             <div class="date-picker-style">
                 <i class="diary-calendar"></i>
                 <date-picker
-                        ng-model="filters.endDate"
+                        ng-model="filtersDate.endDate"
                         ng-change="filterByDate()"
                         class="input-date-picker-style">
                 </date-picker>
@@ -33,6 +33,25 @@
                        ng-model="query_name"
                        ng-keyup="searchByName(query_name)"
                        i18n-placeholder="search.filter.order">
+            </div>
+            <div class="cell margin-top-8 twelve-mobile two catalog">
+                <button ng-click="initPopUpFilters('showPopUpColumnsReassort')"
+                        class="filterButton">
+                    <i class="star-circle"></i>
+                    <span><i18n>crre.reassort</i18n></span>
+                    <div class="columns-popup-wrapper right-magnet">
+                        <div class="right-magnet columns-popup-button">
+                            <span ng-show="showPopUpColumnsReassort">&#x25B2;</span>
+                            <span ng-hide="showPopUpColumnsReassort">&#x25BC;</span>
+                        </div>
+                        <div ng-class="{'open' : showPopUpColumnsReassort}" class="right-magnet columns-popup">
+                            <label class="columns-popup-items" ng-repeat="reassort in reassorts">
+                                <input type="checkbox" ng-model = "reassort.isChecked" ng-change="getFilter(reassort.reassort, 'reassort')">
+                                <span ng-bind="lang.translate(reassort.reassort)"></span>
+                            </label>
+                        </div>
+                    </div>
+                </button>
             </div>
         </div>
     </div>

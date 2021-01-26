@@ -1,5 +1,5 @@
 import http from "axios";
-import {moment, notify} from "entcore";
+import {moment, notify, toasts} from "entcore";
 import {
     Campaign,
     Contract,
@@ -9,7 +9,7 @@ import {
     Structures, Supplier, TechnicalSpec,
     Utils,
     OrderClient,
-    Equipment, BasketOrder
+    Equipment, BasketOrder, Filter
 } from "./index";
 import {Mix, Selection} from "entcore-toolkit";
 
@@ -203,8 +203,6 @@ export class OrdersRegion extends Selection<OrderRegion> {
             notify.error('crre.basket.sync.err');
         }
     }
-
-
 
     async create():Promise<any> {
         let orders = [];

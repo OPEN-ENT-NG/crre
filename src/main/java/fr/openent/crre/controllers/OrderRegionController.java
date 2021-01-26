@@ -211,22 +211,31 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void getProjectsDateSearch(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && request.params().get("q").trim() != "") {
                 try {
-                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    String query = "";
+                    // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
+                    if (request.params().contains("q")) {
+                        query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    }
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
+                    JsonArray filters = new JsonArray();
+                    int length = request.params().entries().size();
+                    for (int i = 0; i < length; i++) {
+                        if (!request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("startDate") && !request.params().entries().get(i).getKey().equals("endDate"))
+                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                    }
+                    String finalQuery = query;
                     orderRegionService.searchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
-                            orderRegionService.filterSearch(user, equipments.right().getValue(), query, startDate, endDate, arrayResponseHandler(request));
+                            orderRegionService.filterSearch(user, equipments.right().getValue(), finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
                         } else {
-                            orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, arrayResponseHandler(request));
+                            orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
                         }
                     });
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-            }
         });
     }
 
