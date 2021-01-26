@@ -176,9 +176,11 @@ export const orderController = ng.controller('orderController',
                     toasts.confirm('crre.order.region.create.message');
                     $scope.campaign.purse_amount -= total;
                     if($scope.ordersClient.selectedElements.length > 0) {
-                        $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selectedElements.length;
+                        $scope.campaign.nb_order_waiting -= $scope.ordersClient.selectedElements.length;
+                        $scope.campaign.historic_etab_notification += $scope.ordersClient.selectedElements.length;
                     } else {
-                        $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.all.length;
+                        $scope.campaign.nb_order_waiting -= $scope.ordersClient.all.length;
+                        $scope.campaign.historic_etab_notification += $scope.ordersClient.all.length;
                     }
                     $scope.orderToCreate = new OrderRegion();
                     await $scope.syncOrders('WAITING');

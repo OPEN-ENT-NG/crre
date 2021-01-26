@@ -186,8 +186,9 @@ export const basketController = ng.controller('basketController',
             }
         };
         $scope.confirmOrder = (data) => {
-            $scope.campaign.nb_order = $scope.campaign.nb_order + 1;
-            $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting + $scope.baskets.all.length;
+            $scope.campaign.nb_order += 1;
+            $scope.campaign.order_notification += 1;
+            $scope.campaign.nb_order_waiting += $scope.baskets.all.length;
             $scope.campaign.nb_panier = 0;
             $scope.campaign.purse_amount = data.amount;
             template.open('basket.order', 'customer/campaign/basket/order-confirmation');

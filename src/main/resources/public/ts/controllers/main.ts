@@ -220,6 +220,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/order/manage-order');
                 $scope.initCampaignOrderView();
+                $scope.campaign.order_notification = 0;
                 Utils.safeApply($scope);
             },
             campaignBasket: async (params) => {
@@ -266,6 +267,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     $scope.selectCampaignShow(campaignPref, "HISTORIC");
                 } else
                     await $scope.openLightSelectCampaign();
+                $scope.campaign.historic_etab_notification = 0;
                 Utils.safeApply($scope);
             },
             orderSent: async () => {

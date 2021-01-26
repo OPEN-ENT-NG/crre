@@ -231,17 +231,12 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     object = orders.getJsonObject(i);
                     try {
                         campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
-                        if(user.getUserId().equals(object.getString("user_id"))) {
-                            if(!campaign.containsKey("nb_order"))
-                                campaign.put("nb_order", object.getLong("nb_order"));
-                            else
-                                campaign.put("nb_order", object.getLong("nb_order"));
-                        }
+                        if(user.getUserId().equals(object.getString("user_id")))
+                            campaign.put("nb_order", object.getLong("nb_order"));
                         if(WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString()))
-                            if(!campaign.containsKey("nb_order_waiting"))
-                                campaign.put("nb_order_waiting", object.getInteger("nb_order_waiting"));
-                            else
-                                campaign.put("nb_order_waiting", object.getInteger("nb_order_waiting"));
+                            campaign.put("nb_order_waiting", object.getInteger("nb_order_waiting"));
+                        campaign.put("order_notification",0);
+                        campaign.put("historic_etab_notification",0);
                     }catch (NullPointerException e){
                         LOGGER.info("An order is present on this structure but the structure is not linked to the campaign");
                     }
@@ -250,7 +245,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 for (Map.Entry<String, Object> aCampaign : campaignMap) {
                     campaignList.add(aCampaign.getValue());
                 }
-
                 handler.handle(new Either.Right<>(campaignList));
             } else {
                 handler.handle(new Either.Left<>("[DefaultCampaignService@listCampaigns] An error occured. CompositeFuture returned failed :" + event.cause()));
