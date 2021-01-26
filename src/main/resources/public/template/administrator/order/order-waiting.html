@@ -137,7 +137,7 @@
                 </td>
                 <td ng-if="tableFields[6].display">
                     <div class="smallTabElem center leftPadding10">
-                        <span ng-bind="order.priceTotalTTC | currency"></span>
+                        <span ng-bind="order.priceUnitedTTC*order.amount | currency"></span>
                     </div>
                 </td>
                 <td ng-if="tableFields[7].display">
@@ -155,7 +155,7 @@
             <div class = "total-container">
                 <div>
                     <i18n>crre.consummed.licences</i18n>
-                    <h1 class="bold-font-weight" ng-bind="displayedOrders.calculTotalAmount()"></h1>
+                    <h1 class="bold-font-weight" ng-bind="displayedOrders.calculTotalAmount()"></h1>wa
                 </div>
                 <div class="licences">
                     <i18n>crre.initial.licences</i18n>
