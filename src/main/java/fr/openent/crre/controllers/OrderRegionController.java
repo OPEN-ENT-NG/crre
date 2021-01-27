@@ -89,54 +89,66 @@ public class OrderRegionController extends BaseController {
                         if (!orders.isEmpty()) {
                             JsonArray ordersList = orders.getJsonArray("orders");
                             String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                            String title = "Commande_" + date + "_" + orders.size();
-                            orderRegionService.createProject(title, idProject -> {
-                                if(idProject.isRight()){
-                                    Integer idProjectRight = idProject.right().getValue().getInteger("id");
-                                    Logging.insert(eb,
-                                            request,
-                                            null,
-                                            Actions.CREATE.toString(),
-                                            idProjectRight.toString(),
-                                            new JsonObject().put("id", idProjectRight).put("title", title));
-                                    for(int i = 0 ; i<ordersList.size() ; i++){
-                                        List<Future> futures = new ArrayList<>();
-                                        Future<JsonObject> purseUpdateFuture = Future.future();
-                                        futures.add(purseUpdateFuture);
-                                        Future<JsonObject> createOrdersRegionFuture = Future.future();
-                                        futures.add(createOrdersRegionFuture);
-                                        JsonObject newOrder = ordersList.getJsonObject(i);
-                                        purseService.updatePurseAmount(newOrder.getDouble("price"),
-                                                newOrder.getInteger("id_campaign"),
-                                                newOrder.getString("id_structure"),"-",
-                                                handlerJsonObject(purseUpdateFuture) );
-                                        orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, handlerJsonObject(createOrdersRegionFuture));
-                                        int finalI = i;
-                                        CompositeFuture.all(futures).setHandler(event -> {
-                                            if (event.succeeded()) {
-                                                Number idReturning = createOrdersRegionFuture.result().getInteger("id");
-                                                Logging.insert(eb,
-                                                        request,
-                                                        Contexts.ORDERREGION.toString(),
-                                                        Actions.CREATE.toString(),
-                                                        idReturning.toString(),
-                                                        new JsonObject().put("order region", newOrder));
-                                                if(finalI == ordersList.size()-1){
-                                                    request.response().setStatusCode(201).end();
-                                                }
-                                            } else {
-                                                LOGGER.error("An error when you want get id after create order region ",event.cause());
-                                                request.response().setStatusCode(400).end();
-                                            }
-                                        });
-                                    }
+                            orderRegionService.getLastProject(user, lastProject -> {
+                            if(lastProject.isRight()) {
+                                String last = lastProject.right().getValue().getString("title");
+                                String title = "Commande_" + date;
+                                if(title.equals(last.substring(0, last.length() - 2))) {
+                                    title = title.substring(0, title.length()) + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
                                 } else {
-                                    LOGGER.error("An error when you want get id after create project " + idProject.left());
-                                    request.response().setStatusCode(400).end();
+                                    title += "_1";
                                 }
+                                String finalTitle = title;
+                                orderRegionService.createProject(title, idProject -> {
+                                    if(idProject.isRight()){
+                                        Integer idProjectRight = idProject.right().getValue().getInteger("id");
+                                        Logging.insert(eb,
+                                                request,
+                                                null,
+                                                Actions.CREATE.toString(),
+                                                idProjectRight.toString(),
+                                                new JsonObject().put("id", idProjectRight).put("title", finalTitle));
+                                        for(int i = 0 ; i<ordersList.size() ; i++){
+                                            List<Future> futures = new ArrayList<>();
+                                            Future<JsonObject> purseUpdateFuture = Future.future();
+                                            futures.add(purseUpdateFuture);
+                                            Future<JsonObject> createOrdersRegionFuture = Future.future();
+                                            futures.add(createOrdersRegionFuture);
+                                            JsonObject newOrder = ordersList.getJsonObject(i);
+                                            purseService.updatePurseAmount(newOrder.getDouble("price"),
+                                                    newOrder.getInteger("id_campaign"),
+                                                    newOrder.getString("id_structure"),"-",
+                                                    handlerJsonObject(purseUpdateFuture) );
+                                            orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, handlerJsonObject(createOrdersRegionFuture));
+                                            int finalI = i;
+                                            CompositeFuture.all(futures).setHandler(event -> {
+                                                if (event.succeeded()) {
+                                                    Number idReturning = createOrdersRegionFuture.result().getInteger("id");
+                                                    Logging.insert(eb,
+                                                            request,
+                                                            Contexts.ORDERREGION.toString(),
+                                                            Actions.CREATE.toString(),
+                                                            idReturning.toString(),
+                                                            new JsonObject().put("order region", newOrder));
+                                                    if(finalI == ordersList.size()-1){
+                                                        request.response().setStatusCode(201).end();
+                                                    }
+                                                } else {
+                                                    LOGGER.error("An error when you want get id after create order region ",event.cause());
+                                                    request.response().setStatusCode(400).end();
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        LOGGER.error("An error when you want get id after create project " + idProject.left());
+                                        request.response().setStatusCode(400).end();
+                                    }
+                                });
+                            }
                             });
-                        }
-                    }));
+                            }
+                            }));
+
         } catch( Exception e){
             LOGGER.error("An error when you want create order region and project", e);
             request.response().setStatusCode(400).end();

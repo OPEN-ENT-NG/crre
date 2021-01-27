@@ -36,4 +36,6 @@ public interface OrderRegionService {
     void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
 }

@@ -459,5 +459,22 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
+    @Override
+    public void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "" +
+                "SELECT p.title " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "WHERE ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            query += "?,";
+            values.add(idStruct);
+        }
+        query = query.substring(0, query.length() - 1) + ")";
+        query = query + " ORDER BY p.id DESC LIMIT 1";
+        sql.prepared(query, values, SqlResult.validUniqueResultHandler(arrayResponseHandler));
+    }
+
 
 }
