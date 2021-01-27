@@ -13,72 +13,95 @@
 
     </div>
     <div>
+        <article class="twelve cell">
+            <h1 class="cell ten">Nombre d'élèves</h1>
+            <div>
+                <div class="cell ten">
+                    <span class="small-text"><i18n>crre.number.student.next.year</i18n></span>
+                    <span class="black-color big-text">1645</span>
+                </div>
+                <div class="cell ten">
+                    <span class="small-text"><i18n>crre.number.student.calcul</i18n></span>
+                    <span class="black-color big-text">5000</span>
+                </div>
+                <div class="twelve-mobile right-magnet">
+                    <div class="twelve-mobile cell">
+                        <input ng-click="modifyNumberStudent()"
+                               type="button"
+                               class="button"
+                               i18n-value="crre.modify.number.student"/>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+    <div>
         <article class="twelve cell"
                  ng-class="{disabled : !campaign.accessible}"
                  ng-repeat="campaign in campaigns.all track by $index">
-                <h3 ng-class="!campaign.accessible ? 'title-disabled' : ''" >[[campaign.name]]</h3>
-                <div>
-                    <p ng-bind-html="campaign.description" class="small-text"></p>
-                    <div class="groupButtons">
-                        <div class="twelve-mobile four cell" >
-                            <p class="small-text-align" ng-if="campaign.purse_enabled">
-                                    <span class="bold-font-weight"><i18n>crre.campaign.purse.region</i18n></span>
-                            </p>
-                            <p class="small-text-align" ng-if="campaign.purse_enabled">
-                                <em class="small-text">
-                                    <i18n>crre.campaign.amount.init</i18n> : <span ng-bind="campaign.initial_purse_amount | currency"></span>
-                                    <i18n>crre.remainder</i18n> : <span ng-bind="campaign.purse_amount | currency"></span>
-                                </em>
-                            </p>
-                            <p ng-repeat="purse in campaign.purse_licence" class="small-text-align" ng-if="campaign.purse_enabled">
-                                <em class="small-text">
-                                    <i18n>crre.campaign.licence</i18n> [[purse.name]] : <span ng-bind="purse.initial_amount"></span>
-                                    <i18n>crre.remainder</i18n> : <span ng-bind="purse.amount"></span>
-                                </em>
-                            </p>
-                            <p class="small-text-align" ng-show="campaign.nb_order && campaign.nb_order !== 0">
-                                <em class="small-text">
-                                    [[campaign.nb_order]]
-                                    <i18n ng-show="campaign.nb_order > 1">crre.demands.waiting</i18n>
-                                    <i18n ng-show="campaign.nb_order === 1">crre.demand.waiting</i18n>
-                                </em>
-                            </p>
-                            <p class="small-text-align" ng-show="campaign.nb_order_waiting && campaign.nb_order_waiting !== 0">
-                                <em class="small-text">
-                                    [[campaign.nb_order_waiting]]
-                                    <i18n ng-show="campaign.nb_order_waiting > 1">crre.demands.waiting.toValidate</i18n>
-                                    <i18n ng-show="campaign.nb_order_waiting === 1">crre.demand.waiting.toValidate</i18n>
-                                </em>
-                            </p>
+            <h1 ng-class="!campaign.accessible ? 'title-disabled' : ''" >[[campaign.name]]</h1>
+            <div>
+                <p ng-bind-html="campaign.description" class="small-text"></p>
+                <div class="groupButtons">
+                    <div class="twelve-mobile four cell" >
+                        <p class="small-text-align" ng-if="campaign.purse_enabled">
+                            <span class="bold-font-weight"><i18n>crre.campaign.purse.region</i18n></span>
+                        </p>
+                        <p class="small-text-align" ng-if="campaign.purse_enabled">
+                            <em class="small-text">
+                                <i18n>crre.campaign.amount.init</i18n> : <span ng-bind="campaign.initial_purse_amount | currency"></span>
+                                <i18n>crre.remainder</i18n> : <span ng-bind="campaign.purse_amount | currency"></span>
+                            </em>
+                        </p>
+                        <p ng-repeat="purse in campaign.purse_licence" class="small-text-align" ng-if="campaign.purse_enabled">
+                            <em class="small-text">
+                                <i18n>crre.campaign.licence</i18n> [[purse.name]] : <span ng-bind="purse.initial_amount"></span>
+                                <i18n>crre.remainder</i18n> : <span ng-bind="purse.amount"></span>
+                            </em>
+                        </p>
+                        <p class="small-text-align" ng-show="campaign.nb_order && campaign.nb_order !== 0">
+                            <em class="small-text">
+                                [[campaign.nb_order]]
+                                <i18n ng-show="campaign.nb_order > 1">crre.demands.waiting</i18n>
+                                <i18n ng-show="campaign.nb_order === 1">crre.demand.waiting</i18n>
+                            </em>
+                        </p>
+                        <p class="small-text-align" ng-show="campaign.nb_order_waiting && campaign.nb_order_waiting !== 0">
+                            <em class="small-text">
+                                [[campaign.nb_order_waiting]]
+                                <i18n ng-show="campaign.nb_order_waiting > 1">crre.demands.waiting.toValidate</i18n>
+                                <i18n ng-show="campaign.nb_order_waiting === 1">crre.demand.waiting.toValidate</i18n>
+                            </em>
+                        </p>
+                    </div>
+                    <div class="twelve-mobile right-magnet paddingTop"  >
+                        <div class="twelve-mobile cell ">
+                            <input type="button"
+                                   class="button"
+                                   ng-show="campaign.nb_order && campaign.nb_order !== 0"
+                                   ng-click="openOrderToMain(campaign)"
+                                   i18n-value="crre.access.demand"/>
+                            <input type="button"
+                                   class="button"
+                                   ng-show="!campaign.nb_order"
+                                   ng-click="openOrderToMain(campaign)"
+                                   ng-disabled="true"
+                                   i18n-value="crre.demand.empty"/>
                         </div>
-                        <div class="twelve-mobile right-magnet paddingTop"  >
-                            <div class="twelve-mobile cell ">
-                                <input type="button"
-                                       class="button"
-                                       ng-show="campaign.nb_order && campaign.nb_order !== 0"
-                                       ng-click="openOrderToMain(campaign)"
-                                       i18n-value="crre.access.demand"/>
-                                <input type="button"
-                                       class="button"
-                                       ng-show="!campaign.nb_order"
-                                       ng-click="openOrderToMain(campaign)"
-                                       ng-disabled="true"
-                                       i18n-value="crre.demand.empty"/>
-                            </div>
-                            <div class="twelve-mobile cell">
-                                <input ng-show="campaign.accessible"
-                                       ng-click="openCampaign(campaign)"
-                                       type="button"
-                                       class="button"
-                                       i18n-value="crre.access.catalog"/>
-                                <input ng-show="!campaign.accessible"
-                                       type="button"
-                                       class="button"
-                                       ng-disabled="true"
-                                       i18n-value="crre.catalog.disabled"/>
-                            </div>
+                        <div class="twelve-mobile cell">
+                            <input ng-show="campaign.accessible"
+                                   ng-click="openCampaign(campaign)"
+                                   type="button"
+                                   class="button"
+                                   i18n-value="crre.access.catalog"/>
+                            <input ng-show="!campaign.accessible"
+                                   type="button"
+                                   class="button"
+                                   ng-disabled="true"
+                                   i18n-value="crre.catalog.disabled"/>
                         </div>
                     </div>
+                </div>
             </div>
         </article>
     </div>
@@ -87,4 +110,7 @@
             <i class="sad-face horizontal-margin"></i>
             <i18n>crre.campaigns.empty</i18n></h4>
     </article>
+    <lightbox show="display.lightbox.modifyNumberStudent" on-close="cancelUpdateNumberStudent()">
+        <container template="number.student"></container>
+    </lightbox>
 </div>

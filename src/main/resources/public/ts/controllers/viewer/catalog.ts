@@ -63,7 +63,7 @@ export const catalogController = ng.controller('catalogController',
         $scope.thereAreOptionalOptions = (equipment: Equipment) => {
             return !(_.findWhere(equipment.options, {required : false}) === undefined) ;
         };
-        $scope.chooseCampaign = async (basket: Basket) => {
+        $scope.chooseCampaign = async () => {
             await $scope.initStructures();
             await $scope.initCampaign($scope.current.structure);
             template.open('campaign.name', 'customer/campaign/basket/campaign-name-confirmation');

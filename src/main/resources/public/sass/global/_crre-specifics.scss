@@ -17,6 +17,14 @@ body.crre {
 
   $secondary: #1794a5;
 
+  .black-color{
+    color: black;
+  }
+
+  .big-text{
+    font-size: 34px;
+  }
+
   .bold-font-weight{
     font-weight: bold;
   }
@@ -61,6 +69,11 @@ body.crre {
 
   .leftPadding10{
     padding-left: 10px;
+  }
+
+  .flex-spacebetween{
+    display: flex;
+    justify-content: space-between
   }
 
   .responsive-table {
