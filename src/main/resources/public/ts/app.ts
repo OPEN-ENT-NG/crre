@@ -21,8 +21,12 @@ routes.define(($routeProvider) => {
             action: 'main'
         });
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
-        $routeProvider.when('/campaigns/create', {
-            action: 'createOrUpdateCampaigns'
+        $routeProvider
+            .when('/equipments/catalog', {
+                action: 'showAdminCatalog'
+            })
+            .when('/campaigns/create', {
+                action: 'createOrUpdateCampaigns'
             })
             .when('/campaigns/update', {
                 action: 'createOrUpdateCampaigns'
@@ -34,9 +38,8 @@ routes.define(($routeProvider) => {
                 action: 'viewLogs'
             })
             .when('/structureGroups/create', {
-                    action: 'createStructureGroup'
-                }
-            )
+                action: 'createStructureGroup'
+            })
             .when('/agents', {
                 action: 'manageAgents'
             })
@@ -57,31 +60,32 @@ routes.define(($routeProvider) => {
             })
             .when('/campaigns/:idCampaign/titles', {
                 action: 'manageTitles'
+            })
+            .when('/equipments/catalog/equipment/:idEquipment', {
+                action: 'adminEquipmentDetail'
+            });
+    } else {
+        $routeProvider
+            .when('/equipments/catalog', {
+                action: 'showCatalog'
+            })
+            .when('/equipments/catalog/equipment/:idEquipment', {
+                action: 'equipmentDetail'
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager)) {
-        $routeProvider.when('/campaigns', {
-            action: 'manageCampaigns'
-        })
+        $routeProvider
+            .when('/campaigns', {
+                action: 'manageCampaigns'
+            })
             .when('/exports', {
                 action: 'exportList'
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
-        $routeProvider.when('/equipments/catalog', {
-            action: 'showCatalog'
-        })
-            .when('/equipments/catalog/equipment/:idEquipment', {
-                action: 'equipmentDetail'
-            })
-            .when('/campaign/:idCampaign/order', {
-                action: 'campaignOrder'
-            })
+        $routeProvider
             .when('/order/:idCampaign/waiting', {
                 action: 'orderWaiting'
-            })
-            .when('/campaign/:idCampaign/basket', {
-                action: 'campaignBasket'
             })
             .when('/order/region/create', {
                 action: 'createRegionOrder'
@@ -107,12 +111,7 @@ routes.define(($routeProvider) => {
 
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {
-        $routeProvider.when('/equipments/catalog', {
-            action: 'showCatalog'
-        })
-            .when('/equipments/catalog/equipment/:idEquipment', {
-                action: 'equipmentDetail'
-            })
+        $routeProvider
             .when('/campaign/:idCampaign/order', {
                 action: 'campaignOrder'
             })
@@ -120,15 +119,6 @@ routes.define(($routeProvider) => {
                 action: 'campaignBasket'
             });
     }
-    else {
-        $routeProvider.when('/equipments/catalog', {
-            action: 'showCatalog'
-        })
-            .when('/equipments/catalog/equipment/:idEquipment', {
-                action: 'equipmentDetail'
-            });
-    }
-
     $routeProvider.otherwise({
         redirectTo: '/'
     });

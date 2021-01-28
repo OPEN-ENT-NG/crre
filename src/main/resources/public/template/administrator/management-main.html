@@ -1,31 +1,37 @@
 <nav class="vertical twelve-mobile mobile-navigation" side-nav>
     <ul>
         <li><a href="#/order/waiting"><i18n>crre.orders.validations.waiting</i18n></a></li>
-        <li><a href="#/order/valid"><i18n>crre.order.form.generate</i18n></a></li>
-        <li><a href="#/order/sent"><i18n>crre.end.expedited.requests</i18n></a></li>
-        <li><a href="#/equipments"><i18n>crre.catalog</i18n></a></li>
+       <!-- <li><a href="#/order/valid"><i18n>crre.order.form.generate</i18n></a></li>
+        <li><a href="#/order/sent"><i18n>crre.end.expedited.requests</i18n></a></li>-->
+        <li><a href="#/order/historic'"><i18n>crre.orders.validate.historic</i18n></a></li>
+        <li><a href="#/equipments/catalog"><i18n>crre.catalog</i18n></a></li>
         <li><a href="#/campaigns"><i18n>crre.manage.campaigns</i18n></a></li>
         <li><a href="#/structureGroups"><i18n>crre.structureGroups.management</i18n></a></li>
-        <li><a href="#/suppliers"><i18n>crre.suppliers.management</i18n></a></li>
+        <li><a href="#/purses"><i18n>crre.purses</i18n></a></li>
+<!--        <li><a href="#/suppliers"><i18n>crre.suppliers.management</i18n></a></li>
         <li><a href="#/contracts"><i18n>crre.contracts.management</i18n></a></li>
-        <li><a href="#/agents"><i18n>crre.agents.management</i18n></a></li>
+        <li><a href="#/agents"><i18n>crre.agents.management</i18n></a></li>-->
         <li workflow="crre.administrator"><a href="#/logs"><i18n>crre.logs</i18n></a></li>
     </ul>
 </nav>
 
 <div class="twelve tabs vertical-spacing heading-tabs zero-mobile">
-    <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/order/region/create' || selectedType == '/exports' || selectedType == '/order/waiting' || selectedType == '/order/valid' || selectedType == '/order/sent')}">
+    <header class="horizontal-spacing"  ng-click="redirectTo('/order/waiting')">
+        <i class="home"></i>
+    </header>
+    <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/order/region/waiting' || selectedType == '/order/historic')}">
         <drop-down-menu title="[[lang.translate('crre.orders')]]">
             <opt ng-click="redirectTo('/order/waiting')"><i18n>crre.orders.validations.waiting</i18n></opt>
-            <opt ng-click="redirectTo('/order/valid')"><i18n>crre.order.form.generate</i18n></opt>
+<!--            <opt ng-click="redirectTo('/order/valid')"><i18n>crre.order.form.generate</i18n></opt>
             <opt ng-click="redirectTo('/order/sent')"><i18n>crre.end.expedited.requests</i18n></opt>
             <opt ng-click="redirectTo('/order/region/create')"><i18n>crre.order.region.create</i18n></opt>
-            <opt ng-click="redirectTo('/exports')"><i18n>crre.goTo.exports</i18n></opt>
+            <opt ng-click="redirectTo('/exports')"><i18n>crre.goTo.exports</i18n></opt>-->
+            <opt ng-click="redirectTo('/order/historic')"><i18n>crre.orders.validate.historic</i18n></opt>
 
 
         </drop-down-menu>
     </header>
-    <header class="horizontal-spacing" ng-class="{selected:selectedType == '/equipments'}" ng-click="redirectTo('/equipments')">
+    <header class="horizontal-spacing" ng-class="{ selected : selectedType.startsWith('/equipments/catalog') }" ng-click="redirectTo('/equipments/catalog')">
             <i18n>crre.catalog</i18n>
     </header>
     <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/campaigns' || selectedType == '/structureGroups')}">
@@ -34,13 +40,16 @@
             <opt ng-click="redirectTo('/structureGroups')"><i18n>crre.structureGroups.management</i18n></opt>
         </drop-down-menu>
     </header>
-    <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/suppliers' || selectedType == '/contracts' || selectedType == '/agents')}">
+    <header class="horizontal-spacing" ng-class="{selected:selectedType == '/purses'}" ng-click="redirectTo('/purses')">
+        <i18n>crre.purses</i18n>
+    </header>
+<!--    <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/suppliers' || selectedType == '/contracts' || selectedType == '/agents')}">
         <drop-down-menu title="[[lang.translate('crre.contracts')]]">
             <opt ng-click="redirectTo('/suppliers')"><i18n>crre.suppliers.management</i18n></opt>
             <opt ng-click="redirectTo('/contracts')"><i18n>crre.contracts.management</i18n></opt>
             <opt ng-click="redirectTo('/agents')"><i18n>crre.agents.management</i18n></opt>
         </drop-down-menu>
-    </header>
+    </header>-->
     <header class="horizontal-spacing" ng-class="{selected:selectedType == '/logs'}" ng-click="redirectTo('/logs')"
             workflow="crre.administrator">
         <i18n>crre.logs</i18n>

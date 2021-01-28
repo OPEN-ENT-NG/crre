@@ -66,7 +66,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         route({
             main: async () => {
                 if ($scope.isManager() || $scope.isAdministrator()) {
-                    $scope.redirectTo('/campaigns');
+                    $scope.redirectTo('/order/waiting');
                 }
                 else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isManager() && !$scope.isAdministrator()) {
                     $scope.redirectTo(`/equipments/catalog`);
@@ -164,16 +164,16 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showCatalog: async () => {
-                $scope.fromCatalog=true
-                $scope.equipments = new Equipments();
+                await $scope.selectCatalog();
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
-                template.close('right-side');
-                $scope.display.equipment = false;
-                await $scope.equipments.sync(true, undefined, undefined );
                 Utils.safeApply($scope);
-
+            },
+            showAdminCatalog: async () => {
+                await $scope.selectCatalog();
+                template.open('administrator-main', 'customer/campaign/catalog/catalog-list');
+                Utils.safeApply($scope);
             },
             campaignCatalog: async () => {
                 let idCampaign = $scope.campaign.id;
@@ -191,20 +191,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             equipmentDetail: async (params) => {
-                let idEquipment = params.idEquipment;
-                $scope.idIsInteger(idEquipment);
-                if($scope.campaign.id) {
-                    await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
-                } else {
-                    await $scope.initBasketItem(parseInt(idEquipment));
-                }
-                /*                if(!$scope.fromCatalog){
-                                    $scope.redirectTo(`/equipments/catalog`);
-                                }*/
+                await $scope.selectEquipment(params);
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
-                window.scrollTo(0, 0);
-                $scope.display.equipment = true;
+                Utils.safeApply($scope);
+            },
+            adminEquipmentDetail: async (params) => {
+                await $scope.selectEquipment(params);
+                template.open('administrator-main', 'customer/campaign/catalog/equipment-detail');
                 Utils.safeApply($scope);
             },
             campaignOrder: async (params) => {
@@ -338,6 +332,25 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
             }
         });
+
+        $scope.selectCatalog = async function (){
+            $scope.fromCatalog=true
+            $scope.equipments = new Equipments();
+            $scope.display.equipment = false;
+            await $scope.equipments.sync(true, undefined, undefined );
+        }
+
+        $scope.selectEquipment = async function (params){
+            let idEquipment = params.idEquipment;
+            $scope.idIsInteger(idEquipment);
+            if($scope.campaign.id) {
+                await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
+            } else {
+                await $scope.initBasketItem(parseInt(idEquipment));
+            }
+            window.scrollTo(0, 0);
+            $scope.display.equipment = true;
+        }
 
         $scope.selectCampaign = async function (idCampaign) {
             if (!$scope.campaign.id) {

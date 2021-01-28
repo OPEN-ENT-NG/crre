@@ -18,6 +18,7 @@ import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
@@ -387,7 +388,7 @@ public class OrderController extends ControllerHelper {
                         request.response()
                                 .putHeader("Content-Type", "text/csv; charset=utf-8")
                                 .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                .end(LogController.generateExport(request, orders));
+                                .end(generateExport(request, orders));
                     }
         });
 
@@ -402,6 +403,42 @@ public class OrderController extends ControllerHelper {
 
     private void getEquipment(List<Integer> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
         searchByIds(idsEquipment, handlerJsonArray);
+    }
+
+    private static String generateExport(HttpServerRequest request, JsonArray logs) {
+        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
+        for (int i = 0; i < logs.size(); i++) {
+            report.append(generateExportLine(request, logs.getJsonObject(i)));
+        }
+        return report.toString();
+    }
+
+    private static String getExportHeader (HttpServerRequest request) {
+        return I18n.getInstance().translate("date", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("basket", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.20", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
+                + "\n";
+    }
+
+    private static String generateExportLine (HttpServerRequest request, JsonObject log) {
+        return  (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
+                (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
+                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
+                (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
+                (log.getString("total_ht") != null ? log.getString("total_ht") : "") + ";" +
+                (log.getString("total_ttc_5_5") != null ? log.getString("total_ttc_5_5") : "") + ";" +
+                (log.getString("total_ttc_20") != null ? log.getString("total_ttc_20") : "") + ";" +
+                (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
+                (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
+                + "\n";
     }
 
     @Put("/orders/valid")
@@ -940,7 +977,7 @@ public class OrderController extends ControllerHelper {
                             request.response()
                                     .putHeader("Content-Type", "text/csv; charset=utf-8")
                                     .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                    .end(LogController.generateExport(request, orders));
+                                    .end(generateExport(request, orders));
 
                         } else {
                             log.error("An error occured when collecting StructureById");
