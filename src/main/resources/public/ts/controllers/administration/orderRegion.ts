@@ -10,7 +10,6 @@ import {
     Contracts, Basket, Equipment, Filter, Filters
 } from "../../model";
 import http from "axios";
-import {Mix} from "entcore-toolkit";
 
 declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
@@ -211,6 +210,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         };
 
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
         const synchroRegionOrders = async (isSearching: boolean = false) : Promise<void> => {
             //await $scope.basketsOrders.sync($scope.campaign.id);
             //await $scope.displayedOrdersRegion.sync();
@@ -224,16 +224,22 @@ export const orderRegionController = ng.controller('orderRegionController',
             params = params.slice(0, -1);
             let { data } = await http.get(`/crre/ordersRegion/orders?${params}`);
             for(const orders of data){
-                const idProject = orders[0].id_project
-                $scope.projects.find(project => project.id == idProject).orders = orders;
+                if(orders.length > 0) {
+                    const idProject = orders[0].id_project
+                    $scope.projects.find(project => project.id == idProject).orders = orders;
+                }
             }
+            let projectWithOrders = [];
             for (const project of $scope.projects) {
-                project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
-                project.amount = $scope.calculateAmountRegion(project.orders);
-                project.creation_date = project.orders[0].creation_date;
-                project.status = project.orders[0].status;
+                if(project.orders && project.orders.length>0) {
+                    project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
+                    project.amount = $scope.calculateAmountRegion(project.orders);
+                    project.creation_date = project.orders[0].creation_date;
+                    project.status = project.orders[0].status;
+                    projectWithOrders.push(project);
+                }
             }
-
+            $scope.projects = projectWithOrders;
             Utils.safeApply($scope);
         };
         synchroRegionOrders();

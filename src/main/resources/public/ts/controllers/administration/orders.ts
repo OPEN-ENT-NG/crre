@@ -302,13 +302,13 @@ export const orderController = ng.controller('orderController',
                     number_validation: data.number_validation,
                     structures: _.uniq(_.pluck(ordersToValidat.all, 'name_structure'))
                 };
-                template.open('validOrder.lightbox', 'administrator/order/order-valid-confirmation');
+                template.open('validOrder.lightbox', 'validator/order-valid-confirmation');
                 $scope.display.lightbox.validOrder = true;
             }
         }
 
         function openLightboxRefuseOrder(status, data, ordersToValidat: OrdersClient) {
-                template.open('refuseOrder.lightbox', 'administrator/order/order-refuse-confirmation');
+                template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
                 $scope.display.lightbox.refuseOrder = true;
         }
 

@@ -1,6 +1,8 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.security.WorkflowActionUtils;
+import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -277,18 +279,21 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void getAllProjects(UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "" +
+        StringBuilder query = new StringBuilder("" +
                 "SELECT DISTINCT (p.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            query += "?,";
-            values.add(idStruct);
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id ");
+        if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
+                WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())){
+            query.append("WHERE ore.id_structure IN ( ");
+            for (String idStruct : user.getStructures()) {
+                query.append("?,");
+                values.add(idStruct);
+            }
+            query = new StringBuilder(query.substring(0, query.length() - 1) + ")");
         }
-        query = query.substring(0, query.length() - 1) + ")";
-        query = query + " ORDER BY p.id DESC ";
-        sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
+        query.append(" ORDER BY p.id DESC ");
+        sql.prepared(query.toString(), values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     @Override

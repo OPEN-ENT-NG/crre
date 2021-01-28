@@ -1,0 +1,207 @@
+<div ng-controller="orderController" class="order-client-validation">
+    <div class="row margin-top-20">
+        <div class="cell two margin-top-8">
+            <div class="search-bar order-search-bar">
+                <i class="search padding-5"></i>
+                <input class="twelve"
+                       type="text"
+                       ng-model="query_name"
+                       ng-keyup="searchByName(query_name)"
+                       i18n-placeholder="search.filter.order">
+            </div>
+        </div>
+        <div ng-init="getAllFilters()" class="cell twelve-mobile six catalog">
+            <button ng-click="initPopUpFilters('showPopUpColumnsTeacher')"
+                    class="filterButton">
+                <i class="user"></i>
+                <span><i18n>Teachers</i18n></span>
+                <div class="columns-popup-wrapper right-magnet">
+                    <div class="right-magnet columns-popup-button">
+                        <span ng-show="showPopUpColumnsTeacher">&#x25B2;</span>
+                        <span ng-hide="showPopUpColumnsTeacher">&#x25BC;</span>
+                    </div>
+                    <div ng-class="{'open' : showPopUpColumnsTeacher}" class="right-magnet columns-popup">
+                        <label class="columns-popup-items" ng-repeat="teacher in users">
+                            <input type="checkbox" ng-model = "teacher.isChecked" ng-change="getFilter(teacher.user_name, 'name_user')">
+                            <span>[[teacher.user_name]]</span>
+                        </label>
+                    </div>
+                </div>
+            </button>
+            <button ng-click="initPopUpFilters('showPopUpColumnsReassort')"
+                    class="filterButton">
+                <i class="star-circle"></i>
+                <span><i18n>crre.reassort</i18n></span>
+                <div class="columns-popup-wrapper right-magnet">
+                    <div class="right-magnet columns-popup-button">
+                        <span ng-show="showPopUpColumnsReassort">&#x25B2;</span>
+                        <span ng-hide="showPopUpColumnsReassort">&#x25BC;</span>
+                    </div>
+                    <div ng-class="{'open' : showPopUpColumnsReassort}" class="right-magnet columns-popup">
+                        <label class="columns-popup-items" ng-repeat="reassort in reassorts">
+                            <input type="checkbox" ng-model = "reassort.isChecked" ng-change="getFilter(reassort.reassort, 'reassort')">
+                            <span ng-bind="lang.translate(reassort.reassort)"></span>
+                        </label>
+                    </div>
+                </div>
+            </button>
+            <button ng-click="initPopUpFilters('showPopUpColumnsGrade')"
+                    class="filterButton">
+                <i class="school"></i>
+                <span><i18n>Grades</i18n></span>
+                <div class="columns-popup-wrapper right-magnet">
+                    <div class="right-magnet columns-popup-button">
+                        <span ng-show="showPopUpColumnsGrade">&#x25B2;</span>
+                        <span ng-hide="showPopUpColumnsGrade">&#x25BC;</span>
+                    </div>
+                    <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
+                        <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
+                            <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'grade_name')">
+                            <span>[[grade.name]]</span>
+                        </label>
+                    </div>
+                </div>
+            </button>
+        </div>
+        <div class="cell twelve-mobile right-magnet">
+            <button ng-click="createOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
+        </div>
+    </div>
+    <div class="row">
+        <div style="margin:0.5em">
+            <div class="cell field ng-scope" ng-repeat="teacher in users | filter: { isChecked: true }">
+                <span ng-show="$first && teacher.isChecked" class="bold-font-weight">&nbsp;Enseignants : </span>
+                <span ng-if="teacher.isChecked" ng-class="{'margin-right-10' : $last}">[[teacher.user_name]]</span>
+                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
+            <div class="cell field ng-scope" ng-repeat="grade in equipments.grades | filter: { isChecked: true }">
+                <span ng-show="$first && grade.isChecked" class="bold-font-weight">&nbsp;Niveaux : </span>
+                <span ng-if="grade.isChecked" ng-class="{'margin-right-10' : $last}">[[grade.name]]</span>
+                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex-row">
+        <table class="twelve-mobile ten">
+            <thead>
+            <tr>
+                <td workflow="crre.validator" class="table-selector main-selector">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAllOrders()"
+                               ng-model="allOrdersSelected">
+                        <span></span>
+                    </label>
+                </td>
+                <td><div class="smallTabElem center"><i18n>crre.equipment.date</i18n></div></td>
+                <td><div class="tabElem center"><i18n>Ressource</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>Owner</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.basket</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.reassort</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
+                <td><div class="smallTabElem">  </div></td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="order in ordersClient.all"
+                class="subline" post-ng-repeat>
+                <td workflow="crre.validator" class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
+                        <span></span>
+                    </label>
+                </td>
+                <td ng-if="tableFields[0].display"><div class="smallTabElem center">[[order.creation_date]]</div></td>
+                <td ng-if="tableFields[1].display">
+                    <div class="tabElem order">
+                        <img src="[[order.image]]"/>
+                        <div class="breakLines">[[order.name]]</div>
+                    </div>
+                </td>
+                <td ng-if="tableFields[2].display"><div class="smallTabElem center breakLines">[[order.user_name]]</div></td>
+                <td ng-if="tableFields[3].display"><div class="smallTabElem center breakLines">[[order.basket_name]]</div></td>
+                <td ng-if="tableFields[4].display">
+                    <div class="smallTabElem center">
+                        <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort" ng-click="updateReassort(order)"></i>
+                        <i class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort" ng-click="updateReassort(order)"></i>
+                    </div>
+                </td>
+                <td ng-if="tableFields[5].display">
+                    <div class="smallTabElem center centerInputAmount">
+                        <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount - 1)"></i>
+                        <input type="number" class="quantity-input" name="input" ng-disabled="order.status === 'IN PROGRESS'"
+                               ng-change="updateAmount(order, order.amount)" ng-model="order.amount">
+                        <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount + 1)"></i>
+                    </div>
+                </td>
+                <td ng-if="tableFields[6].display">
+                    <div class="smallTabElem center leftPadding10">
+                        <span ng-bind="order.priceUnitedTTC*order.amount | currency"></span>
+                    </div>
+                </td>
+                <td ng-if="tableFields[7].display">
+                    <div class="smallTabElem center"
+                         tooltip="[[order.comment]]"
+                         ng-if="order.comment">
+                        <i class="comment-icon"></i>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="twelve-mobile tot-cards two">
+            <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
+            <div class = "total-container">
+                <div>
+                    <i18n>crre.consummed.licences</i18n>
+                    <h1 class="bold-font-weight" ng-bind="displayedOrders.calculTotalAmount()"></h1>wa
+                </div>
+                <div class="licences">
+                    <i18n>crre.initial.licences</i18n>
+                    <div class="bold-font-weight big" ng-bind="campaign.nb_licences_total"></div>
+                    <div class="small"><i18n>crre.second.class</i18n>[[campaign.nb_licences_2de]]</div>
+                    <div class="small"><i18n>crre.premiere.class</i18n>[[campaign.nb_licences_1ere]]</div>
+                    <div class="small"><i18n>crre.terminal.class</i18n>[[campaign.nb_licences_Tale]]</div>
+                </div>
+                <div class="color-red">
+                    <i18n>crre.remain.licences</i18n>
+                    <h1 class="bold-font-weight color-red no-margin-bottom" ng-bind="campaign.nb_licences_total - displayedOrders.calculTotalAmount()"></h1>
+                </div>
+            </div>
+            <div class = "total-container vertical-spacing">
+                <div>
+                    <i18n>crre.total.in.euros</i18n>
+                    <h1 class="bold-font-weight" ng-bind="displayedOrders.calculTotalPriceTTC() | currency"></h1>
+                </div>
+                <div>
+                    <i18n>crre.initial</i18n><span ng-bind="campaign.initial_purse_amount | currency"></span>
+                </div>
+                <div class="color-red">
+                    <i18n>crre.remained</i18n><span ng-bind="campaign.purse_amount - displayedOrders.calculTotalPriceTTC() | currency"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <lightbox on-close="closedLighbtox();"
+              show="display.lightbox.validOrder">
+        <container template="validOrder.lightbox"></container>hi
+    </lightbox>
+    <lightbox on-close="closedLighbtox();"
+              show="display.lightbox.refuseOrder">
+        <container template="refuseOrder.lightbox"></container>
+    </lightbox>
+    <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="refuseOrders()">
+                    <i18n>Denied</i18n>
+                </button>
+                <button ng-click="exportCSV()">
+                    <i18n>crre.orderEquipment.manage.exportCSV</i18n>
+                </button>
+            </div>
+        </div>
+    </section>
+</div>
+

@@ -264,6 +264,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.campaign.historic_etab_notification = 0;
                 Utils.safeApply($scope);
             },
+            orderHistoricAdmin: async () => {
+                $scope.displayedOrders.all = $scope.ordersClient.all;
+                template.open('administrator-main', 'administrator/order/order-waiting');
+                Utils.safeApply($scope);
+            },
             orderSent: async () => {
                 template.open('administrator-main', 'administrator/order/order-sent');
                 $scope.structures = new Structures();
@@ -509,28 +514,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.orderToSend.preview = await $scope.orderToSend.getPreviewData();
             $scope.orderToSend.preview.index = 0;
         };
-        $scope.syncCampaignInputSelected = async ():Promise<void> => {
-            $scope.campaignsForSelectInput = [];
-            $scope.allCampaignsSelect = new Campaign(lang.translate("crre.campaign.order.all"), '');
-            $scope.allCampaignsSelect.id = -1;
-            await $scope.campaigns.sync();
-            $scope.campaignsForSelectInput = [...$scope.campaigns.all];
-            $scope.campaignsForSelectInput.unshift( $scope.allCampaignsSelect);
-
-        };
         $scope.openLightSelectCampaign = async ():Promise<void> => {
             template.open('administrator-main');
-            template.open('selectCampaign', 'administrator/order/select-campaign');
+            template.open('selectCampaign', 'validator/select-campaign');
             $scope.display.lightbox.lightBoxIsOpen = true;
             $scope.initOrders('WAITING');
             Utils.safeApply($scope);
         };
         $scope.selectCampaignShow = (campaign?: Campaign, type?: string): void => {
-/*            if(type == "WAITING" ) {
-                $scope.ub.putPreferences("ordersWaitingCampaign", campaign.id);
-            } else {
-                $scope.ub.putPreferences("ordersHistoricCampaign", campaign.id);
-            }*/
             $scope.display.lightbox.lightBoxIsOpen = false;
             template.close('selectCampaign');
             if(campaign){
@@ -539,7 +530,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     .filter( order => order.id_campaign === campaign.id || campaign.id === -1);
                 $scope.cancelSelectCampaign(false, type);
             } else {
-                $scope.campaign = $scope.allCampaignsSelect;
                 $scope.cancelSelectCampaign(true, type);
             }
         };
@@ -554,11 +544,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             template.close('campaign-main')
             template.open('main-profile', 'customer/campaign/campaign-detail');
             if(type == "WAITING") {
-                template.open('administrator-main', 'administrator/order/order-waiting');
+                template.open('administrator-main', 'validator/order-waiting');
             } else {
-                template.open('administrator-main', 'administrator/order/order-historic');
+                template.open('administrator-main', 'validator/order-historic');
             }
-
             Utils.safeApply($scope);
         };
 

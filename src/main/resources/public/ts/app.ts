@@ -40,15 +40,6 @@ routes.define(($routeProvider) => {
             .when('/structureGroups/create', {
                 action: 'createStructureGroup'
             })
-            .when('/agents', {
-                action: 'manageAgents'
-            })
-            .when('/suppliers', {
-                action: 'manageSuppliers'
-            })
-            .when('/contracts', {
-                action: 'manageContracts'
-            })
             .when('/equipments', {
                 action: 'manageEquipments'
             })
@@ -58,11 +49,11 @@ routes.define(($routeProvider) => {
             .when('/campaigns/:idCampaign/purse', {
                 action: 'managePurse'
             })
-            .when('/campaigns/:idCampaign/titles', {
-                action: 'manageTitles'
-            })
             .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'adminEquipmentDetail'
+            })
+            .when('/order/historic', {
+                action: 'orderHistoricAdmin'
             });
     } else {
         $routeProvider
