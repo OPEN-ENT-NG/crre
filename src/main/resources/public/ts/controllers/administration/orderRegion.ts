@@ -53,6 +53,23 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }*/
 
+        $scope.openFiltersLightbox= () => {
+            template.open('lightbox.waitingAdmin', 'administrator/order/filters');
+            $scope.display.lightbox.waitingAdmin = true;
+            Utils.safeApply($scope);
+        }
+
+        $scope.openRefusingOrderLightbox= () => {
+            template.open('lightbox.waitingAdmin', 'administrator/order/refuse-order');
+            $scope.display.lightbox.waitingAdmin = true;
+            Utils.safeApply($scope);
+        }
+
+        $scope.closeWaitingAdminLightbox= () =>{
+            $scope.display.lightbox.filters = false;
+            Utils.safeApply($scope);
+        };
+
         $scope.getProjectsSearchFilter = async(name: string, startDate: Date, endDate: Date) => {
             try {
                 startDate = moment(startDate).format('YYYY-MM-DD').toString();
@@ -222,25 +239,39 @@ export const orderRegionController = ng.controller('orderRegionController',
                 params += `project_id=${project.id}&`;
             });
             params = params.slice(0, -1);
-            let { data } = await http.get(`/crre/ordersRegion/orders?${params}`);
-            for(const orders of data){
-                if(orders.length > 0) {
-                    const idProject = orders[0].id_project
-                    $scope.projects.find(project => project.id == idProject).orders = orders;
-                }
+            let promesses = [http.get(`/crre/ordersRegion/orders?${params}`)];
+            if($scope.structuresToDisplay.all.length == 0 && $scope.isAdministrator()){
+                promesses.push($scope.structuresToDisplay.sync());
             }
-            let projectWithOrders = [];
-            for (const project of $scope.projects) {
-                if(project.orders && project.orders.length>0) {
-                    project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
-                    project.amount = $scope.calculateAmountRegion(project.orders);
-                    project.creation_date = project.orders[0].creation_date;
-                    project.status = project.orders[0].status;
-                    projectWithOrders.push(project);
+            const responses = await Promise.all(promesses);
+            if(responses[0]){
+                const data = responses[0].data;
+                for (const orders of data) {
+                    if (orders.length > 0) {
+                        const idProject = orders[0].id_project
+                        $scope.projects.find(project => project.id == idProject).orders = orders;
+                    }
                 }
+                let projectWithOrders = [];
+                for (const project of $scope.projects) {
+                    if (project.orders && project.orders.length > 0) {
+                        project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
+                        project.amount = $scope.calculateAmountRegion(project.orders);
+                        const firstOrder = project.orders[0];
+                        project.creation_date = firstOrder.creation_date;
+                        project.status = firstOrder.status;
+                        project.campaign_name = firstOrder.campaign_name;
+                        const structure = $scope.structuresToDisplay.all.find(structure => firstOrder.id_structure == structure.id);
+                        if(structure) {
+                            project.uai = structure.uai;
+                            project.structure_name = structure.name;
+                        }
+                        projectWithOrders.push(project);
+                    }
+                }
+                $scope.projects = projectWithOrders;
+                Utils.safeApply($scope);
             }
-            $scope.projects = projectWithOrders;
-            Utils.safeApply($scope);
         };
         synchroRegionOrders();
 

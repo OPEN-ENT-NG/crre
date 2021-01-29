@@ -323,7 +323,7 @@ public class OrderRegionController extends BaseController {
                         ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                         orderJson.put("creation_date",creation_date);
-                        int idEquipment = orderJson.getInteger("id");
+                        int idEquipment = orderJson.getInteger("equipment_key");
                         for (Object equipment : equipments.right().getValue()) {
                             JsonObject equipmentJson = (JsonObject) equipment;
                             if (idEquipment == equipmentJson.getInteger("id")) {
@@ -331,6 +331,7 @@ public class OrderRegionController extends BaseController {
                                 orderJson.put("price", price);
                                 orderJson.put("name", equipmentJson.getString("name"));
                                 orderJson.put("image", equipmentJson.getString("image"));
+                                orderJson.put("ean", equipmentJson.getString("ean"));
                             }
                         }
                     }

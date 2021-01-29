@@ -262,6 +262,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "SELECT ore.*, " +
                 "       ore.price AS price_single_ttc, " +
                 "       to_json(campaign.*) campaign, " +
+                "       campaign.name AS campaign_name, " +
                 "       p.title AS title, " +
                 "       to_json(oce.*) AS order_parent, " +
                 "       bo.name AS basket_name " +

@@ -54,6 +54,9 @@ routes.define(($routeProvider) => {
             })
             .when('/order/historic', {
                 action: 'orderHistoricAdmin'
+            })
+            .when('/order/waiting', {
+                action: 'orderWaitingAdmin'
             });
     } else {
         $routeProvider

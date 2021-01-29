@@ -62,8 +62,8 @@ public class Crre extends BaseServer {
                         new synchTotalStudents(vertx, new CrreController())
                 );
             }
-        } catch (ParseException e) {
-            log.fatal("Invalid cron expression.", e);
+        } catch (Exception e) {
+            log.fatal("Invalid CRRE cron expression.", e);
         }
 
         addController(new CrreController());

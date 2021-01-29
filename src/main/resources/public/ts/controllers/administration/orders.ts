@@ -307,7 +307,7 @@ export const orderController = ng.controller('orderController',
             }
         }
 
-        function openLightboxRefuseOrder(status, data, ordersToValidat: OrdersClient) {
+        function openLightboxRefuseOrder() {
                 template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
                 $scope.display.lightbox.refuseOrder = true;
         }
@@ -317,7 +317,7 @@ export const orderController = ng.controller('orderController',
             let ordersToRefuse  = new OrdersClient();
             ordersToRefuse.all = Mix.castArrayAs(OrderClient, $scope.ordersClient.selected);
             let { status, data } = await ordersToRefuse.updateStatus('REFUSED');
-            openLightboxRefuseOrder(status, data, $scope.ordersClient.selected);
+            openLightboxRefuseOrder();
         };
 
         $scope.validateOrders = async (orders: OrderClient[]) => {

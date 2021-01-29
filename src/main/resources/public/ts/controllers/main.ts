@@ -66,7 +66,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         route({
             main: async () => {
                 if ($scope.isManager() || $scope.isAdministrator()) {
-                    $scope.redirectTo('/order/waiting');
+                    $scope.redirectTo("/order/waiting");
                 }
                 else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isManager() && !$scope.isAdministrator()) {
                     $scope.redirectTo(`/equipments/catalog`);
@@ -264,7 +264,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.campaign.historic_etab_notification = 0;
                 Utils.safeApply($scope);
             },
-            orderHistoricAdmin: async () => {
+            orderWaitingAdmin: async () => {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
                 template.open('administrator-main', 'administrator/order/order-waiting');
                 Utils.safeApply($scope);
