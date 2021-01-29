@@ -56,7 +56,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     public void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) where s.id IN {ids} RETURN distinct u.level, count(u), s.id;\n";
+        String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;\n";
         neo4j.execute(query, new JsonObject().put("ids", structureIds),
                 Neo4jResult.validResultHandler(handler));
 
@@ -74,19 +75,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    public void insertTotalStructure(JsonArray total, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " + Crre.crreSchema + ".structure_student(id_structure, total) VALUES";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        for (int i = 0; i < total.size(); i++) {
-            JsonObject structure_total = total.getJsonObject(i);
-            query += i < total.size() - 1 ? "(?, ?), " : "(?, ?) ";
-            params.add(structure_total.getString("id_structure")).add(structure_total.getInteger("total"));
-        }
-        query += "ON CONFLICT (id_structure) DO UPDATE " +
-                "SET total = excluded.total";
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-    }
-
     @Override
     public void insertStudents(JsonArray students, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
@@ -96,7 +84,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             String s = j.getString("s.id");
             Integer count = j.getInteger("count(u)");
             switch (j.getString("u.level")) {
-                case "6EME": {
+                /*case "6EME": {
                     query += "UPDATE " + Crre.crreSchema + ".students SET \"6eme\" = ?, \"pro\" = false WHERE id_structure = ?; ";
                     params.add(count).add(s);
                     break;
@@ -115,7 +103,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     query += "UPDATE " + Crre.crreSchema + ".students SET \"3eme\" = ?, \"pro\" = false WHERE id_structure = ?; ";
                     params.add(count).add(s);
                     break;
-                }
+                }*/
                 case "SECONDE GENERALE & TECHNO YC BT": {
                     query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = false WHERE id_structure = ?; ";
                     params.add(count).add(s);
@@ -152,12 +140,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
 
-    }
-
-    public void getTotalStructure(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT \"Premiere\" + \"Terminale\" + \"Seconde\" + \"6eme\" + \"5eme\" + \"4eme\" + \"3eme\" as total, id_structure" +
-                " FROM " + Crre.crreSchema + ".students";
-        sql.raw(query, SqlResult.validResultHandler(handler));
     }
 
     public void getAllStructure(Handler<Either<String, JsonArray>> handler) {
