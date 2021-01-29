@@ -58,6 +58,7 @@ dependencies {
   compile "com.opencsv:opencsv:$opencsvVersion"
   compile "org.apache.poi:poi:$apachePoiVersion"
   compile "org.apache.poi:poi-ooxml:$apachePoiVersion"
+  compile "fr.wseduc:vertx-cron-timer:$vertxCronTimer"
   testCompile "org.entcore:tests:$entCoreVersion"
   testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
 }

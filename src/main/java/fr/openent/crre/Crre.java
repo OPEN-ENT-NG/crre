@@ -1,6 +1,7 @@
 package fr.openent.crre;
 
 import fr.openent.crre.controllers.*;
+import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.export.ExportCrreWorker;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -9,6 +10,11 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
+import fr.wseduc.cron.CronTrigger;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -32,6 +38,7 @@ public class Crre extends BaseServer {
     public static final String XLSX = "xlsx";
     public static final String PDF = "pdf";
 
+
     @Override
     public void start() throws Exception {
         super.start();
@@ -46,8 +53,18 @@ public class Crre extends BaseServer {
         Storage storage = new StorageFactory(vertx, config).getStorage();
         STORAGE = storage;
         JsonObject mail = config.getJsonObject("mail", new JsonObject());
+        Date today = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 
-
+        try {
+            if(config.getString("dateSynch").equals(formatter.format(today))) {
+                new CronTrigger(vertx, config.getString("timeSecondSynchCron")).schedule(
+                        new synchTotalStudents(vertx, new CrreController())
+                );
+            }
+        } catch (ParseException e) {
+            log.fatal("Invalid cron expression.", e);
+        }
 
         addController(new CrreController());
         addController(new AgentController());
