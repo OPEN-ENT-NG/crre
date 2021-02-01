@@ -1,5 +1,5 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {_, notify, toasts} from 'entcore';
+import {_, toasts} from 'entcore';
 import http from 'axios';
 import {Equipment, EquipmentOption, Filter, Structure, Utils} from './index';
 
@@ -55,7 +55,7 @@ export class Basket implements Selectable {
         try {
             return await  http.post(`/crre/basket/campaign/${this.id_campaign}`, this.toJson());
         } catch (e) {
-            notify.error('crre.basket.create.err');
+            toasts.warning('crre.basket.create.err');
         }
     }
 
@@ -63,7 +63,7 @@ export class Basket implements Selectable {
         try {
             http.put(`/crre/basket/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -72,7 +72,7 @@ export class Basket implements Selectable {
         try {
             http.put(`/crre/basket/${this.id}/amount`, this.toJson());
         } catch (e) {
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -81,7 +81,7 @@ export class Basket implements Selectable {
         try{
             http.put(`/crre/basket/${this.id}/comment`, { comment: this.comment });
         }catch (e){
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -90,7 +90,7 @@ export class Basket implements Selectable {
         try{
             http.put(`/crre/basket/${this.id}/reassort`, { reassort: this.reassort });
         }catch (e){
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -99,7 +99,7 @@ export class Basket implements Selectable {
         try {
             http.put(`/crre/basket/${this.id}/priceProposal`, {price_proposal: this.price_proposal});
         } catch (e) {
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -108,7 +108,7 @@ export class Basket implements Selectable {
         try {
             return await  http.delete(`/crre/basket/${this.id}/campaign/${this.id_campaign}`);
         } catch (e) {
-            notify.error('crre.basket.delete.err');
+            toasts.warning('crre.basket.delete.err');
         }
     }
 
@@ -156,7 +156,7 @@ export class Baskets extends Selection<Basket> {
                 basket.equipment.options.map((option) => option.selected = true);
             });
         } catch (e) {
-            notify.error('crre.basket.sync.err');
+            toasts.warning('crre.basket.sync.err');
         }
     }
 
@@ -183,7 +183,7 @@ export class Baskets extends Selection<Basket> {
 
             return await http.post(`/crre/baskets/to/orders/${idCampaign}`, data);
         } catch (e) {
-            notify.error('crre.order.create.err');
+            toasts.warning('crre.order.create.err');
         }
     }
 }
@@ -230,7 +230,7 @@ export class BasketOrder implements Selectable {
             this.amount = data.amount;
         }
         catch {
-            notify.error('crre.order.getMine.err');
+            toasts.warning('crre.order.getMine.err');
         }
     }
 
@@ -246,7 +246,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             let { data } = await http.get(`/crre/basketOrder/${idCampaign}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         } catch (e) {
-            notify.error('crre.basket.sync.err');
+            toasts.warning('crre.basket.sync.err');
         }
     }
 
@@ -256,7 +256,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             const {data} = await http.get(`/crre/basketOrder/search?q=${text}&id=${id_campaign}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         } catch (err) {
-            notify.error('crre.basket.sync.err');
+            toasts.warning('crre.basket.sync.err');
             throw err;
         }
     }
@@ -284,7 +284,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
                 toasts.warning('crre.equipment.special');
             }
         } catch (e) {
-            notify.error('crre.equipment.sync.err');
+            toasts.warning('crre.equipment.sync.err');
             throw e;
         }
     }
@@ -296,7 +296,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             this.all = Mix.castArrayAs(BasketOrder, data);
         }
         catch {
-            notify.error('crre.order.getMine.err');
+            toasts.warning('crre.order.getMine.err');
         }
     }
 
@@ -306,7 +306,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             this.all = Mix.castArrayAs(BasketOrder, data);
         }
         catch {
-            notify.error('crre.order.getMine.err');
+            toasts.warning('crre.order.getMine.err');
         }
     }
 
@@ -325,7 +325,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
     //         });
     //     }
     //     catch (e) {
-    //         notify.error('crre.order.getAll.err');
+    //         toasts.warning('crre.order.getAll.err');
     //     }
     // }
     //
@@ -334,7 +334,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
     //         return await http.get(`/crre/basket/${idOrder}`);
     //     }
     //     catch {
-    //         notify.error('crre.order.getOne.err');
+    //         toasts.warning('crre.order.getOne.err');
     //     }
     // }
 }

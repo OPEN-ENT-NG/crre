@@ -14,7 +14,7 @@ import java.util.*;
 public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
     private static final Integer PAGE_SIZE = 10000;
-    private static final String RESOURCE_TYPE_NAME = "equipment";
+    private static final String RESOURCE_TYPE_NAME = "";
     private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("id", "name", "ean", "editor_name", "grade_name", "subject_name", "author");
 
     private ElasticSearchHelper() {
@@ -106,10 +106,7 @@ public class ElasticSearchHelper {
             JsonObject regexp = regexpField("name", query);
             should.add(regexp);
         }
-        ArrayList<String> filter_tab = new ArrayList<String>();
-        for (String filter : filters) {
-            filter_tab.add(filter);
-        }
+        ArrayList<String> filter_tab = new ArrayList<>(filters);
         term.add(new JsonObject().put("terms", new JsonObject().put("grade_name", new JsonArray(filter_tab))));
 
 
@@ -196,14 +193,14 @@ public class ElasticSearchHelper {
             if (search.failed()) {
                 handler.handle(Future.failedFuture(search.cause()));
             } else {
-                List<JsonObject> resources = parseEsResponse(search.result());
+                List resources = parseEsResponse(search.result());
                 handler.handle(Future.succeededFuture(new JsonArray(resources)));
 
             }
         });
     }
 
-    private static List<JsonObject> parseEsResponse(JsonObject esResponse) {
+    private static List parseEsResponse(JsonObject esResponse) {
         return esResponse
                 .getJsonObject("hits", new JsonObject())
                 .getJsonArray("hits", new JsonArray()).getList();

@@ -1,7 +1,6 @@
-import {_, idiom as lang, model, moment, notify, toasts} from 'entcore';
+import {_, idiom as lang, model, moment, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {
-    BasketOrder,
     Campaign,
     Contract,
     ContractType,
@@ -82,7 +81,7 @@ export class OrderClient implements Order  {
         try{
             http.put(`/crre/order/${this.id}/comment`, { comment: this.comment });
         }catch (e){
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -94,7 +93,7 @@ export class OrderClient implements Order  {
         try {
             return await http.delete(`/crre/order/${this.id}/${this.id_structure}/${this.id_campaign}`);
         } catch (e) {
-            notify.error('crre.order.delete.err');
+            toasts.warning('crre.order.delete.err');
         }
     }
 
@@ -107,7 +106,7 @@ export class OrderClient implements Order  {
             await http.put(`/crre/order/${this.id}/amount`,{ amount: amount });
         }
         catch {
-            notify.error('crre.order.getMine.err');
+            toasts.warning('crre.order.getMine.err');
         }
     }
 
@@ -116,7 +115,7 @@ export class OrderClient implements Order  {
             await http.put(`/crre/order/${this.id}/reassort`,{ reassort: this.reassort });
         }
         catch {
-            notify.error('crre.order.getMine.err');
+            toasts.warning('crre.order.getMine.err');
         }
     }
 
@@ -130,7 +129,7 @@ export class OrderClient implements Order  {
             params = params.slice(0, -1);
             await http.delete(`/crre/orders/valid?${params}`);*/
         } catch (e) {
-            notify.error('crre.order.update.err');
+            toasts.warning('crre.order.update.err');
         }
     }
 
@@ -170,7 +169,7 @@ export class OrderClient implements Order  {
             Mix.extend(this, OrderClient.formatSqlDataToModel(data));
 
         } catch (e) {
-            notify.error('crre.order.get.err');
+            toasts.warning('crre.order.get.err');
         }
     }
 
@@ -179,7 +178,7 @@ export class OrderClient implements Order  {
             const {data} = await http.get(`/crre/orderClient/${id}/order/${status}`);
             return new Order(Object.assign(data, {typeOrder:"client"}), structures);
         } catch (e) {
-            notify.error('crre.admin.order.get.err');
+            toasts.warning('crre.admin.order.get.err');
             throw e;
         }
     }
@@ -188,7 +187,7 @@ export class OrderClient implements Order  {
         try {
            await http.get( `/crre/orders/valid/export/structure_list?${params}`);
         } catch (e) {
-            notify.error("crre.order.get.err")
+            toasts.warning("crre.order.get.err")
         }
     }
 }
@@ -216,7 +215,7 @@ export class OrdersClient extends Selection<OrderClient> {
             await  http.put(`/crre/campaign/${id_campaign}/projects/${id_project}/preferences?structureId=${id_structure}`,
                 { preferences: tabIdsProjects });
         }catch (e) {
-            notify.error('crre.project.update.err');
+            toasts.warning('crre.project.update.err');
         }
     }
 
@@ -235,7 +234,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 }
             });
         } catch (err) {
-            notify.error('crre.basket.sync.err');
+            toasts.warning('crre.basket.sync.err');
             throw err;
         }
     }
@@ -271,7 +270,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 toasts.warning('crre.equipment.special');
             }
         } catch (e) {
-            notify.error('crre.equipment.sync.err');
+            toasts.warning('crre.equipment.sync.err');
             throw e;
         } finally {
         }
@@ -320,7 +319,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 });
             }
         } catch (e) {
-            notify.error('crre.order.sync.err');
+            toasts.warning('crre.order.sync.err');
         }
     }
 
@@ -416,7 +415,7 @@ export class OrdersClient extends Selection<OrderClient> {
             let config = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
             return await  http.put(`/crre/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
         } catch (e) {
-            notify.error('crre.order.update.err');
+            toasts.warning('crre.order.update.err');
             throw e;
         }
     }
@@ -425,7 +424,7 @@ export class OrdersClient extends Selection<OrderClient> {
         try {
             await  http.put(`/crre/order/rank/move?idStructure=${structureId}&idCampaign=${campaignId}`,{ orders: tabIdsProjects });
         }catch (e) {
-            notify.error('crre.project.update.err');
+            toasts.warning('crre.project.update.err');
             throw e;
         }
     }
@@ -462,7 +461,7 @@ export class OrdersClient extends Selection<OrderClient> {
         try{
             await http.put(`/crre/orders/operation/${idOperation}`, idsOrder);
         }catch (e){
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }
@@ -470,7 +469,7 @@ export class OrdersClient extends Selection<OrderClient> {
         try{
             await http.put(`/crre/orders/operation/in-progress/${idOperation}`, idsOrder);
         }catch (e){
-            notify.error('crre.basket.update.err');
+            toasts.warning('crre.basket.update.err');
             throw e;
         }
     }

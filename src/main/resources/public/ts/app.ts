@@ -76,7 +76,8 @@ routes.define(($routeProvider) => {
                 action: 'exportList'
             });
     }
-    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator) &&
+    !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
             .when('/order/:idCampaign/waiting', {
                 action: 'orderWaiting'
@@ -104,7 +105,9 @@ routes.define(($routeProvider) => {
             });
 
     }
-    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor)) {
+    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) &&
+    !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator) &&
+    !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
         $routeProvider
             .when('/campaign/:idCampaign/order', {
                 action: 'campaignOrder'

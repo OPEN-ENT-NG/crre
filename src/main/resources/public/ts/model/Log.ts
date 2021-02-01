@@ -1,5 +1,5 @@
 import http from 'axios';
-import { notify } from 'entcore';
+import { toasts } from 'entcore';
 import { Mix } from 'entcore-toolkit';
 
 export class Log {
@@ -29,7 +29,7 @@ export class Logs {
             this.numberOfPages = Math.floor(data.number_logs / 100) + 1;
             this.all.map((log) => log.selected = false);
         } catch (e) {
-            notify.error('crre.logs.sync.err');
+            toasts.warning('crre.logs.sync.err');
         }
     }
 

@@ -97,7 +97,7 @@
             <tr>
                 <td class="table-selector">
                     <label class="checkbox">
-                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrders(project)">
+                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project)">
                         <span></span>
                     </label>
                 </td>
@@ -154,9 +154,9 @@
     <section class="toggle-buttons" ng-class="{ hide: !displayToggle }">
         <div class="toggle">
             <div class="row">
-                <button ng-click=""><i18n>Validate</i18n></button>
+                <button ng-click="validateOrders()"><i18n>Validate</i18n></button>
                 <button ng-click="openRefusingOrderLightbox()"><i18n>Denied</i18n></button>
-                <button ng-click=""><i18n>crre.logs.csv.export</i18n></button>
+                <button ng-click="exportCSV()"><i18n>crre.logs.csv.export</i18n></button>
             </div>
         </div>
     </section>

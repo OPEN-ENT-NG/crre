@@ -21,7 +21,7 @@ public class StructureController extends ControllerHelper {
 
     public StructureController(){
         super();
-        this.structureService = new DefaultStructureService( Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
     @Get("/structures")

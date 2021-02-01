@@ -186,7 +186,7 @@ export const orderController = ng.controller('orderController',
                     await $scope.syncOrders('WAITING');
                 }
                 else {
-                    notify.error('crre.admin.order.create.err');
+                    toasts.warning('crre.admin.order.create.err');
                 }
             })
         }
@@ -312,14 +312,6 @@ export const orderController = ng.controller('orderController',
                 $scope.display.lightbox.refuseOrder = true;
         }
 
-
-        $scope.refuseOrders = async () => {
-            let ordersToRefuse  = new OrdersClient();
-            ordersToRefuse.all = Mix.castArrayAs(OrderClient, $scope.ordersClient.selected);
-            let { status, data } = await ordersToRefuse.updateStatus('REFUSED');
-            openLightboxRefuseOrder();
-        };
-
         $scope.validateOrders = async (orders: OrderClient[]) => {
             let ordersToValidat  = new OrdersClient();
             ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
@@ -345,10 +337,18 @@ export const orderController = ng.controller('orderController',
         $scope.confirmRefuseOrder = async () => {
             $scope.display.lightbox.refuseOrder = false;
             template.close('refuseOrder.lightbox');
-            $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selected.length;
-            $scope.getOrderWaitingFiltered($scope.campaign);
-            await $scope.syncOrders('WAITING');
-            Utils.safeApply($scope);
+            let ordersToRefuse  = new OrdersClient();
+            ordersToRefuse.all = Mix.castArrayAs(OrderClient, $scope.ordersClient.selected);
+            let {status} = await ordersToRefuse.updateStatus('REFUSED');
+            if(status == 200){
+                $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selected.length;
+                $scope.getOrderWaitingFiltered($scope.campaign);
+                await $scope.syncOrders('WAITING');
+                toasts.confirm('crre.order.refused.succes');
+                Utils.safeApply($scope);
+            } else {
+                toasts.warning('crre.order.refused.error');
+            }
         };
 
 

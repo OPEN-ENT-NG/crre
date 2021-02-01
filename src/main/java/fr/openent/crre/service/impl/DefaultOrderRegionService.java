@@ -8,12 +8,12 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
+
+import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 
@@ -23,7 +23,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         super(table);
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderRegionService.class);
     @Override
     public void setOrderRegion(JsonObject order, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String query = "";
@@ -273,8 +272,35 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
-                "WHERE ore.status = 'IN PROGRESS' and ore.id_project = ? ";
+                "WHERE ore.id_project = ? ";
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        String query = "" +
+                "SELECT ore.*, " +
+                "       ore.price AS price_single_ttc, " +
+                "       to_json(campaign.*) campaign, " +
+                "       campaign.name AS campaign_name, " +
+                "       p.title AS title, " +
+                "       to_json(oce.*) AS order_parent, " +
+                "       bo.name AS basket_name " +
+                "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
+                "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
+                "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
+                "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
+                "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray()) + " ; ";
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        for (Integer id : idsOrder) {
+            params.add( id);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     @Override
@@ -482,5 +508,17 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         sql.prepared(query, values, SqlResult.validUniqueResultHandler(arrayResponseHandler));
     }
 
+    @Override
+    public void updateOrders(List<Integer> ids, String status, String justification, final Handler<Either<String, JsonObject>> handler){
+        String query = "UPDATE " + Crre.crreSchema + ".\"order-region-equipment\" " +
+                " SET  status = ?, cause_status = ?" +
+                " WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ; ";
 
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status.toUpperCase()).add(justification);
+        for (Integer id : ids) {
+            params.add( id);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
 }

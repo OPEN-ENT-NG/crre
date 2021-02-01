@@ -1,4 +1,4 @@
-import { _, notify } from 'entcore';
+import {_, notify, toasts} from 'entcore';
 import http from 'axios';
 import { Mix, Selectable, Selection } from 'entcore-toolkit';
 
@@ -39,7 +39,7 @@ export class Supplier implements Selectable {
             let supplier = await http.post(`/crre/supplier`, this.toJson());
             this.id = supplier.data.id;
         } catch (e) {
-            notify.error('crre.supplier.create.err');
+            toasts.warning('crre.supplier.create.err');
         }
 
     }
@@ -53,7 +53,7 @@ export class Supplier implements Selectable {
             this.email = email;
             this.address = address;
         } catch (e) {
-            notify.error('crre.supplier.update.err');
+            toasts.warning('crre.supplier.update.err');
         }
     }
 
@@ -61,7 +61,7 @@ export class Supplier implements Selectable {
         try {
             await http.delete(`/crre/supplier?id=${this.id}`);
         } catch (e) {
-            notify.error('crre.supplier.delete.err');
+            toasts.warning('crre.supplier.delete.err');
         }
     }
 
@@ -88,7 +88,7 @@ export class Suppliers extends Selection<Supplier> {
             filter = filter.slice(0, -1);
             await http.delete(`/crre/supplier?${filter}`);
         } catch (e) {
-            notify.error('crre.supplier.delete.err');
+            toasts.warning('crre.supplier.delete.err');
         }
     }
 

@@ -1,5 +1,5 @@
 import http from "axios";
-import {moment, notify, toasts} from "entcore";
+import {_, moment, toasts} from "entcore";
 import {
     Campaign,
     Contract,
@@ -9,7 +9,7 @@ import {
     Structures, Supplier, TechnicalSpec,
     Utils,
     OrderClient,
-    Equipment, BasketOrder, Filter
+    Equipment
 } from "./index";
 import {Mix, Selection} from "entcore-toolkit";
 
@@ -148,7 +148,7 @@ export class OrderRegion implements Order  {
         try {
             return await http.post(`/crre/region/order`, this.toJson());
         } catch (e) {
-            notify.error('crre.admin.order.update.err');
+            toasts.warning('crre.admin.order.update.err');
             throw e;
         }
     }
@@ -157,7 +157,7 @@ export class OrderRegion implements Order  {
         try {
             return await http.put(`/crre/region/order/${id}`, this.toJson());
         } catch (e) {
-            notify.error('crre.admin.order.update.err');
+            toasts.warning('crre.admin.order.update.err');
             throw e;
         }
     }
@@ -174,7 +174,7 @@ export class OrderRegion implements Order  {
         try{
             return await http.delete(`/crre/region/${id}/order`);
         } catch (e) {
-            notify.error('crre.admin.order.update.err');
+            toasts.warning('crre.admin.order.update.err');
             throw e;
         }
     }
@@ -184,7 +184,7 @@ export class OrderRegion implements Order  {
             const {data} =  await http.get(`/crre/orderRegion/${id}/order`);
             return new Order(Object.assign(data, {typeOrder:"region"}), structures);
         } catch (e) {
-            notify.error('crre.admin.order.update.err');
+            toasts.warning('crre.admin.order.update.err');
             throw e;
         }
     }
@@ -200,7 +200,7 @@ export class OrdersRegion extends Selection<OrderRegion> {
             let { data } = await http.get(`/crre/orderRegion/orders`);
             this.all = Mix.castArrayAs(OrderRegion, data);
         } catch (e) {
-            notify.error('crre.basket.sync.err');
+            toasts.warning('crre.basket.sync.err');
         }
     }
 
@@ -213,15 +213,36 @@ export class OrdersRegion extends Selection<OrderRegion> {
         try {
             return await http.post(`/crre/region/orders/`, {orders: orders});
         } catch (e) {
-            notify.error('crre.order.create.err');
+            toasts.warning('crre.order.create.err');
             throw e;
         }
     }
+
     async updateOperation(idOperation:number, idsRegions: Array<number>):Promise<any>{
         try {
             await http.put(`/crre/order/region/${idOperation}/operation`, idsRegions);
         } catch (e) {
-            notify.error('crre.admin.order.update.err');
+            toasts.warning('crre.admin.order.update.err');
+            throw e;
+        }
+    }
+
+    toJson (status: string, justification:string):any {
+        const ids = _.pluck(this.all, 'id');
+        return {
+            ids,
+            status : status,
+            justification : justification
+        };
+    }
+
+    async updateStatus(status: string, justification?:string):Promise<any> {
+        try {
+            if(!justification)
+                justification="";
+            return await  http.put(`/crre/region/orders/${status.toLowerCase()}`, this.toJson(status,justification));
+        } catch (e) {
+            toasts.warning('crre.order.update.error');
             throw e;
         }
     }

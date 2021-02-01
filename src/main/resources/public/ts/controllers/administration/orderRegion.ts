@@ -1,4 +1,4 @@
-import {idiom as lang, moment, ng, notify, template, toasts} from 'entcore';
+import {idiom as lang, moment, ng, template, toasts} from 'entcore';
 import {
     OrderRegion,
     OrdersRegion,
@@ -7,9 +7,10 @@ import {
     Structures,
     Utils,
     Equipments,
-    Contracts, Basket, Equipment, Filter, Filters
+    Contracts, Basket, Equipment, Filter, Filters, OrderClient
 } from "../../model";
 import http from "axios";
+import {Mix} from "entcore-toolkit";
 
 declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
@@ -40,7 +41,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let { data } = await http.get(`/crre/orderRegion/projects`);
                 $scope.projects = data;
             } catch (e) {
-                notify.error('crre.basket.sync.err');
+                toasts.warning('crre.basket.sync.err');
             }
         }
 
@@ -49,7 +50,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let { data } = await http.get(`/crre/ordersRegion/search?q=${name}`);
                 $scope.projects = data;
             } catch (e) {
-                notify.error('crre.basket.sync.err');
+                toasts.warning('crre.basket.sync.err');
             }
         }*/
 
@@ -66,9 +67,73 @@ export const orderRegionController = ng.controller('orderRegionController',
         }
 
         $scope.closeWaitingAdminLightbox= () =>{
-            $scope.display.lightbox.filters = false;
+            $scope.display.lightbox.waitingAdmin = false;
             Utils.safeApply($scope);
         };
+
+        $scope.confirmRefuseOrder= async (justification:string) =>{
+            $scope.display.lightbox.waitingAdmin = false;
+            template.close('lightbox.waitingAdmin');
+            let selectedOrders = [];
+            $scope.projects.forEach(project => {
+                project.orders.forEach( async order => {
+                    if(order.selected) {
+                       selectedOrders.push(order);
+                    }
+                });
+            });
+            let ordersToRefuse  = new OrdersRegion();
+            ordersToRefuse.all = Mix.castArrayAs(OrderClient, selectedOrders);
+            let {status} = await ordersToRefuse.updateStatus('REJECTED', justification);
+            if(status == 200){
+                this.init();
+                await synchroRegionOrders();
+                toasts.confirm('crre.order.refused.succes');
+                $scope.displayToggle = false;
+                Utils.safeApply($scope);
+            } else {
+                toasts.warning('crre.order.refused.error');
+            }
+        };
+
+        $scope.validateOrders = async () =>{
+            let selectedOrders = [];
+            $scope.projects.forEach(project => {
+                project.orders.forEach( async order => {
+                    if(order.selected) {
+                        selectedOrders.push(order);
+                    }
+                });
+            });
+            let ordersToValidate  = new OrdersRegion();
+            ordersToValidate.all = Mix.castArrayAs(OrderClient, selectedOrders);
+            let {status} = await ordersToValidate.updateStatus('VALID');
+            if(status == 200){
+                this.init();
+                await synchroRegionOrders();
+                toasts.confirm('crre.order.validated');
+                $scope.displayToggle = false;
+                Utils.safeApply($scope);
+            } else {
+                toasts.warning('crre.order.validated.error');
+            }
+        };
+
+        $scope.exportCSV = () => {
+            let selectedOrders = [];
+            $scope.projects.forEach(project => {
+                project.orders.forEach( async order => {
+                    if(order.selected) {
+                        selectedOrders.push(order);
+                    }
+                });
+            });
+            let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
+            let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
+            let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
+            window.location = `/crre/region/orders/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
+            $scope.uncheckAll();
+        }
 
         $scope.getProjectsSearchFilter = async(name: string, startDate: Date, endDate: Date) => {
             try {
@@ -77,7 +142,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let { data } = await http.get(`/crre/ordersRegion/projects/search_filter?q=${name}&startDate=${startDate}&endDate=${endDate}`);
                 $scope.projects = data;
             } catch (e) {
-                notify.error('crre.basket.sync.err');
+                toasts.warning('crre.basket.sync.err');
             }
         }
 
@@ -88,7 +153,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let {data} = await http.get(`/crre/ordersRegion/projects/filter?startDate=${startDate}&endDate=${endDate}`);
                 $scope.projects = data;
             } catch (e) {
-                notify.error('crre.basket.sync.err');
+                toasts.warning('crre.basket.sync.err');
             }
         }*/
 
@@ -164,7 +229,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     await $scope.filter_order();
                     await synchroRegionOrders(true);
                 } else {
-                    notify.error('crre.date.err');
+                    toasts.warning('crre.date.err');
                 }
         }
 
@@ -194,7 +259,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let { data } = await http.get(url);
                 $scope.projects = data;
             } catch (e) {
-                notify.error('crre.equipment.sync.err');
+                toasts.warning('crre.equipment.sync.err');
                 throw e;
             }
         }
@@ -487,7 +552,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.orderToCreate = new OrderRegion();
             }
             else {
-                notify.error('crre.admin.order.create.err');
+                toasts.warning('crre.admin.order.create.err');
             }
             Utils.safeApply($scope);
         }
@@ -520,10 +585,10 @@ export const orderRegionController = ng.controller('orderRegionController',
                 }
             });
             $scope.displayToggle = $scope.projects.some(project => project.selected) || orderSelected;
-            $scope.$apply();
+            Utils.safeApply($scope);
         }
 
-        $scope.switchAllOrders = (project) => {
+        $scope.switchAllOrdersOfProject = (project) => {
             project.orders.forEach(order => {
                 order.selected = project.selected;
             });
@@ -547,6 +612,18 @@ export const orderRegionController = ng.controller('orderRegionController',
                     order.selected = false;
                 });
             });
+            $scope.displayToggle = false;
+            Utils.safeApply($scope);
+        }
+
+        $scope.switchAllOrders = () => {
+            $scope.projects.forEach(project => {
+                project.selected = $scope.allOrdersSelected;
+                project.orders.forEach( async order => {
+                    order.selected = $scope.allOrdersSelected;
+                });
+            });
+            Utils.safeApply($scope);
         }
 
         $scope.reSubmit = async () => {

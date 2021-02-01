@@ -1,5 +1,5 @@
 import http from 'axios';
-import {_, notify} from 'entcore';
+import {_, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {StructureGroup} from './index';
 
@@ -53,7 +53,7 @@ export class Campaign implements Selectable  {
         try {
             await http.post(`/crre/campaign`, this.toJson());
         } catch (e) {
-            notify.error('crre.campaign.create.err');
+            toasts.warning('crre.campaign.create.err');
         }
     }
 
@@ -61,7 +61,7 @@ export class Campaign implements Selectable  {
         try {
             await http.put(`/crre/campaign/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('crre.campaign.update.err');
+            toasts.warning('crre.campaign.update.err');
         }
     }
 
@@ -69,14 +69,14 @@ export class Campaign implements Selectable  {
         try {
             await http.delete(`/crre/campaign/${this.id}`);
         } catch (e) {
-            notify.error('crre.campaign.delete.err');
+            toasts.warning('crre.campaign.delete.err');
         }
     }
     async updateAccessibility() {
         try {
             await http.put(`/crre/campaign/accessibility/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('crre.campaign.update.err');
+            toasts.warning('crre.campaign.update.err');
         }
     }
     projectPriorityEnable(){
@@ -94,7 +94,7 @@ export class Campaign implements Selectable  {
             } else this.groups = [];
 
         } catch (e) {
-            notify.error('crre.campaign.sync.err');
+            toasts.warning('crre.campaign.sync.err');
         }
     }
 }
@@ -113,7 +113,7 @@ export class Campaigns extends Selection<Campaign> {
             filter = filter.slice(0, -1);
             await http.delete(`/crre/campaign?${filter}`);
         } catch (e) {
-            notify.error('crre.campaign.delete.err');
+            toasts.warning('crre.campaign.delete.err');
         }
     }
 
@@ -122,7 +122,7 @@ export class Campaigns extends Selection<Campaign> {
             let { data } = await http.get( Structure ? `/crre/campaigns?idStructure=${Structure}`  : `/crre/campaigns`  );
             this.all = Mix.castArrayAs(Campaign, data);
         } catch (e) {
-            notify.error('crre.campaigns.sync.err');
+            toasts.warning('crre.campaigns.sync.err');
         }
     }
 

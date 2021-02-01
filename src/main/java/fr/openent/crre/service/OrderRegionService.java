@@ -2,9 +2,12 @@ package fr.openent.crre.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
+
+import java.util.List;
 
 public interface OrderRegionService {
     void setOrderRegion(JsonObject order, UserInfos user, Handler<Either<String, JsonObject>> handler);
@@ -23,6 +26,8 @@ public interface OrderRegionService {
 
     void getAllOrderRegionByProject(int idProject, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
+    void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
     void getAllProjects(UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void search(String query, UserInfos user, JsonArray equipTab, Handler<Either<String, JsonArray>> arrayResponseHandler);
@@ -38,4 +43,6 @@ public interface OrderRegionService {
     void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
+
+    void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 }

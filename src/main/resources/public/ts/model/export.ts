@@ -1,7 +1,6 @@
 import http from "axios";
-import {idiom as lang, moment, notify} from "entcore";
+import {idiom as lang, moment, toasts} from "entcore";
 import {Mix, Selectable, Selection} from "entcore-toolkit";
-import {Utils} from "./Utils";
 
 export class Export implements Selectable {
     selected: boolean;
@@ -47,7 +46,7 @@ export class Exports extends Selection<Export> {
             });
             this.all = Mix.castArrayAs(Export, response);
         } catch (e) {
-            notify.error('crre.instruction.create.err');
+            toasts.warning('crre.instruction.create.err');
             throw e;
         }
     }
@@ -60,7 +59,7 @@ export class Exports extends Selection<Export> {
             };
             await http.delete('/crre/exports', { data: bodySend });
         } catch (e) {
-            throw notify.error('crre.export.delete.err');
+            throw toasts.warning('crre.export.delete.err');
         }
     }
 }

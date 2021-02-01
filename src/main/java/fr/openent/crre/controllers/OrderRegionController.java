@@ -1,17 +1,24 @@
 package fr.openent.crre.controllers;
 
+import fr.openent.crre.Crre;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.security.ManagerRight;
+import fr.openent.crre.security.PrescriptorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.PurseService;
+import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.openent.crre.service.impl.DefaultPurseService;
+import fr.openent.crre.service.impl.DefaultStructureService;
+import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
@@ -26,12 +33,14 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
@@ -43,6 +52,7 @@ public class OrderRegionController extends BaseController {
 
     private final OrderRegionService orderRegionService;
     private final PurseService purseService;
+    private final StructureService structureService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
 
@@ -50,6 +60,7 @@ public class OrderRegionController extends BaseController {
     public OrderRegionController() {
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
+        this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
 
@@ -350,5 +361,139 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void updateOperation(final HttpServerRequest request) {
         badRequest(request);
+    }
+
+    @Put("/region/orders/:status")
+    @ApiDoc("update region orders with status")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ManagerRight.class)
+    public void validateOrders (final HttpServerRequest request){
+        RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
+                orders -> UserUtils.getUserInfos(eb, request,
+                        userInfos -> {
+                            try {
+                                String status = request.getParam("status");
+                                List<String> params = new ArrayList<>();
+                                for (Object id: orders.getJsonArray("ids") ) {
+                                    params.add( id.toString());
+                                }
+                                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
+                                String justification = orders.getString("justification");
+                                orderRegionService.updateOrders(ids,status,justification,
+                                        Logging.defaultResponsesHandler(eb,
+                                                request,
+                                                Contexts.ORDERREGION.toString(),
+                                                Actions.UPDATE.toString(),
+                                                params,
+                                                null));
+                            } catch (ClassCastException e) {
+                                log.error("An error occurred when casting order id", e);
+                            }
+                        }));
+
+    }
+
+    @Get("region/orders/exports")
+    @ApiDoc("Export list of custumer's orders as CSV")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PrescriptorRight.class)
+    public void export (final HttpServerRequest request){
+        List<String> params = request.params().getAll("id");
+        List<String> params2 = request.params().getAll("equipment_key");
+        List<String> params3 = request.params().getAll("id_structure");
+        JsonArray idStructures = new JsonArray();
+        for(String structureId : params3){
+            idStructures.add(structureId);
+        }
+        List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
+        List<Integer> idsEquipment = SqlQueryUtils.getIntegerIds(params2);
+        Future<JsonArray> structureFuture = Future.future();
+        Future<JsonArray> orderRegionFuture = Future.future();
+        Future<JsonArray> equipmentsFuture = Future.future();
+
+        CompositeFuture.all(structureFuture, orderRegionFuture, equipmentsFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonArray structures = structureFuture.result();
+                JsonArray orderRegion = orderRegionFuture.result();
+                JsonArray equipments = equipmentsFuture.result();
+                JsonObject order,equipment,structure;
+                for (int i = 0; i < orderRegion.size(); i++) {
+                    order = orderRegion.getJsonObject(i);
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                    order.put("creation_date",creation_date);
+
+                    for (int j = 0; j < equipments.size(); j++) {
+                        equipment = equipments.getJsonObject(j);
+                        if (equipment.getInteger("id").equals(order.getInteger("equipment_key"))) {
+                            double price = (Double.parseDouble(equipment.getString("price")) *
+                                    (1 + Double.parseDouble(equipment.getString("tax_amount")) / 100)) * order.getInteger("amount");
+                            order.put("price", price);
+                            order.put("name", equipment.getString("name"));
+                            order.put("image", equipment.getString("image"));
+                            order.put("ean", equipment.getString("ean"));
+                        }
+                    }
+
+                    for (int j = 0; j < structures.size(); j++) {
+                        structure = structures.getJsonObject(j);
+                        if (structure.getString("id").equals(order.getString("id_structure"))) {
+                            order.put("uai_structure", structure.getString("uai"));
+                            order.put("name_structure", structure.getString("name"));
+                        }
+                    }
+                }
+                request.response()
+                        .putHeader("Content-Type", "text/csv; charset=utf-8")
+                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                        .end(generateExport(request, orderRegion));
+            }
+        });
+        orderRegionService.getOrdersRegionById(idsOrders, handlerJsonArray(orderRegionFuture));
+        structureService.getStructureById(idStructures,handlerJsonArray(structureFuture));
+        searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
+    }
+
+    private static String generateExport(HttpServerRequest request, JsonArray logs) {
+        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
+        for (int i = 0; i < logs.size(); i++) {
+            report.append(generateExportLine(request, logs.getJsonObject(i)));
+        }
+        return report.toString();
+    }
+
+    private static String getExportHeader (HttpServerRequest request) {
+        return I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("UAI", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.request", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("CAMPAIGN", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("resource", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.reassort", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.number.licences", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Total", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
+                + "\n";
+    }
+
+    private static String generateExportLine (HttpServerRequest request, JsonObject log) {
+        return  (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
+                (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
+                (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
+                (log.getString("title") != null ? log.getString("title") : "") + ";" +
+                (log.getString("campaign_name") != null ? log.getString("campaign_name") : "") + ";" +
+                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
+                (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non")  : "") + ";" +
+                (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
+                (log.getDouble("price") != null ? log.getDouble("price").toString() : "") + ";" +
+                (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
+                (log.getString("status") != null ?
+                        I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
+                + "\n";
     }
 }

@@ -9,6 +9,9 @@
     "status":{
       "type": "string"
     },
+    "justification":{
+      "type": [ "string" ]
+    },
     "bc_number":{
       "type": [ "string", "null" ]
     },

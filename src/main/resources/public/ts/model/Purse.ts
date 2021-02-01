@@ -31,7 +31,7 @@ export class Purse implements Selectable {
             }
         } catch (e) {
             console.log(e)
-            notify.error('crre.purse.update.err');
+            toasts.warning('crre.purse.update.err');
         }
     }
 

@@ -414,7 +414,7 @@ public class OrderController extends ControllerHelper {
     }
 
     private static String getExportHeader (HttpServerRequest request) {
-        return I18n.getInstance().translate("date", getHost(request), I18n.acceptLanguage(request)) + ";" +
+        return I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("basket", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +

@@ -1,6 +1,6 @@
 import {Structure} from './index';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {_, notify} from 'entcore';
+import {_, toasts} from 'entcore';
 import http from 'axios';
 import {Structures} from './Structure';
 
@@ -42,7 +42,7 @@ export class StructureGroup implements Selectable {
         try {
             await http.post(`/crre/structure/group`, this.toJson());
         } catch (e) {
-            notify.error('crre.structureGroup.create.err');
+            toasts.warning('crre.structureGroup.create.err');
         }
     }
 
@@ -51,7 +51,7 @@ export class StructureGroup implements Selectable {
             await http.put(`/crre/structure/group/${this.id}`, this.toJson());
 
         } catch (e) {
-            notify.error('crre.structureGroup.update.err');
+            toasts.warning('crre.structureGroup.update.err');
         }
     }
 
@@ -60,7 +60,7 @@ export class StructureGroup implements Selectable {
             let id = `id=${this.id}`;
             await http.delete(`/crre/structure/group?${id}`);
         } catch (e) {
-            notify.error('crre.structureGroup.delete.err');
+            toasts.warning('crre.structureGroup.delete.err');
         }
     }
 
@@ -132,7 +132,7 @@ export class StructureGroups extends Selection<StructureGroup> {
             filter = filter.slice(0, -1);
             await http.delete(`/crre/structure/group?${filter}`);
         } catch (e) {
-            notify.error('crre.structureGroup.sync.err');
+            toasts.warning('crre.structureGroup.sync.err');
         }
     }
 

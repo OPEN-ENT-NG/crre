@@ -1,5 +1,5 @@
 import {Utils} from './index';
-import {_, notify, toasts} from 'entcore';
+import {_, toasts} from 'entcore';
 import {Eventer, Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 
@@ -79,7 +79,7 @@ export class Equipment implements Selectable {
         try {
             await http.post(`/crre/equipment`, this.toJson());
         } catch (e) {
-            notify.error('crre.equipment.create.err');
+            toasts.warning('crre.equipment.create.err');
         }
     }
 
@@ -87,7 +87,7 @@ export class Equipment implements Selectable {
         try {
             await http.put(`/crre/equipment/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('crre.equipment.update.err');
+            toasts.warning('crre.equipment.update.err');
             throw e;
         }
     }
@@ -96,7 +96,7 @@ export class Equipment implements Selectable {
         try {
             await http.delete(`/crre/equipment/${this.id}`);
         } catch (e) {
-            notify.error('crre.equipment.delete.err');
+            toasts.warning('crre.equipment.delete.err');
         }
     }
 
@@ -116,7 +116,7 @@ export class Equipment implements Selectable {
                 : this.technical_specs;*/
         } catch (e) {
             console.error(e);
-            notify.error('crre.equipment.sync.err');
+            toasts.warning('crre.equipment.sync.err');
         }
         finally {
             this.loading = false;
@@ -188,7 +188,7 @@ export class Equipments extends Selection<Equipment> {
             filter = filter.slice(0, -1);
             await http.delete(`/crre/equipment?${filter}`);
         } catch (e) {
-            notify.error('crre.equipment.delete.err');
+            toasts.warning('crre.equipment.delete.err');
         }
     }
 
@@ -219,7 +219,7 @@ export class Equipments extends Selection<Equipment> {
             }
 
         } catch (e) {
-            notify.error('crre.equipment.sync.err');
+            toasts.warning('crre.equipment.sync.err');
             throw e;
         } finally {
             this.loading = false;
@@ -244,7 +244,7 @@ export class Equipments extends Selection<Equipment> {
             this.syncEquip(data);
 
         } catch (e) {
-            notify.error('crre.equipment.sync.err');
+            toasts.warning('crre.equipment.sync.err');
             throw e;
         } finally {
             this.loading = false;
@@ -277,7 +277,7 @@ export class Equipments extends Selection<Equipment> {
             });
 
         } catch (e) {
-            notify.error('crre.equipment.sync.err');
+            toasts.warning('crre.equipment.sync.err');
             throw e;
 
         }
@@ -298,7 +298,7 @@ export class Equipments extends Selection<Equipment> {
             let params = Utils.formatKeyToParameter(this.selected, 'id');
             await http.put(`/crre/equipments/${status}?${params}`);
         } catch (e) {
-            notify.error('crre.equipment.update.err');
+            toasts.warning('crre.equipment.update.err');
             throw e;
         }
     }
@@ -309,7 +309,7 @@ export class Equipments extends Selection<Equipment> {
             const {data} = await http.get(`/crre/equipments/search?q=${text}&field=${fieldName}`);
             return Mix.castArrayAs(Equipment, data);
         } catch (err) {
-            notify.error('crre.option.search.err');
+            toasts.warning('crre.option.search.err');
             throw err;
         }
     }*/

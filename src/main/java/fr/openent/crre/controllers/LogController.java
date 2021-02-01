@@ -93,7 +93,7 @@ public class LogController extends ControllerHelper {
     }
 
     private static String getExportHeader (HttpServerRequest request) {
-        return I18n.getInstance().translate("date", getHost(request), I18n.acceptLanguage(request)) + ";" +
+        return I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("user", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("action", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("context", getHost(request), I18n.acceptLanguage(request)) + ";" +

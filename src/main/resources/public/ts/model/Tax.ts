@@ -1,5 +1,5 @@
 import { Provider } from 'entcore-toolkit';
-import { notify } from 'entcore';
+import { toasts } from 'entcore';
 
 export class Tax {
     id?: number;
@@ -24,7 +24,7 @@ export class Taxes {
             this.all = await this.provider.data();
             this.all.map((tax) => this.mapping[tax.id] = tax);
         } catch (e) {
-            notify.error('crre.tax.sync.err');
+            toasts.warning('crre.tax.sync.err');
             throw e;
         }
     }

@@ -1,4 +1,4 @@
-import {moment, notify} from 'entcore';
+import {moment, toasts} from 'entcore';
 import {Mix, Provider, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 
@@ -74,7 +74,7 @@ export class Contract implements Selectable {
             let res = await http.post(`/crre/contract`, this.toJson());
             this.id = res.data.id;
         } catch (e) {
-            notify.error('crre.contract.create.err');
+            toasts.warning('crre.contract.create.err');
         }
     }
 
@@ -82,7 +82,7 @@ export class Contract implements Selectable {
         try {
             await http.put(`/crre/contract/${this.id}`, this.toJson());
         } catch (e) {
-            notify.error('crre.contract.update.err');
+            toasts.warning('crre.contract.update.err');
         }
     }
 
@@ -90,7 +90,7 @@ export class Contract implements Selectable {
         try {
             await http.delete(`/crre/contract?id=${this.id}`);
         } catch (e) {
-            notify.error('crre.contract.delete.err');
+            toasts.warning('crre.contract.delete.err');
         }
     }
     syncBooleans = async () => {
@@ -123,7 +123,7 @@ export class Contracts extends Selection<Contract> {
             filter = filter.slice(0, -1);
             await http.delete(`/crre/contract?${filter}`);
         } catch (e) {
-            notify.error('crre.contract.delete.err');
+            toasts.warning('crre.contract.delete.err');
         }
     }
 
