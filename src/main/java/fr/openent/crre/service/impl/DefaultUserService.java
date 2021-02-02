@@ -13,7 +13,7 @@ public class DefaultUserService implements UserService {
     public void getStructures(String userId, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (a:Action {displayName:'crre.access'})<-[AUTHORIZE]-(:Role)" +
                 "<-[AUTHORIZED]-(g:Group:ManualGroup)-[:DEPENDS]->(s:Structure), " +
-                "(u:User {id:{userId}})-[:IN]->(g) return s.id as id, s.name as name, s.UAI as UAI";
+                "(u:User {id:{userId}})-[:IN]->(g) return s.id as id, s.name as name, s.UAI as UAI, s.type";
 
         JsonObject params = new JsonObject()
                 .put("userId", userId);

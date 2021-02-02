@@ -234,6 +234,8 @@
   "crre.project.name": "Nom du projet",
   "the.structure": "l'établissement",
   "crre.structures.number": "Nb d'établissements",
+  "crre.structure.update.err": "Une erreur est survenue lors de la mise à jour du nombre d'élève",
+  "crre.structure.amount.err": "Une erreur est survenue lors de la récupération du nombre d'élève",
   "crre.slack.order.message1": " a passé une commande d'un montant de ",
   "crre.orders.valid.cancel.confirmation": "Annulation des commandes effecutée",
   "crre.orders.valid.cancel.error": "Une erreur est survenue lors de l'annulation des commandes. Merci de réessayer plus tard",

@@ -15,6 +15,7 @@ export * from './StructureGroup';
 export * from './Purse';
 export * from './basket';
 export * from './Purse';
+export * from './Student';
 export * from './Notification';
 export * from './OrderClient';
 export * from './tableFields';

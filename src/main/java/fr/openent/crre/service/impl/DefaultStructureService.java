@@ -76,6 +76,26 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    public void insertTotalStructure(JsonArray total, Handler<Either<String, JsonObject>> handler) {
+        String query = "INSERT INTO " + Crre.crreSchema + ".licences(id_structure, initial_amount, amount) VALUES";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        for (int i = 0; i < total.size(); i++) {
+            JsonObject structure_total = total.getJsonObject(i);
+            query += i < total.size() - 1 ? "(?, ?, ?), " : "(?, ?, ?) ";
+            int total_licence = 0;
+            if(structure_total.getBoolean("pro")) {
+                total_licence = structure_total.getInteger("Seconde") * 3 + structure_total.getInteger("Premiere") * 3 + structure_total.getInteger("Terminale") * 3;
+            } else {
+                total_licence = structure_total.getInteger("Seconde") * 9 + structure_total.getInteger("Premiere") * 8 + structure_total.getInteger("Terminale") * 7;
+            }
+            params.add(structure_total.getString("id_structure")).add(total_licence).add(total_licence);
+        }
+        query += "ON CONFLICT (id_structure) DO UPDATE " +
+                "SET initial_amount = excluded.initial_amount," +
+                "amount = excluded.amount";
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
     @Override
     public void insertStudents(JsonArray students, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
@@ -121,6 +141,42 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
 
+    }
+
+    public void getTotalStructure(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT \"Premiere\", \"Terminale\", \"Seconde\", id_structure, pro" +
+                " FROM " + Crre.crreSchema + ".students";
+        sql.raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void updateAmount(String id_structure, Integer seconde, Integer premiere, Integer terminale, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = " UPDATE " + Crre.crreSchema + ".students " +
+                " SET \"Seconde\" = ?, \"Premiere\" = ?, \"Terminale\" = ? " +
+                "WHERE id_structure = ?";
+        values.add(seconde).add(premiere).add(terminale).add(id_structure);
+        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler) );
+    }
+
+    @Override
+    public void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = " SELECT \"Seconde\", \"Premiere\", \"Terminale\", \"Seconde\" + \"Premiere\" + \"Terminale\" as total, pro " +
+                "FROM " + Crre.crreSchema + ".students " +
+                "WHERE id_structure = ?";
+        values.add(id_structure);
+        sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler) );
+    }
+
+    @Override
+    public void updateAmountLicence(String id_structure, Integer total_licence, Handler<Either<String, JsonObject>> defaultResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = " UPDATE " + Crre.crreSchema + ".licences " +
+                "SET initial_amount =  ?, amount = ? " +
+                "WHERE id_structure = ?";
+        values.add(total_licence).add(total_licence).add(id_structure);
+        sql.prepared(query, values, SqlResult.validRowsResultHandler(defaultResponseHandler));
     }
 
     public void getAllStructure(Handler<Either<String, JsonArray>> handler) {

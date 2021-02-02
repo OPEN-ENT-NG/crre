@@ -28,4 +28,27 @@ export const campaignsListController = ng.controller('campaignsListController',
             template.close('number.student');
             Utils.safeApply($scope);
         };
+
+        $scope.getStudent = async () => {
+            await $scope.student.getAmount($scope.current.structure.id);
+            await $scope.calculateLicence();
+            Utils.safeApply($scope);
+        };
+
+        $scope.calculateLicence = async () => {
+           if($scope.student.pro) {
+               $scope.total_licence = ($scope.student.Seconde + $scope.student.Premiere + $scope.student.Terminale) * 3;
+           } else {
+               $scope.total_licence = $scope.student.Seconde * 9 + $scope.student.Premiere * 8 + $scope.student.Terminale * 7;
+           }
+        };
+
+        $scope.updateNumberStudent = async (seconde: number, premiere: number, terminale: number) => {
+            await $scope.student.updateAmount($scope.current.structure.id, seconde, premiere, terminale, $scope.student.pro);
+            await $scope.student.getAmount($scope.current.structure.id);
+            await $scope.calculateLicence();
+            $scope.display.lightbox.modifyNumberStudent = false;
+            template.close('number.student');
+            Utils.safeApply($scope);
+        }
     }]);

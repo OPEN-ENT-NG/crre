@@ -20,9 +20,13 @@ import {
     Structures,
     Suppliers,
     Taxes,
-    Utils, OrdersRegion, Filters,
+    Utils,
+    OrdersRegion,
+    Filters,
+    Student
 } from '../model';
 import {Mix} from "entcore-toolkit";
+
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope', '$timeout',
     ($scope, route, $location, $rootScope, $timeout) => {
@@ -55,6 +59,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.basketsOrders = new BasketsOrders();
         $scope.users = [];
         $scope.filters = new Filters();
+        $scope.student = new Student();
+        $scope.total_licence = 0;
         $scope.exports = new Exports([]);
         //$scope.ub = new Userbook();
         $scope.equipments.eventer.on('loading::true', $scope.$apply);

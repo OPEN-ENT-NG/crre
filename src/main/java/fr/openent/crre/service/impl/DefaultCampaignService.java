@@ -105,10 +105,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsLicences(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT licences.amount, licences.initial_amount, id_campaign as id_campaign, name " +
-                "FROM " + Crre.crreSchema + ".purse " +
-                "LEFT JOIN " + Crre.crreSchema + ".licences ON id_purse = purse.id " +
-                "WHERE id_structure = ?";
+        String query = "SELECT \"Seconde\", \"Premiere\", \"Terminale\", pro, amount, initial_amount " +
+                "FROM " + Crre.crreSchema + ".licences l " +
+                "JOIN " + Crre.crreSchema + ".students s ON (s.id_structure = l.id_structure) "+
+                "WHERE l.id_structure = ?";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
     }
@@ -210,18 +210,30 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 }
                 for (int i = 0; i < licences.size(); i++) {
                     object = licences.getJsonObject(i);
-                    campaign = campaignMap.getJsonObject(object.getInteger("id_campaign").toString());
                     try {
-                        JsonArray arr = new JsonArray();
-                        arr.add(object);
-                        if(campaign.getInteger("id").equals(object.getInteger("id_campaign")) && campaign.containsKey("purse_licence")) {
-                            arr = campaign.getJsonArray("purse_licence").add(object);
+                        int nb_seconde = 0;
+                        int nb_premiere = 0;
+                        int nb_terminale = 0;
+                        if(object.getBoolean("pro")) {
+                             nb_seconde = object.getInteger("Seconde") * 3;
+                             nb_premiere = object.getInteger("Premiere") * 3;
+                             nb_terminale = object.getInteger("Terminale") * 3;
+                        } else {
+                             nb_seconde = object.getInteger("Seconde") * 9;
+                             nb_premiere = object.getInteger("Premiere") * 8;
+                             nb_terminale = object.getInteger("Terminale") * 7;
                         }
-                        campaign.put("purse_licence", arr); // à voir ce qu'on utilise!!
-                        campaign.put("nb_licences_total", 5000);
-                        campaign.put("nb_licences_2de", 2700);
-                        campaign.put("nb_licences_1ere", 1500);
-                        campaign.put("nb_licences_Tale", 800);
+
+                        int nb_total = Integer.parseInt(object.getString("initial_amount"));
+                        int nb_total_available = Integer.parseInt(object.getString("amount"));
+                        for (int s = 0; s < campaigns.size(); s++) {
+                            campaign = campaignMap.getJsonObject(campaigns.getJsonObject(s).getInteger("id").toString());
+                            campaign.put("nb_licences_total", nb_total);
+                            campaign.put("nb_licences_available", nb_total_available);
+                            campaign.put("nb_licences_2de", nb_seconde);
+                            campaign.put("nb_licences_1ere", nb_premiere);
+                            campaign.put("nb_licences_Tale", nb_terminale);
+                        }
                     } catch (NullPointerException e){
                         LOGGER.info("A licence is present on this structure but the structure is not linked to the campaign");
                     }

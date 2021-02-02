@@ -4,21 +4,21 @@
         <div class="flex-spacebetween">
             <div>
                 <label>Secondes : </label>
-                <input class="three" type="number" ng-model="seconde" ng-init="seconde = 2700">
+                <input class="three" type="number" ng-model="seconde" ng-init="seconde = student.Seconde">
             </div>
             <div>
                 <label>Premières : </label>
-                <input class="three" type="number" ng-model="premiere" ng-init="premiere = 1500">
+                <input class="three" type="number" ng-model="premiere" ng-init="premiere = student.Premiere">
             </div>
             <div>
                 <label>Terminales : </label>
-                <input class="three" type="number" ng-model="terminale" ng-init="terminale = 800">
+                <input class="three" type="number" ng-model="terminale" ng-init="terminale = student.Terminale">
             </div>
         </div>
     </form>
 
     <div class="row vertical-spacing">
-        <input type="submit" class="button right-magnet " ng-click="updateNumberStudent()" i18n-value="modify"/>
+        <input type="submit" class="button right-magnet " ng-click="updateNumberStudent(seconde, premiere, terminale)" i18n-value="modify"/>
         <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelUpdateNumberStudent()" i18n-value="cancel"/>
     </div>
 </div>

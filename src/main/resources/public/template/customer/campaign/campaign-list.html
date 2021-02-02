@@ -15,14 +15,14 @@
     <div>
         <article class="twelve cell">
             <h1 class="cell ten">Nombre d'élèves</h1>
-            <div>
+            <div ng-init="getStudent()">
                 <div class="cell ten">
                     <span class="small-text"><i18n>crre.number.student.next.year</i18n></span>
-                    <span class="black-color big-text">1645</span>
+                    <span class="black-color big-text">[[student.total]]</span>
                 </div>
                 <div class="cell ten">
                     <span class="small-text"><i18n>crre.number.student.calcul</i18n></span>
-                    <span class="black-color big-text">5000</span>
+                    <span class="black-color big-text">[[total_licence]]</span>
                 </div>
                 <div class="twelve-mobile right-magnet">
                     <div class="twelve-mobile cell">
@@ -53,10 +53,10 @@
                                 <i18n>crre.remainder</i18n> : <span ng-bind="campaign.purse_amount | currency"></span>
                             </em>
                         </p>
-                        <p ng-repeat="purse in campaign.purse_licence" class="small-text-align" ng-if="campaign.purse_enabled">
+                        <p class="small-text-align" ng-if="campaign.purse_enabled">
                             <em class="small-text">
-                                <i18n>crre.campaign.licence</i18n> [[purse.name]] : <span ng-bind="purse.initial_amount"></span>
-                                <i18n>crre.remainder</i18n> : <span ng-bind="purse.amount"></span>
+                                <i18n>crre.campaign.licence</i18n> : <span ng-bind="campaign.nb_licences_total"></span>
+                                <i18n>crre.remainder</i18n> : <span ng-bind="campaign.nb_licences_available"></span>
                             </em>
                         </p>
                         <p class="small-text-align" ng-show="campaign.nb_order && campaign.nb_order !== 0">

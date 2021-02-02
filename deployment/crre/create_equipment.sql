@@ -1,7 +1,3 @@
-INSERT INTO crre.licences (id_purse, name, amount, initial_amount, id) VALUES (1, 'English Attack', 100, 200, 1);
-INSERT INTO crre.licences (id_purse, name, amount, initial_amount, id) VALUES (1, 'Educ ''Arte', 100, 200, 2);
-INSERT INTO crre.licences (id_purse, name, amount, initial_amount, id) VALUES (1, 'Pearltrees', 100, 200, 3);
-
 INSERT INTO crre.grade (id, name) VALUES (1, '6ème');
 INSERT INTO crre.grade (id, name) VALUES (2, '5ème');
 INSERT INTO crre.grade (id, name) VALUES (3, '4ème');

@@ -56,11 +56,18 @@ public class CrreController extends ControllerHelper {
                         JsonArray students = getStudentsByStructureFuture.result();
                         structureService.insertStudents(students, result -> {
                             if(result.isRight()) {
-                                log.info("Insert students success");
-                                eitherHandler.handle(new Either.Right<>(result.right().getValue()));
-                            } else {
-                                log.error("Failed to insert students");
-                                eitherHandler.handle(new Either.Left<>("Failed to insert students"));
+                                structureService.getTotalStructure(total_structure -> {
+                                    JsonArray total = total_structure.right().getValue();
+                                    structureService.insertTotalStructure(total, event2 -> {
+                                        if(event2.isRight()) {
+                                            log.info("Insert total success");
+                                            eitherHandler.handle(new Either.Right<>(event2.right().getValue()));
+                                        } else {
+                                            log.error("Failed to insert");
+                                            eitherHandler.handle(new Either.Left<>("Failed to insert"));
+                                        }
+                                    });
+                                });
                             }
                         });
                     } else {

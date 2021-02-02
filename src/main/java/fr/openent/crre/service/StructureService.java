@@ -19,10 +19,19 @@ public interface StructureService {
 
     void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler);
 
+    void getTotalStructure(Handler<Either<String, JsonArray>> handler);
+
     void getAllStructure(Handler<Either<String, JsonArray>> handler);
+
+    void insertTotalStructure(JsonArray total, Handler<Either<String, JsonObject>> handler);
 
     void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler);
 
     void insertStudents(JsonArray students, Handler<Either<String, JsonObject>> defaultResponseHandler);
 
+    void updateAmount(String id_structure, Integer seconde, Integer premiere, Integer terminale, Handler<Either<String, JsonObject>> handler);
+
+    void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler);
+
+    void updateAmountLicence(String id_structure, Integer total_licence, Handler<Either<String, JsonObject>> defaultResponseHandler);
 }
