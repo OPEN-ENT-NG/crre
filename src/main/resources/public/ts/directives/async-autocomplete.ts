@@ -1,18 +1,4 @@
 import {ng, $, _, idiom as lang} from 'entcore';
-
-const options = [
-    'Simon',
-    'Quentin',
-    'Valentin',
-    'Agnes',
-    'Rhita',
-    'Maxime',
-    'Anthony',
-    'Laurent',
-    'Glenn',
-    'Julie'
-];
-
 export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', ($timeout) => ({
     restrict: 'E',
     replace: true,
@@ -56,7 +42,7 @@ export const asyncAutocomplete = ng.directive('asyncAutocomplete', ['$timeout', 
         const dropDownContainer = $element.find('[data-drop-down]');
         const linkedInput = $element.find('input');
         $scope.loading = false;
-        $scope.disabled = false || $scope.ngDisabled;
+        $scope.disabled = $scope.ngDisabled;
         $scope.translate = lang.translate;
         $scope.search = $scope.search || "";
 

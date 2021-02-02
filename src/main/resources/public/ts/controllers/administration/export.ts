@@ -1,8 +1,5 @@
-import {moment, ng,_,idiom as lang, template, toasts} from "entcore";
-import {Export, Notification, Utils, STATUS, Userbook, OrderClient} from "../../model";
-
-declare let window: any;
-
+import {ng,_,idiom as lang, template, toasts} from "entcore";
+import {Export, Utils, STATUS} from "../../model";
 export const exportCtrl = ng.controller('exportCtrl', [
     '$scope','$window', async ($scope,$window) => {
         $scope.display = {

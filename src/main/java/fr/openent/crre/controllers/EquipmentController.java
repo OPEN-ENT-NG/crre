@@ -14,7 +14,6 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -65,24 +64,6 @@ public class EquipmentController extends ControllerHelper {
                 orderIdsInt.add(Integer.parseInt(orderId));
             }
             searchByIds(orderIdsInt, arrayResponseHandler(request));
-        }
-    }
-
-    @Get("/equipments/pages/count")
-    @ApiDoc("Get page number in database")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getPageNumber(HttpServerRequest request) {
-        MultiMap params = request.params();
-        List<String> queries = params.getAll("q");
-        if (params.contains("idCampaign") && params.contains("idStructure")) {
-            try {
-                equipmentService.getNumberPagesCatalog(queries, defaultResponseHandler(request));
-            } catch (NumberFormatException e) {
-                badRequest(request);
-                log.error("An error occured while casting campaign identifier", e);
-            }
-        } else {
-            equipmentService.getNumberPages(queries, defaultResponseHandler(request));
         }
     }
 

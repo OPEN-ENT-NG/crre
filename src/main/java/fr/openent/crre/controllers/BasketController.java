@@ -26,8 +26,6 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -300,12 +298,7 @@ public class BasketController extends ControllerHelper {
             try {
                 Integer id = parseInt(request.params().get("idBasket"));
                 Integer amount = basket.getInteger("amount") ;
-                basketService.updateAmount(id, amount, event -> {
-                    if (event.isRight()) {
-                        final String orders = event.left().getValue();
-                        renderJson(request, new JsonObject(orders));
-                    }
-                });
+                basketService.updateAmount(id, amount, defaultResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred when casting basket id", e);
             }

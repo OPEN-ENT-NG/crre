@@ -9,7 +9,7 @@ import {Basket, Campaign, Equipment, Utils} from '../../model';
 
 
 export const catalogController = ng.controller('catalogController',
-    ['$scope', '$routeParams', ($scope, $routeParams) => {
+    ['$scope', '$routeParams', ($scope) => {
         this.init = () => {
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
@@ -20,7 +20,6 @@ export const catalogController = ng.controller('catalogController',
         };
 
         $scope.addFilter = (event) => {
-            //$scope.equipments.sort.filters.push(event.target.value);
             $scope.word = event.target.value;
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipments.getFilterEquipments(event.target.value);
@@ -28,24 +27,10 @@ export const catalogController = ng.controller('catalogController',
         };
 
         $scope.getFilter = async (word: string, filter: string) => {
-            //$scope.equipments.sort.filters.push(event.target.value);
             $scope.nbItemsDisplay = $scope.pageSize;
             await $scope.equipments.getFilterEquipments(word, filter);
             $scope.$apply();
         };
-
-/*        $scope.addfilterWords = (filterWrod) => {
-            if (filterWrod !== '') {
-                $scope.search.filterWrods = _.union($scope.search.filterWrods, [filterWrod]);
-                $scope.search.filterWrod = '';
-                Utils.safeApply($scope);
-            }
-        };
-
-        $scope.dropEquipmentFilter = (filter: string) => {
-            $scope.equipments.sort.filters = _.without($scope.equipments.sort.filters, filter);
-            $scope.equipments.sync();
-        };*/
 
         $scope.openEquipment = (equipment: Equipment) => {
             if (equipment.status === 'AVAILABLE') {

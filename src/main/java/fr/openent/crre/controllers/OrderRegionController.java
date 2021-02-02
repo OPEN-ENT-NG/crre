@@ -104,7 +104,7 @@ public class OrderRegionController extends BaseController {
                                 String last = lastProject.right().getValue().getString("title");
                                 String title = "Commande_" + date;
                                 if(title.equals(last.substring(0, last.length() - 2))) {
-                                    title = title.substring(0, title.length()) + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
+                                    title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
                                 } else {
                                     title += "_1";
                                 }
@@ -215,18 +215,6 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    @Get("/ordersRegion/projects/filter")
-    @ApiDoc("get all projects ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void getProjectsDate(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            String startDate = request.getParam("startDate");
-            String endDate = request.getParam("endDate");
-            orderRegionService.filter(user, startDate, endDate, arrayResponseHandler(request));
-        });
-    }
-
     @Get("/ordersRegion/projects/search_filter")
     @ApiDoc("get all projects search and filter")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -261,31 +249,6 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    @Get("/ordersRegion/search")
-    @ApiDoc("Search order through name")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void search(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && !request.params().get("q").trim().equals("")) {
-                try {
-                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
-                    orderRegionService.searchName(query, equipments -> {
-                        if(equipments.right().getValue().size() > 0) {
-                            orderRegionService.search(query, user, equipments.right().getValue(), arrayResponseHandler(request));
-                        } else {
-                            orderRegionService.searchWithoutEquip(query, user, arrayResponseHandler(request));
-                        }
-                    });
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-                badRequest(request);
-            }
-        });
-    }
-
     @Get("/ordersRegion/orders")
     @ApiDoc("get all orders of each project")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
@@ -303,8 +266,8 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private CompositeFuture getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, List<Future> futures) {
-        return CompositeFuture.all(futures).setHandler(event -> {
+    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, List<Future> futures) {
+        CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 List<JsonArray> resultsList = event.result().list();
                 List<Integer> listIdsEquipment = new ArrayList<>();
@@ -352,14 +315,6 @@ public class OrderRegionController extends BaseController {
                 badRequest(request);
             }
         });
-    }
-
-    @Put("/order/region/:idOperation/operation")
-    @ApiDoc("update operation in orders region")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void updateOperation(final HttpServerRequest request) {
-        badRequest(request);
     }
 
     @Put("/region/orders/:status")

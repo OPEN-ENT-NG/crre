@@ -14,16 +14,6 @@ export const basketController = ng.controller('basketController',
             grade: "",
         };
 
-/*        $scope.amountIncrease = (basket: Basket) => {
-            $scope.basket.amount += 1;
-            $scope.$apply();
-        };
-        $scope.amountDecrease = () => {
-            if($scope.basket.amount)
-                $scope.basket.amount -= 1;
-            $scope.$apply();
-        };*/
-
         $scope.isProposed = (basket: Basket) => {
             return (basket.price_proposal);
         };

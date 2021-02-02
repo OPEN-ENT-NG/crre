@@ -1,16 +1,13 @@
-import {_, idiom as lang, model, moment, toasts} from 'entcore';
+import {_, model, moment, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {
     Campaign,
-    Contract,
-    ContractType,
     Equipment, Filter,
     Order,
     OrderRegion,
     OrderUtils,
     Structure,
     Structures,
-    Supplier,
     TechnicalSpec,
     Utils
 } from './index';
@@ -21,8 +18,6 @@ export class OrderClient implements Order  {
     amount: number;
     campaign: Campaign;
     comment: string;
-    contract: Contract;
-    contract_type: ContractType;
     creation_date: Date;
     equipment: Equipment;
     equipment_key:number;
@@ -62,8 +57,6 @@ export class OrderClient implements Order  {
     priceTotalTTC: number;
     priceUnitedTTC: number;
     structure_groups: any;
-    supplier: Supplier;
-    supplier_name?: string;
     summary:string;
     image:string;
     status:string;
@@ -122,12 +115,6 @@ export class OrderClient implements Order  {
     async updateStatusOrder(status: String, id:number = this.id):Promise<void>{
         try {
             await http.put(`/crre/order/${id}`, {status: status});
-/*            let params = '';
-            orders.map((order) => {
-                params += `number_validation=${order.number_validation}&`;
-            });
-            params = params.slice(0, -1);
-            await http.delete(`/crre/orders/valid?${params}`);*/
         } catch (e) {
             toasts.warning('crre.order.update.err');
         }
@@ -172,24 +159,6 @@ export class OrderClient implements Order  {
             toasts.warning('crre.order.get.err');
         }
     }
-
-    async getOneOrderClient(id:number, structures:Structures, status:string):Promise<Order>{
-        try{
-            const {data} = await http.get(`/crre/orderClient/${id}/order/${status}`);
-            return new Order(Object.assign(data, {typeOrder:"client"}), structures);
-        } catch (e) {
-            toasts.warning('crre.admin.order.get.err');
-            throw e;
-        }
-    }
-
-    async exportListLycee(params: string) {
-        try {
-           await http.get( `/crre/orders/valid/export/structure_list?${params}`);
-        } catch (e) {
-            toasts.warning("crre.order.get.err")
-        }
-    }
 }
 export class OrdersClient extends Selection<OrderClient> {
 
@@ -202,15 +171,6 @@ export class OrdersClient extends Selection<OrderClient> {
         this.dateGeneration = new Date();
         this.id_project_use = -1;
         this.filters = [];
-    }
-
-    async updateReference(tabIdsProjects: Array<object>, id_campaign:number, id_project:number, id_structure:string):Promise<void> {
-        try {
-            await  http.put(`/crre/campaign/${id_campaign}/projects/${id_project}/preferences?structureId=${id_structure}`,
-                { preferences: tabIdsProjects });
-        }catch (e) {
-            toasts.warning('crre.project.update.err');
-        }
     }
 
     async search(text: String, id_campaign: number) {
@@ -378,15 +338,6 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async updateOrderRanks(tabIdsProjects: Array<object>, structureId:string, campaignId:number):Promise<void>{
-        try {
-            await  http.put(`/crre/order/rank/move?idStructure=${structureId}&idCampaign=${campaignId}`,{ orders: tabIdsProjects });
-        }catch (e) {
-            toasts.warning('crre.project.update.err');
-            throw e;
-        }
-    }
-
     calculTotalAmount ():number {
         let total = 0;
         this.all.map((order) => {
@@ -401,35 +352,6 @@ export class OrdersClient extends Selection<OrderClient> {
             total += this.choosePriceTotal(order);
         }
         return total;
-    }
-
-    async cancel (orders: OrderClient[]):Promise<void> {
-        try {
-            let params = '';
-            orders.map((order) => {
-                params += `number_validation=${order.number_validation}&`;
-            });
-            params = params.slice(0, -1);
-            await http.delete(`/crre/orders/valid?${params}`);
-        } catch (e) {
-            throw e;
-        }
-    }
-    async addOperation (idOperation:number, idsOrder: Array<number>):Promise<void> {
-        try{
-            await http.put(`/crre/orders/operation/${idOperation}`, idsOrder);
-        }catch (e){
-            toasts.warning('crre.basket.update.err');
-            throw e;
-        }
-    }
-    async addOperationInProgress (idOperation:number, idsOrder: Array<number>):Promise<void> {
-        try{
-            await http.put(`/crre/orders/operation/in-progress/${idOperation}`, idsOrder);
-        }catch (e){
-            toasts.warning('crre.basket.update.err');
-            throw e;
-        }
     }
 }
 

@@ -2,11 +2,9 @@ import http from "axios";
 import {_, moment, toasts} from "entcore";
 import {
     Campaign,
-    Contract,
-    ContractType,
     Order,
     Structure,
-    Structures, Supplier, TechnicalSpec,
+    Structures, TechnicalSpec,
     Utils,
     OrderClient,
     Equipment
@@ -18,8 +16,6 @@ export class OrderRegion implements Order  {
     amount: number;
     campaign: Campaign;
     comment: string;
-    contract: Contract;
-    contract_type: ContractType;
     creation_date: Date;
     equipment: Equipment;
     equipment_key:number;
@@ -55,8 +51,6 @@ export class OrderRegion implements Order  {
     preference: number;
     priceUnitedTTC: number;
     structure_groups: any;
-    supplier: Supplier;
-    supplier_name?: string;
     summary:string;
     image:string;
     status:string;
@@ -121,12 +115,10 @@ export class OrderRegion implements Order  {
         this.status = order.status;
         this.number_validation = order.number_validation;
         this.technical_spec = order.technical_spec;
-        this.contract = order.contract;
         this.campaign = order.campaign;
         this.structure_groups = order.structure_groups;
         this.contract_name = order.contract_name;
         this.files = order.files;
-        this.contract_type = order.contract_type;
         this.name_structure = order.name_structure;
         this.id_contract = order.id_contract;
         this.id_campaign = order.id_campaign;
@@ -214,15 +206,6 @@ export class OrdersRegion extends Selection<OrderRegion> {
             return await http.post(`/crre/region/orders/`, {orders: orders});
         } catch (e) {
             toasts.warning('crre.order.create.err');
-            throw e;
-        }
-    }
-
-    async updateOperation(idOperation:number, idsRegions: Array<number>):Promise<any>{
-        try {
-            await http.put(`/crre/order/region/${idOperation}/operation`, idsRegions);
-        } catch (e) {
-            toasts.warning('crre.admin.order.update.err');
             throw e;
         }
     }

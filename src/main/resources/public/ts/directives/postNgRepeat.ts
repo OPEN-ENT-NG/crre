@@ -1,8 +1,7 @@
-import {ng,  idiom as lang} from 'entcore';
-import {Utils} from "../model";
+import {ng} from 'entcore';
 
 export const postNgRepeat = ng.directive('postNgRepeat', () => {
-    return function(scope, element, attrs) {
+    return function(scope) {
         if (scope.$last){
             let elements = document.getElementsByClassName('vertical-array-scroll');
             if(elements && elements[0])

@@ -89,25 +89,6 @@ public class OrderController extends ControllerHelper {
         }
     }
 
-    @Put("/order/rank/move")
-    @ApiDoc("Update the rank of tow orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
-    public void updatePriority(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, campaign -> {
-            if (!campaign.containsKey("orders")) {
-                badRequest(request);
-                return;
-            }
-            JsonArray orders = campaign.getJsonArray("orders");
-            try{
-                orderService.updateRank(orders, defaultResponseHandler(request));
-            }catch(Exception e){
-                log.error(" An error occurred when casting campaign id", e);
-            }
-        });
-    }
-
     @Get("/orders")
     @ApiDoc("Get the list of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -234,41 +215,6 @@ public class OrderController extends ControllerHelper {
                     e.printStackTrace();
                 }
         });
-    }
-
-    @Get("/order/struct")
-    @ApiDoc("Get the pdf of orders by structure")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void getOrderPDFStruct (final HttpServerRequest request) {
-        final String orderNumber = request.params().get("bc_number");
-        try {
-            if(!request.getParam("bc_number").isEmpty()) {
-                ExportHelper.makeExport(request, eb, exportService, Crre.ORDERSSENT, Crre.PDF, ExportTypes.BC_AFTER_VALIDATION_STRUCT, "_STRUCTURES_BC_" + orderNumber);
-            }
-
-        }catch (NullPointerException e){
-            ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_BEFORE_VALIDATION_STRUCT, "_STRUCTURES_BC" );
-        }
-//
-    }
-    /**
-     * Init map with numbers validation
-     * @param orders order list containing numbers
-     * @return Map containing numbers validation as key and an empty array as value
-     */
-    private JsonObject initNumbersMap (JsonArray orders) {
-        JsonObject map = new JsonObject();
-        JsonObject item;
-        for (int i = 0; i < orders.size(); i++) {
-            item = orders.getJsonObject(i);
-            try {
-                map.put(item.getString("number_validation"), new fr.wseduc.webutils.collections.JsonArray());
-            }catch (NullPointerException e){
-                log.error("Number validation is null");
-            }
-        }
-        return map;
     }
 
     @Get("/orders/exports")
@@ -433,7 +379,6 @@ public class OrderController extends ControllerHelper {
                                 log.error("An error occurred when casting order id", e);
                             }
                         });
-
     }
 
     @Put("/orders/inprogress")
@@ -445,19 +390,6 @@ public class OrderController extends ControllerHelper {
             final JsonArray ids = orders.getJsonArray("ids");
             orderService.setInProgress(ids, defaultResponseHandler(request));
         });
-    }
-
-    @Delete("/orders/valid")
-    @ApiDoc("Delete valid orders. Cancel validation. All orders are back to validation state")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void cancelValidOrder(HttpServerRequest request) {
-        if (request.params().contains("number_validation")) {
-            List<String> numbers = request.params().getAll("number_validation");
-            orderService.cancelValidation(new fr.wseduc.webutils.collections.JsonArray(numbers), defaultResponseHandler(request));
-        } else {
-            badRequest(request);
-        }
     }
 
     @Put("/order/:idOrder/comment")
@@ -566,32 +498,6 @@ public class OrderController extends ControllerHelper {
         return bd.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 
-    @Put("/orders/done")
-    @ApiDoc("Wind up orders ")
-    @ResourceFilter(ManagerRight.class)
-    public void windUpOrders(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
-            try {
-                List<String> params = new ArrayList<>();
-                for (Object id : orders.getJsonArray("ids")) {
-                    params.add(id.toString());
-                }
-                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                orderService.windUpOrders(ids, Logging.defaultResponsesHandler(eb,
-                        request,
-                        Contexts.ORDER.toString(),
-                        Actions.UPDATE.toString(),
-                        params,
-                        null)
-
-                );
-            } catch (ClassCastException e) {
-                log.error("An error occurred when casting order id", e);
-            }
-        });
-
-    }
-
     @Get("/orders/export")
     @ApiDoc("Export list of waiting orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -651,22 +557,6 @@ public class OrderController extends ControllerHelper {
                 notFound(request);
             }
         });
-    }
-
-    @Put("/orders/operation/in-progress/:idOperation")
-    @ApiDoc("update operation in orders with status in progress")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void updateOperationInProgress(final HttpServerRequest request) {
-        badRequest(request);
-    }
-
-    @Put("/orders/operation/:idOperation")
-    @ApiDoc("update operation in orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void updateOperation(final HttpServerRequest request) {
-        badRequest(request);
     }
 
     @Put("/order/:idOrder")

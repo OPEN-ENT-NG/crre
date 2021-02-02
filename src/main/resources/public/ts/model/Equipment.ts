@@ -196,8 +196,6 @@ export class Equipments extends Selection<Equipment> {
         this.all = Mix.castArrayAs(Equipment, data);
         this.all.map((equipment) => {
             equipment.price = parseFloat(equipment.price.toString());
-            // equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
-            // this.equipmentsOptionsTechnicalsSpecs(true, equipment);
         });
     }
 
@@ -236,10 +234,6 @@ export class Equipments extends Selection<Equipment> {
     async sync() {
         this.loading = true;
         try {
-            // old
-            // const queriesFilter = Utils.formatGetParameters({q: filter.filters});
-            // let uri = `/crre/equipments?order=${filter.type}&reverse=${filter.reverse}&${queriesFilter}`;
-            
             let {data} = await http.get(`/crre/equipments/catalog`);
             this.syncEquip(data);
 
@@ -248,17 +242,6 @@ export class Equipments extends Selection<Equipment> {
             throw e;
         } finally {
             this.loading = false;
-        }
-    }
-
-    private static equipmentsOptionsTechnicalsSpecs(isCatalog:boolean, equipment: Equipment) {
-        if(isCatalog) {
-            equipment.options.toString() !== '[null]' && equipment.options !== null ?
-                equipment.options = Mix.castArrayAs(EquipmentOption, JSON.parse(equipment.options.toString()))
-                : equipment.options = [];
-            equipment.technical_specs = equipment.technical_specs !== null
-                ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(equipment.technical_specs.toString()))
-                : equipment.technical_specs;
         }
     }
 
@@ -273,7 +256,6 @@ export class Equipments extends Selection<Equipment> {
                 equipment.price = parseFloat(equipment.price.toString());
                 equipment.tax_amount = parseFloat(equipment.tax_amount.toString());
                 equipment.priceTTC = equipment.price + (equipment.price * equipment.tax_amount / 100);
-                // this.equipmentsOptionsTechnicalsSpecs(false, equipment);
             });
 
         } catch (e) {
@@ -302,18 +284,6 @@ export class Equipments extends Selection<Equipment> {
             throw e;
         }
     }
-    
-/*    async search(text: String, fieldName: String) {
-        try {
-            if ((text.trim() === '' || !text) || (fieldName.trim() === '' || !fieldName)) return;
-            const {data} = await http.get(`/crre/equipments/search?q=${text}&field=${fieldName}`);
-            return Mix.castArrayAs(Equipment, data);
-        } catch (err) {
-            toasts.warning('crre.option.search.err');
-            throw err;
-        }
-    }*/
-
 }
 
 export class EquipmentOption implements Selectable {

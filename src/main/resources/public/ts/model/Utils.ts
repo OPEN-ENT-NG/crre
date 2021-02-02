@@ -1,5 +1,4 @@
 import {moment} from "entcore";
-import {Order} from "./Order";
 
 export class Utils {
 
@@ -30,10 +29,8 @@ export class Utils {
         return params.slice(0, -1);
     }
 
-    static calculatePriceTTC (price, tax_value, roundNumber?: number) {
-        let priceFloat = parseFloat(price);
-        let taxFloat = parseFloat(tax_value);
-        let price_TTC = (( priceFloat + ((priceFloat *  taxFloat) / 100)));
+    static calculatePriceTTC (price, roundNumber?: number) {
+        let price_TTC = parseFloat(price) ;
         return (!isNaN(price_TTC)) ? (roundNumber ? price_TTC.toFixed(roundNumber) : price_TTC ) : '';
     }
 

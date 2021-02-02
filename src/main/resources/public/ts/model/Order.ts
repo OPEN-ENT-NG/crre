@@ -1,7 +1,5 @@
 import {
     Campaign,
-    Contract,
-    ContractType,
     Equipment,
     OrderClient,
     OrderOptionClient,
@@ -17,8 +15,6 @@ export interface OrderImp extends Selectable{
     amount: number;
     campaign: Campaign;
     comment: string;
-    contract: Contract;
-    contract_type: ContractType;
     creation_date: Date;
     equipment_key:number;
     id_structure: string;
@@ -36,8 +32,6 @@ export class Order implements OrderImp{
     amount: number;
     campaign: Campaign;
     comment: string;
-    contract: Contract;
-    contract_type: ContractType;
     creation_date: Date;
     equipment: Equipment;
     equipment_key:number;
@@ -63,8 +57,6 @@ export class Order implements OrderImp{
         this.amount  = order.amount? parseInt(order.amount.toString()) : null;
         this.campaign = order.campaign? Mix.castAs(Campaign, JSON.parse(order.campaign.toString())) : null;
         this.comment = order.comment;
-        this.contract = order.contract? JSON.parse(order.contract.toString()) : null;
-        this.contract_type = order.contract_type? JSON.parse(order.contract_type.toString()) : null;
         this.equipment_key = order.equipment_key;
         this.inheritedClass = order;
         this.price = order.price? parseFloat(order.price.toString()) : null;
@@ -99,12 +91,7 @@ export class OrderUtils {
     }
 
     static calculatePriceTTC( roundNumber?: number, order?:Order|OrderClient|OrderRegion):number|any {
-        let price = parseFloat(Utils.calculatePriceTTC(order.price , order.tax_amount).toString());
-/*        if (order.options !== undefined) {
-            order.options.map((option) => {
-                price += parseFloat(Utils.calculatePriceTTC(option.price , option.tax_amount).toString() );
-            });
-        }*/
+        let price = parseFloat(Utils.calculatePriceTTC(order.price).toString());
         return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price ) : price ;
     }
     static initParentOrder( order:Order):Object{

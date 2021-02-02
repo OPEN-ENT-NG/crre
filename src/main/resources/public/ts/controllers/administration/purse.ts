@@ -1,4 +1,4 @@
-import { ng, template, notify, moment, _ } from 'entcore';
+import { ng, template, _ } from 'entcore';
 import { PurseImporter, Utils, Purse, Purses } from '../../model';
 import { Mix } from 'entcore-toolkit';
 

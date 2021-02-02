@@ -67,7 +67,7 @@ export class StructureGroup implements Selectable {
     structureIdToObject(idsStructure: String[], structures: Structures) {
         this.structures = [];
         idsStructure.forEach((idStructure) => {
-            let structure = new Structure();
+            let structure: Structure;
             structure = _.findWhere(structures.all, {id: idStructure});
             if (structure !== undefined ) {
                 this.structures.push(structure);

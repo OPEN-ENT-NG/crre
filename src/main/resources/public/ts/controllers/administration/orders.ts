@@ -1,4 +1,4 @@
-import {_, angular, idiom as lang, model, moment, ng, notify, template, toasts} from 'entcore';
+import {_, angular, idiom as lang, model, ng, template, toasts} from 'entcore';
 import http from "axios";
 import {
     BasketOrder,
@@ -62,13 +62,6 @@ export const orderController = ng.controller('orderController',
                             || ('structure' in order && order.structure['city'] ? regex.test(order.structure.city.toLocaleLowerCase()) : false)
                             || ('structure' in order && order.structure['academy'] ? regex.test(order.structure.academy.toLowerCase()) : false)
                             || ('structure' in order && order.structure['type'] ? regex.test(order.structure.type.toLowerCase()) : false)
-                            || ('contract_type' in order ? regex.test(order.contract_type.name.toLowerCase()) : false)
-                            || regex.test('contract' in (order as OrderClient)
-                                ? order.contract.name.toLowerCase()
-                                : order.contract_name)
-                            || regex.test('supplier' in (order as OrderClient)
-                                ? order.supplier.name.toLowerCase()
-                                : order.supplier_name)
                             || ('campaign' in order ? regex.test(order.campaign.name.toLowerCase()) : false)
                             || ('name' in order ? regex.test(order.name.toLowerCase()) : false)
                             || matchStructureGroups(order.structure_groups)
@@ -81,7 +74,6 @@ export const orderController = ng.controller('orderController',
                             || (order.label_program !== null && 'label_program' in order
                                 ? regex.test(order.label_program.toLowerCase())
                                 : false)
-                            || ('supplier_name' in order ?  regex.test(order.supplier_name.toLowerCase()) : false );
                     });
                 });
                 $scope.displayedOrders.all = searchResult;
@@ -191,23 +183,6 @@ export const orderController = ng.controller('orderController',
             })
         }
 
-/*        $scope.initPreferences = ()  => {
-            if(isPageOrderWaiting)
-                if ($scope.preferences && $scope.preferences.preference) {
-                    let loadedPreferences = JSON.parse($scope.preferences.preference);
-                    if(loadedPreferences.ordersWaitingDisplay)
-                        $scope.tableFields.map(table => {
-                            table.display = loadedPreferences.ordersWaitingDisplay[table.fieldName]
-                        });
-                    if(loadedPreferences.searchFields){
-                        $scope.search.filterWords = loadedPreferences.searchFields;
-                        $scope.filterDisplayedOrders();
-                    }
-                    $scope.ub.putPreferences("searchFields", []);
-                }
-        };
-
-        $scope.initPreferences();*/
         $scope.display = {
             ordersClientOptionOption : [],
             lightbox : {
@@ -230,15 +205,6 @@ export const orderController = ng.controller('orderController',
             return totalPrice.toFixed(roundNumber);
         };
 
-
-/*        $scope.savePreference = () =>{
-            let elements = document.getElementsByClassName('vertical-array-scroll');
-            if(elements[0])
-                elements[0].scrollLeft = $(".vertical-array-scroll").scrollLeft() ;
-            Utils.safeApply($scope);
-            $scope.ub.putPreferences("ordersWaitingDisplay", $scope.jsonPref($scope.tableFields));
-        };*/
-
         $scope.jsonPref = (prefs) => {
             let json = {};
             prefs.forEach(pref =>{
@@ -254,13 +220,6 @@ export const orderController = ng.controller('orderController',
             });
             return total;
         }
-
-/*        $scope.addFilter = (filterWord: string, event?) => {
-            if (event && (event.which === 13 || event.keyCode === 13 )) {
-                $scope.addFilterWords(filterWord);
-                $scope.filterDisplayedOrders();
-            }
-        };*/
 
         $scope.switchAllOrders = () => {
             $scope.displayedOrders.all.map((order) => order.selected = $scope.allOrdersSelected);
@@ -492,28 +451,12 @@ export const orderController = ng.controller('orderController',
             return _.where(orders, {status: 'SENT'}).length === orders.length || (_.where(orders, {status: 'DONE'}).length === orders.length) && $scope.validateSentOrders(orders);
         }
 
-        $scope.exportOrder = async (orders: OrderClient[]) => {
-            if (isSentOrDone(orders)) {
-                let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
-                let  {status, data} =  await http.get(`/crre/order?bc_number=${orderNumber}`);
-                if(status === 201){
-                    toasts.info('crre.sent.export.BC');
-                }
-            } else {
-                $scope.exportValidOrders(orders, 'order');
-            }
-            $scope.displayedOrders.selected.map(order => {
-                order.selected = false;
-            });
-            Utils.safeApply($scope);
-        };
-
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
             if(amount.toString() != 'undefined') {
                 await orderClient.updateAmount(amount);
                 let basket = new BasketOrder();
                 basket.setIdBasket(orderClient.id_basket);
-                await basket.updateAllAmount();
+                await basket.getAmount();
                 orderClient.amount = amount;
                 $scope.$apply()
             }
@@ -522,74 +465,8 @@ export const orderController = ng.controller('orderController',
         $scope.updateReassort = async (orderClient: OrderClient) => {
             orderClient.reassort = !orderClient.reassort;
             await orderClient.updateReassort();
-/*            let basket = new BasketOrder();
-            basket.setIdBasket(orderClient.id_basket);
-            await basket.updateReassort();*/
             $scope.$apply()
         };
-
-        $scope.exportOrderStruct = async (orders: OrderClient[]) => {
-            if (isSentOrDone(orders)) {
-                let orderNumber = _.uniq(_.pluck(orders, 'order_number'));
-                let  {status, data} =  await http.get(`/crre/order/struct?bc_number=${orderNumber}`);
-                if(status === 201){
-                    toasts.info('crre.sent.export.BC');
-                }
-            } else {
-                let filter = "";
-                orders.forEach(order => {
-                    filter +="number_validation=" +  order.number_validation + "&";
-                });
-                filter = filter.substring(filter.length-1,0);
-                let  {status, data} = await http.get(`/crre/order/struct?${filter}`);
-                if(status === 201){
-                    toasts.info('crre.sent.export.BC');
-                }
-            }
-            $scope.displayedOrders.selected.map(order => {
-                order.selected = false;
-            });
-            Utils.safeApply($scope);
-        };
-
-        $scope.exportValidOrders = async  (orders: OrderClient[], fileType: string) => {
-            let params = '';
-            orders.map((order: OrderClient) => {
-                params += `number_validation=${order.number_validation}&`;
-            });
-            params = params.slice(0, -1);
-            if(fileType ==='structure_list'){
-                toasts.info('crre.sent.export.BC');
-                await orders[0].exportListLycee(params);
-                $scope.displayedOrders.selected[0].selected = false;
-                Utils.safeApply($scope);
-            }else
-            if(fileType === 'certificates'){
-                window.location = `/crre/orders/valid/export/${fileType}?${params}`;
-            }
-            else{
-                let  {status, data} = await http.get(`/crre/orders/valid/export/${fileType}?${params}`);
-                if(status === 201){
-                    toasts.info('crre.sent.export.BC');
-                }
-            }
-        };
-
-        $scope.cancelValidation = async (orders: OrderClient[]) => {
-            try {
-                await $scope.displayedOrders.cancel(orders);
-                await $scope.syncOrders('VALID');
-                toasts.confirm('crre.orders.valid.cancel.confirmation');
-            } catch (e) {
-                toasts.warning('crre.orders.valid.cancel.error');
-            } finally {
-                Utils.safeApply($scope);
-            }
-        };
-
-        $scope.getProgramName = (idProgram: number) => idProgram !== undefined
-            ? _.findWhere($scope.programs.all, { id: idProgram }).name
-            : '';
 
         $scope.countColSpan = (field:string):number =>{
             let totaux = $scope.isValidator() ? 1 :0;
@@ -629,10 +506,7 @@ export const orderController = ng.controller('orderController',
             }
             return order.rank = lang.translate("crre.order.not.prioritized");
         };
-/*        $scope.updateOrder = (order: OrderClient) => {
-            $scope.ub.putPreferences("searchFields", $scope.search.filterWords);
-            $scope.redirectTo(`/order/update/${order.id}`);
-        };*/
+
         $scope.selectCampaignAndInitFilter = async (campaign: Campaign) =>{
             await $scope.selectCampaignShow(campaign);
             $scope.search.filterWords = [];
@@ -643,33 +517,6 @@ export const orderController = ng.controller('orderController',
 
         $scope.displayedBasketsOrders = [];
         $scope.displayedOrdersRegionOrders = [];
-        const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
-
-        const synchroBaskets = async () : Promise<void> => {
-            await $scope.basketsOrders.sync($scope.campaign.id);
-            //await $scope.displayedOrdersRegion.sync();
-
-            formatDisplayedBasketOrders();
-            Utils.safeApply($scope);
-        };
-
-        const formatDisplayedBasketOrders = () : void  => {
-            $scope.displayedBasketsOrders = [];
-            $scope.basketsOrders.forEach(function (basketOrder) {
-                let displayedBasket = basketOrder;
-                displayedBasket.name_user = displayedBasket.name_user.toUpperCase();
-                displayedBasket.total = currencyFormatter.format(basketOrder.total);
-                displayedBasket.created = moment(basketOrder.created).format('DD-MM-YYYY').toString();
-                displayedBasket.expanded = false;
-                displayedBasket.orders = [];
-                $scope.displayedOrders.forEach(function (order) {
-                    if (order.id_basket === basketOrder.id) {
-                        displayedBasket.orders.push(order);
-                    }
-                });
-                $scope.displayedBasketsOrders.push(displayedBasket);
-            });
-        };
 
         $scope.switchAllSublines = (basket) : void => {
             basket.orders.forEach(function (order) {

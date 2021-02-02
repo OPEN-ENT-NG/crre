@@ -1,4 +1,4 @@
-import { notify,toasts } from 'entcore';
+import { toasts } from 'entcore';
 import http from 'axios';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 

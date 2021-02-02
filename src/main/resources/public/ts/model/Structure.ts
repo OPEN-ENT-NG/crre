@@ -1,4 +1,3 @@
-import {_} from "entcore";
 import { Selectable, Mix, Selection } from 'entcore-toolkit';
 import http from 'axios';
 

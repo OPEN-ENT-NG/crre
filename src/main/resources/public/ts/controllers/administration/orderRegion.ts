@@ -7,7 +7,7 @@ import {
     Structures,
     Utils,
     Equipments,
-    Contracts, Basket, Equipment, Filter, Filters, OrderClient
+    Basket, Equipment, Filter, Filters, OrderClient
 } from "../../model";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
@@ -44,15 +44,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 toasts.warning('crre.basket.sync.err');
             }
         }
-
-/*        $scope.getProjectsSearch = async(name: string) => {
-            try {
-                let { data } = await http.get(`/crre/ordersRegion/search?q=${name}`);
-                $scope.projects = data;
-            } catch (e) {
-                toasts.warning('crre.basket.sync.err');
-            }
-        }*/
 
         $scope.openFiltersLightbox= () => {
             template.open('lightbox.waitingAdmin', 'administrator/order/filters');
@@ -146,17 +137,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-/*        $scope.getProjectsFilterDate = async(startDate: Date, endDate: Date) => {
-            try {
-                startDate = moment(startDate).format('YYYY-MM-DD').toString();
-                endDate = moment(endDate).format('YYYY-MM-DD').toString();
-                let {data} = await http.get(`/crre/ordersRegion/projects/filter?startDate=${startDate}&endDate=${endDate}`);
-                $scope.projects = data;
-            } catch (e) {
-                toasts.warning('crre.basket.sync.err');
-            }
-        }*/
-
         $scope.getFilter = async (word: string, filter: string) => {
             let newFilter = new Filter();
             newFilter.name = filter;
@@ -181,23 +161,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 Utils.safeApply($scope);
             }
         };
-
-/*        $scope.searchByName =  async (name: string) => {
-            if(!!name) {
-                if(!$scope.filters.hasOwnProperty("startDate") && !$scope.filters.hasOwnProperty("endDate")) {
-                    await $scope.getProjectsSearch(name);
-                    await synchroRegionOrders(true);
-                } else {
-                    if(moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
-                        await $scope.getProjectsSearchFilter(name, $scope.filtersDate.startDate, $scope.filtersDate.endDate);
-                        await synchroRegionOrders(true);
-                    }
-                }
-            } else {
-                await synchroRegionOrders();
-            }
-            Utils.safeApply($scope);
-        }*/
 
         $scope.searchByName =  async (name: string) => {
             if(!!name) {
@@ -294,8 +257,6 @@ export const orderRegionController = ng.controller('orderRegionController',
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
         const synchroRegionOrders = async (isSearching: boolean = false) : Promise<void> => {
-            //await $scope.basketsOrders.sync($scope.campaign.id);
-            //await $scope.displayedOrdersRegion.sync();
             if(!isSearching) {
                 await $scope.getProjects();
             }
@@ -439,7 +400,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 equipment: undefined,
                 equipments: new Equipments(),
                 allEquipments : [],
-                contracts : new Contracts(),
                 structure: undefined,
                 price: undefined,
                 amount: undefined,
@@ -462,7 +422,6 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.duplicateRow = (index:number):void => {
             let row = JSON.parse(JSON.stringify($scope.orderToCreate.rows[index]));
             row.equipments = new Equipments();
-            row.contracts = new Contracts();
             if (row.structure){
                 if (row.structure.structures) {
                     row.structure = $scope.structure_groups.all.find(struct => row.structure.id === struct.id);

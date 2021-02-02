@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {_, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, EquipmentOption, Filter, Structure, Utils} from './index';
+import {Equipment, EquipmentOption, Filter, Structure} from './index';
 
 
 export class Basket implements Selectable {
@@ -126,11 +126,14 @@ export class Basket implements Selectable {
 
     amountIncrease = () => {
         this.amount += 1;
+        this.updateAmount ();
     };
 
     amountDecrease = () => {
-        if(this.amount)
+        if(this.amount >= 1){
             this.amount -= 1;
+            this.updateAmount ();
+        }
     };
 
 }
@@ -218,7 +221,7 @@ export class BasketOrder implements Selectable {
         };
     }
 
-    async updateAllAmount():Promise<void>{
+    async getAmount():Promise<void>{
         try {
             let {data} = await http.get(`/crre/basketOrder/${this.id}/amount`);
             this.amount = data.amount;
@@ -303,32 +306,4 @@ export class BasketsOrders extends Selection<BasketOrder> {
             toasts.warning('crre.order.getMine.err');
         }
     }
-
-    // async getAllBasketOrders (idCampaign: number) {
-    //     try {
-    //         let {data} = await http.get(`/crre/basket/${idCampaign}`);
-    //         this.all = Mix.castArrayAs(Basket, data);
-    //         this.all.map((basket) => {
-    //             basket.equipment = Mix.castAs(Equipment, JSON.parse(basket.equipment.toString())[0]);
-    //             basket.options = basket.options.toString() !== '[null]' && basket.options !== null
-    //                 ? Mix.castArrayAs(EquipmentOption, JSON.parse(basket.options.toString()))
-    //                 : [];
-    //             basket.equipment.options = basket.options;
-    //             basket.files = (basket.files.toString !== '[null]') ? Utils.parsePostgreSQLJson(basket.files) : [];
-    //             basket.equipment.options.map((option) => option.selected = true);
-    //         });
-    //     }
-    //     catch (e) {
-    //         toasts.warning('crre.order.getAll.err');
-    //     }
-    // }
-    //
-    // async getOrderById(idOrder: number) {
-    //     try {
-    //         return await http.get(`/crre/basket/${idOrder}`);
-    //     }
-    //     catch {
-    //         toasts.warning('crre.order.getOne.err');
-    //     }
-    // }
 }

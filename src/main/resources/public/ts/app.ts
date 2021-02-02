@@ -31,17 +31,11 @@ routes.define(($routeProvider) => {
             .when('/campaigns/update', {
                 action: 'createOrUpdateCampaigns'
             })
-            .when('/equipments/create', {
-                action: 'createEquipment'
-            })
             .when('/logs', {
                 action: 'viewLogs'
             })
             .when('/structureGroups/create', {
                 action: 'createStructureGroup'
-            })
-            .when('/equipments', {
-                action: 'manageEquipments'
             })
             .when('/structureGroups', {
                 action: 'manageStructureGroups'
@@ -81,24 +75,6 @@ routes.define(($routeProvider) => {
         $routeProvider
             .when('/order/:idCampaign/waiting', {
                 action: 'orderWaiting'
-            })
-            .when('/order/region/create', {
-                action: 'createRegionOrder'
-            })
-            .when('/order/update/:idOrder', {
-                action: 'updateOrder'
-            })
-            .when('/order/sent', {
-                action: 'orderSent'
-            })
-            .when('/order/valid', {
-                action: 'orderClientValided'
-            })
-            .when('/order/preview', {
-                action: 'previewOrder'
-            })
-            .when('/order/operation/update/:idOrder/:typeOrder', {
-                action: 'updateLinkedOrder'
             })
             .when('/order/:idCampaign/historic', {
                 action: 'orderHistoric'

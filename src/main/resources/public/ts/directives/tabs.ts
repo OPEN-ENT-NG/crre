@@ -15,7 +15,7 @@ export const Tabs = ng.directive('tabs', () => {
             </div>
         </div>
         `,
-        link: function ($scope, $element, $attrs, ngModel) {
+        link: function ($scope, $attrs, ngModel) {
             $scope.lang = lang;
             $scope.selectMenu =(menu)=>{
                 let oldModel = $scope.ngModel;

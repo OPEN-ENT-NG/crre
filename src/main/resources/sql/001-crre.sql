@@ -2,24 +2,24 @@ CREATE SCHEMA crre;
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
 CREATE TABLE crre.scripts (
-  filename character varying(255) NOT NULL,
-  passed timestamp without time zone NOT NULL DEFAULT now(),
-  CONSTRAINT scripts_pkey PRIMARY KEY (filename)
+    filename character varying(255) NOT NULL,
+    passed timestamp without time zone NOT NULL DEFAULT now(),
+    CONSTRAINT scripts_pkey PRIMARY KEY (filename)
 );
 
 CREATE TABLE crre.logs (
-  id bigserial NOT NULL,
-  date timestamp without time zone DEFAULT now(),
-  action character varying(30),
-  context character varying(30),
-  value json,
-  id_user character varying(36),
-  username character varying(50),
-  item text,
-  CONSTRAINT logs_pkey PRIMARY KEY (id)
+    id bigserial NOT NULL,
+    date timestamp without time zone DEFAULT now(),
+    action character varying(30),
+    context character varying(30),
+    value json,
+    id_user character varying(36),
+    username character varying(50),
+    item text,
+    CONSTRAINT logs_pkey PRIMARY KEY (id)
 );
 
-	CREATE TABLE crre.structure_group
+CREATE TABLE crre.structure_group
 (
     id bigserial NOT NULL,
     name character varying NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE crre.logs (
     CONSTRAINT structure_group_pkey PRIMARY KEY (id)
 );
 
-	CREATE TABLE crre.campaign
+CREATE TABLE crre.campaign
 (
     id bigserial NOT NULL,
     name character varying(255) NOT NULL,
@@ -63,17 +63,17 @@ CREATE TABLE crre.rel_group_structure
 );
 
 CREATE TABLE crre.purse(
-  id bigserial NOT NULL,
-  id_structure character varying(36),
-  amount numeric,
-  id_campaign bigint,
-  initial_amount NUMERIC,
-  CONSTRAINT purse_pkey PRIMARY KEY (id),
-  CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
-  REFERENCES crre.campaign (id) MATCH SIMPLE
-  ON UPDATE NO ACTION ON DELETE CASCADE,
-  CONSTRAINT purse_id_structure_id_campaign_key UNIQUE (id_structure, id_campaign),
-  CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric)
+    id bigserial NOT NULL,
+    id_structure character varying(36),
+    amount numeric,
+    id_campaign bigint,
+    initial_amount NUMERIC,
+    CONSTRAINT purse_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
+       REFERENCES crre.campaign (id) MATCH SIMPLE
+       ON UPDATE NO ACTION ON DELETE CASCADE,
+    CONSTRAINT purse_id_structure_id_campaign_key UNIQUE (id_structure, id_campaign),
+    CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric)
 );
 
 CREATE TABLE crre.licences
@@ -102,11 +102,12 @@ CREATE TABLE crre.basket_equipment (
     id_type bigint DEFAULT 1,
     owner_id character varying,
     owner_name character varying(255),
+    reassort boolean NOT NULL DEFAULT false,
     PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
-        REFERENCES crre.campaign (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+       REFERENCES crre.campaign (id) MATCH SIMPLE
+       ON UPDATE NO ACTION
+       ON DELETE NO ACTION,
     CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric)
 );
 
@@ -122,14 +123,19 @@ CREATE TABLE crre.order_client_equipment (
     cause_status character varying(300),
     comment TEXT,
     user_id character varying(100) NOT NULL,
+    id_basket bigint,
+    reassort boolean NOT NULL DEFAULT false,
     PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
-        REFERENCES crre.campaign (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+     REFERENCES crre.campaign (id) MATCH SIMPLE
+     ON UPDATE NO ACTION
+     ON DELETE NO ACTION,
     CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric),
-    CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
+    CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') ),
+    CONSTRAINT fk_basket_order FOREIGN KEY (id_basket) REFERENCES crre.basket_order(id)
 );
+
+CREATE INDEX fki_fk_basket_id ON crre.order_client_equipment USING btree (id_basket);
 
 CREATE TABLE crre.order_file (
     id character varying (36) NOT NULL,
@@ -157,6 +163,7 @@ CREATE TABLE crre."order-region-equipment"
     comment text,
     id_project bigint,
     id_order_client_equipment bigint,
+    reassort boolean NOT NULL DEFAULT false,
 
     CONSTRAINT order_region_equipment_pkey PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
@@ -170,4 +177,36 @@ CREATE TABLE crre."order-region-equipment"
     CONSTRAINT constraint_unique_id_order_client_equipment UNIQUE (id_order_client_equipment),
     CONSTRAINT "Check_amount_positive" CHECK (amount::numeric >= 0::numeric) NOT VALID,
     CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
+);
+
+CREATE TABLE crre.project (
+    id integer NOT NULL,
+    title character varying(50),
+
+    CONSTRAINT project_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.basket_order (
+    id integer NOT NULL,
+    name character varying(255),
+    id_structure character varying(255),
+    id_campaign bigint,
+    name_user character varying(255),
+    id_user character varying(255),
+    total double precision,
+    amount bigint,
+    created date,
+
+    CONSTRAINT basket_order_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.students
+(
+    "id_structure" character varying(50),
+    "Seconde" bigint DEFAULT 0,
+    "Premiere" bigint DEFAULT 0,
+    "Terminale" bigint DEFAULT 0,
+    "pro" boolean,
+    PRIMARY KEY (id_structure),
+    CONSTRAINT structure_unique UNIQUE (id_structure)
 );

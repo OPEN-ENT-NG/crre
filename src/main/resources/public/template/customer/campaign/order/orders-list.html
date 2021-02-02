@@ -65,7 +65,7 @@
             </td>
             <td ng-if="tableFields[3].display">
                 <div class="smallTabElem center">
-                    <span ng-bind="order.price | currency"></span>
+                    <span ng-bind="order.price*order.amount | currency"></span>
                 </div>
             </td>
             <td ng-if="tableFields[4].display">

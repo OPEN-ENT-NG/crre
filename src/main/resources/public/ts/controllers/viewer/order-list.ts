@@ -57,18 +57,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             });
         }
 
-/*        $scope.searchByName =  async (name: string) => {
-            if(name != "") {
-                await $scope.basketsOrders.search(name, $scope.campaign.id);
-                formatDisplayedBasketOrders();
-                Utils.safeApply($scope);
-            } else {
-                await $scope.basketsOrders.getMyOrders();
-                formatDisplayedBasketOrders();
-                Utils.safeApply($scope);
-            }
-        }*/
-
         $scope.initPopUpFilters = (filter?:string) => {
             let value = $scope.$eval(filter);
             $scope.showPopUpColumnsGrade = false;
@@ -213,7 +201,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
             if(amount.toString() != 'undefined') {
                 await orderClient.updateAmount(amount);
-                await basketOrder.updateAllAmount();
+                await basketOrder.getAmount();
                 orderClient.amount = amount;
                 $scope.$apply()
             }
@@ -222,9 +210,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         $scope.updateReassort = async (orderClient: OrderClient) => {
             orderClient.reassort = !orderClient.reassort;
             await orderClient.updateReassort();
-            /*            let basket = new BasketOrder();
-                        basket.setIdBasket(orderClient.id_basket);
-                        await basket.updateReassort();*/
             $scope.$apply()
         };
 
@@ -261,52 +246,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                     : toasts.confirm('crre.requestEquipment.delete.confirm');
             }
         };
-
-        $scope.switchOrderClient = async (order: OrderClient, index: number, to: string) =>{
-            let ordersJson = await $scope.getOrdersRanksSwitchedToJson( index, to);
-            await $scope.ordersClient.updateOrderRanks(ordersJson,order.id_structure, order.id_campaign);
-            $scope.ordersClient.all = _.sortBy($scope.ordersClient.all, (order)=> order.rank != null ? order.rank : $scope.ordersClient.all.length );
-            Utils.safeApply($scope);
-        };
-
-        $scope.getOrdersRanksSwitchedToJson = (index:number, to:string )=>{
-            let rang = to == 'up'? -1 : +1;
-            $scope.ordersClient.all[index].rank = index + rang;
-            $scope.ordersClient.all[index + rang].rank = $scope.ordersClient.all[index].rank - rang ;
-            return [{
-                id:  $scope.ordersClient.all[index].id,
-                rank: $scope.ordersClient.all[index].rank
-            },{
-                id: $scope.ordersClient.all[index + rang].id,
-                rank: $scope.ordersClient.all[index + rang].rank
-            }]
-        };
-
-        $scope.switchProjectClient = async (index: number, to: string) =>{
-            let projectOrderJson = await $scope.getProjectRanksSwitchedToJson(index, to);
-            await $scope.ordersClient.updateReference(projectOrderJson, $scope.ordersClient.all[0].id_campaign,
-                $scope.ordersClient.projects.all[index].id, $scope.ordersClient.all[0].id_structure);
-            $scope.ordersClient.projects.all = _.sortBy($scope.ordersClient.projects.all, (project)=> project.preference != null
-                ? project.preference
-                : $scope.ordersClient.projects.all.length );
-            Utils.safeApply($scope);
-        };
-
-        $scope.getProjectRanksSwitchedToJson = (index:number, to:string )=>{
-            let rang = to == 'up'? -1 : +1;
-            $scope.ordersClient.projects.all[index].preference = index + rang;
-            $scope.ordersClient.projects.all[index + rang].preference = $scope.ordersClient.projects.all[index].preference - rang ;
-            return [{
-                id:  $scope.ordersClient.projects.all[index].id,
-                preference: $scope.ordersClient.projects.all[index].preference
-            },{
-                id:  $scope.ordersClient.projects.all[index + rang].id,
-                preference: $scope.ordersClient.projects.all[index + rang].preference
-            }]
-        };
-
-
-
 
         // Functions specific for baskets interactions
 
