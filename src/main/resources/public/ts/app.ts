@@ -106,8 +106,7 @@ routes.define(($routeProvider) => {
 
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) &&
-    !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator) &&
-    !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator)) {
+    !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
             .when('/campaign/:idCampaign/order', {
                 action: 'campaignOrder'

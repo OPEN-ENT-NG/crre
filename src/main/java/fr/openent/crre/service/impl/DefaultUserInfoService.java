@@ -12,7 +12,7 @@ import io.vertx.core.json.JsonObject;
 public class DefaultUserInfoService implements UserInfoService {
 
 
-    private Neo4j neo4j;
+    private final Neo4j neo4j;
 
     public DefaultUserInfoService(){
         this.neo4j = Neo4j.getInstance();

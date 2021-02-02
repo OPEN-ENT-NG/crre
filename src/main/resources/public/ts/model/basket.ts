@@ -147,13 +147,7 @@ export class Baskets extends Selection<Basket> {
             let { data } = await http.get(`/crre/basket/${idCampaign}/${idStructure}`);
             this.all = Mix.castArrayAs(Basket, data);
             this.all.map((basket) => {
-                basket.equipment = Mix.castAs(Equipment, JSON.parse(basket.equipment.toString())[0]);
-                basket.options = basket.options.toString() !== '[null]' && basket.options !== null
-                    ? Mix.castArrayAs(EquipmentOption, JSON.parse(basket.options.toString()))
-                    : [];
-                basket.equipment.options = basket.options;
-                basket.files = (basket.files.toString !== '[null]') ? Utils.parsePostgreSQLJson(basket.files) : [];
-                basket.equipment.options.map((option) => option.selected = true);
+                basket.equipment = Mix.castAs(Equipment, basket.equipment);
             });
         } catch (e) {
             toasts.warning('crre.basket.sync.err');

@@ -278,7 +278,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
             let totalPrice = 0;
             orders.forEach(order => {
-                totalPrice += order.amount * order.price_single_ttc;
+                totalPrice += order.price;
             });
             return totalPrice.toFixed(roundNumber);
         };

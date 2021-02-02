@@ -18,7 +18,7 @@ import org.entcore.common.sql.SqlResult;
  */
 public class DefaultStructureService extends SqlCrudService implements StructureService {
 
-    private Neo4j neo4j;
+    private final Neo4j neo4j;
     public DefaultStructureService(String schema){
         super(schema, "");
         this.neo4j = Neo4j.getInstance();
@@ -85,26 +85,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             String s = j.getString("s.id");
             Integer count = j.getInteger("count(u)");
             switch (j.getString("u.level")) {
-                /*case "6EME": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"6eme\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "5EME": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"5eme\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "4EME (NC 4E AES)": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"4eme\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "3EME": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"3eme\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }*/
                 case "SECONDE GENERALE & TECHNO YC BT": {
                     query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = false WHERE id_structure = ?; ";
                     params.add(count).add(s);

@@ -208,16 +208,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getOneOrderRegion(int idOrder, Handler<Either<String, JsonObject>> handler) {
         String query = "" +
                 "SELECT ore.*, " +
-                "       ore.price AS price_single_ttc, " +
-                "       to_json(contract.*) contract, " +
-                "       to_json(ct.*) contract_type, " +
                 "       to_json(campaign.*) campaign, " +
                 "       to_json(tt.*) AS title, " +
                 "       to_json(oce.*) AS order_parent " +
                 "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
-                "LEFT JOIN  " + Crre.crreSchema + ".contract ON ore.id_contract = contract.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".contract_type ct ON ct.id = contract.id_contract_type " +
                 "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
                 "INNER JOIN  " + Crre.crreSchema + ".title AS tt ON tt.id = prj.id_title " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
@@ -225,8 +220,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "WHERE ore.status = 'IN PROGRESS' AND ore.id = ? " +
                 "GROUP BY ( prj.id, " +
                 "          ore.id, " +
-                "          contract.id, " +
-                "          ct.id, " +
                 "          campaign.id, " +
                 "          tt.id, " +
                 "          oce.id )";
@@ -238,7 +231,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getAllOrderRegion(Handler<Either<String, JsonArray>> handler) {
         String query = "" +
                 "SELECT ore.*, " +
-                "       ore.price AS price_single_ttc, " +
                 "       to_json(campaign.*) campaign, " +
                 "       p.title AS title, " +
                 "       to_json(oce.*) AS order_parent, " +
@@ -259,7 +251,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getAllOrderRegionByProject(int idProject, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String query = "" +
                 "SELECT ore.*, " +
-                "       ore.price AS price_single_ttc, " +
                 "       to_json(campaign.*) campaign, " +
                 "       campaign.name AS campaign_name, " +
                 "       p.title AS title, " +
@@ -280,7 +271,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String query = "" +
                 "SELECT ore.*, " +
-                "       ore.price AS price_single_ttc, " +
                 "       to_json(campaign.*) campaign, " +
                 "       campaign.name AS campaign_name, " +
                 "       p.title AS title, " +

@@ -18,10 +18,8 @@ import {
     OrdersClient, OrderUtils,
     StructureGroups,
     Structures,
-    Supplier,
     Suppliers,
     Taxes,
-    Userbook,
     Utils, OrdersRegion, Filters,
 } from '../model';
 import {Mix} from "entcore-toolkit";
@@ -509,7 +507,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.initOrdersForPreview = async (orders: OrderClient[]) => {
-            $scope.orderToSend = new OrdersClient(Mix.castAs(Supplier, orders[0].supplier));
+            $scope.orderToSend = new OrdersClient();
             $scope.orderToSend.all = Mix.castArrayAs(OrderClient, orders);
             $scope.orderToSend.preview = await $scope.orderToSend.getPreviewData();
             $scope.orderToSend.preview.index = 0;

@@ -221,44 +221,6 @@ public class EquipmentController extends ControllerHelper {
                         equipment)));
     }
 
-    @Put("/equipment/:id")
-    @ApiDoc("Update an equipment")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    @Override
-    public void update(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "equipment",
-                equipment -> {
-                    try {
-                        final Integer id = Integer.parseInt(request.params().get("id"));
-                        equipmentService.updateEquipment(id, equipment,
-                                eventUpdateEquipment -> {
-                                    if(eventUpdateEquipment.isRight()){
-                                        final Integer optionsCreate =  equipment
-                                                .getJsonArray("optionsCreate").size();
-                                        equipmentService.prepareUpdateOptions( optionsCreate , id,
-                                                resultObject -> {
-                                                    if(resultObject.isRight()) {
-                                                        equipmentService.updateOptions( id, equipment,
-                                                                resultObject.right().getValue(),
-                                                                Logging.defaultResponseHandler(eb,
-                                                                        request,
-                                                                        Contexts.EQUIPMENT.toString(),
-                                                                        Actions.UPDATE.toString(),
-                                                                        request.params().get("id"),
-                                                                        equipment) );
-                                                    }else {
-                                                        log.error("An error occurred when preparing options update");
-                                                    }
-                                                });
-                                    }
-                                });
-                    } catch (ClassCastException e) {
-                        log.error("An error occurred when casting equipment id", e);
-                    }
-                });
-    }
-
     @Put("/equipments/:status")
     @ApiDoc("Update equipments to provided status")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

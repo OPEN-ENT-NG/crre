@@ -106,12 +106,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 "tax.value tax_amount, editor.name as editor_name, STRING_AGG ( DISTINCT grade.name,', ') grade_name, " +
                 "STRING_AGG ( DISTINCT subject.name,', ') subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
                 "FROM " + Crre.crreSchema + ".equipment e " +
-                "LEFT JOIN ( " +
-                "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
-                "FROM " + Crre.crreSchema + ".equipment_option option " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
-                ") opts ON opts.id_equipment = e.id " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
                 "LEFT JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
                 "LEFT JOIN " + Crre.crreSchema + ".editor ON (editor.id = e.id_editor) " +
@@ -205,12 +199,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     @Override
     public void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT e.*, tax.value tax_amount, grade.name as grade_name, subject.name as subject_name, array_to_json(array_agg(DISTINCT opts)) as options " +
-                "FROM " + Crre.crreSchema + ".equipment e LEFT JOIN ( " +
-                "SELECT option.*, equipment.name, equipment.price, tax.value tax_amount " +
-                "FROM " + Crre.crreSchema + ".equipment_option option " +
-                "INNER JOIN " + Crre.crreSchema + ".equipment ON (option.id_option = equipment.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = equipment.id_tax " +
-                ") opts ON opts.id_equipment = e.id " +
+                "FROM " + Crre.crreSchema + ".equipment e " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
                 "INNER JOIN " + Crre.crreSchema + ".tax on tax.id = e.id_tax " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_equipment_grade ON (rel_equipment_grade.id_equipment = e.id) " +
@@ -246,10 +235,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                     JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
                             .add(getEquipmentCreationStatement(id, equipment));
 
-                    JsonArray options = equipment.getJsonArray("optionsCreate");
-                    for (int j = 0; j < options.size(); j++) {
-                        statements.add(getEquipmentOptionRelationshipStatement(id, options.getJsonObject(j)));
-                    }
                     sql.transaction(statements, event1 -> handler.handle(SqlQueryUtils.getTransactionHandler(event1, id)));
                 } catch (ClassCastException e) {
                     LOGGER.error("An error occurred when casting tags ids", e);
@@ -380,49 +365,9 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
 
         sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event, id)));
     }
-    @Override
-    public void updateOptions(final Number id, JsonObject equipment,  JsonObject  resultsObject,
-                              final Handler<Either<String, JsonObject>> handler){
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray deletedOptions  = equipment.getJsonArray("deletedOptions");
-        JsonArray optionsCreate =  equipment.getJsonArray("optionsCreate");
-        JsonArray optionsUpdate =  equipment.getJsonArray("optionsUpdate");
 
-        if( null != deletedOptions && deletedOptions.size() != 0 ) {
-            statements.add(getEquipmentOptionsBasketRelationshipDeletion( deletedOptions));
-            statements.add(getEquipmentOptionsRelationshipDeletion(deletedOptions));
-        }
-
-        for (int j = 0; j < optionsCreate.size(); j++) {
-            JsonObject option = optionsCreate.getJsonObject(j);
-            statements.add(createEquipmentOptionRelationshipStatement(id, option, resultsObject.getInteger("id"+j) ));
-            if ( option.getBoolean("required") &&
-                    resultsObject.getJsonArray("id_basket_equipments").size() > 0) {
-                statements.add(addRequiredOptionToBasketStatement(
-                        resultsObject.getJsonArray("id_basket_equipments"),
-                        resultsObject.getInteger("id"+j)));
-            }
-        }
-        for (int i = 0; i < optionsUpdate.size(); i++) {
-            JsonObject option = optionsUpdate.getJsonObject(i);
-            statements.add(updateEquipmentOptionRelationshipStatement(option));
-            if ( option.getBoolean("required") &&
-                    resultsObject.getJsonArray("id_basket_equipments").size() > 0) {
-                statements.add(addRequiredOptionToBasketStatement(
-                        resultsObject.getJsonArray("id_basket_equipments"),
-                        option.getInteger("id")
-                ));
-            }
-        }
-        if (statements.size() > 0) {
-            sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event, id)));
-        } else {
-            handler.handle(new Either.Right<>(new JsonObject().put("id", id)));
-        }
-    }
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                .add(getEquipmentsOptionsRelationshipDeletion(ids))
                 .add(getEquipmentsDeletion(ids));
 
         sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event,ids.get(0))));
@@ -440,18 +385,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         }
 
         sql.prepared(query, params, SqlResult.validRowsResultHandler(handler));
-    }
-
-    @Override
-    public void prepareUpdateOptions (Number optionCreate, Number idEquipment,
-                                      final Handler<Either<String, JsonObject>> handler){
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-        statements.add(getBasketIds(idEquipment));
-        for(int i = 0 ; i < (int) optionCreate ; i++) {
-            statements.add(getOptionsSequences(i));
-        }
-
-        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event)));
     }
 
     @Override
@@ -514,13 +447,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
                 .put(VALUES, new fr.wseduc.webutils.collections.JsonArray().add(id))
                 .put(ACTION, PREPARED);
     }
-    private static JsonObject getOptionsSequences(int i) {
-        String query = "select nextval('" + Crre.crreSchema + ".equipment_option_id_seq') as id"+i;
-        return new JsonObject()
-                .put(STATEMENT, query)
-                .put(VALUES, new fr.wseduc.webutils.collections.JsonArray())
-                .put(ACTION, PREPARED);
-    }
     /**
      * Returns an equipment creation statement
      *
@@ -555,105 +481,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
     /**
-     * Create an option for an equipment
-     * @param id of the equipment
-     * @param option
-     * @return Insert statement
-     */
-    private JsonObject createEquipmentOptionRelationshipStatement(Number id, JsonObject option, Number optionId) {
-        String insertTagEquipmentRelationshipQuery =
-                "INSERT INTO " + Crre.crreSchema + ".equipment_option" +
-                        "(id, amount, required, id_equipment, id_option) " +
-                        "VALUES (?, ?, ?, ?, ?);";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(optionId)
-                .add(option.getInteger("amount"))
-                .add(option.getBoolean("required"))
-                .add(id)
-                .add(option.getInteger("id_option"));
-
-
-        return new JsonObject()
-                .put(STATEMENT, insertTagEquipmentRelationshipQuery)
-                .put(VALUES, params)
-                .put(ACTION, PREPARED);
-    }
-    /**
-     * Create an option for an equipment
-     * @param id of the equipment
-     * @param option
-     * @return Insert statement
-     */
-    private JsonObject getEquipmentOptionRelationshipStatement(Number id, JsonObject option) {
-        String insertTagEquipmentRelationshipQuery =
-                "INSERT INTO " + Crre.crreSchema + ".equipment_option" +
-                        "( amount, required, id_equipment, id_option) " +
-                        "VALUES (?, ?, ?, ?);";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(option.getInteger("amount"))
-                .add(option.getBoolean("required"))
-                .add(id)
-                .add(option.getInteger("id_option"));
-
-
-        return new JsonObject()
-                .put(STATEMENT, insertTagEquipmentRelationshipQuery)
-                .put(VALUES, params)
-                .put(ACTION, PREPARED);
-    }
-
-
-    /**
-     * Update an option for an equipment
-     * @param option the option
-     * @return Insert statement
-     */
-    private static JsonObject updateEquipmentOptionRelationshipStatement( JsonObject option) {
-        String insertTagEquipmentRelationshipQuery =
-                "UPDATE " + Crre.crreSchema + ".equipment_option " +
-                        "SET amount=?, required=?, id_option = ?" +
-                        "WHERE id=?;";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(option.getInteger("amount"))
-                .add(option.getBoolean("required"))
-                .add(option.getInteger("id_option"))
-                .add(option.getInteger("id"));
-
-
-        return new JsonObject()
-                .put(STATEMENT, insertTagEquipmentRelationshipQuery)
-                .put(VALUES, params)
-                .put(ACTION, PREPARED);
-    }
-
-    /**
-     * add a required option for all equipments in a basket
-     * @return Insert statement
-     */
-    private static JsonObject addRequiredOptionToBasketStatement(JsonArray idsBasket, Number optionId) {
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder insertQuery = new StringBuilder().append("INSERT INTO ").append(Crre.crreSchema).append(".basket_option( ")
-                .append(" id_basket_equipment, id_option) " )
-                .append( " VALUES ");
-        for (int i=0; i<idsBasket.size(); i++){
-            insertQuery.append("( ?, ?)");
-            insertQuery.append( i == idsBasket.size()-1 ? "; " : ", ");
-
-            params.add((idsBasket.getJsonArray(i)).getInteger(0))
-                    .add( optionId );
-        }
-
-
-
-        return new JsonObject()
-                .put(STATEMENT, insertQuery.toString())
-                .put(VALUES, params)
-                .put(ACTION, PREPARED);
-    }
-    /**
      * Returns the update statement.
      *
      * @param id        resource Id
@@ -685,56 +512,6 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         return new JsonObject()
                 .put(STATEMENT, query)
                 .put(VALUES, params)
-                .put(ACTION, PREPARED);
-    }
-
-    /**
-     * Delete options of an equipment
-     * @return Delete statement
-     */
-    private JsonObject getEquipmentOptionsRelationshipDeletion(JsonArray deletedOptions) {
-        JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "DELETE FROM " + Crre.crreSchema + ".equipment_option " +
-                " WHERE id in "+ Sql.listPrepared(deletedOptions.getList());
-        return addParamsDeletion(deletedOptions, value, query);
-    }
-    /**
-     * Delete options of an equipment from baskets
-     * @return Delete statement
-     */
-    private JsonObject getEquipmentOptionsBasketRelationshipDeletion(JsonArray deletedOptions) {
-        JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "DELETE FROM " + Crre.crreSchema + ".basket_option " +
-                " WHERE id_option in "+ Sql.listPrepared(deletedOptions.getList());
-        return addParamsDeletion(deletedOptions, value, query);
-    }
-
-    private JsonObject addParamsDeletion(JsonArray deletedOptions, JsonArray value, String query) {
-        for (int i = 0; i < deletedOptions.size(); i++) {
-            value.add((deletedOptions.getJsonObject(i)).getInteger("id"));
-        }
-        return new JsonObject()
-                .put(STATEMENT, query)
-                .put(VALUES, value)
-                .put(ACTION, PREPARED);
-    }
-
-    /**
-     * Delete options of  equipments
-     * @param ids : equipment ids
-     * @return Delete statement
-     */
-    private JsonObject getEquipmentsOptionsRelationshipDeletion(List<Integer> ids) {
-        String query = "DELETE FROM " + Crre.crreSchema + ".equipment_option " +
-                " WHERE id_equipment in " +
-                Sql.listPrepared(ids.toArray());
-        JsonArray value = new fr.wseduc.webutils.collections.JsonArray();
-        for (Integer id : ids) {
-            value.add(id);
-        }
-        return new JsonObject()
-                .put(STATEMENT, query)
-                .put(VALUES, value)
                 .put(ACTION, PREPARED);
     }
 

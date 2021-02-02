@@ -33,7 +33,6 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -267,7 +266,7 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+            if (request.params().contains("q") && !request.params().get("q").trim().equals("")) {
                 try {
                     String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
                     orderRegionService.searchName(query, equipments -> {

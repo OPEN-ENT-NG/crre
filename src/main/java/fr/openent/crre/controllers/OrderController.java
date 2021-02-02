@@ -2,7 +2,6 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.export.ExportTypes;
-import fr.openent.crre.export.validOrders.PDF_OrderHElper;
 import fr.openent.crre.helpers.ExportHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
@@ -21,7 +20,10 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -35,14 +37,19 @@ import org.entcore.common.user.UserUtils;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
-import java.text.*;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
-import static fr.openent.crre.utils.OrderUtils.*;
+import static fr.openent.crre.utils.OrderUtils.retrieveUaiNameStructure;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Integer.parseInt;
@@ -53,14 +60,9 @@ public class OrderController extends ControllerHelper {
     private final Storage storage;
     private final OrderService orderService;
     private final StructureService structureService;
-    private final SupplierService supplierService;
-    private final ContractService contractService;
-    private final AgentService agentService;
     private final ExportService exportService;
 
     public static final String UTF8_BOM = "\uFEFF";
-
-    private static final DecimalFormat decimals = new DecimalFormat("0.00");
 
     public OrderController (Storage storage, Vertx vertx, JsonObject config, EventBus eb) {
         this.storage = storage;
@@ -68,9 +70,6 @@ public class OrderController extends ControllerHelper {
         EmailSender emailSender = emailFactory.getSender();
         this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment", emailSender);
         this.structureService = new DefaultStructureService(Crre.crreSchema);
-        this.supplierService = new DefaultSupplierService(Crre.crreSchema, "supplier");
-        this.contractService = new DefaultContractService(Crre.crreSchema, "contract");
-        this.agentService = new DefaultAgentService(Crre.crreSchema, "agent");
         exportService = new DefaultExportServiceService(storage);
     }
 
@@ -121,24 +120,7 @@ public class OrderController extends ControllerHelper {
                 orderService.getOrdersGroupByValidationNumber(statusList, event -> {
                     if (event.isRight()) {
                         final JsonArray orders = event.right().getValue();
-                        orderService.getOrdersDetailsIndexedByValidationNumber(statusList, event1 -> {
-                            if (event1.isRight()) {
-                                JsonArray equipments = event1.right().getValue();
-                                JsonObject mapNumberEquipments = initNumbersMap(orders);
-                                mapNumbersEquipments(equipments, mapNumberEquipments);
-                                JsonObject order;
-                                for (int i = 0; i < orders.size(); i++) {
-                                    order = orders.getJsonObject(i);
-                                    order.put("price",
-                                            decimals.format(
-                                                    roundWith2Decimals(getTotalOrder(mapNumberEquipments.getJsonArray(order.getString("number_validation")))))
-                                                    .replace(".", ","));
-                                }
-                                renderJson(request, orders);
-                            } else {
-                                badRequest(request);
-                            }
-                        });
+                        renderJson(request, orders);
                     } else {
                         badRequest(request);
                     }
@@ -287,52 +269,6 @@ public class OrderController extends ControllerHelper {
             }
         }
         return map;
-    }
-
-    /**
-     * Map equipments with numbers validation
-     * @param equipments Equipments list
-     * @param numbers Numbers maps
-     * @return Map containing number validations as key and an array containing equipments as value
-     */
-    private JsonObject mapNumbersEquipments (JsonArray equipments, JsonObject numbers) {
-        JsonObject equipment;
-        JsonArray equipmentList;
-        for (int i = 0; i < equipments.size(); i++) {
-            equipment = equipments.getJsonObject(i);
-            equipmentList = numbers.getJsonArray(equipment.getString("number_validation"));
-            numbers.put(equipment.getString("number_validation"), equipmentList.add(equipment));
-        }
-        return numbers;
-    }
-
-    @Delete("/order/:idOrder/:idStructure/:idCampaign")
-    @ApiDoc("Delete a order item")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
-    public void deleteOrder(final HttpServerRequest request){
-        try {
-            final Integer idOrder = Integer.parseInt(request.params().get("idOrder"));
-            final String idStructure = request.params().get("idStructure");
-            orderService.deletableOrder(idOrder, deletableEvent -> {
-                if (deletableEvent.isRight() && deletableEvent.right().getValue().getInteger("count") == 0) {
-                    orderService.orderForDelete(idOrder, order -> {
-                        if (order.isRight()) {
-                            UserUtils.getUserInfos(eb, request, user -> {
-                                orderService.deleteOrder(idOrder, order.right().getValue(), idStructure, user,
-                                        Logging.defaultResponseHandler(eb, request, Contexts.ORDER.toString(),
-                                                Actions.DELETE.toString(), "idOrder", order.right().getValue()));
-                            });
-                        }
-                    });
-                } else {
-                    badRequest(request);
-                }
-            });
-        } catch (ClassCastException e){
-            log.error("An error occurred when casting order id", e);
-            badRequest(request);
-        }
     }
 
     @Get("/orders/exports")
@@ -500,67 +436,6 @@ public class OrderController extends ControllerHelper {
 
     }
 
-
-    private void logSendingOrder(JsonArray ids, final HttpServerRequest request) {
-        orderService.getOrderByValidatioNumber(ids, event -> {
-            if (event.isRight()) {
-                JsonArray orders = event.right().getValue();
-                JsonObject order;
-                for (int i = 0; i < orders.size(); i++) {
-                    order = orders.getJsonObject(i);
-                    Logging.insert(eb, request, Contexts.ORDER.toString(), Actions.UPDATE.toString(),
-                            order.getInteger("id").toString(), order);
-                }
-            }
-        });
-    }
-
-
-
-    private void sentOrders(HttpServerRequest request,
-                            final JsonArray ids, final String engagementNumber, final Number programId, final String dateCreation,
-                            final String orderNumber) {
-/*        programService.getProgramById(programId, (Handler<Either<String, JsonObject>>) programEvent -> {
-            if (programEvent.isRight()) {
-                JsonObject program = programEvent.right().getValue();
-                orderService.updateStatusToSent(ids.getList(), "SENT", engagementNumber, program.getString("name"),
-                        dateCreation, orderNumber,  new Handler<Either<String, JsonObject>>() {
-                            @Override
-                            public void handle(Either<String, JsonObject> event) {
-                                if (event.isRight()) {
-                                    logSendingOrder(ids,request);
-                                    ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_DURING_VALIDATION, "_BC");
-                                } else {
-                                    badRequest(request);
-                                }
-                            }
-                        });
-            } else {
-                badRequest(request);
-            }
-        });*/
-        badRequest(request);
-    }
-    @Put("/orders/sent")
-    @ApiDoc("send orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void sendOrders (final HttpServerRequest request){
-        RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
-            final JsonArray ids = orders.getJsonArray("ids");
-            final String nbrBc = orders.getString("bc_number");
-            final String nbrEngagement = orders.getString("engagement_number");
-            final String dateGeneration = orders.getString("dateGeneration");
-            Number supplierId = orders.getInteger("supplierId");
-            final Number programId = orders.getInteger("id_program");
-            getOrdersData(request, nbrBc, nbrEngagement, dateGeneration, supplierId, ids,
-                    data -> {
-                        data.put("print_order", true);
-                        sentOrders(request,ids,nbrEngagement,programId,dateGeneration,nbrBc);
-                    });
-        });
-    }
-
     @Put("/orders/inprogress")
     @ApiDoc("send orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -570,76 +445,6 @@ public class OrderController extends ControllerHelper {
             final JsonArray ids = orders.getJsonArray("ids");
             orderService.setInProgress(ids, defaultResponseHandler(request));
         });
-    }
-
-    @Get("/orders/valid/export/:file")
-    @ApiDoc("Export valid orders based on validation number and type file")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void csvExport(final HttpServerRequest request) {
-        if (request.params().contains("number_validation")) {
-            List<String> validationNumbers = request.params().getAll("number_validation");
-            switch (request.params().get("file")) {
-                case "structure_list": {
-                    exportStructuresList(request);
-                    break;
-                }
-                case "certificates": {
-                    exportDocuments(request, false, true, validationNumbers);
-                    break;
-                }
-                case "order": {
-                    exportDocuments(request, true, false, validationNumbers);
-                    break;
-                }
-                default: {
-                    badRequest(request);
-                }
-            }
-        } else {
-            badRequest(request);
-        }
-    }
-
-    private void exportDocuments(final HttpServerRequest request, final Boolean printOrder,
-                                 final Boolean printCertificates, final List<String> validationNumbers) {
-        if(printOrder){
-            ExportHelper.makeExport(request,eb,exportService, Crre.ORDERS,  Crre.PDF, ExportTypes.BC_BEFORE_VALIDATION, "_BC");
-        }else {
-            supplierService.getSupplierByValidationNumbers(new fr.wseduc.webutils.collections.JsonArray(validationNumbers), event -> {
-                if (event.isRight()) {
-                    JsonObject supplier = event.right().getValue();
-                    getOrdersData(request, "", "", "", supplier.getInteger("id"), new fr.wseduc.webutils.collections.JsonArray(validationNumbers),
-                            data -> {
-                                data.put("print_certificates", printCertificates);
-                                new PDF_OrderHElper(eb,vertx,config).generatePDF(null, request, data,
-                                        "BC_CSF.xhtml",
-                                        pdf -> request.response()
-                                                .putHeader("Content-Type", "application/pdf; charset=utf-8")
-                                                .putHeader("Content-Disposition", "attachment; filename="
-                                                        + generateExportName(validationNumbers, "" +
-                                                        (printCertificates ? "CSF" : "")) + ".pdf")
-                                                .end(pdf)
-                                );
-                            });
-                } else {
-                    log.error("An error occurred when collecting supplier Id", new Throwable(event.left().getValue()));
-                    badRequest(request);
-                }
-            });
-        }
-    }
-
-    private String generateExportName(List<String> validationNumbers, String prefix) {
-        StringBuilder exportName = new StringBuilder(prefix);
-        for (String validationNumber : validationNumbers) {
-            exportName.append("_").append(validationNumber);
-        }
-        return exportName.toString();
-    }
-
-    private void exportStructuresList(final HttpServerRequest request) {
-        ExportHelper.makeExport(request, eb, exportService, Crre.ORDERS,  Crre.XLSX,ExportTypes.LIST_LYCEE, "_list_bdc");
     }
 
     @Delete("/orders/valid")
@@ -715,64 +520,12 @@ public class OrderController extends ControllerHelper {
         });
     }
 
-    private void retrieveContract(final HttpServerRequest request, JsonArray ids,
-                                  final Handler<JsonObject> handler) {
-        contractService.getContract(ids, event -> {
-            if (event.isRight() && event.right().getValue().size() == 1) {
-                handler.handle(event.right().getValue().getJsonObject(0));
-            } else {
-                log.error("An error occured when collecting contract data");
-                badRequest(request);
-            }
-        });
-    }
-
-    private void retrieveStructures(final HttpServerRequest request, JsonArray ids,
-                                    final Handler<JsonObject> handler) {
-        new PDF_OrderHElper(eb,vertx,config).retrieveStructures(null, request,ids,handler);
-    }
-
-    private void retrieveOrderData(final HttpServerRequest request, JsonArray ids,
-                                   final Handler<JsonObject> handler) {
-        orderService.getOrders(ids, null, true, false, event -> {
-            if (event.isRight()) {
-                JsonObject order = new JsonObject();
-                JsonArray orders = formatOrders(event.right().getValue());
-                order.put("orders", orders);
-                Double sumWithoutTaxes = getSumWithoutTaxes(orders);
-                Double taxTotal = getTaxesTotal(orders);
-                order.put("sumLocale",
-                        getReadableNumber(roundWith2Decimals(sumWithoutTaxes)));
-                order.put("totalTaxesLocale",
-                        getReadableNumber(roundWith2Decimals(taxTotal)));
-                order.put("totalPriceTaxeIncludedLocal",
-                        getReadableNumber(roundWith2Decimals(taxTotal + sumWithoutTaxes)));
-                handler.handle(order);
-            } else {
-                log.error("An error occurred when retrieving order data");
-                badRequest(request);
-            }
-        });
-    }
-
     public static String getReadableNumber(Double number) {
         DecimalFormat instance = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.FRENCH);
         DecimalFormatSymbols symbols = instance.getDecimalFormatSymbols();
         symbols.setCurrencySymbol("");
         instance.setDecimalFormatSymbols(symbols);
         return instance.format(number);
-    }
-
-    private Double getTotalOrder(JsonArray orders) {
-        double sum = 0D;
-        JsonObject order;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            sum += (Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"))
-                    * (Double.parseDouble(order.getString("tax_amount")) / 100 + 1));
-        }
-
-        return sum;
     }
 
     public static JsonArray formatOrders(JsonArray orders) {
@@ -811,115 +564,6 @@ public class OrderController extends ControllerHelper {
     public static Double roundWith2Decimals(Double numberToRound) {
         BigDecimal bd = new BigDecimal(numberToRound);
         return bd.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
-    }
-
-
-    @Get("/orders/preview")
-    @ApiDoc("Get orders preview data")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void getOrdersPreviewData(final HttpServerRequest request) {
-        MultiMap params = request.params();
-        if (!params.contains("ids") && !params.contains("bc_number")
-                && !params.contains("engagement_number") && !params.contains("dateGeneration")
-                && !params.contains("supplierId")) {
-            badRequest(request);
-        } else {
-            final List<String> ids = params.getAll("ids");
-            final String nbrBc = params.get("bc_number");
-            final String nbrEngagement = params.get("engagement_number");
-            final String dateGeneration = params.get("dateGeneration");
-            Number supplierId = Integer.parseInt(params.get("supplierId"));
-
-            getOrdersData(request, nbrBc, nbrEngagement, dateGeneration, supplierId,
-                    new fr.wseduc.webutils.collections.JsonArray(ids), data -> renderJson(request, data));
-        }
-    }
-
-    private void getOrdersData(final HttpServerRequest request, final String nbrBc,
-                               final String nbrEngagement, final String dateGeneration,
-                               final Number supplierId, final JsonArray ids,
-                               final Handler<JsonObject> handler) {
-        final JsonObject data = new JsonObject();
-        retrieveManagementInfo(request, ids, supplierId,
-                managmentInfo -> retrieveStructures(request, ids,
-                        structures -> retrieveOrderData(request, ids,
-                                order -> retrieveOrderDataForCertificate(request, structures,
-                                        certificates -> retrieveContract(request, ids,
-                                                contract -> retrieveOrderParam(ids,
-                                                        event -> {
-                                                            putInfosInData(nbrBc, nbrEngagement, data, managmentInfo, order, certificates, contract);
-                                                            data.put("date_generation", dateGeneration);
-                                                            if(nbrBc.equals("")){
-                                                                data.put("nbr_bc",  event.getString("order_number"))
-                                                                        .put("nbr_engagement", event.getString("engagement_number"));
-                                                            }
-                                                            handler.handle(data);
-                                                        }))))));
-    }
-
-    private void retrieveOrderParam(JsonArray validationNumbers, Handler<JsonObject> jsonObjectHandler) {
-        orderService.getOrderBCParams(validationNumbers, event -> {
-            if(event.isRight()) {
-                jsonObjectHandler.handle(event.right().getValue());
-            }
-
-        });
-    }
-
-    private void retrieveOrderDataForCertificate(final HttpServerRequest request, final JsonObject structures,
-                                                 final Handler<JsonArray> handler) {
-        JsonObject structure;
-        String structureId;
-        Iterator<String> structureIds = structures.fieldNames().iterator();
-        final JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
-        while (structureIds.hasNext()) {
-            structureId = structureIds.next();
-            structure = structures.getJsonObject(structureId);
-            orderService.getOrders(structure.getJsonArray("orderIds"), structureId, false, true,
-                    event -> {
-                        if (event.isRight() && event.right().getValue().size() > 0) {
-                            JsonObject order = event.right().getValue().getJsonObject(0);
-                            result.add(new JsonObject()
-                                    .put("id_structure", order.getString("id_structure"))
-                                    .put("structure", structures.getJsonObject(order.getString("id_structure"))
-                                            .getJsonObject("structureInfo"))
-                                    .put("orders", formatOrders(event.right().getValue()))
-                            );
-                            if (result.size() == structures.size()) {
-                                handler.handle(result);
-                            }
-                        } else {
-                            log.error("An error occurred when collecting orders for certificates");
-                            badRequest(request);
-                        }
-                    });
-        }
-    }
-
-    private void retrieveManagementInfo(final HttpServerRequest request, JsonArray ids,
-                                        final Number supplierId, final Handler<JsonObject> handler) {
-        agentService.getAgentByOrderIds(ids, user -> {
-            if (user.isRight()) {
-                final JsonObject userObject = user.right().getValue();
-                supplierService.getSupplier(supplierId.toString(), supplier -> {
-                    if (supplier.isRight()) {
-                        JsonObject supplierObject = supplier.right().getValue();
-                        handler.handle(
-                                new JsonObject()
-                                        .put("userInfo", userObject)
-                                        .put("supplierInfo", supplierObject)
-                        );
-                    } else {
-                        log.error("An error occurred when collecting supplier data");
-                        badRequest(request);
-                    }
-                });
-            } else {
-                log.error("An error occured when collecting user information");
-                badRequest(request);
-            }
-        });
     }
 
     @Put("/orders/done")
@@ -1050,23 +694,5 @@ public class OrderController extends ControllerHelper {
             log.error(" An error occurred when casting order id", e);
         }
 
-    }
-
-    @Get("/orderClient/:id/order/progress")
-    @ApiDoc("get order by id order client ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void getOneOrderProgress(HttpServerRequest request) {
-        int idOrder = Integer.parseInt(request.getParam("id"));
-        orderService.getOneOrderClient(idOrder,"IN PROGRESS" ,defaultResponseHandler(request));
-    }
-
-    @Get("/orderClient/:id/order/waiting")
-    @ApiDoc("get order by id order client ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
-    public void getOneOrderWaiting(HttpServerRequest request) {
-        int idOrder = Integer.parseInt(request.getParam("id"));
-        orderService.getOneOrderClient(idOrder,"WAITING" ,defaultResponseHandler(request));
     }
 }

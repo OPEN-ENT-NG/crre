@@ -42,12 +42,6 @@ public interface OrderService {
      */
    void validateOrders(HttpServerRequest request, UserInfos user, List<Integer> ids, String url,
                        Handler<Either<String, JsonObject>> handler);
-    /**
-     * order to delete
-     * @param idOrder id order
-     * @param handler function handler returning idCampaign, price of Equipment
-     */
-    void orderForDelete(Integer idOrder, Handler<Either<String, JsonObject>> handler);
 
  /**
   * Check if the order can be delete
@@ -83,13 +77,6 @@ public interface OrderService {
     void getExportCsvOrdersAdmin(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Send orders
-     * @param ids List containing ids
-     * @param handler Function handler returning data
-     */
-    void sendOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
-
-    /**
      * Update status order
      * @param ids order id list
      * @param status status to update
@@ -116,16 +103,6 @@ public interface OrderService {
      */
     void getStructuresId(JsonArray ids, Handler<Either<String, JsonArray>> handler);
 
-    /**
-     * List an union of equipments and options based on order ids
-     * @param ids order ids
-     * @param structureId structure id
-     * @param groupByStructure Group result by structure
-     * @param handler function handler returning data
-     * @param isNumberValidation Set true if it based on number validation
-     */
-    void getOrders(JsonArray ids, String structureId, Boolean isNumberValidation, Boolean groupByStructure, Handler<Either<String, JsonArray>> handler);
-
     void getOrderByValidatioNumber(JsonArray ids, Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -134,13 +111,6 @@ public interface OrderService {
      * @param handler Function handler returning data
      */
     void getOrdersGroupByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Returns all orders indexed by validation number and filtered by status
-     * @param status Status
-     * @param handler Function handler returning data
-     */
-    void getOrdersDetailsIndexedByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Cancel validation order. Set all orders to waiting status. All orders update are based on validation numbers;
@@ -163,8 +133,6 @@ public interface OrderService {
      * @param handler Function handler returning data
      */
     void getFile(Integer orderId, String fileId, Handler<Either<String, JsonObject>> handler);
-
-    void updatePriceProposal(Integer id, Double price_proposal, Handler<Either<String, JsonObject>> eitherHandler);
 
     /**
      * Update the rank of two orders
@@ -192,8 +160,6 @@ public interface OrderService {
     void getOrder(Integer idOrder, Handler<Either<String, JsonObject>> handler);
 
     void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler);
-
-    void getOneOrderClient(int idOrderClient,String status,  Handler<Either<String, JsonObject>> handler);
 
     void getOrderBCParams(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
 

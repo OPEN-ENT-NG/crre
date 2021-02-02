@@ -84,7 +84,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             }
         });
         getCampaignsInfo(handlerJsonArray(campaignFuture));
-        //getCampaignEquipmentCount(handlerJsonArray(equipmentFuture));
         getCampaignsPurses(handlerJsonArray(purseFuture));
         getCampaignOrderStatusCount(handlerJsonArray(orderFuture));
     }

@@ -23,7 +23,7 @@ public interface BasketService {
      * @param idStructure structure identifier
      * @param handler function handler returning data
      */
-    void listBasket(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user);
+    void listBasket(Integer idCampaign, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get a basket thanks to its id
@@ -106,42 +106,6 @@ public interface BasketService {
      * @param handler function handler returning data
      */
     void listebasketItemForOrder(Integer idCampaign, String idStructure, JsonArray baskets, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Update a price proposaf from a basket
-     * @param id
-     * @param price_proposal
-     * @param eitherHandler
-     */
-    void updatePriceProposal(Integer id, Double price_proposal, Handler<Either<String, JsonObject>> eitherHandler);
-
-    /**
-     * Add file to a specific basket
-     *
-     * @param basketId basket identifier
-     * @param fileId   file identifier
-     * @param fileName file name
-     * @param handler  Function handler returning data
-     */
-    void addFileToBasket(Integer basketId, String fileId, String fileName, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Delete file from basket
-     *
-     * @param basketId basket identifier
-     * @param fileId   file identifier
-     * @param handler  Function handler returning data
-     */
-    void deleteFileFromBasket(Integer basketId, String fileId, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Get file from a specific basket id
-     *
-     * @param basketId basket identifier
-     * @param fileId   file identifier
-     * @param handler  Function handler returning data
-     */
-    void getFile(Integer basketId, String fileId, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Search basket from a query (name, user_name or article)

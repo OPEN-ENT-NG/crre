@@ -4,7 +4,10 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.*;
+import fr.openent.crre.security.AccessOrderCommentRight;
+import fr.openent.crre.security.AccessOrderReassortRight;
+import fr.openent.crre.security.AccessUpdateOrderOnClosedCampaigne;
+import fr.openent.crre.security.PersonnelRight;
 import fr.openent.crre.service.BasketService;
 import fr.openent.crre.service.impl.DefaultBasketService;
 import fr.wseduc.rs.*;
@@ -19,14 +22,16 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -34,11 +39,9 @@ import static java.lang.Integer.parseInt;
 
 public class BasketController extends ControllerHelper {
     private final BasketService basketService;
-    private final Storage storage;
 
-    public BasketController(Vertx vertx, Storage storage, JsonObject slackConfiguration,JsonObject mail) {
+    public BasketController(Vertx vertx, JsonObject slackConfiguration, JsonObject mail) {
         super();
-        this.storage = storage;
         this.basketService = new DefaultBasketService(Crre.crreSchema, "basket", vertx, slackConfiguration, mail);
     }
     @Get("/basket/:idCampaign/:idStructure")
@@ -53,7 +56,38 @@ public class BasketController extends ControllerHelper {
                 String idStructure = request.params().contains("idStructure")
                         ? request.params().get("idStructure")
                         : null;
-                basketService.listBasket(idCampaign, idStructure, arrayResponseHandler(request), user);
+                basketService.listBasket(idCampaign, idStructure, user, baskets -> {
+                    if(baskets.isRight()) {
+                        JsonArray basketsResult = new JsonArray();
+                        List<Integer> listIdsEquipment = new ArrayList<>();
+                        for(Object bask : baskets.right().getValue()){
+                            JsonObject basket = (JsonObject) bask;
+                            basketsResult.add(basket);
+                            listIdsEquipment.add(basket.getInteger("id_equipment"));
+                        }
+                        searchByIds(listIdsEquipment, equipments -> {
+                            if (equipments.isRight()) {
+                                for (Object bask : basketsResult) {
+                                    JsonObject basket = (JsonObject) bask;
+                                    int idEquipment = basket.getInteger("id_equipment");
+                                    for (Object equipment : equipments.right().getValue()) {
+                                        JsonObject equipmentJson = (JsonObject) equipment;
+                                        if (idEquipment == equipmentJson.getInteger("id")) {
+                                            basket.put("equipment",equipment);
+                                        }
+                                    }
+                                }
+                                renderJson(request, basketsResult);
+                            } else {
+                                log.error(equipments.left());
+                                badRequest(request);
+                            }
+                        });
+                    } else {
+                        log.error("An error occurred getting basket", baskets.left());
+                        badRequest(request);
+                    }
+                });
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
             }
@@ -96,16 +130,16 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Update an order's amount")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void updateAmounts(final HttpServerRequest request) {
-            try {
-                Integer id = Integer.parseInt(request.params().get("idBasketOrder"));
-                basketService.updateAllAmount(id, event -> {
-                    if (event.isRight()) {
-                        final JsonObject orders = event.right().getValue();
-                        renderJson(request, orders);
-                    }});
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
+        try {
+            Integer id = Integer.parseInt(request.params().get("idBasketOrder"));
+            basketService.updateAllAmount(id, event -> {
+                if (event.isRight()) {
+                    final JsonObject orders = event.right().getValue();
+                    renderJson(request, orders);
+                }});
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
     }
 
     @Get("/basketOrder/allMyOrders")
@@ -272,7 +306,7 @@ public class BasketController extends ControllerHelper {
                         renderJson(request, new JsonObject(orders));
                     }
                 });
-                } catch (ClassCastException e) {
+            } catch (ClassCastException e) {
                 log.error("An error occurred when casting basket id", e);
             }
         });
@@ -318,29 +352,6 @@ public class BasketController extends ControllerHelper {
         });
     }
 
-    @Put("/basket/:idBasket/priceProposal")
-    @ApiDoc("Update the price proposal of a basket")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessPriceProposalRight.class)
-    public void updatePriceProposal(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, basket -> {
-            if (!basket.containsKey("price_proposal")) {
-                badRequest(request);
-                return;
-            }
-            try {
-                Integer id = parseInt(request.params().get("idBasket"));
-                Double price_proposal = basket.getDouble("price_proposal");
-                basketService.updatePriceProposal(id, price_proposal, defaultResponseHandler(request));
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            } catch (NullPointerException e) {
-                Integer id = parseInt(request.params().get("idBasket"));
-                basketService.updatePriceProposal(id, null, defaultResponseHandler(request));
-            }
-        });
-    }
-
     @Post("/baskets/to/orders/:idCampaign")
     @ApiDoc("Create an order list from basket")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -356,16 +367,15 @@ public class BasketController extends ControllerHelper {
                 basketService.listebasketItemForOrder(idCampaign, idStructure, baskets,
                         listBasket -> {
                             if(listBasket.isRight() && listBasket.right().getValue().size() > 0){
-                                UserUtils.getUserInfos(eb, request, user -> {
-                                    basketService.takeOrder(request , listBasket.right().getValue(),
-                                            idCampaign, user, idStructure, nameStructure, baskets, nameBasket,
-                                            Logging.defaultCreateResponsesHandler(eb,
-                                                    request,
-                                                    Contexts.ORDER.toString(),
-                                                    Actions.CREATE.toString(),
-                                                    "id_order",
-                                                    listBasket.right().getValue()));
-                                });
+                                UserUtils.getUserInfos(eb, request, user ->
+                                        basketService.takeOrder(request , listBasket.right().getValue(),
+                                                idCampaign, user, idStructure, nameStructure, baskets, nameBasket,
+                                                Logging.defaultCreateResponsesHandler(eb,
+                                                        request,
+                                                        Contexts.ORDER.toString(),
+                                                        Actions.CREATE.toString(),
+                                                        "id_order",
+                                                        listBasket.right().getValue())));
                             }else{
                                 log.error("An error occurred when listing Baskets");
                                 badRequest(request);
@@ -375,84 +385,6 @@ public class BasketController extends ControllerHelper {
             } catch (ClassCastException e) {
                 log.error("An error occurred when casting Basket information", e);
                 renderError(request);
-            }
-        });
-    }
-
-    @Post("/basket/:id/file")
-    @ApiDoc("Upload a file for a specific cart")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PostBasketFileRight.class)
-    public void uploadFile(HttpServerRequest request) {
-        storage.writeUploadFile(request, entries -> {
-            if (!"ok".equals(entries.getString("status"))) {
-                renderError(request);
-                return;
-            }
-            try {
-                Integer basketId = parseInt(request.getParam("id"));
-                String fileId = entries.getString("_id");
-                String filename = entries.getJsonObject("metadata").getString("filename");
-                basketService.addFileToBasket(basketId, fileId, filename, event -> {
-                    if (event.isRight()) {
-                        JsonObject response = new JsonObject()
-                                .put("id", fileId)
-                                .put("filname", filename);
-                        request.response().setStatusCode(201).putHeader("Content-Type", "application/json").end(response.toString());
-                    } else {
-                        deleteFile(fileId);
-                        renderError(request);
-                    }
-                });
-            } catch (NumberFormatException e) {
-                renderError(request);
-            }
-        });
-    }
-
-    @Delete("/basket/:id/file/:fileId")
-    @ApiDoc("Delete file from basket")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PostBasketFileRight.class)
-    public void deleteFileFromBasket(HttpServerRequest request) {
-        Integer basketId = parseInt(request.getParam("id"));
-        String fileId = request.getParam("fileId");
-
-        basketService.deleteFileFromBasket(basketId, fileId, event -> {
-            if (event.isRight()) {
-                request.response().setStatusCode(204).end();
-                deleteFile(fileId);
-            } else {
-                renderError(request);
-            }
-        });
-    }
-
-    /**
-     * Delete file from storage based on identifier
-     *
-     * @param fileId File identifier to delete
-     */
-    private void deleteFile(String fileId) {
-        storage.removeFile(fileId, e -> {
-            if (!"ok".equals(e.getString("status"))) {
-                log.error("[Crre@uploadFile] An error occurred while removing " + fileId + " file.");
-            }
-        });
-    }
-
-    @Get("/basket/:id/file/:fileId")
-    @ApiDoc("Download specific file")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getFile(HttpServerRequest request) {
-        Integer basketId = parseInt(request.getParam("id"));
-        String fileId = request.getParam("fileId");
-        basketService.getFile(basketId, fileId, event -> {
-            if (event.isRight()) {
-                JsonObject file = event.right().getValue();
-                storage.sendFile(fileId, file.getString("filename"), request, false, new JsonObject());
-            } else {
-                notFound(request);
             }
         });
     }

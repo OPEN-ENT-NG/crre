@@ -12,13 +12,10 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.util.List;

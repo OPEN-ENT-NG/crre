@@ -1,8 +1,8 @@
-import {$, _, angular, idiom as lang, model, moment, ng, notify, template, toasts} from 'entcore';
+import {_, angular, idiom as lang, model, moment, ng, notify, template, toasts} from 'entcore';
 import http from "axios";
 import {
     BasketOrder,
-    Campaign, Equipment, OrderClient,
+    Campaign, OrderClient,
     OrderRegion,
     OrdersClient,
     OrdersRegion,
@@ -423,12 +423,10 @@ export const orderController = ng.controller('orderController',
             }
         };
         $scope.validatePrepareSentOrders = (orderToSend: OrdersClient) => {
-            return orderToSend && orderToSend.supplier && orderToSend.bc_number && orderToSend.engagement_number
-                && orderToSend.bc_number.trim() !== '' && orderToSend.engagement_number.trim() !== ''
-                && orderToSend.id_program !== undefined;
+            return orderToSend;
         };
         $scope.sendOrders = async (orders: OrdersClient) => {
-            let { status, data } = await orders.updateStatus('SENT');
+            let { status } = await orders.updateStatus('SENT');
             if (status === 201) {
                 toasts.confirm( 'crre.sent.order');
                 toasts.info( 'crre.sent.export.BC');

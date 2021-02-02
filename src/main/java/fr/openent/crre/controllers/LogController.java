@@ -7,14 +7,12 @@ import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.http.filter.ResourceFilter;
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 
 public class LogController extends ControllerHelper {
 
@@ -36,30 +34,24 @@ public class LogController extends ControllerHelper {
             Integer page = request.params().contains("page")
                 ? Integer.parseInt(request.params().get("page"))
                 : null;
-            logService.list(page, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> res) {
-                    if (res.isRight()) {
-                        final JsonArray logs = res.right().getValue();
-                        logService.getLogsNumber(new Handler<Either<String, JsonObject>>() {
-                            @Override
-                            public void handle(Either<String, JsonObject> event) {
-                                if (event.isRight()) {
-                                    Integer numberLogs = event.right().getValue().getInteger("number_logs");
-                                    JsonObject response = new JsonObject();
-                                    response.put("number_logs", numberLogs)
-                                            .put("logs", logs);
-                                    renderJson(request, response, 200);
-                                } else {
-                                    log.error("An error occurred when collecting numbers of log");
-                                    renderError(request);
-                                }
-                            }
-                        });
-                    } else {
-                        log.error("An error occurred when collecting logs");
-                        renderError(request);
-                    }
+            logService.list(page, res -> {
+                if (res.isRight()) {
+                    final JsonArray logs = res.right().getValue();
+                    logService.getLogsNumber(event -> {
+                        if (event.isRight()) {
+                            Integer numberLogs = event.right().getValue().getInteger("number_logs");
+                            JsonObject response = new JsonObject();
+                            response.put("number_logs", numberLogs)
+                                    .put("logs", logs);
+                            renderJson(request, response, 200);
+                        } else {
+                            log.error("An error occurred when collecting numbers of log");
+                            renderError(request);
+                        }
+                    });
+                } else {
+                    log.error("An error occurred when collecting logs");
+                    renderError(request);
                 }
             });
         } catch (ClassCastException e) {

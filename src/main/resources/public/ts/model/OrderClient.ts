@@ -193,18 +193,12 @@ export class OrderClient implements Order  {
 }
 export class OrdersClient extends Selection<OrderClient> {
 
-    supplier: Supplier;
-    bc_number?: string;
-    id_program?: number;
-    engagement_number?: string;
     dateGeneration?: Date;
     id_project_use?: number;
     filters: Array<string>;
-    ordersOfOperation: Array<OrderClient>;
 
-    constructor(supplier?: Supplier) {
+    constructor() {
         super([]);
-        this.supplier = supplier ? supplier : new Supplier();
         this.dateGeneration = new Date();
         this.id_project_use = -1;
         this.filters = [];
@@ -335,64 +329,28 @@ export class OrdersClient extends Selection<OrderClient> {
     syncWithIdsCampaignAndStructure():void{
         this.all.map((order) => {
             order.price = parseFloat(order.price.toString());
-            order.price_proposal = order.price_proposal? parseFloat( order.price_proposal.toString()) : null;
-            order.tax_amount = parseFloat(order.tax_amount.toString());
-            order.rank = order.rank ? parseInt(order.rank.toString()) : null ;
-            order.options = order.options.toString() !== '[null]' && order.options !== null ?
-                Mix.castArrayAs(OrderOptionClient, JSON.parse(order.options.toString()))
-                : order.options = [];
-            order.options.map((order) => order.selected = true);
             order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
         });
-        this.all = _.sortBy(this.all, (order)=> order.rank != null ? order.rank : this.all.length );
     }
 
     makeOrderNotValid(order:OrderClient):void{
-        order.tax_amount = parseFloat(order.tax_amount.toString());
-/*        order.contract = Mix.castAs(Contract,  JSON.parse(order.contract.toString()));
-        order.contract_type = Mix.castAs(ContractType,  JSON.parse(order.contract_type.toString()));
-        order.supplier = Mix.castAs(Supplier,  JSON.parse(order.supplier.toString()));
-        order.id_supplier = order.supplier.id;*/
         order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
-        order.rank = order.rank ? parseInt(order.rank.toString()) : null ;
         order.creation_date = moment(order.creation_date).format('L');
-        order.options.toString() !== '[null]' && order.options !== null ?
-            order.options = Mix.castArrayAs( OrderOptionClient, JSON.parse(order.options.toString()))
-            : order.options = [];
-        order.priceUnitedTTC = order.price_proposal ?
-            parseFloat(( order.price_proposal).toString()):
-            parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString());
+        order.priceUnitedTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString());
         order.priceTotalTTC = this.choosePriceTotal(order);
-        if( order.campaign.orderPriorityEnable()){
-            order.rankOrder = order.rank + 1;
-        } else{
-            order.rankOrder = lang.translate("crre.order.not.prioritized");
-        }
     }
 
     choosePriceTotal(order:OrderClient):number{
-        return order.price_proposal !== null?
-            parseFloat(( order.price_proposal).toString()) * order.amount :
-            parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
+        return parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
     }
 
     toJson (status: string):any {
-        const ids = status === 'SENT'
-            ? _.pluck(this.all, 'number_validation')
-            : _.pluck(this.all, 'id');
-
-        const supplierId = status === 'SENT'
-            ? _.pluck(this.all, 'supplierid')[0]
-            : this.supplier.id;
+        const ids = _.pluck(this.all, 'id');
         return {
             ids,
             status : status,
-            bc_number: this.bc_number || null,
-            engagement_number: this.engagement_number || null,
             dateGeneration: moment(this.dateGeneration).format('DD/MM/YYYY') || null,
-            supplierId,
-            userId : model.me.userId,
-            id_program: this.id_program || null
+            userId : model.me.userId
         };
     }
 

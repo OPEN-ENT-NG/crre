@@ -14,7 +14,7 @@ import java.util.*;
 public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
     private static final Integer PAGE_SIZE = 10000;
-    private static final String RESOURCE_TYPE_NAME = "";
+    private static final String RESOURCE_TYPE_NAME = "equipment";
     private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("id", "name", "ean", "editor_name", "grade_name", "subject_name", "author");
 
     private ElasticSearchHelper() {

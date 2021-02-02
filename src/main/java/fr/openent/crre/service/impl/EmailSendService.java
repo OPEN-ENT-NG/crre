@@ -6,20 +6,16 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.user.UserInfos;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 
 public class EmailSendService {
 
-    private Neo4j neo4j;
+    private final Neo4j neo4j;
 
-    private static final io.vertx.core.logging.Logger LOGGER = LoggerFactory.getLogger (EmailSendService.class);
     private final EmailSender emailSender;
     public EmailSendService(EmailSender emailSender){
         this.emailSender = emailSender;
@@ -139,14 +135,6 @@ public class EmailSendService {
                 + "<br /> Bien Cordialement, "
                 + "<br /> L'équipe Crre. ";
         return formatAccentedString(body);
-    }
-
-    private static String getEncodedRedirectUri(String callback) {
-        try {
-            return "/auth/login?callback=" + URLEncoder.encode(callback, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return "";
-        }
     }
 
     private static String formatAccentedString (String body){

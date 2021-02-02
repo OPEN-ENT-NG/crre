@@ -23,7 +23,6 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -137,38 +136,32 @@ public class PurseController extends ControllerHelper {
      */
     private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais,
                             final JsonObject amount, final String contentFile) {
-        structureService.getStructureByUAI(uais, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    final JsonArray ids = event.right().getValue();
-                    campaignService.getCampaignStructures(Integer.parseInt(request.params().get("id")),
-                            new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> event) {
-                                    if (event.isRight()) {
-                                        JsonArray correctIds = deleteWrongIds(ids, event.right().getValue());
-                                        if (correctIds.size() == 0) {
-                                            returnErrorMessage(request, new Throwable("crre.statements.empty"), path);
-                                            return;
-                                        }
-
-                                        JsonObject statementsValues = new JsonObject();
-                                        JsonObject id;
-                                        for (int i = 0; i < correctIds.size(); i++) {
-                                            id = correctIds.getJsonObject(i);
-                                            statementsValues.put(id.getString("id"),
-                                                    amount.getString(id.getString("uai")));
-                                        }
-                                        launchImport(request, path, statementsValues, contentFile);
-                                    } else {
-                                        returnErrorMessage(request, new Throwable(event.left().getValue()), path);
-                                    }
+        structureService.getStructureByUAI(uais, event -> {
+            if (event.isRight()) {
+                final JsonArray ids = event.right().getValue();
+                campaignService.getCampaignStructures(Integer.parseInt(request.params().get("id")),
+                        event1 -> {
+                            if (event1.isRight()) {
+                                JsonArray correctIds = deleteWrongIds(ids, event1.right().getValue());
+                                if (correctIds.size() == 0) {
+                                    returnErrorMessage(request, new Throwable("crre.statements.empty"), path);
+                                    return;
                                 }
-                            });
-                } else {
-                    returnErrorMessage(request, new Throwable(event.left().getValue()), path);
-                }
+
+                                JsonObject statementsValues = new JsonObject();
+                                JsonObject id;
+                                for (int i = 0; i < correctIds.size(); i++) {
+                                    id = correctIds.getJsonObject(i);
+                                    statementsValues.put(id.getString("id"),
+                                            amount.getString(id.getString("uai")));
+                                }
+                                launchImport(request, path, statementsValues, contentFile);
+                            } else {
+                                returnErrorMessage(request, new Throwable(event1.left().getValue()), path);
+                            }
+                        });
+            } else {
+                returnErrorMessage(request, new Throwable(event.left().getValue()), path);
             }
         });
     }
@@ -231,74 +224,27 @@ public class PurseController extends ControllerHelper {
     public void export(final HttpServerRequest request) {
         try {
             Integer idCampaign = Integer.parseInt(request.params().get("id"));
-            purseService.getPursesByCampaignId(idCampaign, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if (event.isRight()) {
-                        JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                        JsonObject exportValues = new JsonObject();
-                        JsonArray purses = event.right().getValue();
-                        JsonObject purse;
-                        for (int i = 0; i < purses.size(); i++) {
-                            purse = purses.getJsonObject(i);
-                            exportValues.put(purse.getString("id_structure"),
-                                    Double.parseDouble(purse.getString("amount")));
-                            ids.add(purse.getString("id_structure"));
-                        }
-                        retrieveUAIs(ids, exportValues, request);
-                    } else {
-                        badRequest(request);
+            purseService.getPursesByCampaignId(idCampaign, event -> {
+                if (event.isRight()) {
+                    JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonObject exportValues = new JsonObject();
+                    JsonArray purses = event.right().getValue();
+                    JsonObject purse;
+                    for (int i = 0; i < purses.size(); i++) {
+                        purse = purses.getJsonObject(i);
+                        exportValues.put(purse.getString("id_structure"),
+                                Double.parseDouble(purse.getString("amount")));
+                        ids.add(purse.getString("id_structure"));
                     }
+                    retrieveUAIs(ids, exportValues, request);
+                } else {
+                    badRequest(request);
                 }
             });
         } catch (NumberFormatException e) {
             log.error("[Crre@CSVExport] : An error occurred when casting campaign id", e);
             badRequest(request);
         }
-    }
-
-    @Put("/purse/:id")
-    @ApiDoc("Update a purse based on his id")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void updateHolder(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "purse", new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject body) {
-                try {
-                    purseService.update(Integer.parseInt(request.params().get("id")), body, new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> event) {
-                                    if(event.isRight()){
-                                        Logging.defaultResponseHandler(eb,
-                                                request,
-                                                Contexts.PURSE.toString(),
-                                                Actions.UPDATE.toString(),
-                                                request.params().get("id"),
-                                                body).handle(new Either.Right<>(event.right().getValue()));
-                                    }else{
-                                        if(event.left().getValue().contains("Check_amount_positive")){
-                                            request.response().setStatusMessage("Amount negative").setStatusCode(202).end();
-                                        }else{
-                                            badRequest(request);
-                                        }
-                                    }
-                                }
-                            }
-                    );
-//                    purseService.update(Integer.parseInt(request.params().get("id")), body, Logging.defaultResponseHandler(eb,
-//                                                request,
-//                                                Contexts.PURSE.toString(),
-//                                                Actions.UPDATE.toString(),
-//                                                request.params().get("id"),
-//                                                body));
-                } catch (NumberFormatException e) {
-                    log.error("An error occurred when casting purse id", e);
-                    badRequest(request);
-                }
-
-            }
-        });
     }
 
     @Get("/campaign/:id/purse/check")
@@ -308,15 +254,12 @@ public class PurseController extends ControllerHelper {
     public void checkPurse(final HttpServerRequest request) {
         try {
             Integer idCampaign = Integer.parseInt(request.params().get("id"));
-            purseService.checkPurses(idCampaign, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if(event.isRight())
-                    {
-                        request.response().setStatusCode(201).end(event.right().getValue().toString());
-                    }else{
-                        badRequest(request);
-                    }
+            purseService.checkPurses(idCampaign, event -> {
+                if(event.isRight())
+                {
+                    request.response().setStatusCode(201).end(event.right().getValue().toString());
+                }else{
+                    badRequest(request);
                 }
             });
 
@@ -334,21 +277,18 @@ public class PurseController extends ControllerHelper {
     public void list(final HttpServerRequest request) {
         try {
             Integer idCampaign = Integer.parseInt(request.params().get("id"));
-            purseService.getPursesByCampaignId(idCampaign, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> event) {
-                    if (event.isRight()) {
-                        JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                        JsonArray purses = event.right().getValue();
-                        JsonObject purse;
-                        for (int i = 0; i < purses.size(); i++) {
-                            purse = purses.getJsonObject(i);
-                            ids.add(purse.getString("id_structure"));
-                        }
-                        retrieveStructuresData(ids, purses, request);
-                    } else {
-                        badRequest(request);
+            purseService.getPursesByCampaignId(idCampaign, event -> {
+                if (event.isRight()) {
+                    JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonArray purses = event.right().getValue();
+                    JsonObject purse;
+                    for (int i = 0; i < purses.size(); i++) {
+                        purse = purses.getJsonObject(i);
+                        ids.add(purse.getString("id_structure"));
                     }
+                    retrieveStructuresData(ids, purses, request);
+                } else {
+                    badRequest(request);
                 }
             });
         } catch (NumberFormatException e) {
@@ -364,38 +304,35 @@ public class PurseController extends ControllerHelper {
      * @param request Http request
      */
     private void retrieveStructuresData(JsonArray ids, final JsonArray purses, final HttpServerRequest request) {
-        structureService.getStructureById(ids, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonArray structures = event.right().getValue();
-                    JsonObject structure;
-                    JsonObject purse;
+        structureService.getStructureById(ids, event -> {
+            if (event.isRight()) {
+                JsonArray structures = event.right().getValue();
+                JsonObject structure;
+                JsonObject purse;
 
-                    // put structure name / uai on the purse according to structure id
-                    for (int i = 0; i < structures.size(); i++) {
-                        structure = structures.getJsonObject(i);
-                        for (int j = 0; j < purses.size(); j++) {
-                            purse = purses.getJsonObject(j);
+                // put structure name / uai on the purse according to structure id
+                for (int i = 0; i < structures.size(); i++) {
+                    structure = structures.getJsonObject(i);
+                    for (int j = 0; j < purses.size(); j++) {
+                        purse = purses.getJsonObject(j);
 
-                            if(purse.getString("id_structure").equals(structure.getString("id"))) {
-                                purse.put("name", structure.getString("name"));
-                                purse.put("uai", structure.getString("uai"));
+                        if(purse.getString("id_structure").equals(structure.getString("id"))) {
+                            purse.put("name", structure.getString("name"));
+                            purse.put("uai", structure.getString("uai"));
 
-                                // we also convert amount to get a number instead of a string
-                                String amount = purse.getString("amount");
-                                purse.remove("amount");
-                                purse.put("amount",Double.parseDouble(amount));
-                            }
+                            // we also convert amount to get a number instead of a string
+                            String amount = purse.getString("amount");
+                            purse.remove("amount");
+                            purse.put("amount",Double.parseDouble(amount));
                         }
                     }
-
-                    Renders.renderJson(request, purses);
-
-                } else {
-                    renderError(request, new JsonObject().put("message",
-                            event.left().getValue()));
                 }
+
+                Renders.renderJson(request, purses);
+
+            } else {
+                renderError(request, new JsonObject().put("message",
+                        event.left().getValue()));
             }
         });
     }
@@ -408,23 +345,20 @@ public class PurseController extends ControllerHelper {
      */
     private void retrieveUAIs(JsonArray ids, final JsonObject exportValues,
                               final HttpServerRequest request) {
-        structureService.getStructureById(ids, new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonObject values = new JsonObject();
-                    JsonArray uais = event.right().getValue();
-                    JsonObject uai;
-                    for (int i = 0; i < uais.size(); i++) {
-                        uai = uais.getJsonObject(i);
-                        values.put(uai.getString("uai"),
-                                exportValues.getInteger(uai.getString("id")));
-                    }
-                    launchExport(values, request);
-                } else {
-                    renderError(request, new JsonObject().put("message",
-                            event.left().getValue()));
+        structureService.getStructureById(ids, event -> {
+            if (event.isRight()) {
+                JsonObject values = new JsonObject();
+                JsonArray uais = event.right().getValue();
+                JsonObject uai;
+                for (int i = 0; i < uais.size(); i++) {
+                    uai = uais.getJsonObject(i);
+                    values.put(uai.getString("uai"),
+                            exportValues.getInteger(uai.getString("id")));
                 }
+                launchExport(values, request);
+            } else {
+                renderError(request, new JsonObject().put("message",
+                        event.left().getValue()));
             }
         });
     }

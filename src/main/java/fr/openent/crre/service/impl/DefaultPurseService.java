@@ -83,105 +83,6 @@ public class DefaultPurseService implements PurseService {
                 .put("action", "prepared");
     }
 
-    public void update(Integer id, JsonObject purse, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE   " +
-                "  " + Crre.crreSchema + ".purse   " +
-                "SET   " +
-                "  amount = (  " +
-                "    SELECT   " +
-                "      CASE WHEN SUM(total) IS NULL THEN ? ELSE ? - SUM(total) END   " +
-                "    FROM   " +
-                "      (  " +
-                "        SELECT   " +
-                "          Round(  " +
-                "            (  " +
-                "              (  " +
-                "                SELECT   " +
-                "                  CASE WHEN orders.price_proposal IS NOT NULL THEN 0 WHEN orders.override_region IS NULL THEN 0 WHEN Sum(  " +
-                "                    oco.price + (  " +
-                "                      (oco.price * oco.tax_amount) / 100  " +
-                "                    ) * oco.amount  " +
-                "                  ) IS NULL THEN 0 ELSE Sum(  " +
-                "                    oco.price + (  " +
-                "                      (oco.price * oco.tax_amount) / 100  " +
-                "                    ) * oco.amount  " +
-                "                  ) END   " +
-                "                FROM   " +
-                "                  " + Crre.crreSchema + ".order_client_options oco   " +
-                "                WHERE   " +
-                "                  oco.id_order_client_equipment = orders.id  " +
-                "              ) + orders.\"price TTC\"  " +
-                "            ) * orders.amount,   " +
-                "            2  " +
-                "          ) AS total   " +
-                "        FROM   " +
-                "          (  " +
-                "            (  " +
-                "              select   " +
-                "                ore.id,   " +
-                "                ore.price as \"price TTC\",   " +
-                "                ore.amount,   " +
-                "                ore.id_campaign,   " +
-                "                ore.id_structure,   " +
-                "                null as price_proposal,   " +
-                "                ore.id_order_client_equipment,   " +
-                "                ore.id_operation,   " +
-                "                null as override_region   " +
-                "              from   " +
-                "                " + Crre.crreSchema + ".\"order-region-equipment\" ore  " +
-                "            )   " +
-                "            UNION   " +
-                "              (  " +
-                "                select   " +
-                "                  oce.id,   " +
-                "                  CASE WHEN price_proposal is null then price + (price * tax_amount / 100) else price_proposal end as \"price TTC\",   " +
-                "                  amount,   " +
-                "                  id_campaign,   " +
-                "                  id_structure,   " +
-                "                  price_proposal,   " +
-                "                  null as id_order_client_equipment,   " +
-                "                  id_operation,   " +
-                "                  override_region   " +
-                "                from   " +
-                "                  " + Crre.crreSchema + ".order_client_equipment oce  " +
-                "              )  " +
-                "          ) as orders   " +
-                "        WHERE   " +
-                "          orders.id_structure = ?   " +
-                "          AND orders.id_campaign = ?  " +
-                "      ) as totalOrders  " +
-                "  ),   " +
-                "  initial_amount = ?   " +
-                "WHERE   " +
-                "  id = ? RETURNING *  ";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(purse.getDouble("amount"))
-                .add(purse.getDouble("amount"))
-                .add(purse.getString("id_structure"))
-                .add(purse.getInteger("id_campaign"))
-                .add(purse.getDouble("amount"))
-                .add(id);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-//        Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
-//            @Override
-//            public void handle(Message<JsonObject> event) {
-//                log.info(event.body());
-//                String status = event.body().getString("status");
-//
-//                if(status.equals("ok")){
-//                    handler
-//                }else{
-//                    String message = event.body().getString("message");
-//                    if(message.contains("Check_amount_positive"))
-//                        log.info("Pas de chance");
-//                    else{
-//                        log.info("plop");
-//                    }
-//                }
-//            }
-//        });
-    }
-
     @Override
     public JsonObject updatePurseAmountStatement(Double price, Integer idCampaign, String idStructure,String operation) {
         final double cons = 100.0;
@@ -224,7 +125,6 @@ public class DefaultPurseService implements PurseService {
                 "                orders.id_campaign,  " +
                 "                orders.\"price TTC\",  " +
                 "                Round(( (SELECT CASE  " +
-                "                                  WHEN orders.price_proposal IS NOT NULL THEN 0  " +
                 "                                  WHEN orders.override_region IS NULL THEN 0  " +
                 "                                  WHEN Sum(oco.price + ( ( oco.price *  " +
                 "                                                         oco.tax_amount )  " +
@@ -247,12 +147,7 @@ public class DefaultPurseService implements PurseService {
                 "         FROM   ( " +
                 "                 (SELECT oce.id,  " +
                 "                         false AS isregion,  " +
-                "                         CASE  " +
-                "                           WHEN price_proposal IS NULL THEN price +  " +
-                "                           ( price * tax_amount  " +
-                "                             / 100 )  " +
-                "                           ELSE price_proposal  " +
-                "                         END   AS \"price TTC\",  " +
+                "                         null AS \"price TTC\",  " +
                 "                         amount,  " +
                 "                         creation_date,  " +
                 "                         NULL  AS modification_date,  " +
@@ -270,7 +165,6 @@ public class DefaultPurseService implements PurseService {
                 "                         id_order,  " +
                 "                         comment,  " +
                 "                         rank  AS \"prio\",  " +
-                "                         price_proposal,  " +
                 "                         id_project,  " +
                 "                         NULL  AS id_order_client_equipment,  " +
                 "                         program,  " +

@@ -102,13 +102,12 @@ public class ExportCrreWorker extends BusModBase implements Handler<Message<Json
                         exportHandler);
                 break;
             case ExportTypes.BC_BEFORE_VALIDATION:
-                exportBCOrders(params,
+                exportBCOrders(
                         fileName,
                         exportHandler);
                 break;
             case ExportTypes.BC_DURING_VALIDATION:
-                exportBCOrdersDuringValidation(params,
-                        fileName,
+                exportBCOrdersDuringValidation(fileName,
                         exportHandler);
                 break;
             case ExportTypes.BC_AFTER_VALIDATION:
@@ -120,7 +119,7 @@ public class ExportCrreWorker extends BusModBase implements Handler<Message<Json
                 exportBCOrdersAfterValidationStruct(string_object_id,fileName,exportHandler);
                 break;
             case ExportTypes.BC_BEFORE_VALIDATION_STRUCT:
-                exportBCOrdersBeforeValidationStruct(params,fileName,exportHandler);
+                exportBCOrdersBeforeValidationStruct(fileName,exportHandler);
                 break;
             default:
                 ExportHelper.catchError(exportService, idNewFile, "Invalid action in worker : " + action,exportHandler);
@@ -128,11 +127,11 @@ public class ExportCrreWorker extends BusModBase implements Handler<Message<Json
         }
     }
 
-    private void exportBCOrdersBeforeValidationStruct(JsonObject params, String titleFile, Handler<Either<String, Boolean>> exportHandler) {
+    private void exportBCOrdersBeforeValidationStruct( String titleFile, Handler<Either<String, Boolean>> exportHandler) {
 
         logger.info("Export BC per structures from Orders before validation started : ");
 
-        this.validOrders = new ValidOrders(exportService,params,idNewFile,this.eb,this.vertx,this.config);
+        this.validOrders = new ValidOrders(exportService,idNewFile);
         this.validOrders.exportBCBeforeValidationByStructures(event1 -> {
             saveExportHandler(titleFile, exportHandler, event1, "error when creating BCOrdersBeforeValidationStruct PDF ", PDFHEADER);
         });
@@ -141,7 +140,7 @@ public class ExportCrreWorker extends BusModBase implements Handler<Message<Json
 
         logger.info("Export BC per structures from Orders after validation started BC : "+ object_id);
 
-        this.validOrders = new ValidOrders(exportService,object_id,idNewFile,this.eb,this.vertx,this.config,false);
+        this.validOrders = new ValidOrders(exportService,object_id,idNewFile,false);
         this.validOrders.exportBCAfterValidationByStructures(event1 -> {
             saveExportHandler(titleFile, exportHandler, event1, "error when creating BCOrdersAfterValidationStruct PDF ", PDFHEADER);
         });
@@ -150,23 +149,23 @@ public class ExportCrreWorker extends BusModBase implements Handler<Message<Json
     private void exportBCOrdersAfterValidation(String object_id, String titleFile, Handler<Either<String, Boolean>> handler) {
         logger.info("Export BC per structures from Orders after validation started BC : "+ object_id);
 
-        this.validOrders = new ValidOrders(exportService,object_id,idNewFile,this.eb,this.vertx,this.config,false);
+        this.validOrders = new ValidOrders(exportService,object_id,idNewFile,false);
         this.validOrders.exportBCAfterValidation(event1 -> {
             saveExportHandler(titleFile, handler, event1, "error when creating BCOrdersAfterValidation PDF ", PDFHEADER);
         });
     }
 
-    private void exportBCOrdersDuringValidation(JsonObject params, String titleFile, Handler<Either<String, Boolean>> handler) {
+    private void exportBCOrdersDuringValidation(String titleFile, Handler<Either<String, Boolean>> handler) {
         logger.info("Export BC from Orders during validation started");
-        this.validOrders = new ValidOrders(exportService,params,idNewFile,this.eb,this.vertx,this.config);
+        this.validOrders = new ValidOrders(exportService,idNewFile);
         this.validOrders.exportBCDuringValidation(event1 -> {
             saveExportHandler(titleFile, handler, event1, "error when creating BCOrdersDuringValidation PDF ", PDFHEADER);
         });
     }
 
-    private void exportBCOrders(JsonObject params, String titleFile, Handler<Either<String, Boolean>> handler) {
+    private void exportBCOrders(String titleFile, Handler<Either<String, Boolean>> handler) {
         logger.info("Export BC from Orders started");
-        this.validOrders = new ValidOrders(exportService,params,idNewFile,this.eb,this.vertx,this.config);
+        this.validOrders = new ValidOrders(exportService,idNewFile);
         this.validOrders.exportBC(event1 -> {
             saveExportHandler(titleFile, handler, event1, "error when creating BCorders PDF ", PDFHEADER);
         });
@@ -174,7 +173,7 @@ public class ExportCrreWorker extends BusModBase implements Handler<Message<Json
 
     private void exportListLycOrders(String object_id, String titleFile, Handler<Either<String, Boolean>> handler) {
         logger.info("Export list lycee from Orders started");
-        this.validOrders = new ValidOrders(exportService,object_id,idNewFile,this.eb,this.vertx,this.config,true);
+        this.validOrders = new ValidOrders(exportService,object_id,idNewFile,true);
         this.validOrders.exportListLycee(event1 -> {
             saveExportHandler(titleFile, handler, event1, "error when creating ListLycOrder xlsx :", XLSXHEADER);
         });

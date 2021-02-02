@@ -35,8 +35,6 @@ public abstract class TabHelper {
     protected static final String CMR = "CMR";
     protected static final String LYCEE = "LYC";
     protected static final String NULL_DATA="Pas de données sur l'établissement";
-    protected static final String INVESTISSEMENT = "Investissement";
-    protected static final String FONCTIONNEMENT = "Fonctionnement";
     protected Workbook wb;
     protected String query;
     protected Sheet sheet;

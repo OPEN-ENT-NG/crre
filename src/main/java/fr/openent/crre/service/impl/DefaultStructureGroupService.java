@@ -42,33 +42,25 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
     @Override
     public void create(final JsonObject structureGroup, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "Select nextval('"+ Crre.crreSchema + ".structure_group_id_seq') as id";
-        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler( new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if(event.isRight()) {
-                    try{
-                        final Number id = event.right().getValue().getInteger("id");
-                        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                                .add(getStructureGroupCreationStatement(id,structureGroup));
+        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
+            if(event.isRight()) {
+                try{
+                    final Number id = event.right().getValue().getInteger("id");
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                            .add(getStructureGroupCreationStatement(id,structureGroup));
 
-                        JsonArray idsStructures = structureGroup.getJsonArray("structures");
-                        statements.add(getGroupStructureRelationshipStatement(id,idsStructures));
+                    JsonArray idsStructures = structureGroup.getJsonArray("structures");
+                    statements.add(getGroupStructureRelationshipStatement(id,idsStructures));
 
-                        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-                            @Override
-                            public void handle(Message<JsonObject> event) {
-                                handler.handle(SqlQueryUtils.getTransactionHandler(event,id));
-                            }
-                        });
+                    sql.transaction(statements, event1 -> handler.handle(SqlQueryUtils.getTransactionHandler(event1,id)));
 
-                    }catch(ClassCastException e){
-                        LOGGER.error("An error occured when casting structures ids " + e);
-                        handler.handle(new Either.Left<String, JsonObject>(""));
-                    }
-                }else{
-                   LOGGER.error("An error occurred when selecting next val");
-                    handler.handle(new Either.Left<String, JsonObject>(""));
+                }catch(ClassCastException e){
+                    LOGGER.error("An error occured when casting structures ids " + e);
+                    handler.handle(new Either.Left<>(""));
                 }
+            }else{
+               LOGGER.error("An error occurred when selecting next val");
+                handler.handle(new Either.Left<>(""));
             }
         }));
     }
@@ -80,12 +72,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                 .add(getStructureGroupUpdateStatement(id,structureGroup))
                 .add(getStrctureGroupRelationshipDeletion(id))
                 .add(getGroupStructureRelationshipStatement(id,idsStructures));
-        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(SqlQueryUtils.getTransactionHandler(event, id));
-            }
-        });
+        sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event, id)));
     }
 
     @Override
@@ -94,12 +81,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                 .add(getStrctureGroupRelationshipDeletion(ids))
                 .add(getStructureGroupDeletion(ids));
 
-        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(SqlQueryUtils.getTransactionHandler(event,ids.get(0)));
-            }
-        });
+        sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event,ids.get(0))));
     }
 
     @Override

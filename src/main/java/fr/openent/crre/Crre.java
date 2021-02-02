@@ -3,6 +3,7 @@ package fr.openent.crre;
 import fr.openent.crre.controllers.*;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.export.ExportCrreWorker;
+import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -10,9 +11,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
-import fr.wseduc.cron.CronTrigger;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -67,18 +66,13 @@ public class Crre extends BaseServer {
         }
 
         addController(new CrreController());
-        addController(new AgentController());
-        addController(new SupplierController());
-        addController(new ContractTypeController());
-        addController(new ContractController());
         addController(new EquipmentController(vertx));
-        addController(new TaxController());
         addController(new LogController());
         addController(new CampaignController());
         addController(new PurseController(vertx));
         addController(new StructureGroupController(vertx));
         addController(new StructureController());
-        addController(new BasketController(vertx, storage, config.getJsonObject("slack", new JsonObject()), mail));
+        addController(new BasketController(vertx, config.getJsonObject("slack", new JsonObject()), mail));
         addController(new OrderController(storage, vertx, config, eb));
         addController(new UserController());
         addController(new OrderRegionController());

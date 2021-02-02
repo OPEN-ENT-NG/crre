@@ -32,15 +32,7 @@ public interface EquipmentService {
      * @param handler function handler returning data
      */
     void updateEquipment(Integer id, JsonObject equipment, Handler<Either<String, JsonObject>> handler);
-    /**
-     * Update options of an equipment
-     * @param id equipment id to update
-     * @param equipment equipment to update
-     * @param resultsObject the object returned by [prepareUpdateOptions()]
-     * @param handler function handler returning data
-     */
-    void updateOptions(Number id, JsonObject equipment,  JsonObject resultsObject,
-                       Handler<Either<String, JsonObject>> handler);
+
     /**
      * Delete an equipment
      * @param ids equipment ids to delete
@@ -55,17 +47,6 @@ public interface EquipmentService {
      * @param handler Function handler returning data
      */
     void setStatus(List<Integer> ids, String status, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Get Basket's ids for an equipment and alloc sequences for options to create
-     * @param numberOptionsCreate number of options to create
-     * @param idEquipment id of the equipment
-     * @param handler
-     * return : ids of baskets who contains the Equipment
-     *          ids allocated to create new options
-     */
-    void prepareUpdateOptions (Number numberOptionsCreate, Number idEquipment,
-                               Handler<Either<String, JsonObject>> handler);
 
     /**
      * Search equipment based on query. Search field are name and reference
