@@ -139,32 +139,17 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void createOrdersRegion(JsonObject order, UserInfos user, Number id_project, Handler<Either<String, JsonObject>> handler) {
         String queryOrderRegionEquipment = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment\" ";
-
-        if (order.getInteger("rank") != -1) {
-            queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
-                    " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
-                    " comment, id_order_client_equipment,  id_project, reassort, rank) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
-        } else {
-            queryOrderRegionEquipment += " ( price, amount, creation_date,  owner_name, owner_id, name, summary, description, image," +
-                    " technical_spec, status, id_contract, equipment_key, id_campaign, id_structure," +
+            queryOrderRegionEquipment += " ( amount, creation_date,  owner_name, owner_id," +
+                    " status, equipment_key, id_campaign, id_structure," +
                     " comment, id_order_client_equipment, id_project, reassort) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
-        }
+                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(order.getDouble("price"))
                 .add(order.getInteger("amount"))
                 .add(order.getString("creation_date"))
                 .add(order.getString("user_name"))
                 .add(order.getString("user_id"))
-                .add(order.getString("name"))
-                .add(order.getString("summary"))
-                .add(order.getString("description"))
-                .add(order.getString("image"))
-                .add(order.getJsonArray("technical_specs"))
                 .add("IN PROGRESS")
-                .add(order.getInteger("id_contract"))
                 .add(order.getInteger("equipment_key"))
                 .add(order.getInteger("id_campaign"))
                 .add(order.getString("id_structure"))
@@ -172,10 +157,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getInteger("id_order_client_equipment"))
                 .add(id_project)
                 .add(order.getBoolean("reassort"));
-        if (order.getInteger("rank") != -1) {
-            params.add(order.getInteger("rank"));
-        }
-
         Sql.getInstance().prepared(queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
     }
 
