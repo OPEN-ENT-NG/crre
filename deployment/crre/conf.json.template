@@ -36,5 +36,7 @@
             "server-uri": "${elasticServerURI}",
             "index": "${elasticCRREIndexName}"
             }
+          "timeSecondSynchCron": "${timeSecondSynchCron}",
+          "dateSynch" : "${dateSynch}"
       }
     }
