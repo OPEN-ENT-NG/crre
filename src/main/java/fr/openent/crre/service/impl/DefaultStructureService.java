@@ -104,39 +104,41 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             JsonObject j = students.getJsonObject(i);
             String s = j.getString("s.id");
             Integer count = j.getInteger("count(u)");
-            switch (j.getString("u.level")) {
-                case "SECONDE GENERALE & TECHNO YC BT": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
+            if(j.getString("u.level") != null) {
+                switch (j.getString("u.level")) {
+                    case "SECONDE GENERALE & TECHNO YC BT": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = false WHERE id_structure = ?; ";
+                        params.add(count).add(s);
+                        break;
+                    }
+                    case "PREMIERE GENERALE & TECHNO YC BT": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, \"pro\" = false WHERE id_structure = ?; ";
+                        params.add(count).add(s);
+                        break;
+                    }
+                    case "TERMINALE GENERALE & TECHNO YC BT": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, \"pro\" = false WHERE id_structure = ?; ";
+                        params.add(count).add(s);
+                        break;
+                    }
+                    case "BAC PRO 3 ANS : 2NDE PRO (OU 1ERE ANNEE)": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = true WHERE id_structure = ?; ";
+                        params.add(count).add(s);
+                        break;
+                    }
+                    case "BAC PRO 3 ANS : 1ERE PRO (OU 2EME ANNEE)": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, \"pro\" = true WHERE id_structure = ?; ";
+                        params.add(count).add(s);
+                        break;
+                    }
+                    case "BAC PRO 3 ANS : TERM PRO (OU 3EME ANNEE)": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, \"pro\" = true WHERE id_structure = ?; ";
+                        params.add(count).add(s);
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                case "PREMIERE GENERALE & TECHNO YC BT": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "TERMINALE GENERALE & TECHNO YC BT": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "BAC PRO 3 ANS : 2NDE PRO (OU 1ERE ANNEE)": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = true WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "BAC PRO 3 ANS : 1ERE PRO (OU 2EME ANNEE)": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, \"pro\" = true WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                case "BAC PRO 3 ANS : TERMINALE PRO (OU 3EME ANNEE)": {
-                    query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, \"pro\" = true WHERE id_structure = ?; ";
-                    params.add(count).add(s);
-                    break;
-                }
-                default:
-                    break;
             }
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));

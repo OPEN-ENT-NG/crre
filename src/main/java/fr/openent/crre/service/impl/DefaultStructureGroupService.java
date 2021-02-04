@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.controllers.CrreController;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
@@ -50,9 +51,28 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                             .add(getStructureGroupCreationStatement(id,structureGroup));
 
                     JsonArray idsStructures = structureGroup.getJsonArray("structures");
-                    statements.add(getGroupStructureRelationshipStatement(id,idsStructures));
+                    JsonArray allIds = new JsonArray();
+                    JsonArray newIds = new JsonArray();
+                    CrreController crreController = new CrreController();
+                    sql.raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event2 -> {
+                        JsonArray structure_id = event2.right().getValue();
+                        for (int i = 0; i < structure_id.size(); i++) {
+                            allIds.add(structure_id.getJsonObject(i).getString("id_structure"));
+                        }
+                        for (int j = 0; j < idsStructures.size(); j++) {
+                            if (!allIds.contains(idsStructures.getString(j))) {
+                                newIds.add(idsStructures.getString(j));
+                            }
+                        }
+                        statements.add(getGroupStructureRelationshipStatement(id, idsStructures));
 
-                    sql.transaction(statements, event1 -> handler.handle(SqlQueryUtils.getTransactionHandler(event1,id)));
+                        sql.transaction(statements, event1 -> {
+                            if(!newIds.isEmpty()) {
+                                crreController.getStudentsByStructures(newIds, handler);
+                            }
+                            handler.handle(SqlQueryUtils.getTransactionHandler(event1, id));
+                        });
+                    }));
 
                 }catch(ClassCastException e){
                     LOGGER.error("An error occured when casting structures ids " + e);
@@ -68,12 +88,37 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
     @Override
     public void update(final Integer id, JsonObject structureGroup,final Handler<Either<String, JsonObject>> handler) {
         JsonArray idsStructures = structureGroup.getJsonArray("structures");
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                .add(getStructureGroupUpdateStatement(id,structureGroup))
-                .add(getStrctureGroupRelationshipDeletion(id))
-                .add(getGroupStructureRelationshipStatement(id,idsStructures));
-        sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event, id)));
+        JsonArray allIds = new JsonArray();
+        JsonArray newIds = new JsonArray();
+        CrreController crreController = new CrreController();
+        sql.raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event -> {
+            JsonArray structure_id = event.right().getValue();
+            for (int i = 0; i < structure_id.size(); i++) {
+                allIds.add(structure_id.getJsonObject(i).getString("id_structure"));
+            }
+            for(int j = 0; j < idsStructures.size(); j++) {
+                if(!allIds.contains(idsStructures.getString(j))) {
+                    newIds.add(idsStructures.getString(j));
+                }
+            }
+            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
+                    .add(getStructureGroupUpdateStatement(id,structureGroup))
+                    .add(getStrctureGroupRelationshipDeletion(id))
+                    .add(getGroupStructureRelationshipStatement(id,idsStructures));
+            sql.transaction(statements, event2 -> {
+                if(!newIds.isEmpty()) {
+                    crreController.getStudentsByStructures(newIds, handler);
+                }
+                handler.handle(SqlQueryUtils.getTransactionHandler(event2, id));
+            });
+        }));
     }
+
+/*    private void getAllStructures(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT DISTINCT r.id_structure " +
+                "FROM " + Crre.crreSchema + ".rel_group_structure r ";
+        sql.prepared(query, idsStructures, SqlResult.validResultHandler(handler));
+    }*/
 
     @Override
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
@@ -137,10 +182,9 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                     .add(idStructureGroup);
             if(i != idsStructure.size()-1){
                 insertGroupStructureRelationshipQuery.append(",");
-            }else{
-                insertGroupStructureRelationshipQuery.append(";");
             }
         }
+        insertGroupStructureRelationshipQuery.append(" ON CONFLICT DO NOTHING RETURNING id_structure;");
         return new JsonObject()
                 .put("statement",insertGroupStructureRelationshipQuery.toString())
                 .put("values",params)

@@ -84,4 +84,31 @@ public class CrreController extends ControllerHelper {
         });
     }
 
+    public void getStudentsByStructures(JsonArray structures, final Handler<Either<String, JsonObject>> eitherHandler) {
+                Future<JsonArray> getStudentsByStructureFuture = Future.future();
+                Future<JsonArray> insertStructuresFuture = Future.future();
+                CompositeFuture.all(getStudentsByStructureFuture, insertStructuresFuture).setHandler(event -> {
+                    if (event.succeeded()) {
+                        JsonArray students = getStudentsByStructureFuture.result();
+                        structureService.insertStudents(students, result -> {
+                            if(result.isRight()) {
+                                structureService.getTotalStructure(total_structure -> {
+                                    JsonArray total = total_structure.right().getValue();
+                                    structureService.insertTotalStructure(total, event2 -> {
+                                        if(event2.isRight()) {
+                                            log.info("Insert total success");
+                                        } else {
+                                            log.error("Failed to insert");
+                                        }
+                                    });
+                                });
+                            }
+                        });
+                    } else {
+                        log.error("Failed to get students or insert into structure");
+                    }
+                });
+                structureService.insertStructures(structures, handlerJsonArray(insertStructuresFuture));
+                structureService.getStudentsByStructure(structures, handlerJsonArray(getStudentsByStructureFuture));
+    }
 }
