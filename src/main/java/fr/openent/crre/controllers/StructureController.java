@@ -8,22 +8,16 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
-import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserUtils;
 
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
-import static java.lang.Integer.parseInt;
 
 
 /**
@@ -53,12 +47,12 @@ public class StructureController extends ControllerHelper {
     @ResourceFilter(PersonnelRight.class)
     public void updateAmount(final HttpServerRequest  request){
             try {
-                Integer seconde = Integer.parseInt(request.params().get("seconde"));
-                Integer premiere = Integer.parseInt(request.params().get("premiere"));
-                Integer terminale = Integer.parseInt(request.params().get("terminale"));
+                int seconde = Integer.parseInt(request.params().get("seconde"));
+                int premiere = Integer.parseInt(request.params().get("premiere"));
+                int terminale = Integer.parseInt(request.params().get("terminale"));
                 String id_structure = request.params().get("id_structure");
                 boolean pro = Boolean.getBoolean(request.params().get("pro"));
-                Integer total_licence = 0;
+                int total_licence;
 
                 if(pro) {
                     total_licence = seconde * 3 + premiere * 3 + terminale * 3;
@@ -78,7 +72,7 @@ public class StructureController extends ControllerHelper {
                     }
                         });
                 structureService.updateAmount(id_structure, seconde, premiere, terminale, handlerJsonObject(updateAmountFuture));
-                structureService.updateAmountLicence(id_structure, total_licence, handlerJsonObject(updateAmountLicenceFuture));
+                structureService.reinitAmountLicence(id_structure, total_licence, handlerJsonObject(updateAmountLicenceFuture));
             } catch (ClassCastException e) {
                 log.error("An error occurred when updating licences amount", e);
             }

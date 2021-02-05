@@ -59,6 +59,7 @@ export class OrderRegion implements Order  {
     user_name:string;
     user_id:string;
     reassort: boolean;
+    priceTotalTTC ?: number;
 
     constructor() {
         this.typeOrder = "region";
@@ -99,7 +100,8 @@ export class OrderRegion implements Order  {
             rank: this.rank -1,
             user_name: this.user_name,
             user_id: this.user_id,
-            reassort: this.reassort
+            reassort: this.reassort,
+            priceTotalTTC: this.priceTotalTTC
         }
     }
 

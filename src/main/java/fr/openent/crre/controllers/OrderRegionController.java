@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
-import static fr.openent.crre.helpers.ElasticSearchHelper.searchById;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
@@ -106,7 +105,7 @@ public class OrderRegionController extends BaseController {
                                 String title = "Commande_" + date;
                                 if(last != null) {
                                     if(title.equals(last.substring(0, last.length() - 2))) {
-                                        title = title.substring(0, title.length()) + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
+                                        title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
                                     } else {
                                         title += "_1";
                                     }
@@ -128,18 +127,19 @@ public class OrderRegionController extends BaseController {
                                             List<Future> futures = new ArrayList<>();
                                             Future<JsonObject> purseUpdateFuture = Future.future();
                                             futures.add(purseUpdateFuture);
+                                            Future<JsonObject> purseUpdateLicencesFuture = Future.future();
+                                            futures.add(purseUpdateLicencesFuture);
                                             Future<JsonObject> createOrdersRegionFuture = Future.future();
                                             futures.add(createOrdersRegionFuture);
                                             JsonObject newOrder = ordersList.getJsonObject(i);
-                                            searchById(newOrder.getInteger("equipment_key"), equipment -> {
-                                                if(equipment.isRight()) {
-                                                    Double price = Double.parseDouble(equipment.right().getValue().getJsonObject(0).getString("price"));
-                                                    purseService.updatePurseAmount(price,
-                                                            newOrder.getInteger("id_campaign"),
-                                                            newOrder.getString("id_structure"),"-",
-                                                            handlerJsonObject(purseUpdateFuture) );
-                                                }
-                                            });
+                                            Double price = Double.parseDouble(newOrder.getInteger("price").toString())*newOrder.getInteger("amount");
+                                            purseService.updatePurseAmount(price,
+                                                    newOrder.getInteger("id_campaign"),
+                                                    newOrder.getString("id_structure"),"-",
+                                                    handlerJsonObject(purseUpdateFuture) );
+                                            structureService.updateAmountLicence(newOrder.getString("id_structure"),"-",
+                                                    newOrder.getInteger("amount"),
+                                                    handlerJsonObject(purseUpdateLicencesFuture) );
                                             orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, handlerJsonObject(createOrdersRegionFuture));
                                             int finalI = i;
                                             CompositeFuture.all(futures).setHandler(event -> {
@@ -311,7 +311,7 @@ public class OrderRegionController extends BaseController {
                         for (Object equipment : equipments.right().getValue()) {
                             JsonObject equipmentJson = (JsonObject) equipment;
                             if (idEquipment == equipmentJson.getInteger("id")) {
-                                double price = (Double.parseDouble(equipmentJson.getString("price")) * (1 + Double.parseDouble(equipmentJson.getString("tax_amount")) / 100)) * orderJson.getInteger("amount");
+                                double price = Double.parseDouble(equipmentJson.getString("price")) * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
                                 orderJson.put("name", equipmentJson.getString("name"));
                                 orderJson.put("image", equipmentJson.getString("image"));

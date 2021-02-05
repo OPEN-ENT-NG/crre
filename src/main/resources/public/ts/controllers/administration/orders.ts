@@ -147,26 +147,30 @@ export const orderController = ng.controller('orderController',
 
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
-            let total = 0;
+            let totalPrice = 0;
+            let totalAmount = 0;
             if($scope.ordersClient.selectedElements.length > 0) {
                 $scope.ordersClient.selectedElements.forEach(order => {
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
-                    total += order.priceTotalTTC
+                    totalPrice += order.priceTotalTTC
+                    totalAmount += order.amount
                 });
             } else {
                 $scope.ordersClient.all.forEach(order => {
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
-                    total += order.priceTotalTTC
+                    totalPrice += order.priceTotalTTC
+                    totalAmount += order.amount
                 });
             }
             ordersToCreate.create().then(async data =>{
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
-                    $scope.campaign.purse_amount -= total;
+                    $scope.campaign.purse_amount -= totalPrice;
+                    $scope.campaign.nb_licences_available -= totalAmount;
                     if($scope.ordersClient.selectedElements.length > 0) {
                         $scope.campaign.nb_order_waiting -= $scope.ordersClient.selectedElements.length;
                         $scope.campaign.historic_etab_notification += $scope.ordersClient.selectedElements.length;

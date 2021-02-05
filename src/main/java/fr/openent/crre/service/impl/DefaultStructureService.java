@@ -172,13 +172,26 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void updateAmountLicence(String id_structure, Integer total_licence, Handler<Either<String, JsonObject>> defaultResponseHandler) {
+    public void reinitAmountLicence(String id_structure, Integer total_licence, Handler<Either<String, JsonObject>> defaultResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".licences " +
                 "SET initial_amount =  ?, amount = ? " +
                 "WHERE id_structure = ?";
         values.add(total_licence).add(total_licence).add(id_structure);
         sql.prepared(query, values, SqlResult.validRowsResultHandler(defaultResponseHandler));
+    }
+
+    @Override
+    public void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler) {
+        String updateQuery = "UPDATE  " + Crre.crreSchema + ".licences " +
+                "SET amount = amount " +  operation + " ?  " +
+                "WHERE id_structure = ? ;";
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(licences)
+                .add(idStructure);
+
+        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     public void getAllStructure(Handler<Either<String, JsonArray>> handler) {

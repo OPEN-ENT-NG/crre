@@ -180,10 +180,10 @@ CREATE TABLE crre."order-region-equipment"
 );
 
 CREATE TABLE crre.project (
-    id integer NOT NULL,
+    id bigserial NOT NULL,
     title character varying(50),
 
-    CONSTRAINT project_pkey PRIMARY KEY (id)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE crre.basket_order (
