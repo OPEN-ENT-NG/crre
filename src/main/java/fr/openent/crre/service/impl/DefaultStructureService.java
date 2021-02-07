@@ -140,7 +140,11 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 }
             }
         }
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        if(query.length()>5) {
+            Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        }else{
+            handler.handle(new Either.Right<>(new JsonObject()));
+        }
 
     }
 
