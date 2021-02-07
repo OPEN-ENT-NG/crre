@@ -70,7 +70,7 @@ public class BasketController extends ControllerHelper {
                                     String idEquipment = basket.getString("id_equipment");
                                     for (Object equipment : equipments.right().getValue()) {
                                         JsonObject equipmentJson = (JsonObject) equipment;
-                                        if (idEquipment == equipmentJson.getString("id")) {
+                                        if (idEquipment.equals(equipmentJson.getString("id"))) {
                                             basket.put("equipment",equipment);
                                         }
                                     }

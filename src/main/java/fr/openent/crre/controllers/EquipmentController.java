@@ -51,20 +51,9 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @Override
     public void list(HttpServerRequest request) {
-        Integer page = request.params().contains("page") ? Integer.parseInt(request.getParam("page")) : 0;
-        String order = request.params().contains("order") ? request.getParam("order") : "name";
-        Boolean reverse = request.params().contains("reverse") && Boolean.parseBoolean(request.getParam("reverse"));
-        List<String> queries = request.params().getAll("q");
         List<String> orderIds = request.params().getAll("order_id");
-        if(orderIds.isEmpty())
-            equipmentService.listEquipments(page, order, reverse, queries, arrayResponseHandler(request));
-        else{
-            List<String> orderIdsInt = new ArrayList<>();
-            for(String orderId : orderIds){
-                orderIdsInt.add(orderId);
-            }
-            searchByIds(orderIdsInt, arrayResponseHandler(request));
-        }
+        List<String> orderIdsInt = new ArrayList<>(orderIds);
+        searchByIds(orderIdsInt, arrayResponseHandler(request));
     }
 
     @Get("/equipment/:id")

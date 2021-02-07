@@ -178,15 +178,17 @@ export class OrdersClient extends Selection<OrderClient> {
             if ((text.trim() === '' || !text)) return;
             const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}`);
             this.all = Mix.castArrayAs(OrderClient, data);
-            await this.getEquipments(this.all).then(equipments =>{
-                for (let order of this.all) {
-                    let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                    order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                    order.name = equipment.name;
-                    order.image = equipment.urlcouverture;
-                    order.creation_date = moment(order.creation_date).format('L');
-                }
-            });
+            if(this.all.length>0) {
+                await this.getEquipments(this.all).then(equipments => {
+                    for (let order of this.all) {
+                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                        order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                        order.name = equipment.name;
+                        order.image = equipment.urlcouverture;
+                        order.creation_date = moment(order.creation_date).format('L');
+                    }
+                });
+            }
         } catch (err) {
             toasts.warning('crre.basket.sync.err');
             throw err;
@@ -211,15 +213,17 @@ export class OrdersClient extends Selection<OrderClient> {
                 }
                 let {data} = await http.get(url);
                 this.all = Mix.castArrayAs(OrderClient, data);
-                await this.getEquipments(this.all).then(equipments =>{
-                    for (let order of this.all) {
-                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                        order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                        order.name = equipment.name;
-                        order.image = equipment.urlcouverture;
-                        order.creation_date = moment(order.creation_date).format('L');
-                    }
-                });
+                if(this.all.length>0) {
+                    await this.getEquipments(this.all).then(equipments => {
+                        for (let order of this.all) {
+                            let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                            order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                            order.name = equipment.name;
+                            order.image = equipment.urlcouverture;
+                            order.creation_date = moment(order.creation_date).format('L');
+                        }
+                    });
+                }
             } else {
                 toasts.warning('crre.equipment.special');
             }
@@ -236,41 +240,45 @@ export class OrdersClient extends Selection<OrderClient> {
             if (idCampaign && idStructure) {
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
-                await this.getEquipments(this.all).then(equipments =>{
-                    for (let order of this.all) {
-                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                        order.price = equipment.price;
-                        order.name = equipment.name;
-                        order.image = equipment.urlcouverture;
-                        order.grade = equipment.grade_name;
-                    }
-                    this.syncWithIdsCampaignAndStructure();
-                });
+                if(this.all.length>0) {
+                    await this.getEquipments(this.all).then(equipments => {
+                        for (let order of this.all) {
+                            let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                            //order.price = equipment.price;
+                            order.name = equipment.ark;
+                            order.image = equipment.urlcouverture;
+                            //order.grade = equipment.grade_name;
+                        }
+                        //this.syncWithIdsCampaignAndStructure();
+                    });
+                }
             } else {
                 const { data } = await http.get(  `/crre/orders?status=${status}`);
                 this.all = Mix.castArrayAs(OrderClient, data);
-                await this.getEquipments(this.all).then(equipments =>{
-                    for (let order of this.all) {
-                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                        order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                        order.price = equipment.price;
-                        order.name = equipment.name;
-                        order.image = equipment.urlcouverture;
-                        order.grade = equipment.grade_name;
-                        order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
-                        order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                        order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
-                        order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
-                        if(order.files.length > 1 )
-                            order.files.sort(function (a, b) {
-                                return  a.filename.localeCompare(b.filename);
-                            });
-                        if (status !== 'VALID') {
-                            this.makeOrderNotValid(order);
+                if(this.all.length>0) {
+                    await this.getEquipments(this.all).then(equipments => {
+                        for (let order of this.all) {
+                            let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                            //order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                            //order.price = equipment.price;
+                            order.name = equipment.ark;
+                            order.image = equipment.urlcouverture;
+                            //order.grade = equipment.grade_name;
+                            order.name_structure = structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
+                            order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
+                            order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
+                            order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
+                            if (order.files.length > 1)
+                                order.files.sort(function (a, b) {
+                                    return a.filename.localeCompare(b.filename);
+                                });
+                            if (status !== 'VALID') {
+                                this.makeOrderNotValid(order);
+                            }
+                            order.creation_date = moment(order.creation_date, 'DD/MM/YYYY').format('DD-MM-YYYY');
                         }
-                        order.creation_date= moment(order.creation_date,'DD/MM/YYYY').format('DD-MM-YYYY');
-                    }
-                });
+                    });
+                }
             }
         } catch (e) {
             toasts.warning('crre.order.sync.err');

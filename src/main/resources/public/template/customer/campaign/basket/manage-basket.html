@@ -19,7 +19,7 @@
                     <i18n ng-show="basket.equipment.status === 'EPUISE'">crre.OUT_OF_STOCK</i18n>
                 </h1>
                 <article class="basket-item twelve cell"
-                         ng-class="{ openedOptions: display.equipmentOption[$index], disabled: basket.equipment.status !== 'DISPONIBLE' }">
+                         ng-class="{ openedOptions: display.equipmentOption[$index], disabled: false }">
                     <div class="cell width-40">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="basket.selected"

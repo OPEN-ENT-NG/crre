@@ -541,7 +541,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 .add(basket.getInteger("id_campaign"))
                 .add(basket.getString("id_structure"))
                 .add("WAITING")
-                .add(basket.getInteger("id_equipment"))
+                .add(basket.getString("id_equipment"))
                 .add(basket.getString("comment"));
         return params;
     }

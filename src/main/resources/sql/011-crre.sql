@@ -1,5 +1,8 @@
 DROP TABLE crre.equipment CASCADE;
 DROP TABLE crre.contract CASCADE;
+DROP TABLE crre.rel_equipment_grade;
+DROP TABLE crre.rel_equipment_subject;
+DROP TABLE crre.tax;
 
 ALTER TABLE crre.basket_equipment
 ALTER COLUMN id_equipment TYPE VARCHAR;

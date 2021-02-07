@@ -132,7 +132,7 @@ public class OrderRegionController extends BaseController {
                                             Future<JsonObject> createOrdersRegionFuture = Future.future();
                                             futures.add(createOrdersRegionFuture);
                                             JsonObject newOrder = ordersList.getJsonObject(i);
-                                            Double price = Double.parseDouble(newOrder.getInteger("price").toString())*newOrder.getInteger("amount");
+                                            Double price = Double.parseDouble("0")*newOrder.getInteger("amount");
                                             purseService.updatePurseAmount(price,
                                                     newOrder.getInteger("id_campaign"),
                                                     newOrder.getString("id_structure"),"-",
@@ -307,14 +307,14 @@ public class OrderRegionController extends BaseController {
                         ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                         orderJson.put("creation_date",creation_date);
-                        int idEquipment = orderJson.getInteger("equipment_key");
+                        String idEquipment = orderJson.getString("equipment_key");
                         for (Object equipment : equipments.right().getValue()) {
                             JsonObject equipmentJson = (JsonObject) equipment;
-                            if (idEquipment == equipmentJson.getInteger("id")) {
-                                double price = Double.parseDouble(equipmentJson.getString("price")) * orderJson.getInteger("amount");
+                            if (idEquipment.equals(equipmentJson.getString("id"))) {
+                                double price = Double.parseDouble("0") * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
-                                orderJson.put("name", equipmentJson.getString("name"));
-                                orderJson.put("image", equipmentJson.getString("image"));
+                                orderJson.put("name", equipmentJson.getString("ark"));
+                                orderJson.put("image", equipmentJson.getString("urlcouverture"));
                                 orderJson.put("ean", equipmentJson.getString("ean"));
                             }
                         }

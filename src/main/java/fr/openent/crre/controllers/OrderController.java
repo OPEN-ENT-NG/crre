@@ -225,7 +225,6 @@ public class OrderController extends ControllerHelper {
         List<String> params = request.params().getAll("id");
         List<String> idsEquipment = request.params().getAll("equipment_key");
         List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
-/*        List<Integer> idsEquipment = SqlQueryUtils.getIntegerIds(params2);*/
         Future<JsonArray> equipmentFuture = Future.future();
         Future<JsonArray> orderClientFuture = Future.future();
 

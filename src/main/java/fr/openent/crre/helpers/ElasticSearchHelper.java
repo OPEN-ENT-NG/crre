@@ -15,7 +15,7 @@ public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
     private static final Integer PAGE_SIZE = 10000;
     private static final String RESOURCE_TYPE_NAME = "_doc";
-    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("id", "name", "ean", "editor_name", "grade_name", "subject_name", "author");
+    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("_id", "titre", "ark", "editeur", "disciplines", "niveaux", "auteur");
 
     private ElasticSearchHelper() {
         throw new IllegalStateException("Utility class");
@@ -32,7 +32,10 @@ public class ElasticSearchHelper {
             } else {
                 JsonArray result = new JsonArray();
                 for (Object article:ar.result()) {
-                    result.add(((JsonObject)article).getJsonObject("_source").put("type", ((JsonObject)article).getString("_index")));
+                    result.add(((JsonObject)article).getJsonObject("_source")
+                            .put("type", ((JsonObject)article).getString("_index"))
+                            .put("id", ((JsonObject)article).getString("_id"))
+                    );
                 }
                 handler.handle(new Either.Right<>(result));
             }
@@ -51,7 +54,10 @@ public class ElasticSearchHelper {
             } else {
                 JsonArray result = new JsonArray();
                 for (Object article:ar.result()) {
-                    result.add(((JsonObject)article).getJsonObject("_source").put("type", ((JsonObject)article).getString("_index")));
+                    result.add(((JsonObject)article).getJsonObject("_source")
+                            .put("type", ((JsonObject)article).getString("_index"))
+                            .put("id", ((JsonObject)article).getString("_id"))
+                    );
                 }
                 handler.handle(new Either.Right<>(result));
             }
