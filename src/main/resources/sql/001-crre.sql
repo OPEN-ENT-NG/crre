@@ -206,7 +206,7 @@ CREATE TABLE crre.students
     "Seconde" bigint DEFAULT 0,
     "Premiere" bigint DEFAULT 0,
     "Terminale" bigint DEFAULT 0,
-    "pro" boolean,
+    "pro" boolean DEFAULT false,
     PRIMARY KEY (id_structure),
     CONSTRAINT structure_unique UNIQUE (id_structure)
 );

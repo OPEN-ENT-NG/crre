@@ -12,9 +12,6 @@ import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class Crre extends BaseServer {
@@ -42,25 +39,21 @@ public class Crre extends BaseServer {
     public void start() throws Exception {
         super.start();
         crreSchema = config.getString("db-schema");
-       if(config.containsKey("iteration-worker")){
-           iterationWorker = config.getInteger("iteration-worker");
-       }else{
-           log.info("no iteration worker in config");
-           iterationWorker = 10 ;
+        if(config.containsKey("iteration-worker")){
+            iterationWorker = config.getInteger("iteration-worker");
+        }else{
+            log.info("no iteration worker in config");
+            iterationWorker = 10 ;
         }
         EventBus eb = getEventBus(vertx);
         Storage storage = new StorageFactory(vertx, config).getStorage();
         STORAGE = storage;
         JsonObject mail = config.getJsonObject("mail", new JsonObject());
-        Date today = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 
         try {
-            if(config.getString("dateSynch").equals(formatter.format(today))) {
-                new CronTrigger(vertx, config.getString("timeSecondSynchCron")).schedule(
-                        new synchTotalStudents(vertx, new CrreController())
-                );
-            }
+            new CronTrigger(vertx, config.getString("timeSecondSynchCron")).schedule(
+                    new synchTotalStudents(vertx, new CrreController())
+            );
         } catch (Exception e) {
             log.fatal("Invalid CRRE cron expression.", e);
         }

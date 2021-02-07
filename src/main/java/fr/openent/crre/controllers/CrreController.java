@@ -46,7 +46,7 @@ public class CrreController extends ControllerHelper {
                 JsonArray structure_id = structures.right().getValue();
                 JsonArray ids = new JsonArray();
                 for (int i = 0; i < structure_id.size(); i++) {
-                    ids.add(structure_id.getJsonObject(0).getString("id_structure"));
+                    ids.add(structure_id.getJsonObject(i).getString("id_structure"));
                 }
                 Future<JsonArray> getStudentsByStructureFuture = Future.future();
                 Future<JsonArray> insertStructuresFuture = Future.future();
@@ -63,52 +63,55 @@ public class CrreController extends ControllerHelper {
                                             log.info("Insert total success");
                                             eitherHandler.handle(new Either.Right<>(event2.right().getValue()));
                                         } else {
-                                            log.error("Failed to insert");
+                                            log.error("Failed to insert total of students", event2.left());
                                             eitherHandler.handle(new Either.Left<>("Failed to insert"));
                                         }
                                     });
                                 });
+                            } else {
+                                log.error("Failed to insert students", result.left());
+                                eitherHandler.handle(new Either.Left<>("Failed to get students or insert into structure"));
                             }
                         });
                     } else {
-                        log.error("Failed to get students or insert into structure");
+                        log.error("Failed to get students or insert into structure", event.cause());
                         eitherHandler.handle(new Either.Left<>("Failed to get students or insert into structure"));
                     }
                 });
                 structureService.insertStructures(ids, handlerJsonArray(insertStructuresFuture));
                 structureService.getStudentsByStructure(ids, handlerJsonArray(getStudentsByStructureFuture));
             } else {
-                log.error("Failed to get all structures");
+                log.error("Failed to get all structures",structures.left());
                 eitherHandler.handle(new Either.Left<>("Failed to get all structures"));
             }
         });
     }
 
     public void getStudentsByStructures(JsonArray structures, final Handler<Either<String, JsonObject>> eitherHandler) {
-                Future<JsonArray> getStudentsByStructureFuture = Future.future();
-                Future<JsonArray> insertStructuresFuture = Future.future();
-                CompositeFuture.all(getStudentsByStructureFuture, insertStructuresFuture).setHandler(event -> {
-                    if (event.succeeded()) {
-                        JsonArray students = getStudentsByStructureFuture.result();
-                        structureService.insertStudents(students, result -> {
-                            if(result.isRight()) {
-                                structureService.getTotalStructure(total_structure -> {
-                                    JsonArray total = total_structure.right().getValue();
-                                    structureService.insertTotalStructure(total, event2 -> {
-                                        if(event2.isRight()) {
-                                            log.info("Insert total success");
-                                        } else {
-                                            log.error("Failed to insert");
-                                        }
-                                    });
-                                });
-                            }
+        Future<JsonArray> getStudentsByStructureFuture = Future.future();
+        Future<JsonArray> insertStructuresFuture = Future.future();
+        CompositeFuture.all(getStudentsByStructureFuture, insertStructuresFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonArray students = getStudentsByStructureFuture.result();
+                structureService.insertStudents(students, result -> {
+                    if(result.isRight()) {
+                        structureService.getTotalStructure(total_structure -> {
+                            JsonArray total = total_structure.right().getValue();
+                            structureService.insertTotalStructure(total, event2 -> {
+                                if(event2.isRight()) {
+                                    log.info("Insert total success");
+                                } else {
+                                    log.error("Failed to insert");
+                                }
+                            });
                         });
-                    } else {
-                        log.error("Failed to get students or insert into structure");
                     }
                 });
-                structureService.insertStructures(structures, handlerJsonArray(insertStructuresFuture));
-                structureService.getStudentsByStructure(structures, handlerJsonArray(getStudentsByStructureFuture));
+            } else {
+                log.error("Failed to get students or insert into structure");
+            }
+        });
+        structureService.insertStructures(structures, handlerJsonArray(insertStructuresFuture));
+        structureService.getStudentsByStructure(structures, handlerJsonArray(getStudentsByStructureFuture));
     }
 }

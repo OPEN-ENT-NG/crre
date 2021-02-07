@@ -58,9 +58,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     public void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
-                "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;\n";
-        neo4j.execute(query, new JsonObject().put("ids", structureIds),
-                Neo4jResult.validResultHandler(handler));
+                "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;";
+        neo4j.execute(query, new JsonObject().put("ids", structureIds), Neo4jResult.validResultHandler(handler));
 
     }
 
