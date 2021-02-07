@@ -59,9 +59,9 @@ public class EquipmentController extends ControllerHelper {
         if(orderIds.isEmpty())
             equipmentService.listEquipments(page, order, reverse, queries, arrayResponseHandler(request));
         else{
-            List<Integer> orderIdsInt = new ArrayList<>();
+            List<String> orderIdsInt = new ArrayList<>();
             for(String orderId : orderIds){
-                orderIdsInt.add(Integer.parseInt(orderId));
+                orderIdsInt.add(orderId);
             }
             searchByIds(orderIdsInt, arrayResponseHandler(request));
         }
@@ -72,8 +72,8 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void equipment(final HttpServerRequest request) {
         try {
-            Integer idEquipment = request.params().contains("id")
-                    ? Integer.parseInt(request.params().get("id"))
+            String idEquipment = request.params().contains("id")
+                    ? request.params().get("id")
                     : null;
             equipmentService.equipment(idEquipment, arrayResponseHandler(request));
         } catch (ClassCastException e) {

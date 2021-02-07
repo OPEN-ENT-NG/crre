@@ -159,7 +159,7 @@ export class OrderRegion implements Order  {
     initDataFromEquipment():void {
         if (this.equipment) {
             this.summary = this.equipment.name;
-            this.image = this.equipment.image;
+            this.image = this.equipment.urlcouverture;
 
         }
     }

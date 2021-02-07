@@ -7,12 +7,12 @@
         </a>
     </div>
     <div class="card row padding-20" ng-show="display.equipment">
-        <h1 class="eight cell">[[basket.equipment.name]] </h1>
+        <h1 class="eight cell">[[basket.equipment.ark]] </h1>
         <div class="four cell right-magnet twelve-mobile" >
             <div class="add-basket centered row twelve vertical-spacing twelve-mobile">
-                <div class="twelve cell">
+                <div class="twelve cell" ng-if="basket.equipment.type !== 'articlenumerique'">
                     <h4 class="cell"><i18n>etablissement.price</i18n></h4>
-                    <h3 class="right-text">[[calculatePriceOfEquipment(basket.equipment, true, 0) | currency]]<i18n>per.student.per.year</i18n></h3>
+                    <h3 class="right-text">[[basket.equipment.prixht]]<i18n>per.student.per.year</i18n></h3>
                 </div>
                 <div class="twelve cell" ng-if="!isAdministrator()" workflow="crre.prescriptor">
                     <div class="quantity">
@@ -35,13 +35,13 @@
         </div>
         <div class="eight cell twelve-mobile">
             <div class="two cell twelve-mobile margin-right-10">
-                <img class="img-equipment" ng-src="[[basket.equipment.image]]" ng-show="basket.equipment.image!==null && basket.equipment.image!==undefined " />
-                <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.image===null || basket.equipment.image===undefined "/>
+                <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]" ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
+                <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
             </div>
-            <div class="editor" ng-show="basket.equipment.editor_name !== null" >
-                <div ng-bind-html="basket.equipment.editor_name"></div>
+            <div class="editor" ng-show="!!basket.equipment.editeur" >
+                <div ng-bind-html="basket.equipment.editeur"></div>
             </div>
-            <div ng-show="basket.equipment.description !== null" >
+            <div ng-show="!!basket.equipment.description" >
                 <p ng-bind-html="basket.equipment.description"></p>
             </div>
         </div>
@@ -51,25 +51,25 @@
             </h2>
             <table class="table twelve">
                 <tbody>
-                <tr>
+                <tr ng-if="!!basket.equipment.editeur">
                     <td class="one"><strong><i18n>crre.equipment.editor</i18n></strong></td>
-                    <td>[[basket.equipment.editor_name]]</td>
+                    <td>[[basket.equipment.editeur]]</td>
                 </tr>
-                <tr>
+                <tr ng-if="!!basket.equipment.auteur">
                     <td class="one"><strong><i18n>crre.equipment.author</i18n></strong></td>
-                    <td>[[basket.equipment.author]]</td>
+                    <td>[[basket.equipment.auteur]]</td>
                 </tr>
-                <tr>
+                <tr ng-if="!!basket.equipment.dateparution">
                     <td class="one"><strong><i18n>crre.date</i18n></strong></td>
-                    <td>[[basket.equipment.parution_date]]</td>
+                    <td>[[basket.equipment.dateparution]]</td>
                 </tr>
-                <tr>
+                <tr ng-if="!!basket.equipment.discipline">
                     <td class="one"><strong><i18n>crre.equipment.field</i18n></strong></td>
-                    <td>[[basket.equipment.subject_name]]</td>
+                    <td>[[basket.equipment.discipline]]</td>
                 </tr>
                 <tr>
                     <td class="one"><strong><i18n>crre.equipment.level</i18n></strong></td>
-                    <td>[[basket.equipment.grade_name]]</td>
+                    <td ng-bind="formatGrade(basket.equipment.niveaux)"></td>
                 </tr>
                 <tr>
                     <td class="one"><strong><i18n>crre.equipment.ean</i18n></strong></td>
@@ -78,27 +78,44 @@
                 </tbody>
             </table>
         </div>
-        <div class="twelve cell">
+  <!--      <div class="twelve cell">
             <h2>
                 <i18n>crre.equipment.details</i18n>
+            </h2>-->
+        <div class="twelve cell" ng-if="basket.equipment.offres && basket.equipment.offres.length > 0">
+            <h2>
+                <i18n>crre.equipment.offer</i18n>
             </h2>
             <table class="table twelve">
+                <thead>
+                <tr>
+                    <td><i18n>crre.offer</i18n></td>
+                    <td><i18n>crre.minimal.quantity</i18n></td>
+                </tr>
+                </thead>
                 <tbody>
-                <tr>
-                    <td class="one"><strong><i18n>crre.equipment.duration</i18n></strong></td>
-                    <td>[[durationFormat(basket.equipment.duration)]]</td>
+                <tr ng-repeat="offer in basket.equipment.offres">
+                    <td class="one"><strong>[[offer.libelle]]</strong></td>
+                    <td>[[offer.quantiteminimaleachat]]</td>
                 </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="twelve cell" ng-if="basket.equipment.tvas && basket.equipment.tvas.length > 0">
+            <h2>
+                <i18n>crre.tax</i18n>
+            </h2>
+            <table class="table twelve">
+                <thead>
                 <tr>
-                    <td class="one"><strong><i18n>crre.tax</i18n></strong></td>
-                    <td>[[basket.equipment.tax_amount]] %</td>
+                    <td><i18n>crre.tax</i18n></td>
+                    <td><i18n>crre.percentage</i18n></td>
                 </tr>
-                <tr>
-                    <td class="one"><strong><i18n>crre.equipment.end.availability</i18n></strong></td>
-                    <td>[[basket.equipment.end_availability]]</td>
-                </tr>
-                <tr>
-                    <td class="one"><strong><i18n>crre.equipment.offer</i18n></strong></td>
-                    <td>[[basket.equipment.offer]]</td>
+                </thead>
+                <tbody>
+                <tr ng-repeat="tva in basket.equipment.tvas">
+                    <td class="one"><strong>[[tva.taux]]</strong></td>
+                    <td>[[tva.pourcent]]</td>
                 </tr>
                 </tbody>
             </table>

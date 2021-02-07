@@ -223,9 +223,9 @@ public class OrderController extends ControllerHelper {
     @ResourceFilter(PrescriptorRight.class)
     public void export (final HttpServerRequest request){
         List<String> params = request.params().getAll("id");
-        List<String> params2 = request.params().getAll("equipment_key");
+        List<String> idsEquipment = request.params().getAll("equipment_key");
         List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
-        List<Integer> idsEquipment = SqlQueryUtils.getIntegerIds(params2);
+/*        List<Integer> idsEquipment = SqlQueryUtils.getIntegerIds(params2);*/
         Future<JsonArray> equipmentFuture = Future.future();
         Future<JsonArray> orderClientFuture = Future.future();
 
@@ -283,7 +283,7 @@ public class OrderController extends ControllerHelper {
         orderService.listExport(idsOrders, handlerJsonArray);
     }
 
-    private void getEquipment(List<Integer> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
+    private void getEquipment(List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
         searchByIds(idsEquipment, handlerJsonArray);
     }
 

@@ -281,10 +281,10 @@ public class OrderRegionController extends BaseController {
         CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 List<JsonArray> resultsList = event.result().list();
-                List<Integer> listIdsEquipment = new ArrayList<>();
+                List<String> listIdsEquipment = new ArrayList<>();
                 for (JsonArray orders : resultsList) {
                     for (Object order : orders) {
-                        listIdsEquipment.add(((JsonObject) order).getInteger("equipment_key"));
+                        listIdsEquipment.add(((JsonObject) order).getString("equipment_key"));
                     }
                 }
                 getSearchByIds(request, resultsList, listIdsEquipment);
@@ -295,7 +295,7 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void getSearchByIds(HttpServerRequest request, List<JsonArray> resultsList, List<Integer> listIdsEquipment) {
+    private void getSearchByIds(HttpServerRequest request, List<JsonArray> resultsList, List<String> listIdsEquipment) {
         searchByIds(listIdsEquipment, equipments -> {
             if (equipments.isRight()) {
                 JsonArray finalResult = new JsonArray();
@@ -364,14 +364,13 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(PrescriptorRight.class)
     public void export (final HttpServerRequest request){
         List<String> params = request.params().getAll("id");
-        List<String> params2 = request.params().getAll("equipment_key");
+        List<String> idsEquipment = request.params().getAll("equipment_key");
         List<String> params3 = request.params().getAll("id_structure");
         JsonArray idStructures = new JsonArray();
         for(String structureId : params3){
             idStructures.add(structureId);
         }
         List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
-        List<Integer> idsEquipment = SqlQueryUtils.getIntegerIds(params2);
         Future<JsonArray> structureFuture = Future.future();
         Future<JsonArray> orderRegionFuture = Future.future();
         Future<JsonArray> equipmentsFuture = Future.future();

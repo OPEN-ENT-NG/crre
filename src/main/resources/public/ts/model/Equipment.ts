@@ -4,7 +4,8 @@ import {Eventer, Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 
 export class Equipment implements Selectable {
-    id?: number;
+    id?: string;
+    ean: string;
     name: string;
     summary: string;
     description: string;
@@ -12,7 +13,7 @@ export class Equipment implements Selectable {
     id_tax: number;
     id_contract: number;
     status: string;
-    image: string;
+    urlcouverture: string;
     reference: string;
     id_option?: number;
     technical_specs: TechnicalSpec[];
@@ -28,6 +29,10 @@ export class Equipment implements Selectable {
     priceTTC?: number;
     contract_type_name:string;
     grade_name: string;
+    disponibilite: any[];
+    disciplines: any[];
+    discipline: string;
+    ark: string;
 
     constructor (name?: string, price?: number) {
         this.eventer = new Eventer();
@@ -58,7 +63,7 @@ export class Equipment implements Selectable {
             option_enabled: this.option_enabled,
             reference : this.reference,
             price_editable: this.price_editable,
-            image: this.image || null,
+            urlcouverture: this.urlcouverture || null,
             id_contract: this.id_contract,
             technical_specs:  (this.technical_specs!=null) ? this.technical_specs.map((spec: TechnicalSpec) => spec.toJson()) : [],
             optionsCreate : _.filter(optionList, function(option) { return option.id === null ; }) ,
@@ -105,12 +110,17 @@ export class Equipment implements Selectable {
 
         try {
             let { data } =  await http.get(`/crre/equipment/${id}`);
-            Mix.extend(this, data[0]);
-            this.price = parseFloat(this.price.toString());
+             Mix.extend(this, data[0]);
+                this.id = this.ean;
+                this.status = this.disponibilite[0].valeur;
+                if(this.disciplines.length != 0) {
+                    this.discipline = this.disciplines[0].libelle;
+                }
+/*            this.price = parseFloat(this.price.toString());
             this.tax_amount = parseFloat(this.tax_amount.toString());
             this.options.toString() !== '[null]' && this.options !== null ?
                 this.options = Mix.castArrayAs(EquipmentOption, JSON.parse(this.options.toString()))
-                : this.options = [];
+                : this.options = [];*/
 /*            this.technical_specs = this.technical_specs !== null && this.technical_specs.toString() !== '[null]'
                 ? Mix.castArrayAs(TechnicalSpec, Utils.parsePostgreSQLJson(this.technical_specs))
                 : this.technical_specs;*/
@@ -195,7 +205,11 @@ export class Equipments extends Selection<Equipment> {
     async syncEquip (data: any) {
         this.all = Mix.castArrayAs(Equipment, data);
         this.all.map((equipment) => {
-            equipment.price = parseFloat(equipment.price.toString());
+            equipment.id = equipment.ean;
+            equipment.status = equipment.disponibilite[0].valeur;
+            if(equipment.disciplines.length != 0) {
+                equipment.discipline = equipment.disciplines[0].libelle;
+            }
         });
     }
 

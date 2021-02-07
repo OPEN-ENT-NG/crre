@@ -183,7 +183,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                     order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
                     order.name = equipment.name;
-                    order.image = equipment.image;
+                    order.image = equipment.urlcouverture;
                     order.creation_date = moment(order.creation_date).format('L');
                 }
             });
@@ -216,7 +216,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                         order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
                         order.name = equipment.name;
-                        order.image = equipment.image;
+                        order.image = equipment.urlcouverture;
                         order.creation_date = moment(order.creation_date).format('L');
                     }
                 });
@@ -241,7 +241,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                         order.price = equipment.price;
                         order.name = equipment.name;
-                        order.image = equipment.image;
+                        order.image = equipment.urlcouverture;
                         order.grade = equipment.grade_name;
                     }
                     this.syncWithIdsCampaignAndStructure();
@@ -255,7 +255,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
                         order.price = equipment.price;
                         order.name = equipment.name;
-                        order.image = equipment.image;
+                        order.image = equipment.urlcouverture;
                         order.grade = equipment.grade_name;
                         order.name_structure =  structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
                         order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();

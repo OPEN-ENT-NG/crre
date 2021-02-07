@@ -6,6 +6,7 @@
  */
 import {_, ng, template} from 'entcore';
 import {Basket, Campaign, Equipment, Utils} from '../../model';
+import forEach = require("core-js/fn/array/for-each");
 
 
 export const catalogController = ng.controller('catalogController',
@@ -33,13 +34,12 @@ export const catalogController = ng.controller('catalogController',
         };
 
         $scope.openEquipment = (equipment: Equipment) => {
-            if (equipment.status === 'AVAILABLE') {
+            if (equipment.status === 'DISPONIBLE') {
                 $scope.redirectTo(`/equipments/catalog/equipment/${equipment.id}`);
             }
         };
         $scope.validArticle = (equipment: Equipment) => {
-            return !isNaN(parseFloat($scope.calculatePriceOfEquipment(equipment)))
-                && $scope.basket.amount > 0;
+            return $scope.basket.amount > 0;
         };
         $scope.switchAll = (model: boolean, collection) => {
             collection.forEach((col) => {col.selected = col.required ? false : col.selected = model; });
@@ -64,6 +64,18 @@ export const catalogController = ng.controller('catalogController',
         $scope.setCampaignId = (campaign: Campaign) => {
           $scope.campaign = campaign;
         }
+
+        $scope.formatGrade = (grades: any[]) => {
+            let grade_string = "";
+            grades.forEach(function(grade, index) {
+               grade_string += grade.libelle;
+               if(grades.length - 1 != index) {
+                   grade_string += ", ";
+               }
+            });
+            return grade_string;
+        }
+
         $scope.addBasketItem = async (basket: Basket, campaign?: Campaign, id_structure?: string) => {
             if(basket.id_campaign === undefined && campaign.accessible) {
                 basket.id_campaign = campaign.id;

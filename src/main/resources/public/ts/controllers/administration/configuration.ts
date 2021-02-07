@@ -291,7 +291,7 @@ export const configurationController = ng.controller('configurationController',
             Utils.safeApply($scope);
         };
 
-        $scope.searchOption = async (searchText: string, field: string, model: EquipmentOption, varName: string) => {
+/*        $scope.searchOption = async (searchText: string, field: string, model: EquipmentOption, varName: string) => {
             try {
                 const options: Equipment[] = await $scope.equipments.search(searchText,field);
                 options.map((equipment: Equipment) => {
@@ -321,5 +321,5 @@ export const configurationController = ng.controller('configurationController',
                 $scope.equipment.options[index].search = undefined;
             }
             Utils.safeApply($scope);
-        };
+        };*/
     }]);

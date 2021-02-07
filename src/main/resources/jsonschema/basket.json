@@ -10,7 +10,7 @@
       "type": ["string", "null"]
     },
     "equipment": {
-      "type": "number"
+      "type": "string"
     },
     "options": {
       "type": ["array", "null"  ]

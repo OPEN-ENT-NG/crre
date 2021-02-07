@@ -14,12 +14,12 @@
         </div>
         <div class="basket-list">
             <div ng-repeat="basket in baskets.all track by $index" class="row">
-                <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="basket.equipment.status !== 'AVAILABLE'">
-                    <i18n ng-show="basket.equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
-                    <i18n ng-show="basket.equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n>
+                <h1 ng-class="{disabled: equipment.status !== 'DISPONIBLE'} " ng-show="basket.equipment.status !== 'DISPONIBLE'">
+<!--                    <i18n ng-show="basket.equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>-->
+                    <i18n ng-show="basket.equipment.status === 'EPUISE'">crre.OUT_OF_STOCK</i18n>
                 </h1>
                 <article class="basket-item twelve cell"
-                         ng-class="{ openedOptions: display.equipmentOption[$index], disabled: basket.equipment.status !== 'AVAILABLE' }">
+                         ng-class="{ openedOptions: display.equipmentOption[$index], disabled: basket.equipment.status !== 'DISPONIBLE' }">
                     <div class="cell width-40">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="basket.selected"
@@ -30,14 +30,14 @@
                     <div class="cell width-100-40">
                         <div class="row article-equipment">
                             <div class="one cell basket-image zero-mobile">
-                                <img ng-src="[[basket.equipment.image]]"
-                                     ng-show="basket.equipment.image!==null && basket.equipment.image!==undefined "/>
+                                <img ng-src="[[basket.equipment.urlcouverture]]"
+                                     ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined "/>
                                 <img skin-src="/img/illustrations/pages-default.png"
-                                     ng-show="basket.equipment.image===null || basket.equipment.image===undefined "/>
+                                     ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
                             </div>
                             <div class="cell eight">
                                 <div class="eleven centered">
-                                    <h3>[[basket.equipment.name]]</h3>
+                                    <h3>[[basket.equipment.ark]]</h3>
                                     <p ng-bind-html="basket.equipment.description"></p>
                                     <a ng-init="display.equipmentOption[$index] = false"
                                        ng-click="displayOptions($index)"
@@ -52,8 +52,8 @@
                             </div>
                             <div class="three cell text-right">
                                 <div class="vertical-spacing-twice price-field">
-                                    <h4 class="cell"><i18n>etablissement.price</i18n></h4>
-                                    <h3 class="right-text">[[priceDisplay(basket) | currency]]<i18n>per.student.per.year</i18n></h3>
+                                    <h4 ng-if="basket.equipment.type !== 'articlenumerique'"class="cell"><i18n>etablissement.price</i18n></h4>
+                                    <h3 ng-if="basket.equipment.type !== 'articlenumerique'" class="right-text">[[priceDisplay(basket) | currency]]<i18n>per.student.per.year</i18n></h3>
                                     <div class="quantity">
                                         <h4 class="cell" style="margin-left: 94px;"><i18n>crre.quantity</i18n></h4>
                                         <div class="right-text">

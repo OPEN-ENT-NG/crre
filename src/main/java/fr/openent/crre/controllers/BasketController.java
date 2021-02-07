@@ -57,20 +57,20 @@ public class BasketController extends ControllerHelper {
                 basketService.listBasket(idCampaign, idStructure, user, baskets -> {
                     if(baskets.isRight()) {
                         JsonArray basketsResult = new JsonArray();
-                        List<Integer> listIdsEquipment = new ArrayList<>();
+                        List<String> listIdsEquipment = new ArrayList<>();
                         for(Object bask : baskets.right().getValue()){
                             JsonObject basket = (JsonObject) bask;
                             basketsResult.add(basket);
-                            listIdsEquipment.add(basket.getInteger("id_equipment"));
+                            listIdsEquipment.add(basket.getString("id_equipment"));
                         }
                         searchByIds(listIdsEquipment, equipments -> {
                             if (equipments.isRight()) {
                                 for (Object bask : basketsResult) {
                                     JsonObject basket = (JsonObject) bask;
-                                    int idEquipment = basket.getInteger("id_equipment");
+                                    String idEquipment = basket.getString("id_equipment");
                                     for (Object equipment : equipments.right().getValue()) {
                                         JsonObject equipmentJson = (JsonObject) equipment;
-                                        if (idEquipment == equipmentJson.getInteger("id")) {
+                                        if (idEquipment == equipmentJson.getString("id")) {
                                             basket.put("equipment",equipment);
                                         }
                                     }

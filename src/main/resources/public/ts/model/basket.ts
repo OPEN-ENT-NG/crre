@@ -36,7 +36,7 @@ export class Basket implements Selectable {
         return {
             amount: this.amount,
             processing_date : this.processing_date,
-            equipment : this.equipment.id,
+            equipment : this.equipment.ean,
             options: options.length > 0 ?  _.pluck( options , 'id') : null ,
             id_campaign : this.id_campaign,
             id_structure : this.id_structure,

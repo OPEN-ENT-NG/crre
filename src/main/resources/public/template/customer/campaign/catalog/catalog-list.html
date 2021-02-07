@@ -114,23 +114,23 @@
     <div class="cell catalog-list twelve">
         <div class="dominos item_hover_accent_list">
             <div class="item six-mobile"
-                 ng-class="{disabled: equipment.status!== 'AVAILABLE', 'list-item': display.equipment}"
+                 ng-class="{disabled: equipment.status!== 'DISPONIBLE', 'list-item': display.equipment}"
                  ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay track by $index"
                  ng-click="openEquipment(equipment)">
 
-                <h1 ng-class="{disabled: equipment.status !== 'AVAILABLE'} " ng-show="equipment.status!== 'AVAILABLE'">
+                <h1 ng-class="{disabled: equipment.status !== 'DISPONIBLE'} " ng-show="equipment.status!== 'DISPONIBLE'">
                     <i18n ng-if="equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>
-                    <i18n ng-if="equipment.status === 'OUT_OF_STOCK'">crre.OUT_OF_STOCK</i18n>
+                    <i18n ng-if="equipment.status === 'EPUISE'">crre.OUT_OF_STOCK</i18n>
                 </h1>
 
-                <article class="domino"  ng-class="{ disabled: equipment.status !== 'AVAILABLE' }">
+                <article class="domino"  ng-class="{ disabled: equipment.status !== 'DISPONIBLE' }">
                     <div class="top" ng-class="{ item: display.equipment }">
                         <div class="image-container">
-                            <img ng-src="[[equipment.image]]" ng-show="equipment.image!==null && equipment.image!==undefined"/>
-                            <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.image===null || equipment.image===undefined"/>
+                            <img ng-src="[[equipment.urlcouverture]]" ng-show="equipment.urlcouverture!==null && equipment.urlcouverture!==undefined"/>
+                            <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined"/>
                         </div>
                         <div>
-                            <strong class="ellipsis">[[equipment.name]]</strong>
+                            <strong class="ellipsis">[[equipment.ark]]</strong>
                             <p class="description" ng-if="equipment.ean"><i></i> <b> EAN :  </b> [[equipment.ean]] </p>
                         </div>
                     </div>

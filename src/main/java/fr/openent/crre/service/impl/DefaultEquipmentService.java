@@ -190,7 +190,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
 
-    public void equipment(Integer idEquipment,  Handler<Either<String, JsonArray>> handler){
+    public void equipment(String idEquipment,  Handler<Either<String, JsonArray>> handler){
         searchById(idEquipment, handler);
     }
 
