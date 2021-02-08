@@ -220,9 +220,17 @@ export class Equipments extends Selection<Equipment> {
             var format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             if(!format.test(word)) {
                 if(filter) {
-                    uri = (`/crre/equipments/catalog/filter?filter=${filter}&word=${word}`);
+                    if(!!word) {
+                        uri = (`/crre/equipments/catalog/filter?filter=${filter}&word=${word}`);
+                    } else {
+                        uri = (`/crre/equipments/catalog/filter?filter=${filter}`);
+                    }
                 } else {
-                    uri = (`/crre/equipments/catalog/search?word=${word}`);
+                    if(!!word) {
+                        uri = (`/crre/equipments/catalog/search?word=${word}`);
+                    } else {
+                        uri = (`/crre/equipments/catalog`);
+                    }
                 }
                 let {data} = await http.get(uri);
                 this.syncEquip(data);

@@ -15,7 +15,7 @@ public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
     private static final Integer PAGE_SIZE = 10000;
     private static final String RESOURCE_TYPE_NAME = "_doc";
-    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("_id", "titre", "ark", "editeur", "disciplines", "niveaux", "auteur");
+    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("ean", "titre", "ark", "editeur", "disciplines", "niveaux", "auteur");
 
     private ElasticSearchHelper() {
         throw new IllegalStateException("Utility class");

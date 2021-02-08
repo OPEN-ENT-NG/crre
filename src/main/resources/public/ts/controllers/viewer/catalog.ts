@@ -20,10 +20,10 @@ export const catalogController = ng.controller('catalogController',
             $scope.initPopUpFilters();
         };
 
-        $scope.addFilter = (event) => {
+        $scope.addFilter = async (event) => {
             $scope.word = event.target.value;
             $scope.nbItemsDisplay = $scope.pageSize;
-            $scope.equipments.getFilterEquipments(event.target.value);
+            await $scope.equipments.getFilterEquipments(event.target.value);
             $scope.$apply();
         };
 
