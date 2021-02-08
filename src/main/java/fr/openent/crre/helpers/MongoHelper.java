@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MongoHelper extends MongoDbCrudService {
-    private static final Logger logger = LoggerFactory.getLogger(MongoHelper.class);
 
     private static final String  STATUS = "status";
     public MongoHelper(String collection) {
