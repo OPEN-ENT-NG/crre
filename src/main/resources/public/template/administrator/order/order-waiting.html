@@ -109,11 +109,16 @@
                 <td><div class="smallTabElem"></div></td>
                 <td><div class="smallTabElem center">[[project.amount]]</div></td>
                 <td><div class="smallTabElem center">[[project.total]]</div></td>
-                <td><div class="smallTabElem center ellipsis" tooltip="[[order.status]]">
-                    <div tooltip="[[project.status]]" class="[[project.status]] status-circle  cell row myOrder centerCircleMobile">
+                <td>
+                    <div class="smallTabElem center ellipsis" ng-if="project.status == 'IN PROGRESS'" tooltip="crre.new">
+                        <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
+                        <span class="webkit-vertical-align zero-mobile"><i18n>crre.new</i18n></span>
                     </div>
-                    <span ng-bind="lang.translate(project.status)" class="webkit-vertical-align zero-mobile"></span>
-                </div></td>
+                    <div class="smallTabElem center ellipsis" ng-if="project.status !== 'IN PROGRESS'" tooltip="[[project.status]]">
+                        <div class="[[project.status]] status-circle  cell row myOrder centerCircleMobile"></div>
+                        <span ng-bind="lang.translate(project.status)" class="webkit-vertical-align zero-mobile"></span>
+                    </div>
+                </td>
             </tr>
             <tr ng-repeat="order in project.orders" class="subline" post-ng-repeat>
                 <td class="table-selector">
@@ -145,6 +150,14 @@
                          tooltip="[[order.comment]]"
                          ng-if="order.comment">
                         <i class="comment-icon"></i>
+                    </div>
+                    <div class="smallTabElem center ellipsis" ng-if="order.displayStatus && order.status == 'IN PROGRESS'" tooltip="crre.new">
+                        <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
+                        <span class="webkit-vertical-align zero-mobile"><i18n>crre.new</i18n></span>
+                    </div>
+                    <div class="smallTabElem center ellipsis" ng-if="order.displayStatus && order.status !== 'IN PROGRESS'" tooltip="[[order.status]]">
+                        <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile"></div>
+                        <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                     </div>
                 </td>
             </tr>

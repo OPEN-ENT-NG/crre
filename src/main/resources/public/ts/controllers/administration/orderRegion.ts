@@ -256,6 +256,32 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
+        function setStatus(project, firstOrder) {
+            project.status = "IN PROGRESS";
+            let partiallyRefused = false;
+            let partiallyValided = false;
+            if(project.orders.length == 1){
+                project.status = firstOrder.status;
+            } else {
+                for (const order of project.orders) {
+                    if (project.status != order.status)
+                        if (order.status == 'VALID')
+                            partiallyValided = true;
+                        else if (order.status == 'REJECTED')
+                            partiallyRefused = true;
+                }
+                if (partiallyRefused || partiallyValided) {
+                    for (const order of project.orders) {
+                        order.displayStatus = true;
+                    }
+                    if (partiallyRefused && !partiallyValided)
+                        project.status = "PARTIALLYREJECTED"
+                    else
+                        project.status = "PARTIALLYVALIDED"
+                }
+            }
+        }
+
         const synchroRegionOrders = async (isSearching: boolean = false) : Promise<void> => {
             if(!isSearching) {
                 await $scope.getProjects();
@@ -285,7 +311,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                         project.amount = $scope.calculateAmountRegion(project.orders);
                         const firstOrder = project.orders[0];
                         project.creation_date = firstOrder.creation_date;
-                        project.status = firstOrder.status;
+                        setStatus(project, firstOrder);
                         project.campaign_name = firstOrder.campaign_name;
                         const structure = $scope.structuresToDisplay.all.find(structure => firstOrder.id_structure == structure.id);
                         if(structure) {
@@ -582,6 +608,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     order.selected = $scope.allOrdersSelected;
                 });
             });
+            $scope.displayToggle = $scope.allOrdersSelected;
             Utils.safeApply($scope);
         }
 

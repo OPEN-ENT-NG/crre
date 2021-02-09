@@ -276,8 +276,35 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                         displayedBasket.orders.push(order);
                     }
                 });
+                setStatus(displayedBasket, displayedBasket.orders[0]);
                 $scope.displayedBasketsOrders.push(displayedBasket);
             });
         };
+
+        function setStatus(displayedBasket, firstOrder) {
+            displayedBasket.status = "IN PROGRESS";
+            let partiallyRefused = false;
+            let partiallyValided = false;
+            if(displayedBasket.orders.length == 1){
+                displayedBasket.status = firstOrder.status;
+            } else {
+                for (const order of displayedBasket.orders) {
+                    if (displayedBasket.status != order.status)
+                        if (order.status == 'VALID')
+                            partiallyValided = true;
+                        else if (order.status == 'REJECTED')
+                            partiallyRefused = true;
+                }
+                if (partiallyRefused || partiallyValided) {
+                    for (const order of displayedBasket.orders) {
+                        order.displayStatus = true;
+                    }
+                    if (partiallyRefused && !partiallyValided)
+                        displayedBasket.status = "PARTIALLYREJECTED"
+                    else
+                        displayedBasket.status = "PARTIALLYVALIDED"
+                }
+            }
+        }
         this.init();
     }]);

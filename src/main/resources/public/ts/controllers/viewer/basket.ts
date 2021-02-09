@@ -30,7 +30,7 @@ export const basketController = ng.controller('basketController',
         $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber?: number) => {
             let totalPrice = 0;
             baskets.all.map((basket) => {
-                if (basket.equipment.status !== 'DISPONIBLE') return false;
+                if (basket.equipment.disponibilite[0].valeur !== 'DISPONIBLE') return false;
                 if (!$scope.hasOneSelected(baskets) || basket.selected) {
                     let basketItemPrice = $scope.calculatePriceOfBasket(basket, 2, false);
                     totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
@@ -41,7 +41,7 @@ export const basketController = ng.controller('basketController',
         $scope.calculatePriceOfEquipmentsProposal = (baskets: Baskets, roundNumber?: number) => {
             let totalPrice = 0;
             baskets.all.map((basket) => {
-                if (basket.equipment.status !== 'DISPONIBLE') return false;
+                if (basket.equipment.disponibilite[0].valeur !== 'DISPONIBLE') return false;
                 if (!$scope.hasOneSelected(baskets) || basket.selected) {
                     let basketItemPrice = $scope.calculatePriceOfBasketProposal(basket, 2, false);
                     totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
@@ -53,7 +53,7 @@ export const basketController = ng.controller('basketController',
         $scope.calculateQuantityOfBasket = (baskets: Baskets) => {
             let quantity = 0;
             baskets.all.map((basket) => {
-                if (basket.equipment.status !== 'DISPONIBLE') return false;
+                if (basket.equipment.disponibilite[0].valeur !== 'DISPONIBLE') return false;
                 if (!$scope.hasOneSelected(baskets) || basket.selected) {
                     quantity += basket.amount;
                 }

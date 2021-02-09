@@ -34,8 +34,8 @@
             <td><div class="tabElem"></div></td>
             <td><div class="tabElem"></div></td>
             <td>
-                <div class="smallTabElem center">
-                    <div tooltip="[[basket.status]]" class="[[basket.status]] status-circle  cell row myOrder"></div>
+                <div class="smallTabElem center ellipsis" tooltip="[[basket.status]]">
+                    <div class="[[basket.status]] status-circle  cell row myOrder"></div>
                     <span ng-bind="lang.translate(basket.status)" class="webkit-vertical-align zero-mobile"></span>
                 </div>
             </td>
@@ -83,41 +83,11 @@
                 </div>
             </td>
             <td ng-if="tableFields[6].display">
-                <div class="smallTabElem center ellipsis" tooltip="[[order.status]]">
-                    <div class="[[order.status]] status-circle cell row myOrder centerCircleMobile"></div>
+                <div class="smallTabElem center ellipsis" ng-if="order.displayStatus" tooltip="[[order.status]]" >
+                    <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile"></div>
                     <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                 </div>
             </td>
-            <!--            <td ng-if="tableFields[7].display"><div class="smallTabElem"> [[order.structure.uai]]</div></td>
-                        <td ng-if="tableFields[8].display"><div class="tabElem"> [[order.structure.name]]</div></td>
-                        <td ng-if="tableFields[9].display"><div class="tabElem"> [[order.structure.type_etab]]</div></td>
-                        <td ng-if="tableFields[10].display"><div class="tabElem"> [[order.structure.city]]</div></td>
-                        <td ng-if="tableFields[11].display"><div class="tabElem"> [[order.campaign.name]]</div></td>
-                        <td ng-if="tableFields[12].display"><div class="smallTabElem"> [[order.rankOrder]]</div></td>
-                        <td ng-if="tableFields[13].display"><div class="smallTabElem"><span ng-bind="order.priceUnitedTTC | currency"></span></div></td>
-                        <td ng-if="tableFields[14].display"><div class="tabElem">
-                            <div ng-if="order.files.length > 0" class="twelve">
-                                <div ng-repeat="file in order.files" class="twelve basket-file row">
-                                    <a class="cell twelve" ng-click="order.downloadFile(file)">[[
-                                        file.name ||
-                                        file.filename ]]</a>
-                                </div>
-                            </div>
-                        </div></td>
-                        <td ng-if="tableFields[15].display"><div class="tabElem">[[order.contract_type.name]]</div></td>
-                        <td ng-if="tableFields[16].display"><div class="tabElem">[[order.structure.academy]]</div></td>
-                        <td ng-if="tableFields[17].display"><div class="smallTabElem">[[order.structure.type]]</div></td>
-                        <td ng-if="tableFields[18].display"><div class="tabElem">[[order.contract.name]]</div></td>
-                        <td ng-if="tableFields[19].display"><div class="tabElem">[[order.project.title.name.toString() ]]</div></td>
-                        <td ng-if="tableFields[20].display"><div class="tabElem">[[getStructureGroupsList(order.structure_groups)]]</div></td>
-                        <td ng-if="tableFields[21].display"><div class="smallTabElem">[[order.project.room || '-']]</div></td>
-                        <td ng-if="tableFields[22].display"><div class="smallTabElem">[[order.project.building || '-']]</div></td>
-                        <td ng-if="tableFields[23].display"><div ng-init="tableFields[19].fullDisplay = false"
-                                                                 class="tabElem"
-                                                                 ng-class="{ellipsis:!tableFields[19].fullDisplay}"
-                                                                 ng-click="tableFields[19].fullDisplay = !tableFields[19].fullDisplay">[[order.project.description || '-']]</div></td>
-                        <td ng-if="tableFields[24].display"><div class="smallTabElem">[[order.structure.department]]</div></td>
-                        <td ng-if="tableFields[25].display"><div class="tabElem">[[order.program]]</div></td>-->
         </tr>
         </tbody>
     </table>

@@ -621,5 +621,8 @@
   "crre.all.editors": "Tout éditeurs",
   "crre.all.diffusors": "Tout diffuseur",
   "crre.all.states": "Tout état",
-  "crre.justificate.denied.order": "Justification refus de commande"
+  "crre.justificate.denied.order": "Justification refus de commande",
+  "crre.new": "Nouveau",
+  "PARTIALLYVALIDED": "Validée partiellement",
+  "PARTIALLYREJECTED": "Refusée partiellement"
 }

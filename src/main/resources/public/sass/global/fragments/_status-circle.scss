@@ -28,7 +28,14 @@
     }
   }
 
-  &.PROGRESS{
+  &.NEW {
+    background: $black;
+    > i {
+      background-image: url(/crre/public/img/scss/send.svg);
+    }
+  }
+
+  &.PROGRESS, &.PARTIALLYVALIDED, &.PARTIALLYREJECTED {
     background: $yellow;
 
     > i {
