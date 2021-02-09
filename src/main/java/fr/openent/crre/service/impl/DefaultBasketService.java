@@ -555,10 +555,10 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         for (int i = 0; i < baskets.size(); i++) {
             params.add(baskets.getInteger(i));
         }
-        params.add(idCampaign).add(idStructure);
         if (purse_enabled) {
-            params.add(idCampaign).add(idStructure);
+            params.add(idStructure);
         }
+        params.add(idCampaign).add(idStructure);
         params.add(user.getUserId());
         String queryEquipmentOrder = " DELETE FROM " + Crre.crreSchema + ".basket_equipment " +
                 " WHERE id_campaign = ? AND id_structure = ? " + basketFilter + " RETURNING " +
@@ -573,8 +573,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         if (purse_enabled) {
             return "( SELECT row_to_json(row(p.amount, count(o.id ) )) " +
                     " FROM " + Crre.crreSchema + ".purse p, " + Crre.crreSchema + ".order_client_equipment o " +
-                    " where p.id_campaign = ? " +
-                    " AND p.id_structure = ? " +
+                    " where p.id_structure = ? " +
                     " AND  o.id_campaign = ? " +
                     " AND o.id_structure = ? AND o.status != 'VALID' AND o.user_id = ? " +
                     " GROUP BY(p.amount) )";

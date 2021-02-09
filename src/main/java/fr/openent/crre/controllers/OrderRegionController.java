@@ -134,7 +134,6 @@ public class OrderRegionController extends BaseController {
                                             JsonObject newOrder = ordersList.getJsonObject(i);
                                             Double price = Double.parseDouble("0")*newOrder.getInteger("amount");
                                             purseService.updatePurseAmount(price,
-                                                    newOrder.getInteger("id_campaign"),
                                                     newOrder.getString("id_structure"),"-",
                                                     handlerJsonObject(purseUpdateFuture) );
                                             structureService.updateAmountLicence(newOrder.getString("id_structure"),"-",

@@ -56,26 +56,6 @@ export class Purses extends Selection<Purse> {
         let {data} = await http.get(`/crre/campaign/${this.id_campaign}/purses/list`);
         this.all = Mix.castArrayAs(Purse, data);
     }
-
-    async check(id_campaign){
-        let {data, status} =  await  http.get(`/crre/campaign/${id_campaign}/purse/check`);
-        if(status===201){
-            this.all.map(purse => {
-                data.map( back_data =>{
-                    if (back_data.id_structure && back_data.id_structure === purse.id_structure){
-                        purse.substraction = back_data.substraction;
-                        if(purse.substraction !== 0){
-                            if(Math.abs(purse.substraction) < 2){
-                                purse.bigDifference = false;
-                            }else{
-                                purse.bigDifference = true;
-                            }
-                        }
-                    }
-                })
-            })
-        }
-    }
 }
 
 export class PurseImporter {

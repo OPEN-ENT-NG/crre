@@ -74,10 +74,5 @@ export const purseController = ng.controller('PurseController',
         $scope.exportPurses = (id: number) => {
             window.location = `/crre/campaign/${id}/purses/export`;
         };
-        $scope.checkPurses = async ( id_Campaign : number ) =>{
-            $scope.isChecked = true;
-            await $scope.campaign.purses.check(id_Campaign);
-            Utils.safeApply($scope)
-        }
 
     }]);

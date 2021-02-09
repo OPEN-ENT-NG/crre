@@ -247,28 +247,6 @@ public class PurseController extends ControllerHelper {
         }
     }
 
-    @Get("/campaign/:id/purse/check")
-    @ApiDoc("Get purses checks")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void checkPurse(final HttpServerRequest request) {
-        try {
-            Integer idCampaign = Integer.parseInt(request.params().get("id"));
-            purseService.checkPurses(idCampaign, event -> {
-                if(event.isRight())
-                {
-                    request.response().setStatusCode(201).end(event.right().getValue().toString());
-                }else{
-                    badRequest(request);
-                }
-            });
-
-        } catch (NumberFormatException e) {
-            log.error("[Crre@purses] : An error occurred when casting campaign id", e);
-            badRequest(request);
-        }
-    }
-
     @Get("/campaign/:id/purses/list")
     @ApiDoc("Get purses for a specific campaign")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

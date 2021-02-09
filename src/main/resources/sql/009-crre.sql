@@ -1,0 +1,1 @@
+alter table crre.purse drop column id_campaign;
