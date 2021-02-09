@@ -43,32 +43,6 @@ public interface OrderService {
    void validateOrders(HttpServerRequest request, UserInfos user, List<Integer> ids, String url,
                        Handler<Either<String, JsonObject>> handler);
 
- /**
-  * Check if the order can be delete
-  *
-  * @param idOrder
-  * @param handler
-  */
- void deletableOrder(Integer idOrder, Handler<Either<String, JsonObject>> handler);
-
- /**
-     * delete an order
-     * @param idOrder id of the order item
-     * @param order order to delete
-     * @param idstructure id structure
-     * @param user
-     * @param handler function returning data
-     */
-    void deleteOrder( Integer idOrder, JsonObject order, String idstructure, UserInfos user,
-                      Handler<Either<String,JsonObject>> handler);
-
-    /**
-     * Wind up orders
-     * @param ids List containing ids
-     * @param handler Function handler returning data
-     **/
-    void windUpOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
-
     /**
      * get params for the exportCsvOrdersSelected
      * @param idsOrders list of idsOrders selected
@@ -77,47 +51,11 @@ public interface OrderService {
     void getExportCsvOrdersAdmin(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Update status order
-     * @param ids order id list
-     * @param status status to update
-     * @param engagementNumber engagement number
-     * @param labelProgram Program label
-     * @param dateCreation Creation date
-     * @param orderNumber Order number
-     * @param handler Function handler returning data
-     */
-    void updateStatusToSent(final List<String> ids, String status, final String engagementNumber, final String labelProgram, final String dateCreation,
-                            final String orderNumber, final Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * List orders based on ids
-     * @param ids order ids
-     * @param handler Function handler returning data
-     */
-    void listOrders(List<Integer> ids, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Get structure ids based on provided order ids
-     * @param ids order ids
-     * @param handler Function handler returning data
-     */
-    void getStructuresId(JsonArray ids, Handler<Either<String, JsonArray>> handler);
-
-    void getOrderByValidatioNumber(JsonArray ids, Handler<Either<String, JsonArray>> handler);
-
-    /**
      * List all orders group by number validation and fitlered by status
      * @param status Status
      * @param handler Function handler returning data
      */
     void getOrdersGroupByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Cancel validation order. Set all orders to waiting status. All orders update are based on validation numbers;
-     * @param validationNumbers validatio numbers list
-     * @param handler Function handler returning data
-     */
-    void cancelValidation(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
 
     void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler);
 
@@ -133,14 +71,6 @@ public interface OrderService {
      * @param handler Function handler returning data
      */
     void getFile(Integer orderId, String fileId, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Update the rank of two orders
-     *
-     * @param orders orders to update
-     * @param handler Function handler returning data
-     */
-    void updateRank( JsonArray orders, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Update the status orders
@@ -160,8 +90,6 @@ public interface OrderService {
     void getOrder(Integer idOrder, Handler<Either<String, JsonObject>> handler);
 
     void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler);
-
-    void getOrderBCParams(JsonArray validationNumbers, Handler<Either<String, JsonObject>> handler);
 
     void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
 

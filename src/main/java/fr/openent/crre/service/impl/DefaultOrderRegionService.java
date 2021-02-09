@@ -485,7 +485,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 " SET  status = ?, cause_status = ?" +
                 " WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ; ";
 
+        query += "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
+                "SET  status = ?, cause_status = ? " +
+                "WHERE id in ( SELECT ore.id_order_client_equipment FROM " + Crre.crreSchema + ".\"order-region-equipment\" ore " +
+                "WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ) ; ";
+
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status.toUpperCase()).add(justification);
+        for (Integer id : ids) {
+            params.add( id);
+        }
+        params.add(status.toUpperCase()).add(justification);
         for (Integer id : ids) {
             params.add( id);
         }
