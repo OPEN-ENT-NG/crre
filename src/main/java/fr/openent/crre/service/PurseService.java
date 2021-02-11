@@ -9,18 +9,16 @@ public interface PurseService {
 
     /**
      * Launch purse import
-     * @param campaignId Campaign id
      * @param statementsValues Object containing structure ids as key and purse amount as value
      * @param handler Function handler
      */
-    void launchImport(Integer campaignId, JsonObject statementsValues, Handler<Either<String, JsonObject>> handler);
+    void launchImport(JsonObject statementsValues, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get purses by campaign id
-     * @param campaignId campaign id
      * @param handler handler function returning data
      */
-    void getPursesByCampaignId(Integer campaignId, Handler<Either<String, JsonArray>> handler);
+    void getPurses(Handler<Either<String, JsonArray>> handler);
 
     /**
      * decrease or increase an amount of Purse

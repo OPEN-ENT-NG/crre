@@ -6,16 +6,14 @@ export class Purse implements Selectable {
     id?: number;
     id_structure: string;
     amount: number;
-    id_campaign: number;
 
     selected: boolean;
     substraction?: any;
     bigDifference: boolean;
 
-    constructor (id_structure?: string, amount?: number, id_campaign?: number) {
+    constructor (id_structure?: string, amount?: number) {
         if (id_structure) this.id_structure = id_structure;
         if (amount) this.amount = amount;
-        if (id_campaign) this.id_campaign = id_campaign;
 
         this.selected = false;
     }
@@ -38,22 +36,19 @@ export class Purse implements Selectable {
     toJson () {
         return {
             id_structure: this.id_structure,
-            amount: this.amount,
-            id_campaign: this.id_campaign
+            amount: this.amount
         };
     }
 }
 
 export class Purses extends Selection<Purse> {
 
-    id_campaign: number;
-    constructor (id_campaign: number) {
+    constructor () {
         super([]);
-        this.id_campaign = id_campaign;
     }
 
     async sync () {
-        let {data} = await http.get(`/crre/campaign/${this.id_campaign}/purses/list`);
+        let {data} = await http.get(`/crre/purses/list`);
         this.all = Mix.castArrayAs(Purse, data);
     }
 }
@@ -87,7 +82,7 @@ export class PurseImporter {
         formData.append('file', this.files[0], this.files[0].name);
         let response;
         try {
-            response = await http.post(`/crre/campaign/${this.id_campaign}/purses/import`,
+            response = await http.post(`/crre/purses/import`,
                 formData, {'headers' : { 'Content-Type': 'multipart/form-data' }});
         } catch (err) {
             throw err.response.data;

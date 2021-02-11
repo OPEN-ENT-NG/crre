@@ -14,7 +14,7 @@
                     <td workflow="crre.administrator">
                         <label class="checkbox">
                             <input type="checkbox"
-                                   ng-change="switchAll(allPurseSelected, campaign.purses)"
+                                   ng-change="switchAll(allPurseSelected, purses)"
                                    ng-model="allPurseSelected">
                             <span></span>
                         </label>
@@ -46,7 +46,7 @@
                     <td ng-show="isChecked"><i18n>difference</i18n></td>
                 </thead>
                 <tbody>
-                <tr ng-repeat="purse in campaign.purses.all | orderBy:sort.purse.type:sort.purse.reverse"
+                <tr ng-repeat="purse in purses.all | orderBy:sort.purse.type:sort.purse.reverse"
                 ng-class="{'tr-warning': purse.substraction !== undefined && purse.substraction !== 0 && !purse.bigDifference,
                           'tr-error': purse.substraction !== undefined && purse.substraction !== 0 &&  purse.bigDifference,
                            'tr-valid': purse.substraction !== undefined && purse.substraction === 0 }">
@@ -71,10 +71,10 @@
         <container template="purse.lightbox"></container>
     </lightbox>
 
-    <section class="toggle-buttons" ng-class="{ hide: campaign.purses.selected.length === 0 || campaign.purses.selected.length > 1}">
+    <section class="toggle-buttons" ng-class="{ hide: purses.selected.length === 0 || purses.selected.length > 1}">
         <div class="toggle">
             <div class="row">
-                <button ng-click="openEditPurseForm(campaign.purses.selected[0])" ng-show="campaign.purses.selected.length === 1">
+                <button ng-click="openEditPurseForm(purses.selected[0])" ng-show="purses.selected.length === 1">
                     <i18n>modify</i18n>
                 </button>
             </div>

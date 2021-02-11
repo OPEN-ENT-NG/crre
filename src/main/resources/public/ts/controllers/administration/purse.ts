@@ -5,10 +5,9 @@ import { Mix } from 'entcore-toolkit';
 declare let window: any;
 
 export const purseController = ng.controller('PurseController',
-    ['$scope', '$routeParams', ($scope, $routeParams) => {
-        $scope.campaign = $scope.campaigns.get(parseInt($routeParams.idCampaign));
-        $scope.campaign.purses = new Purses(parseInt($routeParams.idCampaign));
-        $scope.campaign.purses.sync().then(() => Utils.safeApply($scope));
+    ['$scope', '$routeParams', ($scope) => {
+        $scope.purses = new Purses();
+        $scope.purses.sync().then(() => Utils.safeApply($scope));
 
         $scope.lightbox = {
             open: false
@@ -24,7 +23,7 @@ export const purseController = ng.controller('PurseController',
         $scope.openEditPurseForm = (purse: Purse = new Purse()) => {
             $scope.purse = new Purse();
             Mix.extend($scope.purse, purse);
-            template.open('purse.lightbox', 'administrator/campaign/purse/edit-purse-form');
+            template.open('purse.lightbox', 'administrator/purse/edit-purse-form');
             $scope.lightbox.open = true;
             Utils.safeApply($scope);
         };
@@ -40,7 +39,7 @@ export const purseController = ng.controller('PurseController',
                 $scope.isNegativePurse = true;
             }else{
                 $scope.lightbox.open = false;
-                await $scope.campaign.purses.sync($scope.campaign.id);
+                await $scope.purses.sync($scope.campaign.id);
                 delete $scope.purse;
             }
             $scope.allHolderSelected = false;
@@ -49,7 +48,7 @@ export const purseController = ng.controller('PurseController',
 
         $scope.openPurseImporter = (): void => {
             $scope.importer = new PurseImporter($scope.campaign.id);
-            template.open('purse.lightbox', 'administrator/campaign/purse/import-purses-form');
+            template.open('purse.lightbox', 'administrator/purse/import-purses-form');
             $scope.lightbox.open = true;
             Utils.safeApply($scope);
         };
@@ -61,7 +60,7 @@ export const purseController = ng.controller('PurseController',
                 importer.message = err.message;
             } finally {
                 if (!importer.message) {
-                    await $scope.campaign.purses.sync($scope.campaign.id);
+                    await $scope.purses.sync($scope.campaign.id);
                     $scope.lightbox.open = false;
                     delete $scope.importer;
                 } else {

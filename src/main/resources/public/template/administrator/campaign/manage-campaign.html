@@ -18,13 +18,6 @@
                     <i18n>crre.campaign.amount</i18n>
                     : <span ng-bind="campaign.purse_amount | currency"></span></div>
                 <div class="small-text">[[campaign.nb_structures]] <i18n>structures</i18n></div>
-                <div class="small-text">[[campaign.nb_equipments]]
-                    <i18n>crre.equipments.available</i18n>
-                </div>
-                <button class="vertical-spacing twelve-mobile" ng-if="campaign.purse_enabled"
-                        ng-click="redirectTo('/campaigns/' + campaign.id + '/purse')">
-                    <i18n>crre.campaign.purse.manage</i18n>
-                </button>
             </div>
             <div class="twelve-mobile row-mobile cell">
                 <ul class="colored status-bar cell row">

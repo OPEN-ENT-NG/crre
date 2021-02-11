@@ -16,13 +16,10 @@ import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
-import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -55,8 +52,8 @@ public class PurseController extends ControllerHelper {
         this.campaignService = new DefaultCampaignService(Crre.crreSchema, "campaign");
     }
 
-    @Post("/campaign/:id/purses/import")
-    @ApiDoc("Import purse for a specific campaign")
+    @Post("/purses/import")
+    @ApiDoc("Import purse")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void purse(final HttpServerRequest request) {
@@ -102,7 +99,7 @@ public class PurseController extends ControllerHelper {
     }
 
     /**
-     * Match ids between structure campaign ids and provided ids.
+     * Match ids
      *
      * @param realIds     provided ids
      * @param expectedIds expected ids
@@ -176,14 +173,12 @@ public class PurseController extends ControllerHelper {
     private void launchImport(final HttpServerRequest request, final String path,
                               JsonObject statementsValues, final String contentFile) {
         try {
-            final Integer campaignId = Integer.parseInt(request.params().get("id"));
-            purseService.launchImport(campaignId,
-                    statementsValues, event -> {
+            purseService.launchImport(statementsValues, event -> {
                         if (event.isRight()) {
                             Renders.renderJson(request, event.right().getValue());
                             JsonObject contentObject = new JsonObject().put("content", contentFile);
                             Logging.insert(eb, request, Contexts.PURSE.toString(),
-                                    Actions.IMPORT.toString(), campaignId.toString(), contentObject);
+                                    Actions.IMPORT.toString(), "", contentObject);
                             deleteImportPath(vertx, path);
                         } else {
                             returnErrorMessage(request, new Throwable(event.left().getValue()), path);
@@ -217,14 +212,13 @@ public class PurseController extends ControllerHelper {
         renderError(request, new JsonObject().put("message", cause.getMessage()));
     }
 
-    @Get("/campaign/:id/purses/export")
-    @ApiDoc("Export purses for a specific campaign")
+    @Get("/purses/export")
+    @ApiDoc("Export purses")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void export(final HttpServerRequest request) {
         try {
-            Integer idCampaign = Integer.parseInt(request.params().get("id"));
-            purseService.getPursesByCampaignId(idCampaign, event -> {
+            purseService.getPurses(event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
                     JsonObject exportValues = new JsonObject();
@@ -242,20 +236,19 @@ public class PurseController extends ControllerHelper {
                 }
             });
         } catch (NumberFormatException e) {
-            log.error("[Crre@CSVExport] : An error occurred when casting campaign id", e);
+            log.error("[Crre@CSVExport] : An error occurred when casting purses", e);
             badRequest(request);
         }
     }
 
-    @Get("/campaign/:id/purses/list")
-    @ApiDoc("Get purses for a specific campaign")
+    @Get("/purses/list")
+    @ApiDoc("Get purses")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void list(final HttpServerRequest request) {
         try {
-            Integer idCampaign = Integer.parseInt(request.params().get("id"));
-            purseService.getPursesByCampaignId(idCampaign, event -> {
+            purseService.getPurses( event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
                     JsonArray purses = event.right().getValue();
@@ -270,7 +263,7 @@ public class PurseController extends ControllerHelper {
                 }
             });
         } catch (NumberFormatException e) {
-            log.error("[Crre@purses] : An error occurred when casting campaign id", e);
+            log.error("[Crre@purses] : An error occurred when casting purses", e);
             badRequest(request);
         }
     }
@@ -386,9 +379,7 @@ public class PurseController extends ControllerHelper {
      * @return File name
      */
     private static String getFileExportName(HttpServerRequest request) {
-        return I18n.getInstance().translate("campaign", getHost(request), I18n.acceptLanguage(request)) +
-                "-" + request.params().get("id") + "-" +
-                I18n.getInstance().translate("purse", getHost(request), I18n.acceptLanguage(request)) +
+        return I18n.getInstance().translate("purse", getHost(request), I18n.acceptLanguage(request)) +
                 ".csv";
     }
 }

@@ -40,7 +40,7 @@ routes.define(($routeProvider) => {
             .when('/structureGroups', {
                 action: 'manageStructureGroups'
             })
-            .when('/campaigns/:idCampaign/purse', {
+            .when('/purses', {
                 action: 'managePurse'
             })
             .when('/equipments/catalog/equipment/:idEquipment', {

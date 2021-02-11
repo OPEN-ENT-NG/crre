@@ -13,7 +13,7 @@ public class DefaultPurseService implements PurseService {
     private Boolean invalidDatas= false;
 
     @Override
-    public void launchImport(Integer campaignId, JsonObject statementsValues,
+    public void launchImport(JsonObject statementsValues,
                              final Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         String[] fields = statementsValues.fieldNames().toArray(new String[0]);
@@ -21,7 +21,6 @@ public class DefaultPurseService implements PurseService {
         for (String field : fields) {
             statements.add(getImportStatement(field,
                     statementsValues.getString(field)));
-
         }
         if(invalidDatas){
             handler.handle(new Either.Left<>
@@ -44,15 +43,10 @@ public class DefaultPurseService implements PurseService {
     }
 
     @Override
-    public void getPursesByCampaignId(Integer campaignId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Crre.crreSchema + ".purse" +
-                " WHERE id_structure IN " +
-                "( SELECT id_structure FROM " + Crre.crreSchema + ".rel_group_structure WHERE id_structure_group IN " +
-                "( SELECT id_structure_group FROM " + Crre.crreSchema + ".rel_group_campaign WHERE id_campaign = ? ) );";
+    public void getPurses(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * FROM " + Crre.crreSchema + ".purse;";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(campaignId);
-
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 

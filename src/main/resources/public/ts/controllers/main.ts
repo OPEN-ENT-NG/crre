@@ -89,12 +89,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('campaigns-main', 'administrator/campaign/campaign_form');
                 Utils.safeApply($scope);
             },
-            managePurse: async (params) => {
-                const campaign = $scope.campaigns.get(parseInt(params.idCampaign));
-                if (template.isEmpty('administrator-main') || campaign === undefined || !campaign.purse_enabled) {
-                    $scope.redirectTo('/campaigns');
-                }
-                template.open('campaigns-main', 'administrator/campaign/purse/manage-purse');
+            managePurse: async () => {
+                template.open('administrator-main', 'administrator/purse/manage-purse');
                 Utils.safeApply($scope);
             },
             manageStructureGroups: async () => {
