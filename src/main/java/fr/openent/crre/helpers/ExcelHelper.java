@@ -50,8 +50,7 @@ public class ExcelHelper {
 
     protected static Logger log = LoggerFactory.getLogger(ExcelHelper.class);
 
-    private DataFormat format;
-    public static final String totalLabel = "Total";
+    private final DataFormat format;
     public static final String sumLabel = "Somme";
 
     public ExcelHelper(Workbook wb, Sheet sheet) {

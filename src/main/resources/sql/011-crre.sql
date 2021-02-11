@@ -1,0 +1,1 @@
+ALTER TABLE crre.students ADD column total_april bigint DEFAULT 0;

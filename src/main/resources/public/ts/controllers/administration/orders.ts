@@ -140,11 +140,6 @@ export const orderController = ng.controller('orderController',
             $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.user_name === v.user_name)) === i)
         };
 
-        $scope.getStudents = () => {
-            let json = ''
-        }
-
-
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
             let totalPrice = 0;

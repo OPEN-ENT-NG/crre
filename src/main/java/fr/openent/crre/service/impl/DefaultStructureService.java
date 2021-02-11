@@ -106,33 +106,39 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             if(j.getString("u.level") != null) {
                 switch (j.getString("u.level")) {
                     case "SECONDE GENERALE & TECHNO YC BT": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                        params.add(count).add(s);
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, total_april = total_april + ?, " +
+                                "\"pro\" = false WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
                         break;
                     }
                     case "PREMIERE GENERALE & TECHNO YC BT": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                        params.add(count).add(s);
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, total_april = total_april + ?, " +
+                                "\"pro\" = false WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
                         break;
                     }
                     case "TERMINALE GENERALE & TECHNO YC BT": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, \"pro\" = false WHERE id_structure = ?; ";
-                        params.add(count).add(s);
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, total_april = total_april + ?, " +
+                                "\"pro\" = false WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
                         break;
                     }
                     case "BAC PRO 3 ANS : 2NDE PRO (OU 1ERE ANNEE)": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, \"pro\" = true WHERE id_structure = ?; ";
-                        params.add(count).add(s);
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, total_april = total_april + ?, " +
+                                "\"pro\" = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
                         break;
                     }
                     case "BAC PRO 3 ANS : 1ERE PRO (OU 2EME ANNEE)": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, \"pro\" = true WHERE id_structure = ?; ";
-                        params.add(count).add(s);
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, total_april = total_april + ?, " +
+                                "\"pro\" = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
                         break;
                     }
                     case "BAC PRO 3 ANS : TERM PRO (OU 3EME ANNEE)": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, \"pro\" = true WHERE id_structure = ?; ";
-                        params.add(count).add(s);
+                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, total_april = total_april + ?, " +
+                                "\"pro\" = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
                         break;
                     }
                     default:
@@ -167,7 +173,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = " SELECT \"Seconde\", \"Premiere\", \"Terminale\", \"Seconde\" + \"Premiere\" + \"Terminale\" as total, pro " +
+        String query = " SELECT \"Seconde\", \"Premiere\", \"Terminale\", \"Seconde\" + \"Premiere\" + \"Terminale\" as total, " +
+                "total_april, pro " +
                 "FROM " + Crre.crreSchema + ".students " +
                 "WHERE id_structure = ?";
         values.add(id_structure);
