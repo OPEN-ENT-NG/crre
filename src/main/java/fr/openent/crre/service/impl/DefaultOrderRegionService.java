@@ -480,7 +480,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void updateOrders(List<Integer> ids, String status, String justification, final Handler<Either<String, JsonObject>> handler){
+    public void  updateOrders(List<Integer> ids, String status, String justification, final Handler<Either<String, JsonObject>> handler){
         String query = "UPDATE " + Crre.crreSchema + ".\"order-region-equipment\" " +
                 " SET  status = ?, cause_status = ?" +
                 " WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ; ";

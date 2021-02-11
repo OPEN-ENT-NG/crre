@@ -126,8 +126,13 @@
                     </div>
                 </td>
                 <td>
+                    <div class="justification-rejected cell"
+                         tooltip="[[order.cause_status]]"
+                         ng-if="order.cause_status">
+                        <i class="comment-icon"></i>
+                    </div>
                     <div class="smallTabElem center ellipsis" ng-if="order.displayStatus" tooltip="[[order.status]]">
-                        <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile"></div>
+                        <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile" ng-if="!order.cause_status"></div>
                         <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                     </div>
                 </td>

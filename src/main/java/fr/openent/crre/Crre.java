@@ -59,7 +59,7 @@ public class Crre extends BaseServer {
         }
 
         addController(new CrreController());
-        addController(new EquipmentController(vertx));
+        addController(new EquipmentController());
         addController(new LogController());
         addController(new CampaignController());
         addController(new PurseController(vertx));

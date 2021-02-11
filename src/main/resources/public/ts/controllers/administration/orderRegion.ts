@@ -257,17 +257,15 @@ export const orderRegionController = ng.controller('orderRegionController',
         const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 
         function setStatus(project, firstOrder) {
-            project.status = "IN PROGRESS";
+            project.status = firstOrder.status;
             let partiallyRefused = false;
             let partiallyValided = false;
-            if(project.orders.length == 1){
-                project.status = firstOrder.status;
-            } else {
+            if(project.orders.length > 1){
                 for (const order of project.orders) {
                     if (project.status != order.status)
-                        if (order.status == 'VALID')
+                        if (order.status == 'VALID' || project.status == 'VALID')
                             partiallyValided = true;
-                        else if (order.status == 'REJECTED')
+                        else if (order.status == 'REJECTED' || project.status == 'REJECTED')
                             partiallyRefused = true;
                 }
                 if (partiallyRefused || partiallyValided) {

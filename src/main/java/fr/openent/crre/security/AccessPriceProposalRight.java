@@ -19,9 +19,7 @@ public class AccessPriceProposalRight implements ResourcesProvider {
         request.pause();
         String query,id;
         query = "SELECT count(basket_equipment.id) FROM "+ Crre.crreSchema + ".basket_equipment "
-                + " INNER JOIN " + Crre.crreSchema + ".equipment ON equipment.id = basket_equipment.id_equipment "
-                + " INNER JOIN " + Crre.crreSchema + ".contract ON contract.id = equipment.id_contract "
-                + " WHERE equipment.price_editable IS TRUE AND basket_equipment.id = ? ";
+                + " WHERE basket_equipment.id = ? ";
         id = request.getParam("idBasket");
         if (id != null) {
             JsonArray params = new JsonArray().add(id);

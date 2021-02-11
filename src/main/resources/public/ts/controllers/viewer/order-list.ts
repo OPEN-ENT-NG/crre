@@ -282,17 +282,15 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         };
 
         function setStatus(displayedBasket, firstOrder) {
-            displayedBasket.status = "IN PROGRESS";
+            displayedBasket.status = firstOrder.status;
             let partiallyRefused = false;
             let partiallyValided = false;
-            if(displayedBasket.orders.length == 1){
-                displayedBasket.status = firstOrder.status;
-            } else {
+            if(displayedBasket.orders.length > 1){
                 for (const order of displayedBasket.orders) {
                     if (displayedBasket.status != order.status)
-                        if (order.status == 'VALID')
+                        if (order.status == 'VALID' || displayedBasket.status == 'VALID')
                             partiallyValided = true;
-                        else if (order.status == 'REJECTED')
+                        else if (order.status == 'REJECTED' || displayedBasket.status == 'REJECTED')
                             partiallyRefused = true;
                 }
                 if (partiallyRefused || partiallyValided) {

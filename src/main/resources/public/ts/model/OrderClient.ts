@@ -79,9 +79,6 @@ export class OrderClient implements Order  {
         }
     }
 
-
-
-
     async delete ():Promise<any> {
         try {
             return await http.delete(`/crre/order/${this.id}/${this.id_structure}/${this.id_campaign}`);
@@ -157,6 +154,26 @@ export class OrderClient implements Order  {
 
         } catch (e) {
             toasts.warning('crre.order.get.err');
+        }
+    }
+
+    toJson():any {
+        return {
+            amount: this.amount,
+            price: this.price,
+            creation_date: moment().format('YYYY-MM-DD'),
+            status: this.status,
+            files: this.files,
+            name_structure: this.name_structure,
+            id_campaign: this.id_campaign,
+            id_structure: this.id_structure,
+            id_project: this.id_project,
+            equipment_key: this.equipment_key,
+            comment: (this.comment) ? this.comment : "",
+            user_name: this.user_name,
+            user_id: this.user_id,
+            reassort: this.reassort,
+            priceTotalTTC: this.priceTotalTTC
         }
     }
 }

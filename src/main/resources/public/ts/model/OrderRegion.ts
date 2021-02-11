@@ -68,18 +68,11 @@ export class OrderRegion implements Order  {
     toJson():any {
         return {
             amount: this.amount,
-            name: this.name,
             price: this.price,
-            summary: this.summary,
-            description: (this.description) ? this.description : "",
             ...(this.id_orderClient && {id_order_client_equipment: this.id_orderClient}),
-            image: this.image,
             creation_date: moment().format('YYYY-MM-DD'),
             status: this.status,
-            ...(this.number_validation && {number_validation: this.number_validation}),
             ...(this.title_id && {title_id: this.title_id}),
-
-            id_contract: this.id_contract,
             files: this.files,
             name_structure: this.name_structure,
             id_campaign: this.id_campaign,
@@ -87,17 +80,6 @@ export class OrderRegion implements Order  {
             id_project: this.id_project,
             equipment_key: this.equipment_key,
             comment: (this.comment) ? this.comment : "",
-            ...(this.rank && {rank: this.rank}),
-            technical_specs: (Utils.parsePostgreSQLJson(this.technical_spec) === null || Utils.parsePostgreSQLJson(this.technical_spec).length === 0) ?
-                []:
-                Utils.parsePostgreSQLJson(this.technical_spec).map(spec => {
-                    return {
-                        name: spec.name,
-                        value: spec.value
-                    }
-                }),
-            id_operation: this.id_operation,
-            rank: this.rank -1,
             user_name: this.user_name,
             user_id: this.user_id,
             reassort: this.reassort,
@@ -201,7 +183,6 @@ export class OrdersRegion extends Selection<OrderRegion> {
     async create():Promise<any> {
         let orders = [];
         this.all.map(order => {
-            order.initDataFromEquipment();
             orders.push(order.toJson());
         });
         try {
@@ -214,8 +195,13 @@ export class OrdersRegion extends Selection<OrderRegion> {
 
     toJson (status: string, justification:string):any {
         const ids = _.pluck(this.all, 'id');
+        let orders = [];
+        this.all.map(order => {
+            orders.push(order.toJson());
+        });
         return {
             ids,
+            orders: orders,
             status : status,
             justification : justification
         };

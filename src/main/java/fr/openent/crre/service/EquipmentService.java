@@ -3,11 +3,9 @@ package fr.openent.crre.service;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public interface EquipmentService {
 
@@ -18,80 +16,11 @@ public interface EquipmentService {
      */
     void equipment(String idEquipment,  Handler<Either<String, JsonArray>> handler);
 
-    /**
-     * Create an equipment
-     * @param equipment equipment to create
-     * @param handler function handler returning data
-     */
-    void create(JsonObject equipment, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Update an equipment
-     * @param id equipment id to update
-     * @param equipment equipment to update
-     * @param handler function handler returning data
-     */
-    void updateEquipment(Integer id, JsonObject equipment, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Delete an equipment
-     * @param ids equipment ids to delete
-     * @param handler function handler returning data
-     */
-    void delete(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Update status for ids list
-     * @param ids Ids list
-     * @param status Status
-     * @param handler Function handler returning data
-     */
-    void setStatus(List<Integer> ids, String status, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Search equipment based on query. Search field are name and reference
-     *
-     * @param query   queyr searching
-     * @param handler Function handler returning data
-     */
-    void search(String query,  List<String> listFields, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Create equipments due to an import
-     *
-     * @param equipments Array of equipments
-     * @param handler    Function handler returning data
-     */
-    void importEquipments(JsonArray equipments, JsonArray referencesToUpdate, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Get equipment page numbers
-     * @param filters Filters list
-     * @param handler Function handler returning data
-     */
-    void getNumberPagesCatalog(List<String> filters, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Get equipment pages number
-     *
-     * @param filters     Filter list
-     * @param handler     Function handler returning data
-     */
-    void getNumberPages(List<String> filters, Handler<Either<String, JsonObject>> handler);
-
-    void listAllEquipments(Integer idCampaign, String idStructure, Handler<Either<String, JsonArray>> handler);
-
     void searchWord(String word, Handler<Either<String, JsonArray>> handler);
-
-    void listFilters(Handler<Either<String, JsonObject>> handler);
 
     void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
 
     void searchAll(Handler<Either<String, JsonArray>> handler);
 
     void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler);
-
-    void syncES(Handler<Either<String, JsonArray>> handler);
-
-    void listEquipments(Integer page, String order, Boolean reverse, List<String> queries, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

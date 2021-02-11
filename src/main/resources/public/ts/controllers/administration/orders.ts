@@ -270,7 +270,7 @@ export const orderController = ng.controller('orderController',
             }
         }
 
-        function openLightboxRefuseOrder() {
+        $scope.openLightboxRefuseOrder = () => {
                 template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
                 $scope.display.lightbox.refuseOrder = true;
         }

@@ -13,18 +13,16 @@ import io.vertx.core.http.HttpServerFileUpload;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.io.File;
-import java.util.List;
 
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class ImportCSVHelper {
 
-    private Vertx vertx;
-    private EventBus eb;
+    private final Vertx vertx;
+    private final EventBus eb;
     private static final Logger log = LoggerFactory.getLogger(ImportCSVHelper.class);
 
     public ImportCSVHelper(Vertx vertx, EventBus eb) {
@@ -45,14 +43,11 @@ public class ImportCSVHelper {
      * @param handler Function handler returning data
      */
     public void getParsedCSV(final HttpServerRequest request, final String path, Boolean deletePath, final Handler<Either<String, Buffer>> handler) {
-        uploadImport(request, path, new Handler<AsyncResult>() {
-            @Override
-            public void handle(AsyncResult event) {
-                if (event.succeeded()) {
-                    readCsv(request, path, deletePath, handler);
-                } else {
-                    handler.handle(new Either.Left<>("Can not upload import"));
-                }
+        uploadImport(request, path, event -> {
+            if (event.succeeded()) {
+                readCsv(path, deletePath, handler);
+            } else {
+                handler.handle(new Either.Left<>("Can not upload import"));
             }
         });
     }
@@ -69,14 +64,11 @@ public class ImportCSVHelper {
         request.endHandler(getEndHandler(request, path, handler));
         request.exceptionHandler(getExceptionHandler(path, handler));
         request.uploadHandler(getUploadHandler(path, handler));
-        vertx.fileSystem().mkdir(path, new Handler<AsyncResult<Void>>() {
-            @Override
-            public void handle(AsyncResult<Void> event) {
-                if (event.succeeded()) {
-                    request.resume();
-                } else {
-                    handler.handle(new DefaultAsyncResult(new RuntimeException("mkdir.error", event.cause())));
-                }
+        vertx.fileSystem().mkdir(path, event -> {
+            if (event.succeeded()) {
+                request.resume();
+            } else {
+                handler.handle(new DefaultAsyncResult(new RuntimeException("mkdir.error", event.cause())));
             }
         });
     }
@@ -91,22 +83,14 @@ public class ImportCSVHelper {
      */
     private Handler<Void> getEndHandler(final HttpServerRequest request, final String path,
                                         final Handler<AsyncResult> handler) {
-        return new Handler<Void>() {
-            @Override
-            public void handle(Void v) {
-                UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                    @Override
-                    public void handle(UserInfos user) {
-                        if (WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString())) {
-                            handler.handle(new DefaultAsyncResult(null));
-                        } else {
-                            handler.handle(new DefaultAsyncResult(new RuntimeException("invalid.admin")));
-                            deleteImportPath(vertx, path);
-                        }
-                    }
-                });
+        return v -> UserUtils.getUserInfos(eb, request, user -> {
+            if (WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString())) {
+                handler.handle(new DefaultAsyncResult(null));
+            } else {
+                handler.handle(new DefaultAsyncResult(new RuntimeException("invalid.admin")));
+                deleteImportPath(vertx, path);
             }
-        };
+        });
     }
 
     /**
@@ -118,12 +102,9 @@ public class ImportCSVHelper {
      * @return Handler<Throwable>
      */
     private Handler<Throwable> getExceptionHandler(final String path, final Handler<AsyncResult> handler) {
-        return new Handler<Throwable>() {
-            @Override
-            public void handle(Throwable event) {
-                handler.handle(new DefaultAsyncResult(event));
-                deleteImportPath(vertx, path);
-            }
+        return event -> {
+            handler.handle(new DefaultAsyncResult(event));
+            deleteImportPath(vertx, path);
         };
     }
 
@@ -136,58 +117,43 @@ public class ImportCSVHelper {
      */
     private static Handler<HttpServerFileUpload> getUploadHandler(final String path,
                                                                   final Handler<AsyncResult> handler) {
-        return new Handler<HttpServerFileUpload>() {
-            @Override
-            public void handle(final HttpServerFileUpload upload) {
-                if (!upload.filename().toLowerCase().endsWith(".csv")) {
-                    handler.handle(new DefaultAsyncResult(
-                            new RuntimeException("invalid.file.extension")
-                    ));
-                    return;
-                }
-
-                final String filename = path + File.separator + upload.filename();
-                upload.endHandler(new Handler<Void>() {
-                    @Override
-                    public void handle(Void event) {
-                        log.info("File " + upload.filename() + " uploaded as " + upload.filename());
-                    }
-                });
-                upload.streamToFileSystem(filename);
+        return upload -> {
+            if (!upload.filename().toLowerCase().endsWith(".csv")) {
+                handler.handle(new DefaultAsyncResult(
+                        new RuntimeException("invalid.file.extension")
+                ));
+                return;
             }
+
+            final String filename = path + File.separator + upload.filename();
+            upload.endHandler(event -> log.info("File " + upload.filename() + " uploaded as " + upload.filename()));
+            upload.streamToFileSystem(filename);
         };
     }
 
     /**
      * Read CSV file
      *
-     * @param request Http request
      * @param deletePath Delete path after reading
      * @param path    Temp directory path
      */
-    public void readCsv(final HttpServerRequest request, final String path, Boolean deletePath, final Handler<Either<String, Buffer>> handler) {
-        vertx.fileSystem().readDir(path, new Handler<AsyncResult<List<String>>>() {
-            @Override
-            public void handle(final AsyncResult<List<String>> event) {
-                if (event.succeeded()) {
-                    String file = event.result().get(0);
-                    vertx.fileSystem().readFile(file, new Handler<AsyncResult<Buffer>>() {
-                        @Override
-                        public void handle(AsyncResult<Buffer> eventBuffer) {
-                            if (eventBuffer.succeeded()) {
-                                handler.handle(new Either.Right<>(eventBuffer.result()));
-                            } else {
-                                handler.handle(new Either.Left<>("Can not read the file"));
-                            }
-                            if (deletePath) {
-                                deleteImportPath(vertx, path);
-                            }
-                        }
-                    });
-                } else {
-                    handler.handle(new Either.Left<>("Can not read the file"));
-                    deleteImportPath(vertx, path);
-                }
+    public void readCsv(final String path, Boolean deletePath, final Handler<Either<String, Buffer>> handler) {
+        vertx.fileSystem().readDir(path, event -> {
+            if (event.succeeded()) {
+                String file = event.result().get(0);
+                vertx.fileSystem().readFile(file, eventBuffer -> {
+                    if (eventBuffer.succeeded()) {
+                        handler.handle(new Either.Right<>(eventBuffer.result()));
+                    } else {
+                        handler.handle(new Either.Left<>("Can not read the file"));
+                    }
+                    if (deletePath) {
+                        deleteImportPath(vertx, path);
+                    }
+                });
+            } else {
+                handler.handle(new Either.Left<>("Can not read the file"));
+                deleteImportPath(vertx, path);
             }
         });
     }

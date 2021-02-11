@@ -282,44 +282,4 @@ export const configurationController = ng.controller('configurationController',
             $scope.display.lightbox.structureGroup = false;
             Utils.safeApply($scope);
         };
-
-        $scope.setStatus = async (status: string) => {
-            await $scope.equipments.setStatus(status);
-            await $scope.equipments.sync();
-            $scope.allEquipmentSelected = false;
-            toasts.confirm('crre.status.update.ok');
-            Utils.safeApply($scope);
-        };
-
-/*        $scope.searchOption = async (searchText: string, field: string, model: EquipmentOption, varName: string) => {
-            try {
-                const options: Equipment[] = await $scope.equipments.search(searchText,field);
-                options.map((equipment: Equipment) => {
-                    equipment.id_option = equipment.id;
-                    delete equipment.id;
-                });
-                model[varName] = options;
-                Utils.safeApply($scope);
-            } catch (err) {
-                console.error(err);
-                model.search = [];
-                return;
-            }
-        };
-        $scope.searchOptionByName =(searchText : string, model: EquipmentOption)=>{
-            $scope.searchOption(searchText,'name',model, 'search');
-        };
-        $scope.searchOptionByReference= (searchText: string, model: EquipmentOption) => {
-            $scope.searchOption(searchText,'reference',model, 'searchReference');
-        };
-
-        $scope.selectOption = function (model: EquipmentOption, option: Equipment) {
-            const alreadyAdded = _.findWhere($scope.equipment.options, {id_option: option.id_option});
-            if (!alreadyAdded) {
-                let index = _.indexOf($scope.equipment.options, model);
-                $scope.equipment.options[index] = Mix.castAs(EquipmentOption, {...model, ...option});
-                $scope.equipment.options[index].search = undefined;
-            }
-            Utils.safeApply($scope);
-        };*/
     }]);

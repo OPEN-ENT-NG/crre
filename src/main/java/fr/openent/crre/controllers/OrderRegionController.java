@@ -100,74 +100,66 @@ public class OrderRegionController extends BaseController {
                             JsonArray ordersList = orders.getJsonArray("orders");
                             String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                             orderRegionService.getLastProject(user, lastProject -> {
-                            if(lastProject.isRight()) {
-                                String last = lastProject.right().getValue().getString("title");
-                                String title = "Commande_" + date;
-                                if(last != null) {
-                                    if(title.equals(last.substring(0, last.length() - 2))) {
-                                        title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
+                                if(lastProject.isRight()) {
+                                    String last = lastProject.right().getValue().getString("title");
+                                    String title = "Commande_" + date;
+                                    if(last != null) {
+                                        if(title.equals(last.substring(0, last.length() - 2))) {
+                                            title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
+                                        } else {
+                                            title += "_1";
+                                        }
                                     } else {
                                         title += "_1";
                                     }
-                                } else {
-                                    title += "_1";
-                                }
 
-                                String finalTitle = title;
-                                orderRegionService.createProject(title, idProject -> {
-                                    if(idProject.isRight()){
-                                        Integer idProjectRight = idProject.right().getValue().getInteger("id");
-                                        Logging.insert(eb,
-                                                request,
-                                                null,
-                                                Actions.CREATE.toString(),
-                                                idProjectRight.toString(),
-                                                new JsonObject().put("id", idProjectRight).put("title", finalTitle));
-                                        for(int i = 0 ; i<ordersList.size() ; i++){
-                                            List<Future> futures = new ArrayList<>();
-                                            Future<JsonObject> purseUpdateFuture = Future.future();
-                                            futures.add(purseUpdateFuture);
-                                            Future<JsonObject> purseUpdateLicencesFuture = Future.future();
-                                            futures.add(purseUpdateLicencesFuture);
-                                            Future<JsonObject> createOrdersRegionFuture = Future.future();
-                                            futures.add(createOrdersRegionFuture);
-                                            JsonObject newOrder = ordersList.getJsonObject(i);
-                                            Double price = Double.parseDouble("0")*newOrder.getInteger("amount");
-                                            purseService.updatePurseAmount(price,
-                                                    newOrder.getString("id_structure"),"-",
-                                                    handlerJsonObject(purseUpdateFuture) );
-                                            structureService.updateAmountLicence(newOrder.getString("id_structure"),"-",
-                                                    newOrder.getInteger("amount"),
-                                                    handlerJsonObject(purseUpdateLicencesFuture) );
-                                            orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, handlerJsonObject(createOrdersRegionFuture));
-                                            int finalI = i;
-                                            CompositeFuture.all(futures).setHandler(event -> {
-                                                if (event.succeeded()) {
-                                                    Number idReturning = createOrdersRegionFuture.result().getInteger("id");
-                                                    Logging.insert(eb,
-                                                            request,
-                                                            Contexts.ORDERREGION.toString(),
-                                                            Actions.CREATE.toString(),
-                                                            idReturning.toString(),
-                                                            new JsonObject().put("order region", newOrder));
-                                                    if(finalI == ordersList.size()-1){
-                                                        request.response().setStatusCode(201).end();
+                                    String finalTitle = title;
+                                    orderRegionService.createProject(title, idProject -> {
+                                        if(idProject.isRight()){
+                                            Integer idProjectRight = idProject.right().getValue().getInteger("id");
+                                            Logging.insert(eb,
+                                                    request,
+                                                    null,
+                                                    Actions.CREATE.toString(),
+                                                    idProjectRight.toString(),
+                                                    new JsonObject().put("id", idProjectRight).put("title", finalTitle));
+                                            for(int i = 0 ; i<ordersList.size() ; i++){
+                                                List<Future> futures = new ArrayList<>();
+                                                JsonObject newOrder = ordersList.getJsonObject(i);
+                                                Future<JsonObject> createOrdersRegionFuture = Future.future();
+                                                futures.add(createOrdersRegionFuture);
+                                                updatePurseLicence(futures, newOrder,"-");
+                                                orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
+                                                        handlerJsonObject(createOrdersRegionFuture));
+                                                int finalI = i;
+                                                CompositeFuture.all(futures).setHandler(event -> {
+                                                    if (event.succeeded()) {
+                                                        Number idReturning = createOrdersRegionFuture.result().getInteger("id");
+                                                        Logging.insert(eb,
+                                                                request,
+                                                                Contexts.ORDERREGION.toString(),
+                                                                Actions.CREATE.toString(),
+                                                                idReturning.toString(),
+                                                                new JsonObject().put("order region", newOrder));
+                                                        if(finalI == ordersList.size()-1){
+                                                            request.response().setStatusCode(201).end();
+                                                        }
+                                                    } else {
+                                                        LOGGER.error("An error when you want get id after create order region ",
+                                                                event.cause());
+                                                        request.response().setStatusCode(400).end();
                                                     }
-                                                } else {
-                                                    LOGGER.error("An error when you want get id after create order region ",event.cause());
-                                                    request.response().setStatusCode(400).end();
-                                                }
-                                            });
+                                                });
+                                            }
+                                        } else {
+                                            LOGGER.error("An error when you want get id after create project " + idProject.left());
+                                            request.response().setStatusCode(400).end();
                                         }
-                                    } else {
-                                        LOGGER.error("An error when you want get id after create project " + idProject.left());
-                                        request.response().setStatusCode(400).end();
-                                    }
-                                });
-                            }
+                                    });
+                                }
                             });
-                            }
-                            }));
+                        }
+                    }));
 
         } catch( Exception e){
             LOGGER.error("An error when you want create order region and project", e);
@@ -231,31 +223,31 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void getProjectsDateSearch(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-                try {
-                    String query = "";
-                    // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
-                    if (request.params().contains("q")) {
-                        query = URLDecoder.decode(request.getParam("q"), "UTF-8");
-                    }
-                    String startDate = request.getParam("startDate");
-                    String endDate = request.getParam("endDate");
-                    JsonArray filters = new JsonArray();
-                    int length = request.params().entries().size();
-                    for (int i = 0; i < length; i++) {
-                        if (!request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("startDate") && !request.params().entries().get(i).getKey().equals("endDate"))
-                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
-                    }
-                    String finalQuery = query;
-                    orderRegionService.searchName(query, equipments -> {
-                        if(equipments.right().getValue().size() > 0) {
-                            orderRegionService.filterSearch(user, equipments.right().getValue(), finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
-                        } else {
-                            orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
-                        }
-                    });
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+            try {
+                String query = "";
+                // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
+                if (request.params().contains("q")) {
+                    query = URLDecoder.decode(request.getParam("q"), "UTF-8");
                 }
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
+                JsonArray filters = new JsonArray();
+                int length = request.params().entries().size();
+                for (int i = 0; i < length; i++) {
+                    if (!request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("startDate") && !request.params().entries().get(i).getKey().equals("endDate"))
+                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                }
+                String finalQuery = query;
+                orderRegionService.searchName(query, equipments -> {
+                    if(equipments.right().getValue().size() > 0) {
+                        orderRegionService.filterSearch(user, equipments.right().getValue(), finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
+                    } else {
+                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
+                    }
+                });
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         });
     }
 
@@ -343,18 +335,56 @@ public class OrderRegionController extends BaseController {
                                 }
                                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
                                 String justification = orders.getString("justification");
-                                orderRegionService.updateOrders(ids,status,justification,
-                                        Logging.defaultResponsesHandler(eb,
-                                                request,
-                                                Contexts.ORDERREGION.toString(),
-                                                Actions.UPDATE.toString(),
-                                                params,
-                                                null));
+                                JsonArray ordersList = orders.getJsonArray("orders");
+                                List<Future> futures = new ArrayList<>();
+                                if(status.equals("rejected")){
+                                    for(int i = 0 ; i<ordersList.size() ; i++) {
+                                        JsonObject newOrder = ordersList.getJsonObject(i);
+                                        if(!newOrder.getString("status").equals("REJECTED"))
+                                            updatePurseLicence(futures, newOrder,"+");
+                                    }
+                                    CompositeFuture.all(futures).setHandler(event -> {
+                                        if (event.succeeded()) {
+                                            orderRegionService.updateOrders(ids,status,justification,
+                                                    Logging.defaultResponsesHandler(eb,
+                                                            request,
+                                                            Contexts.ORDERREGION.toString(),
+                                                            Actions.UPDATE.toString(),
+                                                            params,
+                                                            null));
+                                        } else {
+                                            LOGGER.error("An error when you want get id after create order region ", event.cause());
+                                            request.response().setStatusCode(400).end();
+                                        }
+                                    });
+                                }else{
+                                    orderRegionService.updateOrders(ids,status,justification,
+                                            Logging.defaultResponsesHandler(eb,
+                                                    request,
+                                                    Contexts.ORDERREGION.toString(),
+                                                    Actions.UPDATE.toString(),
+                                                    params,
+                                                    null));
+                                }
                             } catch (ClassCastException e) {
                                 log.error("An error occurred when casting order id", e);
                             }
                         }));
 
+    }
+
+    private void updatePurseLicence(List<Future> futures, JsonObject newOrder,String operation) {
+        Future<JsonObject> purseUpdateFuture = Future.future();
+        futures.add(purseUpdateFuture);
+        Future<JsonObject> purseUpdateLicencesFuture = Future.future();
+        futures.add(purseUpdateLicencesFuture);
+        Double price = Double.parseDouble("0") * newOrder.getInteger("amount");
+        purseService.updatePurseAmount(price,
+                newOrder.getString("id_structure"), operation,
+                handlerJsonObject(purseUpdateFuture));
+        structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
+                newOrder.getInteger("amount"),
+                handlerJsonObject(purseUpdateLicencesFuture));
     }
 
     @Get("region/orders/exports")

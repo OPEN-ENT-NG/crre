@@ -296,16 +296,6 @@ export class Equipments extends Selection<Equipment> {
     get loading() {
         return this._loading;
     }
-
-    async setStatus (status: string): Promise<void> {
-        try {
-            let params = Utils.formatKeyToParameter(this.selected, 'id');
-            await http.put(`/crre/equipments/${status}?${params}`);
-        } catch (e) {
-            toasts.warning('crre.equipment.update.err');
-            throw e;
-        }
-    }
 }
 
 export class EquipmentOption implements Selectable {

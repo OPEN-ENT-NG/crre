@@ -6,29 +6,20 @@
     "ids": {
       "type": "array"
     },
+    "orders": {
+      "type": "array"
+    },
     "status":{
       "type": "string"
     },
     "justification":{
       "type": [ "string" ]
     },
-    "bc_number":{
-      "type": [ "string", "null" ]
-    },
-    "engagement_number":{
-      "type": [ "string", "null" ]
-    },
     "dateGeneration":{
       "type": [ "string", "null" ]
     },
-    "supplierId":{
-      "type": ["number", "null"]
-    },
     "userId":{
       "type": "string"
-    },
-    "id_program": {
-      "type": ["number", "null"]
     }
   },
   "required": [
