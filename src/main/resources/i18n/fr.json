@@ -1,6 +1,7 @@
 {
   "crre.title": "Catalogue de ressources régionales éducatives",
   "crre.orders": "Demandes",
+  "crre.order.user": "Demandeur",
   "crre.order.refused": "Commande(s) refusée(s)",
   "crre.order.refused.succes": "Commande(s) refusée(s) avec succès",
   "crre.order.refused.error": "Une erreur est survenue lors du refus d'une commande",
@@ -25,7 +26,7 @@
   "crre.orders.validations.waiting": "Traiter les demandes en attente",
   "crre.orders.validate.historic": "Historique des demandes",
   "crre.order": "Bon de commande",
-  "crre.order.number": "Numéro du Bon de Commande",
+  "crre.order.number": "Numéro de Commande",
   "crre.certificates": "Certificat(s) de service fait",
   "crre.certificates.contract": "CSF prestataire",
   "crre.order.form.generate": "Générer les bons de commandes",
@@ -356,6 +357,7 @@
   "crre.basket.file.delete.error": "Une erreur est survenue lors de la suppresion du document. Merci de réessayer plus tard",
   "crre.basket.file.delete.success": "Document supprimé",
   "crre.basket.file.name": "Documents ajoutés",
+  "crre.basket.file.sent": "Document envoyé",
   "crre.basket.delete.message": "La ressource suivante sera retiré de votre panier",
   "crre.basket.name": "Nom du panier :",
   "crre.agent.create.err": "Erreur lors de la création d'un correspondant région",
@@ -625,5 +627,8 @@
   "crre.justificate.denied.order": "Justification refus de commande",
   "crre.new": "Nouveau",
   "PARTIALLYVALIDED": "Validée partiellement",
-  "PARTIALLYREJECTED": "Refusée partiellement"
+  "PARTIALLYREJECTED": "Refusée partiellement",
+  "crre.number.structure.concern": "Nombre d'établissements concernés",
+  "crre.devis.posted": "Devis reçu",
+  "crre.canceled": "Annulée"
 }

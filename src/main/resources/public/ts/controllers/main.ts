@@ -200,6 +200,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('administrator-main', 'administrator/order/order-waiting');
                 Utils.safeApply($scope);
             },
+            orderHistoricAdmin: async () => {
+                $scope.displayedOrders.all = $scope.ordersClient.all;
+                template.open('administrator-main', 'administrator/order/order-sent-library');
+                Utils.safeApply($scope);
+            },
             exportList: async () => {
                 $scope.loadingArray = true;
                 await $scope.exports.getExports();
