@@ -159,7 +159,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listExport(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT oe.price, oe.tax_amount, oe.amount, oe.creation_date, oe.status, oe.equipment_key, oe.comment, bo.name as basket_name " +
+        String query = "SELECT oe.amount, oe.creation_date, oe.status, oe.equipment_key, oe.comment, bo.name as basket_name " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +
                 "LEFT JOIN "+ Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "WHERE oe.id IN ( ";
@@ -255,19 +255,12 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     @Override
     public void getExportCsvOrdersAdmin(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler) {
 
-        String query = "SELECT oce.id, oce.id_structure as idStructure, contract.name as namecontract," +
-                " supplier.name as namesupplier, campaign.name as namecampaign, oce.amount as qty," +
-                " oce.creation_date as date, CASE count(priceOptions)"+
-                "WHEN 0 THEN ROUND ((oce.price+( oce.tax_amount*oce.price)/100)*oce.amount,2)"+
-                "ELSE ROUND((priceOptions +( oce.price + ROUND((oce.tax_amount*oce.price)/100,2)))*oce.amount,2) "+
-                "END as priceTotal "+
+        String query = "SELECT oce.id, oce.id_structure as idStructure, campaign.name as namecampaign, oce.amount as qty," +
+                " oce.creation_date as date" +
                 "FROM "+ Crre.crreSchema +".order_client_equipment  oce "+
-                "LEFT JOIN "+ Crre.crreSchema +".contract ON contract.id=oce.id_contract "+
                 "INNER JOIN "+ Crre.crreSchema +".campaign ON campaign.id = oce.id_campaign "+
-                "INNER JOIN "+ Crre.crreSchema +".supplier ON contract.id_supplier = supplier.id "+
                 "WHERE oce.id in "+ Sql.listPrepared(idsOrders.toArray()) +
-                " GROUP BY oce.id, idStructure, qty,date,oce.price, oce.tax_amount, oce.id_campaign, priceOptions," +
-                " namecampaign, namecontract, namesupplier ;";
+                " GROUP BY oce.id, idStructure, qty,date, oce.id_campaign, namecampaign ;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 

@@ -33,28 +33,6 @@
                 <p>
             </div>
         </div>
-            <div class="row options-head" ng-show="orderClient.options.length > 0">
-            <h4 class="highlighted"><i18n>multi-combo.options</i18n></h4>
-            <table class="twelve option-table">
-                <thead>
-                <tr>
-                    <td>Nom</td>
-                    <td>Prix Unitaire</td>
-                    <td>Quantité</td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr ng-repeat="option in orderClient.options">
-                    <td>[[option.name]]</td>
-                    <td><span ng-bind="calculatePriceTTC(option.price, option.tax_amount, 2) | currency"></span></td>
-                    <td>[[option.amount]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-
-
         <div class="twelve">
             <h4 class="highlighted">
                 <i18n>crre.order</i18n>

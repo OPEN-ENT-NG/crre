@@ -33,6 +33,10 @@ export class Equipment implements Selectable {
     disciplines: any[];
     discipline: string;
     ark: string;
+    type: string;
+    offres: any;
+    prixht: number;
+    tvas: any;
 
     constructor (name?: string, price?: number) {
         this.eventer = new Eventer();

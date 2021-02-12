@@ -5,7 +5,6 @@ import {
     Order,
     Structure,
     Structures, TechnicalSpec,
-    Utils,
     OrderClient,
     Equipment
 } from "./index";
@@ -49,7 +48,6 @@ export class OrderRegion implements Order  {
     order_client: OrderClient;
     order_number?: string;
     preference: number;
-    priceUnitedTTC: number;
     structure_groups: any;
     summary:string;
     image:string;
@@ -109,7 +107,7 @@ export class OrderRegion implements Order  {
         this.id_structure = order.id_structure;
         this.id_project = order.id_project;
         this.comment = order.comment;
-        this.price = order.priceUnitedTTC;
+        this.price = order.price;
         this.rank = order.rank;
         this.structure = order.structure;
         this.id_operation = order.id_operation;
@@ -117,25 +115,6 @@ export class OrderRegion implements Order  {
         this.user_name = order.user_name;
         this.user_id = order.user_id;
         this.reassort = order.reassort;
-    }
-
-
-    async create():Promise<any> {
-        try {
-            return await http.post(`/crre/region/order`, this.toJson());
-        } catch (e) {
-            toasts.warning('crre.admin.order.update.err');
-            throw e;
-        }
-    }
-
-    async update(id:number):Promise<any>{
-        try {
-            return await http.put(`/crre/region/order/${id}`, this.toJson());
-        } catch (e) {
-            toasts.warning('crre.admin.order.update.err');
-            throw e;
-        }
     }
 
     initDataFromEquipment():void {

@@ -5,12 +5,34 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class OrderUtils {
+
+    public static Double getPriceTtc(JsonObject equipmentJson) {
+        Double prixht, price_TTC;
+        JsonArray tvas;
+        if(equipmentJson.getString("type").equals("articlenumerique")){
+            prixht = equipmentJson.getJsonArray("offres").getJsonObject(0).getDouble("prixht");
+            tvas = equipmentJson.getJsonArray("offres").getJsonObject(0).getJsonArray("tvas");
+        }else{
+            prixht = equipmentJson.getDouble("prixht");
+            tvas = equipmentJson.getJsonArray("tvas");
+        }
+        price_TTC = prixht;
+        for(Object tva : tvas){
+            JsonObject tvaJson = (JsonObject) tva;
+            Double taxFloat = tvaJson.getDouble("taux");
+            Double pourcent = tvaJson.getDouble("pourcent");
+            price_TTC  += (((prixht)*pourcent/100) *  taxFloat) / 100;
+        }
+        DecimalFormat df2 = new DecimalFormat("#.##");
+        return Double.parseDouble(df2.format(price_TTC));
+    }
 
     public static String getValidOrdersCSVExportHeader(HttpServerRequest request) {
         return I18n.getInstance().
@@ -42,29 +64,6 @@ public class OrderUtils {
         }
 
         return structureMap;
-    }
-
-    public static Double getTaxesTotal(JsonArray orders) {
-        double sum = 0D;
-        JsonObject order;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            sum += Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"))
-                    * (Double.parseDouble(order.getString("tax_amount")) / 100);
-        }
-
-        return sum;
-    }
-
-    public static Double getSumWithoutTaxes(JsonArray orders) {
-        JsonObject order;
-        double sum = 0D;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            sum += Double.parseDouble(order.getString("price")) * Integer.parseInt(order.getString("amount"));
-        }
-
-        return sum;
     }
 
     public static void putInfosInData(String nbrBc, String nbrEngagement, JsonObject data, JsonObject managmentInfo, JsonObject order, JsonArray certificates, JsonObject contract) {

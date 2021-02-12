@@ -7,11 +7,15 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.*;
-import fr.openent.crre.service.*;
-import fr.openent.crre.service.impl.*;
+import fr.openent.crre.service.ExportService;
+import fr.openent.crre.service.OrderService;
+import fr.openent.crre.service.StructureService;
+import fr.openent.crre.service.impl.DefaultExportServiceService;
+import fr.openent.crre.service.impl.DefaultOrderService;
+import fr.openent.crre.service.impl.DefaultStructureService;
+import fr.openent.crre.controllers.OrderRegionController.*;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
@@ -35,20 +39,17 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.openent.crre.utils.OrderUtils.retrieveUaiNameStructure;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -242,10 +243,10 @@ public class OrderController extends ControllerHelper {
                             check = true;
                             j = 0;
                             while(check && j < equipments.size()) {
-                                if(equipments.getJsonObject(j).getInteger("id").equals(order.getInteger("equipment_key"))) {
+                                if(equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
                                     orderMap = new JsonObject();
                                     equipment = equipments.getJsonObject(j);
-                                    orderMap.put("name", equipment.getString("name"));
+                                    orderMap.put("name", equipment.getString("titre"));
                                     orderMap.put("id", order.getInteger("id"));
                                     DecimalFormat df = new DecimalFormat("0.00");
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
@@ -257,9 +258,8 @@ public class OrderController extends ControllerHelper {
                                     orderMap.put("basket_name", order.getString("basket_name"));
                                     orderMap.put("comment", order.getString("comment"));
                                     orderMap.put("amount", order.getInteger("amount"));
-                                    orderMap.put("total_ht", df.format(Float.parseFloat(order.getString("price")) * order.getInteger("amount")));
-                                    orderMap.put("total_ttc_20", df.format(Float.parseFloat(order.getString("price")) * (1.2)  * order.getInteger("amount")));
-                                    orderMap.put("total_ttc_5_5", df.format(Float.parseFloat(order.getString("price")) * (1.055)  * order.getInteger("amount")));
+                                    orderMap.put("total_ht", df.format(getPriceHT(equipment) * order.getInteger("amount")));
+                                    orderMap.put("total_ttc",  df.format(getPriceTtc(equipment) * order.getInteger("amount")));
                                     orders.add(orderMap);
                                     check = false;
                                 }
@@ -276,6 +276,17 @@ public class OrderController extends ControllerHelper {
         getEquipment(idsEquipment, handlerJsonArray(equipmentFuture));
         getOrderEquipmentEquipment(idsOrders, handlerJsonArray(orderClientFuture));
 
+    }
+
+    private Double getPriceHT(JsonObject equipmentJson) {
+        Double prixht;
+        if(equipmentJson.getString("type").equals("articlenumerique")){
+            prixht = equipmentJson.getJsonArray("offres").getJsonObject(0).getDouble("prixht");
+        }else{
+            prixht = equipmentJson.getDouble("prixht");
+        }
+        DecimalFormat df2 = new DecimalFormat("#.##");
+        return Double.parseDouble(df2.format(prixht));
     }
 
     private void getOrderEquipmentEquipment(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
@@ -301,8 +312,7 @@ public class OrderController extends ControllerHelper {
                 I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("price.equipment.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("price.equipment.20", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
                 + "\n";
@@ -315,8 +325,7 @@ public class OrderController extends ControllerHelper {
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
                 (log.getString("total_ht") != null ? log.getString("total_ht") : "") + ";" +
-                (log.getString("total_ttc_5_5") != null ? log.getString("total_ttc_5_5") : "") + ";" +
-                (log.getString("total_ttc_20") != null ? log.getString("total_ttc_20") : "") + ";" +
+                (log.getString("total_ttc") != null ? log.getString("total_ttc") : "") + ";" +
                 (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
                 (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
                 + "\n";
@@ -449,52 +458,6 @@ public class OrderController extends ControllerHelper {
                 e.printStackTrace();
             }
         });
-    }
-
-    public static String getReadableNumber(Double number) {
-        DecimalFormat instance = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.FRENCH);
-        DecimalFormatSymbols symbols = instance.getDecimalFormatSymbols();
-        symbols.setCurrencySymbol("");
-        instance.setDecimalFormatSymbols(symbols);
-        return instance.format(number);
-    }
-
-    public static JsonArray formatOrders(JsonArray orders) {
-        JsonObject order;
-        for (int i = 0; i < orders.size(); i++) {
-            order = orders.getJsonObject(i);
-            order.put("priceLocale",
-                    getReadableNumber(roundWith2Decimals(Double.parseDouble(order.getString("price")))));
-            order.put("unitPriceTaxIncluded",
-                    getReadableNumber(roundWith2Decimals(getTaxIncludedPrice(Double.parseDouble(order.getString("price")),
-                            Double.parseDouble(order.getString("tax_amount"))))));
-            order.put("unitPriceTaxIncludedLocale",
-                    getReadableNumber(roundWith2Decimals(getTaxIncludedPrice(Double.parseDouble(order.getString("price")),
-                            Double.parseDouble(order.getString("tax_amount"))))));
-            order.put("totalPrice",
-                    roundWith2Decimals(getTotalPrice(Double.parseDouble(order.getString("price")),
-                            Double.parseDouble(order.getString("amount")))));
-            order.put("totalPriceLocale",
-                    getReadableNumber(roundWith2Decimals(Double.parseDouble(order.getDouble("totalPrice").toString()))));
-            order.put("totalPriceTaxIncluded",
-                    getReadableNumber(roundWith2Decimals(getTaxIncludedPrice(order.getDouble("totalPrice"),
-                            Double.parseDouble(order.getString("tax_amount"))))));
-        }
-        return orders;
-    }
-
-    public static Double getTotalPrice(Double price, Double amount) {
-        return price * amount;
-    }
-
-    public static Double getTaxIncludedPrice(Double price, Double taxAmount) {
-        Double multiplier = taxAmount / 100 + 1;
-        return roundWith2Decimals(price) * multiplier;
-    }
-
-    public static Double roundWith2Decimals(Double numberToRound) {
-        BigDecimal bd = new BigDecimal(numberToRound);
-        return bd.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 
     @Get("/orders/export")

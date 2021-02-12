@@ -10,10 +10,6 @@ import org.entcore.common.user.UserInfos;
 import java.util.List;
 
 public interface OrderRegionService {
-    void setOrderRegion(JsonObject order, UserInfos user, Handler<Either<String, JsonObject>> handler);
-
-    void updateOrderRegion(JsonObject order,int idOrder, UserInfos user, Handler<Either<String, JsonObject>> handler);
-
     void createOrdersRegion(JsonObject order, UserInfos event, Number id_project, Handler<Either<String, JsonObject>> handler);
 
     void deleteOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);

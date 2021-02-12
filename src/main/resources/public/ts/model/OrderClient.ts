@@ -55,7 +55,6 @@ export class OrderClient implements Order  {
     order_number?: string;
     preference: number;
     priceTotalTTC: number;
-    priceUnitedTTC: number;
     structure_groups: any;
     summary:string;
     image:string;
@@ -199,7 +198,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 await this.getEquipments(this.all).then(equipments => {
                     for (let order of this.all) {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                        order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                        order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
                         order.name = equipment.name;
                         order.image = equipment.urlcouverture;
                         order.creation_date = moment(order.creation_date).format('L');
@@ -234,7 +233,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     await this.getEquipments(this.all).then(equipments => {
                         for (let order of this.all) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                            order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
+                            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
                             order.name = equipment.name;
                             order.image = equipment.urlcouverture;
                             order.creation_date = moment(order.creation_date).format('L');
@@ -261,12 +260,12 @@ export class OrdersClient extends Selection<OrderClient> {
                     await this.getEquipments(this.all).then(equipments => {
                         for (let order of this.all) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                            //order.price = equipment.price;
+                            order.price = Utils.calculatePriceTTC(equipment, 2);
                             order.name = equipment.ark;
                             order.image = equipment.urlcouverture;
                             //order.grade = equipment.grade_name;
                         }
-                        //this.syncWithIdsCampaignAndStructure();
+                        this.syncWithIdsCampaignAndStructure();
                     });
                 }
             } else {
@@ -276,8 +275,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     await this.getEquipments(this.all).then(equipments => {
                         for (let order of this.all) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                            //order.priceTotalTTC = (equipment.price * (1 + equipment.tax_amount / 100)) * order.amount;
-                            //order.price = equipment.price;
+                            order.price = Utils.calculatePriceTTC(equipment,2);
                             order.name = equipment.ark;
                             order.image = equipment.urlcouverture;
                             //order.grade = equipment.grade_name;
@@ -321,7 +319,6 @@ export class OrdersClient extends Selection<OrderClient> {
     makeOrderNotValid(order:OrderClient):void{
         order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
         order.creation_date = moment(order.creation_date).format('L');
-        order.priceUnitedTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString());
         order.priceTotalTTC = this.choosePriceTotal(order);
     }
 
@@ -370,11 +367,12 @@ export class OrdersClient extends Selection<OrderClient> {
         });
         return total;
     }
+
     calculTotalPriceTTC ():number {
         let total = 0;
         for (let i = 0; i < this.all.length; i++) {
             let order = this.all[i];
-            total += this.choosePriceTotal(order);
+            total += order.price*order.amount;
         }
         return total;
     }

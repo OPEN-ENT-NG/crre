@@ -149,7 +149,7 @@ export const orderController = ng.controller('orderController',
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
-                    totalPrice += order.priceTotalTTC
+                    totalPrice += order.price*order.amount
                     totalAmount += order.amount
                 });
             } else {
@@ -157,7 +157,7 @@ export const orderController = ng.controller('orderController',
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
-                    totalPrice += order.priceTotalTTC
+                    totalPrice += order.price*order.amount
                     totalAmount += order.amount
                 });
             }
@@ -200,7 +200,7 @@ export const orderController = ng.controller('orderController',
         };
 
         $scope.calculateTotal = (orderClient: OrderClient, roundNumber: number) => {
-            let totalPrice = $scope.calculatePriceOfEquipment(orderClient, false, roundNumber) * orderClient.amount;
+            let totalPrice = $scope.calculatePriceOfEquipment(orderClient, roundNumber) * orderClient.amount;
             return totalPrice.toFixed(roundNumber);
         };
 
@@ -479,13 +479,6 @@ export const orderController = ng.controller('orderController',
                 }
             }
             return field == 'totaux' ? totaux : price;
-        };
-        $scope.isOperationsIsEmpty = false;
-
-        $scope.selectOperationForOrder = async () =>{
-            $scope.isOperationsIsEmpty = !$scope.operations.all.some(operation => operation.status === 'true' && !operation.id_instruction);
-            template.open('validOrder.lightbox', 'administrator/order/order-select-operation');
-            $scope.display.lightbox.validOrder = true;
         };
 
         $scope.inProgressOrders = async (orders: OrderClient[]) => {

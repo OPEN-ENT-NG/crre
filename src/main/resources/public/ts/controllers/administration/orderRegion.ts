@@ -325,200 +325,9 @@ export const orderRegionController = ng.controller('orderRegionController',
         };
         synchroRegionOrders();
 
-        $scope.updateCampaign = async ():Promise<void> => {
-            $scope.orderToCreate.rows = undefined;
-            $scope.orderToCreate.project = undefined;
-            $scope.orderToCreate.operation = undefined;
-            await $scope.structure_groups.syncByCampaign($scope.orderToCreate.campaign.id);
-            let structures = new Structures();
-            $scope.structure_groups.all.map(structureGR => {
-                structureGR.structures.map(structureId => {
-                    let newStructure = new Structure();
-                    newStructure.id = structureId;
-                    newStructure = $scope.structures.all.find(s => s.id === newStructure.id);
-                    if (structures.all.indexOf(newStructure) === -1)
-                        structures.push(newStructure);
-                })
-            });
-            $scope.structuresToDisplay = structures;
-            $scope.structuresToDisplay.all.sort((firstStructure, secondStructure) => {
-                if (firstStructure.uai > secondStructure.uai) return 1;
-                if (firstStructure.uai < secondStructure.uai) return -1;
-                return 0;
-            });
-            Utils.safeApply($scope);
-        };
-
-        $scope.isOperationsIsEmpty = false;
-        $scope.selectOperationForOrder = async ():Promise<void> => {
-            $scope.isOperationsIsEmpty = !$scope.operations.all.some(operation => operation.status === 'true');
-            template.open('validOrder.lightbox', 'administrator/order/order-select-operation');
-            $scope.display.lightbox.validOrder = true;
-        };
-
-        $scope.cancelUpdate = ():void => {
-            if($scope.operationId) {
-                $scope.redirectTo(`/operation/order/${$scope.operationId}`)
-                $scope.operationId = undefined;
-            }
-            else if ($scope.fromWaiting)
-                $scope.redirectTo('/order/waiting');
-            else
-                window.history.back();
-        };
-        $scope.updateOrderConfirm = async ():Promise<void> => {
-            await $scope.selectOperationForOrder();
-        };
-
-        $scope.updateLinkedOrderConfirm = async ():Promise<void> => {
-            let orderRegion = new OrderRegion();
-            orderRegion.createFromOrderClient($scope.orderToUpdate);
-            orderRegion.equipment_key = $scope.orderToUpdate.equipment_key;
-            orderRegion.id_contract = orderRegion.equipment.id_contract;
-            $scope.cancelUpdate();
-            if($scope.orderToUpdate.typeOrder === "region"){
-                await orderRegion.update($scope.orderToUpdate.id);
-            } else {
-                await orderRegion.create();
-            }
-            toasts.confirm('crre.order.region.update');
-        };
-        $scope.isValidFormUpdate = ():boolean => {
-            return $scope.orderToUpdate &&  $scope.orderToUpdate.equipment_key
-                &&  $scope.orderToUpdate.equipment
-                && $scope.orderToUpdate.price_single_ttc
-                && $scope.orderToUpdate.amount
-                && ((($scope.orderToUpdate.rank>0 &&
-                    $scope.orderToUpdate.rank > 0  ||
-                    $scope.orderToUpdate.rank === null)) ||
-                    !$scope.orderToUpdate.campaign.orderPriorityEnable())
-        };
-
-        function checkRow(row):boolean {
-            return row.equipment && row.price && row.structure && row.amount
-        }
-
-        $scope.oneRow = ():boolean => {
-            let oneValidRow = false;
-            if ($scope.orderToCreate.rows)
-                $scope.orderToCreate.rows.map(row => {
-                    if (checkRow(row))
-                        oneValidRow = true;
-                });
-            return oneValidRow;
-        };
-
-        $scope.validForm = ():boolean => {
-            return $scope.orderToCreate.campaign
-                && $scope.orderToCreate.project
-                && $scope.orderToCreate.operation
-                && $scope.oneRow()
-                && ($scope.orderToCreate.rows.every( row => (row.rank>0 &&
-                    row.rank<11  ||
-                    row.rank === null))
-                    || !$scope.orderToCreate.campaign.orderPriorityEnable());
-        };
-
-        $scope.addRow = ():void => {
-            let row = {
-                equipment: undefined,
-                equipments: new Equipments(),
-                allEquipments : [],
-                structure: undefined,
-                price: undefined,
-                amount: undefined,
-                comment: "",
-                display: {
-                    struct: false
-                }
-            };
-            if (!$scope.orderToCreate.rows)
-                $scope.orderToCreate.rows = [];
-            $scope.orderToCreate.rows.push(row);
-            Utils.safeApply($scope)
-
-        };
-
-        $scope.dropRow = (index:number):void => {
-            $scope.orderToCreate.rows.splice(index, 1);
-        };
-
-        $scope.duplicateRow = (index:number):void => {
-            let row = JSON.parse(JSON.stringify($scope.orderToCreate.rows[index]));
-            row.equipments = new Equipments();
-            if (row.structure){
-                if (row.structure.structures) {
-                    row.structure = $scope.structure_groups.all.find(struct => row.structure.id === struct.id);
-                } else {
-                    row.structure = $scope.structures.all.find(struct => row.structure.id === struct.id);
-                }
-            }
-            //duplicate contracttypes
-            row.ct_enabled =  $scope.orderToCreate.rows[index].ct_enabled;
-
-            $scope.orderToCreate.rows[index].contracts.all.forEach(ct=>{
-                row.contracts.all.push(ct);
-            })
-            if($scope.orderToCreate.rows[index].contract_type)
-                row.contract_type = $scope.orderToCreate.rows[index].contract_type ;
-
-            $scope.orderToCreate.rows[index].equipments.forEach(equipment => {
-                row.equipments.push(equipment);
-                if (row.equipment && row.equipment.id === equipment.id)
-                    row.equipment = equipment;
-            });
-            $scope.orderToCreate.rows.splice(index + 1, 0, row)
-        };
         $scope.cancelBasketDelete = ():void => {
             $scope.display.lightbox.validOrder = false;
             template.close('validOrder.lightbox');
-        };
-
-        $scope.switchStructure = async (row:any, structure:Structure):Promise<void> => {
-            await row.equipments.syncAll($scope.orderToCreate.campaign.id, (structure) ? structure.id : undefined);
-            await row.contracts.sync();
-            row.contract_type = undefined;
-            row.ct_enabled = undefined;
-            let contracts = [];
-            row.equipments.all.forEach(e => {
-                row.allEquipments.push(e);
-                row.contracts.all.map(contract =>{
-                    if(contract.id === e.id_contract  && !contract.isPresent ){
-                        contract.isPresent = true;
-                        contracts.push(contract);
-                    }
-                })
-            });
-            row.contracts.all = contracts;
-            row.equipment = undefined;
-            row.price = undefined;
-            row.amount = undefined;
-            Utils.safeApply($scope);
-        };
-        $scope.initEquipmentData = (row:OrderRegion):void => {
-            let roundedString = row.equipment.priceTTC.toFixed(2);
-            let rounded = Number(roundedString);
-            row.price = Number(rounded);
-            row.amount = 1;
-        };
-        $scope.initContractType = async (row) => {
-            if (row.contract) {
-                row.ct_enabled = true;
-                row.equipment = undefined;
-                row.equipments.all = row.allEquipments.filter(equipment => row.contract.id === equipment.id_contract);
-                Utils.safeApply($scope);
-
-            }
-        };
-
-        $scope.swapTypeStruct = (row):void => {
-            row.display.struct = !row.display.struct;
-            row.equipment = undefined;
-            row.price = undefined;
-            row.amount = undefined;
-            row.comment ="";
-            row.structure = undefined;
-            Utils.safeApply($scope);
         };
 
         $scope.createOrder = async ():Promise<void> => {
@@ -543,8 +352,8 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.getTotalHistoric = () => {
             let total = 0;
             if($scope.projects) {
-                $scope.projects.forEach(basket => {
-                    total += parseFloat(basket.total.replace(/[^0-9.,-]+/g, ""));
+                $scope.projects.forEach(project => {
+                    total += parseFloat(project.total.replace(/[^0-9.,-]+/g, "").replace(",","."));
                 });
             }
             return total;
@@ -553,8 +362,8 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.getTotalAmountHistoric = () => {
             let total = 0;
             if($scope.projects) {
-                $scope.projects.forEach(basket => {
-                    total += parseFloat(basket.amount);
+                $scope.projects.forEach(project => {
+                    total += parseFloat(project.amount);
                 });
             }
             return total;
@@ -618,7 +427,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 project.orders.forEach( async order => {
                     if(order.selected) {
                         let equipment = new Equipment();
-                        equipment.id = order.equipment_key;
+                        equipment.ean = order.equipment_key;
                         let basket = new Basket(equipment, $scope.campaign.id, $scope.current.structure.id);
                         basket.amount = order.amount;
                         totalAmount += order.amount;

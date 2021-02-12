@@ -33,6 +33,7 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +44,7 @@ import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
+import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -60,32 +62,6 @@ public class OrderRegionController extends BaseController {
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
         this.structureService = new DefaultStructureService(Crre.crreSchema);
-    }
-
-
-    @Post("/region/order")
-    @ApiDoc("Create an order with id order client when admin or manager")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void createWithOrderClientAdminOrder(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, event -> RequestUtils.bodyToJson(request,
-                order -> RequestUtils.bodyToJson(request,
-                        orderRegion ->  orderRegionService.setOrderRegion(order, event,
-                                Logging.defaultResponseHandler(eb, request, Contexts.ORDERREGION.toString(),
-                                        Actions.CREATE.toString(),null, orderRegion)))));
-    }
-
-    @Put("/region/order/:id")
-    @ApiDoc("Update an order when admin or manager")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void updateAdminOrder(final HttpServerRequest request) {
-        int idOrder = Integer.parseInt(request.getParam("id"));
-        UserUtils.getUserInfos(eb, request, event -> RequestUtils.bodyToJson(request,
-                order -> RequestUtils.bodyToJson(request,
-                        orderRegion ->  orderRegionService.updateOrderRegion(order, idOrder, event,
-                                Logging.defaultResponseHandler(eb, request, Contexts.ORDERREGION.toString(),
-                                        Actions.UPDATE.toString(), Integer.toString(idOrder), new JsonObject().put("orderRegion", orderRegion))))));
     }
 
     @Post("/region/orders/")
@@ -302,7 +278,8 @@ public class OrderRegionController extends BaseController {
                         for (Object equipment : equipments.right().getValue()) {
                             JsonObject equipmentJson = (JsonObject) equipment;
                             if (idEquipment.equals(equipmentJson.getString("id"))) {
-                                double price = Double.parseDouble("0") * orderJson.getInteger("amount");
+                                Double price_TTC = getPriceTtc(equipmentJson);
+                                double price = price_TTC * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
                                 orderJson.put("name", equipmentJson.getString("ark"));
                                 orderJson.put("image", equipmentJson.getString("urlcouverture"));
@@ -378,7 +355,7 @@ public class OrderRegionController extends BaseController {
         futures.add(purseUpdateFuture);
         Future<JsonObject> purseUpdateLicencesFuture = Future.future();
         futures.add(purseUpdateLicencesFuture);
-        Double price = Double.parseDouble("0") * newOrder.getInteger("amount");
+        Double price = Double.parseDouble(newOrder.getDouble("price").toString()) * newOrder.getInteger("amount");
         purseService.updatePurseAmount(price,
                 newOrder.getString("id_structure"), operation,
                 handlerJsonObject(purseUpdateFuture));
@@ -420,11 +397,11 @@ public class OrderRegionController extends BaseController {
 
                     for (int j = 0; j < equipments.size(); j++) {
                         equipment = equipments.getJsonObject(j);
-                        if (equipment.getInteger("id").equals(order.getInteger("equipment_key"))) {
-                            double price = (Double.parseDouble(equipment.getString("price")) *
-                                    (1 + Double.parseDouble(equipment.getString("tax_amount")) / 100)) * order.getInteger("amount");
+                        if (equipment.getString("id").equals(order.getString("equipment_key"))) {
+                            double price_TTC = getPriceTtc(equipment);
+                            double price = price_TTC * order.getInteger("amount");
                             order.put("price", price);
-                            order.put("name", equipment.getString("name"));
+                            order.put("name", equipment.getString("titre"));
                             order.put("image", equipment.getString("image"));
                             order.put("ean", equipment.getString("ean"));
                         }

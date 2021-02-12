@@ -10,9 +10,9 @@
         <h1 class="eight cell">[[basket.equipment.ark]] </h1>
         <div class="four cell right-magnet twelve-mobile" >
             <div class="add-basket centered row twelve vertical-spacing twelve-mobile">
-                <div class="twelve cell" ng-if="basket.equipment.type !== 'articlenumerique'">
+                <div class="twelve cell">
                     <h4 class="cell"><i18n>etablissement.price</i18n></h4>
-                    <h3 class="right-text">[[basket.equipment.prixht]]<i18n>per.student.per.year</i18n></h3>
+                    <h3 class="right-text">[[calculatePriceOfEquipment(basket.equipment,2) | currency]]<i18n>per.student.per.year</i18n></h3>
                 </div>
                 <div class="twelve cell" ng-if="!isAdministrator()" workflow="crre.prescriptor">
                     <div class="quantity">
@@ -28,8 +28,8 @@
                             <i class="plus" ng-click="amountIncrease()"></i>
                         </div>
                     </div>
-                    <div class="row vertical-spacing"><input type="button" ng-show="basket.id_campaign == undefined" ng-disabled="!validArticle(basket.equipment)" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
-                    <div class="row vertical-spacing"><input type="button" ng-show="!(basket.id_campaign == undefined)" ng-disabled="!validArticle(basket.equipment) && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                    <div class="row vertical-spacing"><input type="button" ng-show="basket.id_campaign == undefined" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
+                    <div class="row vertical-spacing"><input type="button" ng-show="!(basket.id_campaign == undefined)" ng-disabled="!validArticle() && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
                 </div>
             </div>
         </div>

@@ -91,39 +91,7 @@ export class OrderUtils {
     }
 
     static calculatePriceTTC( roundNumber?: number, order?:Order|OrderClient|OrderRegion):number|any {
-        let price = parseFloat(Utils.calculatePriceTTC(order.price).toString());
+        let price = parseFloat(Utils.calculatePriceTTC(order.equipment,roundNumber).toString());
         return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price ) : price ;
-    }
-    static initParentOrder( order:Order):Object{
-        if(!order)return;
-        if(order.equipment) {
-            return {
-                amount: order.amount || 0,
-                comment: order.comment || "",
-                equipment: {
-                    contract_type_name: order.equipment.contract_type_name || "",
-                    name: order.equipment.name || "",
-                },
-                price_single_ttc: OrderUtils.findGoodPrice(order) || 0,
-                rank: order.rank || 0,
-            };
-        } else {
-            return  {
-                amount : order.amount || 0,
-                comment : order.comment || "",
-                equipment : {
-                    contract_type_name: "",
-                    name: "",
-                },
-                price_single_ttc : OrderUtils.findGoodPrice(order) || 0,
-                rank : order.rank || 0,
-            };
-        }
-    }
-    static findGoodPrice(order:Order):Number{
-        if(order.price_single_ttc) return order.price_single_ttc;
-        if(order.price_proposal) return order.price_proposal;
-        if(order.price) return OrderUtils.calculatePriceTTC(2,order);
-        return 0;
     }
 }

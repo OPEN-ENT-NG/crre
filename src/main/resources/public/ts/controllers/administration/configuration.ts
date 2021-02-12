@@ -1,13 +1,10 @@
-import {_, ng, template, toasts} from 'entcore';
+import {_, ng, template} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {
     Campaign,
     COMBO_LABELS,
-    Equipment,
-    EquipmentOption,
     StructureGroup,
     StructureGroupImporter,
-    TechnicalSpec,
     Utils
 } from '../../model';
 
@@ -20,37 +17,12 @@ export const configurationController = ng.controller('configurationController',
         $scope.COMBO_LABELS = COMBO_LABELS;
         $scope.display = {
             lightbox: {
-                agent: false,
-                supplier: false,
-                contract: false,
-                tag: false,
-                equipment: false,
                 campaign: false,
                 structureGroup: false
             },
             input: {
                 group: []
             }
-        };
-
-        $scope.sort = {
-            agent: {
-                type: 'name',
-                reverse: false
-            },
-            supplier: {
-                type: 'name',
-                reverse: false
-            },
-            contract: {
-                type: 'start_date',
-                reverse: false
-            },
-            tag: {
-                type: 'name',
-                reverse: false
-            },
-            equipment: $scope.equipments.sort
         };
 
         $scope.search = {};
@@ -72,59 +44,6 @@ export const configurationController = ng.controller('configurationController',
 
         $scope.switchAll = (model: boolean, collection) => {
             model ? collection.selectAll() : collection.deselectAll();
-            Utils.safeApply($scope);
-        };
-
-        $scope.addEquipmentFilter = (event?) => {
-            if (event && (event.which === 13 || event.keyCode === 13) && event.target.value.trim() !== '') {
-                $scope.equipments.sort.filters = [...$scope.equipments.sort.filters, event.target.value];
-                $scope.nbItemsDisplay = $scope.pageSize;
-                $scope.equipments.sync(true, undefined, undefined, $scope.sort.equipment);
-                event.target.value = '';
-            }
-        };
-
-        $scope.dropEquipmentFilter = (filter: string) => {
-            $scope.equipments.sort.filters = _.without($scope.equipments.sort.filters, filter);
-            $scope.nbItemsDisplay = $scope.pageSize;
-            $scope.equipments.sync(true, undefined, undefined, $scope.sort.equipment);
-        };
-
-        $scope.addTechnicalSpec = (equipment: Equipment) => {
-            if(equipment.technical_specs == null){
-                equipment.technical_specs=  [];
-            }
-            equipment.technical_specs.push(new TechnicalSpec());
-            Utils.safeApply($scope);
-        };
-
-        $scope.dropTechnicalSpec = (equipment: Equipment, technicalSpec: TechnicalSpec) => {
-            equipment.technical_specs = _.without(equipment.technical_specs, technicalSpec);
-            Utils.safeApply($scope);
-        };
-        $scope.dropOption = (equipment: Equipment, index) => {
-            equipment.deletedOptions === undefined ? equipment.deletedOptions = [] : null;
-            equipment.options[index].id ? equipment.deletedOptions.push(equipment.options[index]) : null;
-            equipment.options.splice(index, 1);
-            Utils.safeApply($scope);
-        };
-
-        $scope.calculatePriceOption = (price, tax_id, amount) => {
-            if (!price || !tax_id || !amount) return '';
-            let tax_value = parseFloat(_.findWhere($scope.taxes.all, {id: tax_id}).value);
-            if (tax_value !== undefined) {
-                let priceFloat = parseFloat(price);
-                let price_TTC = $scope.calculatePriceTTC(priceFloat);
-                let Price_TTC_QTe = (price_TTC * parseFloat(amount));
-                return (!isNaN(Price_TTC_QTe) && price_TTC !== '') ? Price_TTC_QTe.toFixed(2) : '';
-            } else {
-                return NaN;
-            }
-        };
-
-        $scope.addOptionLigne = () => {
-            let option = new EquipmentOption();
-            $scope.equipment.options.push(option);
             Utils.safeApply($scope);
         };
 

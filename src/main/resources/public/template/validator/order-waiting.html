@@ -114,7 +114,7 @@
                 </td>
                 <td ng-if="tableFields[0].display"><div class="smallTabElem center">[[order.creation_date]]</div></td>
                 <td ng-if="tableFields[1].display">
-                    <div class="tabElem order">
+                    <div class="tabElem order" ng-click="openEquipmentId(order.equipment_key)">
                         <img src="[[order.image]]"/>
                         <div class="breakLines">[[order.name]]</div>
                     </div>

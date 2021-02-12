@@ -29,9 +29,26 @@ export class Utils {
         return params.slice(0, -1);
     }
 
-    static calculatePriceTTC (price, roundNumber?: number) {
-        let price_TTC = parseFloat(price) ;
-        return (!isNaN(price_TTC)) ? (roundNumber ? price_TTC.toFixed(roundNumber) : price_TTC ) : '';
+    static calculatePriceTTC (equipment, roundNumber?: number) {
+        let prixht,price_TTC: number;
+        let tvas;
+        if(!equipment){
+            return 0;
+        }else {
+            if (equipment.type == 'articlenumerique') {
+                prixht = equipment.offres[0].prixht;
+                tvas = equipment.offres[0].tvas;
+            } else {
+                prixht = equipment.prixht;
+                tvas = equipment.tvas;
+            }
+            price_TTC = prixht;
+            tvas.forEach((tva) => {
+                let taxFloat = tva.taux;
+                price_TTC += (((prixht) * tva.pourcent / 100) * taxFloat) / 100;
+            });
+            return (!isNaN(price_TTC)) ? (roundNumber ? parseFloat(price_TTC.toFixed(roundNumber)) : price_TTC) : 0;
+        }
     }
 
     static formatGetParameters (obj: any): string {

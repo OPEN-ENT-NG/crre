@@ -33,12 +33,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.$apply();
         };
 
-        $scope.openEquipment = (equipment: Equipment) => {
-            if (equipment.disponibilite[0].valeur === 'DISPONIBLE') {
-                $scope.redirectTo(`/equipments/catalog/equipment/${equipment.id}`);
-            }
-        };
-        $scope.validArticle = (equipment: Equipment) => {
+        $scope.validArticle = () => {
             return $scope.basket.amount > 0;
         };
         $scope.switchAll = (model: boolean, collection) => {

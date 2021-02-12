@@ -122,6 +122,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             equipmentDetail: async (params) => {
                 await $scope.selectEquipment(params);
+                template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 Utils.safeApply($scope);
@@ -309,10 +310,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return moment(date).format(format);
         };
 
-        $scope.calculatePriceTTC = (price, roundNumber?: number) =>  {
-            return Utils.calculatePriceTTC(price,roundNumber);
-        };
-
         /**
          * Calculate the price of an equipment
          * @param {Equipment} equipment
@@ -320,10 +317,19 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
          * @param {number} roundNumber [number of digits after the decimal point]
          * @returns {string | number}
          */
-        $scope.calculatePriceOfEquipment = (equipment: any, selectedOptions: boolean, roundNumber: number = 2) => {
-            let price = parseFloat((equipment.price_proposal)? equipment.price_proposal : $scope.calculatePriceTTC(equipment.price));
+        $scope.calculatePriceOfEquipment = (equipment: any, roundNumber?: number) => {
+            let price = Utils.calculatePriceTTC(equipment, roundNumber);
             return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price) : price;
         };
+
+        $scope.openEquipment = (equipment: Equipment) => {
+            $scope.redirectTo(`/equipments/catalog/equipment/${equipment.id}`);
+        };
+
+        $scope.openEquipmentId = (equipmentId: string) => {
+            $scope.redirectTo(`/equipments/catalog/equipment/${equipmentId}`);
+        };
+
         $scope.initStructures = async () => {
             await $scope.structures.syncUserStructures();
             $scope.current.structure = $scope.structures.all[0];
