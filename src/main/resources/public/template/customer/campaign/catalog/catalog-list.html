@@ -10,7 +10,7 @@
                 <i class="search padding-20"></i>
                 <input class="twelve"
                        type="text"
-                       ng-keyup="addFilter($event)"
+                       ng-keyup="$event.keyCode == 13 ? addFilter($event) : null"
                        i18n-placeholder="search.filter.catalog">
             </div>
         </div>
@@ -34,8 +34,9 @@
                     <span ng-show="showPopUpColumnsSubject">&#x25B2;</span>
                     <span ng-hide="showPopUpColumnsSubject">&#x25BC;</span>
                 </div>
-                <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet first-column-popup columns-popup">
-                    <label class="columns-popup-items" ng-repeat="subject in equipments.subjects">
+                <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet columns-popup">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsSubject}"
+                           ng-repeat="subject in equipments.subjects | orderBy:'name'">
                         <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'disciplines.libelle')">
                         <span>[[subject.name]]</span>
                     </label>
@@ -51,9 +52,10 @@
                     <span ng-show="showPopUpColumnsPublic">&#x25B2;</span>
                     <span ng-hide="showPopUpColumnsPublic">&#x25BC;</span>
                 </div>
-                <div ng-class="{'open' : showPopUpColumnsPublic}" class="right-magnet first-column-popup columns-popup">
-                    <label class="columns-popup-items" ng-repeat="public in equipments.public">
-                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(public.name, 'publiccible')">
+                <div ng-class="{'open' : showPopUpColumnsPublic}" class="right-magnet columns-popup">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsPublic}"
+                           ng-repeat="public in equipments.public | orderBy:'name'">
+                        <input type="checkbox" ng-model = "public.isChecked" ng-change="getFilter(public.name, 'publiccible')">
                         <span>[[public.name]]</span>
                     </label>
                 </div>
@@ -69,7 +71,8 @@
                     <span ng-hide="showPopUpColumnsGrade">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsGrade}"
+                           ng-repeat="grade in equipments.grades | orderBy:'name'">
                         <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'niveaux.libelle')">
                         <span>[[grade.name]]</span>
                     </label>
@@ -86,11 +89,13 @@
                     <span ng-hide="showPopUpColumnsDocumentsTypes">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsDocumentsTypes}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items">
-                        <input type="checkbox" ng-change="getFilter('articlepapier', '_index')">
-                        <span>Article Papier</span>
-                        <input type="checkbox" ng-change="getFilter('articlenumerique', '_index')">
-                        <span>Article Numerique</span>
+                    <label class="columns-popup-items left-text ellipsis">
+                        <input type="checkbox" ng-model = "articlepapier.isChecked" ng-change="getFilter('articlepapier', '_index')">
+                        <span>Ressource Papier</span>
+                    </label>
+                    <label class="columns-popup-items left-text ellipsis">
+                        <input type="checkbox" ng-model = "articlenumerique.isChecked" ng-change="getFilter('articlenumerique', '_index')">
+                        <span>Ressource Numerique</span>
                     </label>
                 </div>
             </div>
@@ -105,14 +110,15 @@
                     <span ng-hide="showPopUpColumnsEditor">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="editor in equipments.editors">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
+                           ng-repeat="editor in equipments.editors | orderBy:'name'">
                         <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')">
                         <span>[[editor.name]]</span>
                     </label>
                 </div>
             </div>
         </button>
-        <button ng-click="initPopUpFilters('showPopUpColumnsOS')"
+        <!--<button ng-click="initPopUpFilters('showPopUpColumnsOS')"
                 class="filterButton">
             <i class="phone-infos"></i>
             <span>OS</span>
@@ -122,13 +128,14 @@
                     <span ng-hide="showPopUpColumnsOS">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsOS}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="os in equipments.os">
+                    <label class="columns-popup-items left-text" ng-class="{'open' : showPopUpColumnsOS}"
+                           ng-repeat="os in equipments.os | orderBy:'name'">
                         <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(os.name, 'technos.technologie')">
-                        <span>[[os.name]]</span>
+                        <span class="columns-popup-span">[[os.name]]</span>
                     </label>
                 </div>
             </div>
-        </button>
+        </button>-->
     </div>
     <div class="row">
         <div style="margin:0.5em">
@@ -137,10 +144,23 @@
                 <span ng-if="subject.isChecked" ng-class="{'margin-right-10' : $last}">[[subject.name]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
             </div>
+            <div class="cell field ng-scope" ng-repeat="public in equipments.public | filter: { isChecked: true }">
+                <span ng-show="$first && public.isChecked" class="bold-font-weight">&nbsp;Niveaux : </span>
+                <span ng-if="public.isChecked" ng-class="{'margin-right-10' : $last}">[[public.name]]</span>
+                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
             <div class="cell field ng-scope" ng-repeat="grade in equipments.grades | filter: { isChecked: true }">
                 <span ng-show="$first && grade.isChecked" class="bold-font-weight">&nbsp;Niveaux : </span>
                 <span ng-if="grade.isChecked" ng-class="{'margin-right-10' : $last}">[[grade.name]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            </div>
+            <div class="cell field ng-scope" ng-if="articlenumerique.isChecked || articlepapier.isChecked">
+                <span class="bold-font-weight">&nbsp;Types de documents : </span>
+                <span ng-if="articlenumerique.isChecked"
+                      ng-class="{'margin-right-10' : !(articlenumerique.isChecked && articlepapier.isChecked)}">Ressource Numérique</span>
+                <span ng-if="articlenumerique.isChecked && articlepapier.isChecked">,&nbsp;</span>
+                <span ng-if="articlepapier.isChecked"
+                      ng-class="{'margin-right-10' : !(articlenumerique.isChecked && articlepapier.isChecked)}">Ressource Papier</span>
             </div>
             <div class="cell field ng-scope" ng-repeat="editor in equipments.editors | filter: { isChecked: true }">
                 <span ng-show="$first && editor.isChecked" class="bold-font-weight">&nbsp;Editeur : </span>

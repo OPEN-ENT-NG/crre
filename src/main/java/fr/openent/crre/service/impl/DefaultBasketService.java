@@ -199,12 +199,12 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
         values.add(id_campaign);
         values.add(user.getUserId());
-        if (query != "") {
+        if (!query.equals("")) {
             sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
             values.add(query);
             values.add(query);
         } else {
-            sqlquery += "AND (bo.name ~* bo.name OR bo.name_user ~* bo.name_user OR oe.equipment_key IN (";
+            sqlquery += "AND (bo.name ~* '' OR bo.name_user ~* '' OR oe.equipment_key IN (";
         }
 
         for (int i = 0; i < equipTab.size(); i++) {

@@ -12,7 +12,8 @@
                     <span ng-hide="showPopUpColumnsCampaign">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsCampaign}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="campaign in campaigns">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsCampaign}"
+                           ng-repeat="campaign in campaigns | orderBy:'campaign'">
                         <input type="checkbox" ng-model = "campaign.isChecked" ng-change="getFilter(campaign.campaign, 'campaign')">
                         <span ng-bind="lang.translate(campaign.campaign)"></span>
                     </label>
@@ -32,7 +33,8 @@
                     <span ng-hide="showPopUpColumnsSchool">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsSchool}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="school in schools">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsSchool}"
+                           ng-repeat="school in schools | orderBy:'school'">
                         <input type="checkbox" ng-model = "school.isChecked" ng-change="getFilter(school.school, 'school')">
                         <span ng-bind="lang.translate(school.school)"></span>
                     </label>
@@ -52,7 +54,8 @@
                     <span ng-hide="showPopUpColumnsEditor">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="editor in editors">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
+                           ng-repeat="editor in editors | orderBy:'name'">
                         <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.editor, 'editor')">
                         <span ng-bind="lang.translate(editor.editor)"></span>
                     </label>
@@ -72,7 +75,8 @@
                     <span ng-hide="showPopUpColumnsDiffusor">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsDiffusor}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="diffusor in diffusors">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDiffusor}"
+                           ng-repeat="diffusor in diffusors | orderBy:'name'">
                         <input type="checkbox" ng-model = "diffusor.isChecked" ng-change="getFilter(diffusor.diffusor, 'diffusor')">
                         <span ng-bind="lang.translate(diffusor.diffusor)"></span>
                     </label>
@@ -92,7 +96,8 @@
                     <span ng-hide="showPopUpColumnsState">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsState}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items" ng-repeat="state in states">
+                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsState}"
+                           ng-repeat="state in states | orderBy:'name'">
                         <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.state, 'state')">
                         <span ng-bind="lang.translate(state.state)"></span>
                     </label>

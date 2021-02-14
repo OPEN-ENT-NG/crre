@@ -197,7 +197,7 @@ public class BasketController extends ControllerHelper {
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
-                List<String> params = new ArrayList<String>();
+                List<String> params = new ArrayList<>();
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
                 if (request.params().contains("niveaux.libelle")) {
                     params = request.params().getAll("niveaux.libelle");

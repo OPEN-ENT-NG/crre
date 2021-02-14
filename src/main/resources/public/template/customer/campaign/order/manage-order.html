@@ -7,7 +7,7 @@
                     <input class="twelve"
                            type="text"
                            ng-model="query_name"
-                           ng-keyup="searchByName(query_name)"
+                           ng-keyup="$event.keyCode == 13 ? searchByName(query_name) : null"
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>
@@ -22,7 +22,8 @@
                             <span ng-hide="showPopUpColumnsTeacher">&#x25BC;</span>
                         </div>
                         <div ng-class="{'open' : showPopUpColumnsTeacher}" class="right-magnet columns-popup">
-                            <label class="columns-popup-items" ng-repeat="teacher in users">
+                            <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsTeacher}"
+                                   ng-repeat="teacher in users | orderBy:'user_name'">
                                 <input type="checkbox" ng-model = "teacher.isChecked" ng-change="getFilter(teacher.user_name, 'name_user')">
                                 <span>[[teacher.user_name]]</span>
                             </label>
@@ -39,7 +40,8 @@
                             <span ng-hide="showPopUpColumnsReassort">&#x25BC;</span>
                         </div>
                         <div ng-class="{'open' : showPopUpColumnsReassort}" class="right-magnet columns-popup">
-                            <label class="columns-popup-items" ng-repeat="reassort in reassorts">
+                            <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsReassort}"
+                                   ng-repeat="reassort in reassorts | orderBy:'reassort'">
                                 <input type="checkbox" ng-model = "reassort.isChecked" ng-change="getFilter(reassort.reassort, 'reassort')">
                                 <span ng-bind="lang.translate(reassort.reassort)"></span>
                             </label>
@@ -56,7 +58,8 @@
                             <span ng-hide="showPopUpColumnsGrade">&#x25BC;</span>
                         </div>
                         <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
-                            <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
+                            <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsGrade}"
+                                   ng-repeat="grade in equipments.grades | orderBy:'name'">
                                 <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'niveaux.libelle')">
                                 <span>[[grade.name]]</span>
                             </label>

@@ -91,7 +91,7 @@ public class EquipmentController extends ControllerHelper {
                                 os_set.add(ressource.getJsonArray("technos").getJsonObject(j).getString("technologie"));
                             }
                         }
-                        if(!ressource.getString("editeur").equals(null) || !ressource.getString("editeur").equals("")) {
+                        if(ressource.getString("editeur") != null && !ressource.getString("editeur").equals("")) {
                             editeur_set.add(ressource.getString("editeur"));
                         }
                         if(ressource.containsKey("publiccible")) {
@@ -150,18 +150,18 @@ public class EquipmentController extends ControllerHelper {
                     this.query_filter.get(filter).add(word);
                 }
             } else {
-                this.query_filter.put(filter, new ArrayList<String>(Arrays.asList(word)));
+                this.query_filter.put(filter, new ArrayList<>(Arrays.asList(word)));
             }
 
             // empty filter
             if (this.query_filter.isEmpty()) {
-                if(!(this.query_word == "")) {
+                if(!(this.query_word.equals(""))) {
                     equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
                 } else {
                     equipmentService.searchAll(arrayResponseHandler(request));
                 }
             } else {
-                if(!(this.query_word == "")) {
+                if(!(this.query_word.equals(""))) {
                     equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
                 } else {
                     equipmentService.filterWord(this.query_filter, arrayResponseHandler(request));
