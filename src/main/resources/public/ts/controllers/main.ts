@@ -341,9 +341,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.notifyBasket = (action: String, basket: Basket) => {
             let messageForOne = basket.amount + ' ' + lang.translate('article') + ' "'
-                + basket.equipment.ark + '" ' + lang.translate('crre.basket.' + action + '.article');
+                + basket.equipment.titre + '" ' + lang.translate('crre.basket.' + action + '.article');
             let messageForMany = basket.amount + ' ' + lang.translate('articles') + ' "'
-                + basket.equipment.ark + '" ' + lang.translate('crre.basket.' + action + '.articles');
+                + basket.equipment.titre + '" ' + lang.translate('crre.basket.' + action + '.articles');
             toasts.confirm(basket.amount === 1 ? messageForOne : messageForMany);
         };
 

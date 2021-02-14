@@ -198,7 +198,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
             for (int i = 0; i < equipTab.size(); i++) {
                 sqlquery += "?,";
-                values.add(equipTab.getJsonObject(i).getInteger("id"));
+                values.add(equipTab.getJsonObject(i).getString("ean"));
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 
@@ -282,7 +282,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
         for (int i = 0; i < equipTab.size(); i++) {
             sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getInteger("id"));
+            values.add(equipTab.getJsonObject(i).getString("ean"));
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 

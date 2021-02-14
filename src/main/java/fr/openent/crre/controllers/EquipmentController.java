@@ -8,14 +8,13 @@ import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -24,6 +23,7 @@ public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
     private String query_word;
+    private boolean haveFilter;
     private final HashMap<String, ArrayList<String>> query_filter;
 
     public EquipmentController() {
@@ -31,6 +31,7 @@ public class EquipmentController extends ControllerHelper {
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.query_filter = new HashMap<>();
         this.query_word = "";
+        this.haveFilter = false;
     }
 
     @Get("/equipments")
@@ -61,7 +62,53 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            equipmentService.searchAll(arrayResponseHandler(request));
+            if(haveFilter) {
+                equipmentService.searchAll(event -> {
+                    JsonArray ressources = event.right().getValue();
+                    JsonArray response = new JsonArray().add(new JsonObject().put("ressources", ressources));
+                    renderJson(request, response);
+                });
+            } else {
+                equipmentService.searchAll(event -> {
+                    JsonArray ressources = event.right().getValue();
+                    JsonArray filtres = new JsonArray();
+                    JsonArray response = new JsonArray();
+                    Set<String> disciplines_set = new HashSet<String>();
+                    Set<String> niveaux_set = new HashSet<String>();
+                    Set<String> editeur_set = new HashSet<String>();
+                    Set<String> public_set = new HashSet<String>();
+                    Set<String> os_set = new HashSet<String>();
+                    for(int i = 0; i < ressources.size(); i++) {
+                        JsonObject ressource = ressources.getJsonObject(i);
+                        for(int j = 0; j < ressource.getJsonArray("disciplines").size(); j ++) {
+                            disciplines_set.add(ressource.getJsonArray("disciplines").getJsonObject(j).getString("libelle"));
+                        }
+                        for(int j = 0; j < ressource.getJsonArray("niveaux").size(); j ++) {
+                            niveaux_set.add(ressource.getJsonArray("niveaux").getJsonObject(j).getString("libelle"));
+                        }
+                        if(ressource.containsKey("technos")) {
+                            for(int j = 0; j < ressource.getJsonArray("technos").size(); j ++) {
+                                os_set.add(ressource.getJsonArray("technos").getJsonObject(j).getString("technologie"));
+                            }
+                        }
+                        if(!ressource.getString("editeur").equals(null) || !ressource.getString("editeur").equals("")) {
+                            editeur_set.add(ressource.getString("editeur"));
+                        }
+                        if(ressource.containsKey("publiccible")) {
+                            public_set.add(ressource.getString("publiccible"));
+                        }
+                    }
+                    filtres.add(new JsonObject().put("disciplines", new JsonArray(Arrays.asList(disciplines_set.toArray())))
+                                                .put("niveaux", new JsonArray(Arrays.asList(niveaux_set.toArray())))
+                                                .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
+                                                .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
+                                                .put("editors", new JsonArray(Arrays.asList(editeur_set.toArray()))));
+                    response.add(new JsonObject().put("ressources", ressources))
+                            .add(new JsonObject().put("filters", filtres));
+                    renderJson(request, response);
+                });
+                //this.haveFilter = true;
+            }
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);

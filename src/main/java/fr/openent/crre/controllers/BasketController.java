@@ -199,15 +199,15 @@ public class BasketController extends ControllerHelper {
             try {
                 List<String> params = new ArrayList<String>();
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
-                if (request.params().contains("grade_name")) {
-                    params = request.params().getAll("grade_name");
+                if (request.params().contains("niveaux.libelle")) {
+                    params = request.params().getAll("niveaux.libelle");
                 }
 
                 // Récupération de tout les filtres hors grade
                 JsonArray filters = new JsonArray();
                 int length = request.params().entries().size();
                 for (int i = 0; i < length; i++) {
-                    if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("grade_name"))
+                    if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("niveaux.libelle"))
                         filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
                 }
                 // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents

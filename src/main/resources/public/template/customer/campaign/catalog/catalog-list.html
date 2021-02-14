@@ -24,7 +24,7 @@
             </div>
         </div>
     </div>
-    <div class="row" ng-init="getFilters()">
+    <div class="row">
         <button ng-click="initPopUpFilters('showPopUpColumnsSubject')"
                 class="filterButton">
             <i class="school"></i>
@@ -36,16 +36,28 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet first-column-popup columns-popup">
                     <label class="columns-popup-items" ng-repeat="subject in equipments.subjects">
-                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'subject_name')">
+                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'disciplines.libelle')">
                         <span>[[subject.name]]</span>
                     </label>
                 </div>
             </div>
         </button>
-        <button ng-click="initPopUpFilters('showPopUpColumnsDiplomes')"
+        <button ng-click="initPopUpFilters('showPopUpColumnsPublic')"
                 class="filterButton">
             <i class="star-circle"></i>
-            <span><i18n>Diplomes</i18n></span>
+            <span><i18n>Public</i18n></span>
+            <div class="columns-popup-wrapper right-magnet">
+                <div class="right-magnet columns-popup-button">
+                    <span ng-show="showPopUpColumnsPublic">&#x25B2;</span>
+                    <span ng-hide="showPopUpColumnsPublic">&#x25BC;</span>
+                </div>
+                <div ng-class="{'open' : showPopUpColumnsPublic}" class="right-magnet first-column-popup columns-popup">
+                    <label class="columns-popup-items" ng-repeat="public in equipments.public">
+                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(public.name, 'publiccible')">
+                        <span>[[public.name]]</span>
+                    </label>
+                </div>
+            </div>
         </button>
         <button ng-click="initPopUpFilters('showPopUpColumnsGrade')"
                 class="filterButton">
@@ -58,7 +70,7 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
                     <label class="columns-popup-items" ng-repeat="grade in equipments.grades">
-                        <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'grade_name')">
+                        <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'niveaux.libelle')">
                         <span>[[grade.name]]</span>
                     </label>
                 </div>
@@ -80,7 +92,7 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items" ng-repeat="editor in equipments.editors">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editor_name')">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')">
                         <span>[[editor.name]]</span>
                     </label>
                 </div>
@@ -90,6 +102,18 @@
                 class="filterButton">
             <i class="phone-infos"></i>
             <span>OS</span>
+            <div class="columns-popup-wrapper right-magnet">
+                <div class="right-magnet columns-popup-button">
+                    <span ng-show="showPopUpColumnsOS">&#x25B2;</span>
+                    <span ng-hide="showPopUpColumnsOS">&#x25BC;</span>
+                </div>
+                <div ng-class="{'open' : showPopUpColumnsOS}" class="right-magnet columns-popup">
+                    <label class="columns-popup-items" ng-repeat="os in equipments.os">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(os.name, 'technos.technologie')">
+                        <span>[[os.name]]</span>
+                    </label>
+                </div>
+            </div>
         </button>
     </div>
     <div class="row">
@@ -130,7 +154,7 @@
                             <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined"/>
                         </div>
                         <div>
-                            <strong class="ellipsis" tooltip="[[equipment.ark]]">[[equipment.ark]]</strong>
+                            <strong class="ellipsis" tooltip="[[equipment.titre]]">[[equipment.titre]]</strong>
                             <p class="description" ng-if="equipment.ean"><i></i> <b> EAN :  </b> [[equipment.ean]] </p>
                         </div>
                     </div>

@@ -281,7 +281,7 @@ public class OrderRegionController extends BaseController {
                                 Double price_TTC = getPriceTtc(equipmentJson);
                                 double price = price_TTC * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
-                                orderJson.put("name", equipmentJson.getString("ark"));
+                                orderJson.put("name", equipmentJson.getString("titre"));
                                 orderJson.put("image", equipmentJson.getString("urlcouverture"));
                                 orderJson.put("ean", equipmentJson.getString("ean"));
                             }

@@ -115,12 +115,12 @@ export const catalogController = ng.controller('catalogController',
             let value = $scope.$eval(filter);
 
             $scope.showPopUpColumnsGrade = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsSubject =
-                $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsDiplomes = false;
+                $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsPublic = false;
 
             if (!value) {
                 switch (filter) {
                     case 'showPopUpColumnsSubject': $scope.showPopUpColumnsSubject = true; break;
-                    case 'showPopUpColumnsDiplomes': $scope.showPopUpColumnsDiplomes = true; break;
+                    case 'showPopUpColumnsPublic': $scope.showPopUpColumnsPublic = true; break;
                     case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
                     case 'showPopUpColumnsDocumentsTypes': $scope.showPopUpColumnsDocumentsTypes = true; break;
                     case 'showPopUpColumnsEditor': $scope.showPopUpColumnsEditor = true; break;

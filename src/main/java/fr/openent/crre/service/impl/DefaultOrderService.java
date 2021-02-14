@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -367,7 +368,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
         for (int i = 0; i < equipTab.size(); i++) {
             sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getInteger("id"));
+            values.add(equipTab.getJsonObject(i).getString("ean"));
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         sqlquery += ") AND oe.id_structure IN ( ";
@@ -409,7 +410,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
             for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
                 sqlquery += "?,";
-                values.add(equipTab.getJsonArray(1).getJsonObject(i).getInteger("id"));
+                values.add(equipTab.getJsonArray(1).getJsonObject(i).getString("ean"));
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
             sqlquery += ")";
@@ -418,7 +419,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sqlquery += " AND oe.equipment_key IN (";
         for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
             sqlquery += "?,";
-            values.add(equipTab.getJsonArray(0).getJsonObject(i).getInteger("id"));
+            values.add(equipTab.getJsonArray(0).getJsonObject(i).getString("ean"));
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 
@@ -459,7 +460,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sqlquery += " AND oe.equipment_key IN (";
         for (int i = 0; i < equipTab.size(); i++) {
             sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getInteger("id"));
+            values.add(equipTab.getJsonObject(i).getString("ean"));
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 
@@ -494,7 +495,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler) {
-        if(query.equals("")) {
+        if(StringUtils.isEmpty(query)) {
             filter_waiting(filter, null, handler);
         } else {
             filter_waiting(filter, query, handler);

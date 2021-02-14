@@ -32,7 +32,7 @@ export class Equipment implements Selectable {
     disponibilite: any[];
     disciplines: any[];
     discipline: string;
-    ark: string;
+    titre: string;
     type: string;
     offres: any;
     prixht: number;
@@ -173,6 +173,8 @@ export interface Equipments {
     subjects: String[];
     grades: String[];
     editors: String[];
+    os: String[];
+    public: String[];
 
     sort: {
         type: string,
@@ -187,6 +189,9 @@ export class Equipments extends Selection<Equipment> {
         this.eventer = new Eventer();
         this.subjects = [];
         this.grades = [];
+        this.os = [];
+        this.public = [];
+        this.editors = [];
         this._loading = false;
         this.sort = {
             type: 'name',
@@ -207,14 +212,28 @@ export class Equipments extends Selection<Equipment> {
     }
 
     async syncEquip (data: any) {
-        this.all = Mix.castArrayAs(Equipment, data);
-        this.all.map((equipment) => {
-            equipment.id = equipment.ean;
-            equipment.status = equipment.disponibilite[0].valeur;
-            if(equipment.disciplines.length != 0) {
-                equipment.discipline = equipment.disciplines[0].libelle;
+        if(data.length > 0 ) {
+            if(data[0].hasOwnProperty("ressources")) {
+                let filters = data[1].filters[0];
+                this.subjects = filters.disciplines.map(v => ({name:v}));
+                this.grades = filters.niveaux.map(v => ({name:v}));
+                this.os = filters.os.map(v => ({name:v}));
+                this.public = filters.public.map(v => ({name:v}));
+                this.editors = filters.editors.map(v => ({name:v}));
+                data = data[0].ressources;
             }
-        });
+            this.all = Mix.castArrayAs(Equipment, data);
+            this.all.map((equipment) => {
+                equipment.id = equipment.ean;
+                equipment.status = equipment.disponibilite[0].valeur;
+                if(equipment.disciplines.length != 0) {
+                    equipment.discipline = equipment.disciplines[0].libelle;
+                }
+            });
+        } else {
+            this.all = [];
+        }
+
     }
 
     async getFilterEquipments(word: string, filter?: string){

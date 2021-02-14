@@ -5,6 +5,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.elasticsearch.ElasticSearch;
@@ -15,7 +16,7 @@ public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
     private static final Integer PAGE_SIZE = 10000;
     private static final String RESOURCE_TYPE_NAME = "_doc";
-    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("ean", "titre", "ark", "editeur", "disciplines", "niveaux", "auteur");
+    private static final  List<String> PLAIN_TEXT_FIELDS = Arrays.asList("ean", "titre", "editeur", "disciplines", "niveaux", "auteur");
 
     private ElasticSearchHelper() {
         throw new IllegalStateException("Utility class");
@@ -64,6 +65,31 @@ public class ElasticSearchHelper {
         });
     }
 
+    public static void getAllFilters(Handler<Either<String, JsonArray>> handler) {
+        JsonArray fields = new JsonArray().add("disciplines.libelle")
+                                        .add("niveaux.libelle")
+                                        .add("editeur");
+        JsonObject query = new JsonObject()
+                .put("from", 0)
+                .put("size", PAGE_SIZE)
+                .put("_source", fields);
+
+        executeEsSearch(query, ar -> {
+            if (ar.failed()) {
+                handler.handle(new Either.Left<>(ar.cause().toString()));
+            } else {
+                JsonArray result = new JsonArray();
+                for (Object article:ar.result()) {
+                    result.add(((JsonObject)article).getJsonObject("_source")
+                            .put("type", ((JsonObject)article).getString("_index"))
+                            .put("id", ((JsonObject)article).getString("_id"))
+                    );
+                }
+                handler.handle(new Either.Right<>(result));
+            }
+        });
+    }
+
 
     public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
@@ -87,7 +113,7 @@ public class ElasticSearchHelper {
 
     public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
-            JsonObject regexp = regexpField("name", query);
+            JsonObject regexp = regexpField("titre", query);
             should.add(regexp);
 
         JsonObject regexpBool = new JsonObject()
@@ -104,29 +130,34 @@ public class ElasticSearchHelper {
     }
 
     public static void filter_waiting(List<String> filters, String query, Handler<Either<String, JsonArray>> handler) {
-        JsonArray term = new JsonArray();
+        JsonObject term = new JsonObject();
         JsonArray should = new JsonArray();
         JsonObject queryObject = new JsonObject();
 
         if (query != null) {
-            JsonObject regexp = regexpField("name", query);
+            JsonObject regexp = regexpField("titre", query);
             should.add(regexp);
         }
         ArrayList<String> filter_tab = new ArrayList<>(filters);
-        term.add(new JsonObject().put("terms", new JsonObject().put("grade_name", new JsonArray(filter_tab))));
+        term = new JsonObject().put("terms", new JsonObject().put("niveaux.libelle", new JsonArray(filter_tab)));
+        JsonObject bool = new JsonObject().put("bool", new JsonObject().put("filter", term));
+        JsonObject nested = new JsonObject().put("path", "niveaux")
+                .put("query", bool);
+        JsonArray j = new JsonArray().add(new JsonObject().put("nested", nested));
+
 
 
 
         if(query != null) {
             JsonObject request = new JsonObject()
-                    .put("filter", term)
+                    .put("filter", j)
                     .put("minimum_should_match", 1)
                     .put("should", should);
 
             queryObject.put("bool", request);
         } else {
             JsonObject filter = new JsonObject()
-                    .put("filter", term);
+                    .put("filter", j);
             queryObject.put("bool", filter);
         }
         search(esQueryObject(queryObject), handler);
@@ -134,14 +165,23 @@ public class ElasticSearchHelper {
 
     public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
+        JsonObject filter = new JsonObject();
+        JsonArray j = new JsonArray();
 
         Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
-            term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
+            if(me.getKey().equals("disciplines.libelle") || me.getKey().equals("niveaux.libelle") || me.getKey().equals("technos.technologie")) {
+                JsonObject t = new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue())));
+                JsonObject bool = new JsonObject().put("bool", new JsonObject().put("filter", t));
+                JsonObject nested = new JsonObject().put("path", me.getKey().split("\\.")[0])
+                                                    .put("query", bool);
+                j = new JsonArray().add(new JsonObject().put("nested", nested));
+            } else {
+                term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
+            }
         }
-        JsonObject filter = new JsonObject()
-                .put("filter", term);
+        filter.put("filter", term.addAll(j));
 
         JsonObject queryObject = new JsonObject()
                 .put("bool", filter);
@@ -170,6 +210,8 @@ public class ElasticSearchHelper {
     public static void searchfilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
         JsonArray should = new JsonArray();
+        JsonObject request = new JsonObject();
+        JsonArray j = new JsonArray();
 
         for (String field : PLAIN_TEXT_FIELDS) {
             JsonObject regexp = regexpField(field, query);
@@ -180,10 +222,17 @@ public class ElasticSearchHelper {
         Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
-            term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
+            if(me.getKey().equals("disciplines.libelle") || me.getKey().equals("niveaux.libelle") || me.getKey().equals("technos.technologie")) {
+                JsonObject t = new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue())));
+                JsonObject bool = new JsonObject().put("bool", new JsonObject().put("filter", t));
+                JsonObject nested = new JsonObject().put("path", me.getKey().split("\\.")[0])
+                        .put("query", bool);
+                j = new JsonArray().add(new JsonObject().put("nested", nested));
+            } else {
+                term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
+            }
         }
-        JsonObject request = new JsonObject()
-                .put("filter", term)
+                request.put("filter", term.addAll(j))
                 .put("minimum_should_match", 1)
                 .put("should", should);
 
