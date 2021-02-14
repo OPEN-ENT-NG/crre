@@ -1,3 +1,3 @@
-DROP TABLE crre.grade;
-DROP TABLE crre.subject;
-DROP TABLE crre.editor;
+DROP TABLE crre.grade CASCADE;
+DROP TABLE crre.subject CASCADE;
+DROP TABLE crre.editor CASCADE;

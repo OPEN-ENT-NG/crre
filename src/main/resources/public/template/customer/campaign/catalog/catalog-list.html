@@ -80,6 +80,20 @@
                 class="filterButton">
             <i class="book-variant"></i>
             <span><i18n>Types.of.documents</i18n></span>
+            <div class="columns-popup-wrapper right-magnet">
+                <div class="right-magnet columns-popup-button">
+                    <span ng-show="showPopUpColumnsDocumentsTypes">&#x25B2;</span>
+                    <span ng-hide="showPopUpColumnsDocumentsTypes">&#x25BC;</span>
+                </div>
+                <div ng-class="{'open' : showPopUpColumnsDocumentsTypes}" class="right-magnet columns-popup">
+                    <label class="columns-popup-items">
+                        <input type="checkbox" ng-change="getFilter('articlepapier', '_index')">
+                        <span>Article Papier</span>
+                        <input type="checkbox" ng-change="getFilter('articlenumerique', '_index')">
+                        <span>Article Numerique</span>
+                    </label>
+                </div>
+            </div>
         </button>
         <button ng-click="initPopUpFilters('showPopUpColumnsEditor')"
                 class="filterButton">
