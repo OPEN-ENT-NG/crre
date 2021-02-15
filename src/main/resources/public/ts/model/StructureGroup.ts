@@ -4,10 +4,6 @@ import {_, toasts} from 'entcore';
 import http from 'axios';
 import {Structures} from './Structure';
 
-/**
- * Created by rahnir on 27/12/2017.
- */
-
 export class StructureGroup implements Selectable {
     id?: number;
     name: string;

@@ -1,13 +1,5 @@
-/**
- * Created by rahnir on 22/01/2018.
- */
-/**
- * Created by rahnir on 18/01/2018.
- */
 import {_, ng, template} from 'entcore';
 import {Basket, Campaign, Equipment, Utils} from '../../model';
-import forEach = require("core-js/fn/array/for-each");
-
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope) => {
@@ -36,13 +28,12 @@ export const catalogController = ng.controller('catalogController',
         $scope.validArticle = () => {
             return $scope.basket.amount > 0;
         };
+
         $scope.switchAll = (model: boolean, collection) => {
             collection.forEach((col) => {col.selected = col.required ? false : col.selected = model; });
             Utils.safeApply($scope);
         };
-        $scope.thereAreOptionalOptions = (equipment: Equipment) => {
-            return !(_.findWhere(equipment.options, {required : false}) === undefined) ;
-        };
+
         $scope.chooseCampaign = async () => {
             await $scope.initStructures();
             await $scope.initCampaign($scope.current.structure);
@@ -50,6 +41,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.display.lightbox.choosecampaign = true;
             Utils.safeApply($scope);
         };
+
         $scope.cancelChooseCampaign = () => {
             $scope.display.lightbox.choosecampaign = false;
             template.close('campaign.name');
@@ -96,10 +88,6 @@ export const catalogController = ng.controller('catalogController',
         $scope.amountDecrease = () => {
             if($scope.basket.amount)
                 $scope.basket.amount -= 1;
-        };
-
-        $scope.getFilters = () => {
-           $scope.equipments.getFilters();
         };
 
         $scope.durationFormat = (nbr : number) => {

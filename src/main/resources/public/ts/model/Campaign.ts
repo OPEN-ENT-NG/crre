@@ -79,12 +79,7 @@ export class Campaign implements Selectable  {
             toasts.warning('crre.campaign.update.err');
         }
     }
-    projectPriorityEnable(){
-        return (this.priority_field == PRIORITY_FIELD.PROJECT || !this.priority_field )  && this.priority_enabled ;
-    }
-    orderPriorityEnable(){
-        return this.priority_field == PRIORITY_FIELD.ORDER  && this.priority_enabled ;
-    }
+
     async sync (id) {
         try {
             let { data } = await http.get(`/crre/campaigns/${id}`);

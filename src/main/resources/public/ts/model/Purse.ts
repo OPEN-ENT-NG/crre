@@ -6,7 +6,6 @@ export class Purse implements Selectable {
     id?: number;
     id_structure: string;
     amount: number;
-
     selected: boolean;
     substraction?: any;
     bigDifference: boolean;
@@ -14,7 +13,6 @@ export class Purse implements Selectable {
     constructor (id_structure?: string, amount?: number) {
         if (id_structure) this.id_structure = id_structure;
         if (amount) this.amount = amount;
-
         this.selected = false;
     }
 

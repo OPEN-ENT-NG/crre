@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {_, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, EquipmentOption, Filter, Structure} from './index';
+import {Equipment, Filter, Structure} from './index';
 
 
 export class Basket implements Selectable {
@@ -9,19 +9,12 @@ export class Basket implements Selectable {
     amount: number;
     processing_date: string| Date;
     equipment: Equipment ;
-    options: EquipmentOption[];
     id_campaign: number;
     id_structure: string;
     selected: boolean;
     comment?: string;
-    price_proposal?: number;
-    price_editable: boolean;
-    display_price_editable: boolean;
     basket_name: string;
     reassort:boolean;
-
-
-    files?: any;
 
     constructor (equipment: Equipment , id_campaign?: number, id_structure?: string ) {
         this.equipment = Mix.castAs(Equipment, equipment) ;
@@ -31,27 +24,16 @@ export class Basket implements Selectable {
         this.id_campaign = id_campaign;
         this.id_structure = id_structure;
         this.amount = 1;
-        this.display_price_editable = false;
     }
 
     toJson () {
-        let options = _.filter( this.equipment.options , function(option) { return option.required || option.selected ; });
         return {
             amount: this.amount,
             processing_date : this.processing_date,
             equipment : this.equipment.ean,
-            options: options.length > 0 ?  _.pluck( options , 'id') : null ,
             id_campaign : this.id_campaign,
             id_structure : this.id_structure,
         };
-    }
-
-    async save () {
-        if (this.id) {
-            this.update();
-        } else {
-            this.create();
-        }
     }
 
     async create () {
@@ -98,33 +80,12 @@ export class Basket implements Selectable {
         }
     }
 
-    async updatePriceProposal() {
-        try {
-            http.put(`/crre/basket/${this.id}/priceProposal`, {price_proposal: this.price_proposal});
-        } catch (e) {
-            toasts.warning('crre.basket.update.err');
-            throw e;
-        }
-    }
-
     async delete () {
         try {
             return await  http.delete(`/crre/basket/${this.id}/campaign/${this.id_campaign}`);
         } catch (e) {
             toasts.warning('crre.basket.delete.err');
         }
-    }
-
-    async deleteDocument(file) {
-        try {
-            await http.delete(`/crre/basket/${this.id}/file/${file.id}`);
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    downloadFile(file) {
-        window.open(`/crre/basket/${this.id}/file/${file.id}`);
     }
 
     amountIncrease = () => {
@@ -264,7 +225,6 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-
     async filter_order(filters: Filter[], id_campaign: number, word?: string){
         try {
             let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
@@ -292,20 +252,9 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-
     async getMyOrders () {
         try {
             let { data } = await http.get(`/crre/basketOrder/allMyOrders`);
-            this.all = Mix.castArrayAs(BasketOrder, data);
-        }
-        catch {
-            toasts.warning('crre.order.getMine.err');
-        }
-    }
-
-    async getStructureHistory () {
-        try {
-            let { data } = await http.get(`/crre/basketOrder/history`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         }
         catch {

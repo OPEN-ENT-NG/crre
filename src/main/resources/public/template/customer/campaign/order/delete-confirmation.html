@@ -44,10 +44,6 @@
                 <span><i18n>price</i18n> : </span>
                 <strong ng-bind="calculateTotal(orderClient,2) | currency"></strong>
             </p>
-            <p ng-if="hasAProposalPrice(orderClient)">
-                <span><i18n>crre.priceProposal</i18n></span>
-                <strong ng-bind="orderClient.price_proposal | currency"></strong>
-            </p>
         </div>
         </div>
     </div>

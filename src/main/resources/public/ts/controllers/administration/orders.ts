@@ -1,13 +1,10 @@
-import {_, angular, idiom as lang, model, ng, template, toasts} from 'entcore';
-import http from "axios";
+import {_, ng, template, toasts} from 'entcore';
 import {
     BasketOrder,
-    Campaign, OrderClient,
+    OrderClient,
     OrderRegion,
     OrdersClient,
     OrdersRegion,
-    orderWaiting,
-    PRIORITY_FIELD,
     Utils,
     Filter, Filters
 } from '../../model';
@@ -19,13 +16,11 @@ export const orderController = ng.controller('orderController',
     ['$scope', '$location', ($scope, $location,) => {
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.allOrdersSelected = false;
-        $scope.tableFields = orderWaiting;
+        $scope.show = {
+            comment:false
+        };
         $scope.projects = [];
-        let isPageOrderWaiting = $location.path() === "/order/waiting";
-        let isPageOrderSent = $location.path() === "/order/sent";
-
-        if(isPageOrderSent)
-            $scope.displayedOrdersSent = $scope.displayedOrders;
+        $location.path() === "/order/waiting";
         $scope.sort = {
             order : {
                 type: 'created',
@@ -37,54 +32,6 @@ export const orderController = ng.controller('orderController',
             $scope.reassorts = [{reassort: true}, {reassort: false}];
             $scope.filters = new Filters();
             $scope.initPopUpFilters();
-        };
-
-
-
-        $scope.filterDisplayedOrders = async () => {
-            let searchResult = [];
-            let regex;
-            const matchStructureGroups = (structureGroups: string[]): boolean => {
-                let bool: boolean = false;
-                if (typeof structureGroups === 'string') structureGroups = Utils.parsePostgreSQLJson(structureGroups);
-                structureGroups.map((groupName) => bool = bool || regex.test(groupName.toLowerCase()));
-                return bool;
-            };
-            if($scope.search.filterWords.length > 0){
-                if(isPageOrderWaiting)await $scope.selectCampaignShow($scope.campaign);
-                $scope.search.filterWords.map((searchTerm: string, index: number): void => {
-                    let searchItems: OrderClient[] = index === 0 ? $scope.displayedOrders.all : searchResult;
-                    regex = Utils.generateRegexp([searchTerm]);
-
-                    searchResult = _.filter(searchItems, (order: OrderClient) => {
-                        return ('name_structure' in order ? regex.test(order.name_structure.toLowerCase()) : false)
-                            || ('structure' in order && order.structure['name'] ? regex.test(order.structure.name.toLowerCase()): false)
-                            || ('structure' in order && order.structure['city'] ? regex.test(order.structure.city.toLocaleLowerCase()) : false)
-                            || ('structure' in order && order.structure['academy'] ? regex.test(order.structure.academy.toLowerCase()) : false)
-                            || ('structure' in order && order.structure['type'] ? regex.test(order.structure.type.toLowerCase()) : false)
-                            || ('campaign' in order ? regex.test(order.campaign.name.toLowerCase()) : false)
-                            || ('name' in order ? regex.test(order.name.toLowerCase()) : false)
-                            || matchStructureGroups(order.structure_groups)
-                            || (order.number_validation !== null
-                                ? regex.test(order.number_validation.toLowerCase())
-                                : false)
-                            || (order.order_number !== null && 'order_number' in order
-                                ? regex.test(order.order_number.toLowerCase())
-                                : false)
-                            || (order.label_program !== null && 'label_program' in order
-                                ? regex.test(order.label_program.toLowerCase())
-                                : false)
-                    });
-                });
-                $scope.displayedOrders.all = searchResult;
-            } else {
-                if(isPageOrderWaiting)
-                    $scope.selectCampaignShow($scope.campaign)
-                else {
-                    $scope.displayedOrders.all = $scope.ordersClient.all ;
-                }
-
-            }
         };
 
         $scope.initPopUpFilters = (filter?:string) => {
@@ -131,7 +78,6 @@ export const orderController = ng.controller('orderController',
         };
 
         $scope.getAllFilters = () => {
-            $scope.equipments.getFilters();
             $scope.ordersClient.all.forEach(function (order) {
                 if(!$scope.users.includes(order.user_name)) {
                     $scope.users.push({user_name: order.user_name});
@@ -309,7 +255,6 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-
         $scope.closedLighbtox= () =>{
             $scope.display.lightbox.validOrder = false;
             if($scope.operationId) {
@@ -319,6 +264,7 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
 
         };
+
         $scope.syncOrders = async (status: string) =>{
             await $scope.ordersClient.sync(status, $scope.structures.all);
             $scope.displayedOrders.all = $scope.ordersClient.all;
@@ -328,83 +274,6 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         };
 
-        $scope.windUpOrders = async (orders: OrderClient[]) => {
-            let ordersToWindUp  = new OrdersClient();
-            // console.log($scope.displayedOrders.all);
-            ordersToWindUp.all = Mix.castArrayAs(OrderClient, orders);
-            let { status } = await ordersToWindUp.updateStatus('DONE');
-            if (status === 200) {
-                toasts.confirm('crre.windUp.notif');
-            }
-            await $scope.syncOrders('SENT');
-            while ($scope.displayedOrders.selected.length > 0){
-                Utils.safeApply($scope);
-            }
-            $scope.allOrdersSelected = false;
-            Utils.safeApply($scope);
-
-        };
-        $scope.isNotValidated = ( orders:OrderClient[]) =>{
-
-            let order  = orders.find(order => order.status === "SENT")
-            return order != undefined
-        };
-
-        $scope.validateSentOrders = (orders: OrderClient[]) => {
-            if (_.where(orders, { status : 'SENT' }).length > 0) {
-                let orderNumber = orders[0].order_number;
-                return _.every(orders, (order) => order.order_number === orderNumber);
-            } else {
-                let id_suppliers = (_.uniq(_.pluck(orders, 'id_contract')));
-                return (id_suppliers.length === 1);
-            }
-        };
-
-        $scope.disableCancelValidation = (orders: OrderClient[]) => {
-            return _.where(orders, { status : 'SENT' }).length > 0;
-        };
-
-        $scope.prepareSendOrder = async (orders: OrderClient[]) => {
-            if ($scope.validateSentOrders(orders)) {
-                try {
-                    await $scope.programs.sync();
-                    await $scope.initOrdersForPreview(orders);
-                } catch (e) {
-                    console.error(e);
-                    toasts.warning('crre.order.pdf.preview.error');
-                } finally {
-                    if ($scope.orderToSend.hasOwnProperty('preview')) {
-                        $scope.redirectTo('/order/preview');
-                    }
-                    Utils.safeApply($scope);
-                }
-            }
-        };
-        $scope.validatePrepareSentOrders = (orderToSend: OrdersClient) => {
-            return orderToSend;
-        };
-        $scope.sendOrders = async (orders: OrdersClient) => {
-            let { status } = await orders.updateStatus('SENT');
-            if (status === 201) {
-                toasts.confirm( 'crre.sent.order');
-                toasts.info( 'crre.sent.export.BC');
-            }
-            $scope.redirectTo('/order/valid');
-            Utils.safeApply($scope);
-        };
-
-        $scope.saveByteArray = (reportName, data) => {
-            let blob = new Blob([data]);
-            let link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download =  reportName + '.pdf';
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(function() {
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(link.href);
-            }, 100);
-        };
         $scope.exportCSV = () => {
             let order_selected;
             if($scope.ordersClient.selectedElements.length == 0) {
@@ -419,35 +288,6 @@ export const orderController = ng.controller('orderController',
             $scope.ordersClient.selectedElements.forEach(function (order) {
                 order.selected = false;
             });
-        }
-
-
-        $scope.getUsername = () => model.me.username;
-
-        $scope.concatOrders = () => {
-            let arr = [];
-            $scope.orderToSend.preview.certificates.map((certificate) => {
-                arr = [...arr, ...certificate.orders];
-            });
-            return arr;
-        };
-
-        $scope.isValidOrdersWaitingSelection = () => {
-            const orders: OrderClient[] = $scope.getSelectedOrders();
-            if (orders.length > 1) {
-                let isValid: boolean = true;
-                let contractId = orders[0].id_contract;
-                for (let i = 1; i < orders.length; i++) {
-                    isValid = isValid && (contractId === orders[i].id_contract);
-                }
-                return isValid;
-            } else {
-                return true;
-            }
-        };
-
-        function isSentOrDone(orders: OrderClient[]) {
-            return _.where(orders, {status: 'SENT'}).length === orders.length || (_.where(orders, {status: 'DONE'}).length === orders.length) && $scope.validateSentOrders(orders);
         }
 
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
@@ -467,54 +307,10 @@ export const orderController = ng.controller('orderController',
             $scope.$apply()
         };
 
-        $scope.countColSpan = (field:string):number =>{
-            let totaux = $scope.isValidator() ? 1 :0;
-            let price = $scope.isValidator() ? 1 : 0;
-            let amount_field = 8;
-            for (let _i = 0; _i < $scope.tableFields.length; _i++) {
-                if(_i < amount_field && $scope.tableFields[_i].display){
-                    totaux++;
-                }else if(_i> amount_field && $scope.tableFields[_i].display)  {
-                    price++;
-                }
-            }
-            return field == 'totaux' ? totaux : price;
-        };
-
-        $scope.inProgressOrders = async (orders: OrderClient[]) => {
-            let ordersToValidat = new OrdersClient();
-            ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
-            let {status, data} = await ordersToValidat.updateStatus('IN PROGRESS');
-            openLightboxValidOrder(status, data, ordersToValidat);
-            await $scope.syncOrders('WAITING');
-            Utils.safeApply($scope);
-        };
-
-        $scope.orderShow = (order:OrderClient) => {
-            if(order.rank !== undefined){
-                if(order.campaign.priority_field === PRIORITY_FIELD.ORDER && order.campaign.orderPriorityEnable()){
-                    return order.rank = order.rank + 1;
-                }
-            }
-            return order.rank = lang.translate("crre.order.not.prioritized");
-        };
-
-        $scope.selectCampaignAndInitFilter = async (campaign: Campaign) =>{
-            await $scope.selectCampaignShow(campaign);
-            $scope.search.filterWords = [];
-        };
-
-
         // Functions specific for baskets interactions
 
         $scope.displayedBasketsOrders = [];
         $scope.displayedOrdersRegionOrders = [];
-
-        $scope.switchAllSublines = (basket) : void => {
-            basket.orders.forEach(function (order) {
-                order.selected = basket.selected;
-            });
-        };
 
         $scope.checkParentSwitch = (basket, checker) : void => {
             if (checker) {
@@ -536,15 +332,6 @@ export const orderController = ng.controller('orderController',
             template.close('refuseOrder.lightbox');
             Utils.safeApply($scope);
         };
-
-
-        angular.element(document).ready(function(){
-            let elements = document.getElementsByClassName('vertical-array-scroll');
-            if(elements[0]) {
-                elements[0].scrollLeft = 9000000000000;
-            }
-            Utils.safeApply($scope);
-        });
 
         this.init();
     }]);

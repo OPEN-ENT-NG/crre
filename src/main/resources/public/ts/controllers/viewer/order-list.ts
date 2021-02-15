@@ -3,7 +3,6 @@ import {
     BasketOrder, Filter, Filters,
     OrderClient,
     OrdersClient,
-    orderWaiting,
     Utils
 } from '../../model';
 
@@ -23,7 +22,9 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             list: $scope.campaign.priority_field
         };
         $scope.allOrdersListSelected = false;
-        $scope.tableFields = orderWaiting;
+        $scope.show = {
+            comment:false
+        };
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
 
         this.init = () => {
@@ -115,7 +116,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 formatDisplayedBasketOrders();
                 Utils.safeApply($scope);
             });
-            $scope.equipments.getFilters();
         };
 
         $scope.searchByName =  async (name: string) => {
@@ -143,11 +143,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             }
             Utils.safeApply($scope);
         }
-
-        $scope.hasAProposalPrice = (orderClient: OrderClient) => {
-
-            return (orderClient.price_proposal);
-        };
 
         $scope.switchAllOrders = (allOrdersListSelected : boolean) => {
             $scope.displayedBasketsOrders.map((basket) => {basket.selected = allOrdersListSelected;
@@ -276,33 +271,9 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                         displayedBasket.orders.push(order);
                     }
                 });
-                setStatus(displayedBasket, displayedBasket.orders[0]);
+                Utils.setStatus(displayedBasket, displayedBasket.orders[0]);
                 $scope.displayedBasketsOrders.push(displayedBasket);
             });
         };
-
-        function setStatus(displayedBasket, firstOrder) {
-            displayedBasket.status = firstOrder.status;
-            let partiallyRefused = false;
-            let partiallyValided = false;
-            if(displayedBasket.orders.length > 1){
-                for (const order of displayedBasket.orders) {
-                    if (displayedBasket.status != order.status)
-                        if (order.status == 'VALID' || displayedBasket.status == 'VALID')
-                            partiallyValided = true;
-                        else if (order.status == 'REJECTED' || displayedBasket.status == 'REJECTED')
-                            partiallyRefused = true;
-                }
-                if (partiallyRefused || partiallyValided) {
-                    for (const order of displayedBasket.orders) {
-                        order.displayStatus = true;
-                    }
-                    if (partiallyRefused && !partiallyValided)
-                        displayedBasket.status = "PARTIALLYREJECTED"
-                    else
-                        displayedBasket.status = "PARTIALLYVALIDED"
-                }
-            }
-        }
         this.init();
     }]);

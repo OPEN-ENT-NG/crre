@@ -10,7 +10,7 @@ export const dropDownMenu = ng.directive('dropDownMenu', () => {
         template: '' +
         '<div class="title">[[title]]</div>' +
         '<div class="options hidden" ng-transclude></div>',
-        link: (scope, element, attributes) => {
+        link: (scope, element) => {
             element.children('.options').on('mouseover', (e) => {
                 e.stopPropagation();
             });

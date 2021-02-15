@@ -1,4 +1,4 @@
-import {_, moment, ng, template, toasts} from 'entcore';
+import {_, idiom, idiom as lang, ng, template, toasts} from 'entcore';
 import {Basket, Baskets, Utils} from '../../model';
 
 export const basketController = ng.controller('basketController',
@@ -12,10 +12,6 @@ export const basketController = ng.controller('basketController',
                 addDocuments: false
             },
             grade: "",
-        };
-
-        $scope.isProposed = (basket: Basket) => {
-            return (basket.price_proposal);
         };
 
         $scope.hasOneSelected = (baskets: Baskets) => {
@@ -63,14 +59,6 @@ export const basketController = ng.controller('basketController',
             return (!isNaN(equipmentPrice)) ? (roundNumber ? equipmentPrice.toFixed(roundNumber) : equipmentPrice) : '';
         };
 
-        $scope.resetPriceProposal = (basket: Basket) => {
-            basket.price_proposal = null;
-            basket.display_price_editable = false;
-            Utils.safeApply($scope);
-            basket.updatePriceProposal();
-        };
-
-
         $scope.calculatePriceOfBasketUnity = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
             let equipmentPrice = $scope.calculatePriceOfEquipment(basket.equipment, roundNumber);
             equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * 1;
@@ -81,29 +69,14 @@ export const basketController = ng.controller('basketController',
             return $scope.calculatePriceOfBasketUnity(basket, 2, true);
         };
 
-        $scope.displayPriceEdition = (basket: Basket) => {
-
-            basket.display_price_editable = true;
-            Utils.safeApply($scope);
-        };
-
-
-        $scope.calculeDeliveryDate = () => {
-            return moment().add(60, 'days').calendar();
-        };
-
-
-        $scope.displayOptions = (index: number) => {
-            $scope.display.equipmentOption[index] = !$scope.display.equipmentOption[index] ;
-            Utils.safeApply($scope);
-        };
-
         $scope.displayLightboxDelete = (basket: Basket) => {
-            template.open('basket.delete', 'customer/campaign/basket/delete-confirmation');
-            $scope.basketToDelete = basket;
-            $scope.display.lightbox.deleteBasket = true;
-            Utils.safeApply($scope);
+            //template.open('basket.delete', 'customer/campaign/basket/delete-confirmation');
+            //$scope.basketToDelete = basket;
+            //$scope.display.lightbox.deleteBasket = true;
+            //Utils.safeApply($scope);
+            $scope.deleteBasket(basket);
         };
+
         $scope.deleteBasket = async (basket: Basket) => {
             let { status } = await basket.delete();
             if (status === 200) {
@@ -114,12 +87,14 @@ export const basketController = ng.controller('basketController',
             await $scope.baskets.sync($routeParams.idCampaign, $scope.current.structure.id);
             Utils.safeApply($scope);
         };
+
         $scope.cancelBasketDelete = () => {
             delete $scope.basketToDelete;
             $scope.display.lightbox.deleteBasket = false;
             template.close('basket.delete');
             Utils.safeApply($scope);
         };
+
         $scope.updateBasketAmount = (basket: Basket) => {
             if (basket.amount === 0) {
                 $scope.displayLightboxDelete(basket);
@@ -128,6 +103,7 @@ export const basketController = ng.controller('basketController',
                 basket.updateAmount();
             }
         };
+
         $scope.updateBasketComment = async (basket: Basket) => {
             if (!basket.comment || basket.comment.trim() == "") {
                 basket.comment = "";
@@ -136,31 +112,33 @@ export const basketController = ng.controller('basketController',
             Utils.safeApply($scope);
         };
 
-        $scope.updateBasketPriceProposal = (basket: Basket) => {
-            basket.updatePriceProposal();
-            console.log(basket);
-            basket.display_price_editable = false;
-            Utils.safeApply($scope);
-        };
-
         $scope.takeClientOrder = async (basket_name: string) => {
             $scope.totalPriceOrder = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
             let {status, data} = await $scope.baskets_test.takeOrder(parseInt($routeParams.idCampaign), $scope.current.structure, basket_name);
             if(status === 200) {
-                $scope.confirmOrder(data)
+                let nbr_equipment = $scope.baskets_test.all.length;
+                $scope.confirmOrder(data, nbr_equipment)
                 $scope.totalPrice = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
                 await $scope.baskets_test.sync(parseInt($routeParams.idCampaign), $scope.current.structure.id);
                 $scope.cancelConfirmBasketName();
             }
         };
-        $scope.confirmOrder = (data) => {
+
+        $scope.confirmOrder = (data, nbr_equipment) => {
             $scope.campaign.nb_order += 1;
             $scope.campaign.order_notification += 1;
-            $scope.campaign.nb_order_waiting += $scope.baskets.all.length;
+            $scope.campaign.nb_order_waiting += nbr_equipment;
             $scope.campaign.nb_panier = 0;
             $scope.campaign.purse_amount = data.amount;
-            template.open('basket.order', 'customer/campaign/basket/order-confirmation');
-            $scope.display.lightbox.confirmOrder = true;
+            let message = lang.translate('crre.confirm.order.message1') +
+                "<strong>" +
+                parseFloat($scope.totalPriceOrder).toLocaleString(undefined,{minimumFractionDigits: 2, maximumFractionDigits: 2}) +
+                " " + idiom.translate('money.symbol') +
+                "</strong>" +
+                lang.translate('crre.confirm.order.message2');
+            toasts.confirm(message);
+            //template.open('basket.order', 'customer/campaign/basket/order-confirmation');
+            //$scope.display.lightbox.confirmOrder = true;
             Utils.safeApply($scope);
         };
 
@@ -193,7 +171,7 @@ export const basketController = ng.controller('basketController',
         $scope.checkPrice = async (baskets: Baskets) => {
             let priceIs0 = false;
             baskets.all.forEach(basket =>{
-                if(basket.price_proposal === null && basket.equipment.price === 0 || basket.price_proposal === 0 ){
+                if(basket.equipment.price === 0){
                     priceIs0 = true;
                 }
             });
@@ -202,37 +180,6 @@ export const basketController = ng.controller('basketController',
             }else{
                 $scope.baskets_test = baskets;
                 $scope.confirmBasketName();
-            }
-        };
-
-        $scope.openAddDocumentsLightbox = (basket: Basket) => {
-            $scope.basket = basket;
-            $scope.files = [];
-            $scope.display.lightbox.addDocuments = true;
-            Utils.safeApply($scope);
-        };
-
-        $scope.endUpload = (files) => {
-            $scope.basket.files = $scope.basket.files || [];
-            for (let i = 0; i < files.length; i++) {
-                $scope.basket.files.push(files[i]);
-            }
-            $scope.display.lightbox.addDocuments = false;
-            Utils.safeApply($scope);
-        };
-
-        $scope.deleteBasketDocument = async (basket: Basket, file) => {
-            try {
-                file.status = 'loading';
-                Utils.safeApply($scope);
-                await basket.deleteDocument(file);
-                basket.files = _.reject(basket.files, (doc) => doc.id === file.id);
-                toasts.confirm('crre.basket.file.delete.success');
-            } catch (err) {
-                toasts.warning('crre.basket.file.delete.error');
-                delete file.status;
-            } finally {
-                Utils.safeApply($scope);
             }
         };
 

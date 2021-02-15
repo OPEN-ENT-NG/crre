@@ -108,29 +108,29 @@
             </thead>
             <tbody>
             <tr ng-repeat="order in ordersClient.all"
-                class="subline" post-ng-repeat>
+                class="subline">
                 <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
                         <span></span>
                     </label>
                 </td>
-                <td ng-if="tableFields[0].display"><div class="smallTabElem center">[[order.creation_date]]</div></td>
-                <td ng-if="tableFields[1].display">
+                <td><div class="smallTabElem center">[[order.creation_date]]</div></td>
+                <td>
                     <div class="tabElem order" ng-click="openEquipmentId(order.equipment_key)">
                         <img src="[[order.image]]"/>
                         <div class="breakLines">[[order.name]]</div>
                     </div>
                 </td>
-                <td ng-if="tableFields[2].display"><div class="smallTabElem center breakLines">[[order.user_name]]</div></td>
-                <td ng-if="tableFields[3].display"><div class="smallTabElem center breakLines">[[order.basket_name]]</div></td>
-                <td ng-if="tableFields[4].display">
+                <td><div class="smallTabElem center breakLines">[[order.user_name]]</div></td>
+                <td><div class="smallTabElem center breakLines">[[order.basket_name]]</div></td>
+                <td>
                     <div class="smallTabElem center">
                         <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort" ng-click="updateReassort(order)"></i>
                         <i class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort" ng-click="updateReassort(order)"></i>
                     </div>
                 </td>
-                <td ng-if="tableFields[5].display">
+                <td>
                     <div class="smallTabElem center centerInputAmount">
                         <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount - 1)"></i>
                         <input type="number" class="quantity-input" name="input" ng-disabled="order.status === 'IN PROGRESS'"
@@ -138,12 +138,12 @@
                         <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(order, order.amount + 1)"></i>
                     </div>
                 </td>
-                <td ng-if="tableFields[6].display">
+                <td>
                     <div class="smallTabElem center leftPadding10">
                         <span ng-bind="order.price*order.amount | currency"></span>
                     </div>
                 </td>
-                <td ng-if="tableFields[7].display">
+                <td>
                     <div class="smallTabElem center"
                          tooltip="[[order.comment]]"
                          ng-if="order.comment">

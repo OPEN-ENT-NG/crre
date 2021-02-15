@@ -2,7 +2,6 @@ import {_, ng, template} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {
     Campaign,
-    COMBO_LABELS,
     StructureGroup,
     StructureGroupImporter,
     Utils
@@ -14,7 +13,6 @@ export const configurationController = ng.controller('configurationController',
         $scope.nbItemsDisplay = $scope.pageSize;
         $scope.itemsFilter = 'name';
         $scope.filterOrder = false;
-        $scope.COMBO_LABELS = COMBO_LABELS;
         $scope.display = {
             lightbox: {
                 campaign: false,

@@ -41,21 +41,21 @@
             </td>
         </tr>
         <tr ng-repeat="order in basket.orders | orderBy:sort.order.type:sort.order.reverse"
-            ng-if="basket.expanded" class="subline" post-ng-repeat>
+            ng-if="basket.expanded" class="subline">
             <td class="table-selector">
                 <label class="checkbox">
                     <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
                     <span></span>
                 </label>
             </td>
-            <td ng-if="tableFields[0].display"><div class="smallTabElem"></div></td>
-            <td ng-if="tableFields[1].display">
+            <td><div class="smallTabElem"></div></td>
+            <td>
                 <div class="tabElem order" ng-click="openEquipmentId(order.equipment_key)">
                     <img src="[[order.image]]"/>
                     <div class="breakLines">[[order.name]]</div>
                 </div>
             </td>
-            <td ng-if="tableFields[2].display">
+            <td>
                 <div class="smallTabElem center centerInputAmount">
                     <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
                     <input type="number" class="quantity-input" ng-disabled="order.status === 'IN PROGRESS'" name="input"
@@ -63,18 +63,18 @@
                     <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount +1)"></i>
                 </div>
             </td>
-            <td ng-if="tableFields[3].display">
+            <td>
                 <div class="smallTabElem center">
                     <span ng-bind="order.price*order.amount | currency"></span>
                 </div>
             </td>
-            <td ng-if="tableFields[4].display">
-                <div ng-init="tableFields[5].fullDisplay = false"
+            <td>
+                <div ng-init="show.comment = false"
                      class="tabElem"
-                     ng-class="{ellipsis:!tableFields[5].fullDisplay}"
-                     ng-click="tableFields[5].fullDisplay = !tableFields[5].fullDisplay"> [[order.comment || '-']]</div>
+                     ng-class="{ellipsis:!show.comment}"
+                     ng-click="show.comment.fullDisplay = !show.comment.fullDisplay"> [[order.comment || '-']]</div>
             </td>
-            <td ng-if="tableFields[5].display">
+            <td>
                 <div class="smallTabElem center">
                     <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"
                        ng-click="order.status !== 'IN PROGRESS' && updateReassort(order)"></i>
@@ -82,7 +82,7 @@
                        ng-click="order.status !== 'IN PROGRESS' && updateReassort(order)"></i>
                 </div>
             </td>
-            <td ng-if="tableFields[6].display">
+            <td>
                 <div class="justification-rejected cell"
                      tooltip="[[order.cause_status]]"
                      ng-if="order.cause_status">

@@ -16,7 +16,7 @@ export const Switch = ng.directive('switchToggle', () => {
             </label>
         </div>
         `,
-        link: function ($scope, $element, $attrs, ngModel) {
+        link: function ($scope, $element, $attrs) {
             $scope.valueChange = function() {
                 setTimeout(function() {
                     if ($attrs.ngChange) $scope.$parent.$eval($attrs.ngChange);

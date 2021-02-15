@@ -19,35 +19,21 @@ export class OrderRegion implements Order  {
     equipment: Equipment;
     equipment_key:number;
     id?: number;
-    id_operation:Number;
     id_structure: string;
     inheritedClass:Order|OrderClient|OrderRegion;
-    options;
     order_parent?:any;
     price: number;
-    price_proposal: number;
-    price_single_ttc: number;
-    rank: number;
-    rankOrder: Number;
     selected:boolean;
     structure: Structure;
-    tax_amount: number;
     typeOrder:string;
-    contract_name?: string;
     description:string;
     files: string;
     id_campaign:number;
-    id_contract:number;
     id_orderClient: number;
     id_project:number;
-    id_supplier: string;
     name:string;
     name_structure: string;
-    number_validation:string;
-    label_program:string;
     order_client: OrderClient;
-    order_number?: string;
-    preference: number;
     structure_groups: any;
     summary:string;
     image:string;
@@ -95,53 +81,21 @@ export class OrderRegion implements Order  {
         this.image = order.image;
         this.creation_date = order.creation_date;
         this.status = order.status;
-        this.number_validation = order.number_validation;
         this.technical_spec = order.technical_spec;
         this.campaign = order.campaign;
         this.structure_groups = order.structure_groups;
-        this.contract_name = order.contract_name;
         this.files = order.files;
         this.name_structure = order.name_structure;
-        this.id_contract = order.id_contract;
         this.id_campaign = order.id_campaign;
         this.id_structure = order.id_structure;
         this.id_project = order.id_project;
         this.comment = order.comment;
         this.price = order.price;
-        this.rank = order.rank;
         this.structure = order.structure;
-        this.id_operation = order.id_operation;
         this.equipment_key = order.equipment_key;
         this.user_name = order.user_name;
         this.user_id = order.user_id;
         this.reassort = order.reassort;
-    }
-
-    initDataFromEquipment():void {
-        if (this.equipment) {
-            this.summary = this.equipment.titre;
-            this.image = this.equipment.urlcouverture;
-
-        }
-    }
-
-    async delete(id:number):Promise<any>{
-        try{
-            return await http.delete(`/crre/region/${id}/order`);
-        } catch (e) {
-            toasts.warning('crre.admin.order.update.err');
-            throw e;
-        }
-    }
-
-    async getOneOrderRegion(id:number, structures:Structures):Promise<Order>{
-        try{
-            const {data} =  await http.get(`/crre/orderRegion/${id}/order`);
-            return new Order(Object.assign(data, {typeOrder:"region"}), structures);
-        } catch (e) {
-            toasts.warning('crre.admin.order.update.err');
-            throw e;
-        }
     }
 }
 

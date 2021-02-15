@@ -135,9 +135,4 @@
     <lightbox show="display.lightbox.confirmbasketName" on-close="cancelConfirmBasketName()">
         <container template="basket.name"></container>
     </lightbox>
-
-    <lightbox show="display.lightbox.addDocuments" on-close="display.lightbox.addDocuments = false">
-        <upload-files end="endUpload"
-                      upload-uri="'/crre/basket/' + basket.id + '/file'"></upload-files>
-    </lightbox>
 </div>

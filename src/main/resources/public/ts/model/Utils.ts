@@ -51,6 +51,30 @@ export class Utils {
         }
     }
 
+    static setStatus(project, firstOrder) {
+        project.status = firstOrder.status;
+        let partiallyRefused = false;
+        let partiallyValided = false;
+        if(project.orders.length > 1){
+            for (const order of project.orders) {
+                if (project.status != order.status)
+                    if (order.status == 'VALID' || project.status == 'VALID')
+                        partiallyValided = true;
+                    else if (order.status == 'REJECTED' || project.status == 'REJECTED')
+                        partiallyRefused = true;
+            }
+            if (partiallyRefused || partiallyValided) {
+                for (const order of project.orders) {
+                    order.displayStatus = true;
+                }
+                if (partiallyRefused && !partiallyValided)
+                    project.status = "PARTIALLYREJECTED"
+                else
+                    project.status = "PARTIALLYVALIDED"
+            }
+        }
+    }
+
     static formatGetParameters (obj: any): string {
         let parameters = '';
         Object.keys(obj).map((key) => {
@@ -76,13 +100,10 @@ export class Utils {
 
         return parameters.slice(0, -1);
     }
+
     static formatDate (date:Date) {
         if (date === null) return '-';
         return moment(date).format('DD/MM/YY');
-    }
-
-    static formatDatePost (date:Date) {
-        return  moment(date).format('YYYY-MM-DD');
     }
 
     static generateRegexp (words: string[]): RegExp {

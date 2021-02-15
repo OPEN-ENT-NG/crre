@@ -2,7 +2,6 @@ import {
     Campaign,
     Equipment,
     OrderClient,
-    OrderOptionClient,
     OrderRegion,
     Structure,
     Structures,
@@ -19,13 +18,8 @@ export interface OrderImp extends Selectable{
     equipment_key:number;
     id_structure: string;
     price: number;
-    price_proposal: number;
-    price_single_ttc: number;
-    rank: number;
-    rankOrder: Number;
     selected:boolean;
     structure: Structure;
-    tax_amount: number;
 }
 
 export class Order implements OrderImp{
@@ -36,19 +30,12 @@ export class Order implements OrderImp{
     equipment: Equipment;
     equipment_key:number;
     id?: number;
-    id_operation:Number;
     id_structure: string;
     inheritedClass:Order|OrderClient|OrderRegion;
-    options;
     order_parent?:any;
     price: number;
-    price_proposal: number;
-    price_single_ttc: number;
-    rank: number;
-    rankOrder: Number;
     selected:boolean;
     structure: Structure;
-    tax_amount: number;
     typeOrder:string;
     basket_name?:string;
     user_name?:string;
@@ -60,21 +47,11 @@ export class Order implements OrderImp{
         this.equipment_key = order.equipment_key;
         this.inheritedClass = order;
         this.price = order.price? parseFloat(order.price.toString()) : null;
-        this.price_proposal = order.price_proposal? parseFloat(order.price_proposal.toString()) : null;
-        this.price_single_ttc  = order.price_single_ttc? parseFloat(order.price_single_ttc.toString()) : null;
-        this.rank  = order.rank? parseInt(order.rank.toString()) + 1: null;
         this.structure = order.id_structure? OrderUtils.initStructure( order.id_structure, structures) : new Structure();
-        this.tax_amount  = order.tax_amount? parseFloat(order.tax_amount.toString()) : null;
         this.typeOrder = order.typeOrder;
         if(order.id)this.id = order.id;
-        if(order.id_operation)this.id_operation = order.id_operation;
         if(order.order_parent){
             this.order_parent = order.order_parent;
-        }
-        if(order.options){
-            this.options = order.options.toString() !== '[null]' && order.options !== null ?
-                Mix.castArrayAs(OrderOptionClient, JSON.parse(order.options.toString()))  :
-                [];
         }
     }
 }

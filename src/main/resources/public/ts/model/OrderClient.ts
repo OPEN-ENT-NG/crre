@@ -22,38 +22,24 @@ export class OrderClient implements Order  {
     equipment: Equipment;
     equipment_key:number;
     id?: number;
-    id_operation:Number;
     id_structure: string;
     inheritedClass:Order|OrderClient|OrderRegion;
-    options;
     order_parent?:any;
     price: number;
-    price_proposal: number;
-    price_single_ttc: number;
-    rank: number;
-    rankOrder: Number;
     selected:boolean;
     structure: Structure;
-    tax_amount: number;
     typeOrder:string;
     total?:number;
     action?:string;
     cause_status?:string;
-    contract_name?: string;
     description:string;
     files;
     id_campaign:number;
-    id_contract:number;
     id_order:number;
     id_project:number;
     id_basket:number;
-    id_supplier: string;
     name:string;
     name_structure: string;
-    number_validation:string;
-    label_program:string;
-    order_number?: string;
-    preference: number;
     priceTotalTTC: number;
     structure_groups: any;
     summary:string;
@@ -84,10 +70,6 @@ export class OrderClient implements Order  {
         } catch (e) {
             toasts.warning('crre.order.delete.err');
         }
-    }
-
-    downloadFile(file):void {
-        window.open(`/crre/order/${this.id}/file/${file.id}`);
     }
 
     async updateAmount(amount: number):Promise<void>{
@@ -136,24 +118,12 @@ export class OrderClient implements Order  {
             name: data.name,
             number_validation: data.number_validation,
             price: data.price,
-            price_proposal: data.price_proposal,
             program: data.program,
-            rank: data.rank,
             status: data.status,
             summary: data.summary,
             tax_amount: data.tax_amount
         }
             ;
-    }
-
-    async get():Promise<void> {
-        try {
-            let {data} = await http.get(`/crre/order/${this.id}`);
-            Mix.extend(this, OrderClient.formatSqlDataToModel(data));
-
-        } catch (e) {
-            toasts.warning('crre.order.get.err');
-        }
     }
 
     toJson():any {
@@ -179,13 +149,11 @@ export class OrderClient implements Order  {
 export class OrdersClient extends Selection<OrderClient> {
 
     dateGeneration?: Date;
-    id_project_use?: number;
     filters: Array<string>;
 
     constructor() {
         super([]);
         this.dateGeneration = new Date();
-        this.id_project_use = -1;
         this.filters = [];
     }
 
@@ -260,7 +228,6 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string):Promise<void> {
         try {
-            this.id_project_use = -1;
             if (idCampaign && idStructure) {
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
@@ -275,7 +242,6 @@ export class OrdersClient extends Selection<OrderClient> {
                                 order.name = equipment.ark;
                             }
                             order.image = equipment.urlcouverture;
-                            //order.grade = equipment.grade_name;
                         }
                         this.syncWithIdsCampaignAndStructure();
                     });
@@ -294,7 +260,6 @@ export class OrdersClient extends Selection<OrderClient> {
                                 order.name = equipment.ark;
                             }
                             order.image = equipment.urlcouverture;
-                            //order.grade = equipment.grade_name;
                             order.name_structure = structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
                             order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                             order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
@@ -392,15 +357,4 @@ export class OrdersClient extends Selection<OrderClient> {
         }
         return total;
     }
-}
-
-export class OrderOptionClient implements Selectable {
-    id?: number;
-    tax_amount: number;
-    price: number;
-    name: string;
-    amount: number;
-    required: boolean;
-    id_order_client_equipment: number;
-    selected: boolean;
 }
