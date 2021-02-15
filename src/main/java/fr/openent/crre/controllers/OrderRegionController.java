@@ -281,7 +281,11 @@ public class OrderRegionController extends BaseController {
                                 Double price_TTC = getPriceTtc(equipmentJson);
                                 double price = price_TTC * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
-                                orderJson.put("name", equipmentJson.getString("titre"));
+                                if(equipmentJson.getString("titre") != null && !equipmentJson.getString("titre").equals("")) {
+                                    orderJson.put("name", equipmentJson.getString("titre"));
+                                } else {
+                                    orderJson.put("name", equipmentJson.getString("ark"));
+                                }
                                 orderJson.put("image", equipmentJson.getString("urlcouverture"));
                                 orderJson.put("ean", equipmentJson.getString("ean"));
                             }
@@ -401,7 +405,11 @@ public class OrderRegionController extends BaseController {
                             double price_TTC = getPriceTtc(equipment);
                             double price = price_TTC * order.getInteger("amount");
                             order.put("price", price);
-                            order.put("name", equipment.getString("titre"));
+                            if(equipment.getString("titre") != null && !equipment.getString("titre").equals("")) {
+                                order.put("name", equipment.getString("titre"));
+                            } else {
+                                order.put("name", equipment.getString("ark"));
+                            }
                             order.put("image", equipment.getString("image"));
                             order.put("ean", equipment.getString("ean"));
                         }

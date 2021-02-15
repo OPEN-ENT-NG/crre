@@ -123,7 +123,8 @@ public class ElasticSearchHelper {
     public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
             JsonObject regexp = regexpField("titre", query);
-            should.add(regexp);
+            JsonObject ark = regexpField("ark", query);
+            should.add(regexp).add(ark);
 
         JsonObject regexpBool = new JsonObject()
                 .put("should", should);
@@ -145,7 +146,8 @@ public class ElasticSearchHelper {
 
         if (query != null) {
             JsonObject regexp = regexpField("titre", query);
-            should.add(regexp);
+            JsonObject ark = regexpField("ark", query);
+            should.add(regexp).add(ark);
         }
         ArrayList<String> filter_tab = new ArrayList<>(filters);
         term = new JsonObject().put("terms", new JsonObject().put("niveaux.libelle", new JsonArray(filter_tab)));
