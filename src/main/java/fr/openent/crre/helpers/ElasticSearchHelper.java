@@ -33,10 +33,13 @@ public class ElasticSearchHelper {
             } else {
                 JsonArray result = new JsonArray();
                 for (Object article:ar.result()) {
-                    result.add(((JsonObject)article).getJsonObject("_source")
+                    JsonObject acticleJson = ((JsonObject)article).getJsonObject("_source")
                             .put("type", ((JsonObject)article).getString("_index"))
-                            .put("id", ((JsonObject)article).getString("_id"))
-                    );
+                            .put("id", ((JsonObject)article).getString("_id"));
+                    if(acticleJson.getString("titre") == null){
+                        acticleJson.put("titre",acticleJson.getString("ark"));
+                    }
+                    result.add(acticleJson);
                 }
                 handler.handle(new Either.Right<>(result));
             }
@@ -55,10 +58,13 @@ public class ElasticSearchHelper {
             } else {
                 JsonArray result = new JsonArray();
                 for (Object article:ar.result()) {
-                    result.add(((JsonObject)article).getJsonObject("_source")
+                    JsonObject acticleJson = ((JsonObject)article).getJsonObject("_source")
                             .put("type", ((JsonObject)article).getString("_index"))
-                            .put("id", ((JsonObject)article).getString("_id"))
-                    );
+                            .put("id", ((JsonObject)article).getString("_id"));
+                    if(acticleJson.getString("titre") == null){
+                        acticleJson.put("titre",acticleJson.getString("ark"));
+                    }
+                    result.add(acticleJson);
                 }
                 handler.handle(new Either.Right<>(result));
             }
@@ -80,10 +86,13 @@ public class ElasticSearchHelper {
             } else {
                 JsonArray result = new JsonArray();
                 for (Object article:ar.result()) {
-                    result.add(((JsonObject)article).getJsonObject("_source")
+                    JsonObject acticleJson = ((JsonObject)article).getJsonObject("_source")
                             .put("type", ((JsonObject)article).getString("_index"))
-                            .put("id", ((JsonObject)article).getString("_id"))
-                    );
+                            .put("id", ((JsonObject)article).getString("_id"));
+                    if(acticleJson.getString("titre") == null){
+                        acticleJson.put("titre",acticleJson.getString("ark"));
+                    }
+                    result.add(acticleJson);
                 }
                 handler.handle(new Either.Right<>(result));
             }

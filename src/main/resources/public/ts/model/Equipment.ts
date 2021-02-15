@@ -227,9 +227,6 @@ export class Equipments extends Selection<Equipment> {
             this.all.map((equipment) => {
                 equipment.id = equipment.ean;
                 equipment.status = equipment.disponibilite[0].valeur;
-                if(!!!equipment.titre) {
-                    equipment.titre = equipment.ark;
-                }
                 if(equipment.disciplines.length != 0) {
                     equipment.discipline = equipment.disciplines[0].libelle;
                 }
