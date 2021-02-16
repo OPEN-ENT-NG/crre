@@ -13,7 +13,6 @@ import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.DefaultExportServiceService;
 import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.openent.crre.service.impl.DefaultStructureService;
-import fr.openent.crre.controllers.OrderRegionController.*;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -246,11 +245,7 @@ public class OrderController extends ControllerHelper {
                                 if(equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
                                     orderMap = new JsonObject();
                                     equipment = equipments.getJsonObject(j);
-                                    if(equipment.getString("titre") != null && !equipment.getString("titre").equals("")) {
-                                        orderMap.put("name", equipment.getString("titre"));
-                                    } else {
-                                        orderMap.put("name", equipment.getString("ark"));
-                                    }
+                                    orderMap.put("name", equipment.getString("titre"));
                                     orderMap.put("id", order.getInteger("id"));
                                     DecimalFormat df = new DecimalFormat("0.00");
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");

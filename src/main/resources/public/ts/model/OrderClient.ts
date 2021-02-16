@@ -1,5 +1,5 @@
 import {_, model, moment, toasts} from 'entcore';
-import {Mix, Selectable, Selection} from 'entcore-toolkit';
+import {Mix, Selection} from 'entcore-toolkit';
 import {
     Campaign,
     Equipment, Filter,
@@ -167,11 +167,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     for (let order of this.all) {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                         order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-                        if(!!equipment.titre) {
-                            order.name = equipment.titre;
-                        } else {
-                            order.name = equipment.ark;
-                        }
+                        order.name = equipment.titre;
                         order.image = equipment.urlcouverture;
                         order.creation_date = moment(order.creation_date).format('L');
                     }
@@ -206,11 +202,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         for (let order of this.all) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                             order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-                            if(!!equipment.titre) {
-                                order.name = equipment.titre;
-                            } else {
-                                order.name = equipment.ark;
-                            }
+                            order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
                             order.creation_date = moment(order.creation_date).format('L');
                         }
@@ -236,11 +228,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         for (let order of this.all) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                             order.price = Utils.calculatePriceTTC(equipment, 2);
-                            if(!!equipment.titre) {
-                                order.name = equipment.titre;
-                            } else {
-                                order.name = equipment.ark;
-                            }
+                            order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
                         }
                         this.syncWithIdsCampaignAndStructure();
@@ -254,11 +242,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         for (let order of this.all) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                             order.price = Utils.calculatePriceTTC(equipment,2);
-                            if(!!equipment.titre) {
-                                order.name = equipment.titre;
-                            } else {
-                                order.name = equipment.ark;
-                            }
+                            order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
                             order.name_structure = structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
                             order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();

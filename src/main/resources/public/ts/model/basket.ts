@@ -18,9 +18,6 @@ export class Basket implements Selectable {
 
     constructor (equipment: Equipment , id_campaign?: number, id_structure?: string ) {
         this.equipment = Mix.castAs(Equipment, equipment) ;
-        if(!!!this.equipment.titre) {
-            this.equipment.titre = this.equipment.ark;
-        }
         this.id_campaign = id_campaign;
         this.id_structure = id_structure;
         this.amount = 1;
@@ -115,9 +112,6 @@ export class Baskets extends Selection<Basket> {
             this.all = Mix.castArrayAs(Basket, data);
             this.all.map((basket) => {
                 basket.equipment = Mix.castAs(Equipment, basket.equipment);
-                if(!!!basket.equipment.titre) {
-                    basket.equipment.titre = basket.equipment.ark;
-                }
             });
         } catch (e) {
             toasts.warning('crre.basket.sync.err');

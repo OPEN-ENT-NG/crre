@@ -210,15 +210,20 @@ public class OrderRegionController extends BaseController {
                 JsonArray filters = new JsonArray();
                 int length = request.params().entries().size();
                 for (int i = 0; i < length; i++) {
-                    if (!request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("startDate") && !request.params().entries().get(i).getKey().equals("endDate"))
-                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                    if (!request.params().entries().get(i).getKey().equals("q") &&
+                            !request.params().entries().get(i).getKey().equals("startDate") &&
+                            !request.params().entries().get(i).getKey().equals("endDate"))
+                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
+                                request.params().entries().get(i).getValue()));
                 }
                 String finalQuery = query;
                 orderRegionService.searchName(query, equipments -> {
                     if(equipments.right().getValue().size() > 0) {
-                        orderRegionService.filterSearch(user, equipments.right().getValue(), finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
+                        orderRegionService.filterSearch(user, equipments.right().getValue(), finalQuery, startDate,
+                                endDate, filters, arrayResponseHandler(request));
                     } else {
-                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters, arrayResponseHandler(request));
+                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters,
+                                arrayResponseHandler(request));
                     }
                 });
             } catch (UnsupportedEncodingException e) {
@@ -281,11 +286,7 @@ public class OrderRegionController extends BaseController {
                                 Double price_TTC = getPriceTtc(equipmentJson);
                                 double price = price_TTC * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
-                                if(equipmentJson.getString("titre") != null && !equipmentJson.getString("titre").equals("")) {
-                                    orderJson.put("name", equipmentJson.getString("titre"));
-                                } else {
-                                    orderJson.put("name", equipmentJson.getString("ark"));
-                                }
+                                orderJson.put("name", equipmentJson.getString("titre"));
                                 orderJson.put("image", equipmentJson.getString("urlcouverture"));
                                 orderJson.put("ean", equipmentJson.getString("ean"));
                             }
@@ -405,11 +406,7 @@ public class OrderRegionController extends BaseController {
                             double price_TTC = getPriceTtc(equipment);
                             double price = price_TTC * order.getInteger("amount");
                             order.put("price", price);
-                            if(equipment.getString("titre") != null && !equipment.getString("titre").equals("")) {
-                                order.put("name", equipment.getString("titre"));
-                            } else {
-                                order.put("name", equipment.getString("ark"));
-                            }
+                            order.put("name", equipment.getString("titre"));
                             order.put("image", equipment.getString("image"));
                             order.put("ean", equipment.getString("ean"));
                         }
