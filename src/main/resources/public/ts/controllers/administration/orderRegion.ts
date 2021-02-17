@@ -28,9 +28,11 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.translate = (key: string):string => lang.translate(key);
         $scope.displayToggle=false;
 
-        this.init = () => {
+        this.init = async () => {
             $scope.reassorts = [{reassort: true}, {reassort: false}];
+            $scope.states = [{status: "WAITING"}, {status: "VALID"}, {status: "IN PROGRESS"}, {status: "WAITING_FOR_ACCEPTANCE"}, {status: "REJECTED"}, {status: "SENT"}, {status: "DONE"}];
             $scope.filters = new Filters();
+            await $scope.campaigns.sync();
             $scope.initPopUpFilters();
         };
 
@@ -227,10 +229,12 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.initPopUpFilters = (filter?:string) => {
             let value = $scope.$eval(filter);
-            $scope.showPopUpColumnsReassort = false;
+            $scope.showPopUpColumnsReassort = $scope.showPopUpColumnsState = $scope.showPopUpColumnsCampaign = false;
             if (!value) {
                 switch (filter) {
                     case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
+                    case 'showPopUpColumnsState': $scope.showPopUpColumnsState = true; break;
+                    case 'showPopUpColumnsCampaign': $scope.showPopUpColumnsCampaign = true; break;
                     default: break;
                 }
             }

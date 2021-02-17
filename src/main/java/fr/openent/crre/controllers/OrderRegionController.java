@@ -213,8 +213,8 @@ public class OrderRegionController extends BaseController {
                     if (!request.params().entries().get(i).getKey().equals("q") &&
                             !request.params().entries().get(i).getKey().equals("startDate") &&
                             !request.params().entries().get(i).getKey().equals("endDate"))
-                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
-                                request.params().entries().get(i).getValue()));
+                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
+                                                             request.params().entries().get(i).getValue()));
                 }
                 String finalQuery = query;
                 orderRegionService.searchName(query, equipments -> {

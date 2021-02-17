@@ -13,6 +13,8 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.awt.*;
+import java.util.*;
 import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
@@ -27,10 +29,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void createOrdersRegion(JsonObject order, UserInfos user, Number id_project, Handler<Either<String, JsonObject>> handler) {
         String queryOrderRegionEquipment = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment\" ";
-            queryOrderRegionEquipment += " ( amount, creation_date,  owner_name, owner_id," +
-                    " status, equipment_key, id_campaign, id_structure," +
-                    " comment, id_order_client_equipment, id_project, reassort) " +
-                    "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+        queryOrderRegionEquipment += " ( amount, creation_date,  owner_name, owner_id," +
+                " status, equipment_key, id_campaign, id_structure," +
+                " comment, id_order_client_equipment, id_project, reassort) " +
+                "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(order.getInteger("amount"))
@@ -52,7 +54,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonArray params;
 
         String queryProjectEquipment = "" +
-                    "INSERT INTO " + Crre.crreSchema + ".project " +
+                "INSERT INTO " + Crre.crreSchema + ".project " +
                 "( title ) VALUES " +
                 "( ? )  RETURNING id ;";
         params = new fr.wseduc.webutils.collections.JsonArray();
@@ -184,33 +186,33 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     @Override
     public void search(String query, UserInfos user, JsonArray equipTab, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-            String sqlquery = "SELECT DISTINCT (p.*) " +
-                    "FROM  " + Crre.crreSchema + ".project p " +
-                    "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                    "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
-                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                    "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN ( ";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String sqlquery = "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN ( ";
 
-            values.add(query);
-            values.add(query);
-            values.add(query);
+        values.add(query);
+        values.add(query);
+        values.add(query);
 
-            for (int i = 0; i < equipTab.size(); i++) {
-                sqlquery += "?,";
-                values.add(equipTab.getJsonObject(i).getString("ean"));
-            }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-
-            sqlquery += ") AND ore.id_structure IN ( ";
-            for (String idStruct : user.getStructures()) {
-                sqlquery += "?,";
-                values.add(idStruct);
-            }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-            sqlquery = sqlquery + " ORDER BY p.id DESC ";
-            sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getString("ean"));
         }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
+        sqlquery += ") AND ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery = sqlquery + " ORDER BY p.id DESC ";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
 
     @Override
     public void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
@@ -261,6 +263,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap<String, ArrayList> hashMap = new HashMap<String, ArrayList>();
         String sqlquery = "SELECT DISTINCT (p.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
@@ -295,19 +298,43 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
-                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
                 String value = filters.getJsonObject(i).getString(key);
-                sqlquery += !key.equals("reassort") ? "b." + key + " = " + "?" : "ore." + key + " = " + "?";
-                values.add(value);
-                if(!(i == filters.size() - 1)) {
-                    sqlquery += " OR ";
+                addValues(key, value, hashMap);
+                }
+            int count = 0;
+            for(Map.Entry mapentry : hashMap.entrySet()) {
+                ArrayList list = (ArrayList) mapentry.getValue();
+                String keys = mapentry.getKey().toString();
+                sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
+                for(int k = 0; k < list.size(); k++) {
+                    sqlquery += k+1 == list.size() ? "?)" : "?, ";
+                    values.add(list.get(k).toString());
+                }
+                if(!(count == hashMap.entrySet().size() - 1)) {
+                    sqlquery += " AND ";
                 } else {
                     sqlquery += ")";
                 }
+                count ++;
             }
         }
         sqlquery = sqlquery + " ORDER BY p.id DESC ";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    private void addValues(String key, String value, HashMap<String, ArrayList> hashMap) {
+        ArrayList tempList = null;
+        if (hashMap.containsKey(key)) {
+            tempList = hashMap.get(key);
+            if(tempList == null)
+                tempList = new ArrayList();
+            tempList.add(value);
+        } else {
+            tempList = new ArrayList();
+            tempList.add(value);
+        }
+        hashMap.put(key,tempList);
     }
 
     @Override
@@ -335,9 +362,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
-                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
                 String value = filters.getJsonObject(i).getString(key);
-                sqlquery += !key.equals("reassort") ? "b." + key + " = " + "?" : "ore." + key + " = " + "?";
+                sqlquery += !key.equals("reassort") || !key.equals("status") ? "b." + key + " = " + "?" : "ore." + key + " = " + "?";
                 values.add(value);
                 if(!(i == filters.size() - 1)) {
                     sqlquery += " OR ";

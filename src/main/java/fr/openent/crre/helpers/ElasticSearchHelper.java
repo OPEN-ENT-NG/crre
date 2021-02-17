@@ -158,7 +158,7 @@ public class ElasticSearchHelper {
                 JsonObject bool = new JsonObject().put("bool", new JsonObject().put("filter", t));
                 JsonObject nested = new JsonObject().put("path", me.getKey().split("\\.")[0])
                                                     .put("query", bool);
-                j = new JsonArray().add(new JsonObject().put("nested", nested));
+                j.add(new JsonObject().put("nested", nested));
             } else {
                 term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
             }

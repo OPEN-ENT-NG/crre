@@ -13,9 +13,9 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsCampaign}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsCampaign}"
-                           ng-repeat="campaign in campaigns | orderBy:'campaign'">
-                        <input type="checkbox" ng-model = "campaign.isChecked" ng-change="getFilter(campaign.campaign, 'campaign')">
-                        <span ng-bind="lang.translate(campaign.campaign)"></span>
+                           ng-repeat="campaign in campaigns.all | orderBy:'campaign'">
+                        <input type="checkbox" ng-model = "campaign.isChecked" ng-change="getFilter(campaign.id, 'id_campaign')">
+                        <span ng-bind="lang.translate(campaign.name)"></span>
                     </label>
                 </div>
             </div>
@@ -97,9 +97,9 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsState}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsState}"
-                           ng-repeat="state in states | orderBy:'name'">
-                        <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.state, 'state')">
-                        <span ng-bind="lang.translate(state.state)"></span>
+                           ng-repeat="state in states | orderBy:'status'">
+                        <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')">
+                        <span ng-bind="lang.translate(state.status)"></span>
                     </label>
                 </div>
             </div>
