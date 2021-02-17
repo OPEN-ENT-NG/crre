@@ -5,8 +5,8 @@ public enum WorkflowActions {
     ADMINISTRATOR_RIGHT ("crre.administrator"),
     VALIDATOR_RIGHT ("crre.validator"),
     PRESCRIPTOR_RIGHT ("crre.prescriptor"),
-    MANAGER_RIGHT ("crre.manager"),
-    REASSORT_RIGHT ("crre.reassort");
+    REASSORT_RIGHT ("crre.reassort"),
+    UPDATE_STUDENT_RIGHT("crre.updateStudent");
 
     private final String actionName;
 

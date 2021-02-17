@@ -51,6 +51,12 @@ routes.define(($routeProvider) => {
             })
             .when('/order/waiting', {
                 action: 'orderWaitingAdmin'
+            })
+            .when('/campaigns', {
+                action: 'manageCampaigns'
+            })
+            .when('/exports', {
+                action: 'exportList'
             });
     } else {
         $routeProvider
@@ -59,15 +65,6 @@ routes.define(($routeProvider) => {
             })
             .when('/equipments/catalog/equipment/:idEquipment', {
                 action: 'equipmentDetail'
-            });
-    }
-    if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager)) {
-        $routeProvider
-            .when('/campaigns', {
-                action: 'manageCampaigns'
-            })
-            .when('/exports', {
-                action: 'exportList'
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator) &&

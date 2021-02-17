@@ -18,8 +18,7 @@ public class AccessExportDownload implements ResourcesProvider {
         String id;
         MongoHelper mongo = new MongoHelper(Crre.CRRE_COLLECTION);
         id = request.getParam("fileId");
-        if (id != null &&  WorkflowActionUtils.hasRight(userInfos, WorkflowActions.MANAGER_RIGHT.toString())
-                || WorkflowActionUtils.hasRight(userInfos, WorkflowActions.ADMINISTRATOR_RIGHT.toString())){
+        if (id != null && WorkflowActionUtils.hasRight(userInfos, WorkflowActions.ADMINISTRATOR_RIGHT.toString())){
             JsonObject params = new JsonObject();
             params.put("fileId",id);
             params.put("userId",userInfos.getUserId());
@@ -27,7 +26,7 @@ public class AccessExportDownload implements ResourcesProvider {
                if (event.isRight()) {
                    request.resume();
                    JsonArray result = event.right().getValue();
-                   handler.handle(result.size() == 1 && WorkflowActionUtils.hasRight(userInfos, WorkflowActions.MANAGER_RIGHT.toString()));
+                   handler.handle(result.size() == 1 && WorkflowActionUtils.hasRight(userInfos, WorkflowActions.ADMINISTRATOR_RIGHT.toString()));
                } else {
                    request.response().setStatusCode(500).end();
                }

@@ -18,6 +18,10 @@ export const campaignsListController = ng.controller('campaignsListController',
             $scope.redirectTo(`/campaign/${campaign.id}/order`);
             $scope.campaign = campaign;
         };
+        $scope.openCampaignWaitingOrder = (campaign: Campaign) => {
+            $scope.redirectTo(`/order/${campaign.id}/waiting`);
+            $scope.campaign = campaign;
+        };
         $scope.modifyNumberStudent = () => {
             template.open('number.student', 'customer/campaign/modify-number-student');
             $scope.display.lightbox.modifyNumberStudent = true;

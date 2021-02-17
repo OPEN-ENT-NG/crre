@@ -28,7 +28,7 @@
                     <span class="small-text"><i18n>crre.number.student.calcul</i18n></span>
                     <span class="black-color big-text">[[total_licence]]</span>
                 </div>
-                <div class="twelve-mobile right-magnet">
+                <div class="twelve-mobile right-magnet" workflow="crre.updateStudent">
                     <div class="twelve-mobile cell">
                         <input ng-click="modifyNumberStudent()"
                                type="button"
@@ -79,7 +79,7 @@
                         </p>
                     </div>
                     <div class="twelve-mobile right-magnet paddingTop"  >
-                        <div class="twelve-mobile cell ">
+                        <div class="twelve-mobile cell" workflow-not="crre.validator">
                             <input type="button"
                                    class="button"
                                    ng-show="campaign.nb_order && campaign.nb_order !== 0"
@@ -87,10 +87,25 @@
                                    i18n-value="crre.access.demand"/>
                             <input type="button"
                                    class="button"
-                                   ng-show="!campaign.nb_order"
+                                   ng-show="!campaign.nb_order && campaign.nb_order_waiting == 0"
                                    ng-click="openOrderToMain(campaign)"
                                    ng-disabled="true"
                                    i18n-value="crre.demand.empty"/>
+
+                        </div>
+                        <div class="twelve-mobile cell" workflow="crre.validator">
+                            <input type="button"
+                                   class="button"
+                                   ng-show="campaign.nb_order_waiting && campaign.nb_order_waiting !== 0"
+                                   ng-click="openCampaignWaitingOrder(campaign)"
+                                   i18n-value="crre.access.demands.waiting.toValidate"/>
+                            <input type="button"
+                                   class="button"
+                                   ng-show="!campaign.nb_order_waiting && campaign.nb_order_waiting == 0"
+                                   ng-click="openCampaignWaitingOrder(campaign)"
+                                   ng-disabled="true"
+                                   i18n-value="crre.demand.empty.waiting.toValidate"/>
+
                         </div>
                         <div class="twelve-mobile cell">
                             <input ng-show="campaign.accessible"

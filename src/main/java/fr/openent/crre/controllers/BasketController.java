@@ -4,10 +4,7 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.AccessOrderCommentRight;
-import fr.openent.crre.security.AccessOrderReassortRight;
-import fr.openent.crre.security.AccessUpdateOrderOnClosedCampaigne;
-import fr.openent.crre.security.PersonnelRight;
+import fr.openent.crre.security.*;
 import fr.openent.crre.service.BasketService;
 import fr.openent.crre.service.impl.DefaultBasketService;
 import fr.wseduc.rs.*;
@@ -292,7 +289,7 @@ public class BasketController extends ControllerHelper {
     @Put("/basket/:idBasket/amount")
     @ApiDoc("Update a basket's amount")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PersonnelRight.class)
+    @ResourceFilter(AccessRight.class)
     public void updateAmount(final HttpServerRequest  request){
         RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
             try {
@@ -347,8 +344,8 @@ public class BasketController extends ControllerHelper {
 
     @Post("/baskets/to/orders/:idCampaign")
     @ApiDoc("Create an order list from basket")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
+    @SecuredAction(Crre.PRESCRIPTOR_RIGHT)
+    @ResourceFilter(PrescriptorRight.class)
     public void takeOrder(final HttpServerRequest  request){
         RequestUtils.bodyToJson( request, pathPrefix + "basketToOrder", object -> {
             try {

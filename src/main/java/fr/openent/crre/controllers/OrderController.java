@@ -117,7 +117,7 @@ public class OrderController extends ControllerHelper {
     @Get("/order")
     @ApiDoc("Get the pdf of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void getOrderPDF (final HttpServerRequest request) {
         final String orderNumber = request.params().get("bc_number");
         ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_AFTER_VALIDATION, "_BC_" + orderNumber);
@@ -333,7 +333,7 @@ public class OrderController extends ControllerHelper {
     @Put("/orders/valid")
     @ApiDoc("validate orders ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void validateOrders (final HttpServerRequest request){
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
                 orders -> UserUtils.getUserInfos(eb, request,
@@ -391,7 +391,7 @@ public class OrderController extends ControllerHelper {
     @Put("/orders/inprogress")
     @ApiDoc("send orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void setOrdersInProgress(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
             final JsonArray ids = orders.getJsonArray("ids");
@@ -523,7 +523,7 @@ public class OrderController extends ControllerHelper {
     @Put("/order/:idOrder")
     @ApiDoc("update status in orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void updateStatusOrder(final HttpServerRequest request) {
         final Integer idOrder = Integer.parseInt(request.params().get("idOrder"));
         RequestUtils.bodyToJson(request, statusEdit -> orderService.updateStatusOrder(idOrder, statusEdit, Logging.defaultResponseHandler(eb,

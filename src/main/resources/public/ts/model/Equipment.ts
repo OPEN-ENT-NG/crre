@@ -89,12 +89,8 @@ export interface Equipments {
     editors: String[];
     os: String[];
     public: String[];
-
-    sort: {
-        type: string,
-        reverse: boolean,
-        filters: string[]
-    }
+    docsType: any;
+    filterFulfilled: boolean;
 }
 
 export class Equipments extends Selection<Equipment> {
@@ -106,23 +102,24 @@ export class Equipments extends Selection<Equipment> {
         this.os = [];
         this.public = [];
         this.editors = [];
+        this.docsType = [];
         this._loading = false;
-        this.sort = {
-            type: 'name',
-            reverse: false,
-            filters: []
-        };
+        this.filterFulfilled = false;
     }
 
     async syncEquip (data: any) {
         if(data.length > 0 ) {
             if(data[0].hasOwnProperty("ressources")) {
-                let filters = data[1].filters[0];
-                this.subjects = filters.disciplines.map(v => ({name:v}));
-                this.grades = filters.niveaux.map(v => ({name:v}));
-                this.os = filters.os.map(v => ({name:v}));
-                this.public = filters.public.map(v => ({name:v}));
-                this.editors = filters.editors.map(v => ({name:v}));
+                if(!this.filterFulfilled) {
+                    let filters = data[1].filters[0];
+                    this.subjects = filters.disciplines.map(v => ({name: v}));
+                    this.grades = filters.niveaux.map(v => ({name: v}));
+                    this.os = filters.os.map(v => ({name: v}));
+                    this.public = filters.public.map(v => ({name: v}));
+                    this.editors = filters.editors.map(v => ({name: v}));
+                    this.docsType = [{name: "articlepapier"}, {name: "articlenumerique"}];
+                    this.filterFulfilled = true;
+                }
                 data = data[0].ressources;
             }
             this.all = Mix.castArrayAs(Equipment, data);
@@ -139,7 +136,7 @@ export class Equipments extends Selection<Equipment> {
 
     }
 
-    async getFilterEquipments(word: string, filter?: string){
+    async getFilterEquipments(word?: string, filter?: string){
         this.loading = true;
         try {
             let uri: string;
@@ -155,7 +152,10 @@ export class Equipments extends Selection<Equipment> {
                     if(!!word) {
                         uri = (`/crre/equipments/catalog/search?word=${word}`);
                     } else {
-                        uri = (`/crre/equipments/catalog`);
+                        if(this.filterFulfilled)
+                            uri = (`/crre/equipments/catalog/filter`);
+                        else
+                            uri = (`/crre/equipments/catalog/filter?emptyFilter=true`);
                     }
                 }
                 let {data} = await http.get(uri);

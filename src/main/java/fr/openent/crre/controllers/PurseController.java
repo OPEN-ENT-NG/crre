@@ -54,7 +54,7 @@ public class PurseController extends ControllerHelper {
 
     @Post("/purses/import")
     @ApiDoc("Import purse")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(Crre.ADMINISTRATOR_RIGHT)
     @ResourceFilter(AdministratorRight.class)
     public void purse(final HttpServerRequest request) {
         final String importId = UUID.randomUUID().toString();

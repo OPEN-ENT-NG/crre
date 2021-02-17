@@ -4,7 +4,7 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.ManagerRight;
+import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.PrescriptorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
@@ -66,7 +66,7 @@ public class OrderRegionController extends BaseController {
 
     @Post("/region/orders/")
     @ApiDoc("Create orders for region")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(Crre.VALIDATOR_RIGHT)
     @ResourceFilter(ValidatorRight.class)
     public void createAdminOrder(final HttpServerRequest request) {
         try{
@@ -304,7 +304,7 @@ public class OrderRegionController extends BaseController {
     @Put("/region/orders/:status")
     @ApiDoc("update region orders with status")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void validateOrders (final HttpServerRequest request){
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
                 orders -> UserUtils.getUserInfos(eb, request,

@@ -1,7 +1,8 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
-import fr.openent.crre.security.PersonnelRight;
+import fr.openent.crre.security.AccessRight;
+import fr.openent.crre.security.updateStudentRight;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -19,10 +20,6 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
-
-/**
- * Created by agnes.lapeyronnie on 09/01/2018.
- */
 public class StructureController extends ControllerHelper {
 
     private final DefaultStructureService structureService;
@@ -42,9 +39,9 @@ public class StructureController extends ControllerHelper {
 
 
     @Put("/structure/amount/update")
-    @ApiDoc("Update a basket's amount")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PersonnelRight.class)
+    @ApiDoc("Update student amount in structure")
+    @SecuredAction(Crre.UPDATE_STUDENT_RIGHT)
+    @ResourceFilter(updateStudentRight.class)
     public void updateAmount(final HttpServerRequest  request){
             try {
                 int seconde = Integer.parseInt(request.params().get("seconde"));
@@ -81,7 +78,7 @@ public class StructureController extends ControllerHelper {
     @Get("/structure/amount")
     @ApiDoc("Get all students amount by structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PersonnelRight.class)
+    @ResourceFilter(AccessRight.class)
     public void getAmount(final HttpServerRequest  request) {
             try {
                 String id_structure = request.params().get("id_structure");

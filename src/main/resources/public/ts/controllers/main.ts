@@ -56,10 +56,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         route({
             main: async () => {
-                if ($scope.isManager() || $scope.isAdministrator()) {
+                if ($scope.isAdministrator()) {
                     $scope.redirectTo("/order/waiting");
                 }
-                else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isManager() && !$scope.isAdministrator()) {
+                else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isAdministrator()) {
                     $scope.redirectTo(`/equipments/catalog`);
                 } else {
                     await $scope.initStructures();
@@ -214,9 +214,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.selectCatalog = async function (){
             $scope.fromCatalog=true
-            $scope.equipments = new Equipments();
             $scope.display.equipment = false;
-            await $scope.equipments.sync(true, undefined, undefined );
+            await $scope.equipments.getFilterEquipments();
         }
 
         $scope.selectEquipment = async function (params){
@@ -275,10 +274,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.hasAccess = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.access);
-        };
-
-        $scope.isManager = () => {
-            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.manager);
         };
 
         $scope.isValidator = () => {
@@ -417,7 +412,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             Utils.safeApply($scope);
         };
 
-        if ($scope.isManager() || $scope.isAdministrator()) {
+        if ($scope.isAdministrator()) {
             template.open('main-profile', 'administrator/management-main');
         }
         Utils.safeApply($scope);

@@ -5,7 +5,7 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AccessExportDownload;
-import fr.openent.crre.security.ManagerRight;
+import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.ExportService;
 import fr.openent.crre.service.impl.DefaultExportServiceService;
 import fr.wseduc.rs.ApiDoc;
@@ -70,7 +70,7 @@ public class ExportController extends ControllerHelper {
     @Delete("/exports")
     @ApiDoc("Delete all exports and files")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void deleteExportExcel(HttpServerRequest request) {
         RequestUtils.bodyToJson( request, ids -> exportService.deleteExport( ids.getJsonArray("idsFiles"), event -> {
             if (event.getString("status").equals("ok")) {

@@ -23,8 +23,8 @@ public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
     private String query_word;
-    private boolean haveFilter;
-    private final HashMap<String, ArrayList<String>> query_filter;
+    private final boolean haveFilter;
+    private HashMap<String, ArrayList<String>> query_filter;
 
     public EquipmentController() {
         super();
@@ -62,56 +62,60 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            if(haveFilter) {
-                equipmentService.searchAll(event -> {
-                    JsonArray ressources = event.right().getValue();
-                    JsonArray response = new JsonArray().add(new JsonObject().put("ressources", ressources));
-                    renderJson(request, response);
-                });
-            } else {
-                equipmentService.searchAll(event -> {
-                    JsonArray ressources = event.right().getValue();
-                    JsonArray filtres = new JsonArray();
-                    JsonArray response = new JsonArray();
-                    Set<String> disciplines_set = new HashSet<String>();
-                    Set<String> niveaux_set = new HashSet<String>();
-                    Set<String> editeur_set = new HashSet<String>();
-                    Set<String> public_set = new HashSet<String>();
-                    Set<String> os_set = new HashSet<String>();
-                    for(int i = 0; i < ressources.size(); i++) {
-                        JsonObject ressource = ressources.getJsonObject(i);
-                        for(int j = 0; j < ressource.getJsonArray("disciplines").size(); j ++) {
-                            disciplines_set.add(ressource.getJsonArray("disciplines").getJsonObject(j).getString("libelle"));
-                        }
-                        for(int j = 0; j < ressource.getJsonArray("niveaux").size(); j ++) {
-                            niveaux_set.add(ressource.getJsonArray("niveaux").getJsonObject(j).getString("libelle"));
-                        }
-                        if(ressource.containsKey("technos")) {
-                            for(int j = 0; j < ressource.getJsonArray("technos").size(); j ++) {
-                                os_set.add(ressource.getJsonArray("technos").getJsonObject(j).getString("technologie"));
-                            }
-                        }
-                        if(ressource.getString("editeur") != null && !ressource.getString("editeur").equals("")) {
-                            editeur_set.add(ressource.getString("editeur"));
-                        }
-                        if(ressource.containsKey("publiccible")) {
-                            public_set.add(ressource.getString("publiccible"));
-                        }
-                    }
-                    filtres.add(new JsonObject().put("disciplines", new JsonArray(Arrays.asList(disciplines_set.toArray())))
-                                                .put("niveaux", new JsonArray(Arrays.asList(niveaux_set.toArray())))
-                                                .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
-                                                .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
-                                                .put("editors", new JsonArray(Arrays.asList(editeur_set.toArray()))));
-                    response.add(new JsonObject().put("ressources", ressources))
-                            .add(new JsonObject().put("filters", filtres));
-                    renderJson(request, response);
-                });
-                //this.haveFilter = true;
-            }
+            searAllWithFilter(request);
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
+        }
+    }
+
+    private void searAllWithFilter(HttpServerRequest request) {
+        if(haveFilter) {
+            equipmentService.searchAll(event -> {
+                JsonArray ressources = event.right().getValue();
+                JsonArray response = new JsonArray().add(new JsonObject().put("ressources", ressources));
+                renderJson(request, response);
+            });
+        } else {
+            equipmentService.searchAll(event -> {
+                JsonArray ressources = event.right().getValue();
+                JsonArray filtres = new JsonArray();
+                JsonArray response = new JsonArray();
+                Set<String> disciplines_set = new HashSet<>();
+                Set<String> niveaux_set = new HashSet<>();
+                Set<String> editeur_set = new HashSet<>();
+                Set<String> public_set = new HashSet<>();
+                Set<String> os_set = new HashSet<>();
+                for(int i = 0; i < ressources.size(); i++) {
+                    JsonObject ressource = ressources.getJsonObject(i);
+                    for(int j = 0; j < ressource.getJsonArray("disciplines").size(); j ++) {
+                        disciplines_set.add(ressource.getJsonArray("disciplines").getJsonObject(j).getString("libelle"));
+                    }
+                    for(int j = 0; j < ressource.getJsonArray("niveaux").size(); j ++) {
+                        niveaux_set.add(ressource.getJsonArray("niveaux").getJsonObject(j).getString("libelle"));
+                    }
+                    if(ressource.containsKey("technos")) {
+                        for(int j = 0; j < ressource.getJsonArray("technos").size(); j ++) {
+                            os_set.add(ressource.getJsonArray("technos").getJsonObject(j).getString("technologie"));
+                        }
+                    }
+                    if(ressource.getString("editeur") != null && !ressource.getString("editeur").equals("")) {
+                        editeur_set.add(ressource.getString("editeur"));
+                    }
+                    if(ressource.containsKey("publiccible")) {
+                        public_set.add(ressource.getString("publiccible"));
+                    }
+                }
+                filtres.add(new JsonObject().put("disciplines", new JsonArray(Arrays.asList(disciplines_set.toArray())))
+                                            .put("niveaux", new JsonArray(Arrays.asList(niveaux_set.toArray())))
+                                            .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
+                                            .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
+                                            .put("editors", new JsonArray(Arrays.asList(editeur_set.toArray()))));
+                response.add(new JsonObject().put("ressources", ressources))
+                        .add(new JsonObject().put("filters", filtres));
+                renderJson(request, response);
+            });
+            //this.haveFilter = true;
         }
     }
 
@@ -136,8 +140,15 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void FilterEquipment(final HttpServerRequest request) throws UnsupportedEncodingException {
         try {
-            String word = URLDecoder.decode(request.getParam("word"), "UTF-8");
+            String word = request.getParam("word");
+            if(word != null)
+                word = URLDecoder.decode(word, "UTF-8");
             String filter = request.getParam("filter");
+            String emptyFilter = request.getParam("emptyFilter");
+            if(emptyFilter != null && emptyFilter.equals("true")){
+                this.query_filter = new HashMap<>();
+                this.query_word = "";
+            }
             if (this.query_filter.containsKey(filter)) {
                 // filter already checked
                 if (this.query_filter.get(filter).contains(word)) {
@@ -149,7 +160,7 @@ public class EquipmentController extends ControllerHelper {
                     // new filter
                     this.query_filter.get(filter).add(word);
                 }
-            } else {
+            } else if(word != null) {
                 this.query_filter.put(filter, new ArrayList<>(Arrays.asList(word)));
             }
 
@@ -158,7 +169,7 @@ public class EquipmentController extends ControllerHelper {
                 if(!(this.query_word.equals(""))) {
                     equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
                 } else {
-                    equipmentService.searchAll(arrayResponseHandler(request));
+                    searAllWithFilter(request);
                 }
             } else {
                 if(!(this.query_word.equals(""))) {

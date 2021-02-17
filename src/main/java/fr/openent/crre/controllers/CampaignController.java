@@ -35,11 +35,11 @@ public class CampaignController extends ControllerHelper {
     @Get("/campaigns")
     @ApiDoc("List all campaigns")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PersonnelRight.class)
+    @ResourceFilter(AccessRight.class)
     @Override
     public void list(final HttpServerRequest  request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if(! (WorkflowActionUtils.hasRight(user, WorkflowActions.MANAGER_RIGHT.toString()))){
+            if(! (WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()))){
                 String idStructure = request.params().contains("idStructure")
                         ? request.params().get("idStructure")
                         : null;
@@ -54,7 +54,7 @@ public class CampaignController extends ControllerHelper {
     @Get("/campaigns/:id")
     @ApiDoc("Get campaign in database")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void campaign(HttpServerRequest request) {
         try {
             Integer id = Integer.parseInt(request.params().get("id"));
@@ -67,7 +67,7 @@ public class CampaignController extends ControllerHelper {
     @Post("/campaign")
     @ApiDoc("Create a campaign")
     @SecuredAction(value =  "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     @Override
     public void create(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "campaign",
@@ -79,7 +79,7 @@ public class CampaignController extends ControllerHelper {
     @Put("/campaign/accessibility/:id")
     @ApiDoc("Update an accessibility campaign")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void updateAccessibility(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "campaign", campaign -> {
             try {
@@ -120,7 +120,7 @@ public class CampaignController extends ControllerHelper {
     @Put("/campaign/:id")
     @ApiDoc("Update a campaign")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     @Override
     public void update(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "campaign", campaign -> {
@@ -140,7 +140,7 @@ public class CampaignController extends ControllerHelper {
     @Delete("/campaign")
     @ApiDoc("Delete a campaign")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ManagerRight.class)
+    @ResourceFilter(AdministratorRight.class)
     @Override
     public void delete(HttpServerRequest request) {
         try{

@@ -14,7 +14,7 @@ public class AccessOrderRight implements ResourcesProvider {
     public void authorize(HttpServerRequest request, Binding binding, UserInfos user,
                           Handler<Boolean> handler) {
 
-        if (WorkflowActionUtils.hasRight(user, WorkflowActions.MANAGER_RIGHT.toString())) {
+        if (WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString())) {
             handler.handle(true);
         } else {
             String idStructure = request.params().get("idStructure");

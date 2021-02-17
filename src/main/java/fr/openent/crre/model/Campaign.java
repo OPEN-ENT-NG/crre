@@ -4,8 +4,6 @@ import fr.openent.crre.Crre;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Arrays;
-import java.util.Collections;
-
 
 public class Campaign extends Model {
 
@@ -112,8 +110,6 @@ public class Campaign extends Model {
         fillables.put("name", Arrays.asList("CREATE", "UPDATE", "mandatory"));
         fillables.put("description", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("image", Arrays.asList("CREATE", "UPDATE"));
-        fillables.put("accessible", Arrays.asList("CREATE", "UPDATE"));
-        fillables.put("description", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("accessible", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("purse_enabled", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("priority_enabled",Arrays.asList("CREATE", "UPDATE"));

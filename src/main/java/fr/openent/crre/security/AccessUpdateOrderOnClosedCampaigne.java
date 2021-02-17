@@ -15,8 +15,7 @@ public class AccessUpdateOrderOnClosedCampaigne implements ResourcesProvider {
     @Override
     public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user,
                           Handler<Boolean> handler) {
-        if(WorkflowActionUtils.hasRight(user, WorkflowActions.MANAGER_RIGHT.toString())
-                || WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString())){
+        if(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString())){
             handler.handle(true);
         }else{
             resourceRequest.pause();
