@@ -134,7 +134,7 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), handler);
     }
 
-    public static void filter(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
+    public static void filters(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
         JsonObject filter = new JsonObject();
         JsonArray j = new JsonArray();

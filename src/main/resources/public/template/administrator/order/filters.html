@@ -55,9 +55,9 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
-                           ng-repeat="editor in editors | orderBy:'name'">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.editor, 'editor')">
-                        <span ng-bind="lang.translate(editor.editor)"></span>
+                           ng-repeat="editor in equipments.editors | orderBy:'name'">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')">
+                        <span ng-bind="lang.translate(editor.name)"></span>
                     </label>
                 </div>
             </div>
@@ -76,9 +76,9 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsDiffusor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDiffusor}"
-                           ng-repeat="diffusor in diffusors | orderBy:'name'">
-                        <input type="checkbox" ng-model = "diffusor.isChecked" ng-change="getFilter(diffusor.diffusor, 'diffusor')">
-                        <span ng-bind="lang.translate(diffusor.diffusor)"></span>
+                           ng-repeat="distributeur in equipments.distributeurs | orderBy:'name'">
+                        <input type="checkbox" ng-model = "distributeur.isChecked" ng-change="getFilter(distributeur.name, 'distributeur')">
+                        <span ng-bind="lang.translate(distributeur.name)"></span>
                     </label>
                 </div>
             </div>

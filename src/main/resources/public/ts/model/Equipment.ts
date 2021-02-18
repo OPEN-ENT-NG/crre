@@ -91,6 +91,8 @@ export interface Equipments {
     public: String[];
     docsType: any;
     filterFulfilled: boolean;
+    distributeurs: String[];
+    
 }
 
 export class Equipments extends Selection<Equipment> {
@@ -103,6 +105,7 @@ export class Equipments extends Selection<Equipment> {
         this.public = [];
         this.editors = [];
         this.docsType = [];
+        this.distributeurs = [];
         this._loading = false;
         this.filterFulfilled = false;
     }
@@ -118,6 +121,7 @@ export class Equipments extends Selection<Equipment> {
                     this.public = filters.public.map(v => ({name: v}));
                     this.editors = filters.editors.map(v => ({name: v}));
                     this.docsType = [{name: "articlepapier"}, {name: "articlenumerique"}];
+                    this.distributeurs = filters.distributeurs.map(v => ({name:v}));
                     this.filterFulfilled = true;
                 }
                 data = data[0].ressources;

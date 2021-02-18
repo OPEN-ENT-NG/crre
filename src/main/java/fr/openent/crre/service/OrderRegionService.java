@@ -2,11 +2,12 @@ package fr.openent.crre.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public interface OrderRegionService {
@@ -26,13 +27,15 @@ public interface OrderRegionService {
 
     void getAllProjects(UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void search(String query, UserInfos user, JsonArray equipTab, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
     void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
@@ -41,4 +44,7 @@ public interface OrderRegionService {
     void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
 
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
+
+    void filterES(HashMap<String, ArrayList<String>> params, String query, Handler<Either<String, JsonArray>> handlerJsonArray);
+
 }

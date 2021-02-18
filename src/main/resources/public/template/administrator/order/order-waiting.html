@@ -11,20 +11,20 @@
             </div>
         </div>
         <div class="cell four twelve-mobile catalog">
-            <button ng-click="initPopUpFilters('showPopUpColumnsNumeric')"
+            <button ng-click="initPopUpFilters('showPopUpColumnsDocumentsTypes')"
                     class="filterButton">
                 <i class="book-variant"></i>
-                <span><i18n>crre.numeric</i18n></span>
+                <span><i18n>Types.of.documents</i18n></span>
                 <div class="columns-popup-wrapper right-magnet">
                     <div class="right-magnet columns-popup-button">
-                        <span ng-show="showPopUpColumnsNumeric">&#x25B2;</span>
-                        <span ng-hide="showPopUpColumnsNumeric">&#x25BC;</span>
+                        <span ng-show="showPopUpColumnsDocumentsTypes">&#x25B2;</span>
+                        <span ng-hide="showPopUpColumnsDocumentsTypes">&#x25BC;</span>
                     </div>
-                    <div ng-class="{'open' : showPopUpColumnsNumeric}" class="right-magnet columns-popup">
-                        <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsNumeric}"
-                               ng-repeat="numeric in numerics | orderBy:'name'">
-                            <input type="checkbox" ng-model = "numeric.isChecked" ng-change="getFilter(numeric.numeric, 'numeric')">
-                            <span ng-bind="lang.translate(numeric.numeric)"></span>
+                    <div ng-class="{'open' : showPopUpColumnsDocumentsTypes}" class="right-magnet columns-popup">
+                        <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDocumentsTypes}"
+                               ng-repeat="docType in equipments.docsType | orderBy:'name'">
+                            <input type="checkbox" ng-model = "docType.isChecked" ng-change="getFilter(docType.name, '_index')">
+                            <span>[[lang.translate(docType.name)]]</span>
                         </label>
                     </div>
                 </div>

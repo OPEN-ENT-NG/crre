@@ -31,7 +31,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
     public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
-        filter(test, handler);
+        filters(test, handler);
     }
 
     public void equipment(String idEquipment,  Handler<Either<String, JsonArray>> handler){

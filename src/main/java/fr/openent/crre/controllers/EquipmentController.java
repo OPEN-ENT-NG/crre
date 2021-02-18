@@ -62,14 +62,14 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            searAllWithFilter(request);
+            searchAllWithFilter(request);
 
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }
     }
 
-    private void searAllWithFilter(HttpServerRequest request) {
+    private void searchAllWithFilter(HttpServerRequest request) {
         if(haveFilter) {
             equipmentService.searchAll(event -> {
                 JsonArray ressources = event.right().getValue();
@@ -169,7 +169,7 @@ public class EquipmentController extends ControllerHelper {
                 if(!(this.query_word.equals(""))) {
                     equipmentService.searchFilter(this.query_filter, this.query_word, arrayResponseHandler(request));
                 } else {
-                    searAllWithFilter(request);
+                    searchAllWithFilter(request);
                 }
             } else {
                 if(!(this.query_word.equals(""))) {

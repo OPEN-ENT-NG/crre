@@ -38,6 +38,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
@@ -205,6 +206,17 @@ public class OrderRegionController extends BaseController {
                 if (request.params().contains("q")) {
                     query = URLDecoder.decode(request.getParam("q"), "UTF-8");
                 }
+                HashMap<String, ArrayList<String>> params = new HashMap<String, ArrayList<String>>();
+                if (request.params().contains("editeur")) {
+                    params.put("editeur", new ArrayList<> (request.params().getAll("editeur")));
+                }
+                if (request.params().contains("distributeur")) {
+                    params.put("distributeur", new ArrayList<> (request.params().getAll("distributeur")));
+                }
+                if (request.params().contains("_index")) {
+                    params.put("_index", new ArrayList<> (request.params().getAll("_index")));
+                }
+
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
                 JsonArray filters = new JsonArray();
@@ -212,20 +224,51 @@ public class OrderRegionController extends BaseController {
                 for (int i = 0; i < length; i++) {
                     if (!request.params().entries().get(i).getKey().equals("q") &&
                             !request.params().entries().get(i).getKey().equals("startDate") &&
+                            !request.params().entries().get(i).getKey().equals("distributeur") &&
+                            !request.params().entries().get(i).getKey().equals("editeur") &&
+                            !request.params().entries().get(i).getKey().equals("_index") &&
                             !request.params().entries().get(i).getKey().equals("endDate"))
                             filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
                                                              request.params().entries().get(i).getValue()));
                 }
                 String finalQuery = query;
-                orderRegionService.searchName(query, equipments -> {
-                    if(equipments.right().getValue().size() > 0) {
-                        orderRegionService.filterSearch(user, equipments.right().getValue(), finalQuery, startDate,
-                                endDate, filters, arrayResponseHandler(request));
-                    } else {
-                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters,
-                                arrayResponseHandler(request));
-                    }
-                });
+                if (params.size() > 0) {
+                    Future<JsonArray> equipmentFilterFuture = Future.future();
+                    Future<JsonArray> equipmentFilterAndQFuture = Future.future();
+
+                    CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
+                        if (event.succeeded()) {
+                            JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
+                            JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
+                            JsonArray allEquipments = new JsonArray();
+                            allEquipments.add(equipmentsGrade);
+                            allEquipments.add(equipmentsGradeAndQ);
+                                if (request.params().contains("q")) {
+                                    orderRegionService.filterSearch(user, allEquipments, finalQuery, startDate,
+                                            endDate, filters, arrayResponseHandler(request));
+                                } else {
+                                    orderRegionService.filter_only(user, equipmentsGrade, startDate,
+                                            endDate, filters, arrayResponseHandler(request));
+                                }
+                            } /*else {
+                                orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters,
+                                        arrayResponseHandler(request));
+                            }
+                        }*/
+                    });
+                    orderRegionService.filterES(params, null, handlerJsonArray(equipmentFilterFuture));
+                    orderRegionService.filterES(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+                } else {
+                    orderRegionService.searchName(query, equipments -> {
+                        if (equipments.right().getValue().size() > 0) {
+                            orderRegionService.search(user, equipments.right().getValue(), finalQuery, startDate,
+                                    endDate, filters, arrayResponseHandler(request));
+                        } else {
+                            orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters,
+                                    arrayResponseHandler(request));
+                        }
+                    });
+                }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }

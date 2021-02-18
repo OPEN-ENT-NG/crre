@@ -33,6 +33,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.states = [{status: "WAITING"}, {status: "VALID"}, {status: "IN PROGRESS"}, {status: "WAITING_FOR_ACCEPTANCE"}, {status: "REJECTED"}, {status: "SENT"}, {status: "DONE"}];
             $scope.filters = new Filters();
             await $scope.campaigns.sync();
+            await $scope.equipments.sync(true, undefined, undefined );
             $scope.initPopUpFilters();
         };
 
@@ -233,12 +234,15 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.initPopUpFilters = (filter?:string) => {
             let value = $scope.$eval(filter);
-            $scope.showPopUpColumnsReassort = $scope.showPopUpColumnsState = $scope.showPopUpColumnsCampaign = false;
+            $scope.showPopUpColumnsReassort = $scope.showPopUpColumnsState = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsCampaign = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsDiffusor = false;
             if (!value) {
                 switch (filter) {
                     case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
                     case 'showPopUpColumnsState': $scope.showPopUpColumnsState = true; break;
                     case 'showPopUpColumnsCampaign': $scope.showPopUpColumnsCampaign = true; break;
+                    case 'showPopUpColumnsEditor': $scope.showPopUpColumnsEditor = true; break;
+                    case 'showPopUpColumnsDiffusor': $scope.showPopUpColumnsDiffusor = true; break;
+                    case 'showPopUpColumnsDocumentsTypes': $scope.showPopUpColumnsDocumentsTypes = true; break;
                     default: break;
                 }
             }

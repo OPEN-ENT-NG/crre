@@ -8,16 +8,16 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
+import static fr.openent.crre.helpers.ElasticSearchHelper.*;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
@@ -185,36 +185,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void search(String query, UserInfos user, JsonArray equipTab, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT DISTINCT (p.*) " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN ( ";
-
-        values.add(query);
-        values.add(query);
-        values.add(query);
-
-        for (int i = 0; i < equipTab.size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getString("ean"));
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-
-        sqlquery += ") AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery = sqlquery + " ORDER BY p.id DESC ";
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    @Override
     public void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT DISTINCT (p.*) " +
@@ -260,6 +230,65 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
+    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap<String, ArrayList> hashMap = new HashMap<String, ArrayList>();
+        String sqlquery = "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE ore.creation_date BETWEEN ? AND ? ";
+        values.add(startDate);
+        values.add(endDate);
+
+        if (query != "") {
+            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR oe.equipment_key IN (";
+            values.add(query);
+            values.add(query);
+        } else {
+            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name OR oe.equipment_key IN (";
+        }
+
+        for (int i = 0; i < equipTab.size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonObject(i).getString("ean"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery += ") AND ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                addValues(key, value, hashMap);
+            }
+            int count = 0;
+            for(Map.Entry mapentry : hashMap.entrySet()) {
+                ArrayList list = (ArrayList) mapentry.getValue();
+                String keys = mapentry.getKey().toString();
+                sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
+                for(int k = 0; k < list.size(); k++) {
+                    sqlquery += k+1 == list.size() ? "?)" : "?, ";
+                    values.add(list.get(k).toString());
+                }
+                if(!(count == hashMap.entrySet().size() - 1)) {
+                    sqlquery += " AND ";
+                } else {
+                    sqlquery += ")";
+                }
+                count ++;
+            }
+        }
+        sqlquery = sqlquery + " ORDER BY p.id DESC ";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
     @Override
     public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -273,23 +302,34 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
         values.add(startDate);
         values.add(endDate);
-        if (query != "") {
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN (";
-            values.add(query);
-            values.add(query);
-            values.add(query);
+        values.add(query);
+        values.add(query);
+        values.add(query);
+
+        if(equipTab.getJsonArray(1).isEmpty()){
+            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?) ";
         } else {
-            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name OR ore.equipment_key IN (";
+            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN (";
+            for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonArray(1).getJsonObject(i).getString("ean"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+            sqlquery += ")";
         }
 
-
-        for (int i = 0; i < equipTab.size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getString("ean"));
+        sqlquery += " AND oe.equipment_key IN (";
+        if(equipTab.getJsonArray(0).isEmpty()) {
+            sqlquery += "?)";
+            values.add("null");
+        } else {
+            for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonArray(0).getJsonObject(i).getString("ean"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-
-        sqlquery += ") AND ore.id_structure IN ( ";
+        sqlquery += " AND ore.id_structure IN ( ";
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);
@@ -302,6 +342,66 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 String value = filters.getJsonObject(i).getString(key);
                 addValues(key, value, hashMap);
                 }
+            int count = 0;
+            for(Map.Entry mapentry : hashMap.entrySet()) {
+                ArrayList list = (ArrayList) mapentry.getValue();
+                String keys = mapentry.getKey().toString();
+                sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
+                for(int k = 0; k < list.size(); k++) {
+                    sqlquery += k+1 == list.size() ? "?)" : "?, ";
+                    values.add(list.get(k).toString());
+                }
+                if(!(count == hashMap.entrySet().size() - 1)) {
+                    sqlquery += " AND ";
+                } else {
+                    sqlquery += ")";
+                }
+                count ++;
+            }
+        }
+        sqlquery = sqlquery + " ORDER BY p.id DESC ";
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap<String, ArrayList> hashMap = new HashMap<String, ArrayList>();
+        String sqlquery = "SELECT DISTINCT (p.*) " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE ore.creation_date BETWEEN ? AND ? ";
+
+        values.add(startDate);
+        values.add(endDate);
+
+        sqlquery += "AND oe.equipment_key IN (";
+
+        if(equipTab.isEmpty()) {
+            sqlquery += "?)";
+            values.add("null");
+        } else {
+            for (int i = 0; i < equipTab.size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonObject(i).getString("ean"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        }
+        sqlquery += " AND ore.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            sqlquery += "?,";
+            values.add(idStruct);
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
+                String value = filters.getJsonObject(i).getString(key);
+                addValues(key, value, hashMap);
+            }
             int count = 0;
             for(Map.Entry mapentry : hashMap.entrySet()) {
                 ArrayList list = (ArrayList) mapentry.getValue();
@@ -415,5 +515,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void filterES(HashMap<String, ArrayList<String>> params, String query, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        if(StringUtils.isEmpty(query)) {
+            filters(params, handlerJsonArray);
+        } else {
+            searchfilter(params, query, handlerJsonArray);
+        }
+
     }
 }
