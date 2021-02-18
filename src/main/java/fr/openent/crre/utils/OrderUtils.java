@@ -13,9 +13,12 @@ import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class OrderUtils {
 
-    public static Double getPriceTtc(JsonObject equipmentJson) {
+    public static JsonObject getPriceTtc(JsonObject equipmentJson) {
         Double prixht, price_TTC;
         JsonArray tvas;
+        JsonObject result = new JsonObject();
+        DecimalFormat df2 = new DecimalFormat("#.##");
+
         if(equipmentJson.getString("type").equals("articlenumerique")){
             prixht = equipmentJson.getJsonArray("offres").getJsonObject(0).getDouble("prixht");
             tvas = equipmentJson.getJsonArray("offres").getJsonObject(0).getJsonArray("tvas");
@@ -28,10 +31,16 @@ public class OrderUtils {
             JsonObject tvaJson = (JsonObject) tva;
             Double taxFloat = tvaJson.getDouble("taux");
             Double pourcent = tvaJson.getDouble("pourcent");
-            price_TTC  += (((prixht)*pourcent/100) *  taxFloat) / 100;
+            Double priceToAdd  = (((prixht)*pourcent/100) *  taxFloat) / 100;
+            price_TTC += priceToAdd;
+            if(taxFloat.equals(5.5)){
+                result.put("partTVA5",Double.parseDouble(df2.format(priceToAdd)));
+            }else if(taxFloat.equals(20.0)) {
+                result.put("partTVA20", Double.parseDouble(df2.format(priceToAdd)));
+            }
         }
-        DecimalFormat df2 = new DecimalFormat("#.##");
-        return Double.parseDouble(df2.format(price_TTC));
+        result.put("prixht",prixht).put("priceTTC",Double.parseDouble(df2.format(price_TTC)));
+        return result;
     }
 
     public static String getValidOrdersCSVExportHeader(HttpServerRequest request) {

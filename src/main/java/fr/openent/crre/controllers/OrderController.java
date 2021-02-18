@@ -257,8 +257,16 @@ public class OrderController extends ControllerHelper {
                                     orderMap.put("basket_name", order.getString("basket_name"));
                                     orderMap.put("comment", order.getString("comment"));
                                     orderMap.put("amount", order.getInteger("amount"));
-                                    orderMap.put("total_ht", df.format(getPriceHT(equipment) * order.getInteger("amount")));
-                                    orderMap.put("total_ttc",  df.format(getPriceTtc(equipment) * order.getInteger("amount")));
+                                    JsonObject priceDetails = getPriceTtc(equipment);
+                                    DecimalFormat df2 = new DecimalFormat("#.##");
+                                    double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
+                                    double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
+                                    orderMap.put("priceht", priceDetails.getDouble("prixht"));
+                                    orderMap.put("tva5",priceDetails.getDouble("partTVA5"));
+                                    orderMap.put("tva20",priceDetails.getDouble("partTVA20"));
+                                    orderMap.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
+                                    orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                                    orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                                     orders.add(orderMap);
                                     check = false;
                                 }
@@ -275,17 +283,6 @@ public class OrderController extends ControllerHelper {
         getEquipment(idsEquipment, handlerJsonArray(equipmentFuture));
         getOrderEquipmentEquipment(idsOrders, handlerJsonArray(orderClientFuture));
 
-    }
-
-    private Double getPriceHT(JsonObject equipmentJson) {
-        Double prixht;
-        if(equipmentJson.getString("type").equals("articlenumerique")){
-            prixht = equipmentJson.getJsonArray("offres").getJsonObject(0).getDouble("prixht");
-        }else{
-            prixht = equipmentJson.getDouble("prixht");
-        }
-        DecimalFormat df2 = new DecimalFormat("#.##");
-        return Double.parseDouble(df2.format(prixht));
     }
 
     private void getOrderEquipmentEquipment(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
@@ -310,8 +307,12 @@ public class OrderController extends ControllerHelper {
                 I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("price.equipment.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("price.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.unit.price.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.20", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.unit.price.ttc", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.amountHT", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.amountTTC", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
                 + "\n";
@@ -323,8 +324,12 @@ public class OrderController extends ControllerHelper {
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
-                (log.getString("total_ht") != null ? log.getString("total_ht") : "") + ";" +
-                (log.getString("total_ttc") != null ? log.getString("total_ttc") : "") + ";" +
+                (log.getDouble("priceht") != null ? log.getDouble("priceht").toString() : "") + ";" +
+                (log.getDouble("tva5") != null ? log.getDouble("tva5").toString() : "") + ";" +
+                (log.getDouble("tva20") != null ? log.getDouble("tva20").toString() : "") + ";" +
+                (log.getDouble("unitedPriceTTC") != null ? log.getDouble("unitedPriceTTC").toString() : "") + ";" +
+                (log.getDouble("totalPriceHT") != null ? log.getDouble("totalPriceHT").toString() : "") + ";" +
+                (log.getDouble("totalPriceTTC") != null ? log.getDouble("totalPriceTTC").toString() : "") + ";" +
                 (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
                 (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
                 + "\n";

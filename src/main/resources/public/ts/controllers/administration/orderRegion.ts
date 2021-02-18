@@ -112,13 +112,17 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.exportCSV = () => {
             let selectedOrders = [];
+            let allOrders = [];
             $scope.projects.forEach(project => {
                 project.orders.forEach( async order => {
                     if(order.selected) {
                         selectedOrders.push(order);
                     }
+                    allOrders.push(order);
                 });
             });
+            if(selectedOrders.length == 0)
+                selectedOrders = allOrders;
             let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
             let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
             let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");

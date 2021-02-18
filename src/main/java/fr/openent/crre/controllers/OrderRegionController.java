@@ -283,8 +283,8 @@ public class OrderRegionController extends BaseController {
                         for (Object equipment : equipments.right().getValue()) {
                             JsonObject equipmentJson = (JsonObject) equipment;
                             if (idEquipment.equals(equipmentJson.getString("id"))) {
-                                Double price_TTC = getPriceTtc(equipmentJson);
-                                double price = price_TTC * orderJson.getInteger("amount");
+                                JsonObject priceDetails = getPriceTtc(equipmentJson);
+                                double price = priceDetails.getDouble("priceTTC") * orderJson.getInteger("amount");
                                 orderJson.put("price", price);
                                 orderJson.put("name", equipmentJson.getString("titre"));
                                 orderJson.put("image", equipmentJson.getString("urlcouverture"));
@@ -403,9 +403,16 @@ public class OrderRegionController extends BaseController {
                     for (int j = 0; j < equipments.size(); j++) {
                         equipment = equipments.getJsonObject(j);
                         if (equipment.getString("id").equals(order.getString("equipment_key"))) {
-                            double price_TTC = getPriceTtc(equipment);
-                            double price = price_TTC * order.getInteger("amount");
-                            order.put("price", price);
+                            JsonObject priceDetails = getPriceTtc(equipment);
+                            DecimalFormat df2 = new DecimalFormat("#.##");
+                            double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
+                            double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
+                            order.put("priceht", priceDetails.getDouble("prixht"));
+                            order.put("tva5",priceDetails.getDouble("partTVA5"));
+                            order.put("tva20",priceDetails.getDouble("partTVA20"));
+                            order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
+                            order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                            order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                             order.put("name", equipment.getString("titre"));
                             order.put("image", equipment.getString("image"));
                             order.put("ean", equipment.getString("ean"));
@@ -449,7 +456,12 @@ public class OrderRegionController extends BaseController {
                 I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.reassort", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.number.licences", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("Total", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.unit.price.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("price.equipment.20", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.unit.price.ttc", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.amountHT", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.amountTTC", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
                 + "\n";
@@ -465,7 +477,12 @@ public class OrderRegionController extends BaseController {
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non")  : "") + ";" +
                 (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
-                (log.getDouble("price") != null ? log.getDouble("price").toString() : "") + ";" +
+                (log.getDouble("priceht") != null ? log.getDouble("priceht").toString() : "") + ";" +
+                (log.getDouble("tva5") != null ? log.getDouble("tva5").toString() : "") + ";" +
+                (log.getDouble("tva20") != null ? log.getDouble("tva20").toString() : "") + ";" +
+                (log.getDouble("unitedPriceTTC") != null ? log.getDouble("unitedPriceTTC").toString() : "") + ";" +
+                (log.getDouble("totalPriceHT") != null ? log.getDouble("totalPriceHT").toString() : "") + ";" +
+                (log.getDouble("totalPriceTTC") != null ? log.getDouble("totalPriceTTC").toString() : "") + ";" +
                 (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
                 (log.getString("status") != null ?
                         I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")

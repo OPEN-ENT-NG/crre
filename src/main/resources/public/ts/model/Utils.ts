@@ -25,7 +25,13 @@ export class Utils {
 
     static formatKeyToParameter (values: any[], key: string): string {
         let params: string = '';
-        values.map((value) => params += value.hasOwnProperty(key) ? `${key}=${value[key]}&` : '');
+        let array = []
+        values.map((value) => {
+            if(array.indexOf(value[key]) == -1) {
+                params += value.hasOwnProperty(key) ? `${key}=${value[key]}&` : '';
+                array.push(value[key]);
+            }
+        });
         return params.slice(0, -1);
     }
 

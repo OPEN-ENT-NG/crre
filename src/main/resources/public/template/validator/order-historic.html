@@ -55,6 +55,9 @@
                 </div>
             </button>
         </div>
+        <div class="cell twelve-mobile right-magnet">
+            <button ng-click="exportCSV()" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
+        </div>
     </div>
     <div class="flex-row">
         <table class="twelve-mobile ten">
@@ -176,9 +179,8 @@
     <section class="toggle-buttons" ng-class="{ hide: !displayToggle }">
         <div class="toggle">
             <div class="row">
-                <button ng-click="reSubmit()" >
-                    <i18n>crre.resubmit</i18n>
-                </button>
+                <button ng-click="reSubmit()" ><i18n>crre.resubmit</i18n></button>
+                <button ng-click="exportCSV()"><i18n>crre.logs.csv.export</i18n></button>
             </div>
         </div>
     </section>

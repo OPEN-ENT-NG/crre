@@ -87,7 +87,7 @@
                                    i18n-value="crre.access.demand"/>
                             <input type="button"
                                    class="button"
-                                   ng-show="!campaign.nb_order && campaign.nb_order_waiting == 0"
+                                   ng-show="!campaign.nb_order || campaign.nb_order_waiting == 0"
                                    ng-click="openOrderToMain(campaign)"
                                    ng-disabled="true"
                                    i18n-value="crre.demand.empty"/>
@@ -101,7 +101,7 @@
                                    i18n-value="crre.access.demands.waiting.toValidate"/>
                             <input type="button"
                                    class="button"
-                                   ng-show="!campaign.nb_order_waiting && campaign.nb_order_waiting == 0"
+                                   ng-show="!campaign.nb_order_waiting || campaign.nb_order_waiting == 0"
                                    ng-click="openCampaignWaitingOrder(campaign)"
                                    ng-disabled="true"
                                    i18n-value="crre.demand.empty.waiting.toValidate"/>
