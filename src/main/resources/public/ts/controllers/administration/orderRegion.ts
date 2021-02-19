@@ -234,7 +234,7 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.initPopUpFilters = (filter?:string) => {
             let value = $scope.$eval(filter);
-            $scope.showPopUpColumnsReassort = $scope.showPopUpColumnsState = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsCampaign = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsDiffusor = false;
+            $scope.showPopUpColumnsReassort = $scope.showPopUpColumnsSchool = $scope.showPopUpColumnsState = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsCampaign = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsDiffusor = false;
             if (!value) {
                 switch (filter) {
                     case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
@@ -243,6 +243,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     case 'showPopUpColumnsEditor': $scope.showPopUpColumnsEditor = true; break;
                     case 'showPopUpColumnsDiffusor': $scope.showPopUpColumnsDiffusor = true; break;
                     case 'showPopUpColumnsDocumentsTypes': $scope.showPopUpColumnsDocumentsTypes = true; break;
+                    case 'showPopUpColumnsSchool': $scope.showPopUpColumnsSchool = true; break;
                     default: break;
                 }
             }

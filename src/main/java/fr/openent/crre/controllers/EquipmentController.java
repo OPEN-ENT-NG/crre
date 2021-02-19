@@ -86,6 +86,7 @@ public class EquipmentController extends ControllerHelper {
                 Set<String> editeur_set = new HashSet<>();
                 Set<String> public_set = new HashSet<>();
                 Set<String> os_set = new HashSet<>();
+                Set<String> distributeurs_set = new HashSet<>();
                 for(int i = 0; i < ressources.size(); i++) {
                     JsonObject ressource = ressources.getJsonObject(i);
                     for(int j = 0; j < ressource.getJsonArray("disciplines").size(); j ++) {
@@ -102,6 +103,10 @@ public class EquipmentController extends ControllerHelper {
                     if(ressource.getString("editeur") != null && !ressource.getString("editeur").equals("")) {
                         editeur_set.add(ressource.getString("editeur"));
                     }
+
+                    if(ressource.getString("distributeur") != null && !ressource.getString("distributeur").equals("")) {
+                        distributeurs_set.add(ressource.getString("distributeur"));
+                    }
                     if(ressource.containsKey("publiccible")) {
                         public_set.add(ressource.getString("publiccible"));
                     }
@@ -110,6 +115,7 @@ public class EquipmentController extends ControllerHelper {
                                             .put("niveaux", new JsonArray(Arrays.asList(niveaux_set.toArray())))
                                             .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
                                             .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
+                                            .put("distributeurs", new JsonArray(Arrays.asList(distributeurs_set.toArray())))
                                             .put("editors", new JsonArray(Arrays.asList(editeur_set.toArray()))));
                 response.add(new JsonObject().put("ressources", ressources))
                         .add(new JsonObject().put("filters", filtres));

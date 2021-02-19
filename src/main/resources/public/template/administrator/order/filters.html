@@ -33,10 +33,13 @@
                     <span ng-hide="showPopUpColumnsSchool">&#x25BC;</span>
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsSchool}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsSchool}"
-                           ng-repeat="school in schools | orderBy:'school'">
-                        <input type="checkbox" ng-model = "school.isChecked" ng-change="getFilter(school.school, 'school')">
-                        <span ng-bind="lang.translate(school.school)"></span>
+                    <label class="columns-popup-items left-text ellipsis">
+                        <input type="checkbox" ng-model = "articlepapier.isChecked" ng-change="getFilter('PU', 'type')">
+                        <span>Lycée Publique</span>
+                    </label>
+                    <label class="columns-popup-items left-text ellipsis">
+                        <input type="checkbox" ng-model = "articlenumerique.isChecked" ng-change="getFilter('PR', 'type')">
+                        <span>Lycée Privé</span>
                     </label>
                 </div>
             </div>

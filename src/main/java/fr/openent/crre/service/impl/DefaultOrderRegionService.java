@@ -209,7 +209,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
-        plainTextSearchName(word, handler);
+        if(!(word.equals(""))) {
+            plainTextSearchName(word, handler);
+        } else {
+            handler.handle(new Either.Right<>(new JsonArray()));
+        }
+
     }
 
     public void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
@@ -254,19 +259,21 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             sqlquery += "?,";
             values.add(equipTab.getJsonObject(i).getString("ean"));
         }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += ") AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + "))";
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
-                String value = filters.getJsonObject(i).getString(key);
-                addValues(key, value, hashMap);
+                if(key.equals("id_structure")) {
+                    JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
+                    for (int j = 0; j < uai.size(); j++) {
+                        addValues(key, uai.getJsonObject(j).getString("uai"), hashMap);
+                    }
+                } else {
+                    String value = filters.getJsonObject(i).getString(key);
+                    addValues(key, value, hashMap);
+                }
+
             }
             int count = 0;
             for(Map.Entry mapentry : hashMap.entrySet()) {
@@ -329,19 +336,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        sqlquery += " AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
-                String value = filters.getJsonObject(i).getString(key);
-                addValues(key, value, hashMap);
+                if(key.equals("id_structure")) {
+                    JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
+                    for (int j = 0; j < uai.size(); j++) {
+                        addValues(key, uai.getJsonObject(j).getString("uai"), hashMap);
+                    }
+                } else {
+                    String value = filters.getJsonObject(i).getString(key);
+                    addValues(key, value, hashMap);
                 }
+            }
             int count = 0;
             for(Map.Entry mapentry : hashMap.entrySet()) {
                 ArrayList list = (ArrayList) mapentry.getValue();
@@ -389,18 +397,19 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        sqlquery += " AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
-                String value = filters.getJsonObject(i).getString(key);
-                addValues(key, value, hashMap);
+                if(key.equals("id_structure")) {
+                    JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
+                    for (int j = 0; j < uai.size(); j++) {
+                        addValues(key, uai.getJsonObject(j).getString("uai"), hashMap);
+                    }
+                } else {
+                    String value = filters.getJsonObject(i).getString(key);
+                    addValues(key, value, hashMap);
+                }
             }
             int count = 0;
             for(Map.Entry mapentry : hashMap.entrySet()) {
@@ -440,37 +449,53 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap<String, ArrayList> hashMap = new HashMap<String, ArrayList>();
         String sqlquery = "SELECT DISTINCT (p.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ";
+                "WHERE ore.creation_date BETWEEN ? AND ? ";
 
         values.add(startDate);
         values.add(endDate);
-        values.add(query);
-        values.add(query);
-        values.add(query);
-
-        sqlquery += ") AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
+        if (query != "") {
+            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?)";
+            values.add(query);
+            values.add(query);
+        } else {
+            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name)";
         }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
-                String value = filters.getJsonObject(i).getString(key);
-                sqlquery += !key.equals("reassort") || !key.equals("status") ? "b." + key + " = " + "?" : "ore." + key + " = " + "?";
-                values.add(value);
-                if(!(i == filters.size() - 1)) {
-                    sqlquery += " OR ";
+                if(key.equals("id_structure")) {
+                    JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
+                    for (int j = 0; j < uai.size(); j++) {
+                        addValues(key, uai.getJsonObject(j).getString("uai"), hashMap);
+                    }
+                } else {
+                    String value = filters.getJsonObject(i).getString(key);
+                    addValues(key, value, hashMap);
+                }
+            }
+            int count = 0;
+            for(Map.Entry mapentry : hashMap.entrySet()) {
+                ArrayList list = (ArrayList) mapentry.getValue();
+                String keys = mapentry.getKey().toString();
+                sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
+                for(int k = 0; k < list.size(); k++) {
+                    sqlquery += k+1 == list.size() ? "?)" : "?, ";
+                    values.add(list.get(k).toString());
+                }
+                if(!(count == hashMap.entrySet().size() - 1)) {
+                    sqlquery += " AND ";
                 } else {
                     sqlquery += ")";
                 }
+                count ++;
             }
         }
         sqlquery = sqlquery + " ORDER BY p.id DESC ";
