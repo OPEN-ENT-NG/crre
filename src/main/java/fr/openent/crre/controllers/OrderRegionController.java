@@ -346,6 +346,9 @@ public class OrderRegionController extends BaseController {
                                 orderJson.put("name", equipmentJson.getString("titre"));
                                 orderJson.put("image", equipmentJson.getString("urlcouverture"));
                                 orderJson.put("ean", equipmentJson.getString("ean"));
+                                orderJson.put("_index", equipmentJson.getString("type"));
+                                orderJson.put("editeur", equipmentJson.getString("editeur"));
+                                orderJson.put("distributeur", equipmentJson.getString("distributeur"));
                             }
                         }
                     }

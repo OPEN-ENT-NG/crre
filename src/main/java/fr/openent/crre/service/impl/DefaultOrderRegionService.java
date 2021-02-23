@@ -463,6 +463,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?)";
             values.add(query);
             values.add(query);
+            values.add(query);
         } else {
             sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name)";
         }

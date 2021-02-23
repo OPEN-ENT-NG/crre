@@ -12,24 +12,6 @@
                 </div>
             </div>
             <div ng-init="getAllFilters()" class="cell twelve-mobile six catalog">
-                <button ng-click="initPopUpFilters('showPopUpColumnsTeacher')"
-                        class="filterButton">
-                    <i class="user"></i>
-                    <span><i18n>Teachers</i18n></span>
-                    <div class="columns-popup-wrapper right-magnet">
-                        <div class="right-magnet columns-popup-button">
-                            <span ng-show="showPopUpColumnsTeacher">&#x25B2;</span>
-                            <span ng-hide="showPopUpColumnsTeacher">&#x25BC;</span>
-                        </div>
-                        <div ng-class="{'open' : showPopUpColumnsTeacher}" class="right-magnet columns-popup">
-                            <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsTeacher}"
-                                   ng-repeat="teacher in users | orderBy:'user_name'">
-                                <input type="checkbox" ng-model = "teacher.isChecked" ng-change="getFilter(teacher.user_name, 'name_user')">
-                                <span>[[teacher.user_name]]</span>
-                            </label>
-                        </div>
-                    </div>
-                </button>
                 <button ng-click="initPopUpFilters('showPopUpColumnsReassort')"
                         class="filterButton">
                     <i class="star-circle"></i>

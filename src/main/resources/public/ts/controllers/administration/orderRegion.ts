@@ -5,7 +5,7 @@ import {
     StructureGroups,
     Structures,
     Utils,
-    Basket, Equipment, Filter, Filters, OrderClient
+    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront
 } from "../../model";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
@@ -29,9 +29,10 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.displayToggle=false;
 
         this.init = async () => {
-            $scope.reassorts = [{reassort: true}, {reassort: false}];
-            $scope.states = [{status: "WAITING"}, {status: "VALID"}, {status: "IN PROGRESS"}, {status: "WAITING_FOR_ACCEPTANCE"}, {status: "REJECTED"}, {status: "SENT"}, {status: "DONE"}];
+            $scope.reassorts = [{reassort: true, isChecked: false}, {reassort: false, isChecked: false}];
+            $scope.states = [{status: "WAITING"}, {status: "IN PROGRESS"}, {status: "VALID"}, {status: "REJECTED"}, {status: "DONE"}, {status: "SENT"}];
             $scope.filters = new Filters();
+            $scope.filtersFront = new FiltersFront();
             await $scope.campaigns.sync();
             await $scope.equipments.sync(true, undefined, undefined );
             $scope.initPopUpFilters();
@@ -62,6 +63,36 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.display.lightbox.waitingAdmin = false;
             Utils.safeApply($scope);
         };
+
+        $scope.yourCustomFilter = function(order) {
+            // order.filter(form => form.collab === true && form.owner_id != model.me.userId);
+
+            if(($scope.reassorts[0].isChecked && $scope.reassorts[1].isChecked) || (!$scope.reassorts[0].isChecked && !$scope.reassorts[1].isChecked)) {
+                return order;
+            } else {
+                if($scope.reassorts[0].isChecked) {
+                    return order && order.reassort == true;
+                } else if ($scope.reassorts[1].isChecked) {
+                    return order && order.reassort == false;
+                }
+            }
+        };
+
+        $scope.filterAll = function (order) {
+            let test = true;
+            let i = 0
+            while(test && $scope.filtersFront.all.length > i) {
+                let valuePropOrder = order[$scope.filtersFront.all[i].name];
+                for (let j = 0; j < $scope.filtersFront.all[i].value.length; j++) {
+                    test = valuePropOrder === $scope.filtersFront.all[i].value[j];
+                    if(test) {
+                        break;
+                    }
+                }
+                i++;
+            }
+            return test;
+        }
 
         $scope.confirmRefuseOrder= async (justification:string) =>{
             $scope.display.lightbox.waitingAdmin = false;
@@ -144,12 +175,34 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.getFilter = async (word: string, filter: string) => {
             let newFilter = new Filter();
+            let newFilterFront = new FilterFront();
             newFilter.name = filter;
             newFilter.value = word;
+            newFilterFront.name = filter;
+            newFilterFront.value = [];
             if ($scope.filters.all.some(f => f.value === word)) {
-                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1)
+                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1);
+                if ($scope.filtersFront.all.some(f => f.name === filter)) {
+                    $scope.filtersFront.all.forEach(function (filt) {
+                        if(filt.name === filter) {
+                            filt.value.splice(filt.value.findIndex(a => a.value === word), 1);
+                        }
+                    })
+                }
             } else {
-                $scope.filters.all.push(newFilter);
+                if ($scope.filtersFront.all.some(f => f.name === filter)) {
+                    $scope.filtersFront.all.forEach(function (filt) {
+                        if(filt.name === filter) {
+                            filt.value.push(word)
+                        }
+                    })
+                    $scope.filters.all.push(newFilter);
+                } else {
+                    $scope.filters.all.push(newFilter);
+                    newFilterFront.value.push(word);
+                    $scope.filtersFront.all.push(newFilterFront);
+                }
+
             }
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {
@@ -283,9 +336,10 @@ export const orderRegionController = ng.controller('orderRegionController',
             const responses = await Promise.all(promesses);
             if(responses[0]){
                 const data = responses[0].data;
-                for (const orders of data) {
+                for (let orders of data) {
                     if (orders.length > 0) {
-                        const idProject = orders[0].id_project
+                        const idProject = orders[0].id_project;
+                        orders = orders.filter($scope.filterAll);
                         $scope.projects.find(project => project.id == idProject).orders = orders;
                     }
                 }

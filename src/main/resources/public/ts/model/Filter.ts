@@ -10,3 +10,16 @@ export class Filters {
         this.all = [];
     }
 }
+
+export class FilterFront {
+    name: string;
+    value: string[];
+}
+
+export class FiltersFront {
+    all: FilterFront[];
+
+    constructor() {
+        this.all = [];
+    }
+}

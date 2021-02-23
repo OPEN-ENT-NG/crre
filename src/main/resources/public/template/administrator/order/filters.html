@@ -3,8 +3,7 @@
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.campaigns</i18n></span>
         <button ng-click="initPopUpFilters('showPopUpColumnsCampaign')"
-                class="filterButton right-magnet">
-            <i class="star-circle"></i>
+                class="filterButton admin right-magnet">
             <span><i18n>crre.all.campaigns</i18n></span>
             <div class="columns-popup-wrapper right-magnet">
                 <div class="right-magnet columns-popup-button">
@@ -24,8 +23,7 @@
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.private.public.school</i18n></span>
         <button ng-click="initPopUpFilters('showPopUpColumnsSchool')"
-                class="filterButton right-magnet">
-            <i class="star-circle"></i>
+                class="filterButton admin right-magnet">
             <span><i18n>crre.all.schools</i18n></span>
             <div class="columns-popup-wrapper right-magnet">
                 <div class="right-magnet columns-popup-button">
@@ -48,8 +46,7 @@
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.editor.ressource</i18n></span>
         <button ng-click="initPopUpFilters('showPopUpColumnsEditor')"
-                class="filterButton right-magnet">
-            <i class="star-circle"></i>
+                class="filterButton admin right-magnet">
             <span><i18n>crre.all.editors</i18n></span>
             <div class="columns-popup-wrapper right-magnet">
                 <div class="right-magnet columns-popup-button">
@@ -69,8 +66,7 @@
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.diffusor.ressource</i18n></span>
         <button ng-click="initPopUpFilters('showPopUpColumnsDiffusor')"
-                class="filterButton right-magnet">
-            <i class="star-circle"></i>
+                class="filterButton admin right-magnet">
             <span><i18n>crre.all.diffusors</i18n></span>
             <div class="columns-popup-wrapper right-magnet">
                 <div class="right-magnet columns-popup-button">
@@ -90,8 +86,7 @@
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.request.state</i18n></span>
         <button ng-click="initPopUpFilters('showPopUpColumnsState')"
-                class="filterButton right-magnet">
-            <i class="star-circle"></i>
+                class="filterButton admin right-magnet">
             <span><i18n>crre.all.states</i18n></span>
             <div class="columns-popup-wrapper right-magnet">
                 <div class="right-magnet columns-popup-button">
@@ -101,8 +96,14 @@
                 <div ng-class="{'open' : showPopUpColumnsState}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsState}"
                            ng-repeat="state in states | orderBy:'status'">
-                        <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')">
-                        <span ng-bind="lang.translate(state.status)"></span>
+                        <div ng-if = "state.status == 'IN PROGRESS'">
+                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')">
+                            <span ng-bind="lang.translate('NEW')"></span>
+                        </div>
+                        <div ng-if = "state.status != 'IN PROGRESS'">
+                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')">
+                            <span ng-bind="lang.translate(state.status)"></span>
+                        </div>
                     </label>
                 </div>
             </div>

@@ -377,6 +377,9 @@ body.crre {
     }
 
     .filterButton{
+      &.admin {
+        width: 226px;
+      }
       border-radius: 30em;
       background-color: white;
       border:solid 1px lightgray;
