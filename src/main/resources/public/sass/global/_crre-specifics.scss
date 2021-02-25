@@ -347,6 +347,11 @@ body.crre {
     }
   }
 
+  lightbox.visible-overflow>section.lightbox>div.content {
+    overflow: visible;
+    max-height: fit-content;
+  }
+
   .catalog{
     div.twelve{
       input.row{
@@ -378,7 +383,8 @@ body.crre {
 
     .filterButton{
       &.admin {
-        width: 226px;
+        width: 201px;
+        display: unset;
       }
       border-radius: 30em;
       background-color: white;

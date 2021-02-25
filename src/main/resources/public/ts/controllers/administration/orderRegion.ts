@@ -82,14 +82,18 @@ export const orderRegionController = ng.controller('orderRegionController',
             let test = true;
             let i = 0
             while(test && $scope.filtersFront.all.length > i) {
-                let valuePropOrder = order[$scope.filtersFront.all[i].name];
-                for (let j = 0; j < $scope.filtersFront.all[i].value.length; j++) {
-                    test = valuePropOrder === $scope.filtersFront.all[i].value[j];
-                    if(test) {
-                        break;
+                if($scope.filtersFront.all[i].name === "type")
+                    i++;
+                else {
+                    let valuePropOrder = order[$scope.filtersFront.all[i].name];
+                    for (let j = 0; j < $scope.filtersFront.all[i].value.length; j++) {
+                        test = valuePropOrder === $scope.filtersFront.all[i].value[j];
+                        if (test) {
+                            break;
+                        }
                     }
+                    i++;
                 }
-                i++;
             }
             return test;
         }
