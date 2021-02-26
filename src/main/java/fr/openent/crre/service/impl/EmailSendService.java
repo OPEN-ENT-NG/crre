@@ -110,8 +110,8 @@ public class EmailSendService {
     private static String getStructureBodyMail(JsonObject row, UserInfos user, String numberOrder, String url,
                                                String name, ArrayList<Integer> idsCampaign){
         StringBuilder listOrders= new StringBuilder();
-        for(int i = 0;i < idsCampaign.size(); i++){
-          listOrders.append("<br />").append(url).append("#/campaign/").append(idsCampaign.get(i)).append("/order <br />");
+        for (Integer integer : idsCampaign) {
+            listOrders.append("<br />").append(url).append("#/campaign/").append(integer).append("/order <br />");
         }
         String body = "Bonjour " + row.getString("name") + ", <br/> <br/>"
                 + "Une commande sous le numéro \"" + numberOrder + "\" vient d'être validée."
@@ -125,7 +125,7 @@ public class EmailSendService {
     }
     private static String getAgentBodyMail(JsonArray row, UserInfos user, String numberOrder, String url){
         final int contractName = 2 ;
-        String body = null;
+        String body;
         body = "Bonjour " + row.getString(contractName) + ", <br/> <br/>"
                 + user.getFirstName() + " " + user.getLastName() + " vient de valider une commande sous le numéro \""
                 + numberOrder + "\"."

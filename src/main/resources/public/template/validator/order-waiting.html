@@ -6,7 +6,7 @@
                 <input class="twelve"
                        type="text"
                        ng-model="query_name"
-                       ng-keyup="$event.keyCode == 13 ? searchByName(query_name) : null"
+                       ng-keyup="$event.keyCode == 13 ? searchByName() : null"
                        i18n-placeholder="search.filter.order">
             </div>
         </div>
@@ -153,6 +153,7 @@
             </tr>
             </tbody>
         </table>
+        <loader data-ng-show="loading" min-height="'250px'" class="twelve-mobile ten absolute-position"/>
         <div class="twelve-mobile tot-cards two">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
             <div class = "total-container">
@@ -194,6 +195,7 @@
               show="display.lightbox.refuseOrder">
         <container template="refuseOrder.lightbox"></container>
     </lightbox>
+    <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
     <section class="toggle-buttons" ng-class="{ hide: ordersClient.selected.length === 0 }">
         <div class="toggle">
             <div class="row">

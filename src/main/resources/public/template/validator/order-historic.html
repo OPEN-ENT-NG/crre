@@ -72,7 +72,7 @@
                 <td><div class="smallTabElem center">[[project.total]]</div></td>
                 <td><div class="smallTabElem"></div></td>
                 <td>
-                    <div class="smallTabElem center ellipsis" tooltip="[[project.status]]">
+                    <div class="smallTabElem center ellipsis status" tooltip="[[project.status]]">
                         <div class="[[project.status]] status-circle  cell row myOrder centerCircleMobile"></div>
                         <span ng-bind="lang.translate(project.status)" class="webkit-vertical-align zero-mobile"></span>
                     </div>
@@ -115,7 +115,7 @@
                          ng-if="order.cause_status">
                         <i class="comment-icon"></i>
                     </div>
-                    <div class="smallTabElem center ellipsis" ng-if="order.displayStatus" tooltip="[[order.status]]">
+                    <div class="smallTabElem center ellipsis status" ng-if="order.displayStatus" tooltip="[[order.status]]">
                         <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile" ng-if="!order.cause_status"></div>
                         <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                     </div>
@@ -123,12 +123,13 @@
             </tr>
             </tbody>
         </table>
+        <loader data-ng-show="loading" min-height="'250px'" class="twelve-mobile ten absolute-position"/>
         <div class="twelve-mobile tot-cards two">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
             <div class = "total-container">
                 <div>
                     <i18n>crre.consummed.licences</i18n>
-                    <h1 class="bold-font-weight" ng-bind="getTotalAmountHistoric()"></h1>
+                    <h1 class="bold-font-weight" ng-bind="campaign.nb_licences_total - campaign.nb_licences_available "></h1>
                 </div>
                 <div class="licences">
                     <i18n>crre.initial.licences</i18n>
@@ -145,7 +146,7 @@
             <div class = "total-container vertical-spacing">
                 <div>
                     <i18n>crre.total.in.euros</i18n>
-                    <h1 class="bold-font-weight" ng-bind="getTotalHistoric() | currency"></h1>
+                    <h1 class="bold-font-weight" ng-bind="campaign.initial_purse_amount - campaign.purse_amount | currency"></h1>
                 </div>
                 <div>
                     <i18n>crre.initial</i18n><span ng-bind="campaign.initial_purse_amount | currency"></span>
@@ -156,6 +157,7 @@
             </div>
         </div>
     </div>
+    <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
     <section class="toggle-buttons" ng-class="{ hide: !displayToggle }">
         <div class="toggle">
             <div class="row">

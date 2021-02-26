@@ -9,6 +9,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.alloptionsSelected = false;
             $scope.equipment = new Equipment();
             $scope.subjects = [];
+            $scope.loading = true;
             $scope.initPopUpFilters();
         };
 

@@ -43,7 +43,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.orderClient = new OrderClient();
         $scope.orderRegion = new OrderRegion();
         $scope.displayedOrders = new OrdersClient();
-        $scope.displayedOrdersRegion = new OrdersRegion();
         $scope.basketsOrders = new BasketsOrders();
         $scope.users = [];
         $scope.filters = new Filters();
@@ -109,10 +108,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showCatalog: async () => {
-                await $scope.selectCatalog();
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
+                await $scope.selectCatalog();
                 Utils.safeApply($scope);
             },
             showAdminCatalog: async () => {
@@ -137,15 +136,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
                     await $scope.initStructures() ;
-                $scope.current.structure
-                    ? await $scope.ordersClient.sync(null, [], idCampaign, $scope.current.structure.id)
-                    : null;
+                $scope.initCampaignOrderView();
                 await $scope.selectCampaign(idCampaign);
+                $scope.campaign.order_notification = 0;
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/order/manage-order');
-                $scope.initCampaignOrderView();
-                $scope.campaign.order_notification = 0;
                 Utils.safeApply($scope);
             },
             campaignBasket: async (params) => {
@@ -170,12 +166,18 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.selectCampaign(idCampaign);
                 let campaignPref;
                 campaignPref = $scope.campaign;
+                $scope.loading = true;
+                Utils.safeApply($scope);
                 if (campaignPref) {
                     await $scope.initOrders('WAITING');
                     $scope.selectCampaignShow(campaignPref, "WAITING");
-                } else
+                    $scope.loading = false;
+                    Utils.safeApply($scope);
+                } else {
                     await $scope.openLightSelectCampaign();
-                Utils.safeApply($scope);
+                    $scope.loading = false;
+                    Utils.safeApply($scope);
+                }
             },
             orderHistoric: async (params) => {
                 let idCampaign = params.idCampaign;
@@ -351,7 +353,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.syncOrders = async (status: string) =>{
             $scope.displayedOrders.all = [];
-            await $scope.ordersClient.sync(status, $scope.structures.all);
+            await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
             $scope.displayedOrders.all = $scope.ordersClient.all;
         };
 

@@ -21,6 +21,10 @@ body.crre {
     color: black;
   }
 
+  .absolute-position{
+    position: absolute;
+  }
+
   .big-text{
     font-size: 34px;
   }
@@ -1098,6 +1102,9 @@ body.crre {
                 max-height: inherit;
                 margin: 0 10px;
               }
+            }
+            .status {
+              min-width: 160px;
             }
           }
         }

@@ -82,7 +82,8 @@ public class OrderController extends ControllerHelper {
             UserUtils.getUserInfos(eb, request, user -> {
                 Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
                 String idStructure = request.params().get("idStructure");
-                orderService.listOrder(idCampaign,idStructure, user, arrayResponseHandler(request));
+                List<String> ordersIds = request.params().getAll("order_id");
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, arrayResponseHandler(request));
             });
         }catch (ClassCastException e ){
             log.error("An error occured when casting campaign id ",e);
@@ -96,6 +97,7 @@ public class OrderController extends ControllerHelper {
     public void listOrders (final HttpServerRequest request){
         if (request.params().contains("status")) {
             final String status = request.params().get("status");
+            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
             if ("valid".equalsIgnoreCase(status)) {
                 final JsonArray statusList = new fr.wseduc.webutils.collections.JsonArray().add(status).add("SENT").add("DONE");
                 orderService.getOrdersGroupByValidationNumber(statusList, event -> {
@@ -107,7 +109,7 @@ public class OrderController extends ControllerHelper {
                     }
                 });
             } else {
-                orderService.listOrder(status, arrayResponseHandler(request));
+                orderService.listOrder(status, page, arrayResponseHandler(request));
             }
         } else {
             badRequest(request);
@@ -132,11 +134,12 @@ public class OrderController extends ControllerHelper {
                 try {
                     String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
                     int id_campaign = parseInt(request.getParam("id"));
+                    Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                     orderService.searchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
-                            orderService.search(query, null, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                            orderService.search(query, null, user, equipments.right().getValue(), id_campaign, page, arrayResponseHandler(request));
                         } else {
-                            orderService.searchWithoutEquip(query, null, user, id_campaign, arrayResponseHandler(request));
+                            orderService.searchWithoutEquip(query, null, user, id_campaign, page, arrayResponseHandler(request));
                         }
                     });
                 } catch (UnsupportedEncodingException e) {
@@ -155,6 +158,7 @@ public class OrderController extends ControllerHelper {
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
                 try {
+                    Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                     List<String> params = new ArrayList<>();
                     String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
                     if (request.params().contains("niveaux.libelle")) {
@@ -189,12 +193,12 @@ public class OrderController extends ControllerHelper {
                                 // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
                                 if (equipmentsGrade.size() > 0) {
                                     if (request.params().contains("q")) {
-                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, arrayResponseHandler(request));
+                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, page, arrayResponseHandler(request));
                                     } else {
-                                        orderService.filter(filters, user, equipmentsGrade, id_campaign, arrayResponseHandler(request));
+                                        orderService.filter(filters, user, equipmentsGrade, id_campaign, page, arrayResponseHandler(request));
                                     }
                                 } else {
-                                    orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, arrayResponseHandler(request));
+                                    orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, page, arrayResponseHandler(request));
                                 }
                             }
                         });
@@ -204,9 +208,9 @@ public class OrderController extends ControllerHelper {
                         // Recherche avec les filtres autres que grade
                         orderService.searchName(finalQ, equipments -> {
                             if (equipments.right().getValue().size() > 0) {
-                                orderService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, arrayResponseHandler(request));
+                                orderService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, page, arrayResponseHandler(request));
                             } else {
-                                orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, arrayResponseHandler(request));
+                                orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, page, arrayResponseHandler(request));
                             }
                         });
                     }

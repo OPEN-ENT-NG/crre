@@ -43,7 +43,7 @@ public interface BasketService {
      * Get all my baskets orders
      * @param handler function handler returning data
      */
-    void getMyBasketOrders(Handler<Either<String, JsonArray>> handler, UserInfos user);
+    void getMyBasketOrders(UserInfos user, Integer page, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get all the baskets orders of my structures
@@ -116,17 +116,21 @@ public interface BasketService {
      * @param arrayResponseHandler  Function handler returning data
      */
 
-    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+                Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void updateAllAmount(Integer id, Handler<Either<String, JsonObject>> handler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
-    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+                       Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Integer page,
+                            Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+                Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler);
 

@@ -6,9 +6,10 @@ import {
     OrdersClient,
     OrdersRegion,
     Utils,
-    Filter, Filters
+    Filter, Filters, BasketsOrders
 } from '../../model';
 import {Mix} from 'entcore-toolkit';
+import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 
 
 declare let window: any;
@@ -27,6 +28,9 @@ export const orderController = ng.controller('orderController',
                 reverse: false
             }
         }
+        $scope.filter = {
+            page: 0
+        };
         this.init = () => {
             $scope.users = [];
             $scope.reassorts = [{reassort: true}, {reassort: false}];
@@ -49,7 +53,16 @@ export const orderController = ng.controller('orderController',
             }
         };
 
+        $scope.onScroll = async (): Promise<void> => {
+            $scope.filter.page++;
+            await $scope.searchByName(true);
+        };
+
         $scope.getFilter = async (word: string, filter: string) => {
+            $scope.loading = true;
+            $scope.filter.page = 0;
+            $scope.ordersClient = new OrdersClient();
+            Utils.safeApply($scope);
             let newFilter = new Filter();
             newFilter.name = filter;
             newFilter.value = word;
@@ -60,18 +73,22 @@ export const orderController = ng.controller('orderController',
             }
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {
-                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name);
+                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page );
+                    $scope.loading = false;
                     Utils.safeApply($scope);
                 } else {
-                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id);
+                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page );
+                    $scope.loading = false;
                     Utils.safeApply($scope);
                 }
             } else {
                 if (!!$scope.query_name) {
-                    await $scope.ordersClient.search($scope.query_name, $scope.campaign.id)
+                    await $scope.ordersClient.search($scope.query_name, $scope.campaign.id, $scope.filter.page );
+                    $scope.loading = false;
                     Utils.safeApply($scope);
                 } else {
-                    await $scope.ordersClient.sync('WAITING');
+                    await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
+                    $scope.loading = false;
                     Utils.safeApply($scope);
                 }
             }
@@ -176,22 +193,36 @@ export const orderController = ng.controller('orderController',
             return structureGroups.join(', ');
         };
 
-        $scope.searchByName =  async (name: string) => {
-            if(name != "") {
+        $scope.searchByName =  async (noInit?:boolean) => {
+            if(!noInit){
+                $scope.loading = true;
+                $scope.filter.page = 0;
+                $scope.ordersClient = new OrdersClient();
+                Utils.safeApply($scope);
+            }
+
+            function endLoading(newData: any) {
+                if (newData)
+                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                $scope.loading = false;
+                Utils.safeApply($scope);
+            }
+
+            if($scope.query_name && $scope.query_name != "") {
                 if($scope.filters.all.length == 0) {
-                    await $scope.ordersClient.search(name, $scope.campaign.id);
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.search($scope.query_name, $scope.campaign.id, $scope.filter.page );
+                    endLoading(newData);
                 } else {
-                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, name);
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page );
+                    endLoading(newData);
                 }
             } else {
                 if($scope.filters.all.length == 0) {
-                    await $scope.ordersClient.sync('WAITING');
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
+                    endLoading(newData);
                 } else {
-                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id);
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page );
+                    endLoading(newData);
                 }
 
             }
@@ -310,7 +341,6 @@ export const orderController = ng.controller('orderController',
         // Functions specific for baskets interactions
 
         $scope.displayedBasketsOrders = [];
-        $scope.displayedOrdersRegionOrders = [];
 
         $scope.checkParentSwitch = (basket, checker) : void => {
             if (checker) {

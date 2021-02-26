@@ -191,11 +191,12 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void getAllProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            orderRegionService.getAllProjects(user, arrayResponseHandler(request));
+            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+            orderRegionService.getAllProjects(user, page, arrayResponseHandler(request));
         });
     }
 
-    private void getOrders (String query, JsonArray filters, UserInfos user, HttpServerRequest request) {
+    private void getOrders (String query, JsonArray filters, UserInfos user, Integer page, HttpServerRequest request) {
         try {
             // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
             if (request.params().contains("q")) {
@@ -222,7 +223,8 @@ public class OrderRegionController extends BaseController {
                         !request.params().entries().get(i).getKey().equals("editeur") &&
                         !request.params().entries().get(i).getKey().equals("_index") &&
                         !request.params().entries().get(i).getKey().equals("type") &&
-                        !request.params().entries().get(i).getKey().equals("endDate"))
+                        !request.params().entries().get(i).getKey().equals("endDate") &&
+                        !request.params().entries().get(i).getKey().equals("page"))
                     filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
                             request.params().entries().get(i).getValue()));
             }
@@ -240,10 +242,10 @@ public class OrderRegionController extends BaseController {
                         allEquipments.add(equipmentsGradeAndQ);
                         if (request.params().contains("q")) {
                             orderRegionService.filterSearch(user, allEquipments, finalQuery, startDate,
-                                    endDate, filters, arrayResponseHandler(request));
+                                    endDate, filters, page, arrayResponseHandler(request));
                         } else {
                             orderRegionService.filter_only(user, equipmentsGrade, startDate,
-                                    endDate, filters, arrayResponseHandler(request));
+                                    endDate, filters, page, arrayResponseHandler(request));
                         }
                     }
                 });
@@ -253,9 +255,9 @@ public class OrderRegionController extends BaseController {
                 orderRegionService.searchName(query, equipments -> {
                     if (equipments.right().getValue().size() > 0) {
                         orderRegionService.search(user, equipments.right().getValue(), finalQuery, startDate,
-                                endDate, filters, arrayResponseHandler(request));
+                                endDate, filters, page, arrayResponseHandler(request));
                     } else {
-                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters,
+                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters, page,
                                 arrayResponseHandler(request));
                     }
                 });
@@ -273,18 +275,19 @@ public class OrderRegionController extends BaseController {
         UserUtils.getUserInfos(eb, request, user -> {
             String query = "";
             JsonArray filters = new JsonArray();
+            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
             if (request.params().contains("type")) {
                 Future<JsonArray> listeUAIFuture = Future.future();
                 listeUAIFuture.setHandler(event -> {
                     if(event.succeeded()) {
                         JsonArray listeUAI = listeUAIFuture.result();
                         filters.add(new JsonObject().put("id_structure", listeUAI));
-                        getOrders(query, filters, user, request);
+                        getOrders(query, filters, user, page, request);
                     }
                 });
                 structureService.getStructuresByType(request.getParam("type"), handlerJsonArray(listeUAIFuture));
             } else {
-                getOrders(query, filters, user, request);
+                getOrders(query, filters, user, page, request);
             }
         });
     }

@@ -208,10 +208,13 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async search(text: String, id_campaign: number) {
+    async search(text: String, id_campaign: number, page?:number) {
         try {
             if ((text.trim() === '' || !text)) return;
-            const {data} = await http.get(`/crre/basketOrder/search?q=${text}&id=${id_campaign}`);
+            let pageParams: string = "";
+            if(page)
+                pageParams = `&page=${page}`;
+            const {data} = await http.get(`/crre/basketOrder/search?q=${text}&id=${id_campaign}${pageParams}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         } catch (err) {
             toasts.warning('crre.basket.sync.err');
@@ -219,7 +222,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, word?: string){
+    async filter_order(filters: Filter[], id_campaign: number, word?: string, page?:number){
         try {
             let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             let params = "";
@@ -228,12 +231,15 @@ export class BasketsOrders extends Selection<BasketOrder> {
                 if(index != filters.length - 1) {
                     params += "&";
                 }});
+            let pageParams: string = "";
+            if(page)
+                pageParams = `&page=${page}`;
             let url;
             if(!format.test(word)) {
                 if(word) {
-                    url = `/crre/basketOrder/filter?q=${word}&id=${id_campaign}&${params}`;
+                    url = `/crre/basketOrder/filter?q=${word}&id=${id_campaign}&${params}${pageParams}`;
                 } else {
-                    url = `/crre/basketOrder/filter?id=${id_campaign}&${params}`;
+                    url = `/crre/basketOrder/filter?id=${id_campaign}&${params}${pageParams}`;
                 }
                 let {data} = await http.get(url);
                 this.all = Mix.castArrayAs(BasketOrder, data);
@@ -246,9 +252,10 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async getMyOrders () {
+    async getMyOrders (page:number) {
         try {
-            let { data } = await http.get(`/crre/basketOrder/allMyOrders`);
+            const params: string = `?page=${page}`;
+            let { data } = await http.get(`/crre/basketOrder/allMyOrders${params}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         }
         catch {

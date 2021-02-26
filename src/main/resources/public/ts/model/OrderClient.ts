@@ -157,14 +157,17 @@ export class OrdersClient extends Selection<OrderClient> {
         this.filters = [];
     }
 
-    async search(text: String, id_campaign: number) {
+    async search(text: String, id_campaign: number, page?: number) {
         try {
             if ((text.trim() === '' || !text)) return;
-            const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}`);
-            this.all = Mix.castArrayAs(OrderClient, data);
-            if(this.all.length>0) {
-                await this.getEquipments(this.all).then(equipments => {
-                    for (let order of this.all) {
+            let pageParams = "";
+            if(page)
+                pageParams = `&page=${page}`;
+            const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}${pageParams}`);
+            let newOrderClient = Mix.castArrayAs(OrderClient, data);
+            if(newOrderClient.length>0) {
+                await this.getEquipments(newOrderClient).then(equipments => {
+                    for (let order of newOrderClient) {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                         order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
                         order.name = equipment.titre;
@@ -172,6 +175,8 @@ export class OrdersClient extends Selection<OrderClient> {
                         order.creation_date = moment(order.creation_date).format('L');
                     }
                 });
+                this.all = this.all.concat(newOrderClient);
+                return true;
             }
         } catch (err) {
             toasts.warning('crre.basket.sync.err');
@@ -179,7 +184,7 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, word?: string){
+    async filter_order(filters: Filter[], id_campaign: number, word?: string, page?: number){
         try {
             let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             let params = "";
@@ -188,18 +193,21 @@ export class OrdersClient extends Selection<OrderClient> {
                 if(index != filters.length - 1) {
                     params += "&";
                 }});
+            let pageParams = "";
+            if(page)
+                pageParams = `&page=${page}`;
             let url;
             if(!format.test(word)) {
                 if(word) {
-                    url = `/crre/orders/filter?q=${word}&id=${id_campaign}&${params}`;
+                    url = `/crre/orders/filter?q=${word}&id=${id_campaign}&${params}${pageParams}`;
                 } else {
-                    url = `/crre/orders/filter?id=${id_campaign}&${params}`;
+                    url = `/crre/orders/filter?id=${id_campaign}&${params}${pageParams}`;
                 }
                 let {data} = await http.get(url);
-                this.all = Mix.castArrayAs(OrderClient, data);
-                if(this.all.length>0) {
-                    await this.getEquipments(this.all).then(equipments => {
-                        for (let order of this.all) {
+                let newOrderClient = Mix.castArrayAs(OrderClient, data);
+                if(newOrderClient.length>0) {
+                    await this.getEquipments(newOrderClient).then(equipments => {
+                        for (let order of newOrderClient) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                             order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
                             order.name = equipment.titre;
@@ -207,6 +215,8 @@ export class OrdersClient extends Selection<OrderClient> {
                             order.creation_date = moment(order.creation_date).format('L');
                         }
                     });
+                    this.all = this.all.concat(newOrderClient);
+                    return true;
                 }
             } else {
                 toasts.warning('crre.equipment.special');
@@ -218,10 +228,18 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string):Promise<void> {
+    async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string, ordersId?, page?:number):Promise<boolean> {
         try {
             if (idCampaign && idStructure) {
-                const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}` );
+                let params = '';
+                if(ordersId) {
+                    params += '?';
+                    ordersId.map((order) => {
+                        params += `order_id=${order}&`;
+                    });
+                    params = params.slice(0, -1);
+                }
+                const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
                 if(this.all.length>0) {
                     await this.getEquipments(this.all).then(equipments => {
@@ -235,17 +253,20 @@ export class OrdersClient extends Selection<OrderClient> {
                     });
                 }
             } else {
-                const { data } = await http.get(  `/crre/orders?status=${status}`);
-                this.all = Mix.castArrayAs(OrderClient, data);
-                if(this.all.length>0) {
-                    await this.getEquipments(this.all).then(equipments => {
-                        for (let order of this.all) {
+                let pageParams = '';
+                if(page)
+                    pageParams = `&page=${page}`;
+                const { data } = await http.get(  `/crre/orders?status=${status}${pageParams}`);
+                let newOrderClient = Mix.castArrayAs(OrderClient, data);
+                if(newOrderClient.length>0) {
+                    await this.getEquipments(newOrderClient).then(equipments => {
+                        for (let order of newOrderClient) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                             order.price = Utils.calculatePriceTTC(equipment,2);
                             order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
-                            order.name_structure = structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
-                            order.structure = structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
+                            order.name_structure = structures && structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
+                            order.structure = structures && structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                             order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
                             order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
                             if (order.files.length > 1)
@@ -258,6 +279,8 @@ export class OrdersClient extends Selection<OrderClient> {
                             order.creation_date = moment(order.creation_date, 'DD/MM/YYYY').format('DD-MM-YYYY');
                         }
                     });
+                    this.all = this.all.concat(newOrderClient);
+                    return true;
                 }
             }
         } catch (e) {

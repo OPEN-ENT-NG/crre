@@ -1,5 +1,5 @@
 <div ng-controller="orderPersonnelController">
-    <div ng-show="ordersClient.all.length > 0" class="basket-list">
+    <div class="basket-list">
         <div class="row margin-top-20">
             <div class="cell two margin-top-8">
                 <div class="search-bar order-search-bar">
@@ -7,7 +7,7 @@
                     <input class="twelve"
                            type="text"
                            ng-model="query_name"
-                           ng-keyup="$event.keyCode == 13 ? searchByName(query_name) : null"
+                           ng-keyup="$event.keyCode == 13 ? searchByName() : null"
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>
@@ -16,10 +16,9 @@
             </div>
         </div>
         <container template="order-list" class="order-client-validation"></container>
+        <loader data-ng-show="loading" min-height="'250px'"/>
+        <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
     </div>
-    <article ng-show = "ordersClient.all.length <= 0 " class="centered-text row">
-        <p><i18n>crre.orderEquipment.manage.empty.order</i18n></p>
-    </article>
     <lightbox show="display.lightbox.deleteOrder" on-close="cancelOrderEquipmentDelete()">
         <container template="orderClient.delete"></container>
     </lightbox>

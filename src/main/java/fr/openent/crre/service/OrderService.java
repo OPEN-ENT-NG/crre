@@ -19,7 +19,8 @@ public interface OrderService {
      * @param user user who is connected
      * @param handler function handler returning data
      */
-    void listOrder(Integer idCampaign, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId,
+                   Handler<Either<String, JsonArray>> handler);
 
     void listExport(List<Integer> idsOrders, Handler<Either<String, JsonArray>> catalog);
     /**
@@ -27,7 +28,7 @@ public interface OrderService {
      * @param status order status to retrieve
      * @param handler Function handler returning data
      */
-    void listOrder(String status, Handler<Either<String, JsonArray>> handler);
+    void listOrder(String status, Integer page, Handler<Either<String, JsonArray>> handler);
 
     void rejectOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
@@ -91,15 +92,19 @@ public interface OrderService {
 
     void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler);
 
-    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+                Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Integer page,
+                            Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
-    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+                       Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+                Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler);
 
