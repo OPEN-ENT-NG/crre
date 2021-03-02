@@ -10,24 +10,24 @@ import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.StructureService;
-import fr.openent.crre.service.impl.DefaultOrderRegionService;
-import fr.openent.crre.service.impl.DefaultOrderService;
-import fr.openent.crre.service.impl.DefaultPurseService;
-import fr.openent.crre.service.impl.DefaultStructureService;
+import fr.openent.crre.service.impl.*;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -56,11 +56,14 @@ public class OrderRegionController extends BaseController {
     private final OrderRegionService orderRegionService;
     private final PurseService purseService;
     private final StructureService structureService;
-
+    private final EmailSendService emailSender;
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
 
 
-    public OrderRegionController() {
+    public OrderRegionController(Vertx vertx, JsonObject config) {
+        EmailFactory emailFactory = new EmailFactory(vertx, config);
+        EmailSender emailSender = emailFactory.getSender();
+        this.emailSender = new EmailSendService(emailSender);
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
         this.structureService = new DefaultStructureService(Crre.crreSchema);
@@ -440,6 +443,21 @@ public class OrderRegionController extends BaseController {
         List<String> params = request.params().getAll("id");
         List<String> idsEquipment = request.params().getAll("equipment_key");
         List<String> params3 = request.params().getAll("id_structure");
+        generateLogs(request, params, idsEquipment, params3, false);
+    }
+
+    @Get("region/orders/library")
+    @ApiDoc("Generate and send mail to library")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PrescriptorRight.class)
+    public void exportLibrary (final HttpServerRequest request){
+        List<String> params = request.params().getAll("id");
+        List<String> idsEquipment = request.params().getAll("equipment_key");
+        List<String> params3 = request.params().getAll("id_structure");
+        generateLogs(request, params, idsEquipment, params3, true);
+    }
+
+    private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3, boolean library) {
         JsonArray idStructures = new JsonArray();
         for(String structureId : params3){
             idStructures.add(structureId);
@@ -490,10 +508,20 @@ public class OrderRegionController extends BaseController {
                         }
                     }
                 }
-                request.response()
-                        .putHeader("Content-Type", "text/csv; charset=utf-8")
-                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                        .end(generateExport(request, orderRegion));
+                if(library) {
+                    emailSender.sendMail(request, "sofianebernoussi@gmail.com", "Test", "Bonjour",
+                            new JsonArray().add(new JsonObject().put("name", "orders.csv")
+                                                                .put("content", generateExport(request, orderRegion))), message -> {
+                        if(message.failed()) {
+                            log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.cause().getMessage());
+                        }
+                            });
+                } else {
+                    request.response()
+                            .putHeader("Content-Type", "text/csv; charset=utf-8")
+                            .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                            .end(generateExport(request, orderRegion));
+                }
             }
         });
         orderRegionService.getOrdersRegionById(idsOrders, handlerJsonArray(orderRegionFuture));

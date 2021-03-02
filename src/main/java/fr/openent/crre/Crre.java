@@ -68,7 +68,7 @@ public class Crre extends BaseServer {
         addController(new BasketController(vertx, config.getJsonObject("slack", new JsonObject()), mail));
         addController(new OrderController(storage, vertx, config, eb));
         addController(new UserController());
-        addController(new OrderRegionController());
+        addController(new OrderRegionController(vertx, config));
         addController(new ExportController(storage));
         CONFIG = config;
         vertx.deployVerticle(ExportCrreWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));

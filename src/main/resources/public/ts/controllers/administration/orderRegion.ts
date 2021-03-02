@@ -183,6 +183,37 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.uncheckAll();
         }
 
+        $scope.generateLibraryOrder = () => {
+            let selectedOrders = [];
+            let allOrders = [];
+            $scope.projects.forEach(project => {
+                project.orders.forEach( async order => {
+                    if(order.selected) {
+                        selectedOrders.push(order);
+                    }
+                    allOrders.push(order);
+                });
+            });
+            if(selectedOrders.length == 0)
+                selectedOrders = allOrders;
+            let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
+            let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
+            let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
+            window.location = `/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
+            $scope.uncheckAll();
+        }
+
+        $scope.getProjectsSearchFilter = async(name: string, startDate: Date, endDate: Date) => {
+            try {
+                startDate = moment(startDate).format('YYYY-MM-DD').toString();
+                endDate = moment(endDate).format('YYYY-MM-DD').toString();
+                let { data } = await http.get(`/crre/ordersRegion/projects/search_filter?q=${name}&startDate=${startDate}&endDate=${endDate}`);
+                $scope.projects = data;
+            } catch (e) {
+                toasts.warning('crre.basket.sync.err');
+            }
+        }
+
         $scope.getFilter = async (word: string, filter: string) => {
             let newFilter = new Filter();
             let newFilterFront = new FilterFront();

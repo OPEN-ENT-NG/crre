@@ -31,12 +31,13 @@
          "mail": {
             "enableMail": ${crreEnableMail}
          },
+         "email": "sofianebernoussi@gmail.com",
          "elasticsearch": true,
          "elasticsearchConfig" : {
             "server-uri": "${elasticServerURI}",
             "index": "${elasticCRREIndexName}"
-            }
-          "timeSecondSynchCron": "${timeSecondSynchCron}",
-          "dateSynch" : "${dateSynch}"
+            },
+         "timeSecondSynchCron": "${timeSecondSynchCron}",
+         "dateSynch" : "${dateSynch}"
       }
     }

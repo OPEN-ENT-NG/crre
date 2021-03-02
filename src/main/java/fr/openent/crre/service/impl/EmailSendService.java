@@ -2,7 +2,9 @@ package fr.openent.crre.service.impl;
 
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -15,8 +17,8 @@ import java.util.ArrayList;
 public class EmailSendService {
 
     private final Neo4j neo4j;
-
     private final EmailSender emailSender;
+
     public EmailSendService(EmailSender emailSender){
         this.emailSender = emailSender;
         this.neo4j = Neo4j.getInstance();
@@ -33,7 +35,25 @@ public class EmailSendService {
                 null,
                 true,
                 null);
+    }
 
+    /**
+     * Send mail with attachments
+     *
+     * @param handler Need to not be null if you send mail with attachments
+     */
+    public void sendMail(HttpServerRequest request, String eMail, String object, String body, JsonArray attachment,
+                         Handler<AsyncResult<Message<JsonObject>>> handler) {
+        emailSender.sendEmail(request,
+                eMail,
+                null,
+                null,
+                object,
+                attachment,
+                body,
+                null,
+                true,
+                handler);
     }
 
     public void sendMails(HttpServerRequest request, JsonObject result, JsonArray rows, UserInfos user, String url,
