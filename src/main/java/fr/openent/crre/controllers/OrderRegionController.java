@@ -510,7 +510,7 @@ public class OrderRegionController extends BaseController {
                 }
                 if(library) {
                     emailSender.sendMail(request, "sofianebernoussi@gmail.com", "Test", "Bonjour",
-                            new JsonArray().add(new JsonObject().put("name", "orders.csv")
+                            new fr.wseduc.webutils.collections.JsonArray().add(new JsonObject().put("name", "orders.csv")
                                                                 .put("content", generateExport(request, orderRegion))), message -> {
                         if(message.failed()) {
                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.cause().getMessage());

@@ -52,7 +52,7 @@ public class EmailSendService {
                 attachment,
                 body,
                 null,
-                true,
+                false,
                 handler);
     }
 
