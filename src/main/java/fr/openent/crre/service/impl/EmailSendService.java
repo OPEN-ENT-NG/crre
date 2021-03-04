@@ -2,9 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,6 +11,8 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
+
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class EmailSendService {
 
@@ -43,7 +43,7 @@ public class EmailSendService {
      * @param handler Need to not be null if you send mail with attachments
      */
     public void sendMail(HttpServerRequest request, String eMail, String object, String body, JsonArray attachment,
-                         Handler<AsyncResult<Message<JsonObject>>> handler) {
+                         Handler<Either.Right<String, JsonObject>> handler) {
         emailSender.sendEmail(request,
                 eMail,
                 null,
@@ -53,7 +53,7 @@ public class EmailSendService {
                 body,
                 null,
                 false,
-                handler);
+                handlerToAsyncHandler(jsonObjectMessage -> handler.handle(new Either.Right<String, JsonObject>(jsonObjectMessage.body()))));
     }
 
     public void sendMails(HttpServerRequest request, JsonObject result, JsonArray rows, UserInfos user, String url,
