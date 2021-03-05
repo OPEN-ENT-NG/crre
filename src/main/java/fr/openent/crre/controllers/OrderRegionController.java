@@ -509,7 +509,7 @@ public class OrderRegionController extends BaseController {
                     }
                 }
                 if(library) {
-                    emailSender.sendMail(request, "sofianebernoussi@gmail.com", "Test", "Bonjour",
+                    emailSender.sendMail(request, "jollois_samuel1911@hotmail.fr", "Test", "Bonjour",
                             new fr.wseduc.webutils.collections.JsonArray().add(new JsonObject().put("name", "orders.csv")
                                                                 .put("content", "dGVzdA==")), message -> {
                         if(!message.isRight()) {
