@@ -34,11 +34,13 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 
@@ -509,9 +511,10 @@ public class OrderRegionController extends BaseController {
                     }
                 }
                 if(library) {
+                    String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
                     emailSender.sendMail(request, "jollois_samuel1911@hotmail.fr", "Test", "Bonjour",
                             new fr.wseduc.webutils.collections.JsonArray().add(new JsonObject().put("name", "orders.csv")
-                                                                .put("content", "dGVzdA==")), message -> {
+                                                                .put("content",base64File)), message -> {
                         if(!message.isRight()) {
                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                         }
