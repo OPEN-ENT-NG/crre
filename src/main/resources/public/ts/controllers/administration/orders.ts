@@ -96,11 +96,11 @@ export const orderController = ng.controller('orderController',
 
         $scope.getAllFilters = () => {
             $scope.ordersClient.all.forEach(function (order) {
-                if(!$scope.users.includes(order.user_name)) {
-                    $scope.users.push({user_name: order.user_name});
+                if(!$scope.users.includes(order.user_id)) {
+                    $scope.users.push({user_name: order.user_name, id_user: order.user_id});
                 }
             });
-            $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.user_name === v.user_name)) === i)
+            $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.id_user === v.id_user)) === i)
         };
 
         $scope.createOrder = async ():Promise<void> => {

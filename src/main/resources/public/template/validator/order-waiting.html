@@ -23,7 +23,7 @@
                     <div ng-class="{'open' : showPopUpColumnsTeacher}" class="right-magnet columns-popup">
                         <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsTeacher}"
                                ng-repeat="teacher in users | orderBy:'user_name'">
-                            <input type="checkbox" ng-model = "teacher.isChecked" ng-change="getFilter(teacher.user_name, 'name_user')">
+                            <input type="checkbox" ng-model = "teacher.isChecked" ng-change="getFilter(teacher.id_user, 'id_user')">
                             <span>[[teacher.user_name]]</span>
                         </label>
                     </div>
