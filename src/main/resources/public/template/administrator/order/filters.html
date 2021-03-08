@@ -13,7 +13,7 @@
                 <div ng-class="{'open' : showPopUpColumnsCampaign}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsCampaign}"
                            ng-repeat="campaign in campaigns.all | orderBy:'campaign'">
-                        <input type="checkbox" ng-model = "campaign.isChecked" ng-change="getFilter(campaign.id, 'id_campaign')">
+                        <input type="checkbox" ng-model = "campaign.isChecked" ng-change="getFilter(campaign.id, 'id_campaign')"/>
                         <span ng-bind="lang.translate(campaign.name)"></span>
                     </label>
                 </div>
@@ -32,11 +32,11 @@
                 </div>
                 <div ng-class="{'open' : showPopUpColumnsSchool}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis">
-                        <input type="checkbox" ng-model = "articlepapier.isChecked" ng-change="getFilter('PU', 'type')">
+                        <input type="checkbox" ng-model = "articlepapier.isChecked" ng-change="getFilter('PU', 'type')"/>
                         <span>Lycée Publique</span>
                     </label>
                     <label class="columns-popup-items left-text ellipsis">
-                        <input type="checkbox" ng-model = "articlenumerique.isChecked" ng-change="getFilter('PR', 'type')">
+                        <input type="checkbox" ng-model = "articlenumerique.isChecked" ng-change="getFilter('PR', 'type')"/>
                         <span>Lycée Privé</span>
                     </label>
                 </div>
@@ -56,7 +56,7 @@
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
                            ng-repeat="editor in equipments.editors | orderBy:'name'">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')"/>
                         <span ng-bind="lang.translate(editor.name)"></span>
                     </label>
                 </div>
@@ -76,7 +76,7 @@
                 <div ng-class="{'open' : showPopUpColumnsDiffusor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDiffusor}"
                            ng-repeat="distributeur in equipments.distributeurs | orderBy:'name'">
-                        <input type="checkbox" ng-model = "distributeur.isChecked" ng-change="getFilter(distributeur.name, 'distributeur')">
+                        <input type="checkbox" ng-model = "distributeur.isChecked" ng-change="getFilter(distributeur.name, 'distributeur')"/>
                         <span ng-bind="lang.translate(distributeur.name)"></span>
                     </label>
                 </div>
@@ -97,11 +97,11 @@
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsState}"
                            ng-repeat="state in states | orderBy:'status'">
                         <div ng-if = "state.status == 'IN PROGRESS'">
-                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')">
+                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')"/>
                             <span ng-bind="lang.translate('NEW')"></span>
                         </div>
                         <div ng-if = "state.status != 'IN PROGRESS'">
-                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')">
+                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')"/>
                             <span ng-bind="lang.translate(state.status)"></span>
                         </div>
                     </label>

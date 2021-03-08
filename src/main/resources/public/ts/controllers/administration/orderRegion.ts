@@ -116,6 +116,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
+            Utils.safeApply($scope);
         };
 
         $scope.confirmRefuseOrder= async (justification:string) =>{

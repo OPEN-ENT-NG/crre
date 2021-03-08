@@ -153,7 +153,7 @@
             </tr>
             </tbody>
         </table>
-        <loader data-ng-show="loading" min-height="'250px'" class="twelve-mobile ten absolute-position"/>
+        <loader data-ng-show="loading" min-height="'250px'" class="twelve-mobile ten absolute-position"></loader>
         <div class="twelve-mobile tot-cards two">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
             <div class = "total-container">
@@ -170,19 +170,19 @@
                 </div>
                 <div class="color-red">
                     <i18n>crre.remain.licences</i18n>
-                    <h1 class="bold-font-weight color-red no-margin-bottom" ng-bind="campaign.nb_licences_available - displayedOrders.calculTotalAmount()"></h1>
+                    <h1 class="bold-font-weight color-red no-margin-bottom">[[campaign.nb_licences_available - displayedOrders.calculTotalAmount()]]</h1>
                 </div>
             </div>
             <div class = "total-container vertical-spacing">
                 <div>
                     <i18n>crre.total.in.euros</i18n>
-                    <h1 class="bold-font-weight" ng-bind="displayedOrders.calculTotalPriceTTC() | currency"></h1>
+                    <h1 class="bold-font-weight">[[displayedOrders.calculTotalPriceTTC() | currency]]</h1>
                 </div>
                 <div>
                     <i18n>crre.initial</i18n><span ng-bind="campaign.initial_purse_amount | currency"></span>
                 </div>
                 <div class="color-red">
-                    <i18n>crre.remained</i18n><span ng-bind="campaign.purse_amount - displayedOrders.calculTotalPriceTTC() | currency"></span>
+                    <i18n>crre.remained</i18n><span>[[campaign.purse_amount - displayedOrders.calculTotalPriceTTC() | currency]]</span>
                 </div>
             </div>
         </div>
