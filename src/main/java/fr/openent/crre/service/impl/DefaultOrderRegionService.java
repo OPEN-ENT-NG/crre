@@ -170,19 +170,21 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getAllProjects(UserInfos user, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
-                "SELECT DISTINCT (p.*) " +
+                "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id ");
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
+                "WHERE ore.status != 'SENT'");
+
         if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
                 WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())){
-            query.append("WHERE ore.id_structure IN ( ");
+            query.append(" AND ore.id_structure IN ( ");
             for (String idStruct : user.getStructures()) {
                 query.append("?,");
                 values.add(idStruct);
             }
             query = new StringBuilder(query.substring(0, query.length() - 1) + ")");
         }
-        query.append(" ORDER BY p.id DESC ");
+        query.append(" ORDER BY ore.creation_date DESC ");
         if (page != null) {
             query.append("OFFSET ? LIMIT ? ");
             values.add(PAGE_SIZE * page);
@@ -194,12 +196,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT DISTINCT (p.*) " +
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ";
+                "WHERE ore.status != 'SENT' AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ";
 
         values.add(query);
         values.add(query);
@@ -211,7 +213,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery = sqlquery + " ORDER BY p.id DESC";
+        sqlquery = sqlquery + " ORDER BY ore.creation_date DESC";
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -227,10 +229,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
-                "SELECT DISTINCT (p.*) " +
+                "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.id_structure IN ( ";
+                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? AND ore.id_structure IN ( ";
         values.add(startDate);
         values.add(endDate);
         for (String idStruct : user.getStructures()) {
@@ -238,7 +240,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(idStruct);
         }
         query = query.substring(0, query.length() - 1) + ")";
-        query = query + " ORDER BY p.id DESC ";
+        query = query + " ORDER BY ore.creation_date DESC ";
         sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -246,12 +248,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                        Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<String, ArrayList>();
-        String sqlquery = "SELECT DISTINCT (p.*) " +
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? ";
+                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
         values.add(startDate);
         values.add(endDate);
 
@@ -277,12 +279,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                              Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*) " +
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? ";
+                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
 
         values.add(startDate);
         values.add(endDate);
@@ -312,12 +314,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                             Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*) " +
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? ";
+                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
 
         values.add(startDate);
         values.add(endDate);
@@ -356,12 +358,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                          Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*) " +
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? ";
+                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
 
         values.add(startDate);
         values.add(endDate);
@@ -410,7 +412,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 count ++;
             }
         }
-        sqlquery = sqlquery + " ORDER BY p.id DESC ";
+        sqlquery = sqlquery + " ORDER BY ore.creation_date DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);
@@ -423,16 +425,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
-                "SELECT p.title " +
+                "SELECT p.title, ore.creation_date" +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.id_structure IN ( ";
+                "WHERE ore.status != 'SENT' AND ore.id_structure IN ( ";
         for (String idStruct : user.getStructures()) {
             query += "?,";
             values.add(idStruct);
         }
         query = query.substring(0, query.length() - 1) + ")";
-        query = query + " ORDER BY p.id DESC LIMIT 1";
+        query = query + " ORDER BY ore.creation_date DESC LIMIT 1";
         sql.prepared(query, values, SqlResult.validUniqueResultHandler(arrayResponseHandler));
     }
 
