@@ -31,6 +31,7 @@ export const orderController = ng.controller('orderController',
         $scope.filter = {
             page: 0
         };
+        // @ts-ignore
         this.init = () => {
             $scope.users = [];
             $scope.reassorts = [{reassort: true}, {reassort: false}];
@@ -105,6 +106,7 @@ export const orderController = ng.controller('orderController',
 
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
+            let ordersToRemove = new OrdersClient();
             let totalPrice = 0;
             let totalAmount = 0;
             if($scope.ordersClient.selectedElements.length > 0) {
@@ -112,6 +114,7 @@ export const orderController = ng.controller('orderController',
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
+                    ordersToRemove.all.push(order);
                     totalPrice += order.price*order.amount
                     totalAmount += order.amount
                 });
@@ -120,6 +123,7 @@ export const orderController = ng.controller('orderController',
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
+                    ordersToRemove.all.push(order);
                     totalPrice += order.price*order.amount
                     totalAmount += order.amount
                 });
@@ -136,8 +140,16 @@ export const orderController = ng.controller('orderController',
                         $scope.campaign.nb_order_waiting -= $scope.ordersClient.all.length;
                         $scope.campaign.historic_etab_notification += $scope.ordersClient.all.length;
                     }
-                    $scope.orderToCreate = new OrderRegion();
-                    await $scope.syncOrders('WAITING');
+                    ordersToRemove.all.forEach(order =>{
+                        $scope.ordersClient.all.forEach((orderClient, i) => {
+                            if(orderClient.id == order.id){
+                                $scope.ordersClient.all.splice(i,1);
+                            }
+                        });
+                    });
+                    $scope.displayedOrders.all = $scope.ordersClient.all;
+                    Utils.safeApply($scope);
+                    $scope.onScroll();
                 }
                 else {
                     toasts.warning('crre.admin.order.create.err');
@@ -277,10 +289,17 @@ export const orderController = ng.controller('orderController',
             let {status} = await ordersToRefuse.updateStatus('REFUSED');
             if(status == 200){
                 $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selected.length;
-                $scope.getOrderWaitingFiltered($scope.campaign);
-                await $scope.syncOrders('WAITING');
+                ordersToRefuse.all.forEach(order =>{
+                    $scope.ordersClient.all.forEach((orderClient, i) => {
+                        if(orderClient.id == order.id){
+                            $scope.ordersClient.all.splice(i,1);
+                        }
+                    });
+                });
+                $scope.displayedOrders.all = $scope.ordersClient.all;
                 toasts.confirm('crre.order.refused.succes');
                 Utils.safeApply($scope);
+                $scope.onScroll();
             } else {
                 toasts.warning('crre.order.refused.error');
             }
@@ -363,5 +382,6 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
         };
 
+        // @ts-ignore
         this.init();
     }]);

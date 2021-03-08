@@ -15,7 +15,6 @@ declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
 
-        $scope.orderToCreate = new OrderRegion();
         $scope.structure_groups = new StructureGroups();
         $scope.structuresToDisplay = new Structures();
         $scope.display = {
@@ -131,11 +130,18 @@ export const orderRegionController = ng.controller('orderRegionController',
                 });
             });
             let ordersToRefuse  = new OrdersRegion();
-            ordersToRefuse.all = Mix.castArrayAs(OrderClient, selectedOrders);
+            ordersToRefuse.all = Mix.castArrayAs(OrderRegion, selectedOrders);
             let {status} = await ordersToRefuse.updateStatus('REJECTED', justification);
             if(status == 200){
-                this.init();
-                await synchroRegionOrders();
+                $scope.projects.forEach(project => {
+                    project.orders.forEach( async order => {
+                        if(order.selected) {
+                            order.status="REJECTED";
+                            order.selected = false;
+                        }
+                    });
+                    Utils.setStatus(project, project.orders[0]);
+                });
                 toasts.confirm('crre.order.refused.succes');
                 $scope.displayToggle = false;
                 Utils.safeApply($scope);
@@ -157,8 +163,15 @@ export const orderRegionController = ng.controller('orderRegionController',
             ordersToValidate.all = Mix.castArrayAs(OrderClient, selectedOrders);
             let {status} = await ordersToValidate.updateStatus('VALID');
             if(status == 200){
-                this.init();
-                await synchroRegionOrders();
+                $scope.projects.forEach(project => {
+                    project.orders.forEach( async order => {
+                        if(order.selected) {
+                            order.status="VALID";
+                            order.selected = false;
+                        }
+                    });
+                    Utils.setStatus(project, project.orders[0]);
+                });
                 toasts.confirm('crre.order.validated');
                 $scope.displayToggle = false;
                 Utils.safeApply($scope);
@@ -432,7 +445,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             let {status} = await ordersToCreate.create();
             if (status === 201) {
                 toasts.confirm('crre.order.region.create.message');
-                $scope.orderToCreate = new OrderRegion();
             }
             else {
                 toasts.warning('crre.admin.order.create.err');
