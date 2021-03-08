@@ -11,7 +11,7 @@
                 <input class="twelve"
                        type="text"
                        ng-keyup="$event.keyCode == 13 ? addFilter($event) : null"
-                       i18n-placeholder="search.filter.catalog">
+                       i18n-placeholder="search.filter.catalog"/>
             </div>
         </div>
     </div>
@@ -28,7 +28,7 @@
                 <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsSubject}"
                            ng-repeat="subject in equipments.subjects | orderBy:'name'">
-                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'disciplines.libelle')">
+                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'disciplines.libelle')"/>
                         <span>[[subject.name]]</span>
                     </label>
                 </div>
@@ -46,7 +46,7 @@
                 <div ng-class="{'open' : showPopUpColumnsPublic}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsPublic}"
                            ng-repeat="public in equipments.public | orderBy:'name'">
-                        <input type="checkbox" ng-model = "public.isChecked" ng-change="getFilter(public.name, 'publiccible')">
+                        <input type="checkbox" ng-model = "public.isChecked" ng-change="getFilter(public.name, 'publiccible')"/>
                         <span>[[lang.translate(public.name)]]</span>
                     </label>
                 </div>
@@ -82,7 +82,7 @@
                 <div ng-class="{'open' : showPopUpColumnsDocumentsTypes}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDocumentsTypes}"
                            ng-repeat="docType in equipments.docsType | orderBy:'name'">
-                        <input type="checkbox" ng-model = "docType.isChecked" ng-change="getFilter(docType.name, '_index')">
+                        <input type="checkbox" ng-model = "docType.isChecked" ng-change="getFilter(docType.name, '_index')"/>
                         <span>[[lang.translate(docType.name)]]</span>
                     </label>
                 </div>
@@ -100,7 +100,7 @@
                 <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
                     <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
                            ng-repeat="editor in equipments.editors | orderBy:'name'">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')">
+                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')"/>
                         <span>[[editor.name]]</span>
                     </label>
                 </div>
@@ -169,8 +169,8 @@
                 <article class="domino"  ng-class="{ disabled: equipment.status !== 'DISPONIBLE' }">
                     <div class="top" ng-class="{ item: display.equipment }">
                         <div class="image-container">
-                            <img ng-src="[[equipment.urlcouverture]]" ng-show="equipment.urlcouverture!==null && equipment.urlcouverture!==undefined"/>
-                            <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined"/>
+                            <img ng-src="[[equipment.urlcouverture]]" ng-show="equipment.urlcouverture!==null && equipment.urlcouverture!==undefined" alt=""/>
+                            <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined" alt=""/>
                         </div>
                         <div>
                             <strong class="ellipsis" tooltip="[[equipment.titre]]">[[equipment.titre]]</strong>

@@ -40,8 +40,11 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.filters = new Filters();
             $scope.filtersFront = new FiltersFront();
             await $scope.campaigns.sync();
+            $scope.equipments.loading = true;
+            Utils.safeApply($scope);
             await $scope.equipments.sync(true, undefined, undefined );
             $scope.initPopUpFilters();
+            Utils.safeApply($scope);
         };
 
         $scope.getProjects = async() => {

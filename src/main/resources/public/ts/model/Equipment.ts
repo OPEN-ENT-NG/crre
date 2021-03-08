@@ -1,5 +1,5 @@
-import {_, toasts} from 'entcore';
-import {Eventer, Mix, Selectable, Selection} from 'entcore-toolkit';
+import {toasts} from 'entcore';
+import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 
 export class Equipment implements Selectable {
@@ -12,7 +12,6 @@ export class Equipment implements Selectable {
     urlcouverture: string;
     technical_specs: TechnicalSpec[];
     selected: boolean;
-    eventer: Eventer;
     _loading: boolean;
     priceTTC?: number;
     disponibilite: any[];
@@ -26,14 +25,11 @@ export class Equipment implements Selectable {
     tvas: any;
 
     constructor () {
-        this.eventer = new Eventer();
         this._loading = false;
         this.technical_specs = [];
     }
 
     async sync (id) {
-        this.loading = true;
-
         try {
             let { data } =  await http.get(`/crre/equipment/${id}`);
              Mix.extend(this, data[0]);
@@ -53,7 +49,6 @@ export class Equipment implements Selectable {
 
     set loading(state: boolean) {
         this._loading = state;
-        this.eventer.trigger(`loading::${this._loading}`);
     }
 
     get loading() {
@@ -79,7 +74,6 @@ export class TechnicalSpec {
 }
 
 export interface Equipments {
-    eventer: Eventer;
     page: number;
     _loading: boolean;
     all: Equipment[];
@@ -92,13 +86,11 @@ export interface Equipments {
     docsType: any;
     filterFulfilled: boolean;
     distributeurs: String[];
-    
 }
 
 export class Equipments extends Selection<Equipment> {
     constructor() {
         super([]);
-        this.eventer = new Eventer();
         this.subjects = [];
         this.grades = [];
         this.os = [];
@@ -141,7 +133,6 @@ export class Equipments extends Selection<Equipment> {
     }
 
     async getFilterEquipments(word?: string, filter?: string){
-        this.loading = true;
         try {
             let uri: string;
             var format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
@@ -192,8 +183,6 @@ export class Equipments extends Selection<Equipment> {
 
     set loading(state: boolean) {
         this._loading = state;
-        if(this.eventer)
-            this.eventer.trigger(`loading::${this._loading}`);
     }
 
     get loading() {

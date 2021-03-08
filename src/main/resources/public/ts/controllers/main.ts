@@ -15,14 +15,13 @@ import {
     StructureGroups,
     Structures,
     Utils,
-    OrdersRegion,
     Filters,
     Student
 } from '../model';
 import {Mix} from "entcore-toolkit";
 
-export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope', '$timeout',
-    ($scope, route, $location, $rootScope, $timeout) => {
+export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
+    ($scope, route, $location, $rootScope) => {
         template.open('main', 'main');
 
         $scope.display = {
@@ -49,8 +48,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.student = new Student();
         $scope.total_licence = 0;
         $scope.exports = new Exports([]);
-        $scope.equipments.eventer.on('loading::true', $scope.$apply);
-        $scope.equipments.eventer.on('loading::false', $scope.$apply);
         $scope.loadingArray = false;
 
         route({
@@ -115,8 +112,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showAdminCatalog: async () => {
-                await $scope.selectCatalog();
                 template.open('administrator-main', 'customer/campaign/catalog/catalog-list');
+                await $scope.selectCatalog();
                 Utils.safeApply($scope);
             },
             equipmentDetail: async (params) => {
@@ -217,7 +214,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.selectCatalog = async function (){
             $scope.fromCatalog=true
             $scope.display.equipment = false;
+            $scope.equipments.loading = true;
+            Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments();
+            Utils.safeApply($scope);
         }
 
         $scope.selectEquipment = async function (params){
@@ -256,9 +256,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.equipment = _.findWhere($scope.equipments.all, {id: idEquipment});
             if ($scope.equipment === undefined && !isNaN(idEquipment)) {
                 $scope.equipment = new Equipment();
+                $scope.equipment.loading = true;
+                Utils.safeApply($scope);
                 await $scope.equipment.sync(idEquipment);
             }
             $scope.basket = new Basket($scope.equipment, idCampaign, structure);
+            Utils.safeApply($scope);
         };
 
         $scope.idIsInteger = (id) => {
@@ -352,7 +355,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.syncOrders = async (status: string) =>{
-            $scope.displayedOrders.all = [];
+            $scope.ordersClient.all = [];
             await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
             $scope.displayedOrders.all = $scope.ordersClient.all;
         };

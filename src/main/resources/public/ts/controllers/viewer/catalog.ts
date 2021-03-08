@@ -16,14 +16,18 @@ export const catalogController = ng.controller('catalogController',
         $scope.addFilter = async (event) => {
             $scope.word = event.target.value;
             $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.equipments.loading = true;
+            Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments(event.target.value);
-            $scope.$apply();
+            Utils.safeApply($scope);
         };
 
         $scope.getFilter = async (word: string, filter: string) => {
             $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.equipments.loading = true;
+            Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments(word, filter);
-            $scope.$apply();
+            Utils.safeApply($scope);
         };
 
         $scope.validArticle = () => {
