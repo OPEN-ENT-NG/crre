@@ -226,10 +226,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.selectEquipment = async function (params){
             let idEquipment = params.idEquipment;
             $scope.idIsInteger(idEquipment);
+            if(!$scope.current.structure)
+                await $scope.initStructures() ;
             if($scope.campaign.id) {
                 await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             } else {
-                await $scope.initBasketItem(parseInt(idEquipment));
+                await $scope.initBasketItem(parseInt(idEquipment), null, $scope.current.structure.id);
             }
             window.scrollTo(0, 0);
             $scope.display.equipment = true;
@@ -261,7 +263,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.equipment = new Equipment();
                 $scope.equipment.loading = true;
                 Utils.safeApply($scope);
-                await $scope.equipment.sync(idEquipment);
+                await $scope.equipment.sync(idEquipment, structure);
             }
             $scope.basket = new Basket($scope.equipment, idCampaign, structure);
             Utils.safeApply($scope);

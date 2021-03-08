@@ -78,6 +78,14 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
+    public void equipmentAlreadyPayed(String idEquipment, String idStructure, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT EXISTS(SELECT id FROM " +
+                Crre.crreSchema + ".\"order-region-equipment\" " +
+                "WHERE equipment_key = ? AND id_structure = ? );";
+        sql.prepared(query, new JsonArray().add(idEquipment).add(idStructure), SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
     public void getOneOrderRegion(int idOrder, Handler<Either<String, JsonObject>> handler) {
         String query = "" +
                 "SELECT ore.*, " +

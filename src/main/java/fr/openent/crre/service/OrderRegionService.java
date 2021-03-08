@@ -15,6 +15,8 @@ public interface OrderRegionService {
 
     void deleteOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
 
+    void equipmentAlreadyPayed(String idEquipment, String idStructure, Handler<Either<String, JsonObject>> handler);
+
     void getOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
 
     void getAllOrderRegion(Handler<Either<String, JsonArray>> handler);

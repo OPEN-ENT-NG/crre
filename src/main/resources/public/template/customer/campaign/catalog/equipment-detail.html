@@ -1,139 +1,142 @@
 <div ng-controller="catalogController" class="catalog">
     <div class="twelve equipment-detail">
-    <div class="margin-top-20 margin-bottom-20">
-        <a ng-show="display.equipment" href="#/equipments/catalog">
-            <i class="back nav-arrow horizontal-spacing"></i>
-            <strong><i18n>back.to.catalog</i18n></strong>
-        </a>
-    </div>
-    <div class="card row padding-20" ng-show="display.equipment">
-        <h1 class="eight cell">[[basket.equipment.titre]] </h1>
-        <div class="four cell right-magnet twelve-mobile" >
-            <div class="add-basket centered row twelve vertical-spacing twelve-mobile">
-                <div class="twelve cell">
-                    <h4 class="cell"><i18n>etablissement.price</i18n></h4>
-                    <h3 class="right-text">[[calculatePriceOfEquipment(basket.equipment,2) | currency]]<i18n>per.student.per.year</i18n></h3>
-                </div>
-                <div class="twelve cell" ng-if="!isAdministrator()" workflow="crre.prescriptor">
-                    <div class="quantity">
-                        <h4 class="cell" style="margin-left: 83px"><i18n>crre.quantity</i18n></h4>
-                        <div class="right-text">
-                            <i class="moins" ng-click="amountDecrease()"></i>
-                            <input type="number"
-                                   step="1"
-                                   min="0"
-                                   ng-keypress="avoidDecimals($event)"
-                                   class="numberWithoutArrow two"
-                                   ng-model="basket.amount"/>
-                            <i class="plus" ng-click="amountIncrease()"></i>
-                        </div>
+        <div class="margin-top-20 margin-bottom-20">
+            <a ng-show="display.equipment" href="#/equipments/catalog">
+                <i class="back nav-arrow horizontal-spacing"></i>
+                <strong><i18n>back.to.catalog</i18n></strong>
+            </a>
+        </div>
+        <div class="warning center bold" ng-if="basket.equipment.structure_already_payed && !isAdministrator()">
+            <span><i18n>crre.structure.already.payed.ressource</i18n></span>
+        </div>
+        <div class="card row padding-20" ng-show="display.equipment">
+            <h1 class="eight cell">[[basket.equipment.titre]] </h1>
+            <div class="four cell right-magnet twelve-mobile" >
+                <div class="add-basket centered row twelve vertical-spacing twelve-mobile">
+                    <div class="twelve cell">
+                        <h4 class="cell"><i18n>etablissement.price</i18n></h4>
+                        <h3 class="right-text">[[calculatePriceOfEquipment(basket.equipment,2) | currency]]<i18n>per.student.per.year</i18n></h3>
                     </div>
-                    <div class="row vertical-spacing"><input type="button" ng-show="basket.id_campaign == undefined" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
-                    <div class="row vertical-spacing"><input type="button" ng-show="!(basket.id_campaign == undefined)" ng-disabled="!validArticle() && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                    <div class="twelve cell" ng-if="!isAdministrator()" workflow="crre.prescriptor">
+                        <div class="quantity">
+                            <h4 class="cell" style="margin-left: 83px"><i18n>crre.quantity</i18n></h4>
+                            <div class="right-text">
+                                <i class="moins" ng-click="amountDecrease()"></i>
+                                <input type="number"
+                                       step="1"
+                                       min="0"
+                                       ng-keypress="avoidDecimals($event)"
+                                       class="numberWithoutArrow two"
+                                       ng-model="basket.amount"/>
+                                <i class="plus" ng-click="amountIncrease()"></i>
+                            </div>
+                        </div>
+                        <div class="row vertical-spacing"><input type="button" ng-show="basket.id_campaign == undefined" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
+                        <div class="row vertical-spacing"><input type="button" ng-show="!(basket.id_campaign == undefined)" ng-disabled="!validArticle() && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="eight cell twelve-mobile">
-            <div class="two cell twelve-mobile margin-right-10">
-                <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]" ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
-                <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+            <div class="eight cell twelve-mobile">
+                <div class="two cell twelve-mobile margin-right-10">
+                    <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]" ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
+                    <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+                </div>
+                <div class="editor" ng-show="!!basket.equipment.editeur" >
+                    <div ng-bind-html="basket.equipment.editeur"></div>
+                </div>
+                <div ng-show="!!basket.equipment.description" >
+                    <p ng-bind-html="basket.equipment.description"></p>
+                </div>
             </div>
-            <div class="editor" ng-show="!!basket.equipment.editeur" >
-                <div ng-bind-html="basket.equipment.editeur"></div>
+            <div class="twelve cell">
+                <h2>
+                    <i18n>crre.information</i18n>
+                </h2>
+                <table class="table twelve">
+                    <tbody>
+                    <tr ng-if="!!basket.equipment.editeur">
+                        <td class="one"><strong><i18n>crre.equipment.editor</i18n></strong></td>
+                        <td>[[basket.equipment.editeur]]</td>
+                    </tr>
+                    <tr ng-if="!!basket.equipment.auteur">
+                        <td class="one"><strong><i18n>crre.equipment.author</i18n></strong></td>
+                        <td>[[basket.equipment.auteur]]</td>
+                    </tr>
+                    <tr ng-if="!!basket.equipment.dateparution">
+                        <td class="one"><strong><i18n>crre.date</i18n></strong></td>
+                        <td>[[basket.equipment.dateparution]]</td>
+                    </tr>
+                    <tr ng-if="!!basket.equipment.discipline">
+                        <td class="one"><strong><i18n>crre.equipment.field</i18n></strong></td>
+                        <td>[[basket.equipment.discipline]]</td>
+                    </tr>
+                    <tr>
+                        <td class="one"><strong><i18n>crre.equipment.level</i18n></strong></td>
+                        <td ng-bind="formatGrade(basket.equipment.niveaux)"></td>
+                    </tr>
+                    <tr>
+                        <td class="one"><strong><i18n>crre.equipment.ean</i18n></strong></td>
+                        <td>[[basket.equipment.ean]]</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-            <div ng-show="!!basket.equipment.description" >
-                <p ng-bind-html="basket.equipment.description"></p>
+      <!--      <div class="twelve cell">
+                <h2>
+                    <i18n>crre.equipment.details</i18n>
+                </h2>-->
+            <div class="twelve cell" ng-if="basket.equipment.offres && basket.equipment.offres.length > 0">
+                <h2>
+                    <i18n>crre.equipment.offer</i18n>
+                </h2>
+                <table class="table twelve">
+                    <thead>
+                    <tr>
+                        <td><i18n>crre.offer</i18n></td>
+                        <td><i18n>crre.minimal.quantity</i18n></td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="offer in basket.equipment.offres">
+                        <td class="one"><strong>[[offer.libelle]]</strong></td>
+                        <td>[[offer.quantiteminimaleachat]]</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="twelve cell" ng-if="basket.equipment.tvas && basket.equipment.tvas.length > 0">
+                <h2>
+                    <i18n>crre.tax</i18n>
+                </h2>
+                <table class="table twelve">
+                    <thead>
+                    <tr>
+                        <td><i18n>crre.tax</i18n></td>
+                        <td><i18n>crre.percentage</i18n></td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="tva in basket.equipment.tvas">
+                        <td class="one"><strong>[[tva.taux]]</strong></td>
+                        <td>[[tva.pourcent]]</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="twelve cell" ng-if="basket.equipment.technical_specs && basket.equipment.technical_specs.length > 0">
+                <h2>
+                    <i18n>SPECIFICATIONS</i18n>
+                </h2>
+                <table class="table twelve">
+                    <tbody>
+                    <tr ng-repeat="technicalSpec in basket.equipment.technical_specs">
+                        <td class="one"><strong>[[technicalSpec.name]]</strong></td>
+                        <td>[[technicalSpec.value]]</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="twelve cell">
-            <h2>
-                <i18n>crre.information</i18n>
-            </h2>
-            <table class="table twelve">
-                <tbody>
-                <tr ng-if="!!basket.equipment.editeur">
-                    <td class="one"><strong><i18n>crre.equipment.editor</i18n></strong></td>
-                    <td>[[basket.equipment.editeur]]</td>
-                </tr>
-                <tr ng-if="!!basket.equipment.auteur">
-                    <td class="one"><strong><i18n>crre.equipment.author</i18n></strong></td>
-                    <td>[[basket.equipment.auteur]]</td>
-                </tr>
-                <tr ng-if="!!basket.equipment.dateparution">
-                    <td class="one"><strong><i18n>crre.date</i18n></strong></td>
-                    <td>[[basket.equipment.dateparution]]</td>
-                </tr>
-                <tr ng-if="!!basket.equipment.discipline">
-                    <td class="one"><strong><i18n>crre.equipment.field</i18n></strong></td>
-                    <td>[[basket.equipment.discipline]]</td>
-                </tr>
-                <tr>
-                    <td class="one"><strong><i18n>crre.equipment.level</i18n></strong></td>
-                    <td ng-bind="formatGrade(basket.equipment.niveaux)"></td>
-                </tr>
-                <tr>
-                    <td class="one"><strong><i18n>crre.equipment.ean</i18n></strong></td>
-                    <td>[[basket.equipment.ean]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-  <!--      <div class="twelve cell">
-            <h2>
-                <i18n>crre.equipment.details</i18n>
-            </h2>-->
-        <div class="twelve cell" ng-if="basket.equipment.offres && basket.equipment.offres.length > 0">
-            <h2>
-                <i18n>crre.equipment.offer</i18n>
-            </h2>
-            <table class="table twelve">
-                <thead>
-                <tr>
-                    <td><i18n>crre.offer</i18n></td>
-                    <td><i18n>crre.minimal.quantity</i18n></td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr ng-repeat="offer in basket.equipment.offres">
-                    <td class="one"><strong>[[offer.libelle]]</strong></td>
-                    <td>[[offer.quantiteminimaleachat]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="twelve cell" ng-if="basket.equipment.tvas && basket.equipment.tvas.length > 0">
-            <h2>
-                <i18n>crre.tax</i18n>
-            </h2>
-            <table class="table twelve">
-                <thead>
-                <tr>
-                    <td><i18n>crre.tax</i18n></td>
-                    <td><i18n>crre.percentage</i18n></td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr ng-repeat="tva in basket.equipment.tvas">
-                    <td class="one"><strong>[[tva.taux]]</strong></td>
-                    <td>[[tva.pourcent]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="twelve cell" ng-if="basket.equipment.technical_specs && basket.equipment.technical_specs.length > 0">
-            <h2>
-                <i18n>SPECIFICATIONS</i18n>
-            </h2>
-            <table class="table twelve">
-                <tbody>
-                <tr ng-repeat="technicalSpec in basket.equipment.technical_specs">
-                    <td class="one"><strong>[[technicalSpec.name]]</strong></td>
-                    <td>[[technicalSpec.value]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
     <lightbox show="display.lightbox.choosecampaign" on-close="cancelChooseCampaign()">
         <container template="campaign.name"></container>

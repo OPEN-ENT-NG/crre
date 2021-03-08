@@ -2,11 +2,16 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.service.EquipmentService;
+import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.impl.DefaultEquipmentService;
+import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,11 +22,14 @@ import java.net.URLDecoder;
 import java.util.*;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class EquipmentController extends ControllerHelper {
 
     private final EquipmentService equipmentService;
+    private final OrderRegionService orderRegionService;
     private String query_word;
     private final boolean haveFilter;
     private HashMap<String, ArrayList<String>> query_filter;
@@ -29,6 +37,7 @@ public class EquipmentController extends ControllerHelper {
     public EquipmentController() {
         super();
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
+        this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.query_filter = new HashMap<>();
         this.query_word = "";
         this.haveFilter = false;
@@ -52,7 +61,30 @@ public class EquipmentController extends ControllerHelper {
             String idEquipment = request.params().contains("id")
                     ? request.params().get("id")
                     : null;
-            equipmentService.equipment(idEquipment, arrayResponseHandler(request));
+            String idStructure = request.params().contains("idStructure")
+                    ? request.params().get("idStructure")
+                    : null;
+            Promise<JsonArray> getEquipmentPromise = Promise.promise();
+            Promise<JsonObject> alreadyPayedPromise = Promise.promise();
+            equipmentService.equipment(idEquipment, handlerJsonArray(getEquipmentPromise));
+            List<Future> promises = new ArrayList<>();
+            promises.add(getEquipmentPromise.future());
+            if(idStructure != null){
+                orderRegionService.equipmentAlreadyPayed(idEquipment,idStructure, handlerJsonObject(alreadyPayedPromise));
+                promises.add(alreadyPayedPromise.future());
+            }
+            CompositeFuture.all(promises).onComplete(event -> {
+                if(event.succeeded()) {
+                    JsonObject equipment = getEquipmentPromise.future().result().getJsonObject(0);
+                    if(event.result().size()>1){
+                        equipment.put("structure_already_payed",alreadyPayedPromise.future().result().getBoolean("exists"));
+                    }
+                    renderJson(request,equipment);
+                } else {
+                    log.error("Problem to catch equipment with his id");
+                    badRequest(request);
+                }
+            });
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }

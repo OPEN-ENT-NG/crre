@@ -637,5 +637,6 @@
   "articlenumerique": "Ressource Numérique",
   "articlepapier": "Ressource Papier",
   "ELEVE": "Élèves",
-  "ELEVE_ET_ENSEIGNANT": "Élèves et Enseignants"
+  "ELEVE_ET_ENSEIGNANT": "Élèves et Enseignants",
+  "crre.structure.already.payed.ressource": "Votre établissement a déjà payé cette ressource"
 }

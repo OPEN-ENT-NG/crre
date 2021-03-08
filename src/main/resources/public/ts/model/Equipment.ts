@@ -29,10 +29,14 @@ export class Equipment implements Selectable {
         this.technical_specs = [];
     }
 
-    async sync (id) {
+    async sync (id, idStructure?:string) {
         try {
-            let { data } =  await http.get(`/crre/equipment/${id}`);
-             Mix.extend(this, data[0]);
+            let url = `/crre/equipment/${id}`;
+            if(idStructure){
+                url +=  `?idStructure=${idStructure}`
+            }
+            let { data } =  await http.get(url);
+             Mix.extend(this, data);
                 this.id = this.ean;
                 this.status = this.disponibilite[0].valeur;
                 if(this.disciplines.length != 0) {
