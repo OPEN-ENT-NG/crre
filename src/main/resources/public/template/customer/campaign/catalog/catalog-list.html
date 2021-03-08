@@ -5,13 +5,15 @@
             <i class="angle-double-left horizontal-spacing"></i>
             <i18n>back.to.catalog</i18n>
         </a>
-        <div class="row twelve" ng-show="!display.equipment">
+        <div class="row twelve">
             <div class="search-bar">
                 <i class="search padding-20"></i>
                 <input class="twelve"
                        type="text"
-                       ng-keyup="$event.keyCode == 13 ? addFilter($event) : null"
-                       i18n-placeholder="search.filter.catalog"/>
+                       ng-keyup="$event.keyCode == 13 ? addFilter() : null"
+                       ng-model="queryWord"
+                       i18n-placeholder="search.filter.catalog"
+                       ng-init="queryWord = query.word"/>
             </div>
         </div>
     </div>
@@ -106,49 +108,31 @@
                 </div>
             </div>
         </button>
-        <!--<button ng-click="initPopUpFilters('showPopUpColumnsOS')"
-                class="filterButton">
-            <i class="phone-infos"></i>
-            <span>OS</span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsOS">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsOS">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsOS}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text" ng-class="{'open' : showPopUpColumnsOS}"
-                           ng-repeat="os in equipments.os | orderBy:'name'">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(os.name, 'technos.technologie')">
-                        <span class="columns-popup-span">[[os.name]]</span>
-                    </label>
-                </div>
-            </div>
-        </button>-->
     </div>
     <div class="row">
         <div style="margin:0.5em">
             <div class="cell field ng-scope" ng-repeat="subject in equipments.subjects | filter: { isChecked: true }">
-                <span ng-show="$first && subject.isChecked" class="bold-font-weight">&nbsp;Disciplines : </span>
+                <span ng-show="$first && subject.isChecked" class="bold-font-weight">&nbsp;<i18n>Subjects</i18n> : </span>
                 <span ng-if="subject.isChecked" ng-class="{'margin-right-10' : $last}">[[subject.name]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
             </div>
             <div class="cell field ng-scope" ng-repeat="public in equipments.public | filter: { isChecked: true }">
-                <span ng-show="$first && public.isChecked" class="bold-font-weight">&nbsp;Niveaux : </span>
+                <span ng-show="$first && public.isChecked" class="bold-font-weight">&nbsp;<i18n>Public</i18n> : </span>
                 <span ng-if="public.isChecked" ng-class="{'margin-right-10' : $last}">[[lang.translate(public.name)]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
             </div>
             <div class="cell field ng-scope" ng-repeat="grade in equipments.grades | filter: { isChecked: true }">
-                <span ng-show="$first && grade.isChecked" class="bold-font-weight">&nbsp;Niveaux : </span>
+                <span ng-show="$first && grade.isChecked" class="bold-font-weight">&nbsp;<i18n>Grades</i18n> : </span>
                 <span ng-if="grade.isChecked" ng-class="{'margin-right-10' : $last}">[[grade.name]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
             </div>
             <div class="cell field ng-scope" ng-repeat="docType in equipments.docsType | filter: { isChecked: true }">
-                <span ng-show="$first && docType.isChecked" class="bold-font-weight">&nbsp;Types de documents : </span>
+                <span ng-show="$first && docType.isChecked" class="bold-font-weight">&nbsp;<i18n>Types.of.documents</i18n> : </span>
                 <span ng-if="docType.isChecked" ng-class="{'margin-right-10' : $last}">[[lang.translate(docType.name)]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
             </div>
             <div class="cell field ng-scope" ng-repeat="editor in equipments.editors | filter: { isChecked: true }">
-                <span ng-show="$first && editor.isChecked" class="bold-font-weight">&nbsp;Editeur : </span>
+                <span ng-show="$first && editor.isChecked" class="bold-font-weight">&nbsp;<i18n>Editors</i18n> : </span>
                 <span ng-if="editor.isChecked" ng-class="{'margin-right-10' : $last}">[[editor.name]]</span>
                 <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
             </div>

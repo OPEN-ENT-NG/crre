@@ -49,6 +49,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.total_licence = 0;
         $scope.exports = new Exports([]);
         $scope.loadingArray = false;
+        $scope.query = {
+            word: "",
+        };
 
         route({
             main: async () => {

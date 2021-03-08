@@ -13,12 +13,12 @@ export const catalogController = ng.controller('catalogController',
             $scope.initPopUpFilters();
         };
 
-        $scope.addFilter = async (event) => {
-            $scope.word = event.target.value;
+        $scope.addFilter = async () => {
+            $scope.query.word = $scope.queryWord;
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
-            await $scope.equipments.getFilterEquipments(event.target.value);
+            await $scope.equipments.getFilterEquipments($scope.query.word);
             Utils.safeApply($scope);
         };
 
@@ -121,7 +121,6 @@ export const catalogController = ng.controller('catalogController',
                     default: break;
                 }
             }
-
         };
 
         this.init();
