@@ -114,34 +114,34 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignOrderStatusCount(Handler<Either<String, JsonArray>> handler) {
-        String sub_query_waiting_order = "(SELECT COUNT(order_client_equipment.id) as nb_order_waiting " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE status = 'WAITING' " +
-                "GROUP BY campaign.id, status) ";
+        String sub_query_waiting_order = "WITH count_order_waiting AS (" +
+                "SELECT COUNT(order_client_equipment.id) as nb_order_waiting, campaign.id as id_campaign " +
+                "FROM " + Crre.crreSchema +".order_client_equipment " +
+                "INNER JOIN " + Crre.crreSchema +".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
+                "WHERE status = 'WAITING' GROUP BY campaign.id) ";
 
-        String query = "SELECT campaign.id as id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, " +
-                sub_query_waiting_order +
+        String query = sub_query_waiting_order +
+                "SELECT bo.id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, cow.nb_order_waiting " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "INNER JOIN " + Crre.crreSchema + ".campaign ON (bo.id_campaign = campaign.id) " +
-                "GROUP BY campaign.id, id_user;";
+                "INNER JOIN count_order_waiting cow ON bo.id_campaign = cow.id_campaign " +
+                "GROUP BY bo.id_campaign, id_user, nb_order_waiting;";
 
         Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String sub_query_waiting_order = "(SELECT COUNT(order_client_equipment.id) as nb_order_waiting " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE id_structure = ? AND status = 'WAITING' " +
-                "GROUP BY campaign.id, status) ";
+        String sub_query_waiting_order = "WITH count_order_waiting AS (" +
+                "SELECT COUNT(order_client_equipment.id) as nb_order_waiting, campaign.id as id_campaign " +
+                "FROM " + Crre.crreSchema +".order_client_equipment " +
+                "INNER JOIN " + Crre.crreSchema +".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
+                "WHERE id_structure = ? AND status = 'WAITING' GROUP BY campaign.id) ";
 
-        String query = "SELECT campaign.id as id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, " +
-                sub_query_waiting_order +
+        String query = sub_query_waiting_order +
+                "SELECT bo.id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, cow.nb_order_waiting " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "INNER JOIN " + Crre.crreSchema + ".campaign ON (bo.id_campaign = campaign.id) " +
+                "INNER JOIN count_order_waiting cow ON bo.id_campaign = cow.id_campaign " +
                 "WHERE id_structure = ? " +
-                "GROUP BY campaign.id, id_user;";
+                "GROUP BY bo.id_campaign, id_user, nb_order_waiting;";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(idStructure), SqlResult.validResultHandler(handler));
     }
@@ -208,9 +208,9 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 for (int i = 0; i < licences.size(); i++) {
                     object = licences.getJsonObject(i);
                     try {
-                        int nb_seconde = 0;
-                        int nb_premiere = 0;
-                        int nb_terminale = 0;
+                        int nb_seconde;
+                        int nb_premiere;
+                        int nb_terminale;
                         if(object.getBoolean("pro")) {
                              nb_seconde = object.getInteger("Seconde") * 3;
                              nb_premiere = object.getInteger("Premiere") * 3;
