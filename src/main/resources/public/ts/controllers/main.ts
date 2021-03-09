@@ -159,6 +159,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             orderWaiting: async (params) => {
+                template.close('campaign-main');
+                $scope.ordersClient.all = [];
+                template.open('main-profile', 'customer/campaign/campaign-detail');
+                template.open('administrator-main', 'validator/order-waiting');
+                $scope.loading = true;
+                Utils.safeApply($scope);
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
@@ -166,8 +172,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.selectCampaign(idCampaign);
                 let campaignPref;
                 campaignPref = $scope.campaign;
-                $scope.loading = true;
-                Utils.safeApply($scope);
                 if (campaignPref) {
                     await $scope.initOrders('WAITING');
                     $scope.selectCampaignShow(campaignPref, "WAITING");
@@ -217,10 +221,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.selectCatalog = async function (){
             $scope.fromCatalog=true
             $scope.display.equipment = false;
-            $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
-            await $scope.equipments.getFilterEquipments();
+            await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
             Utils.safeApply($scope);
         }
 
@@ -369,6 +372,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.initOrders = async (status: string) => {
             await $scope.initOrderStructures();
             await $scope.syncOrders(status);
+            $scope.loading = false;
             Utils.safeApply($scope);
         };
 
