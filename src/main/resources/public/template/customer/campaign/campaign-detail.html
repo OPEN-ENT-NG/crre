@@ -30,8 +30,7 @@
         <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order') &&
         selectedType.split('/').includes('campaign')}"
                 ng-click="openOrder(campaign.id)" workflow="crre.prescriptor" >
-            <span ng-show="campaign.purse_enabled"><i18n>crre.request.mine</i18n></span>
-            <span ng-show="!campaign.purse_enabled"><i18n>crre.order.tracking</i18n></span>
+            <span><i18n>crre.request.mine</i18n></span>
             <span class="notification-bull right-magnet" ng-if="campaign.order_notification && campaign.order_notification > 0">
                 [[campaign.order_notification]]
             </span>

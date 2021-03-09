@@ -42,8 +42,6 @@
   "crre.tag.equipments.nb": "Nombre d'équipements",
   "description": "Description",
   "crre.catalog": "Catalogue",
-  "crre.order.tracking": "Suivi des commandes",
-  "crre.request.tracking": "Suivi des demandes",
   "crre.request.validate": "Valider les demandes",
   "crre.request.mine": "Mes demandes",
   "crre.structure.history": "Historique établissement",
