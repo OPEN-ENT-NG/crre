@@ -217,6 +217,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.selectCatalog = async function (){
             $scope.fromCatalog=true
             $scope.display.equipment = false;
+            $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments();

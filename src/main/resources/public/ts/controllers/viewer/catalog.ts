@@ -16,6 +16,7 @@ export const catalogController = ng.controller('catalogController',
         $scope.addFilter = async () => {
             $scope.query.word = $scope.queryWord;
             $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word);
@@ -24,6 +25,7 @@ export const catalogController = ng.controller('catalogController',
 
         $scope.getFilter = async (word: string, filter: string) => {
             $scope.nbItemsDisplay = $scope.pageSize;
+            $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments(word, filter);

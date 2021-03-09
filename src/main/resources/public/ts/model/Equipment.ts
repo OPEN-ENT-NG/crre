@@ -148,7 +148,7 @@ export class Equipments extends Selection<Equipment> {
                         uri = (`/crre/equipments/catalog/filter?filter=${filter}`);
                     }
                 } else {
-                    if(!!word) {
+                    if(word != null || word != undefined) {
                         uri = (`/crre/equipments/catalog/search?word=${word}`);
                     } else {
                         if(this.filterFulfilled)
@@ -172,7 +172,6 @@ export class Equipments extends Selection<Equipment> {
     }
 
     async sync() {
-        this.loading = true;
         try {
             let {data} = await http.get(`/crre/equipments/catalog`);
             this.syncEquip(data);
