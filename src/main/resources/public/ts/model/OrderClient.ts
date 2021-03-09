@@ -242,6 +242,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
                 this.syncWithIdsCampaignAndStructure();
+                return true;
             } else {
                 let pageParams = '';
                 if(page)

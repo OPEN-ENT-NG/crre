@@ -149,7 +149,7 @@ export class Equipments extends Selection<Equipment> {
                 });
             }
             if(!format.test(queryword)) {
-                    if(queryword != null || queryword != undefined) {
+                    if(!!queryword) {
                         uri = (`/crre/equipments/catalog/search?word=${queryword}${params}`);
                     } else {
                         uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);

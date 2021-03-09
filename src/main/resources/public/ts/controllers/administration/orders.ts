@@ -74,23 +74,19 @@ export const orderController = ng.controller('orderController',
             }
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {
-                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page );
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page );
+                    endLoading(newData);
                 } else {
-                    await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page );
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page );
+                    endLoading(newData);
                 }
             } else {
                 if (!!$scope.query_name) {
-                    await $scope.ordersClient.search($scope.query_name, $scope.campaign.id, $scope.filter.page );
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.search($scope.query_name, $scope.campaign.id, $scope.filter.page );
+                    endLoading(newData);
                 } else {
-                    await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
+                    const newData = await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
+                    endLoading(newData);
                 }
             }
         };
@@ -205,18 +201,18 @@ export const orderController = ng.controller('orderController',
             return structureGroups.join(', ');
         };
 
+        function endLoading(newData: any) {
+            if (newData)
+                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+            $scope.loading = false;
+            Utils.safeApply($scope);
+        }
+
         $scope.searchByName =  async (noInit?:boolean) => {
             if(!noInit){
                 $scope.loading = true;
                 $scope.filter.page = 0;
                 $scope.ordersClient = new OrdersClient();
-                Utils.safeApply($scope);
-            }
-
-            function endLoading(newData: any) {
-                if (newData)
-                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                $scope.loading = false;
                 Utils.safeApply($scope);
             }
 

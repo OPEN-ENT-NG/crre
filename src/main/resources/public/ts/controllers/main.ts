@@ -18,7 +18,7 @@ import {
     Filters,
     Student
 } from '../model';
-import {Mix} from "entcore-toolkit";
+import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -365,8 +365,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.syncOrders = async (status: string) =>{
             $scope.ordersClient.all = [];
-            await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
+            const newData = await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
+            if (newData)
+                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+            $scope.loading = false;
             $scope.displayedOrders.all = $scope.ordersClient.all;
+            Utils.safeApply($scope);
+
         };
 
         $scope.initOrders = async (status: string) => {

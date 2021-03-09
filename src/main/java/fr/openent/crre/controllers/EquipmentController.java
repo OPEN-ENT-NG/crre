@@ -148,7 +148,7 @@ public class EquipmentController extends ControllerHelper {
     public void SearchEquipment(final HttpServerRequest request) {
         try {
             String query_word = URLDecoder.decode(request.getParam("word"), "UTF-8");
-            HashMap<String, ArrayList<String>> params = new HashMap<String, ArrayList<String>>();
+            HashMap<String, ArrayList<String>> params = new HashMap<>();
             getFilterFromRequest(request, params);
             if(!params.isEmpty()) {
                 equipmentService.searchFilter(params, query_word, arrayResponseHandler(request));
@@ -163,7 +163,7 @@ public class EquipmentController extends ControllerHelper {
     @Get("/equipments/catalog/filter")
     @ApiDoc("Search an equipment by keyword")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void FilterEquipment(final HttpServerRequest request) throws UnsupportedEncodingException {
+    public void FilterEquipment(final HttpServerRequest request) {
         try {
             boolean emptyFilter = Boolean.parseBoolean(request.getParam("emptyFilter"));
             HashMap<String, ArrayList<String>> params = new HashMap<>();
