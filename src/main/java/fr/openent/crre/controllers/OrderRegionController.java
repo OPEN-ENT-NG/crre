@@ -428,7 +428,9 @@ public class OrderRegionController extends BaseController {
         futures.add(purseUpdateFuture);
         Future<JsonObject> purseUpdateLicencesFuture = Future.future();
         futures.add(purseUpdateLicencesFuture);
-        Double price = Double.parseDouble(newOrder.getDouble("price").toString()) * newOrder.getInteger("amount");
+        Double price = Double.parseDouble(newOrder.getDouble("price").toString());
+        if(operation.equals("-"))
+        price *= newOrder.getInteger("amount");
         purseService.updatePurseAmount(price,
                 newOrder.getString("id_structure"), operation,
                 handlerJsonObject(purseUpdateFuture));

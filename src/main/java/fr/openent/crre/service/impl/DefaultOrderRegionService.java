@@ -433,15 +433,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
-                "SELECT p.title, ore.creation_date" +
+                "SELECT p.title, ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.status != 'SENT' AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            query += "?,";
-            values.add(idStruct);
-        }
-        query = query.substring(0, query.length() - 1) + ")";
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id ";
         query = query + " ORDER BY ore.creation_date DESC LIMIT 1";
         sql.prepared(query, values, SqlResult.validUniqueResultHandler(arrayResponseHandler));
     }

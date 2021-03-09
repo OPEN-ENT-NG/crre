@@ -46,12 +46,6 @@ public interface BasketService {
     void getMyBasketOrders(UserInfos user, Integer page, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Get all the baskets orders of my structures
-     * @param handler function handler returning data
-     */
-    void getStructureHistoryBaskets(Handler<Either<String, JsonArray>> handler, UserInfos user);
-
-    /**
      * Delete a basket item
      * @param idBasket id of the basket item
      * @param handler function handler returning data

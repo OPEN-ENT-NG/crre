@@ -36,7 +36,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     private static NotificationService notificationService;
     private static JsonObject mail;
 
-    private final Integer PAGE_SIZE = 10;
+    private final Integer PAGE_SIZE = 15;
 
     public DefaultBasketService(String schema, String table, Vertx vertx, JsonObject slackConfiguration,JsonObject mail) {
         super(schema, table);
@@ -97,18 +97,6 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             values.add(PAGE_SIZE * page);
             values.add(PAGE_SIZE);
         }
-        sql.prepared(query, values, SqlResult.validResultHandler(handler));
-    }
-
-    public void getStructureHistoryBaskets(Handler<Either<String, JsonArray>> handler, UserInfos user){
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id_structure IN (";
-        for (String idStruct : user.getStructures()) {
-            query += "?,";
-            values.add(idStruct);
-        }
-        query = query.substring(0, query.length() - 1) + ")";
-
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
