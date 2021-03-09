@@ -241,17 +241,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 }
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}` );
                 this.all = Mix.castArrayAs(OrderClient, data);
-                if(this.all.length>0) {
-                    await this.getEquipments(this.all).then(equipments => {
-                        for (let order of this.all) {
-                            let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                            order.price = Utils.calculatePriceTTC(equipment, 2);
-                            order.name = equipment.titre;
-                            order.image = equipment.urlcouverture;
-                        }
-                        this.syncWithIdsCampaignAndStructure();
-                    });
-                }
+                this.syncWithIdsCampaignAndStructure();
             } else {
                 let pageParams = '';
                 if(page)
@@ -322,16 +312,6 @@ export class OrdersClient extends Selection<OrderClient> {
             dateGeneration: moment(this.dateGeneration).format('DD/MM/YYYY') || null,
             userId : model.me.userId
         };
-    }
-
-    async getPreviewData (): Promise<any> {
-        try {
-            const params = Utils.formatGetParameters(this.toJson('SENT'));
-            const { data } = await http.get(`crre/orders/preview?${params}`);
-            return data;
-        } catch (e) {
-            throw e;
-        }
     }
 
     async updateStatus(status: string):Promise<any> {

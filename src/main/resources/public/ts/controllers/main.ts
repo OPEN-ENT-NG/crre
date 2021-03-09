@@ -379,12 +379,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             Utils.safeApply($scope);
         };
 
-        $scope.initOrdersForPreview = async (orders: OrderClient[]) => {
-            $scope.orderToSend = new OrdersClient();
-            $scope.orderToSend.all = Mix.castArrayAs(OrderClient, orders);
-            $scope.orderToSend.preview = await $scope.orderToSend.getPreviewData();
-            $scope.orderToSend.preview.index = 0;
-        };
         $scope.openLightSelectCampaign = async ():Promise<void> => {
             template.open('administrator-main');
             template.open('selectCampaign', 'validator/select-campaign');

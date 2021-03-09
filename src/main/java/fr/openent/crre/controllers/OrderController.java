@@ -83,7 +83,39 @@ public class OrderController extends ControllerHelper {
                 Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
                 String idStructure = request.params().get("idStructure");
                 List<String> ordersIds = request.params().getAll("order_id");
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, arrayResponseHandler(request));
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, orders -> {
+                    if (orders.isRight()) {
+                        List<String> idEquipments = new ArrayList<>();
+                        for(Object order : orders.right().getValue()){
+                            String idEquipment = ((JsonObject)order).getString("equipment_key");
+                            idEquipments.add(idEquipment);
+                        }
+                        searchByIds(idEquipments, equipments -> {
+                            if(equipments.isRight()) {
+                                for(Object order : orders.right().getValue()){
+                                    JsonObject orderJson = ((JsonObject)order);
+                                    String idEquipment = orderJson.getString("equipment_key");
+                                    for(Object equipment : equipments.right().getValue()){
+                                        JsonObject equipmentJson = ((JsonObject)equipment);
+                                        if(idEquipment.equals(equipmentJson.getString("id"))){
+                                            orderJson.put("price",getPriceTtc(equipmentJson).getDouble("priceTTC"));
+                                            orderJson.put("name",equipmentJson.getString("titre"));
+                                            orderJson.put("image",equipmentJson.getString("urlcouverture"));
+                                        }
+                                    }
+                                }
+                                final JsonArray finalResult = orders.right().getValue();
+                                renderJson(request, finalResult);
+                            }else{
+                                badRequest(request);
+                                log.error("Problem when catching equipments");
+                            }
+                        });
+                    } else {
+                        badRequest(request);
+                        log.error("Problem when catching orders");
+                    }
+                });
             });
         }catch (ClassCastException e ){
             log.error("An error occured when casting campaign id ",e);

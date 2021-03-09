@@ -25,6 +25,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
     private final EmailSendService emailSender ;
+    private final Integer PAGE_SIZE = 15;
 
     public DefaultOrderService(
             String schema, String table, EmailSender emailSender){
@@ -88,7 +89,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "ORDER BY oce.creation_date DESC ";
         if (page != null) {
             query += "OFFSET ? LIMIT ? ";
-            Integer PAGE_SIZE = 10;
             values.add(PAGE_SIZE * page);
             values.add(PAGE_SIZE);
         }
@@ -434,7 +434,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sqlquery += " ORDER BY creation_date DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
-            Integer PAGE_SIZE = 10;
             values.add(PAGE_SIZE * page);
             values.add(PAGE_SIZE);
         }

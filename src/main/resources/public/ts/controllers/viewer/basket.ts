@@ -82,10 +82,6 @@ export const basketController = ng.controller('basketController',
         };
 
         $scope.displayLightboxDelete = (basket: Basket) => {
-            //template.open('basket.delete', 'customer/campaign/basket/delete-confirmation');
-            //$scope.basketToDelete = basket;
-            //$scope.display.lightbox.deleteBasket = true;
-            //Utils.safeApply($scope);
             $scope.deleteBasket(basket);
         };
 

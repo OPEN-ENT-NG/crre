@@ -221,30 +221,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             $scope.$apply()
         };
 
-        $scope.displayLightboxDelete = (orderEquipments: OrdersClient) => {
-            template.open('orderClient.delete', 'customer/campaign/order/delete-confirmation');
-            $scope.ordersEquipmentToDelete = orderEquipments;
-            $scope.display.lightbox.deleteOrder = true;
-            Utils.safeApply($scope);
-        };
-        $scope.cancelOrderEquipmentDelete = () => {
-            delete $scope.orderEquipmentToDelete;
-            $scope.display.lightbox.deleteOrder = false;
-            template.close('orderClient.delete');
-
-            Utils.safeApply($scope);
-        };
-
-
-        $scope.deleteOrdersEquipment = async (ordersEquipment: OrdersClient) => {
-            for (let i = 0; i < ordersEquipment.length; i++) {
-                await $scope.deleteOrderEquipment(ordersEquipment[i]);
-            }
-            $scope.cancelOrderEquipmentDelete();
-            await $scope.ordersClient.sync(null, [], $routeParams.idCampaign, $scope.current.structure.id);
-            Utils.safeApply($scope);
-        };
-
         $scope.deleteOrderEquipment = async (orderEquipmentToDelete: OrderClient) => {
             let {status, data} = await orderEquipmentToDelete.delete();
             if (status === 200) {
