@@ -1,6 +1,7 @@
 import {toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
+import {Filters} from "./Filter";
 
 export class Equipment implements Selectable {
     id?: string;
@@ -136,27 +137,23 @@ export class Equipments extends Selection<Equipment> {
 
     }
 
-    async getFilterEquipments(word?: string, filter?: string){
+    async getFilterEquipments(queryword?: string, filters?: Filters){
         try {
             let uri: string;
+            let params = "";
             var format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
-            if(!format.test(word)) {
-                if(filter) {
-                    if(!!word) {
-                        uri = (`/crre/equipments/catalog/filter?filter=${filter}&word=${word}`);
+            if(filters) {
+                params = "&";
+                filters.all.forEach(function (f) {
+                    params += f.name + "=" + f.value + "&";
+                });
+            }
+            if(!format.test(queryword)) {
+                    if(queryword != null || queryword != undefined) {
+                        uri = (`/crre/equipments/catalog/search?word=${queryword}${params}`);
                     } else {
-                        uri = (`/crre/equipments/catalog/filter?filter=${filter}`);
+                        uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);
                     }
-                } else {
-                    if(word != null || word != undefined) {
-                        uri = (`/crre/equipments/catalog/search?word=${word}`);
-                    } else {
-                        if(this.filterFulfilled)
-                            uri = (`/crre/equipments/catalog/filter`);
-                        else
-                            uri = (`/crre/equipments/catalog/filter?emptyFilter=true`);
-                    }
-                }
                 let {data} = await http.get(uri);
                 this.syncEquip(data);
             } else {

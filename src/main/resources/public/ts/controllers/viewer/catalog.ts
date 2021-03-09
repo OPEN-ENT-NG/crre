@@ -1,5 +1,5 @@
 import {_, ng, template} from 'entcore';
-import {Basket, Campaign, Equipment, Utils} from '../../model';
+import {Basket, Campaign, Equipment, Filter, Filters, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope) => {
@@ -11,6 +11,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.subjects = [];
             $scope.loading = true;
             $scope.initPopUpFilters();
+            $scope.filters = new Filters();
         };
 
         $scope.addFilter = async () => {
@@ -19,7 +20,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
-            await $scope.equipments.getFilterEquipments($scope.query.word);
+            await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
             Utils.safeApply($scope);
         };
 
@@ -28,8 +29,21 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
-            await $scope.equipments.getFilterEquipments(word, filter);
-            Utils.safeApply($scope);
+            let newFilter = new Filter();
+            newFilter.name = filter;
+            newFilter.value = word;
+            if ($scope.filters.all.some(f => f.value === word)) {
+                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1);
+            } else {
+                $scope.filters.all.push(newFilter);
+            }
+            if($scope.filters.all.length > 0) {
+                await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
+                Utils.safeApply($scope);
+            } else {
+                await $scope.equipments.getFilterEquipments($scope.query.word);
+                Utils.safeApply($scope);
+            }
         };
 
         $scope.validArticle = () => {
