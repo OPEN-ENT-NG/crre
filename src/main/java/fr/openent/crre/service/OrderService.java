@@ -30,6 +30,13 @@ public interface OrderService {
      */
     void listOrder(String status, Integer page, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     * Get the list of all users
+     * @param status order status to retrieve
+     * @param handler Function handler returning data
+     */
+    void listUsers(String status, Handler<Either<String, JsonArray>> handler);
+
     void rejectOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -92,18 +99,18 @@ public interface OrderService {
 
     void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler);
 
-    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Integer page,
+    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, Integer page,
                             Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
-    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler);

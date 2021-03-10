@@ -109,7 +109,7 @@
             <tbody>
             <tr ng-repeat="order in ordersClient.all"
                 class="subline">
-                <td workflow="crre.validator" class="table-selector" ng-init="getAllFilters()">
+                <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
                         <span></span>

@@ -279,6 +279,11 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
+    async getUsers (status: string):Promise<boolean> {
+        const { data } = await http.get(  `/crre/orders/users?status=${status}`);
+        return data;
+    }
+
     getEquipments (orders):Promise<any>{
         let params = '';
         orders.map((order) => {

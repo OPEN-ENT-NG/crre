@@ -148,6 +148,19 @@ public class OrderController extends ControllerHelper {
         }
     }
 
+    @Get("/orders/users")
+    @ApiDoc("Get the list of users who orders")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void listUsers (final HttpServerRequest request){
+        if (request.params().contains("status")) {
+            final String status = request.params().get("status");
+            orderService.listUsers(status, arrayResponseHandler(request));
+        } else {
+            badRequest(request);
+        }
+    }
+
     @Get("/order")
     @ApiDoc("Get the pdf of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -208,13 +221,16 @@ public class OrderController extends ControllerHelper {
                     if (request.params().contains("q")) {
                         q = URLDecoder.decode(request.getParam("q"), "UTF-8");
                     }
-                    int id_campaign = parseInt(request.getParam("id"));
+                    Integer id_campaign = null;
+                    if(!request.getParam("id").equals("null"))
+                        id_campaign = parseInt(request.getParam("id"));
                     String finalQ = q;
                     // Si nous avons des filtres de grade
                     if (params.size() > 0) {
                         Future<JsonArray> equipmentGradeFuture = Future.future();
                         Future<JsonArray> equipmentGradeAndQFuture = Future.future();
 
+                        Integer finalId_campaign = id_campaign;
                         CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
                             if (event.succeeded()) {
                                 JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
@@ -225,12 +241,12 @@ public class OrderController extends ControllerHelper {
                                 // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
                                 if (equipmentsGrade.size() > 0) {
                                     if (request.params().contains("q")) {
-                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, page, arrayResponseHandler(request));
+                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, finalId_campaign, page, arrayResponseHandler(request));
                                     } else {
-                                        orderService.filter(filters, user, equipmentsGrade, id_campaign, page, arrayResponseHandler(request));
+                                        orderService.filter(filters, user, equipmentsGrade, finalId_campaign, page, arrayResponseHandler(request));
                                     }
                                 } else {
-                                    orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, page, arrayResponseHandler(request));
+                                    orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, page, arrayResponseHandler(request));
                                 }
                             }
                         });
@@ -238,11 +254,12 @@ public class OrderController extends ControllerHelper {
                         orderService.filterGrade(params, q, handlerJsonArray(equipmentGradeAndQFuture));
                     } else {
                         // Recherche avec les filtres autres que grade
+                        Integer finalId_campaign = id_campaign;
                         orderService.searchName(finalQ, equipments -> {
                             if (equipments.right().getValue().size() > 0) {
-                                orderService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, page, arrayResponseHandler(request));
+                                orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, page, arrayResponseHandler(request));
                             } else {
-                                orderService.searchWithoutEquip(finalQ, filters, user, id_campaign, page, arrayResponseHandler(request));
+                                orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, page, arrayResponseHandler(request));
                             }
                         });
                     }

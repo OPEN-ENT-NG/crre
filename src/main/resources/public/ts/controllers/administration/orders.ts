@@ -41,7 +41,7 @@ export const orderController = ng.controller('orderController',
             Utils.safeApply($scope);
             await $scope.equipments.sync(true, undefined, undefined );
             $scope.initPopUpFilters();
-            $scope.getAllFilters();
+            await $scope.getAllFilters();
         };
 
         $scope.initPopUpFilters = (filter?:string) => {
@@ -79,15 +79,15 @@ export const orderController = ng.controller('orderController',
             }
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.query_name, $scope.filter.page );
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filter.page );
                     endLoading(newData);
                 }
             } else {
                 if (!!$scope.query_name) {
-                    const newData = await $scope.ordersClient.search($scope.query_name, $scope.campaign.id, $scope.filter.page );
+                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filter.page );
                     endLoading(newData);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
@@ -96,20 +96,8 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-        $scope.getAllFilters = () => {
-            const users = $scope.users;
-            $scope.users = [];
-            $scope.ordersClient.all.forEach(function (order) {
-                if(!$scope.users.includes(order.user_id)) {
-                    const user = users.find(user => {return order.user_id === user.id_user});
-                    let isChecked = false
-                    if(user && user.isChecked){
-                        isChecked = true;
-                    }
-                    $scope.users.push({user_name: order.user_name, id_user: order.user_id, isChecked: isChecked});
-                }
-            });
-            $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.id_user === v.id_user)) === i)
+        $scope.getAllFilters = async () => {
+            $scope.users = await $scope.ordersClient.getUsers('WAITING');
         };
 
         $scope.createOrder = async ():Promise<void> => {
@@ -156,7 +144,7 @@ export const orderController = ng.controller('orderController',
                         });
                     });
                     $scope.displayedOrders.all = $scope.ordersClient.all;
-                    $scope.getAllFilters();
+                    await $scope.getAllFilters();
                     Utils.safeApply($scope);
                     $scope.onScroll();
                 }
@@ -218,7 +206,6 @@ export const orderController = ng.controller('orderController',
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.loading = false;
-            $scope.getAllFilters();
             Utils.safeApply($scope);
         }
 
@@ -232,10 +219,10 @@ export const orderController = ng.controller('orderController',
 
             if($scope.query_name && $scope.query_name != "") {
                 if($scope.filters.all.length == 0) {
-                    const newData = await $scope.ordersClient.search($scope.query_name, $scope.campaign.id, $scope.filter.page );
+                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filter.page );
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.query_name, $scope.filter.page );
                     endLoading(newData);
                 }
             } else {
@@ -243,7 +230,7 @@ export const orderController = ng.controller('orderController',
                     const newData = await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filter.page );
                     endLoading(newData);
                 }
 

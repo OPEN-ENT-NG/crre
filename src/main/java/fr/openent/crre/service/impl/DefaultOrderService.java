@@ -96,6 +96,19 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
+    public  void listUsers(String status,  Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT DISTINCT(bo.name_user) as user_name, bo.id_user "+
+                "FROM " + Crre.crreSchema + ".basket_order bo " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oce ON bo.id = oce.id_basket ";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        if(!status.contains("ALL")) {
+            query += "WHERE oce.status = ? ";
+            values.add(status);
+        }
+        sql.prepared(query, values , SqlResult.validResultHandler(handler));
+    }
+
+    @Override
     public void getOrdersGroupByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT row.number_validation, row.status, contract.name as contract_name, contract.id as id_contract, supplier.name as supplier_name, " +
                 "array_to_json(array_agg(structure_group.name)) as structure_groups, count(distinct row.id_structure) as structure_count, supplier.id as supplierId, " +
@@ -326,29 +339,37 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Integer page,
+    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, Integer page,
                                    Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
+                "WHERE ";
+        if(id_campaign != null){
+            sqlquery += "oe.id_campaign = ? AND";
+            values.add(id_campaign);
+        }
+        sqlquery += " oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
 
-        values.add(id_campaign);
         values.add(query);
         values.add(query);
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' ";
+                "WHERE oe.status = 'WAITING' ";
 
-        values.add(id_campaign);
+        if(id_campaign != null){
+            sqlquery += "AND oe.id_campaign = ? ";
+            values.add(id_campaign);
+        }
+
         if (query != "") {
             sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
             values.add(query);
@@ -366,14 +387,17 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 
-    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
                               Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' ";
-        values.add(id_campaign);
+                "WHERE oe.status = 'WAITING' ";
+        if(id_campaign != null){
+            sqlquery += "AND oe.id_campaign = ? ";
+            values.add(id_campaign);
+        }
         sqlquery = queryFilterSQL(query, equipTab, values, sqlquery);
 
         sqlquery += " AND oe.id_structure IN ( ";
@@ -414,16 +438,17 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         return sqlquery;
     }
 
-    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.id_campaign = ? AND oe.status = 'WAITING' ";
-        values.add(id_campaign);
-
-
+                "WHERE oe.status = 'WAITING' ";
+        if(id_campaign != null){
+            sqlquery += "AND oe.id_campaign = ? ";
+            values.add(id_campaign);
+        }
         sqlquery = filterSQLTable(equipTab, values, sqlquery);
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
