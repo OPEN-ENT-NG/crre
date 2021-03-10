@@ -2,7 +2,7 @@
     <nav class="vertical twelve-mobile mobile-navigation" side-nav>
         <ul>
             <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
-            <li><a ng-click="openCatalog()"><i18n>crre.catalog</i18n></a></li>
+            <li><a ng-click="openCatalog(campaign.id)"><i18n>crre.catalog</i18n></a></li>
             <li>
                 <a ng-click="openOrder(campaign.id)">
                     <i18n>crre.request.mine</i18n>
@@ -24,7 +24,7 @@
         <header class="horizontal-spacing"  ng-click="backHome()">
             <i class="home"></i>
         </header>
-        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog()"  >
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog(campaign.id)"  >
             <i18n>crre.catalog</i18n>
         </header>
         <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order') &&

@@ -43,7 +43,7 @@ routes.define(($routeProvider) => {
             .when('/purses', {
                 action: 'managePurse'
             })
-            .when('/equipments/catalog/equipment/:idEquipment', {
+            .when('/equipments/catalog/equipment/:idEquipment/:idCampaign', {
                 action: 'adminEquipmentDetail'
             })
             .when('/order/historic', {
@@ -60,10 +60,10 @@ routes.define(($routeProvider) => {
             });
     } else {
         $routeProvider
-            .when('/equipments/catalog', {
+            .when('/equipments/catalog/:idCampaign', {
                 action: 'showCatalog'
             })
-            .when('/equipments/catalog/equipment/:idEquipment', {
+            .when('/equipments/catalog/equipment/:idEquipment/:idCampaign', {
                 action: 'equipmentDetail'
             });
     }

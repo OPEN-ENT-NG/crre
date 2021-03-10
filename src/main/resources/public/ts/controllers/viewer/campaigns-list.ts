@@ -7,7 +7,7 @@ export const campaignsListController = ng.controller('campaignsListController',
             if (campaign.accessible) {
                 $scope.emitCampaign(campaign);
                 $scope.campaign = campaign;
-                $scope.redirectTo(`/equipments/catalog`);
+                $scope.redirectTo(`/equipments/catalog/${campaign.id}`);
                 Utils.safeApply($scope);
             }
         };

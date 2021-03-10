@@ -1,7 +1,7 @@
 <div ng-controller="catalogController" class="catalog">
     <div class="twelve equipment-detail">
         <div class="margin-top-20 margin-bottom-20">
-            <a ng-show="display.equipment" href="#/equipments/catalog">
+            <a ng-show="display.equipment" ng-click="redirectTo(goBackUrl)">
                 <i class="back nav-arrow horizontal-spacing"></i>
                 <strong><i18n>back.to.catalog</i18n></strong>
             </a>

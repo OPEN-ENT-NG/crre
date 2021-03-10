@@ -2,8 +2,8 @@ import { ng } from 'entcore';
 
 export const campaignMainController = ng.controller('campaignMainController',
     ['$scope', ($scope) => {
-        $scope.openCatalog = () => {
-            $scope.redirectTo(`/equipments/catalog`);
+        $scope.openCatalog = (id: number) => {
+            $scope.redirectTo(`/equipments/catalog/${id}`);
         };
         $scope.openBasket = (id: number) => {
             $scope.redirectTo(`/campaign/${id}/basket`);

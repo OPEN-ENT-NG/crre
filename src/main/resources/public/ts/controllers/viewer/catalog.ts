@@ -12,6 +12,13 @@ export const catalogController = ng.controller('catalogController',
             $scope.loading = true;
             $scope.initPopUpFilters();
             $scope.filters = new Filters();
+            if($scope.isAdministrator()){
+                $scope.goBackUrl = "/equipments/catalog";
+            }else if($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor()){
+                $scope.goBackUrl = "/equipments/catalog/0";
+            }else{
+                $scope.goBackUrl = "/equipments/catalog/" + $scope.campaign.id;
+            }
         };
 
         $scope.addFilter = async () => {

@@ -52,6 +52,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.query = {
             word: "",
         };
+        $scope.selectedType = $location.path();
 
         route({
             main: async () => {
@@ -59,7 +60,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     $scope.redirectTo("/order/waiting");
                 }
                 else if ($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor() && !$scope.isAdministrator()) {
-                    $scope.redirectTo(`/equipments/catalog`);
+                    $scope.redirectTo(`/equipments/catalog/0`);
                 } else {
                     await $scope.initStructures();
                     await $scope.initCampaign($scope.current.structure);
@@ -107,7 +108,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
-            showCatalog: async () => {
+            showCatalog: async (params) => {
+                await this.setCampaign(params);
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
@@ -119,11 +121,21 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.selectCatalog();
                 Utils.safeApply($scope);
             },
+            setCampaign: async function (params) {
+                let idCampaign = params.idCampaign;
+                $scope.idIsInteger(idCampaign);
+                if (idCampaign != "0") {
+                    if (!$scope.current.structure)
+                        await $scope.initStructures();
+                    await $scope.selectCampaign(idCampaign);
+                }
+            },
             equipmentDetail: async (params) => {
-                await $scope.selectEquipment(params);
+                await this.setCampaign(params);
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
+                await $scope.selectEquipment(params);
                 Utils.safeApply($scope);
             },
             adminEquipmentDetail: async (params) => {
@@ -230,19 +242,21 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.selectEquipment = async function (params){
             let idEquipment = params.idEquipment;
             $scope.idIsInteger(idEquipment);
-            if(!$scope.current.structure)
-                await $scope.initStructures() ;
-            if($scope.campaign.id) {
-                await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
+            if(!$scope.current.structure){
+                await $scope.initStructures()
+                if($scope.current.structure)
+                    await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
+                else
+                    await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, null);
             } else {
-                await $scope.initBasketItem(parseInt(idEquipment), null, $scope.current.structure.id);
+                await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             }
             window.scrollTo(0, 0);
             $scope.display.equipment = true;
         }
 
         $scope.selectCampaign = async function (idCampaign) {
-            if (!$scope.campaign.id) {
+            if (!$scope.campaign.id && idCampaign) {
                 await $scope.campaigns.sync($scope.current.structure.id);
                 $scope.campaigns.all.forEach(campaign => {
                     if (campaign.id == idCampaign) {
@@ -269,6 +283,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
                 await $scope.equipment.sync(idEquipment, structure);
             }
+            if(!idCampaign)
+                idCampaign = null;
             $scope.basket = new Basket($scope.equipment, idCampaign, structure);
             Utils.safeApply($scope);
         };
@@ -332,14 +348,19 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.openEquipment = (equipment: Equipment) => {
-            $scope.redirectTo(`/equipments/catalog/equipment/${equipment.id}`);
+            let url = `/equipments/catalog/equipment/${equipment.id}`;
+            if($scope.campaign && $scope.campaign.id)
+                url += `/${$scope.campaign.id}`
+            else
+                url += `/0`
+            $scope.redirectTo(url);
         };
 
         $scope.openEquipmentId = (equipmentId: string) => {
             $scope.redirectTo(`/equipments/catalog/equipment/${equipmentId}`);
         };
 
-        $scope.initStructures = async () => {
+         $scope.initStructures = async () => {
             await $scope.structures.syncUserStructures();
             $scope.current.structure = $scope.structures.all[0];
         };
@@ -371,7 +392,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.loading = false;
             $scope.displayedOrders.all = $scope.ordersClient.all;
             Utils.safeApply($scope);
-
         };
 
         $scope.initOrders = async (status: string) => {
