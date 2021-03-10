@@ -43,7 +43,7 @@ public interface BasketService {
      * Get all my baskets orders
      * @param handler function handler returning data
      */
-    void getMyBasketOrders(UserInfos user, Integer page, Handler<Either<String, JsonArray>> handler);
+    void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Delete a basket item

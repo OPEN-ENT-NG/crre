@@ -244,7 +244,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         const synchroMyBaskets = async (search? : boolean) : Promise<void> => {
             if(!search){
                 $scope.newBasketsOrders = new BasketsOrders();
-                await $scope.newBasketsOrders.getMyOrders($scope.filter.page);
+                await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $routeParams.idCampaign);
             }
             if($scope.newBasketsOrders.all.length != 0) {
                 let ordersId = [];
@@ -275,7 +275,8 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                         displayedBasket.orders.push(order);
                     }
                 });
-                Utils.setStatus(displayedBasket, displayedBasket.orders[0]);
+                if(displayedBasket.orders.length > 0)
+                    Utils.setStatus(displayedBasket, displayedBasket.orders[0]);
                 $scope.displayedBasketsOrders.push(displayedBasket);
                 $scope.basketsOrders.all.push(basketOrder);
             });

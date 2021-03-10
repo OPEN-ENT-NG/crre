@@ -144,7 +144,8 @@ public class BasketController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                basketService.getMyBasketOrders(user, page, arrayResponseHandler(request));
+                int id_campaign = parseInt(request.getParam("id"));
+                basketService.getMyBasketOrders(user, page, id_campaign, arrayResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
             }

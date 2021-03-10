@@ -88,10 +88,10 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
-    public void getMyBasketOrders(UserInfos user, Integer page, Handler<Either<String, JsonArray>> handler){
+    public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b WHERE b.id_user = ? ORDER BY b.id DESC ";
-        values.add(user.getUserId());
+        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b WHERE b.id_user = ? AND b.id_campaign = ? ORDER BY b.id DESC ";
+        values.add(user.getUserId()).add(id_campaign);
         if (page != null) {
             query += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);

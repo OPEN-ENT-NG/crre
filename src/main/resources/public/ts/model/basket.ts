@@ -252,10 +252,10 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async getMyOrders (page:number) {
+    async getMyOrders (page:number, id_campaign: number) {
         try {
             const params: string = `?page=${page}`;
-            let { data } = await http.get(`/crre/basketOrder/allMyOrders${params}`);
+            let { data } = await http.get(`/crre/basketOrder/allMyOrders${params}&id=${id_campaign}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         }
         catch {
