@@ -196,7 +196,7 @@
         <container template="refuseOrder.lightbox"></container>
     </lightbox>
     <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
-    <section class="toggle-buttons" ng-hide="!ordersClient || !ordersClient.selected || ordersClient.selected.length === 0">
+    <section class="toggle-buttons" ng-show="ordersClient.selected.length > 0">
         <div class="toggle">
             <div class="row">
                 <button ng-click="openLightboxRefuseOrder()">

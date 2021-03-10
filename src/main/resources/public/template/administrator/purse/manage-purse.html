@@ -71,7 +71,7 @@
         <container template="purse.lightbox"></container>
     </lightbox>
 
-    <section class="toggle-buttons" ng-class="{ hide: purses.selected.length === 0 || purses.selected.length > 1}">
+    <section class="toggle-buttons" ng-show="purses.selected.length === 1">
         <div class="toggle">
             <div class="row">
                 <button ng-click="openEditPurseForm(purses.selected[0])" ng-show="purses.selected.length === 1">

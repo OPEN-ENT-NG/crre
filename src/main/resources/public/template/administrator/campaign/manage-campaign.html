@@ -44,7 +44,7 @@
     <container template="campaign.lightbox"></container>
 </lightbox>
 
-<section class="toggle-buttons" ng-class="{ hide: campaigns.selected.length === 0 }" workflow="crre.administrator">
+<section class="toggle-buttons" ng-show="campaigns.selected.length > 0" workflow="crre.administrator">
     <div class="toggle">
         <div class="row">
             <button ng-click="openCampaignForm(campaigns.selected[0])" ng-show="campaigns.selected.length === 1">
