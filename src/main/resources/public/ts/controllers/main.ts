@@ -109,7 +109,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showCatalog: async (params) => {
-                await this.setCampaign(params);
+                await $scope.setCampaign(params);
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
@@ -121,17 +121,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await $scope.selectCatalog();
                 Utils.safeApply($scope);
             },
-            setCampaign: async function (params) {
-                let idCampaign = params.idCampaign;
-                $scope.idIsInteger(idCampaign);
-                if (idCampaign != "0") {
-                    if (!$scope.current.structure)
-                        await $scope.initStructures();
-                    await $scope.selectCampaign(idCampaign);
-                }
-            },
             equipmentDetail: async (params) => {
-                await this.setCampaign(params);
+                await $scope.setCampaign(params);
                 template.close('administrator-main');
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
@@ -229,6 +220,16 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
             }
         });
+
+        $scope.setCampaign = async function (params) {
+            let idCampaign = params.idCampaign;
+            $scope.idIsInteger(idCampaign);
+            if (idCampaign != "0") {
+                if (!$scope.current.structure)
+                    await $scope.initStructures();
+                await $scope.selectCampaign(idCampaign);
+            }
+        }
 
         $scope.selectCatalog = async function (){
             $scope.fromCatalog=true

@@ -244,7 +244,8 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         const synchroMyBaskets = async (search? : boolean) : Promise<void> => {
             if(!search){
                 $scope.newBasketsOrders = new BasketsOrders();
-                await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $routeParams.idCampaign);
+                if($routeParams.idCampaign)
+                    await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $routeParams.idCampaign);
             }
             if($scope.newBasketsOrders.all.length != 0) {
                 let ordersId = [];

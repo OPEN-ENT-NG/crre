@@ -16,9 +16,11 @@ export class Utils {
     }
 
     static safeApply ($scope: any) {
-        let phase = $scope.$root.$$phase;
-        if (phase !== '$apply' && phase !== '$digest') {
-            $scope.$apply();
+        if($scope && $scope.$root) {
+            let phase = $scope.$root.$$phase;
+            if (phase !== '$apply' && phase !== '$digest') {
+                $scope.$apply();
+            }
         }
     }
 
