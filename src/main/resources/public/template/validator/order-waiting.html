@@ -10,7 +10,7 @@
                        i18n-placeholder="search.filter.order">
             </div>
         </div>
-        <div ng-init="getAllFilters()" class="cell twelve-mobile six catalog">
+        <div class="cell twelve-mobile six catalog">
             <button ng-click="initPopUpFilters('showPopUpColumnsTeacher')"
                     class="filterButton">
                 <i class="user"></i>
@@ -109,7 +109,7 @@
             <tbody>
             <tr ng-repeat="order in ordersClient.all"
                 class="subline">
-                <td workflow="crre.validator" class="table-selector">
+                <td workflow="crre.validator" class="table-selector" ng-init="getAllFilters()">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
                         <span></span>

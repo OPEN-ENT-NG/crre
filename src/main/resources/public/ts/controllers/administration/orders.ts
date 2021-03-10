@@ -32,11 +32,16 @@ export const orderController = ng.controller('orderController',
             page: 0
         };
         // @ts-ignore
-        this.init = () => {
+        this.init = async () => {
             $scope.users = [];
             $scope.reassorts = [{reassort: true}, {reassort: false}];
             $scope.filters = new Filters();
+            $scope.equipments.loading = true;
+            $scope.equipments.all = [];
+            Utils.safeApply($scope);
+            await $scope.equipments.sync(true, undefined, undefined );
             $scope.initPopUpFilters();
+            $scope.getAllFilters();
         };
 
         $scope.initPopUpFilters = (filter?:string) => {
@@ -92,9 +97,16 @@ export const orderController = ng.controller('orderController',
         };
 
         $scope.getAllFilters = () => {
+            const users = $scope.users;
+            $scope.users = [];
             $scope.ordersClient.all.forEach(function (order) {
                 if(!$scope.users.includes(order.user_id)) {
-                    $scope.users.push({user_name: order.user_name, id_user: order.user_id});
+                    const user = users.find(user => {return order.user_id === user.id_user});
+                    let isChecked = false
+                    if(user && user.isChecked){
+                        isChecked = true;
+                    }
+                    $scope.users.push({user_name: order.user_name, id_user: order.user_id, isChecked: isChecked});
                 }
             });
             $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t=> (t.id_user === v.id_user)) === i)
@@ -144,6 +156,7 @@ export const orderController = ng.controller('orderController',
                         });
                     });
                     $scope.displayedOrders.all = $scope.ordersClient.all;
+                    $scope.getAllFilters();
                     Utils.safeApply($scope);
                     $scope.onScroll();
                 }
@@ -205,6 +218,7 @@ export const orderController = ng.controller('orderController',
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.loading = false;
+            $scope.getAllFilters();
             Utils.safeApply($scope);
         }
 
@@ -236,33 +250,11 @@ export const orderController = ng.controller('orderController',
             }
             Utils.safeApply($scope);
         }
-
-
-        function openLightboxValidOrder(status, data, ordersToValidat: OrdersClient) {
-            if (status === 200) {
-                $scope.orderValidationData = {
-                    agents: _.uniq(data.agent),
-                    number_validation: data.number_validation,
-                    structures: _.uniq(_.pluck(ordersToValidat.all, 'name_structure'))
-                };
-                template.open('validOrder.lightbox', 'validator/order-valid-confirmation');
-                $scope.display.lightbox.validOrder = true;
-            }
-        }
-
         $scope.openLightboxRefuseOrder = () => {
                 template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
                 $scope.display.lightbox.refuseOrder = true;
         }
 
-        $scope.validateOrders = async (orders: OrderClient[]) => {
-            let ordersToValidat  = new OrdersClient();
-            ordersToValidat.all = Mix.castArrayAs(OrderClient, orders);
-            let { status, data } = await ordersToValidat.updateStatus('VALID');
-            openLightboxValidOrder(status, data, ordersToValidat);
-            $scope.getOrderWaitingFiltered($scope.campaign);
-            Utils.safeApply($scope);
-        };
         $scope.cancelBasketDelete = () => {
             $scope.display.lightbox.validOrder = false;
             template.close('validOrder.lightbox');
@@ -293,6 +285,7 @@ export const orderController = ng.controller('orderController',
                     });
                 });
                 $scope.displayedOrders.all = $scope.ordersClient.all;
+                $scope.getAllFilters();
                 toasts.confirm('crre.order.refused.succes');
                 Utils.safeApply($scope);
                 $scope.onScroll();
