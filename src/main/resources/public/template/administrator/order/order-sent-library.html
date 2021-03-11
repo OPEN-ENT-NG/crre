@@ -1,4 +1,4 @@
-<div ng-controller="orderRegionController" class="order-client-validation">
+<div ng-controller="quoteController" class="order-client-validation">
     <div class="row margin-top-20 vertical-spacing-twice">
         <div class="cell two margin-top-8 twelve-mobile">
             <div class="search-bar order-search-bar">
@@ -6,7 +6,7 @@
                 <input class="twelve"
                        type="text"
                        ng-model="query_name"
-                       ng-keyup="$event.keyCode == 13 ? searchByName(query_name) : null"
+                       ng-keyup="$event.keyCode == 13 ? search(query_name, true) : null"
                        i18n-placeholder="search.filter.order">
             </div>
         </div>
@@ -33,25 +33,25 @@
             </thead>
 <!--            <tbody ng-repeat="project in projects">-->
             <tbody>
-            <tr>
+            <tr ng-repeat="quote in quotes">
                 <td class="table-selector">
                     <label class="checkbox">
-                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project)">
+                        <input type="checkbox" ng-model="quote.selected" ng-change="switchAllOrdersOfProject(quote)">
                         <span></span>
                     </label>
                 </td>
-                <td><div class="smallTabElem center">01-12-20 - 12:33</div></td>
-                <td><div class="smallTabElem center">AK1459876ERZI</div></td>
-                <td><div class="smallTabElem center">Alain RODIN</div></td>
-                <td><div class="smallTabElem center">365</div></td>
+                <td><div class="smallTabElem center">[[quote.creation_date]]</div></td>
+                <td><div class="smallTabElem center">[[quote.title]]</div></td>
+                <td><div class="smallTabElem center">[[quote.owner_name]]</div></td>
+                <td><div class="smallTabElem center">[[quote.nb_structures]]</div></td>
                 <td>
-                    <div class="smallTabElem center">
-                        <i class="comment-icon"></i>
+                    <div class="smallTabElem center" ng-click="generateCSV(quote.attachment)">
+                        <i class="comment-icon" ></i>
                     </div>
                 </td>
                 <td><div class="smallTabElem center"></div></td>
             </tr>
-            <tr>
+           <!-- <tr>
                 <td class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project)">
@@ -95,10 +95,12 @@
                         <span class="webkit-vertical-align zero-mobile"><i18n>crre.canceled</i18n></span>
                     </div>
                 </td>
-            </tr>
+            </tr>-->
             </tbody>
         </table>
     </div>
+    <loader data-ng-show="loading" min-height="'250px'"></loader>
+    <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
     <section class="toggle-buttons" ng-hide="!displayToggle">
         <div class="toggle">
             <div class="row">

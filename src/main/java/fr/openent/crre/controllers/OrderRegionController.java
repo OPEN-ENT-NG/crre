@@ -9,6 +9,7 @@ import fr.openent.crre.security.PrescriptorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.PurseService;
+import fr.openent.crre.service.QuoteService;
 import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.*;
 import fr.openent.crre.utils.SqlQueryUtils;
@@ -58,16 +59,20 @@ public class OrderRegionController extends BaseController {
     private final OrderRegionService orderRegionService;
     private final PurseService purseService;
     private final StructureService structureService;
+    private final QuoteService quoteService;
     private final EmailSendService emailSender;
+    private final JsonObject mail;
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
 
 
-    public OrderRegionController(Vertx vertx, JsonObject config) {
+    public OrderRegionController(Vertx vertx, JsonObject config, JsonObject mail) {
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender emailSender = emailFactory.getSender();
         this.emailSender = new EmailSendService(emailSender);
+        this.mail = mail;
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
+        this.quoteService = new DefaultQuoteService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
@@ -439,29 +444,31 @@ public class OrderRegionController extends BaseController {
                 handlerJsonObject(purseUpdateLicencesFuture));
     }
 
-    @Get("region/orders/exports")
+    @Post("region/orders/exports")
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void export (final HttpServerRequest request){
         List<String> params = request.params().getAll("id");
         List<String> idsEquipment = request.params().getAll("equipment_key");
         List<String> params3 = request.params().getAll("id_structure");
-        generateLogs(request, params, idsEquipment, params3, false);
+        generateLogs(request, params, idsEquipment, params3, null, false);
     }
 
-    @Get("region/orders/library")
+    @Post("region/orders/library")
     @ApiDoc("Generate and send mail to library")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void exportLibrary (final HttpServerRequest request){
-        List<String> params = request.params().getAll("id");
-        List<String> idsEquipment = request.params().getAll("equipment_key");
-        List<String> params3 = request.params().getAll("id_structure");
-        generateLogs(request, params, idsEquipment, params3, true);
+        UserUtils.getUserInfos(eb, request, user -> {
+            List<String> params = request.params().getAll("id");
+            List<String> idsEquipment = request.params().getAll("equipment_key");
+            List<String> params3 = request.params().getAll("id_structure");
+            generateLogs(request, params, idsEquipment, params3, user, true);
+        });
     }
 
-    private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3, boolean library) {
+    private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3, UserInfos user, boolean library) {
         JsonArray idStructures = new JsonArray();
         for(String structureId : params3){
             idStructures.add(structureId);
@@ -513,14 +520,24 @@ public class OrderRegionController extends BaseController {
                     }
                 }
                 if(library) {
-                    String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
-                    emailSender.sendMail(request, "jollois_samuel1911@hotmail.fr", "Test", "Bonjour",
-                            new fr.wseduc.webutils.collections.JsonArray().add(new JsonObject().put("name", "orders.csv")
-                                                                .put("content",base64File)), message -> {
-                        if(!message.isRight()) {
-                            log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
-                        }
+                   int nbEtab = structures.size();
+                   String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
+                   quoteService.insertQuote(user, nbEtab, base64File, response -> {
+                        if(response.isRight()) {
+                            JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
+                            attachment.add(new JsonObject().put("name", "orders.csv"))
+                                      .add(new JsonObject().put("content", base64File));
+                            String mail = this.mail.getString("address");
+                            emailSender.sendMail(request, mail, "Test",
+                                           "Bonjour", attachment, message -> {
+                                if(!message.isRight()) {
+                                    log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
+                                }
                             });
+                            renderJson(request, response.right().getValue());
+                        }
+                   });
+
                 } else {
                     request.response()
                             .putHeader("Content-Type", "text/csv; charset=utf-8")

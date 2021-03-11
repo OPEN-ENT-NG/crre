@@ -144,7 +144,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
-                "WHERE ore.id_project = ? ";
+                "WHERE ore.id_project = ? AND ore.status != 'SENT'";
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
 
