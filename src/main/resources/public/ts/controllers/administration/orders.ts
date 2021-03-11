@@ -36,12 +36,15 @@ export const orderController = ng.controller('orderController',
             $scope.users = [];
             $scope.reassorts = [{reassort: true}, {reassort: false}];
             $scope.filters = new Filters();
-            $scope.equipments.loading = true;
-            $scope.equipments.all = [];
-            Utils.safeApply($scope);
-            await $scope.equipments.sync(true, undefined, undefined );
+            if($scope.equipments.grades.length === 0){
+                $scope.equipments.loading = true;
+                $scope.equipments.all = [];
+                await $scope.equipments.sync(true, undefined, undefined);
+            }
             $scope.initPopUpFilters();
             await $scope.getAllFilters();
+            $scope.loading = false;
+            Utils.safeApply($scope);
         };
 
         $scope.initPopUpFilters = (filter?:string) => {
@@ -90,7 +93,7 @@ export const orderController = ng.controller('orderController',
                     const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filter.page );
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
+                    const newData = await $scope.ordersClient.sync('WAITING', $scope.structures.all, null, null, null, $scope.filter.page);
                     endLoading(newData);
                 }
             }
@@ -227,10 +230,10 @@ export const orderController = ng.controller('orderController',
                 }
             } else {
                 if($scope.filters.all.length == 0) {
-                    const newData = await $scope.ordersClient.sync('WAITING', null, null, null, null, $scope.filter.page);
+                    const newData = await $scope.ordersClient.sync('WAITING',  $scope.structures.all, null, null, null, $scope.filter.page);
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, null, $scope.filter.page );
                     endLoading(newData);
                 }
 
@@ -289,15 +292,6 @@ export const orderController = ng.controller('orderController',
             }
             Utils.safeApply($scope);
 
-        };
-
-        $scope.syncOrders = async (status: string) =>{
-            await $scope.ordersClient.sync(status, $scope.structures.all);
-            $scope.displayedOrders.all = $scope.ordersClient.all;
-            $scope.displayedOrders.all.map(order => {
-                    order.selected = false;
-            });
-            Utils.safeApply($scope);
         };
 
         $scope.exportCSV = () => {

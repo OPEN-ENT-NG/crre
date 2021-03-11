@@ -106,7 +106,7 @@
                 <td><div class="smallTabElem">  </div></td>
             </tr>
             </thead>
-            <tbody>
+            <tbody ng-if="!loading">
             <tr ng-repeat="order in ordersClient.all"
                 class="subline">
                 <td workflow="crre.validator" class="table-selector">

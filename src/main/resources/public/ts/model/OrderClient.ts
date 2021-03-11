@@ -160,10 +160,12 @@ export class OrdersClient extends Selection<OrderClient> {
     async search(text: String, id_campaign: number, page?: number) {
         try {
             if ((text.trim() === '' || !text)) return;
-            let pageParams = "";
+            let params = "";
+            if(id_campaign)
+                params += `&id=${id_campaign}`
             if(page)
-                pageParams = `&page=${page}`;
-            const {data} = await http.get(`/crre/orders/search?q=${text}&id=${id_campaign}${pageParams}`);
+                params = `&page=${page}`;
+            const {data} = await http.get(`/crre/orders/search?q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
             if(newOrderClient.length>0) {
                 await this.getEquipments(newOrderClient).then(equipments => {
@@ -188,20 +190,20 @@ export class OrdersClient extends Selection<OrderClient> {
         try {
             let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             let params = "";
+            if(id_campaign)
+                params += `&id=${id_campaign}`
             filters.forEach(function (f, index) {
-                params += f.name + "=" + f.value;
-                if(index != filters.length - 1) {
-                    params += "&";
-                }});
+                params += "&" + f.name + "=" + f.value;
+            });
             let pageParams = "";
             if(page)
                 pageParams = `&page=${page}`;
             let url;
             if(!format.test(word)) {
                 if(word) {
-                    url = `/crre/orders/filter?q=${word}&id=${id_campaign}&${params}${pageParams}`;
+                    url = `/crre/orders/filter?q=${word}${params}${pageParams}`;
                 } else {
-                    url = `/crre/orders/filter?id=${id_campaign}&${params}${pageParams}`;
+                    url = `/crre/orders/filter?${params.substring(1)}${pageParams}`;
                 }
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);

@@ -166,7 +166,7 @@
   "crre.equipments.available": "Référence(s) disponible(s)",
   "crre.campaign.purse.manage": "Gérer les crédits",
   "crre.campaign.titles.manage": "Gérer les intitulés",
-  "crre.campaign.purse.import": "Import CSV",
+  "crre.campaign.purse.import": "Importer CSV",
   "crre.campaign.purse.export": "Exporter en CSV",
   "crre.campaign.purse": "Crédits",
   "crre.equipment.import.contract": "Le marché cible n'est pas sélectionné",
@@ -534,7 +534,7 @@
   "crre.save": "Enregistrer",
   "crre.order.create": "Créer une demande",
   "crre.placeholder.structureGroup": "Sélectionner le regroupement",
-  "crre.order.region.create.message": "Les commandes ont bien été enregistré",
+  "crre.order.region.create.message": "Les commandes ont bien été enregistrées",
   "crre.admin.order.create.err": "Erreur lors de la création de la commande",
   "crre.exportEquipmentRapp": "Export Equipement_Rapport",
   "crre.lycee": "Lycées",
@@ -649,5 +649,9 @@
   "articlepapier": "Ressource Papier",
   "ELEVE": "Élèves",
   "ELEVE_ET_ENSEIGNANT": "Élèves et Enseignants",
-  "crre.structure.already.payed.ressource": "Votre établissement a déjà payé cette ressource"
+  "crre.structure.already.payed.ressource": "Votre établissement a déjà payé cette ressource",
+  "crre.credit.type": "Type de crédit",
+  "crre.initial.quantity": "Quantité initiale",
+  "crre.rest.quantity": "Reste actuel",
+  "crre.detail": "Détail"
 }

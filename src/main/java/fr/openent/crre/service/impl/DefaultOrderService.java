@@ -366,7 +366,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(id_campaign);
         }
 
-        if (query != "") {
+        if (!query.equals("")) {
             sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
             values.add(query);
             values.add(query);

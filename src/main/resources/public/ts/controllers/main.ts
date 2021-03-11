@@ -178,12 +178,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if (campaignPref) {
                     await $scope.initOrders('WAITING');
                     $scope.selectCampaignShow(campaignPref, "WAITING");
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
+
                 } else {
                     await $scope.openLightSelectCampaign();
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
                 }
             },
             orderHistoric: async (params) => {
@@ -196,8 +193,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 campaignPref = $scope.campaign;
                 if (campaignPref) {
                     $scope.selectCampaignShow(campaignPref, "HISTORIC");
-                } else
+                } else {
                     await $scope.openLightSelectCampaign();
+                    $scope.loading = false;
+                    Utils.safeApply($scope);
+                }
                 $scope.campaign.historic_etab_notification = 0;
                 Utils.safeApply($scope);
             },
@@ -358,7 +358,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.openEquipmentId = (equipmentId: string) => {
-            $scope.redirectTo(`/equipments/catalog/equipment/${equipmentId}`);
+            let url = `/equipments/catalog/equipment/${equipmentId}`;
+            if($scope.campaign && $scope.campaign.id)
+                url += `/${$scope.campaign.id}`
+            else
+                url += `/0`
+            $scope.redirectTo(url);
         };
 
          $scope.initStructures = async () => {
@@ -390,16 +395,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             const newData = await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-            $scope.loading = false;
             $scope.displayedOrders.all = $scope.ordersClient.all;
-            Utils.safeApply($scope);
         };
 
         $scope.initOrders = async (status: string) => {
             await $scope.initOrderStructures();
             await $scope.syncOrders(status);
-            $scope.loading = false;
-            Utils.safeApply($scope);
         };
 
         $scope.initOrderStructures = async () => {
@@ -411,10 +412,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.openLightSelectCampaign = async ():Promise<void> => {
-            template.open('administrator-main');
-            template.open('selectCampaign', 'validator/select-campaign');
+            await template.open('administrator-main');
+            await template.open('selectCampaign', 'validator/select-campaign');
             $scope.display.lightbox.lightBoxIsOpen = true;
-            $scope.initOrders('WAITING');
+            await $scope.initOrders('WAITING');
             Utils.safeApply($scope);
         };
         $scope.selectCampaignShow = (campaign?: Campaign, type?: string): void => {
@@ -429,10 +430,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.cancelSelectCampaign(true, type);
             }
         };
-        $scope.getOrderWaitingFiltered = async (campaign:Campaign):Promise<void> =>{
-            await $scope.initOrders('WAITING');
-            $scope.selectCampaignShow(campaign, "WAITING");
-        };
+
         $scope.cancelSelectCampaign = (initOrder: boolean, type:string):void => {
             if(initOrder) {
                 $scope.displayedOrders.all = $scope.ordersClient.all;

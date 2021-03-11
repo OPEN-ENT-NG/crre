@@ -178,13 +178,17 @@ public class OrderController extends ControllerHelper {
             if (request.params().contains("q") && request.params().get("q").trim() != "") {
                 try {
                     String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
-                    int id_campaign = parseInt(request.getParam("id"));
+                    Integer id_campaign = null;
+                    if(request.getParam("id") != null) {
+                        id_campaign = parseInt(request.getParam("id"));
+                    }
                     Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+                    Integer finalId_campaign = id_campaign;
                     orderService.searchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
-                            orderService.search(query, null, user, equipments.right().getValue(), id_campaign, page, arrayResponseHandler(request));
+                            orderService.search(query, null, user, equipments.right().getValue(), finalId_campaign, page, arrayResponseHandler(request));
                         } else {
-                            orderService.searchWithoutEquip(query, null, user, id_campaign, page, arrayResponseHandler(request));
+                            orderService.searchWithoutEquip(query, null, user, finalId_campaign, page, arrayResponseHandler(request));
                         }
                     });
                 } catch (UnsupportedEncodingException e) {
@@ -214,7 +218,8 @@ public class OrderController extends ControllerHelper {
                     JsonArray filters = new JsonArray();
                     int length = request.params().entries().size();
                     for (int i = 0; i < length; i++) {
-                        if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("niveaux.libelle"))
+                        String key = request.params().entries().get(i).getKey();
+                        if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page"))
                             filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
                     }
                     // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
@@ -222,8 +227,9 @@ public class OrderController extends ControllerHelper {
                         q = URLDecoder.decode(request.getParam("q"), "UTF-8");
                     }
                     Integer id_campaign = null;
-                    if(!request.getParam("id").equals("null"))
+                    if(request.getParam("id") != null) {
                         id_campaign = parseInt(request.getParam("id"));
+                    }
                     String finalQ = q;
                     // Si nous avons des filtres de grade
                     if (params.size() > 0) {
