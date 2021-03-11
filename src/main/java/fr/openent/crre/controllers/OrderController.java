@@ -1,8 +1,6 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
-import fr.openent.crre.export.ExportTypes;
-import fr.openent.crre.helpers.ExportHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -68,7 +66,7 @@ public class OrderController extends ControllerHelper {
         this.storage = storage;
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender emailSender = emailFactory.getSender();
-        this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment", emailSender);
+        this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema);
         exportService = new DefaultExportServiceService(storage);
     }
@@ -130,19 +128,7 @@ public class OrderController extends ControllerHelper {
         if (request.params().contains("status")) {
             final String status = request.params().get("status");
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-            if ("valid".equalsIgnoreCase(status)) {
-                final JsonArray statusList = new fr.wseduc.webutils.collections.JsonArray().add(status).add("SENT").add("DONE");
-                orderService.getOrdersGroupByValidationNumber(statusList, event -> {
-                    if (event.isRight()) {
-                        final JsonArray orders = event.right().getValue();
-                        renderJson(request, orders);
-                    } else {
-                        badRequest(request);
-                    }
-                });
-            } else {
-                orderService.listOrder(status, page, arrayResponseHandler(request));
-            }
+            orderService.listOrder(status, page, arrayResponseHandler(request));
         } else {
             badRequest(request);
         }
@@ -159,15 +145,6 @@ public class OrderController extends ControllerHelper {
         } else {
             badRequest(request);
         }
-    }
-
-    @Get("/order")
-    @ApiDoc("Get the pdf of orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void getOrderPDF (final HttpServerRequest request) {
-        final String orderNumber = request.params().get("bc_number");
-        ExportHelper.makeExport(request,eb,exportService, Crre.ORDERSSENT,  Crre.PDF,ExportTypes.BC_AFTER_VALIDATION, "_BC_" + orderNumber);
     }
 
     @Get("/orders/search")
@@ -409,8 +386,7 @@ public class OrderController extends ControllerHelper {
                                 }
 
                                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                                final String url = request.headers().get("Referer");
-                                orderService.validateOrders(request, userInfos , ids, url,
+                                orderService.validateOrders(ids,
                                         Logging.defaultResponsesHandler(eb,
                                                 request,
                                                 Contexts.ORDER.toString(),

@@ -2,15 +2,12 @@ package fr.openent.crre.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 import java.util.List;
-/**
- * Created by agnes.lapeyronnie on 20/02/2018.
- */
+
 public interface OrderService {
     /**
      * List orders of a campaign and a structure in data base
@@ -40,16 +37,11 @@ public interface OrderService {
     void rejectOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
     /**
-     * Valid order ( change status to 'VALID', add validation number to the order,
-     * then send mail to Agents )
-     * @param request the request
-     * @param user user informations
+     * Valid order
      * @param ids order's ids
-     * @param url url to send in the mail
      * @param handler the Handler
      */
-   void validateOrders(HttpServerRequest request, UserInfos user, List<Integer> ids, String url,
-                       Handler<Either<String, JsonObject>> handler);
+   void validateOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
     /**
      * get params for the exportCsvOrdersSelected
@@ -57,13 +49,6 @@ public interface OrderService {
      * @param handler function returning data
      */
     void getExportCsvOrdersAdmin(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * List all orders group by number validation and fitlered by status
-     * @param status Status
-     * @param handler Function handler returning data
-     */
-    void getOrdersGroupByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler);
 
     void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler);
 

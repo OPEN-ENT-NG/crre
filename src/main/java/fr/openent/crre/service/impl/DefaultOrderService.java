@@ -3,13 +3,9 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.service.OrderService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -23,14 +19,10 @@ import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
-    private final EmailSendService emailSender ;
     private final Integer PAGE_SIZE = 15;
 
-    public DefaultOrderService(
-            String schema, String table, EmailSender emailSender){
+    public DefaultOrderService(String schema, String table){
         super(schema,table);
-        this.emailSender = new EmailSendService(emailSender);
     }
 
     @Override
@@ -106,24 +98,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(status);
         }
         sql.prepared(query, values , SqlResult.validResultHandler(handler));
-    }
-
-    @Override
-    public void getOrdersGroupByValidationNumber(JsonArray status, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT row.number_validation, row.status, contract.name as contract_name, contract.id as id_contract, supplier.name as supplier_name, " +
-                "array_to_json(array_agg(structure_group.name)) as structure_groups, count(distinct row.id_structure) as structure_count, supplier.id as supplierId, " +
-                Crre.crreSchema + ".order.label_program, " + Crre.crreSchema + ".order.order_number " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment row " +
-                "INNER JOIN " + Crre.crreSchema + ".contract ON (row.id_contract = contract.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".supplier ON (contract.id_supplier = supplier.id) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (row.id_structure = rel_group_structure.id_structure) " +
-                "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id) " +
-                "LEFT OUTER JOIN " + Crre.crreSchema + ".order ON (row.id_order = " + Crre.crreSchema + ".order.id)  " +
-                "WHERE row.status IN " + Sql.listPrepared(status.getList()) +
-                " GROUP BY row.number_validation, contract.name, supplier.name, contract.id, supplierId, row.status, " + Crre.crreSchema +
-                ".order.label_program, " + Crre.crreSchema + ".order.order_number;";
-
-        this.sql.prepared(query, status, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -209,67 +183,15 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void validateOrders(final HttpServerRequest request, final UserInfos user, final List<Integer> ids,
-                               final String url, final Handler<Either<String, JsonObject>> handler){
-        String getIdQuery = "Select "+ Crre.crreSchema + ".get_validation_number() as numberOrder ";
-        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
-            if (event.isRight()) {
-                try {
-                    final String numberOrder = event.right().getValue().getString("numberorder");
-                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                            .add(getValidateStatusStatement(ids, numberOrder));
-                    sql.transaction(statements, jsonObjectMessage -> {
-
-
-                        final JsonArray rows = ((jsonObjectMessage).body()
-                                .getJsonArray("results").getJsonObject(1)).getJsonArray("results");
-                        JsonArray names = new fr.wseduc.webutils.collections.JsonArray();
-                        final int agentNameIndex = 2;
-                        final int structureIdIndex = 4;
-                        JsonArray structureIds = new fr.wseduc.webutils.collections.JsonArray();
-                        for (int j = 0; j < rows.size(); j++) {
-                            names.add((rows.getJsonArray(j)).getString(agentNameIndex));
-                            structureIds.add((rows.getJsonArray(j)).getString(structureIdIndex));
-                        }
-                        final JsonArray agentNames = names;
-                        emailSender.getPersonnelMailStructure(structureIds,
-                                stringJsonArrayEither -> {
-                                    final JsonObject result = new JsonObject()
-                                            .put("number_validation", numberOrder)
-                                            .put("agent", agentNames);
-                                    handler.handle(new Either.Right<>(result));
-                                    emailSender.sendMails(request, result,  rows,  user,  url,
-                                            stringJsonArrayEither.right().getValue());
-                                });
-                    });
-                } catch (ClassCastException e) {
-                    LOGGER.error("An error occurred when casting numberOrder", e);
-                    handler.handle(new Either.Left<>(""));
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                LOGGER.error("An error occurred when selecting number of the order");
-                handler.handle(new Either.Left<>(""));
-            }
-        }));
-    }
-
-    private static JsonObject getValidateStatusStatement(List<Integer> ids, String numberOrder){
-
+    public void validateOrders(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler){
         String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                " SET  status = VALID, number_validation = ?  " +
+                " SET  status = VALID " +
                 " WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ; ";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(numberOrder);
-
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for (Integer id : ids) {
-            params.add( id);
+            params.add(id);
         }
-
-        return new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared");
+        sql.prepared(query, params, SqlResult.validRowsResultHandler(handler));
     }
 
     @Override

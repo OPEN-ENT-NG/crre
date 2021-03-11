@@ -56,19 +56,16 @@ public final class Logging {
                       final String item, final JsonObject object) {
         return event -> {
             if (event.isRight()) {
-                UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                    @Override
-                    public void handle(UserInfos user) {
-                        Renders.renderJson(request, event.right().getValue(), OK_STATUS);
-                        JsonObject statement = add(context, action,
-                                item == null ? event.right().getValue().getInteger("id").toString() : item, object, user);
-                        Sql.getInstance().prepared(statement.getString("statement"), statement.getJsonArray("values"),
-                                response -> {
-                            if (!"ok".equals(response.body().getString("status"))) {
-                                log(context, action);
-                            }
-                        });
-                    }
+                UserUtils.getUserInfos(eb, request, user -> {
+                    Renders.renderJson(request, event.right().getValue(), OK_STATUS);
+                    JsonObject statement = add(context, action,
+                            item == null ? event.right().getValue().getInteger("id").toString() : item, object, user);
+                    Sql.getInstance().prepared(statement.getString("statement"), statement.getJsonArray("values"),
+                            response -> {
+                        if (!"ok".equals(response.body().getString("status"))) {
+                            log(context, action);
+                        }
+                    });
                 });
             } else {
                 JsonObject error = new JsonObject()

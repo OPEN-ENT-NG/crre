@@ -2,11 +2,8 @@ package fr.openent.crre.helpers;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.MongoDbCrudService;
 
 import java.time.LocalDateTime;
@@ -45,14 +42,11 @@ public class MongoHelper extends MongoDbCrudService {
                     if(!fileId.isEmpty())
                         exportProperties.put("fileId",fileId);
 
-                    mongo.save(collection, exportProperties, new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> event) {
-                            if(!event.body().getString("status").equals("ok")) {
-                                handler.handle("mongoinsertfailed");
-                            }else {
-                                handler.handle("ok");
-                            }
+                    mongo.save(collection, exportProperties, event -> {
+                        if(!event.body().getString("status").equals("ok")) {
+                            handler.handle("mongoinsertfailed");
+                        }else {
+                            handler.handle("ok");
                         }
                     });
                 }
@@ -63,44 +57,28 @@ public class MongoHelper extends MongoDbCrudService {
     }
 
     public void getExports(Handler<Either<String, JsonArray>> handler, String userId) {
-        mongo.find(collection, new JsonObject().put("userId",userId), new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(new Either.Right(event.body().getJsonArray("results")));
-            }
-        });
+        mongo.find(collection, new JsonObject().put("userId",userId), event -> handler.handle(new Either.Right(event.body().getJsonArray("results"))));
     }
 
     public void getWaitingExports(Handler<Either<String,JsonObject>> handler){
-        mongo.findOne(collection, new JsonObject().put("status","WAITING"),new Handler<Message<JsonObject>>(){
-            @Override
-            public void handle(Message<JsonObject> event){
-                JsonObject result = event.body();
-                if(result.containsKey("result"))
-                    handler.handle(new Either.Right(result.getJsonObject("result")));
-                else
-                    handler.handle(new Either.Left<>("No waiting orders"));
-            }
+        mongo.findOne(collection, new JsonObject().put("status","WAITING"), event -> {
+            JsonObject result = event.body();
+            if(result.containsKey("result"))
+                handler.handle(new Either.Right(result.getJsonObject("result")));
+            else
+                handler.handle(new Either.Left<>("No waiting orders"));
         });
     }
     public void getExport( JsonObject params, Handler<Either<String, JsonArray>> handler) {
-        mongo.find(collection, params, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(new Either.Right(event.body().getJsonArray("results")));
-            }
-        });
+        mongo.find(collection, params, event -> handler.handle(new Either.Right(event.body().getJsonArray("results"))));
     }
 
     public void deleteExports(JsonArray values, Handler<Either<String, JsonObject>> handler) {
-        mongo.delete(collection, new JsonObject().put("_id", new JsonObject().put("$in", values)), new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                if(!event.body().getString("status").equals("ok")) {
-                    handler.handle(new Either.Left<>("mongoinsertfailed"));
-                }else {
-                    handler.handle(new Either.Right<>(new JsonObject()));
-                }
+        mongo.delete(collection, new JsonObject().put("_id", new JsonObject().put("$in", values)), event -> {
+            if(!event.body().getString("status").equals("ok")) {
+                handler.handle(new Either.Left<>("mongoinsertfailed"));
+            }else {
+                handler.handle(new Either.Right<>(new JsonObject()));
             }
         });
     }

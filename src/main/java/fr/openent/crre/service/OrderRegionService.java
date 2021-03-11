@@ -32,8 +32,6 @@ public interface OrderRegionService {
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
                 Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
     void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);

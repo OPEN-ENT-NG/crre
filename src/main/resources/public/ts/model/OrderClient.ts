@@ -116,7 +116,6 @@ export class OrderClient implements Order  {
             id_structure: data.id_structure,
             image: data.image,
             name: data.name,
-            number_validation: data.number_validation,
             price: data.price,
             program: data.program,
             status: data.status,

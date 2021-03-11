@@ -29,10 +29,8 @@
             "channel": ""
         },
          "mail": {
-            "enableMail": ${crreEnableMail},
             "address": ${address}
          },
-         "email": "sofianebernoussi@gmail.com",
          "elasticsearch": true,
          "elasticsearchConfig" : {
             "server-uri": "${elasticServerURI}",

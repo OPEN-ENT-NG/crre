@@ -2,12 +2,9 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.service.BasketService;
-import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -20,34 +17,19 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
-import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class DefaultBasketService extends SqlCrudService implements BasketService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultBasketService.class);
 
-    private static NotificationService notificationService;
-    private static JsonObject mail;
-
     private final Integer PAGE_SIZE = 15;
 
-    public DefaultBasketService(String schema, String table, Vertx vertx, JsonObject slackConfiguration,JsonObject mail) {
+    public DefaultBasketService(String schema, String table) {
         super(schema, table);
-        DefaultBasketService.mail = mail;
-        notificationService = new SlackService(
-                vertx,
-                slackConfiguration.getString("api-uri"),
-                slackConfiguration.getString("token"),
-                slackConfiguration.getString("bot-username"),
-                slackConfiguration.getString("channel")
-        );
     }
 
     public void listBasket(Integer idCampaign, String idStructure,  UserInfos user, Handler<Either<String,JsonArray>> handler){
@@ -341,7 +323,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                             .getJsonObject(event.body().getJsonArray("results").size()-1);
                     JsonArray objectResult = results.getJsonArray("results").getJsonArray(0);
                     String jsonValue = objectResult.getString(0) == null ? "{}" : objectResult.getString(0);
-                    getTransactionHandler(request, nameStructure, event, new JsonObject(jsonValue), handler);
+                    getTransactionHandler(event, new JsonObject(jsonValue), handler);
                 });
             });
 
@@ -518,8 +500,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
      * @param basicBDObject
      * @return Transaction handler
      */
-    private static void getTransactionHandler(HttpServerRequest request, String nameStructure,
-                                              Message<JsonObject> event, JsonObject basicBDObject,
+    private static void getTransactionHandler(Message<JsonObject> event, JsonObject basicBDObject,
                                               Handler<Either<String, JsonObject>> handler) {
         JsonObject result = event.body();
         if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
@@ -532,29 +513,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     returns.put("amount",basicBDObject.getInteger("f1"));
                 }
             }
-            DateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm");
             handler.handle(new Either.Right<>(returns));
-            if(mail.containsKey("enableMail")){
-                if (!mail.getBoolean("enableMail")) {
-                    notificationService.sendMessage(
-                            I18n.getInstance().translate("the.structure",
-                                    getHost(request), I18n.acceptLanguage(request))
-                                    + " " + nameStructure + " " +
-                                    I18n.getInstance().translate("crre.slack.order.message1",
-                                            getHost(request), I18n.acceptLanguage(request))
-                                    +
-                                    I18n.getInstance().translate("money.symbol",
-                                            getHost(request), I18n.acceptLanguage(request))
-                                    + " " +
-                                    I18n.getInstance().translate("determiner.male",
-                                            getHost(request), I18n.acceptLanguage(request))
-                                    + " " + format.format(new Date()) + " ");
-                } else {
-                    LOGGER.info("Sending mails is enable in conf.json.template");
-                }
-            } else {
-                LOGGER.info("EnableMail doesn't exist in object mail contents conf.json.template");
-            }
         } else {
             LOGGER.error("An error occurred when launching 'order' transaction");
             handler.handle(new Either.Left<>(""));

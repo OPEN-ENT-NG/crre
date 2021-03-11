@@ -35,9 +35,9 @@ import static java.lang.Integer.parseInt;
 public class BasketController extends ControllerHelper {
     private final BasketService basketService;
 
-    public BasketController(Vertx vertx, JsonObject slackConfiguration, JsonObject mail) {
+    public BasketController() {
         super();
-        this.basketService = new DefaultBasketService(Crre.crreSchema, "basket", vertx, slackConfiguration, mail);
+        this.basketService = new DefaultBasketService(Crre.crreSchema, "basket");
     }
     @Get("/basket/:idCampaign/:idStructure")
     @ApiDoc("List baskets of a campaign and a structure")

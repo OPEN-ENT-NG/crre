@@ -201,30 +201,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         sql.prepared(query.toString(), values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    @Override
-    public void searchWithoutEquip(String query, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.status != 'SENT' AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? ";
-
-        values.add(query);
-        values.add(query);
-        values.add(query);
-
-        sqlquery += ") AND ore.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery = sqlquery + " ORDER BY ore.creation_date DESC";
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
     public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
         if(!(word.equals(""))) {
             plainTextSearchName(word, handler);
