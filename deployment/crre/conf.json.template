@@ -17,19 +17,8 @@
         "entcore.port" : 8009,
         "sql": true,
         "db-schema": "crre",
-        "iteration-worker": ${crreIterationWorker},
-        "exports" : {
-            "template-path" : "./public/template/pdf/",
-            "logo-path": "./public/img/ile_de_france.png"
-        },
-        "slack": {
-            "token": "",
-            "api-uri": "",
-            "bot-username": "Crre Bot",
-            "channel": ""
-        },
          "mail": {
-            "address": ${address}
+            "address": "${address}"
          },
          "elasticsearch": true,
          "elasticsearchConfig" : {

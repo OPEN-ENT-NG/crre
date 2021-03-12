@@ -171,6 +171,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     for (let order of newOrderClient) {
                         let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                         order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
+                        order.price = Utils.calculatePriceTTC(equipment,2);
                         order.name = equipment.titre;
                         order.image = equipment.urlcouverture;
                         order.creation_date = moment(order.creation_date).format('L');
@@ -211,6 +212,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         for (let order of newOrderClient) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                             order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
+                            order.price = Utils.calculatePriceTTC(equipment,2);
                             order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
                             order.creation_date = moment(order.creation_date).format('L');
@@ -254,6 +256,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     await this.getEquipments(newOrderClient).then(equipments => {
                         for (let order of newOrderClient) {
                             let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
                             order.price = Utils.calculatePriceTTC(equipment,2);
                             order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
