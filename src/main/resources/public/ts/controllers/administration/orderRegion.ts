@@ -35,9 +35,23 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         this.init = async () => {
             $scope.reassorts = [{reassort: true, isChecked: false}, {reassort: false, isChecked: false}];
-            $scope.states = [{status: "WAITING"}, {status: "IN PROGRESS"}, {status: "VALID"}, {status: "REJECTED"}, {status: "DONE"}, {status: "SENT"}];
+            $scope.states = [{status: "WAITING", isChecked: true}, {status: "IN PROGRESS", isChecked: true},
+                {status: "VALID", isChecked: true}, {status: "REJECTED", isChecked: false},
+                {status: "DONE", isChecked: true}];
             $scope.filters = new Filters();
             $scope.filtersFront = new FiltersFront();
+            let newFilterFront = new FilterFront();
+            newFilterFront.name = "status";
+            newFilterFront.value = ["WAITING", "IN PROGRESS", "VALID", "DONE"];
+            $scope.filtersFront.all.push(newFilterFront);
+            $scope.states.forEach(state => {
+                if(state.status != "REJECTED") {
+                    let newFilter = new Filter();
+                    newFilter.name = "status";
+                    newFilter.value = state.status;
+                    $scope.filters.all.push(newFilter);
+                }
+            });
             await $scope.campaigns.sync();
             $scope.equipments.loading = true;
             $scope.equipments.all = [];
@@ -409,7 +423,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     params += `project_id=${project.id}&`;
                 });
                 params = params.slice(0, -1);
-                let promesses = [http.get(`/crre/ordersRegion/orders?${params}`)];
+                let promesses = [http.get(`/crre/ordersRegion/orders?${params}&isFiltering=${isSearching}`)];
                 if ($scope.structuresToDisplay.all.length == 0 && $scope.isAdministrator()) {
                     promesses.push($scope.structuresToDisplay.sync());
                 }

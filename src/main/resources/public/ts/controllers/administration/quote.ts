@@ -19,7 +19,7 @@ export const quoteController = ng.controller('quoteController',
                 let {data} = await http.get(`/crre/quote${page}`);
                 return data;
             } catch (e) {
-                toasts.warning('TODO');
+                toasts.warning('crre.quote.list.error');
             }
         }
 
@@ -27,7 +27,7 @@ export const quoteController = ng.controller('quoteController',
             try {
                 window.location = `/crre/quote/csv?attachment=${attachment}`;
             } catch (e) {
-                toasts.warning('TODO');
+                toasts.warning('crre.quote.generate.csv.error');
             }
         }
         const syncQuotes = async() => {

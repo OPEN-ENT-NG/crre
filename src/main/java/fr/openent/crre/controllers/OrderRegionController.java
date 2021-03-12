@@ -5,7 +5,6 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.security.PrescriptorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.PurseService;
@@ -16,12 +15,14 @@ import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -186,14 +187,14 @@ public class OrderRegionController extends BaseController {
         orderRegionService.getAllOrderRegion(arrayResponseHandler(request));
     }
 
-    @Get("/orderRegion/orders/:id")
+/*    @Get("/orderRegion/orders/:id")
     @ApiDoc("get all orders by project ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void getAllOrderByProject(HttpServerRequest request) {
         int idProject = Integer.parseInt(request.getParam("id"));
         orderRegionService.getAllOrderRegionByProject(idProject, arrayResponseHandler(request));
-    }
+    }*/
 
     @Get("/orderRegion/projects")
     @ApiDoc("get all projects ")
@@ -307,13 +308,14 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getOrdersByProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
+            boolean isFiltering = request.getParam("isFiltering") != null ? Boolean.parseBoolean(request.getParam("isFiltering")) : false;
             List<String> projectIds = request.params().getAll("project_id");
             List<Future> futures = new ArrayList<>();
             for(String id : projectIds){
                 Future<JsonArray> projectIdFuture = Future.future();
                 futures.add(projectIdFuture);
                 int idProject = Integer.parseInt(id);
-                orderRegionService.getAllOrderRegionByProject(idProject, handlerJsonArray(projectIdFuture));
+                orderRegionService.getAllOrderRegionByProject(idProject, isFiltering, handlerJsonArray(projectIdFuture));
             }
             getCompositeFutureAllOrderRegionByProject(request, futures);
         });

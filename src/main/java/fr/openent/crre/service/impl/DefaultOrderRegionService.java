@@ -129,7 +129,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
 
     @Override
-    public void getAllOrderRegionByProject(int idProject, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void getAllOrderRegionByProject(int idProject, boolean isFiltering, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String query = "" +
                 "SELECT ore.*, " +
                 "       to_json(campaign.*) campaign, " +
@@ -145,6 +145,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
                 "WHERE ore.id_project = ? AND ore.status != 'SENT'";
+        if(!isFiltering) {
+            query += " AND ore.status != 'REJECTED'";
+        }
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -181,7 +184,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.status != 'SENT'");
+                "WHERE ore.status != 'SENT' AND ore.status != 'REJECTED'");
 
         if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
                 WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())){
