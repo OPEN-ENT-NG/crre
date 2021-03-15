@@ -528,8 +528,7 @@ public class OrderRegionController extends BaseController {
                    quoteService.insertQuote(user, nbEtab, base64File, response -> {
                         if(response.isRight()) {
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-                            attachment.add(new JsonObject().put("name", "orders.csv"))
-                                      .add(new JsonObject().put("content", base64File));
+                            attachment.add(new JsonObject().put("name", "orders.csv").put("content",base64File));
                             String mail = this.mail.getString("address");
                             emailSender.sendMail(request, mail, "Test",
                                            "Bonjour", attachment, message -> {
