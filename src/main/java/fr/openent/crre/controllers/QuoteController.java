@@ -52,7 +52,7 @@ public class QuoteController extends BaseController {
         quoteService.getAllQuote(page, arrayResponseHandler(request));
     }
 
-    @Post("/quote/csv")
+    @Get("/quote/csv")
     @ApiDoc("generate csv attachment ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
