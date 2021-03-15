@@ -141,12 +141,14 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void listUsers (final HttpServerRequest request){
-        if (request.params().contains("status")) {
-            final String status = request.params().get("status");
-            orderService.listUsers(status, arrayResponseHandler(request));
-        } else {
-            badRequest(request);
-        }
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("status")) {
+                final String status = request.params().get("status");
+                orderService.listUsers(status, user, arrayResponseHandler(request));
+            } else {
+                badRequest(request);
+            }
+        });
     }
 
     @Get("/orders/search")

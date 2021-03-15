@@ -73,16 +73,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oce.id = ore.id_order_client_equipment ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query += "WHERE oce.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            query += "?,";
-            values.add(idStruct);
-        }
-        query = query.substring(0, query.length() - 1) + ") ";
-        if(!status.contains("ALL")) {
-            query += " AND oce.status = ? ";
-            values.add(status);
-        }
+        query = filterWaitingOrder(status, user, query, values);
 
         query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status) " +
                 "ORDER BY oce.creation_date DESC ";
@@ -95,16 +86,29 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public  void listUsers(String status,  Handler<Either<String, JsonArray>> handler){
+    public  void listUsers(String status, UserInfos user,  Handler<Either<String, JsonArray>> handler){
         String query = "SELECT DISTINCT(bo.name_user) as user_name, bo.id_user "+
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oce ON bo.id = oce.id_basket ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        if(!status.contains("ALL")) {
-            query += "WHERE oce.status = ? ";
+        query = filterWaitingOrder(status, user, query, values);
+        sql.prepared(query, values , SqlResult.validResultHandler(handler));
+    }
+
+    private String filterWaitingOrder(String status, UserInfos user, String query, JsonArray values) {
+        query += "WHERE oce.id_structure IN ( ";
+        StringBuilder queryBuilder = new StringBuilder(query);
+        for (String idStruct : user.getStructures()) {
+            queryBuilder.append("?,");
+            values.add(idStruct);
+        }
+        query = queryBuilder.toString();
+        query = query.substring(0, query.length() - 1) + ") ";
+        if (!status.contains("ALL")) {
+            query += " AND oce.status = ? ";
             values.add(status);
         }
-        sql.prepared(query, values , SqlResult.validResultHandler(handler));
+        return query;
     }
 
     @Override

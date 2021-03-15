@@ -32,7 +32,7 @@ public interface OrderService {
      * @param status order status to retrieve
      * @param handler Function handler returning data
      */
-    void listUsers(String status, Handler<Either<String, JsonArray>> handler);
+    void listUsers(String status, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
     void rejectOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
