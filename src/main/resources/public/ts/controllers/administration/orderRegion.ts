@@ -34,37 +34,40 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.loading = true;
 
         this.init = async () => {
-            $scope.reassorts = [{reassort: true, isChecked: false}, {reassort: false, isChecked: false}];
-            $scope.states = [{status: "WAITING", isChecked: true}, {status: "IN PROGRESS", isChecked: true},
-                {status: "VALID", isChecked: true}, {status: "REJECTED", isChecked: false},
-                {status: "DONE", isChecked: true}];
             $scope.filters = new Filters();
             $scope.filtersFront = new FiltersFront();
-            let newFilterFront = new FilterFront();
-            newFilterFront.name = "status";
-            newFilterFront.value = ["WAITING", "IN PROGRESS", "VALID", "DONE"];
-            $scope.filtersFront.all.push(newFilterFront);
-            $scope.states.forEach(state => {
-                if(state.status != "REJECTED") {
-                    let newFilter = new Filter();
-                    newFilter.name = "status";
-                    newFilter.value = state.status;
-                    $scope.filters.all.push(newFilter);
-                }
-            });
-            await $scope.campaigns.sync();
-            $scope.equipments.loading = true;
-            $scope.equipments.all = [];
-            Utils.safeApply($scope);
-            await $scope.equipments.sync(true, undefined, undefined );
-            $scope.initPopUpFilters();
-            Utils.safeApply($scope);
+            if(!$scope.selectedType.split('/').includes('historic')){
+                $scope.states = [{status: "WAITING", isChecked: true}, {status: "IN PROGRESS", isChecked: true},
+                    {status: "VALID", isChecked: true}, {status: "REJECTED", isChecked: false},
+                    {status: "DONE", isChecked: true}];
+                $scope.reassorts = [{reassort: true, isChecked: false}, {reassort: false, isChecked: false}];
+                let newFilterFront = new FilterFront();
+                newFilterFront.name = "status";
+                newFilterFront.value = ["WAITING", "IN PROGRESS", "VALID", "DONE"];
+                $scope.filtersFront.all.push(newFilterFront);
+                $scope.states.forEach(state => {
+                    if (state.status != "REJECTED") {
+                        let newFilter = new Filter();
+                        newFilter.name = "status";
+                        newFilter.value = state.status;
+                        $scope.filters.all.push(newFilter);
+                    }
+                });
+                await $scope.campaigns.sync();
+                $scope.equipments.loading = true;
+                $scope.equipments.all = [];
+                Utils.safeApply($scope);
+                await $scope.equipments.sync(true, undefined, undefined );
+                $scope.initPopUpFilters();
+                Utils.safeApply($scope);
+            }
         };
 
         $scope.getProjects = async() => {
             try {
-                const page: string = $scope.filter.page ? `?page=${$scope.filter.page}` : '';
-                let { data } = await http.get(`/crre/orderRegion/projects${page}`);
+                const page: string = $scope.filter.page ? `page=${$scope.filter.page}&` : '';
+                const filterRejectedOrders = !$scope.selectedType.split('/').includes('historic');
+                let { data } = await http.get(`/crre/orderRegion/projects?${page}filterRejectedOrders=${filterRejectedOrders}`);
                 return data;
             } catch (e) {
                 toasts.warning('crre.basket.sync.err');
@@ -300,11 +303,13 @@ export const orderRegionController = ng.controller('orderRegionController',
                 }
                 if ($scope.filters.all.length > 0) {
                     const data = await $scope.filter_order(true);
-                    await synchroRegionOrders(true, data);
-                    Utils.safeApply($scope);
+                    if(data.length > 0){
+                        await synchroRegionOrders(true, data);
+                        $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                        Utils.safeApply($scope);
+                    }
                 } else {
                     await $scope.searchByName($scope.query_name);
-                    Utils.safeApply($scope);
                 }
             };
 
@@ -312,7 +317,11 @@ export const orderRegionController = ng.controller('orderRegionController',
                 if (!!name) {
                     $scope.query_name = name;
                     const data = await $scope.filter_order(true);
-                    await synchroRegionOrders(true, data);
+                    if(data.length > 0){
+                        await synchroRegionOrders(true, data);
+                        $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                        Utils.safeApply($scope);
+                    }
                 } else {
                     if ($scope.filters.all.length == 0) {
                         $scope.filter.page = 0;
@@ -320,9 +329,15 @@ export const orderRegionController = ng.controller('orderRegionController',
                         $scope.projects = [];
                         Utils.safeApply($scope);
                         await synchroRegionOrders();
+                        $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                        Utils.safeApply($scope);
                     } else {
                         const data = await $scope.filter_order(true);
-                        await synchroRegionOrders(true, data);
+                        if(data.length > 0){
+                            await synchroRegionOrders(true, data);
+                            $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                            Utils.safeApply($scope);
+                        }
                     }
 
                 }
@@ -423,7 +438,8 @@ export const orderRegionController = ng.controller('orderRegionController',
                     params += `project_id=${project.id}&`;
                 });
                 params = params.slice(0, -1);
-                let promesses = [http.get(`/crre/ordersRegion/orders?${params}&isFiltering=${isSearching}`)];
+                const filterRejectedOrders = !isSearching && !$scope.selectedType.split('/').includes('historic');
+                let promesses = [http.get(`/crre/ordersRegion/orders?${params}&filterRejectedOrders=${filterRejectedOrders}`)];
                 if ($scope.structuresToDisplay.all.length == 0 && $scope.isAdministrator()) {
                     promesses.push($scope.structuresToDisplay.sync());
                 }

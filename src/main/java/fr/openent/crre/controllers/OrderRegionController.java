@@ -203,7 +203,8 @@ public class OrderRegionController extends BaseController {
     public void getAllProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-            orderRegionService.getAllProjects(user, page, arrayResponseHandler(request));
+            boolean filterRejectedOrders = request.getParam("filterRejectedOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedOrders"));
+            orderRegionService.getAllProjects(user, page, filterRejectedOrders, arrayResponseHandler(request));
         });
     }
 
@@ -308,14 +309,14 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getOrdersByProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            boolean isFiltering = request.getParam("isFiltering") != null ? Boolean.parseBoolean(request.getParam("isFiltering")) : false;
+            boolean filterRejectedOrders = request.getParam("filterRejectedOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedOrders"));
             List<String> projectIds = request.params().getAll("project_id");
             List<Future> futures = new ArrayList<>();
             for(String id : projectIds){
                 Future<JsonArray> projectIdFuture = Future.future();
                 futures.add(projectIdFuture);
                 int idProject = Integer.parseInt(id);
-                orderRegionService.getAllOrderRegionByProject(idProject, isFiltering, handlerJsonArray(projectIdFuture));
+                orderRegionService.getAllOrderRegionByProject(idProject, filterRejectedOrders, handlerJsonArray(projectIdFuture));
             }
             getCompositeFutureAllOrderRegionByProject(request, futures);
         });

@@ -23,11 +23,11 @@ public interface OrderRegionService {
 
     void createProject (String title,  Handler<Either<String, JsonObject>> handler);
 
-    void getAllOrderRegionByProject(int idProject, boolean isFiltering, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getAllProjects(UserInfos user, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getAllProjects(UserInfos user, Integer page, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
                 Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);

@@ -4,7 +4,7 @@ import {
     Campaign,
     Order,
     Structure,
-    Structures, TechnicalSpec,
+    TechnicalSpec,
     OrderClient,
     Equipment
 } from "./index";
