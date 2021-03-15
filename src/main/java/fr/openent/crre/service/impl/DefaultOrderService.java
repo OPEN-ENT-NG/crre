@@ -58,7 +58,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public  void listOrder(String status, Integer page,  Handler<Either<String, JsonArray>> handler){
+    public  void listOrder(String status, Integer page, UserInfos user, Handler<Either<String, JsonArray>> handler){
         String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups, " +
                 "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " +
@@ -73,10 +73,17 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oce.id = ore.id_order_client_equipment ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        query += "WHERE oce.id_structure IN ( ";
+        for (String idStruct : user.getStructures()) {
+            query += "?,";
+            values.add(idStruct);
+        }
+        query = query.substring(0, query.length() - 1) + ") ";
         if(!status.contains("ALL")) {
-            query += "WHERE oce.status = ? ";
+            query += " AND oce.status = ? ";
             values.add(status);
         }
+
         query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status) " +
                 "ORDER BY oce.creation_date DESC ";
         if (page != null) {

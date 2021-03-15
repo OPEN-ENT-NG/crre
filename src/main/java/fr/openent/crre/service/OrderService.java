@@ -25,7 +25,7 @@ public interface OrderService {
      * @param status order status to retrieve
      * @param handler Function handler returning data
      */
-    void listOrder(String status, Integer page, Handler<Either<String, JsonArray>> handler);
+    void listOrder(String status, Integer page, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get the list of all users
