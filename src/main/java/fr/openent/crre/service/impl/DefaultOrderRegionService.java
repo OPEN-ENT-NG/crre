@@ -124,7 +124,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
                 "LEFT JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
                 "LEFT JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
-                "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL";
+                "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
         if(filterRejectedSentOrders) {
             query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
@@ -164,7 +164,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.equipment_key IS NOT NULL");
+                "WHERE ore.equipment_key IS NOT NULL ");
 
         if(filterRejectedSentOrders) {
             query.append("AND ore.status != 'SENT' AND ore.status != 'REJECTED' ");
