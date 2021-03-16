@@ -19,22 +19,18 @@ public interface OrderRegionService {
 
     void getOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
 
-    void getAllOrderRegion(Handler<Either<String, JsonArray>> handler);
-
     void createProject (String title,  Handler<Either<String, JsonObject>> handler);
 
     void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getAllProjects(UserInfos user, Integer page, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getAllProjects(UserInfos user, Integer page, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
                 Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
-
-    void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, JsonArray filters,
                      Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);

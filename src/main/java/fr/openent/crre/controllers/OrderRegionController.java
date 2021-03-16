@@ -179,23 +179,6 @@ public class OrderRegionController extends BaseController {
         orderRegionService.getOneOrderRegion(idOrder, defaultResponseHandler(request));
     }
 
-    @Get("/orderRegion/orders")
-    @ApiDoc("get all orders ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void getAllOrder(HttpServerRequest request) {
-        orderRegionService.getAllOrderRegion(arrayResponseHandler(request));
-    }
-
-/*    @Get("/orderRegion/orders/:id")
-    @ApiDoc("get all orders by project ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void getAllOrderByProject(HttpServerRequest request) {
-        int idProject = Integer.parseInt(request.getParam("id"));
-        orderRegionService.getAllOrderRegionByProject(idProject, arrayResponseHandler(request));
-    }*/
-
     @Get("/orderRegion/projects")
     @ApiDoc("get all projects ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -203,8 +186,8 @@ public class OrderRegionController extends BaseController {
     public void getAllProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-            boolean filterRejectedOrders = request.getParam("filterRejectedOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedOrders"));
-            orderRegionService.getAllProjects(user, page, filterRejectedOrders, arrayResponseHandler(request));
+            boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
+            orderRegionService.getAllProjects(user, page, filterRejectedSentOrders, arrayResponseHandler(request));
         });
     }
 
@@ -309,14 +292,15 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getOrdersByProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            boolean filterRejectedOrders = request.getParam("filterRejectedOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedOrders"));
+            boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
+                    && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
             List<String> projectIds = request.params().getAll("project_id");
             List<Future> futures = new ArrayList<>();
             for(String id : projectIds){
                 Future<JsonArray> projectIdFuture = Future.future();
                 futures.add(projectIdFuture);
                 int idProject = Integer.parseInt(id);
-                orderRegionService.getAllOrderRegionByProject(idProject, filterRejectedOrders, handlerJsonArray(projectIdFuture));
+                orderRegionService.getAllOrderRegionByProject(idProject, filterRejectedSentOrders, handlerJsonArray(projectIdFuture));
             }
             getCompositeFutureAllOrderRegionByProject(request, futures);
         });

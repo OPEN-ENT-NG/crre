@@ -104,15 +104,6 @@ export class OrdersRegion extends Selection<OrderRegion> {
         super([]);
     }
 
-    async sync () {
-        try {
-            let { data } = await http.get(`/crre/orderRegion/orders`);
-            this.all = Mix.castArrayAs(OrderRegion, data);
-        } catch (e) {
-            toasts.warning('crre.basket.sync.err');
-        }
-    }
-
     async create():Promise<any> {
         let orders = [];
         this.all.map(order => {

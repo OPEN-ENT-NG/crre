@@ -109,27 +109,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getAllOrderRegion(Handler<Either<String, JsonArray>> handler) {
-        String query = "" +
-                "SELECT ore.*, " +
-                "       to_json(campaign.*) campaign, " +
-                "       p.title AS title, " +
-                "       to_json(oce.*) AS order_parent, " +
-                "       bo.name AS basket_name " +
-                "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
-                "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
-                "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
-                "WHERE ore.status = 'IN PROGRESS'  ";
-        sql.raw(query, SqlResult.validResultHandler(handler));
-    }
-
-
-    @Override
-    public void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void getAllOrderRegionByProject(int idProject, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String query = "" +
                 "SELECT ore.*, " +
                 "       to_json(campaign.*) campaign, " +
@@ -140,13 +120,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
-                "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
-                "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
-                "WHERE ore.id_project = ? AND ore.status != 'SENT'";
-        if(filterRejectedOrders) {
-            query += " AND ore.status != 'REJECTED'";
+                "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
+                "LEFT JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
+                "LEFT JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
+                "LEFT JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) " +
+                "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL";
+        if(filterRejectedSentOrders) {
+            query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
@@ -178,16 +158,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getAllProjects(UserInfos user, Integer page, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void getAllProjects(UserInfos user, Integer page, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
                 "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.status != 'SENT'");
+                "WHERE ore.equipment_key IS NOT NULL");
 
-        if(filterRejectedOrders) {
-            query.append(" AND ore.status != 'REJECTED'");
+        if(filterRejectedSentOrders) {
+            query.append("AND ore.status != 'SENT' AND ore.status != 'REJECTED' ");
         }
 
         if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
@@ -217,36 +197,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     }
 
-    public void filter(UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "" +
-                "SELECT DISTINCT (p.*), ore.creation_date " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? AND ore.id_structure IN ( ";
-        values.add(startDate);
-        values.add(endDate);
-        for (String idStruct : user.getStructures()) {
-            query += "?,";
-            values.add(idStruct);
-        }
-        query = query.substring(0, query.length() - 1) + ")";
-        query = query + " ORDER BY ore.creation_date DESC ";
-        sql.prepared(query, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
     public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
                        Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<String, ArrayList>();
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
-        values.add(startDate);
-        values.add(endDate);
+        HashMap<String, ArrayList> hashMap = new HashMap<>();
+        String sqlquery = selectSQLOrders(startDate, endDate, values);
 
         if (!query.equals("")) {
             sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR oe.equipment_key IN (";
@@ -265,23 +220,24 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery);
     }
 
-    @Override
-    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
-                             Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<>();
+    private String selectSQLOrders(String startDate, String endDate, JsonArray values) {
         String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
-
+                "WHERE ore.creation_date BETWEEN ? AND ? ";
         values.add(startDate);
         values.add(endDate);
-        values.add(query);
-        values.add(query);
-        values.add(query);
+        return sqlquery;
+    }
+
+    @Override
+    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
+                             Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap<String, ArrayList> hashMap = new HashMap<>();
+        String sqlquery = selectSQLOrders(startDate, endDate, values);
 
         if(equipTab.getJsonArray(1).isEmpty()){
             sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?) ";
@@ -289,6 +245,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN (";
             sqlquery = DefaultOrderService.insertValuesQuery(equipTab, values, sqlquery);
         }
+
+        values.add(query);
+        values.add(query);
+        values.add(query);
 
         sqlquery += " AND oe.equipment_key IN (";
         if(equipTab.getJsonArray(0).isEmpty()) {
@@ -305,15 +265,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                             Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
-
-        values.add(startDate);
-        values.add(endDate);
+        String sqlquery = selectSQLOrders(startDate, endDate, values);
 
         sqlquery += "AND oe.equipment_key IN (";
 
@@ -349,15 +301,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                          Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.status != 'SENT' AND ore.creation_date BETWEEN ? AND ? ";
-
-        values.add(startDate);
-        values.add(endDate);
+        String sqlquery = selectSQLOrders(startDate, endDate, values);
         if (!query.equals("")) {
             sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?)";
             values.add(query);
