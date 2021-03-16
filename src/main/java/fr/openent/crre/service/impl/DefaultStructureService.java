@@ -41,7 +41,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     @Override
     public void getStructureByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure) WHERE s.UAI IN {uais} return s.id as id, s.UAI as uai";
+        String query = "MATCH (s:Structure) WHERE s.UAI IN {uais} return s.id as id, s.UAI as uai, s.type as type";
 
         Neo4j.getInstance().execute(query,
                 new JsonObject().put("uais", uais),
@@ -189,12 +189,12 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void reinitAmountLicence(String id_structure, Integer total_licence, Handler<Either<String, JsonObject>> defaultResponseHandler) {
+    public void reinitAmountLicence(String id_structure, Integer difference, Handler<Either<String, JsonObject>> defaultResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".licences " +
-                "SET initial_amount =  ?, amount = ? " +
+                "SET initial_amount = initial_amount + ?, amount = amount + ? " +
                 "WHERE id_structure = ?";
-        values.add(total_licence).add(total_licence).add(id_structure);
+        values.add(difference).add(difference).add(id_structure);
         sql.prepared(query, values, SqlResult.validRowsResultHandler(defaultResponseHandler));
     }
 

@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public interface PurseService {
 
     /**
@@ -12,13 +14,27 @@ public interface PurseService {
      * @param statementsValues Object containing structure ids as key and purse amount as value
      * @param handler Function handler
      */
-    void launchImport(JsonObject statementsValues, Handler<Either<String, JsonObject>> handler);
+    void launchImport(JsonObject statementsValues, boolean invalidDatas, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Get purses by campaign id
      * @param handler handler function returning data
      */
-    void getPurses(Handler<Either<String, JsonArray>> handler);
+    void getPursesStudentsAndLicences(List<String> params, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Get purses by campaign id
+     * @param handler handler function returning data
+     */
+    void getPursesStudentsAndLicences(Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Update a purse based on his id structure
+     * @param id_structure Purse id
+     * @param purse purse object
+     * @param handler Function handler returning data
+     */
+    void update(String id_structure, JsonObject purse, Handler<Either<String, JsonObject>> handler);
 
     /**
      * decrease or increase an amount of Purse

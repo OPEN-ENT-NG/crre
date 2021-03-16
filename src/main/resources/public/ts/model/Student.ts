@@ -12,10 +12,10 @@ export class Student {
 
     constructor() {}
 
-    async updateAmount(id_structure: string, seconde: number, premiere: number, terminale: number, pro: boolean):Promise<void>{
+    async updateAmount(id_structure: string, seconde: number, premiere: number, terminale: number, pro: boolean, previousTotal: number):Promise<void>{
         try {
             await http.put(`/crre/structure/amount/update?seconde=${seconde}&premiere=${premiere}&` +
-            `terminale=${terminale}&id_structure=${id_structure}&pro=${pro}`);
+            `terminale=${terminale}&id_structure=${id_structure}&pro=${pro}&previousTotal=${previousTotal}`);
         }
         catch {
             toasts.warning('crre.structure.update.err');

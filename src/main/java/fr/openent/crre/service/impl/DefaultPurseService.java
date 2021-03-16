@@ -9,18 +9,27 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.List;
+
 public class DefaultPurseService implements PurseService {
     private Boolean invalidDatas= false;
 
     @Override
-    public void launchImport(JsonObject statementsValues,
+    public void launchImport(JsonObject statementsValues, boolean invalidDatasPreviously,
                              final Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         String[] fields = statementsValues.fieldNames().toArray(new String[0]);
-        invalidDatas = false;
-        for (String field : fields) {
-            statements.add(getImportStatement(field,
-                    statementsValues.getString(field)));
+        invalidDatas = invalidDatasPreviously;
+        if(!invalidDatas) {
+            for (String field : fields) {
+                JsonObject values = statementsValues.getJsonObject(field);
+                statements.add(getImportStatementStudent(field,
+                        values.getString("second"), values.getString("premiere"), values.getString("terminale"), values.getBoolean("pro")));
+                statements.add(getImportStatementAmount(field,
+                        values.getString("amount"), "purse"));
+                statements.add(getImportStatementAmount(field,
+                        values.getString("licence"), "licences"));
+            }
         }
         if(invalidDatas){
             handler.handle(new Either.Left<>
@@ -43,27 +52,102 @@ public class DefaultPurseService implements PurseService {
     }
 
     @Override
-    public void getPurses(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT * FROM " + Crre.crreSchema + ".purse;";
+    public void getPursesStudentsAndLicences(List<String> ids, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
+                "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount " +
+                "FROM " + Crre.crreSchema + ".purse " +
+                "INNER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
+                "INNER JOIN " + Crre.crreSchema + ".licences ON licences.id_structure = purse.id_structure ";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        if(ids.size() > 0){
+            query += "WHERE purse.id IN " + Sql.listPrepared(ids.toArray());
+            for (String id : ids) {
+                params.add(Integer.parseInt(id));
+            }
+        }
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getPursesStudentsAndLicences(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
+                "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount " +
+                "FROM " + Crre.crreSchema + ".purse " +
+                "INNER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
+                "INNER JOIN " + Crre.crreSchema + ".licences ON licences.id_structure = purse.id_structure";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    private JsonObject getImportStatement(String structureId, String amount) {
-        String statement = "INSERT INTO " + Crre.crreSchema + ".purse(id_structure, amount, initial_amount) " +
-                "VALUES (?, ?,?) " +
+    @Override
+    public void update(String id_structure, JsonObject purse, Handler<Either<String, JsonObject>> handler) {
+        String query = "UPDATE " + Crre.crreSchema + ".purse " +
+                "SET initial_amount = ?, amount = amount + ( ? - initial_amount) " +
+                "WHERE id_structure = ? ;" +
+                "UPDATE " + Crre.crreSchema + ".licences " +
+                "SET initial_amount = ?, amount = amount + ( ? - initial_amount) " +
+                "WHERE id_structure = ? ;" ;
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(purse.getDouble("initial_amount")).add(purse.getDouble("initial_amount")).add(id_structure)
+                .add(purse.getInteger("licence_initial_amount")).add(purse.getInteger("licence_initial_amount")).add(id_structure);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private JsonObject getImportStatementAmount(String structureId, String amount, String table) {
+        String statement = "INSERT INTO " + Crre.crreSchema + "." + table + " (id_structure, amount, initial_amount) " +
+                "VALUES (?,?,?) " +
                 "ON CONFLICT (id_structure) DO UPDATE " +
-                "SET amount = ?, " +
-                "initial_amount = ? " +
-                "WHERE purse.id_structure = ? ;";
+                "SET initial_amount = ?, amount = " + table + ".amount + ( ? - " + table + ".initial_amount) " +
+                "WHERE " + table + ".id_structure = ? ;";
+        JsonArray params =  new fr.wseduc.webutils.collections.JsonArray();
+        try {
+            params.add(structureId);
+            if (table.equals("licences")) {
+                params.add(Integer.parseInt(amount))
+                        .add(Integer.parseInt(amount))
+                        .add(Integer.parseInt(amount))
+                        .add(Integer.parseInt(amount));
+            } else {
+                params.add(Double.parseDouble(amount))
+                        .add(Double.parseDouble(amount))
+                        .add(Double.parseDouble(amount))
+                        .add(Double.parseDouble(amount));
+            }
+            params.add(structureId);
+
+        }catch (NumberFormatException e){
+            invalidDatas = true;
+        }
+        return new JsonObject()
+                .put("statement", statement)
+                .put("values", params)
+                .put("action", "prepared");
+    }
+
+    private JsonObject getImportStatementStudent(String structureId, String second, String premiere, String terminale, boolean pro) {
+
+        String statement = "INSERT INTO " + Crre.crreSchema + ".students (id_structure, \"Seconde\", \"Premiere\", \"Terminale\", pro) " +
+                "VALUES (?,?,?,?,?) " +
+                "ON CONFLICT (id_structure) DO UPDATE " +
+                "SET \"Seconde\" = ?, " +
+                "\"Premiere\" = ?, " +
+                "\"Terminale\" = ?, " +
+                "pro = ? " +
+                "WHERE students.id_structure = ? ;";
         JsonArray params =  new fr.wseduc.webutils.collections.JsonArray();
         try {
             params.add(structureId)
-                    .add(Double.parseDouble(amount))
-                    .add(Double.parseDouble(amount))
-                    .add(Double.parseDouble(amount))
-                    .add(Double.parseDouble(amount))
+                    .add(Integer.parseInt(second))
+                    .add(Integer.parseInt(premiere))
+                    .add(Integer.parseInt(terminale))
+                    .add(pro)
+                    .add(Integer.parseInt(second))
+                    .add(Integer.parseInt(premiere))
+                    .add(Integer.parseInt(terminale))
+                    .add(pro)
                     .add(structureId);
 
         }catch (NumberFormatException e){

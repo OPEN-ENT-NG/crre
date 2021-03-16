@@ -48,7 +48,7 @@ export const campaignsListController = ng.controller('campaignsListController',
         };
 
         $scope.updateNumberStudent = async (seconde: number, premiere: number, terminale: number) => {
-            await $scope.student.updateAmount($scope.current.structure.id, seconde, premiere, terminale, $scope.student.pro);
+            await $scope.student.updateAmount($scope.current.structure.id, seconde, premiere, terminale, $scope.student.pro, $scope.total_licence);
             await $scope.student.getAmount($scope.current.structure.id);
             await $scope.calculateLicence();
             $scope.display.lightbox.modifyNumberStudent = false;

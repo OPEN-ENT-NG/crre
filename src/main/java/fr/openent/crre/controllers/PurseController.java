@@ -16,10 +16,13 @@ import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
+import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
@@ -32,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.UUID;
 
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
@@ -83,12 +87,20 @@ public class PurseController extends ControllerHelper {
             String[] values;
             JsonArray uais = new fr.wseduc.webutils.collections.JsonArray();
             JsonObject amounts = new JsonObject();
+            JsonObject licences = new JsonObject();
+            JsonObject seconds = new JsonObject();
+            JsonObject premieres = new JsonObject();
+            JsonObject terminales = new JsonObject();
             while ((values = csv.readNext()) != null) {
                 amounts.put(values[0], values[1]);
+                licences.put(values[0], values[2]);
+                seconds.put(values[0], values[3]);
+                premieres.put(values[0], values[4]);
+                terminales.put(values[0], values[5]);
                 uais.add(values[0]);
             }
             if (uais.size() > 0) {
-                matchUAIID(request, path, uais, amounts, content.toString());
+                matchUAIID(request, path, uais, amounts, licences, seconds, premieres, terminales, content.toString());
             } else {
                 returnErrorMessage(request, new Throwable("missing.uai"), path);
             }
@@ -132,31 +144,45 @@ public class PurseController extends ControllerHelper {
      * @param amount  Object containing UAI as key and purse amount as value
      */
     private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais,
-                            final JsonObject amount, final String contentFile) {
+                            final JsonObject amount, final JsonObject licence, final JsonObject seconds, final JsonObject premieres,
+                            final JsonObject terminales, final String contentFile) {
         structureService.getStructureByUAI(uais, event -> {
             if (event.isRight()) {
-                final JsonArray ids = event.right().getValue();
-                campaignService.getCampaignStructures(Integer.parseInt(request.params().get("id")),
-                        event1 -> {
-                            if (event1.isRight()) {
-                                JsonArray correctIds = deleteWrongIds(ids, event1.right().getValue());
-                                if (correctIds.size() == 0) {
-                                    returnErrorMessage(request, new Throwable("crre.statements.empty"), path);
-                                    return;
-                                }
-
-                                JsonObject statementsValues = new JsonObject();
-                                JsonObject id;
-                                for (int i = 0; i < correctIds.size(); i++) {
-                                    id = correctIds.getJsonObject(i);
-                                    statementsValues.put(id.getString("id"),
-                                            amount.getString(id.getString("uai")));
-                                }
-                                launchImport(request, path, statementsValues, contentFile);
+                final JsonArray structures = event.right().getValue();
+                    JsonObject statementsValues = new JsonObject();
+                    JsonObject structure;
+                boolean invalidDatas = false;
+                    for (int i = 0; i < structures.size(); i++) {
+                        structure = structures.getJsonObject(i);
+                        boolean professionnal_structure = structure.getString("type").equals("LYCEE PROFESSIONNEL");
+                        try {
+                            int licences = Integer.parseInt(licence.getString(structure.getString("uai")));
+                            int seconde = Integer.parseInt(seconds.getString(structure.getString("uai")));
+                            int premiere = Integer.parseInt(premieres.getString(structure.getString("uai")));
+                            int terminale = Integer.parseInt(terminales.getString(structure.getString("uai")));
+                            int minimumLicences;
+                            if(professionnal_structure){
+                                minimumLicences = seconde * 3 + premiere * 3 + terminale * 3;
                             } else {
-                                returnErrorMessage(request, new Throwable(event1.left().getValue()), path);
+                                minimumLicences = seconde * 9 + premiere * 8 + terminale * 7;
                             }
-                        });
+                            if(licences < minimumLicences){
+                                licence.put(structure.getString("uai"), Integer.toString(minimumLicences));
+                            }
+                        } catch (NumberFormatException e){
+                            invalidDatas = true;
+                        }
+                        statementsValues.put(structure.getString("id"), new JsonObject()
+                                .put("amount",amount.getString(structure.getString("uai")))
+                                .put("licence",licence.getString(structure.getString("uai")))
+                                .put("second",seconds.getString(structure.getString("uai")))
+                                .put("premiere",premieres.getString(structure.getString("uai")))
+                                .put("terminale",terminales.getString(structure.getString("uai")))
+                                .put("pro",professionnal_structure)
+                        );
+                    }
+                    launchImport(request, path, statementsValues, contentFile, invalidDatas);
+
             } else {
                 returnErrorMessage(request, new Throwable(event.left().getValue()), path);
             }
@@ -171,9 +197,9 @@ public class PurseController extends ControllerHelper {
      * @param statementsValues Object containing statement values
      */
     private void launchImport(final HttpServerRequest request, final String path,
-                              JsonObject statementsValues, final String contentFile) {
+                              JsonObject statementsValues, final String contentFile, boolean invalidDatas) {
         try {
-            purseService.launchImport(statementsValues, event -> {
+            purseService.launchImport(statementsValues, invalidDatas, event -> {
                         if (event.isRight()) {
                             Renders.renderJson(request, event.right().getValue());
                             JsonObject contentObject = new JsonObject().put("content", contentFile);
@@ -218,19 +244,15 @@ public class PurseController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     public void export(final HttpServerRequest request) {
         try {
-            purseService.getPurses(event -> {
+            List<String> params = request.params().getAll("id");
+            purseService.getPursesStudentsAndLicences(params, event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                    JsonObject exportValues = new JsonObject();
                     JsonArray purses = event.right().getValue();
-                    JsonObject purse;
                     for (int i = 0; i < purses.size(); i++) {
-                        purse = purses.getJsonObject(i);
-                        exportValues.put(purse.getString("id_structure"),
-                                Double.parseDouble(purse.getString("amount")));
-                        ids.add(purse.getString("id_structure"));
+                        ids.add(purses.getJsonObject(i).getString("id_structure"));
                     }
-                    retrieveUAIs(ids, exportValues, request);
+                    retrieveStructures(ids, purses, request);
                 } else {
                     badRequest(request);
                 }
@@ -241,6 +263,34 @@ public class PurseController extends ControllerHelper {
         }
     }
 
+    @Put("/purse/:idStructure")
+    @ApiDoc("Update a purse based on his id")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void updateHolder(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "purse", body -> {
+            try {
+                purseService.update(request.params().get("idStructure"), body, event -> {
+                    if(event.isRight()){
+                        Logging.defaultResponseHandler(eb,
+                                request,
+                                Contexts.PURSE.toString(),
+                                Actions.UPDATE.toString(),
+                                request.params().get("idStructure"),
+                                body).handle(new Either.Right<>(event.right().getValue()));
+                    }else{
+                        badRequest(request);
+                    }
+                }
+                );
+            } catch (NumberFormatException e) {
+                log.error("An error occurred when casting purse id", e);
+                badRequest(request);
+            }
+
+        });
+    }
+
     @Get("/purses/list")
     @ApiDoc("Get purses")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -248,7 +298,7 @@ public class PurseController extends ControllerHelper {
     @Override
     public void list(final HttpServerRequest request) {
         try {
-            purseService.getPurses( event -> {
+            purseService.getPursesStudentsAndLicences( event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
                     JsonArray purses = event.right().getValue();
@@ -277,28 +327,7 @@ public class PurseController extends ControllerHelper {
     private void retrieveStructuresData(JsonArray ids, final JsonArray purses, final HttpServerRequest request) {
         structureService.getStructureById(ids, event -> {
             if (event.isRight()) {
-                JsonArray structures = event.right().getValue();
-                JsonObject structure;
-                JsonObject purse;
-
-                // put structure name / uai on the purse according to structure id
-                for (int i = 0; i < structures.size(); i++) {
-                    structure = structures.getJsonObject(i);
-                    for (int j = 0; j < purses.size(); j++) {
-                        purse = purses.getJsonObject(j);
-
-                        if(purse.getString("id_structure").equals(structure.getString("id"))) {
-                            purse.put("name", structure.getString("name"));
-                            purse.put("uai", structure.getString("uai"));
-
-                            // we also convert amount to get a number instead of a string
-                            String amount = purse.getString("amount");
-                            purse.remove("amount");
-                            purse.put("amount",Double.parseDouble(amount));
-                        }
-                    }
-                }
-
+                prepareDataPurses(purses, event);
                 Renders.renderJson(request, purses);
 
             } else {
@@ -311,22 +340,15 @@ public class PurseController extends ControllerHelper {
     /**
      * Retrieve structure uais based on ids list
      * @param ids JsonArray containing ids list
-     * @param exportValues Values to exports
+     * @param purses Values to exports
      * @param request Http request
      */
-    private void retrieveUAIs(JsonArray ids, final JsonObject exportValues,
+    private void retrieveStructures(JsonArray ids, final JsonArray purses,
                               final HttpServerRequest request) {
         structureService.getStructureById(ids, event -> {
             if (event.isRight()) {
-                JsonObject values = new JsonObject();
-                JsonArray uais = event.right().getValue();
-                JsonObject uai;
-                for (int i = 0; i < uais.size(); i++) {
-                    uai = uais.getJsonObject(i);
-                    values.put(uai.getString("uai"),
-                            exportValues.getInteger(uai.getString("id")));
-                }
-                launchExport(values, request);
+                prepareDataPurses(purses, event);
+                launchExport(purses, request);
             } else {
                 renderError(request, new JsonObject().put("message",
                         event.left().getValue()));
@@ -334,16 +356,49 @@ public class PurseController extends ControllerHelper {
         });
     }
 
+    private void prepareDataPurses(JsonArray purses, Either<String, JsonArray> event) {
+        JsonArray structures = event.right().getValue();
+        JsonObject structure;
+        JsonObject purse;
+
+        // put structure name / uai on the purse according to structure id
+        for (int i = 0; i < structures.size(); i++) {
+            structure = structures.getJsonObject(i);
+            for (int j = 0; j < purses.size(); j++) {
+                purse = purses.getJsonObject(j);
+
+                if (purse.getString("id_structure").equals(structure.getString("id"))) {
+                    purse.put("name", structure.getString("name"));
+                    purse.put("uai", structure.getString("uai"));
+
+                    // we also convert amount to get a number instead of a string
+                    purse.put("amount", Double.parseDouble(purse.getString("amount")));
+                    purse.put("initial_amount", Double.parseDouble(purse.getString("initial_amount")));
+                    purse.put("licence_amount", Integer.parseInt(purse.getString("licence_amount")));
+                    purse.put("licence_initial_amount", Integer.parseInt(purse.getString("licence_initial_amount")));
+                    if (purse.getBoolean("pro")) {
+                        purse.put("seconde", purse.getInteger("seconde") * 3);
+                        purse.put("premiere", purse.getInteger("premiere") * 3);
+                        purse.put("terminale", purse.getInteger("terminale") * 3);
+                    } else {
+                        purse.put("seconde", purse.getInteger("seconde") * 9);
+                        purse.put("premiere", purse.getInteger("premiere") * 8);
+                        purse.put("terminale", purse.getInteger("terminale") * 7);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Launch export. Build CSV based on values parameter
-     * @param values values to export
+     * @param purses values to export
      * @param request Http request
      */
-    private static void launchExport(JsonObject values, HttpServerRequest request) {
-        String[] uais = values.fieldNames().toArray(new String[0]);
+    private static void launchExport(JsonArray purses, HttpServerRequest request) {
         StringBuilder exportString = new StringBuilder(getCSVHeader(request));
-        for (String uai : uais) {
-            exportString.append(getCSVLine(uai, values.getDouble(uai)));
+        for (Object purse : purses) {
+            exportString.append(getCSVLine((JsonObject) purse));
         }
         request.response()
                 .putHeader("Content-Type", "text/csv; charset=utf-8")
@@ -357,20 +412,32 @@ public class PurseController extends ControllerHelper {
      * @return CSV file Header
      */
     private static String getCSVHeader(HttpServerRequest request) {
-        return I18n.getInstance().translate("UAI", getHost(request), I18n.acceptLanguage(request)) +
-                ";" +
-                I18n.getInstance().translate("purse", getHost(request), I18n.acceptLanguage(request)) +
-                "\n";
+        return I18n.getInstance().translate("UAI", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.money.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.money.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.licence.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.licence.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.second.class", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.premiere.class", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.terminal.class", getHost(request), I18n.acceptLanguage(request)) + "\n";
     }
 
     /**
      * Get CSV Line
-     * @param uai Structure UAI
-     * @param amount Structure purse amount
+     * @param purse purse Values
      * @return CSV Line
      */
-    private static String getCSVLine(String uai, Number amount) {
-        return uai + ";" + amount + "\n";
+    private static String getCSVLine(JsonObject purse) {
+        return  (purse.getString("uai") != null ? purse.getString("uai") : "") + ";" +
+                (purse.getString("name") != null ? purse.getString("name") : "") + ";" +
+                (purse.getDouble("initial_amount") != null ? purse.getDouble("initial_amount").toString() : "") + ";" +
+                (purse.getDouble("amount") != null ? purse.getDouble("amount").toString() : "") + ";" +
+                (purse.getInteger("licence_initial_amount") != null ? purse.getInteger("licence_initial_amount").toString() : "") + ";" +
+                (purse.getInteger("licence_amount") != null ? purse.getInteger("licence_amount").toString() : "") + ";" +
+                (purse.getInteger("seconde") != null ? purse.getInteger("seconde").toString() : "") + ";" +
+                (purse.getInteger("premiere") != null ? purse.getInteger("premiere").toString() : "") + ";" +
+                (purse.getInteger("terminale") != null ? purse.getInteger("terminale").toString() : "") + "\n";
     }
 
     /**

@@ -3,15 +3,15 @@
 	"type": "object",
 	"additionalProperties": false,
 	"properties": {
-		"amount": {
+		"initial_amount": {
 			"type": "number"
 		},
 	    "id_structure": {
 			"type": "string"
 		},
-	    "id_campaign": {
+		"licence_initial_amount": {
 			"type": "number"
 		}
- 	},
-	"required": [ "amount" ]
+	},
+	"required": [ "initial_amount","licence_initial_amount" ]
 }

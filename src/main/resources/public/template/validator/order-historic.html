@@ -1,4 +1,4 @@
-<div ng-controller="orderRegionController" class="order-client-validation">
+<div ng-controller="orderRegionController" class="crre-table">
     <div class="row margin-top-20 vertical-spacing-twice">
         <div class="cell min-width-date-picker margin-top-8 twelve-mobile">
             <i18n>from</i18n>
@@ -134,9 +134,12 @@
                 <div class="licences">
                     <i18n>crre.initial.licences</i18n>
                     <div class="bold-font-weight big" ng-bind="campaign.nb_licences_total"></div>
-                    <div class="small"><i18n>crre.second.class</i18n>[[campaign.nb_licences_2de]]</div>
-                    <div class="small"><i18n>crre.premiere.class</i18n>[[campaign.nb_licences_1ere]]</div>
-                    <div class="small"><i18n>crre.terminal.class</i18n>[[campaign.nb_licences_Tale]]</div>
+                    <div class="small"><i18n>crre.second.class</i18n> : [[campaign.nb_licences_2de]]</div>
+                    <div class="small"><i18n>crre.premiere.class</i18n> : [[campaign.nb_licences_1ere]]</div>
+                    <div class="small"><i18n>crre.terminal.class</i18n> : [[campaign.nb_licences_Tale]]</div>
+                    <div class="small"><i18n>crre.licences.supp</i18n> :
+                        [[campaign.nb_licences_total - campaign.nb_licences_2de - campaign.nb_licences_1ere - campaign.nb_licences_Tale]]
+                    </div>
                 </div>
                 <div class="color-red">
                     <i18n>crre.remain.licences</i18n>

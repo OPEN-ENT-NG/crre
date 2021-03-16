@@ -1,83 +1,96 @@
-<div ng-controller="PurseController" class="purse-management">
+<div ng-controller="PurseController" class="crre-table">
 
-    <div class="tools right-magnet eleven-mobile">
-        <button class="five-mobile" ng-click="openPurseImporter()"><i18n>crre.campaign.purse.import</i18n></button>
-        <button class="five-mobile" ng-click="exportPurses(campaign.id)"><i18n>crre.campaign.purse.export</i18n></button>
+    <div class="row margin-top-20 vertical-spacing-twice">
+        <div class="cell two margin-top-8 twelve-mobile">
+            <div class="search-bar order-search-bar">
+                <i class="search padding-5"></i>
+                <input class="twelve"
+                       type="text"
+                       ng-model="query_name"
+                       ng-keyup="$event.keyCode == 13 ? searchByName(query_name) : null"
+                       i18n-placeholder="search.filter.order">
+            </div>
+        </div>
+        <div class="cell twelve-mobile right-magnet">
+            <button ng-click="openPurseImporter()" class="right-magnet"><i18n>crre.campaign.purse.import</i18n></button>
+        </div>
     </div>
-
-    <div class="six centered twelve-mobile">
-        <h1 class="centered-text">Cagnotte [[campaign.name]]</h1>
-
-        <article class="responsive-table">
-            <table class="twelve">
-                <thead>
-                    <td workflow="crre.administrator">
-                        <label class="checkbox">
-                            <input type="checkbox"
-                                   ng-change="switchAll(allPurseSelected, purses)"
-                                   ng-model="allPurseSelected">
-                            <span></span>
-                        </label>
-                    </td>
-                    <td ng-click="sort.purse.type = 'uai';
-                        sort.purse.reverse = !sort.purse.reverse">
-                        <i18n>UAI</i18n>
-                        <i class="up-open" ng-show="sort.purse.type === 'uai' && !sort.purse.reverse"></i>
-                        <i class="down-open" ng-show="sort.purse.type === 'uai' && sort.purse.reverse"></i>
-                    </td>
-                    <td ng-click="sort.purse.type = 'name';
-                        sort.purse.reverse = !sort.purse.reverse">
-                        <i18n>name</i18n>
-                        <i class="up-open" ng-show="sort.purse.type === 'name' && !sort.purse.reverse"></i>
-                        <i class="down-open" ng-show="sort.purse.type === 'name' && sort.purse.reverse"></i>
-                    </td>
-                    <td ng-click="sort.purse.type = 'amount';
-                        sort.purse.reverse = !sort.purse.reverse">
-                        <i18n>crre.campaign.purse</i18n>
-                        <i class="up-open" ng-show="sort.purse.type === 'amount' && !sort.purse.reverse"></i>
-                        <i class="down-open" ng-show="sort.purse.type === 'amount' && sort.purse.reverse"></i>
-                    </td>
-                    <td ng-click="sort.purse.type = 'amount';
-                        sort.purse.reverse = !sort.purse.reverse">
-                        <i18n>crre.campaign.purse.init</i18n>
-                        <i class="up-open" ng-show="sort.purse.type === 'amount' && !sort.purse.reverse"></i>
-                        <i class="down-open" ng-show="sort.purse.type === 'amount' && sort.purse.reverse"></i>
-                    </td>
-                    <td ng-show="isChecked"><i18n>difference</i18n></td>
-                </thead>
-                <tbody>
-                <tr ng-repeat="purse in purses.all | orderBy:sort.purse.type:sort.purse.reverse"
-                ng-class="{'tr-warning': purse.substraction !== undefined && purse.substraction !== 0 && !purse.bigDifference,
-                          'tr-error': purse.substraction !== undefined && purse.substraction !== 0 &&  purse.bigDifference,
-                           'tr-valid': purse.substraction !== undefined && purse.substraction === 0 }">
-                    <td workflow="crre.administrator">
-                        <label class="checkbox">
-                            <input type="checkbox" ng-model="purse.selected">
-                            <span></span>
-                        </label>
-                    </td>
-                    <td>[[purse.uai]]</td>
-                    <td>[[purse.name]]</td>
-                    <td><span ng-bind="purse.amount | currency"></span></td>
-                    <td><span ng-bind="purse.initial_amount | currency"></span></td>
-                    <td ng-show="isChecked">[[purse.substraction | currency]]  <i ng-class="{'warning-icon':purse.substraction !== 0 ,
-                        'valid-icon':purse.substraction === 0 }"></i></td>
-                </tr>
-                </tbody>
-            </table>
-        </article>
+    <div class="flex-row">
+        <table class="twelve">
+            <thead>
+            <tr>
+                <td class="table-selector main-selector">
+                    <label class="checkbox">
+                        <input type="checkbox"
+                               ng-change="switchAll(allPurseSelected, purses)"
+                               ng-model="allPurseSelected">
+                        <span></span>
+                    </label>
+                </td>
+                <td><div class="smallTabElem center"><i18n>UAI</i18n></div></td>
+                <td><div class="tabElem center"><i18n>crre.structure.name</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.credit.type</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.initial.quantity</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.rest.quantity</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.detail</i18n></div></td>
+            </tr>
+            </thead>
+            <tbody ng-repeat="purse in purses.all">
+            <tr>
+                <td class="table-selector">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="purse.selected">
+                        <span></span>
+                    </label>
+                </td>
+                <td><div class="smallTabElem center">[[purse.uai]]</div></td>
+                <td><div class="tabElem center">[[purse.name]]</div></td>
+                <td>
+                    <div class="smallTabElem center">
+                        <i18n ng-if="purse.licence_initial_amount">crre.Licences</i18n>
+                        <br ng-if="purse.licence_initial_amount && purse.initial_amount" />
+                        <i18n ng-if="purse.initial_amount" >crre.Money</i18n>
+                    </div>
+                </td>
+                <td>
+                    <div class="smallTabElem center">
+                        <span ng-bind="purse.licence_initial_amount" ng-if="purse.licence_initial_amount"></span>
+                        <br ng-if="purse.licence_initial_amount && purse.initial_amount"/>
+                        <span ng-bind="purse.initial_amount | currency" ng-if="purse.initial_amount"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="smallTabElem center">
+                        <span ng-bind="purse.licence_amount" ng-if="purse.licence_amount"></span>
+                        <br ng-if="purse.licence_amount && purse.amount"/>
+                        <span ng-bind="purse.amount | currency" ng-if="purse.amount"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="smallTabElem center">
+                        <i class="info-circle" tooltip="2nde : [[purse.seconde]]   /   1ère : [[purse.premiere]]   /
+                           Tale : [[purse.terminale]]   /   Supp : [[purse.licence_initial_amount - purse.seconde - purse.premiere - purse.terminale]]"></i>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
-    <lightbox show="lightbox.open" on-close="lightbox.open = false">
-        <container template="purse.lightbox"></container>
-    </lightbox>
-
+    <loader data-ng-show="loading" min-height="'250px'"></loader>
+    <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
     <section class="toggle-buttons" ng-show="purses.selected.length === 1">
         <div class="toggle">
             <div class="row">
                 <button ng-click="openEditPurseForm(purses.selected[0])" ng-show="purses.selected.length === 1">
                     <i18n>modify</i18n>
                 </button>
+                <button ng-click="exportPurses()">
+                    <i18n>crre.campaign.purse.export</i18n>
+                </button>
             </div>
         </div>
     </section>
+    <lightbox show="lightbox.open" on-close="lightbox.open = false">
+        <container template="purse.lightbox"></container>
+    </lightbox>
 </div>

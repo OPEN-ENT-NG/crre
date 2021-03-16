@@ -30,7 +30,7 @@ body.crre {
   }
 
   .bold-font-weight{
-    font-weight: bold;
+    font-weight: bold !important;
   }
 
   input[type=button].cancel{
@@ -290,6 +290,12 @@ body.crre {
 
   i.comment-icon {
     background-image: url(/crre/public/img/scss/comment.svg);
+    background-repeat: no-repeat;
+    padding: 5px 12px;
+  }
+
+  i.info-circle {
+    background-image: url(/crre/public/img/scss/information.svg);
     background-repeat: no-repeat;
     padding: 5px 12px;
   }
@@ -1027,7 +1033,7 @@ body.crre {
       display: inline-block;
     }
   }
-  .order-client-validation {
+  .crre-table {
     .validate-order {
       background-color: #f44336;
       color: white;

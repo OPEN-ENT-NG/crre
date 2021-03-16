@@ -35,7 +35,7 @@ public interface StructureService {
 
     void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler);
 
-    void reinitAmountLicence(String id_structure, Integer total_licence, Handler<Either<String, JsonObject>> defaultResponseHandler);
+    void reinitAmountLicence(String id_structure, Integer difference, Handler<Either<String, JsonObject>> defaultResponseHandler);
 
     void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
 

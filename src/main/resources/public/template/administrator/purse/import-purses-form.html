@@ -1,5 +1,5 @@
 <form ng-submit="importPurses(importer)">
-    <h2><i18n>crre.campaign.purse.import.title</i18n> [[campaign.name]]</h2>
+    <h2><i18n>crre.campaign.purse.import.title</i18n></h2>
     <div class="info">
         <p><i18n>crre.campaign.purse.import.definition</i18n></p>
         <p>
@@ -14,7 +14,6 @@
         <p class="six centered">
             <i18n>csv.file</i18n>
             <input type="file" files-input-change ng-model="importer.files">
-        </p>
         </p>
         <div class="row">
             <button class="right-magnet" ng-disabled="!importer.isValid()">

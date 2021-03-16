@@ -1,4 +1,4 @@
-<div ng-controller="quoteController" class="order-client-validation">
+<div ng-controller="quoteController" class="crre-table">
     <div class="row margin-top-20 vertical-spacing-twice">
         <div class="cell two margin-top-8 twelve-mobile">
             <div class="search-bar order-search-bar">
@@ -28,10 +28,8 @@
                 <td><div class="smallTabElem center"><i18n>crre.order.user</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.number.structure.concern</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.basket.file.sent</i18n></div></td>
-<!--                <td><div class="smallTabElem center"><i18n>crre.devis.posted</i18n></div></td>-->
             </tr>
             </thead>
-<!--            <tbody ng-repeat="project in projects">-->
             <tbody>
             <tr ng-repeat="quote in quotes">
                 <td class="table-selector">
@@ -49,53 +47,7 @@
                         <i class="attach-file" ></i>
                     </div>
                 </td>
-<!--                <td><div class="smallTabElem center"></div></td>-->
             </tr>
-           <!-- <tr>
-                <td class="table-selector">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project)">
-                        <span></span>
-                    </label>
-                </td>
-                <td><div class="smallTabElem center">01-12-20 - 09:33</div></td>
-                <td><div class="smallTabElem center">AK1459876ERZI</div></td>
-                <td><div class="smallTabElem center">Alain RODIN</div></td>
-                <td><div class="smallTabElem center">365</div></td>
-                <td>
-                    <div class="smallTabElem center">
-                        <i class="attach-file"></i>
-                    </div>
-                </td>
-                <td>
-                    <div class="smallTabElem center">
-                        <i class="pdf-file"></i>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="table-selector">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project)">
-                        <span></span>
-                    </label>
-                </td>
-                <td><div class="smallTabElem center">01-12-20 - 09:33</div></td>
-                <td><div class="smallTabElem center">AK1459876ERZI</div></td>
-                <td><div class="smallTabElem center">Alain RODIN</div></td>
-                <td><div class="smallTabElem center">365</div></td>
-                <td>
-                    <div class="smallTabElem center">
-                        <i class="attach-file"></i>
-                    </div>
-                </td>
-                <td>
-                    <div class="smallTabElem center ellipsis" tooltip="crre.canceled">
-                        <div class="CANCELED status-circle cell row myOrder centerCircleMobile"></div>
-                        <span class="webkit-vertical-align zero-mobile"><i18n>crre.canceled</i18n></span>
-                    </div>
-                </td>
-            </tr>-->
             </tbody>
         </table>
     </div>

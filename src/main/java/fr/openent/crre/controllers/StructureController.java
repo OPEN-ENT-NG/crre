@@ -49,6 +49,7 @@ public class StructureController extends ControllerHelper {
                 int terminale = Integer.parseInt(request.params().get("terminale"));
                 String id_structure = request.params().get("id_structure");
                 boolean pro = Boolean.getBoolean(request.params().get("pro"));
+                int previousTotal = Integer.parseInt(request.params().get("previousTotal"));
                 int total_licence;
 
                 if(pro) {
@@ -56,6 +57,8 @@ public class StructureController extends ControllerHelper {
                 } else {
                     total_licence = seconde * 9 + premiere * 8 + terminale * 7;
                 }
+
+                int difference = total_licence - previousTotal;
 
                 Future<JsonObject> updateAmountFuture = Future.future();
                 Future<JsonObject> updateAmountLicenceFuture = Future.future();
@@ -69,7 +72,7 @@ public class StructureController extends ControllerHelper {
                     }
                         });
                 structureService.updateAmount(id_structure, seconde, premiere, terminale, handlerJsonObject(updateAmountFuture));
-                structureService.reinitAmountLicence(id_structure, total_licence, handlerJsonObject(updateAmountLicenceFuture));
+                structureService.reinitAmountLicence(id_structure, difference, handlerJsonObject(updateAmountLicenceFuture));
             } catch (ClassCastException e) {
                 log.error("An error occurred when updating licences amount", e);
             }

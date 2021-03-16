@@ -1,6 +1,6 @@
-import { ng, template, _ } from 'entcore';
-import { PurseImporter, Utils, Purse, Purses } from '../../model';
-import { Mix } from 'entcore-toolkit';
+import {ng, template} from 'entcore';
+import {Purse, PurseImporter, Purses, Utils} from '../../model';
+import {Mix} from 'entcore-toolkit';
 
 declare let window: any;
 
@@ -11,13 +11,6 @@ export const purseController = ng.controller('PurseController',
 
         $scope.lightbox = {
             open: false
-        };
-
-        $scope.sort = {
-            purse: {
-                type: 'name',
-                reverse: false
-            }
         };
 
         $scope.openEditPurseForm = (purse: Purse = new Purse()) => {
@@ -34,20 +27,24 @@ export const purseController = ng.controller('PurseController',
         };
 
         $scope.validPurse = async (purse: Purse) => {
-            let status = await purse.save();
-            if(status === 202){
-                $scope.isNegativePurse = true;
-            }else{
-                $scope.lightbox.open = false;
-                await $scope.purses.sync($scope.campaign.id);
-                delete $scope.purse;
-            }
-            $scope.allHolderSelected = false;
+            await purse.save();
+            $scope.lightbox.open = false;
+            purse.amount = $scope.purses.selected[0].amount + (purse.initial_amount - $scope.purses.selected[0].initial_amount);
+            purse.licence_amount = $scope.purses.selected[0].licence_amount + (purse.licence_initial_amount - $scope.purses.selected[0].licence_initial_amount);
+            purse.selected = false;
+            $scope.purses.all = $scope.purses.all.filter(purse => { return purse.id != $scope.purses.selected[0].id });
+            $scope.purses.push(purse);
             Utils.safeApply($scope);
         };
 
+        $scope.checkPurse = () => {
+            return ($scope.purses.selected[0].licence_initial_amount && !$scope.purses.selected[0].initial_amount && !$scope.purse.licence_initial_amount) ||
+            ($scope.purses.selected[0].initial_amount && !$scope.purses.selected[0].licence_initial_amount && !$scope.purse.initial_amount) ||
+            ($scope.purses.selected[0].initial_amount && $scope.purses.selected[0].licence_initial_amount && !$scope.purse.initial_amount && !$scope.purse.licence_initial_amount);
+        }
+
         $scope.openPurseImporter = (): void => {
-            $scope.importer = new PurseImporter($scope.campaign.id);
+            $scope.importer = new PurseImporter();
             template.open('purse.lightbox', 'administrator/purse/import-purses-form');
             $scope.lightbox.open = true;
             Utils.safeApply($scope);
@@ -60,7 +57,7 @@ export const purseController = ng.controller('PurseController',
                 importer.message = err.message;
             } finally {
                 if (!importer.message) {
-                    await $scope.purses.sync($scope.campaign.id);
+                    await $scope.purses.sync();
                     $scope.lightbox.open = false;
                     delete $scope.importer;
                 } else {
@@ -70,8 +67,15 @@ export const purseController = ng.controller('PurseController',
             }
         };
 
-        $scope.exportPurses = (id: number) => {
-            window.location = `/crre/campaign/${id}/purses/export`;
+        $scope.exportPurses = () => {
+            let selectedPurses = [];
+            $scope.purses.forEach(purse => {
+                if(purse.selected) {
+                    selectedPurses.push(purse);
+                }
+            });
+            let params_id_purses = Utils.formatKeyToParameter(selectedPurses, 'id');
+            window.location = `/crre/purses/export?${params_id_purses}`;
         };
 
     }]);

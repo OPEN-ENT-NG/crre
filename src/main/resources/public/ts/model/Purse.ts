@@ -6,9 +6,14 @@ export class Purse implements Selectable {
     id?: number;
     id_structure: string;
     amount: number;
+    initial_amount: number;
     selected: boolean;
-    substraction?: any;
-    bigDifference: boolean;
+    seconde: number;
+    premiere: number;
+    terminale: number;
+    total: number;
+    licence_amount: number;
+    licence_initial_amount: number;
 
     constructor (id_structure?: string, amount?: number) {
         if (id_structure) this.id_structure = id_structure;
@@ -16,15 +21,9 @@ export class Purse implements Selectable {
         this.selected = false;
     }
 
-    async save (): Promise<number> {
+    async save (): Promise<void> {
         try {
-            let {status, data} = await http.put(`/crre/purse/${this.id}`, this.toJson());
-            if(status===200) {
-                let {amount} = data.amount;
-                this.amount = amount;
-            }else{
-                return status;
-            }
+            await http.put(`/crre/purse/${this.id_structure}`, this.toJson());
         } catch (e) {
             console.log(e)
             toasts.warning('crre.purse.update.err');
@@ -34,7 +33,8 @@ export class Purse implements Selectable {
     toJson () {
         return {
             id_structure: this.id_structure,
-            amount: this.amount
+            initial_amount: this.initial_amount,
+            licence_initial_amount: this.licence_initial_amount
         };
     }
 }
@@ -53,12 +53,10 @@ export class Purses extends Selection<Purse> {
 
 export class PurseImporter {
     files: File[];
-    id_campaign: number;
     message: string;
 
-    constructor (id_campaign: number) {
+    constructor () {
         this.files = [];
-        this.id_campaign = id_campaign;
     }
 
     isValid(): boolean {
