@@ -236,7 +236,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                     project.orders.forEach(async (order, j) => {
                         if (order.selected) {
                             project.orders.splice(j,1);
-                            order.status = "SENT";
                         }
                     });
                     if(project.orders.length == 0) {
@@ -249,7 +248,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
                 let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
                 await http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`);
-                $scope.uncheckAll();
                 Utils.safeApply($scope);
             }
         }
@@ -286,12 +284,7 @@ export const orderRegionController = ng.controller('orderRegionController',
 
             }
             if ($scope.filters.all.length > 0) {
-                const data = await $scope.filter_order(true);
-                if(data.length > 0){
-                    await synchroRegionOrders(true, data);
-                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                    Utils.safeApply($scope);
-                }
+                await searchProjectAndOrders();
             } else {
                 await $scope.searchByName($scope.query_name);
             }
