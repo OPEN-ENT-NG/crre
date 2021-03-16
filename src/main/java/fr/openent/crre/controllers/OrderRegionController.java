@@ -117,7 +117,8 @@ public class OrderRegionController extends BaseController {
                                                 JsonObject newOrder = ordersList.getJsonObject(i);
                                                 Future<JsonObject> createOrdersRegionFuture = Future.future();
                                                 futures.add(createOrdersRegionFuture);
-                                                updatePurseLicence(futures, newOrder,"-");
+                                                Double price = Double.parseDouble(newOrder.getDouble("price").toString())*newOrder.getInteger("amount");
+                                                updatePurseLicence(futures, newOrder,"-",price);
                                                 orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
                                                         handlerJsonObject(createOrdersRegionFuture));
                                                 int finalI = i;
@@ -379,35 +380,33 @@ public class OrderRegionController extends BaseController {
                                 String justification = orders.getString("justification");
                                 JsonArray ordersList = orders.getJsonArray("orders");
                                 List<Future> futures = new ArrayList<>();
-                                if(status.equals("rejected")){
-                                    for(int i = 0 ; i<ordersList.size() ; i++) {
-                                        JsonObject newOrder = ordersList.getJsonObject(i);
-                                        if(!newOrder.getString("status").equals("REJECTED"))
-                                            updatePurseLicence(futures, newOrder,"+");
-                                    }
-                                    CompositeFuture.all(futures).setHandler(event -> {
-                                        if (event.succeeded()) {
-                                            orderRegionService.updateOrders(ids,status,justification,
-                                                    Logging.defaultResponsesHandler(eb,
-                                                            request,
-                                                            Contexts.ORDERREGION.toString(),
-                                                            Actions.UPDATE.toString(),
-                                                            params,
-                                                            null));
-                                        } else {
-                                            LOGGER.error("An error when you want get id after create order region ", event.cause());
-                                            request.response().setStatusCode(400).end();
+                                for(int i = 0 ; i < ordersList.size() ; i++) {
+                                    JsonObject newOrder = ordersList.getJsonObject(i);
+                                    Double price = Double.parseDouble(newOrder.getDouble("price").toString());
+                                    if(newOrder.getString("status").equals("REJECTED")) {
+                                        if (status.equals("valid")) {
+                                            updatePurseLicence(futures, newOrder, "-",price);
                                         }
-                                    });
-                                }else{
-                                    orderRegionService.updateOrders(ids,status,justification,
-                                            Logging.defaultResponsesHandler(eb,
-                                                    request,
-                                                    Contexts.ORDERREGION.toString(),
-                                                    Actions.UPDATE.toString(),
-                                                    params,
-                                                    null));
+                                    }else{
+                                        if (status.equals("rejected")) {
+                                            updatePurseLicence(futures, newOrder, "+",price);
+                                        }
+                                    }
                                 }
+                                CompositeFuture.all(futures).setHandler(event -> {
+                                    if (event.succeeded()) {
+                                        orderRegionService.updateOrders(ids,status,justification,
+                                                Logging.defaultResponsesHandler(eb,
+                                                        request,
+                                                        Contexts.ORDERREGION.toString(),
+                                                        Actions.UPDATE.toString(),
+                                                        params,
+                                                        null));
+                                    } else {
+                                        LOGGER.error("An error when you want get id after create order region ", event.cause());
+                                        request.response().setStatusCode(400).end();
+                                    }
+                                });
                             } catch (ClassCastException e) {
                                 log.error("An error occurred when casting order id", e);
                             }
@@ -415,14 +414,11 @@ public class OrderRegionController extends BaseController {
 
     }
 
-    private void updatePurseLicence(List<Future> futures, JsonObject newOrder,String operation) {
+    private void updatePurseLicence(List<Future> futures, JsonObject newOrder,String operation, Double price) {
         Future<JsonObject> purseUpdateFuture = Future.future();
         futures.add(purseUpdateFuture);
         Future<JsonObject> purseUpdateLicencesFuture = Future.future();
         futures.add(purseUpdateLicencesFuture);
-        Double price = Double.parseDouble(newOrder.getDouble("price").toString());
-        if(operation.equals("-"))
-        price *= newOrder.getInteger("amount");
         purseService.updatePurseAmount(price,
                 newOrder.getString("id_structure"), operation,
                 handlerJsonObject(purseUpdateFuture));
@@ -507,22 +503,22 @@ public class OrderRegionController extends BaseController {
                     }
                 }
                 if(library) {
-                   int nbEtab = structures.size();
-                   String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
-                   quoteService.insertQuote(user, nbEtab, base64File, response -> {
+                    int nbEtab = structures.size();
+                    String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
+                    quoteService.insertQuote(user, nbEtab, base64File, response -> {
                         if(response.isRight()) {
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
                             attachment.add(new JsonObject().put("name", "orders.csv").put("content",base64File));
                             String mail = this.mail.getString("address");
                             emailSender.sendMail(request, mail, "Test",
-                                           "Bonjour", attachment, message -> {
-                                if(!message.isRight()) {
-                                    log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
-                                }
-                            });
+                                    "Bonjour", attachment, message -> {
+                                        if(!message.isRight()) {
+                                            log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
+                                        }
+                                    });
                             renderJson(request, response.right().getValue());
                         }
-                   });
+                    });
 
                 } else {
                     request.response()

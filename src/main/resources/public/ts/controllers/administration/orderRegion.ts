@@ -157,6 +157,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                             order.status="REJECTED";
                             order.selected = false;
                         }
+                        project.selected =false;
                     });
                     Utils.setStatus(project, project.orders[0]);
                 });
@@ -187,6 +188,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                             order.status="VALID";
                             order.selected = false;
                         }
+                        project.selected =false;
                     });
                     Utils.setStatus(project, project.orders[0]);
                 });
@@ -235,7 +237,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                         if (order.selected) {
                             project.orders.splice(j,1);
                             order.status = "SENT";
-                            order.selected = false;
                         }
                     });
                     if(project.orders.length == 0) {
