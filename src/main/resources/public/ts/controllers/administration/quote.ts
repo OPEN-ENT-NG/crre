@@ -32,13 +32,13 @@ export const quoteController = ng.controller('quoteController',
         }
         const syncQuotes = async() => {
             let data = await $scope.getQuotes();
+            data.map(quote =>{
+                let date = new Date(quote.creation_date);
+                let newDateString = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
+                quote.creation_date = newDateString;
+            });
             if(data.length > 0 ) {
                 $scope.quotes = $scope.quotes.concat(data);
-                $scope.quotes.map(quote =>{
-                    let date = new Date(quote.creation_date);
-                    let newDateString = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
-                    quote.creation_date = newDateString;
-                });
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
             $scope.loading = false;
@@ -59,6 +59,11 @@ export const quoteController = ng.controller('quoteController',
             }
             if (!!name) {
                 let {data} = await http.get(`/crre/quote/search?q=${name}&page=${$scope.filter.page}`);
+                data.map(quote =>{
+                    let date = new Date(quote.creation_date);
+                    let newDateString = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
+                    quote.creation_date = newDateString;
+                });
                 if(data.length > 0 ) {
                     $scope.quotes = $scope.quotes.concat(data);
                     $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
