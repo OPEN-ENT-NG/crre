@@ -11,7 +11,7 @@
         </div>
         <div class="card row padding-20" ng-show="display.equipment">
         <h1 class="eight cell">[[basket.equipment.titre]] </h1>
-        <div class="twelve-small cell right-magnet twelve-mobile" >
+        <div class="twelve-small padding-20 cell right-magnet twelve-mobile" >
             <div ng-if="basket.equipment.type === 'articlenumerique'" id="box">
                 <input type="radio" id="item_1" name="box" checked />
                 <label for="item_1" class="labeltab">
@@ -189,11 +189,11 @@
             <h2>
                 <i18n>Détails Techniques</i18n>
             </h2>
-            <table class="table twelve">
+            <table class="table six">
                 <tbody>
                 <tr ng-repeat="label in labels">
                     <td class="bold-font-weight" ng-bind="lang.translate(label)"></td>
-                    <td ng-repeat="techno in basket.equipment.technos" ng-bind="lang.translate(techno[label])"></td>
+                    <td class="center" ng-repeat="techno in basket.equipment.technos" ng-bind="lang.translate(techno[label])"></td>
                 </tr>
                 </tbody>
             </table>

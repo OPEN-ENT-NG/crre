@@ -270,36 +270,36 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
+        const removeUselessTechnos = (techno) => {
+            let removeTechnos = ["configurationMiniOS", "technologie", "$$hashKey", "versionReader", "annotations",
+                "assignationTachesEleves", "availableHorsENT", "captureImage", "creationCours", "deploiementMasse",
+                "exercicesAutoCorriges", "exportCleUSB", "exportDocument", "exportReponsesEleves", "exportSCORM",
+                "fonctionsRecherche", "importDocument", "marquePage", "modifContenuEditorial", "oneClic", "partageContenuEleves",
+                "personnalisationUserInterface", "zoom"];
+            removeTechnos.forEach(t => {
+                delete techno[t];
+            });
+            return techno;
+        }
+
         $scope.computeTechnos = async () => {
             let technos = $scope.basket.equipment.technos;
             for (let i = 0; i < technos.length; i++) {
                 if(i + 1 < technos.length) {
                     let technoTemp = JSON.parse(JSON.stringify(technos[i]));
-                    delete technoTemp.configurationMiniOS;
-                    delete technoTemp.technologie;
-                    delete technoTemp.versionReader;
-                    delete technoTemp.$$hashKey;
+                    removeUselessTechnos(technoTemp);
                     for(let j = i + 1; j < technos.length; j++) {
                         let technoTemp2 = JSON.parse(JSON.stringify(technos[j]));
-                        delete technoTemp2.configurationMiniOS;
-                        delete technoTemp2.technologie;
-                        delete technoTemp2.versionReader;
-                        delete technoTemp2.$$hashKey;
+                        removeUselessTechnos(technoTemp2);
                         if (_.isEqual(technoTemp, technoTemp2)) {
                             $scope.basket.equipment.technos[i].technologie += ", " + $scope.basket.equipment.technos[j].technologie;
                             $scope.basket.equipment.technos.splice(j, 1);
                         }
                         if(i + 1 >= technos.length && technos.length == 2) {
                             let technoTemp = JSON.parse(JSON.stringify(technos[0]));
-                            delete technoTemp.configurationMiniOS;
-                            delete technoTemp.technologie;
-                            delete technoTemp.versionReader;
-                            delete technoTemp.$$hashKey;
+                            removeUselessTechnos(technoTemp);
                             let technoTemp2 = JSON.parse(JSON.stringify(technos[1]));
-                            delete technoTemp2.configurationMiniOS;
-                            delete technoTemp2.technologie;
-                            delete technoTemp2.versionReader;
-                            delete technoTemp2.$$hashKey;
+                            removeUselessTechnos(technoTemp2);
                             if (_.isEqual(technoTemp, technoTemp2)) {
                                 $scope.basket.equipment.technos[0].technologie += ", " + $scope.basket.equipment.technos[1].technologie;
                                 $scope.basket.equipment.technos.splice(1, 1);
