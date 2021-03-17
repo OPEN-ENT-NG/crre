@@ -10,10 +10,8 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 public class DefaultQuoteService extends SqlCrudService implements QuoteService {
 
@@ -44,8 +42,7 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Crre.crreSchema + ".quote(title, owner_name, owner_id, nb_structures, attachment) " +
                        "VALUES (?, ?, ?, ?, ?)";
-        DateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmm");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmm");
         String dateStr = "DD" + simpleDateFormat.format(new Date());
         params.add(dateStr)
               .add(user.getUsername())
