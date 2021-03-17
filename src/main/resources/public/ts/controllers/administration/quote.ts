@@ -36,8 +36,7 @@ export const quoteController = ng.controller('quoteController',
                 $scope.quotes = $scope.quotes.concat(data);
                 $scope.quotes.map(quote =>{
                     let date = new Date(quote.creation_date);
-                    var newDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
-                    let newDateString = newDate.toLocaleDateString().replace(/\//g, "-") + " - " + newDate.toLocaleTimeString();
+                    let newDateString = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
                     quote.creation_date = newDateString;
                 });
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
