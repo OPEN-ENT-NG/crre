@@ -43,6 +43,13 @@ export class Equipment implements Selectable {
                 if(this.disciplines.length != 0) {
                     this.discipline = this.disciplines[0].libelle;
                 }
+                if(this.type === 'articlenumerique') {
+                    this.offres[0].leps.forEach(function (offre) {
+                        offre.conditions.sort(function (a, b) {
+                            return a.gratuite - b.gratuite;
+                        });
+                    });
+                }
         } catch (e) {
             console.error(e);
             toasts.warning('crre.equipment.sync.err');
@@ -187,5 +194,18 @@ export class Equipments extends Selection<Equipment> {
 
     get loading() {
         return this._loading;
+    }
+}
+
+export class Offer {
+    name: string;
+    value: string;
+}
+
+export class Offers {
+    all: Offer[];
+
+    constructor() {
+        this.all = [];
     }
 }

@@ -1,5 +1,5 @@
 import {_, ng, template} from 'entcore';
-import {Basket, Campaign, Equipment, Filter, Filters, Utils} from '../../model';
+import {Basket, Campaign, Equipment, Filter, Filters, Offer, Offers, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', ($scope) => {
@@ -10,6 +10,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipment = new Equipment();
             $scope.subjects = [];
             $scope.loading = true;
+            $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT", "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
             $scope.initPopUpFilters();
             $scope.filters = new Filters();
             if($scope.isAdministrator()){
@@ -56,6 +57,33 @@ export const catalogController = ng.controller('catalogController',
         $scope.validArticle = () => {
             return $scope.basket.amount > 0;
         };
+
+        $scope.computeOffer = () => {
+            let amount = $scope.basket.amount;
+            let gratuit = 0;
+            let gratuite = 0;
+            let offre = null;
+            $scope.offers = new Offers();
+            $scope.basket.equipment.offres[0].leps.forEach(function (offer) {
+                offre = new Offer();
+                offre.name = offer.licence[0].valeur;
+                if(offer.conditions.length > 1) {
+                    offer.conditions.forEach(function (condition) {
+                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                            gratuit = condition.conditionGratuite;
+                            gratuite = condition.gratuite;
+                        }
+                    });
+                } else {
+                    gratuit = offer.conditions[0].conditionGratuite;
+                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+                }
+                offre.value = gratuite;
+                $scope.offers.all.push(offre);
+            });
+            return $scope.offers;
+        };
+
 
         $scope.switchAll = (model: boolean, collection) => {
             collection.forEach((col) => {col.selected = col.required ? false : col.selected = model; });
@@ -112,10 +140,16 @@ export const catalogController = ng.controller('catalogController',
         };
         $scope.amountIncrease = () => {
             $scope.basket.amount += 1;
+            if($scope.basket.equipment.type === 'articlenumerique') {
+                $scope.computeOffer();
+            }
         };
         $scope.amountDecrease = () => {
             if($scope.basket.amount)
                 $scope.basket.amount -= 1;
+            if($scope.basket.equipment.type === 'articlenumerique') {
+                $scope.computeOffer();
+            }
         };
 
         $scope.durationFormat = (nbr : number) => {

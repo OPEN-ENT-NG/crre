@@ -20,7 +20,11 @@ export class Basket implements Selectable {
         this.equipment = Mix.castAs(Equipment, equipment) ;
         this.id_campaign = id_campaign;
         this.id_structure = id_structure;
-        this.amount = 1;
+        if(equipment.type === "articlenumerique") {
+            this.amount = equipment.offres[0].quantiteminimaleachat;
+        } else {
+            this.amount = 1;
+        }
     }
 
     toJson () {
@@ -93,7 +97,7 @@ export class Basket implements Selectable {
     amountDecrease = () => {
         if(this.amount >= 1){
             this.amount -= 1;
-            this.updateAmount ();
+            this.updateAmount();
         }
     };
 

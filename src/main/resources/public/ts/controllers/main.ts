@@ -16,7 +16,7 @@ import {
     Structures,
     Utils,
     Filters,
-    Student
+    Student, Offers, Offer
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 
@@ -178,7 +178,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if (campaignPref) {
                     await $scope.initOrders('WAITING');
                     $scope.selectCampaignShow(campaignPref, "WAITING");
-
                 } else {
                     await $scope.openLightSelectCampaign();
                 }
@@ -252,6 +251,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             } else {
                 await $scope.initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             }
+            if($scope.basket.equipment.type === 'articlenumerique') {
+                await $scope.computeOffer();
+                await $scope.computeTechnos();
+            }
             window.scrollTo(0, 0);
             $scope.display.equipment = true;
         }
@@ -264,6 +267,46 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                         $scope.campaign = campaign;
                     }
                 });
+            }
+        };
+
+        $scope.computeTechnos = async () => {
+            let technos = $scope.basket.equipment.technos;
+            for (let i = 0; i < technos.length; i++) {
+                if(i + 1 < technos.length) {
+                    let technoTemp = JSON.parse(JSON.stringify(technos[i]));
+                    delete technoTemp.configurationMiniOS;
+                    delete technoTemp.technologie;
+                    delete technoTemp.versionReader;
+                    delete technoTemp.$$hashKey;
+                    for(let j = i + 1; j < technos.length; j++) {
+                        let technoTemp2 = JSON.parse(JSON.stringify(technos[j]));
+                        delete technoTemp2.configurationMiniOS;
+                        delete technoTemp2.technologie;
+                        delete technoTemp2.versionReader;
+                        delete technoTemp2.$$hashKey;
+                        if (_.isEqual(technoTemp, technoTemp2)) {
+                            $scope.basket.equipment.technos[i].technologie += ", " + $scope.basket.equipment.technos[j].technologie;
+                            $scope.basket.equipment.technos.splice(j, 1);
+                        }
+                        if(i + 1 >= technos.length && technos.length == 2) {
+                            let technoTemp = JSON.parse(JSON.stringify(technos[0]));
+                            delete technoTemp.configurationMiniOS;
+                            delete technoTemp.technologie;
+                            delete technoTemp.versionReader;
+                            delete technoTemp.$$hashKey;
+                            let technoTemp2 = JSON.parse(JSON.stringify(technos[1]));
+                            delete technoTemp2.configurationMiniOS;
+                            delete technoTemp2.technologie;
+                            delete technoTemp2.versionReader;
+                            delete technoTemp2.$$hashKey;
+                            if (_.isEqual(technoTemp, technoTemp2)) {
+                                $scope.basket.equipment.technos[0].technologie += ", " + $scope.basket.equipment.technos[1].technologie;
+                                $scope.basket.equipment.technos.splice(1, 1);
+                            }
+                        }
+                    }
+                }
             }
         };
 
@@ -430,6 +473,53 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.cancelSelectCampaign(true, type);
             }
         };
+        $scope.getOrderWaitingFiltered = async (campaign:Campaign):Promise<void> =>{
+            await $scope.initOrders('WAITING');
+            $scope.selectCampaignShow(campaign, "WAITING");
+        };
+
+        $scope.computeOffer = async () => {
+            let amount = $scope.basket.amount;
+            let gratuit = 0;
+            let gratuite = 0;
+            let offre = null;
+            $scope.offerStudent = "";
+            $scope.offerTeacher = "";
+            $scope.offers = new Offers();
+            $scope.basket.equipment.offres[0].leps.forEach(function (offer) {
+                offre = new Offer();
+                offre.name = offer.licence[0].valeur;
+                if(offer.conditions.length > 1) {
+                    offer.conditions.forEach(function (condition) {
+                        if(offer.licence[0].valeur === "Elève") {
+                            $scope.offerStudent += condition.gratuite + " licence élève gratuite pour " + condition.conditionGratuite + ", ";
+                        } else {
+                            $scope.offerTeacher += condition.gratuite + " licence enseignant gratuite pour " + condition.conditionGratuite + ", ";
+                        }
+                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                            gratuit = condition.conditionGratuite;
+                            gratuite = condition.gratuite;
+                        }
+                    });
+                    if(offer.licence[0].valeur === "Elève") {
+                        $scope.offerStudent = $scope.offerStudent.slice(0, -2);
+                    } else {
+                        $scope.offerTeacher = $scope.offerTeacher.slice(0, -2);
+                    }
+                } else {
+                    if(offer.licence[0].valeur === "Elève") {
+                        $scope.offerStudent += offer.conditions[0].gratuite + " licence élève gratuite pour " + offer.conditions[0].conditionGratuite;
+                    } else {
+                        $scope.offerTeacher += offer.conditions[0].gratuite + " licence enseignant gratuite pour " + offer.conditions[0].conditionGratuite;
+                    }
+                    gratuit = offer.conditions[0].conditionGratuite;
+                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+                }
+                offre.value = gratuite;
+                $scope.offers.all.push(offre);
+            });
+        };
+
 
         $scope.cancelSelectCampaign = (initOrder: boolean, type:string):void => {
             if(initOrder) {
