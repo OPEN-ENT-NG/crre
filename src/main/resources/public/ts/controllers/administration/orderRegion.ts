@@ -209,7 +209,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.uncheckAll();
         }
 
-        function extractSelectedOrders() {
+        function extractSelectedOrders(select: boolean = false) {
             let selectedOrders = [];
             let allOrders = [];
             $scope.projects.forEach(project => {
@@ -220,7 +220,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     allOrders.push(order);
                 });
             });
-            if (selectedOrders.length == 0) {
+            if (selectedOrders.length == 0 && !select) {
                 selectedOrders = allOrders;
             }
             return selectedOrders;
@@ -232,24 +232,30 @@ export const orderRegionController = ng.controller('orderRegionController',
             ordersToSend.all = Mix.castArrayAs(OrderRegion, selectedOrders);
             let {status} = await ordersToSend.updateStatus('SENT');
             if (status == 200) {
-                $scope.projects.forEach((project, i) => {
-                    project.orders.forEach(async (order, j) => {
-                        if (order.selected) {
-                            project.orders.splice(j,1);
+                let selectedOrders = extractSelectedOrders(true);
+                if(selectedOrders.length == 0) {
+                    $scope.projects = [];
+                } else {
+                    for(let i = $scope.projects.length - 1; i >= 0; i--) {
+                        let project = $scope.projects[i];
+                        for(let j = project.orders.length -1; j >= 0; j--) {
+                            if (project.orders[j].selected) {
+                                project.orders.splice(j,1);
+                            }
                         }
-                    });
-                    if(project.orders.length == 0) {
-                        $scope.projects.splice(i, 1);
-                    } else {
-                        Utils.setStatus(project, project.orders[0]);
+                        if(project.orders.length == 0) {
+                            $scope.projects.splice(i, 1);
+                        } else {
+                            Utils.setStatus(project, project.orders[0]);
+                        }
                     }
-                });
+                    }
+                }
                 let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
                 let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
                 let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
                 await http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`);
                 Utils.safeApply($scope);
-            }
         }
 
         $scope.getFilter = async (word: string, filter: string) => {
