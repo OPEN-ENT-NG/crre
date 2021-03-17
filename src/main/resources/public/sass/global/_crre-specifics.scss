@@ -1612,7 +1612,6 @@ input[type="radio"]:checked + .labeltab > div {
   top: 40px;
   left: 0;
   width:92.5%;
-  min-height: 250px;
   padding: 10px;
   box-shadow: -1px 1px 3px 0px rgba(0, 0, 0, 0.75);
   background: rgb(251,251,251);
@@ -1672,4 +1671,8 @@ input[type="radio"]:checked + .labeltab > div {
 .italic16 {
   font-style: italic;
   font-size: 16px;
+}
+
+.verticalAlignMiddle {
+  vertical-align: middle;
 }

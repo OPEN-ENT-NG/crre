@@ -26,10 +26,10 @@
                                <span class="bold15"><i18n>Licences élèves</i18n></span>
                             </div>
                             <div class="centerColumnInput" ng-if="!isAdministrator()" workflow="crre.prescriptor">
-                                <i class="moins" ng-click="amountDecrease()"></i>
-                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="numberWithoutArrow two ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
-                                <i class="plus" ng-click="amountIncrease()"></i>
-                                </div>
+                                <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
+                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
+                                <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
+                            </div>
                             <div>
                                 <span class="grayUnderline"><i18n>crre.equipment.offer.free</i18n></span>
                             </div>
@@ -81,9 +81,9 @@
                                 <span class="bold15"><i18n>Quantité Manuels élèves</i18n></span>
                             </div>
                             <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="centerColumnInput">
-                                <i class="moins" ng-click="amountDecrease()"></i>
-                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="numberWithoutArrow two ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
-                                <i class="plus" ng-click="amountIncrease()"></i>
+                                <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
+                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
+                                <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
                         </div>
                         <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="boxF">
