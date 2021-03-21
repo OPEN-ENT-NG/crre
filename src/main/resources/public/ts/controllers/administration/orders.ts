@@ -103,6 +103,10 @@ export const orderController = ng.controller('orderController',
             $scope.users = await $scope.ordersClient.getUsers('WAITING');
         };
 
+        $scope.licencesAvailable = () => {
+            return $scope.campaign.nb_licences_available - $scope.displayedOrders.calculTotalAmount() < 0;
+        }
+
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
             let ordersToRemove = new OrdersClient();

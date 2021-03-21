@@ -230,8 +230,21 @@ export const orderRegionController = ng.controller('orderRegionController',
             let selectedOrders = extractSelectedOrders();
             let ordersToSend = new OrdersRegion();
             ordersToSend.all = Mix.castArrayAs(OrderRegion, selectedOrders);
-            let {status} = await ordersToSend.updateStatus('SENT');
-            if (status == 200) {
+            let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
+            let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
+            let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
+            let promesses = []
+            promesses.push(ordersToSend.updateStatus('SENT'));
+            promesses.push(http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`));
+            let responses = await Promise.all(promesses);
+            let statusOK = true;
+            if (responses[0].status) {
+                for (let i = 0; i < responses.length; i++) {
+                    if (!(responses[i].status === 200)) {
+                        statusOK = false;
+                    }
+                }
+            if (statusOK) {
                 let selectedOrders = extractSelectedOrders(true);
                 if(selectedOrders.length == 0) {
                     $scope.projects = [];
@@ -250,12 +263,11 @@ export const orderRegionController = ng.controller('orderRegionController',
                         }
                     }
                     }
-                }
-                let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
-                let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
-                let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
-                await http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`);
+                toasts.confirm('crre.order.region.library.create.message');
                 Utils.safeApply($scope);
+                } else {
+                toasts.warning('crre.order.region.library.create.err');
+            }}
         }
 
         $scope.getFilter = async (word: string, filter: string) => {

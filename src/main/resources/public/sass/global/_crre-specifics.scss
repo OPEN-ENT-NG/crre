@@ -1593,15 +1593,16 @@ input[type="radio"],.contentTab {display: none;}
   display: inline-block;
   height: 20px;
   padding: 10px 10px;
-  background: rgb(251,251,251);
+  background: #cecece;
   border-radius: 10px 10px 0px 0px;
-  box-shadow: 1px -1px 2px rgba(0,0,0,0.51);
+  box-shadow: -2px 2px 0px 0px rgba(0,0,0,0.25);
   width: 44.5%;
   font-size: 18px;
+  color:white;
 }
 input[type="radio"]:checked + .labeltab {
-  background: #9acfd7;
-  color:white;
+  background: rgb(251,251,251);
+  color:black;
   font-size: 18px;
 }
 input[type="radio"]:checked + .labeltab > div {
@@ -1613,7 +1614,7 @@ input[type="radio"]:checked + .labeltab > div {
   left: 0;
   width:92.5%;
   padding: 10px;
-  box-shadow: -1px 1px 3px 0px rgba(0, 0, 0, 0.75);
+  box-shadow: -2px 2px 0px 0px rgba(0,0,0,0.25);
   background: rgb(251,251,251);
   color: black;
 }
