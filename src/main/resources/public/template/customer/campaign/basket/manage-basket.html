@@ -40,12 +40,7 @@
                             <div class="cell eight" ng-click="openEquipment(basket.equipment)">
                                 <div class="eleven centered">
                                     <h3>[[basket.equipment.titre]]</h3>
-                                    <p ng-bind-html="basket.equipment.description"
-                                       style="overflow: hidden;
-                                       text-overflow: ellipsis;
-                                       display: -webkit-box;
-                                       -webkit-line-clamp: 3;
-                                       -webkit-box-orient: vertical;"></p>
+                                    <p ng-bind-html="basket.equipment.description" class="descriptionTruncate" style="-webkit-box-orient: vertical;"></p>
                                 </div>
                             </div>
                             <div class="three cell text-right">

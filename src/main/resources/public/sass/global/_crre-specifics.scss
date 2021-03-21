@@ -1677,3 +1677,11 @@ input[type="radio"]:checked + .labeltab > div {
 .verticalAlignMiddle {
   vertical-align: middle;
 }
+
+.descriptionTruncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
