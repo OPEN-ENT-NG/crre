@@ -244,30 +244,31 @@ export const orderRegionController = ng.controller('orderRegionController',
                         statusOK = false;
                     }
                 }
-            if (statusOK) {
-                let selectedOrders = extractSelectedOrders(true);
-                if(selectedOrders.length == 0) {
-                    $scope.projects = [];
-                } else {
-                    for(let i = $scope.projects.length - 1; i >= 0; i--) {
-                        let project = $scope.projects[i];
-                        for(let j = project.orders.length -1; j >= 0; j--) {
-                            if (project.orders[j].selected) {
-                                project.orders.splice(j,1);
+                if (statusOK) {
+                    let selectedOrders = extractSelectedOrders(true);
+                    if(selectedOrders.length == 0) {
+                        $scope.projects = [];
+                    } else {
+                        for(let i = $scope.projects.length - 1; i >= 0; i--) {
+                            let project = $scope.projects[i];
+                            for(let j = project.orders.length -1; j >= 0; j--) {
+                                if (project.orders[j].selected) {
+                                    project.orders.splice(j,1);
+                                }
+                            }
+                            if(project.orders.length == 0) {
+                                $scope.projects.splice(i, 1);
+                            } else {
+                                Utils.setStatus(project, project.orders[0]);
                             }
                         }
-                        if(project.orders.length == 0) {
-                            $scope.projects.splice(i, 1);
-                        } else {
-                            Utils.setStatus(project, project.orders[0]);
-                        }
                     }
-                    }
-                toasts.confirm('crre.order.region.library.create.message');
-                Utils.safeApply($scope);
+                    toasts.confirm('crre.order.region.library.create.message');
+                    $scope.displayToggle = false;
+                    Utils.safeApply($scope);
                 } else {
-                toasts.warning('crre.order.region.library.create.err');
-            }}
+                    toasts.warning('crre.order.region.library.create.err');
+                }}
         }
 
         $scope.getFilter = async (word: string, filter: string) => {
