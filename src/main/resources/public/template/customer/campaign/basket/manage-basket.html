@@ -109,12 +109,16 @@
             </div>
         </div>
     </div>
-    <div ng-show="baskets.all.length === 0" class=" row cell centered empty-basket-message">
-        <div class="cell twelve-mobile centered-text">
-            <img src="/crre/public/img/basket.png" />
+    <div ng-show="baskets.all.length === 0" class="centered">
+        <div class="twelve cell centered-text" >
+            <h3>
+                <i18n>crre.info.empty.basket.1</i18n>
+                <span class="bold-font-weight secondary-color"><i18n>crre.info.empty.2</i18n></span>
+            </h3>
         </div>
-        <div class="cell centered-text four twelve-mobile" >
-            <h4><i18n>crre.info.empty.basket</i18n></h4>
+        <br/>
+        <div class="twelve cell centered-text vertical-spacing">
+            <img class="four" src="/crre/public/img/PagePanierVide.svg" />
         </div>
     </div>
     <lightbox show="display.lightbox.deleteBasket" on-close="cancelBasketDelete()">

@@ -53,6 +53,15 @@
     </div>
     <loader data-ng-show="loading" min-height="'250px'"></loader>
     <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
+    <div ng-show="quotes.length === 0 && !loading" class="centered">
+        <div class="twelve cell centered-text" >
+            <h3><i18n>crre.info.empty.tab</i18n></h3>
+        </div>
+        <br/>
+        <div class="twelve cell centered-text vertical-spacing">
+            <img class="four" src="/crre/public/img/PageTableauVide.svg" />
+        </div>
+    </div>
     <section class="toggle-buttons" ng-hide="!displayToggle">
         <div class="toggle">
             <div class="row">

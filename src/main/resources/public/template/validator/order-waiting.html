@@ -154,6 +154,15 @@
             </tbody>
         </table>
         <loader data-ng-show="loading" min-height="'250px'" class="twelve-mobile ten absolute-position"></loader>
+        <div ng-show="ordersClient.all.length === 0 && !loading" class="twelve-mobile ten absolute-position centered top-margin-100">
+            <div class="twelve cell centered-text" >
+                <h3><i18n>crre.info.empty.tab</i18n></h3>
+            </div>
+            <br/>
+            <div class="twelve cell centered-text">
+                <img class="four" src="/crre/public/img/PageTableauVide.svg" />
+            </div>
+        </div>
         <div class="twelve-mobile tot-cards two">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
             <div class = "total-container">

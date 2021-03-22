@@ -178,5 +178,17 @@
                 </article>
             </div>
         </div>
+        <div ng-show="equipments.all.length === 0 && !equipments.loading" class="centered">
+            <div class="twelve cell centered-text" >
+                <h3>
+                    <i18n>crre.info.empty.catalog.1</i18n>
+                    <span class="bold-font-weight color-red"><i18n>crre.info.empty.2</i18n></span>
+                </h3>
+            </div>
+            <br/>
+            <div class="twelve cell centered-text vertical-spacing">
+                <img class="four" src="/crre/public/img/PageCatalogueVide.svg" />
+            </div>
+        </div>
     </div>
 </div>

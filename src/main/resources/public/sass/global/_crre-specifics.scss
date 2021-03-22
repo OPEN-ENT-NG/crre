@@ -21,6 +21,10 @@ body.crre {
     color: black;
   }
 
+  .secondary-color{
+    color: $secondary;
+  }
+
   .absolute-position{
     position: absolute;
   }
@@ -45,6 +49,10 @@ body.crre {
 
   .tooltip {
     z-index: 99999;
+  }
+
+  .top-margin-100 {
+    margin-top: 100px;
   }
 
   .heading-tabs {
@@ -996,19 +1004,6 @@ body.crre {
           display: inline;
         }
       }
-    }
-  }
-  .empty-basket-message{
-    float: unset;
-    width: 450px;
-    img{
-      margin: 25px;
-    }
-    .four{
-      height: 207px
-    }
-    h4{
-      line-height: 207px;
     }
   }
   .order-equipment-manage{
