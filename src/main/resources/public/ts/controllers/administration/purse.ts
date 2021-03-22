@@ -1,16 +1,37 @@
 import {ng, template} from 'entcore';
 import {Purse, PurseImporter, Purses, Utils} from '../../model';
 import {Mix} from 'entcore-toolkit';
+import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 
 declare let window: any;
 
 export const purseController = ng.controller('PurseController',
     ['$scope', '$routeParams', ($scope) => {
         $scope.purses = new Purses();
-        $scope.purses.sync().then(() => Utils.safeApply($scope));
-
+        $scope.purses.get().then((purses) => {
+            $scope.purses.all = purses;
+            $scope.loading = false;
+            Utils.safeApply($scope);
+        });
         $scope.lightbox = {
             open: false
+        };
+        $scope.filter = {
+            page: 0
+        };
+        $scope.loading = true;
+
+        $scope.onScroll = async (): Promise<void> => {
+            $scope.filter.page++;
+            await $scope.purses.get($scope.filter.page).then((purses) => {
+                if(purses.length > 0) {
+                    $scope.purses.all = $scope.purses.all.concat(purses);
+                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                    Utils.safeApply($scope);
+                }
+                $scope.loading = false;
+                Utils.safeApply($scope);
+            });
         };
 
         $scope.openEditPurseForm = (purse: Purse = new Purse()) => {

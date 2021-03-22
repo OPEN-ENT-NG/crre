@@ -45,9 +45,12 @@ export class Purses extends Selection<Purse> {
         super([]);
     }
 
-    async sync () {
-        let {data} = await http.get(`/crre/purses/list`);
-        this.all = Mix.castArrayAs(Purse, data);
+    async get (page?:number) {
+        let pageParams = '';
+        if(page)
+            pageParams = `?page=${page}`;
+        let {data} = await http.get(`/crre/purses/list${pageParams}`);
+        return Mix.castArrayAs(Purse, data);
     }
 }
 

@@ -298,7 +298,8 @@ public class PurseController extends ControllerHelper {
     @Override
     public void list(final HttpServerRequest request) {
         try {
-            purseService.getPursesStudentsAndLicences( event -> {
+            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+            purseService.getPursesStudentsAndLicences(page, event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
                     JsonArray purses = event.right().getValue();
