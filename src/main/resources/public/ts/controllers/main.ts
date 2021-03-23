@@ -162,11 +162,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             orderWaiting: async (params) => {
+                $scope.loading = true;
                 template.close('campaign-main');
                 $scope.ordersClient.all = [];
                 template.open('main-profile', 'customer/campaign/campaign-detail');
                 template.open('administrator-main', 'validator/order-waiting');
-                $scope.loading = true;
                 Utils.safeApply($scope);
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);

@@ -78,7 +78,12 @@ export const purseController = ng.controller('PurseController',
                 importer.message = err.message;
             } finally {
                 if (!importer.message) {
-                    await $scope.purses.sync();
+                    $scope.filter.page = 0;
+                    await $scope.purses.get().then((purses) => {
+                        $scope.purses.all = purses;
+                        $scope.loading = false;
+                        Utils.safeApply($scope);
+                    });
                     $scope.lightbox.open = false;
                     delete $scope.importer;
                 } else {
