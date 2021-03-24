@@ -150,15 +150,19 @@ export const orderRegionController = ng.controller('orderRegionController',
             return test;
         }
 
-        $scope.onScroll = async (): Promise<void> => {
-            $scope.filter.page++;
-            const data = await $scope.filter_order();
+        $scope.onScroll = async (init?:boolean): Promise<void> => {
+            let data;
+            if(init){
+                data = await $scope.filter_order(true);
+            }else{
+                $scope.filter.page++;
+                data = await $scope.filter_order(false);
+            }
             if(data.length > 0){
                 await synchroRegionOrders(true, data);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
-            Utils.safeApply($scope);
         };
 
         $scope.confirmRefuseOrder= async (justification:string) =>{
@@ -291,6 +295,8 @@ export const orderRegionController = ng.controller('orderRegionController',
                     toasts.confirm('crre.order.region.library.create.message');
                     $scope.displayToggle = false;
                     Utils.safeApply($scope);
+                    $scope.allOrdersSelected = false;
+                    $scope.onScroll(true);
                 } else {
                     toasts.warning('crre.order.region.library.create.err');
                 }}
