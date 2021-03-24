@@ -34,8 +34,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
     public void listBasket(Integer idCampaign, String idStructure,  UserInfos user, Handler<Either<String,JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT basket.id, basket.amount, basket.comment , basket.processing_date, basket.id_campaign, " +
-                "basket.id_structure, basket.id_equipment " +
+        String query = "SELECT id, amount, comment , processing_date, id_campaign, id_structure, id_equipment, reassort " +
                 "FROM " + Crre.crreSchema + ".basket_equipment basket " +
                 "WHERE basket.id_campaign = ? " +
                 "AND basket.id_structure = ? " +
