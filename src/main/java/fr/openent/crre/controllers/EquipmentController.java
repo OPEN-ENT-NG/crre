@@ -130,8 +130,8 @@ public class EquipmentController extends ControllerHelper {
                     public_set.add(ressource.getString("publiccible"));
                 }
             }
-            filtres.add(new JsonObject().put("disciplines", new JsonArray(Arrays.asList(disciplines_set.toArray())))
-                    .put("niveaux", new JsonArray(Arrays.asList(niveaux_set.toArray())))
+            filtres.add(new JsonObject().put("subjects", new JsonArray(Arrays.asList(disciplines_set.toArray())))
+                    .put("grades", new JsonArray(Arrays.asList(niveaux_set.toArray())))
                     .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
                     .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
                     .put("distributeurs", new JsonArray(Arrays.asList(distributeurs_set.toArray())))

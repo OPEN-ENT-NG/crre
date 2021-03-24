@@ -1,112 +1,61 @@
 <h1><i18n>crre.filters</i18n></h1>
-<div class="catalog" style="padding: 0 20%;">
+<div class="catalog" style="padding: 0 15%;">
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.campaigns</i18n></span>
-        <button ng-click="initPopUpFilters('showPopUpColumnsCampaign')"
-                class="filterButton admin right-magnet">
-            <span><i18n>crre.all.campaigns</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsCampaign">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsCampaign">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsCampaign}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsCampaign}"
-                           ng-repeat="campaign in campaigns.all | orderBy:'campaign'">
-                        <input type="checkbox" ng-model = "campaign.isChecked" ng-change="getFilter(campaign.id, 'id_campaign')"/>
-                        <span ng-bind="lang.translate(campaign.name)"></span>
-                    </label>
-                </div>
-            </div>
-        </button>
+        <multi-combo title="[[lang.translate('crre.all.campaigns')]]"
+                     combo-model="campaigns.all"
+                     search-on="name" order-by="campaign"
+                     labels="comboLabels" filtered-model="filterChoice.campaigns"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     max-selected="10"
+                     class="inline-block seven right-magnet">
+        </multi-combo>
     </div>
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.private.public.school</i18n></span>
-        <button ng-click="initPopUpFilters('showPopUpColumnsSchool')"
-                class="filterButton admin right-magnet">
-            <span><i18n>crre.all.schools</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsSchool">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsSchool">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsSchool}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis">
-                        <input type="checkbox" ng-model = "articlepapier.isChecked" ng-change="getFilter('PU', 'type')"/>
-                        <span>Lycée Publique</span>
-                    </label>
-                    <label class="columns-popup-items left-text ellipsis">
-                        <input type="checkbox" ng-model = "articlenumerique.isChecked" ng-change="getFilter('PR', 'type')"/>
-                        <span>Lycée Privé</span>
-                    </label>
-                </div>
-            </div>
-        </button>
+        <multi-combo title="[[lang.translate('crre.all.schools')]]"
+                     combo-model="schools"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.schools"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     class="inline-block seven right-magnet">
+        </multi-combo>
     </div>
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.editor.ressource</i18n></span>
-        <button ng-click="initPopUpFilters('showPopUpColumnsEditor')"
-                class="filterButton admin right-magnet">
-            <span><i18n>crre.all.editors</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsEditor">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsEditor">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
-                           ng-repeat="editor in equipments.editors | orderBy:'name'">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')"/>
-                        <span ng-bind="lang.translate(editor.name)"></span>
-                    </label>
-                </div>
-            </div>
-        </button>
+        <multi-combo title="[[lang.translate('crre.all.editors')]]"
+                     combo-model="equipments.editors"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.editors"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     max-selected="10"
+                     class="inline-block seven right-magnet">
+        </multi-combo>
     </div>
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.diffusor.ressource</i18n></span>
-        <button ng-click="initPopUpFilters('showPopUpColumnsDiffusor')"
-                class="filterButton admin right-magnet">
-            <span><i18n>crre.all.diffusors</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsDiffusor">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsDiffusor">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsDiffusor}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDiffusor}"
-                           ng-repeat="distributeur in equipments.distributeurs | orderBy:'name'">
-                        <input type="checkbox" ng-model = "distributeur.isChecked" ng-change="getFilter(distributeur.name, 'distributeur')"/>
-                        <span ng-bind="lang.translate(distributeur.name)"></span>
-                    </label>
-                </div>
-            </div>
-        </button>
+        <multi-combo title="[[lang.translate('crre.all.diffusors')]]"
+                     combo-model="equipments.distributeurs"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.distributeurs"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     max-selected="10"
+                     class="inline-block seven right-magnet">
+        </multi-combo>
     </div>
     <div class="row">
-        <span style="line-height: 50px;"><i18n>crre.request.state</i18n></span>
-        <button ng-click="initPopUpFilters('showPopUpColumnsState')"
-                class="filterButton admin right-magnet">
-            <span><i18n>crre.all.states</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsState">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsState">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsState}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsState}"
-                           ng-repeat="state in states | orderBy:'status'">
-                        <div ng-if = "state.status == 'IN PROGRESS'">
-                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')"/>
-                            <span ng-bind="lang.translate('NEW')"></span>
-                        </div>
-                        <div ng-if = "state.status != 'IN PROGRESS'">
-                            <input type="checkbox" ng-model = "state.isChecked" ng-change="getFilter(state.status, 'status')"/>
-                            <span ng-bind="lang.translate(state.status)"></span>
-                        </div>
-                    </label>
-                </div>
-            </div>
-        </button>
+        <span style="line-height: 50px;"><i18n>crre.licences.types</i18n></span>
+        <multi-combo title="[[lang.translate('crre.all.licences')]]"
+                     combo-model="licences"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.licence"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     class="inline-block seven right-magnet">
+        </multi-combo>
     </div>
 </div>

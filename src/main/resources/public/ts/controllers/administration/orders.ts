@@ -1,4 +1,4 @@
-import {_, ng, template, toasts} from 'entcore';
+import {_, idiom as lang, ng, template, toasts} from 'entcore';
 import {
     BasketOrder,
     OrderClient,
@@ -6,7 +6,7 @@ import {
     OrdersClient,
     OrdersRegion,
     Utils,
-    Filter, Filters, BasketsOrders
+    Filter, Filters
 } from '../../model';
 import {Mix} from 'entcore-toolkit';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
@@ -31,35 +31,30 @@ export const orderController = ng.controller('orderController',
         $scope.filter = {
             page: 0
         };
+        $scope.translate = (key: string):string => lang.translate(key);
         // @ts-ignore
         this.init = async () => {
-            $scope.users = [];
-            $scope.reassorts = [{reassort: true}, {reassort: false}];
-            $scope.filters = new Filters();
-            if($scope.equipments.grades.length === 0){
-                $scope.equipments.loading = true;
-                $scope.equipments.all = [];
-                await $scope.equipments.sync(true, undefined, undefined);
+            $scope.filterChoice = {
+                users : [],
+                reassorts : [],
             }
-            $scope.initPopUpFilters();
+            $scope.filterChoiceCorrelation = {
+                keys : ["users","reassorts"],
+                users : 'id_user',
+                reassorts : 'reassort'
+            }
+            $scope.users = [];
+            $scope.reassorts = [{name: 'true'}, {name: 'false'}];
+            $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
+            $scope.filters = new Filters();
             await $scope.getAllFilters();
-            $scope.loading = false;
+            $scope.users.forEach((item) => item.toString = () => item.user_name);
             Utils.safeApply($scope);
         };
 
-        $scope.initPopUpFilters = (filter?:string) => {
-            let value = $scope.$eval(filter);
-            $scope.showPopUpColumnsGrade = false;
-            $scope.showPopUpColumnsTeacher = false;
-            $scope.showPopUpColumnsReassort = false;
-            if (!value) {
-                switch (filter) {
-                    case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
-                    case 'showPopUpColumnsTeacher': $scope.showPopUpColumnsTeacher = true; break;
-                    case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
-                    default: break;
-                }
-            }
+        $scope.dropElement = (item,key): void => {
+            $scope.filterChoice[key] = _.without($scope.filterChoice[key], item);
+            $scope.getFilter();
         };
 
         $scope.onScroll = async (): Promise<void> => {
@@ -67,18 +62,23 @@ export const orderController = ng.controller('orderController',
             await $scope.searchByName(true);
         };
 
-        $scope.getFilter = async (word: string, filter: string) => {
+        $scope.getFilter = async () => {
             $scope.loading = true;
             $scope.filter.page = 0;
             $scope.ordersClient = new OrdersClient();
             Utils.safeApply($scope);
-            let newFilter = new Filter();
-            newFilter.name = filter;
-            newFilter.value = word;
-            if ($scope.filters.all.some(f => f.value === word)) {
-                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1)
-            } else {
-                $scope.filters.all.push(newFilter);
+            $scope.filters = new Filters();
+            for (const key of Object.keys($scope.filterChoice)) {
+                $scope.filterChoice[key].forEach(item => {
+                    let newFilter = new Filter();
+                    newFilter.name = $scope.filterChoiceCorrelation[key];
+                    let value = item.name;
+                    if(key === "users"){
+                        value = item.id_user;
+                    }
+                    newFilter.value = value;
+                    $scope.filters.all.push(newFilter);
+                });
             }
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {

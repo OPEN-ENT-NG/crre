@@ -10,9 +10,23 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipment = new Equipment();
             $scope.subjects = [];
             $scope.loading = true;
-            $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT", "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
-            $scope.initPopUpFilters();
-            $scope.filters = new Filters();
+            $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
+                "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
+            $scope.catalog = {
+                subjects : [],
+                public : [],
+                grades : [],
+                docsType : [],
+                editors : []
+            };
+            $scope.correlationFilterES = {
+                keys : ["subjects","public","grades","docsType","editors"],
+                subjects : 'disciplines.libelle',
+                public : 'publiccible',
+                grades : 'niveaux.libelle',
+                docsType : '_index',
+                editors : 'editeur'
+            };
             if($scope.isAdministrator()){
                 $scope.goBackUrl = "crre#/equipments/catalog";
             }else if($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor()){
@@ -32,18 +46,19 @@ export const catalogController = ng.controller('catalogController',
             Utils.safeApply($scope);
         };
 
-        $scope.getFilter = async (word: string, filter: string) => {
+        $scope.getFilter = async () => {
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipments.all = [];
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
-            let newFilter = new Filter();
-            newFilter.name = filter;
-            newFilter.value = word;
-            if ($scope.filters.all.some(f => f.value === word)) {
-                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1);
-            } else {
-                $scope.filters.all.push(newFilter);
+            $scope.filters = new Filters();
+            for (const key of Object.keys($scope.catalog)) {
+                $scope.catalog[key].forEach(item => {
+                    let newFilter = new Filter();
+                    newFilter.name = $scope.correlationFilterES[key];
+                    newFilter.value = item.name;
+                    $scope.filters.all.push(newFilter);
+                })
             }
             if($scope.filters.all.length > 0) {
                 await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
@@ -53,6 +68,12 @@ export const catalogController = ng.controller('catalogController',
                 Utils.safeApply($scope);
             }
         };
+
+        $scope.dropElement = (item,key): void => {
+            $scope.catalog[key] = _.without($scope.catalog[key], item);
+            $scope.getFilter();
+        };
+
 
         $scope.validArticle = () => {
             return $scope.basket.amount > 0;
@@ -160,25 +181,5 @@ export const catalogController = ng.controller('catalogController',
             else
                 return nbr.toString() + " années scolaires";
         };
-
-        $scope.initPopUpFilters = (filter?:string) => {
-            let value = $scope.$eval(filter);
-
-            $scope.showPopUpColumnsGrade = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsSubject =
-                $scope.showPopUpColumnsOS = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsPublic = false;
-
-            if (!value) {
-                switch (filter) {
-                    case 'showPopUpColumnsSubject': $scope.showPopUpColumnsSubject = true; break;
-                    case 'showPopUpColumnsPublic': $scope.showPopUpColumnsPublic = true; break;
-                    case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
-                    case 'showPopUpColumnsDocumentsTypes': $scope.showPopUpColumnsDocumentsTypes = true; break;
-                    case 'showPopUpColumnsEditor': $scope.showPopUpColumnsEditor = true; break;
-                    case 'showPopUpColumnsOS': $scope.showPopUpColumnsOS = true; break;
-                    default: break;
-                }
-            }
-        };
-
         this.init();
     }]);

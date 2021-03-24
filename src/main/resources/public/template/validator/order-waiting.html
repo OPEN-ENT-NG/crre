@@ -1,6 +1,6 @@
 <div ng-controller="orderController" class="crre-table">
     <div class="row margin-top-20">
-        <div class="cell two margin-top-8">
+        <div class="cell two">
             <div class="search-bar order-search-bar">
                 <i class="search padding-5"></i>
                 <input class="twelve"
@@ -11,76 +11,34 @@
             </div>
         </div>
         <div class="cell twelve-mobile six catalog">
-            <button ng-click="initPopUpFilters('showPopUpColumnsTeacher')"
-                    class="filterButton">
-                <i class="user"></i>
-                <span><i18n>Teachers</i18n></span>
-                <div class="columns-popup-wrapper right-magnet">
-                    <div class="right-magnet columns-popup-button">
-                        <span ng-show="showPopUpColumnsTeacher">&#x25B2;</span>
-                        <span ng-hide="showPopUpColumnsTeacher">&#x25BC;</span>
-                    </div>
-                    <div ng-class="{'open' : showPopUpColumnsTeacher}" class="right-magnet columns-popup">
-                        <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsTeacher}"
-                               ng-repeat="teacher in users | orderBy:'user_name'">
-                            <input type="checkbox" ng-model = "teacher.isChecked" ng-change="getFilter(teacher.id_user, 'id_user')">
-                            <span>[[teacher.user_name]]</span>
-                        </label>
-                    </div>
-                </div>
-            </button>
-            <button ng-click="initPopUpFilters('showPopUpColumnsReassort')"
-                    class="filterButton">
-                <i class="star-circle"></i>
-                <span><i18n>crre.reassort</i18n></span>
-                <div class="columns-popup-wrapper right-magnet">
-                    <div class="right-magnet columns-popup-button">
-                        <span ng-show="showPopUpColumnsReassort">&#x25B2;</span>
-                        <span ng-hide="showPopUpColumnsReassort">&#x25BC;</span>
-                    </div>
-                    <div ng-class="{'open' : showPopUpColumnsReassort}" class="right-magnet columns-popup">
-                        <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsReassort}"
-                               ng-repeat="reassort in reassorts | orderBy:'reassort'">
-                            <input type="checkbox" ng-model = "reassort.isChecked" ng-change="getFilter(reassort.reassort, 'reassort')">
-                            <span ng-bind="lang.translate(reassort.reassort)"></span>
-                        </label>
-                    </div>
-                </div>
-            </button>
-            <button ng-click="initPopUpFilters('showPopUpColumnsGrade')"
-                    class="filterButton">
-                <i class="school"></i>
-                <span><i18n>Grades</i18n></span>
-                <div class="columns-popup-wrapper right-magnet">
-                    <div class="right-magnet columns-popup-button">
-                        <span ng-show="showPopUpColumnsGrade">&#x25B2;</span>
-                        <span ng-hide="showPopUpColumnsGrade">&#x25BC;</span>
-                    </div>
-                    <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
-                        <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsGrade}"
-                               ng-repeat="grade in equipments.grades | orderBy:'name'">
-                            <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'niveaux.libelle')">
-                            <span>[[grade.name]]</span>
-                        </label>
-                    </div>
-                </div>
-            </button>
+            <multi-combo title="[[lang.translate('Teachers')]]"
+                         combo-model="users"
+                         search-on="user_name" order-by="user_name"
+                         labels="comboLabels" filtered-model="filterChoice.users"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block horizontal-spacing">
+            </multi-combo>
+            <multi-combo title="[[lang.translate('crre.reassort')]]"
+                         combo-model="reassorts"
+                         search-on="name" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.reassorts"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block horizontal-spacing">
+            </multi-combo>
         </div>
         <div class="cell twelve-mobile right-magnet">
             <button ng-disabled="licencesAvailable()" ng-click="createOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
         </div>
     </div>
-    <div class="row">
-        <div style="margin:0.5em">
-            <div class="cell field ng-scope" ng-repeat="teacher in users | filter: { isChecked: true }">
-                <span ng-show="$first && teacher.isChecked" class="bold-font-weight">&nbsp;Enseignants : </span>
-                <span ng-if="teacher.isChecked" ng-class="{'margin-right-10' : $last}">[[teacher.user_name]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
-            </div>
-            <div class="cell field ng-scope" ng-repeat="grade in equipments.grades | filter: { isChecked: true }">
-                <span ng-show="$first && grade.isChecked" class="bold-font-weight">&nbsp;Niveaux : </span>
-                <span ng-if="grade.isChecked" ng-class="{'margin-right-10' : $last}">[[grade.name]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+    <div class="row" ng-if="filters.all.length > 0">
+        <div class="remove-margin-bottom inline-block">
+            <div ng-repeat="key in filterChoiceCorrelation.keys" class="select-blocks">
+                <div ng-repeat="item in filterChoice[key]"
+                     ng-click="dropElement(item,key)">
+                    [[item.toString()]]
+                </div>
             </div>
         </div>
     </div>

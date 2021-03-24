@@ -51,6 +51,10 @@ body.crre {
     z-index: 99999;
   }
 
+  .inline-block {
+    display: inline-block;
+  }
+
   .top-margin-100 {
     margin-top: 100px;
   }
@@ -399,100 +403,8 @@ body.crre {
       animation: none;
     }
 
-    .filterButton{
-      &.admin {
-        width: 201px;
-        display: unset;
-      }
-      border-radius: 30em;
-      background-color: white;
-      border:solid 1px lightgray;
-      margin: 0.5em;
-      padding: 5px 15px;
-      color: black;
-      display: flex;
-      align-items: center;
-      box-shadow: none;
-      overflow: unset;
-      > span {
-        padding: 0 15px;
-      }
-      > i {
-        margin: 0;
-        color: $secondary;
-        height: 25px;
-        width: 25px;
-        filter: invert(58%) sepia(79%) saturate(4662%) hue-rotate(156deg) brightness(88%) contrast(82%);
-      }
-      > i.school {
-        background-image: url(/crre/public/img/scss/school.svg);
-      }
-      > i.star-circle {
-        background-image: url(/crre/public/img/scss/star-circle.svg);
-      }
-      > i.book-variant {
-        background-image: url(/crre/public/img/scss/book-variant.svg);
-      }
-      > i.phone-infos {
-        background-image: url(/crre/public/img/scss/cellphone-information.svg);
-      }
-      > i.editor {
-        background-image: url(/crre/public/img/scss/editor.svg);
-      }
-      > i.user {
-        background-image: url(/crre/public/img/scss/account.svg);
-      }
-      > i.arrow {
-        color: black;
-        filter: unset;
-      }
-    }
-
     .right {
       margin-right: 15px;
-    }
-
-    .columns-popup-wrapper {
-      position: relative;
-      display: contents;
-    }
-
-    .columns-popup {
-      position: absolute;
-      top: 144%;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      background-color: white;
-      border-radius: 5px;
-      height: 0;
-      -webkit-transition: height 0.15s linear;
-      -moz-transition: height 0.15s linear;
-      -ms-transition: height 0.15s linear;
-      -o-transition: height 0.15s linear;
-      transition: height 0.15s linear;
-    }
-
-    .columns-popup.open {
-      border: 1px $primary solid;
-      max-height: 500px;
-      height: auto;
-      -webkit-transition: height 0.15s linear;
-      -moz-transition: height 0.15s linear;
-      -ms-transition: height 0.15s linear;
-      -o-transition: height 0.15s linear;
-      transition: height 0.15s linear;
-      align-items: flex-start;
-      overflow-y: scroll;
-    }
-    .columns-popup-button {
-      font-size: 20px;
-    }
-    .columns-popup-items{
-      margin: 10px;
-    }
-    .columns-popup-items.open{
-      overflow: unset;
     }
   }
 

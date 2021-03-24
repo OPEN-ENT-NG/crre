@@ -13,3 +13,4 @@ export * from './OrderClient';
 export * from './OrderRegion';
 export * from './export';
 export * from './Order';
+export * from './comboLabels';

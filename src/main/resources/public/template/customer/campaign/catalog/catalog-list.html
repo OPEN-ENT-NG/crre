@@ -17,124 +17,27 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <button ng-click="initPopUpFilters('showPopUpColumnsSubject')"
-                class="filterButton">
-            <i class="school"></i>
-            <span><i18n>Subjects</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsSubject">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsSubject">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsSubject}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsSubject}"
-                           ng-repeat="subject in equipments.subjects | orderBy:'name'">
-                        <input type="checkbox" ng-model = "subject.isChecked" ng-change="getFilter(subject.name, 'disciplines.libelle')"/>
-                        <span>[[subject.name]]</span>
-                    </label>
-                </div>
-            </div>
-        </button>
-        <button ng-click="initPopUpFilters('showPopUpColumnsPublic')"
-                class="filterButton">
-            <i class="user"></i>
-            <span><i18n>Public</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsPublic">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsPublic">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsPublic}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsPublic}"
-                           ng-repeat="public in equipments.public | orderBy:'name'">
-                        <input type="checkbox" ng-model = "public.isChecked" ng-change="getFilter(public.name, 'publiccible')"/>
-                        <span>[[lang.translate(public.name)]]</span>
-                    </label>
-                </div>
-            </div>
-        </button>
-        <button ng-click="initPopUpFilters('showPopUpColumnsGrade')"
-                class="filterButton">
-            <i class="star-circle"></i>
-            <span><i18n>Grades</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsGrade">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsGrade">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsGrade}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsGrade}"
-                           ng-repeat="grade in equipments.grades | orderBy:'name'">
-                        <input type="checkbox" ng-model = "grade.isChecked" ng-change="getFilter(grade.name, 'niveaux.libelle')">
-                        <span>[[grade.name]]</span>
-                    </label>
-                </div>
-            </div>
-        </button>
-        <button ng-click="initPopUpFilters('showPopUpColumnsDocumentsTypes')"
-                class="filterButton">
-            <i class="book-variant"></i>
-            <span><i18n>Types.of.documents</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsDocumentsTypes">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsDocumentsTypes">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsDocumentsTypes}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsDocumentsTypes}"
-                           ng-repeat="docType in equipments.docsType | orderBy:'name'">
-                        <input type="checkbox" ng-model = "docType.isChecked" ng-change="getFilter(docType.name, '_index')"/>
-                        <span>[[lang.translate(docType.name)]]</span>
-                    </label>
-                </div>
-            </div>
-        </button>
-        <button ng-click="initPopUpFilters('showPopUpColumnsEditor')"
-                class="filterButton">
-            <i class="editor"></i>
-            <span><i18n>Editors</i18n></span>
-            <div class="columns-popup-wrapper right-magnet">
-                <div class="right-magnet columns-popup-button">
-                    <span ng-show="showPopUpColumnsEditor">&#x25B2;</span>
-                    <span ng-hide="showPopUpColumnsEditor">&#x25BC;</span>
-                </div>
-                <div ng-class="{'open' : showPopUpColumnsEditor}" class="right-magnet columns-popup">
-                    <label class="columns-popup-items left-text ellipsis" ng-class="{'open' : showPopUpColumnsEditor}"
-                           ng-repeat="editor in equipments.editors | orderBy:'name'">
-                        <input type="checkbox" ng-model = "editor.isChecked" ng-change="getFilter(editor.name, 'editeur')"/>
-                        <span>[[editor.name]]</span>
-                    </label>
-                </div>
-            </div>
-        </button>
+    <div class="cell twelve vertical-spacing">
+        <multi-combo title="[[lang.translate(key)]]"
+                     combo-model="equipments[key]"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="catalog[key]"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     max-selected="10"
+                     class="inline-block four-small horizontal-spacing"
+                     ng-repeat="key in correlationFilterES.keys">
+        </multi-combo>
     </div>
-    <div class="row">
+    <div class="row" ng-if="filters.all.length > 0">
         <div style="margin:0.5em">
-            <div class="cell field ng-scope" ng-repeat="subject in equipments.subjects | filter: { isChecked: true }">
-                <span ng-show="$first && subject.isChecked" class="bold-font-weight">&nbsp;<i18n>Subjects</i18n> : </span>
-                <span ng-if="subject.isChecked" ng-class="{'margin-right-10' : $last}">[[subject.name]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
-            </div>
-            <div class="cell field ng-scope" ng-repeat="public in equipments.public | filter: { isChecked: true }">
-                <span ng-show="$first && public.isChecked" class="bold-font-weight">&nbsp;<i18n>Public</i18n> : </span>
-                <span ng-if="public.isChecked" ng-class="{'margin-right-10' : $last}">[[lang.translate(public.name)]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
-            </div>
-            <div class="cell field ng-scope" ng-repeat="grade in equipments.grades | filter: { isChecked: true }">
-                <span ng-show="$first && grade.isChecked" class="bold-font-weight">&nbsp;<i18n>Grades</i18n> : </span>
-                <span ng-if="grade.isChecked" ng-class="{'margin-right-10' : $last}">[[grade.name]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
-            </div>
-            <div class="cell field ng-scope" ng-repeat="docType in equipments.docsType | filter: { isChecked: true }">
-                <span ng-show="$first && docType.isChecked" class="bold-font-weight">&nbsp;<i18n>Types.of.documents</i18n> : </span>
-                <span ng-if="docType.isChecked" ng-class="{'margin-right-10' : $last}">[[lang.translate(docType.name)]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
-            </div>
-            <div class="cell field ng-scope" ng-repeat="editor in equipments.editors | filter: { isChecked: true }">
-                <span ng-show="$first && editor.isChecked" class="bold-font-weight">&nbsp;<i18n>Editors</i18n> : </span>
-                <span ng-if="editor.isChecked" ng-class="{'margin-right-10' : $last}">[[editor.name]]</span>
-                <span ng-repeat-end ng-if="!$last">,&nbsp;</span>
+            <div class="remove-margin-bottom inline-block">
+                <div ng-repeat="key in correlationFilterES.keys" class="select-blocks">
+                    <div ng-repeat="item in catalog[key]"
+                         ng-click="dropElement(item,key)">
+                        [[item.toString()]]
+                    </div>
+                </div>
             </div>
         </div>
     </div>

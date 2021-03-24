@@ -1,4 +1,4 @@
-import {toasts} from 'entcore';
+import {idiom as lang, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 import {Filters} from "./Filter";
@@ -115,17 +115,27 @@ export class Equipments extends Selection<Equipment> {
     }
 
     async syncEquip (data: any) {
+        function setFilterValues(filters, group) {
+            this[group] = filters[group].map(v => ({name: v}));
+            if(group === 'public'){
+                this[group].forEach((item) => item.toString = () => lang.translate(item.name));
+            }else {
+                this[group].forEach((item) => item.toString = () => item.name);
+            }
+        }
+
         if(data.length > 0 ) {
             if(data[0].hasOwnProperty("ressources")) {
                 if(!this.filterFulfilled) {
                     let filters = data[1].filters[0];
-                    this.subjects = filters.disciplines.map(v => ({name: v}));
-                    this.grades = filters.niveaux.map(v => ({name: v}));
-                    this.os = filters.os.map(v => ({name: v}));
-                    this.public = filters.public.map(v => ({name: v}));
-                    this.editors = filters.editors.map(v => ({name: v}));
+                    setFilterValues.call(this, filters, 'subjects');
+                    setFilterValues.call(this, filters, 'grades');
+                    setFilterValues.call(this, filters, 'os');
+                    setFilterValues.call(this, filters, 'public');
+                    setFilterValues.call(this, filters, 'editors');
+                    setFilterValues.call(this, filters, 'distributeurs');
                     this.docsType = [{name: "articlepapier"}, {name: "articlenumerique"}];
-                    this.distributeurs = filters.distributeurs.map(v => ({name:v}));
+                    this.docsType.forEach((item) => item.toString = () => lang.translate(item.name));
                     this.filterFulfilled = true;
                 }
                 data = data[0].ressources;

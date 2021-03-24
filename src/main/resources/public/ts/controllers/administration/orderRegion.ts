@@ -1,4 +1,4 @@
-import {idiom as lang, moment, ng, template, toasts} from 'entcore';
+import {_, idiom as lang, moment, ng, template, toasts} from 'entcore';
 import {
     OrderRegion,
     OrdersRegion,
@@ -36,31 +36,70 @@ export const orderRegionController = ng.controller('orderRegionController',
         this.init = async () => {
             $scope.filters = new Filters();
             $scope.filtersFront = new FiltersFront();
+            $scope.filterChoice = {
+                states : [],
+                distributeurs : [],
+                editors : [],
+                schools : [],
+                campaigns : [],
+                docType : [],
+                reassort : [],
+                licence : [],
+            }
+            $scope.filterChoiceCorrelation = {
+                keys : ["docType","reassort","licence","campaigns", "schools", "editors", "distributeurs", "states"],
+                states : 'status',
+                distributeurs : 'distributeur',
+                editors : 'editeur',
+                schools : 'type',
+                campaigns : 'id_campaign',
+                docType : '_index',
+                reassort : 'reassort',
+                licence : 'licence'
+            }
             if(!$scope.selectedType.split('/').includes('historic')){
-                $scope.states = [{status: "WAITING", isChecked: true}, {status: "IN PROGRESS", isChecked: true},
-                    {status: "VALID", isChecked: true}, {status: "REJECTED", isChecked: false},
-                    {status: "DONE", isChecked: true}];
-                $scope.reassorts = [{reassort: true, isChecked: false}, {reassort: false, isChecked: false}];
+                $scope.states = [{status: "WAITING"},{status: "IN PROGRESS"},{status: "VALID"},{status: "DONE"},{status: "REJECTED"}];
+                $scope.states.forEach((item) => item.toString = () => {
+                    if(item.status === "IN PROGRESS"){
+                        return $scope.translate("NEW")
+                    }else{
+                        return $scope.translate(item.status)
+                    }
+                });
+                $scope.states.forEach(state => {
+                    if(state.status != "REJECTED")
+                        $scope.filterChoice.states.push(state);
+                })
+                $scope.filterChoice.states.forEach(state => {
+                    let newFilter = new Filter();
+                    newFilter.name = "status";
+                    newFilter.value = state.status;
+                    $scope.filters.all.push(newFilter);
+                });
                 let newFilterFront = new FilterFront();
                 newFilterFront.name = "status";
                 newFilterFront.value = ["WAITING", "IN PROGRESS", "VALID", "DONE"];
                 $scope.filtersFront.all.push(newFilterFront);
-                $scope.states.forEach(state => {
-                    if (state.status != "REJECTED") {
-                        let newFilter = new Filter();
-                        newFilter.name = "status";
-                        newFilter.value = state.status;
-                        $scope.filters.all.push(newFilter);
-                    }
-                });
+
+                $scope.reassorts = [{name: 'true'}, {name: 'false'}];
+                $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
+
+                $scope.schools = [{name: 'PU'},{name:'PR'}];
+                $scope.schools.forEach((item) => item.toString = () => $scope.translate(item.name));
+
                 await $scope.campaigns.sync();
+                $scope.campaigns.all.forEach((item) => item.toString = () => $scope.translate(item.name));
                 $scope.equipments.loading = true;
                 $scope.equipments.all = [];
                 Utils.safeApply($scope);
-                await $scope.equipments.sync(true, undefined, undefined );
-                $scope.initPopUpFilters();
+                await $scope.equipments.sync(true, undefined, undefined);
                 Utils.safeApply($scope);
             }
+        };
+
+        $scope.dropElement = (item,key): void => {
+            $scope.filterChoice[key] = _.without($scope.filterChoice[key], item);
+            $scope.getFilter();
         };
 
         $scope.getProjects = async() => {
@@ -89,20 +128,6 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.closeWaitingAdminLightbox= () =>{
             $scope.display.lightbox.waitingAdmin = false;
             Utils.safeApply($scope);
-        };
-
-        $scope.yourCustomFilter = function(order) {
-            // order.filter(form => form.collab === true && form.owner_id != model.me.userId);
-
-            if(($scope.reassorts[0].isChecked && $scope.reassorts[1].isChecked) || (!$scope.reassorts[0].isChecked && !$scope.reassorts[1].isChecked)) {
-                return order;
-            } else {
-                if($scope.reassorts[0].isChecked) {
-                    return order && order.reassort == true;
-                } else if ($scope.reassorts[1].isChecked) {
-                    return order && order.reassort == false;
-                }
-            }
         };
 
         $scope.filterAll = function (order) {
@@ -271,36 +296,27 @@ export const orderRegionController = ng.controller('orderRegionController',
                 }}
         }
 
-        $scope.getFilter = async (word: string, filter: string) => {
-            let newFilter = new Filter();
-            let newFilterFront = new FilterFront();
-            newFilter.name = filter;
-            newFilter.value = word;
-            newFilterFront.name = filter;
-            newFilterFront.value = [];
-            if ($scope.filters.all.some(f => f.value === word)) {
-                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word), 1);
-                if ($scope.filtersFront.all.some(f => f.name === filter)) {
-                    $scope.filtersFront.all.forEach(function (filt) {
-                        if (filt.name === filter) {
-                            filt.value.splice(filt.value.findIndex(a => a.value === word), 1);
-                        }
-                    })
-                }
-            } else {
-                if ($scope.filtersFront.all.some(f => f.name === filter)) {
-                    $scope.filtersFront.all.forEach(function (filt) {
-                        if (filt.name === filter) {
-                            filt.value.push(word)
-                        }
-                    })
+        $scope.getFilter = async () => {
+            $scope.filters = new Filters();
+            $scope.filtersFront = new FiltersFront()
+            for (const key of Object.keys($scope.filterChoice)) {
+                let newFilterFront = new FilterFront();
+                newFilterFront.name = $scope.filterChoiceCorrelation[key];
+                newFilterFront.value = [];
+                $scope.filterChoice[key].forEach(item => {
+                    let newFilter = new Filter();
+                    newFilter.name = $scope.filterChoiceCorrelation[key];
+                    let value = item.name;
+                    if(key === "campaigns"){
+                        value = item.id;
+                    } else if(key === "states"){
+                        value = item.status;
+                    }
+                    newFilter.value = value;
+                    newFilterFront.value.push(value);
                     $scope.filters.all.push(newFilter);
-                } else {
-                    $scope.filters.all.push(newFilter);
-                    newFilterFront.value.push(word);
-                    $scope.filtersFront.all.push(newFilterFront);
-                }
-
+                });
+                $scope.filtersFront.all.push(newFilterFront);
             }
             if ($scope.filters.all.length > 0) {
                 await searchProjectAndOrders();
@@ -380,23 +396,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                 throw e;
             }
         }
-
-        $scope.initPopUpFilters = (filter?:string) => {
-            let value = $scope.$eval(filter);
-            $scope.showPopUpColumnsReassort = $scope.showPopUpColumnsSchool = $scope.showPopUpColumnsState = $scope.showPopUpColumnsDocumentsTypes = $scope.showPopUpColumnsCampaign = $scope.showPopUpColumnsEditor = $scope.showPopUpColumnsDiffusor = false;
-            if (!value) {
-                switch (filter) {
-                    case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
-                    case 'showPopUpColumnsState': $scope.showPopUpColumnsState = true; break;
-                    case 'showPopUpColumnsCampaign': $scope.showPopUpColumnsCampaign = true; break;
-                    case 'showPopUpColumnsEditor': $scope.showPopUpColumnsEditor = true; break;
-                    case 'showPopUpColumnsDiffusor': $scope.showPopUpColumnsDiffusor = true; break;
-                    case 'showPopUpColumnsDocumentsTypes': $scope.showPopUpColumnsDocumentsTypes = true; break;
-                    case 'showPopUpColumnsSchool': $scope.showPopUpColumnsSchool = true; break;
-                    default: break;
-                }
-            }
-        };
 
         $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
             let totalPrice = 0;

@@ -16,7 +16,7 @@ import {
     Structures,
     Utils,
     Filters,
-    Student, Offers, Offer
+    Student, Offers, Offer, COMBO_LABELS
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 
@@ -53,6 +53,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             word: "",
         };
         $scope.selectedType = $location.path();
+        $scope.comboLabels = COMBO_LABELS;
 
         route({
             main: async () => {
@@ -434,11 +435,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.syncOrders = async (status: string) =>{
-            $scope.ordersClient.all = [];
+            $scope.ordersClient = new OrdersClient();
             const newData = await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.displayedOrders.all = $scope.ordersClient.all;
+            $scope.loading = false;
         };
 
         $scope.initOrders = async (status: string) => {
