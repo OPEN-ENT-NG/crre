@@ -57,9 +57,13 @@ export const orderController = ng.controller('orderController',
             $scope.getFilter();
         };
 
-        $scope.onScroll = async (): Promise<void> => {
-            $scope.filter.page++;
-            await $scope.searchByName(true);
+        $scope.onScroll = async (init?:boolean): Promise<void> => {
+            if(init){
+                await $scope.searchByName(false)
+            }else{
+                $scope.filter.page++;
+                await $scope.searchByName(true);
+            }
         };
 
         $scope.getFilter = async () => {
@@ -153,7 +157,8 @@ export const orderController = ng.controller('orderController',
                     $scope.displayedOrders.all = $scope.ordersClient.all;
                     await $scope.getAllFilters();
                     Utils.safeApply($scope);
-                    $scope.onScroll();
+                    $scope.allOrdersSelected = false;
+                    $scope.onScroll(true);
                 }
                 else {
                     toasts.warning('crre.admin.order.create.err');
