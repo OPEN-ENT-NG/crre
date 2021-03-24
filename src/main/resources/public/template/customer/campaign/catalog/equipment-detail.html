@@ -11,7 +11,7 @@
         </div>
         <div class="card row padding-20" ng-show="display.equipment">
         <h1 class="eight cell">[[basket.equipment.titre]] </h1>
-        <div class="twelve-small padding-20 cell right-magnet twelve-mobile" >
+        <div class="twelve-small padding-20 cell right-magnet twelve-mobile" ng-style="{height: offers.all.length > 1 ? '400px' : '250px'}" >
             <div ng-if="basket.equipment.type === 'articlenumerique'" id="box">
                 <input type="radio" id="item_1" name="box" checked />
                 <label for="item_1" class="labeltab">
@@ -118,7 +118,7 @@
             </div>-->
         </div>
         <div class="thirteen-small cell twelve-mobile">
-            <div class="two cell twelve-mobile margin-right-10">
+            <div class="two cell twelve-mobile margin-right-4">
                 <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]" ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
             </div>

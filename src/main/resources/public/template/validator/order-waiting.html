@@ -64,9 +64,8 @@
                 <td><div class="smallTabElem">  </div></td>
             </tr>
             </thead>
-            <tbody ng-if="!loading">
-            <tr ng-repeat="order in ordersClient.all"
-                class="subline">
+            <tbody ng-repeat="order in ordersClient.all" ng-if="!loading">
+            <tr class="subline">
                 <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
@@ -108,6 +107,16 @@
                         <i class="comment-icon"></i>
                     </div>
                 </td>
+            </tr>
+            <tr class="subline" ng-repeat="offer in order.offers.all" ng-if="!!order.offers">
+                <td></td>
+                <td><div class="smallTabElem center"></div></td>
+                <td><span class="arrowOffer">[[offer.name]]</span></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="center">[[offer.value]]</td>
+                <td class="center">GRATUIT</td><td></td>
             </tr>
             </tbody>
         </table>

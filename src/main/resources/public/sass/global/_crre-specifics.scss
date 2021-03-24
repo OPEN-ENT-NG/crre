@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'material-icons';
-  src: url('/crre/public/fonts/materialdesignicons-webfont.eot');
-  src: url('/crre/public/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
-  url('/crre/public/fonts/materialdesignicons-webfont.woff2') format('woff2'),
-  url('/crre/public/fonts/materialdesignicons-webfont.woff2') format('woff'),
-  url('/crre/public/fonts/materialdesignicons-webfont.ttf') format('truetype');
+  src: url('/crre/public/font/material-design/fonts/materialdesignicons-webfont.eot');
+  src: url('/crre/public/font/material-design/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
+  url('/crre/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff2'),
+  url('/crre/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff'),
+  url('/crre/public/font/material-design/fonts/materialdesignicons-webfont.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -1337,6 +1337,9 @@ body.crre {
   .margin-right-10{
     margin-right: 10px !important;
   }
+  .margin-right-4{
+    margin-right: 4% !important;
+  }
   .listElementSelect{
     width: 90%;
     margin: 20px auto;
@@ -1502,7 +1505,7 @@ input[type="radio"],.contentTab {display: none;}
   padding: 10px 10px;
   background: #cecece;
   border-radius: 10px 10px 0px 0px;
-  box-shadow: -2px 2px 0px 0px rgba(0,0,0,0.25);
+  box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.25);
   width: 44.5%;
   font-size: 18px;
   color:white;
@@ -1521,7 +1524,7 @@ input[type="radio"]:checked + .labeltab > div {
   left: 0;
   width:92.5%;
   padding: 10px;
-  box-shadow: -2px 2px 0px 0px rgba(0,0,0,0.25);
+  box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.25);
   background: rgb(251,251,251);
   color: black;
 }
@@ -1532,7 +1535,7 @@ input[type="radio"]:checked + .labeltab > div {
   left: 0;
   width:92.5%;
   padding: 10px;
-  box-shadow: -1px 1px 3px 0px rgba(0, 0, 0, 0.75);
+  box-shadow: -1px 3px 5px 0px rgba(0,0,0,0.25);
   background: rgb(251,251,251);
   color: black;
 }
@@ -1591,4 +1594,59 @@ input[type="radio"]:checked + .labeltab > div {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+.arrowOffer {
+  vertical-align: super;
+  margin-left: 7%;
+}
+.arrowOffer:before {
+  font-family: 'material-icons';
+  content: "\F60D";
+  font-size: 30px;
+}
+
+@mixin line-clamp($lines: 1, $line-height: null) {
+  overflow: hidden;
+
+  @if ($lines == 1) {
+    // Limited to one line
+    // Ellipsis will be displayed
+    // Excellent browser support
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @if ($lines > 1) {
+    @if ($line-height) {
+      // Set max-height fallback, for browsers not supporting -webkit-line-clamp
+      $max-height: #{$lines + ' * (' + $line-height + ')'};
+      max-height: calc(#{$max-height});
+    }
+
+    @supports (-webkit-line-clamp: 1) {
+      // Not limited to one line
+      // Ellipsis will be displayed
+      // Not so good browser support
+      display: -webkit-box;
+      -webkit-line-clamp: $lines;
+      -webkit-box-orient: vertical;
+      max-height: 100%; // Unset max-height fallback
+    }
+  }
+}
+
+.line-clamp-1 {
+  @include line-clamp();
+}
+
+.line-clamp-2 {
+  @include line-clamp($lines: 2);
+
+  &.fallback {
+    @include line-clamp($lines: 2, $line-height: 1.5em);
+  }
+}
+
+.line-clamp-3 {
+  @include line-clamp($lines: 3);
 }

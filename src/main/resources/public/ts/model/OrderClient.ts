@@ -2,7 +2,7 @@ import {_, model, moment, toasts} from 'entcore';
 import {Mix, Selection} from 'entcore-toolkit';
 import {
     Campaign,
-    Equipment, Filter,
+    Equipment, Filter, Offer, Offers,
     Order,
     OrderRegion,
     OrderUtils,
@@ -175,6 +175,9 @@ export class OrdersClient extends Selection<OrderClient> {
                         order.name = equipment.titre;
                         order.image = equipment.urlcouverture;
                         order.creation_date = moment(order.creation_date).format('L');
+                        if(equipment.type === "articlenumerique") {
+                            order.offers = this.computeOffer(order, equipment);
+                        }
                     }
                 });
                 this.all = this.all.concat(newOrderClient);
@@ -216,6 +219,9 @@ export class OrdersClient extends Selection<OrderClient> {
                             order.name = equipment.titre;
                             order.image = equipment.urlcouverture;
                             order.creation_date = moment(order.creation_date).format('L');
+                            if(equipment.type === "articlenumerique") {
+                                order.offers = this.computeOffer(order, equipment);
+                            }
                         }
                     });
                     this.all = this.all.concat(newOrderClient);
@@ -243,7 +249,16 @@ export class OrdersClient extends Selection<OrderClient> {
                     params = params.slice(0, -1);
                 }
                 const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}` );
-                this.all = Mix.castArrayAs(OrderClient, data);
+                let newOrderClient = Mix.castArrayAs(OrderClient, data);
+                await this.getEquipments(newOrderClient).then(equipments => {
+                    for (let order of newOrderClient) {
+                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                        if(equipment.type === "articlenumerique") {
+                            order.offers = this.computeOffer(order, equipment);
+                        }
+                    }
+                });
+                this.all = newOrderClient;
                 this.syncWithIdsCampaignAndStructure();
                 return true;
             } else {
@@ -264,6 +279,9 @@ export class OrdersClient extends Selection<OrderClient> {
                             order.structure = structures && structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                             order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
                             order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
+                            if(equipment.type === "articlenumerique") {
+                                order.offers = this.computeOffer(order, equipment);
+                            }
                             if (order.files.length > 1)
                                 order.files.sort(function (a, b) {
                                     return a.filename.localeCompare(b.filename);
@@ -354,4 +372,49 @@ export class OrdersClient extends Selection<OrderClient> {
         }
         return total;
     }
+
+    computeOffer (order, equipment): Offers {
+        let amount = order.amount;
+        let gratuit = 0;
+        let gratuite = 0;
+        let offre = null;
+/*        $scope.offerStudent = "";
+        $scope.offerTeacher = "";*/
+        let offers = new Offers();
+        equipment.offres[0].leps.forEach(function (offer) {
+            offre = new Offer();
+            offre.name = "Manuel " + offer.licence[0].valeur;
+            if(offer.conditions.length > 1) {
+                offer.conditions.forEach(function (condition) {
+                    if(offer.licence[0].valeur === "Elève") {
+/*                        $scope.offerStudent += condition.gratuite + " licence élève gratuite pour " + condition.conditionGratuite + ", ";*/
+                    } else {
+/*                        $scope.offerTeacher += condition.gratuite + " licence enseignant gratuite pour " + condition.conditionGratuite + ", ";*/
+                    }
+                    if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                        gratuit = condition.conditionGratuite;
+                        gratuite = condition.gratuite;
+                    }
+                });
+                if(offer.licence[0].valeur === "Elève") {
+/*                    $scope.offerStudent = $scope.offerStudent.slice(0, -2);*/
+                } else {
+/*                    $scope.offerTeacher = $scope.offerTeacher.slice(0, -2);*/
+                }
+            } else {
+                if(offer.licence[0].valeur === "Elève") {
+/*                    $scope.offerStudent += offer.conditions[0].gratuite + " licence élève gratuite pour " + offer.conditions[0].conditionGratuite;*/
+                } else {
+/*                    $scope.offerTeacher += offer.conditions[0].gratuite + " licence enseignant gratuite pour " + offer.conditions[0].conditionGratuite;*/
+                }
+                gratuit = offer.conditions[0].conditionGratuite;
+                gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+            }
+            offre.value = gratuite;
+            if(gratuite > 0) {
+                offers.all.push(offre);
+            }
+        });
+        return offers;
+    };
 }

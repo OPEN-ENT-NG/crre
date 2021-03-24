@@ -78,7 +78,7 @@
                     </div>
                 </td>
             </tr>
-            <tr ng-repeat="order in project.orders" class="subline">
+            <tr ng-repeat-start="order in project.orders" class="subline">
                 <td class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project)">
@@ -120,6 +120,18 @@
                         <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                     </div>
                 </td>
+            </tr>
+            <tr class="subline" ng-repeat="offer in order.offers.all" ng-if="order.offers.all.length > 0" ng-repeat-end>
+                <td></td>
+                <td></td>
+                <td><span class="arrowOffer">[[offer.name]]</span></td>
+                <td><div class="smallTabElem center"></div></td>
+                <td></td>
+                <td></td>
+                <td class="center">[[offer.value]]</td>
+                <td class="center">GRATUIT</td>
+                <td></td>
+                <td></td>
             </tr>
             </tbody>
         </table>

@@ -5,7 +5,7 @@ import {
     StructureGroups,
     Structures,
     Utils,
-    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront
+    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront, Offers, Offer
 } from "../../model";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
@@ -447,6 +447,14 @@ export const orderRegionController = ng.controller('orderRegionController',
                     if (orders.length > 0) {
                         const idProject = orders[0].id_project;
                         orders = orders.filter($scope.filterAll);
+                        await getEquipments(orders).then(equipments => {
+                            for (let order of orders) {
+                                let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                                if(equipment.type === "articlenumerique") {
+                                    order.offers = computeOffer(order, equipment);
+                                }
+                            }
+                        });
                         projets.find(project => project.id == idProject).orders = orders;
                     }
                 }
@@ -477,6 +485,60 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         };
         synchroRegionOrders();
+
+        const getEquipments = (orders) :Promise <any> => {
+            let params = '';
+            orders.map((order) => {
+                params += `order_id=${order.equipment_key}&`;
+            });
+            params = params.slice(0, -1);
+            return http.get(`/crre/equipments?${params}`);
+        }
+
+        const computeOffer = (order, equipment): Offers => {
+            let amount = order.amount;
+            let gratuit = 0;
+            let gratuite = 0;
+            let offre = null;
+            /*        $scope.offerStudent = "";
+                    $scope.offerTeacher = "";*/
+            let offers = new Offers();
+            equipment.offres[0].leps.forEach(function (offer) {
+                offre = new Offer();
+                offre.name = "Manuel " + offer.licence[0].valeur;
+                if(offer.conditions.length > 1) {
+                    offer.conditions.forEach(function (condition) {
+                        if(offer.licence[0].valeur === "Elève") {
+                            /*                        $scope.offerStudent += condition.gratuite + " licence élève gratuite pour " + condition.conditionGratuite + ", ";*/
+                        } else {
+                            /*                        $scope.offerTeacher += condition.gratuite + " licence enseignant gratuite pour " + condition.conditionGratuite + ", ";*/
+                        }
+                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                            gratuit = condition.conditionGratuite;
+                            gratuite = condition.gratuite;
+                        }
+                    });
+                    if(offer.licence[0].valeur === "Elève") {
+                        /*                    $scope.offerStudent = $scope.offerStudent.slice(0, -2);*/
+                    } else {
+                        /*                    $scope.offerTeacher = $scope.offerTeacher.slice(0, -2);*/
+                    }
+                } else {
+                    if(offer.licence[0].valeur === "Elève") {
+                        /*                    $scope.offerStudent += offer.conditions[0].gratuite + " licence élève gratuite pour " + offer.conditions[0].conditionGratuite;*/
+                    } else {
+                        /*                    $scope.offerTeacher += offer.conditions[0].gratuite + " licence enseignant gratuite pour " + offer.conditions[0].conditionGratuite;*/
+                    }
+                    gratuit = offer.conditions[0].conditionGratuite;
+                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+                }
+                offre.value = gratuite;
+                if(gratuite > 0) {
+                    offers.all.push(offre);
+                }
+            });
+            return offers;
+        };
 
         $scope.cancelBasketDelete = (): void => {
             $scope.display.lightbox.validOrder = false;

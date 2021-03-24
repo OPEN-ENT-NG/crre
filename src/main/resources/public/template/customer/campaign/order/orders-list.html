@@ -40,7 +40,7 @@
                 </div>
             </td>
         </tr>
-        <tr ng-repeat="order in basket.orders | orderBy:sort.order.type:sort.order.reverse"
+        <tr ng-repeat-start="order in basket.orders | orderBy:sort.order.type:sort.order.reverse"
             ng-if="basket.expanded" class="subline">
             <td class="table-selector">
                 <label class="checkbox">
@@ -93,6 +93,16 @@
                     <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
                 </div>
             </td>
+        </tr>
+        <tr ng-if="basket.expanded" class="subline" ng-repeat="offer in order.offers.all" ng-if="order.offers.all.length > 0" ng-repeat-end>
+            <td></td>
+            <td></td>
+            <td><span class="arrowOffer">[[offer.name]]</span></td>
+            <td><div class="smallTabElem center"></div></td>
+            <td class="center">[[offer.value]]</td>
+            <td class="center">GRATUIT</td>
+            <td></td>
+            <td></td>
         </tr>
         </tbody>
     </table>
