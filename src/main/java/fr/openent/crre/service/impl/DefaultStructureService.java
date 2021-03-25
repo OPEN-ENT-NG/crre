@@ -78,7 +78,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             query += i < structures.size() - 1 ? "(?), " : "(?)";
             params.add(structure);
         }
-        query += " ON CONFLICT DO UPDATE " +
+        query += " ON CONFLICT (id_structure) DO UPDATE " +
                 "SET total_april = 0;";
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
