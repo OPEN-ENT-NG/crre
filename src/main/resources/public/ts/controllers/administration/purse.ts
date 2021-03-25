@@ -2,6 +2,7 @@ import {ng, template} from 'entcore';
 import {Purse, PurseImporter, Purses, Utils} from '../../model';
 import {Mix} from 'entcore-toolkit';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
+import http from "axios";
 
 declare let window: any;
 
@@ -41,6 +42,30 @@ export const purseController = ng.controller('PurseController',
             $scope.lightbox.open = true;
             Utils.safeApply($scope);
         };
+
+
+        $scope.onScroll = async (): Promise<void> => {
+            $scope.filter.page++;
+            await $scope.search($scope.query_name);
+        };
+
+        $scope.search = async (name: string, init: boolean = false) => {
+            if(init) {
+                $scope.purses.all = [];
+                $scope.filter.page = 0;
+            }
+            if (!!name) {
+                let {data} = await http.get(`/crre/purse/search?q=${name}&page=${$scope.filter.page}`);
+                if(data.length > 0 ) {
+                    $scope.purses.all = $scope.purses.all.concat(data);
+                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                }
+                Utils.safeApply($scope);
+            } else {
+                await $scope.purses.get($scope.filter.page);
+                Utils.safeApply($scope);
+            }
+        }
 
         $scope.cancelPurseForm = () => {
             $scope.lightbox.open = false;

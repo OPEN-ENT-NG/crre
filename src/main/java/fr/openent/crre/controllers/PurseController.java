@@ -31,13 +31,12 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.UUID;
 
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class PurseController extends ControllerHelper {
@@ -449,5 +448,28 @@ public class PurseController extends ControllerHelper {
     private static String getFileExportName(HttpServerRequest request) {
         return I18n.getInstance().translate("purse", getHost(request), I18n.acceptLanguage(request)) +
                 ".csv";
+    }
+
+    @Get("/purse/search")
+    @ApiDoc("Search in quotes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void search(HttpServerRequest request) throws UnsupportedEncodingException {
+        String query = "";
+        Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+        if (request.params().contains("q")) {
+            query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+        }
+        String finalQuery = query;
+        purseService.getAll(event -> {
+            if (event.isRight()) {
+                JsonArray response = event.right().getValue();
+                JsonArray ids = new JsonArray();
+                for (int i = 0; i < response.size(); i++) {
+                    ids.add(response.getJsonObject(i).getString("id_structure"));
+                }
+                structureService.searchStructureByNameUai(finalQuery, ids, page, arrayResponseHandler(request));
+            }
+        });
     }
 }
