@@ -616,7 +616,7 @@
   "crre.initial": "initiale : ",
   "crre.remained": "reste : ",
   "crre.modify.number.student": "Modifier le nombre d'élèves",
-  "crre.number.student.april": "Nombre d'élèves actuel : ",
+  "crre.number.student.april": "Nombre d'élèves au 30/04 : ",
   "crre.number.student.next.year": "Nombre d'élèves pour l'année n+1 : ",
   "crre.number.student.calcul": "Nombre de licences calculé à partir du nombre d'élèves (9 licences/élève de 2nde - 8 licences/élève de 1ère - 7 licences/élève pour les terminales) : ",
   "crre.numeric": "Numérique",
