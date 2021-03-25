@@ -78,7 +78,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             query += i < structures.size() - 1 ? "(?), " : "(?)";
             params.add(structure);
         }
-        query += " ON CONFLICT DO NOTHING";
+        query += " ON CONFLICT DO UPDATE " +
+                "SET total_april = 0;";
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
@@ -88,7 +89,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         for (int i = 0; i < total.size(); i++) {
             JsonObject structure_total = total.getJsonObject(i);
             query += i < total.size() - 1 ? "(?, ?, ?), " : "(?, ?, ?) ";
-            int total_licence = 0;
+            int total_licence;
             if(structure_total.getBoolean("pro")) {
                 total_licence = structure_total.getInteger("Seconde") * 3 + structure_total.getInteger("Premiere") * 3 + structure_total.getInteger("Terminale") * 3;
             } else {
