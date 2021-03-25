@@ -540,7 +540,8 @@ public class OrderRegionController extends BaseController {
     }
 
     private static String getExportHeader (HttpServerRequest request) {
-        return I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
+        return "Id" + ";" +
+                I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("UAI", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.request", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -561,7 +562,8 @@ public class OrderRegionController extends BaseController {
     }
 
     private static String generateExportLine (HttpServerRequest request, JsonObject log) {
-        return  (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
+        return  (log.getInteger("id") != null ? log.getInteger("id").toString() : "") + ";" +
+                (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
                 (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
                 (log.getString("title") != null ? log.getString("title") : "") + ";" +
