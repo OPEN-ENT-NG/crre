@@ -31,8 +31,8 @@
     </div>
     <div class="row" ng-if="filters.all.length > 0">
         <div style="margin:0.5em">
-            <div class="remove-margin-bottom inline-block">
-                <div ng-repeat="key in correlationFilterES.keys" class="select-blocks">
+            <div class="remove-margin-bottom">
+                <div ng-repeat="key in correlationFilterES.keys" class="select-blocks inline-block">
                     <div ng-repeat="item in catalog[key]"
                          ng-click="dropElement(item,key)">
                         [[item.toString()]]

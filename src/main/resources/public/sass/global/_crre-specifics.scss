@@ -1801,4 +1801,9 @@ body.crre {
   .line-clamp-6 {
     @include line-clamp($lines: 6, $line-height: 1.4em);
   }
+
+  multi-combo .multi-combo-root-button {
+    border-radius: 100px;
+    border-style: none !important;
+  }
 }

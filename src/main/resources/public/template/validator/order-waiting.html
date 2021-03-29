@@ -33,8 +33,8 @@
         </div>
     </div>
     <div class="row" ng-if="filters.all.length > 0">
-        <div class="remove-margin-bottom inline-block">
-            <div ng-repeat="key in filterChoiceCorrelation.keys" class="select-blocks">
+        <div class="remove-margin-bottom">
+            <div ng-repeat="key in filterChoiceCorrelation.keys" class="select-blocks inline-block">
                 <div ng-repeat="item in filterChoice[key]"
                      ng-click="dropElement(item,key)">
                     [[item.toString()]]
