@@ -54,5 +54,5 @@ export const campaignsListController = ng.controller('campaignsListController',
             $scope.display.lightbox.modifyNumberStudent = false;
             template.close('number.student');
             Utils.safeApply($scope);
-        }
+        };
     }]);

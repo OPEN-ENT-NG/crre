@@ -158,7 +158,7 @@ export class Equipments extends Selection<Equipment> {
         try {
             let uri: string;
             let params = "";
-            var format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
+            const format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             if(filters) {
                 params = "&";
                 filters.all.forEach(function (f) {
@@ -172,7 +172,7 @@ export class Equipments extends Selection<Equipment> {
                         uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);
                     }
                 let {data} = await http.get(uri);
-                this.syncEquip(data);
+                await this.syncEquip(data);
             } else {
                 toasts.warning('crre.equipment.special');
             }
@@ -188,7 +188,7 @@ export class Equipments extends Selection<Equipment> {
     async sync() {
         try {
             let {data} = await http.get(`/crre/equipments/catalog`);
-            this.syncEquip(data);
+            await this.syncEquip(data);
 
         } catch (e) {
             toasts.warning('crre.equipment.sync.err');

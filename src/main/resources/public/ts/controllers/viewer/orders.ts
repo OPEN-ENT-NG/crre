@@ -109,30 +109,30 @@ export const orderController = ng.controller('orderController',
 
         $scope.licencesAvailable = () => {
             return $scope.campaign.nb_licences_available - $scope.displayedOrders.calculTotalAmount() < 0;
-        }
+        };
 
         $scope.createOrder = async ():Promise<void> => {
             let ordersToCreate = new OrdersRegion();
             let ordersToRemove = new OrdersClient();
             let totalPrice = 0;
             let totalAmount = 0;
+
+            function reformatOrder(order) {
+                let orderRegionTemp = new OrderRegion();
+                orderRegionTemp.createFromOrderClient(order);
+                ordersToCreate.all.push(orderRegionTemp);
+                ordersToRemove.all.push(order);
+                totalPrice += order.price * order.amount
+                totalAmount += order.amount
+            }
+
             if($scope.ordersClient.selectedElements.length > 0) {
                 $scope.ordersClient.selectedElements.forEach(order => {
-                    let orderRegionTemp = new OrderRegion();
-                    orderRegionTemp.createFromOrderClient(order);
-                    ordersToCreate.all.push(orderRegionTemp);
-                    ordersToRemove.all.push(order);
-                    totalPrice += order.price*order.amount
-                    totalAmount += order.amount
+                    reformatOrder(order);
                 });
             } else {
                 $scope.ordersClient.all.forEach(order => {
-                    let orderRegionTemp = new OrderRegion();
-                    orderRegionTemp.createFromOrderClient(order);
-                    ordersToCreate.all.push(orderRegionTemp);
-                    ordersToRemove.all.push(order);
-                    totalPrice += order.price*order.amount
-                    totalAmount += order.amount
+                    reformatOrder(order);
                 });
             }
             ordersToCreate.create().then(async data =>{
@@ -164,18 +164,6 @@ export const orderController = ng.controller('orderController',
                     toasts.warning('crre.admin.order.create.err');
                 }
             })
-        }
-
-        $scope.display = {
-            ordersClientOptionOption : [],
-            lightbox : {
-                deleteOrder : false,
-                sendOrder : false,
-                validOrder : false,
-            },
-            generation: {
-                type: 'ORDER'
-            }
         };
 
         $scope.switchAll = (model: boolean, collection) => {
@@ -188,14 +176,6 @@ export const orderController = ng.controller('orderController',
             return totalPrice.toFixed(roundNumber);
         };
 
-        $scope.jsonPref = (prefs) => {
-            let json = {};
-            prefs.forEach(pref =>{
-                json[pref.fieldName]= pref.display;
-            });
-            return json;
-        };
-
         $scope.getTotalAmount = () => {
             let total = 0;
             $scope.basketsOrders.all.forEach(basket => {
@@ -206,12 +186,6 @@ export const orderController = ng.controller('orderController',
 
         $scope.switchAllOrders = () => {
             $scope.displayedOrders.all.map((order) => order.selected = $scope.allOrdersSelected);
-        };
-
-        $scope.getSelectedOrders = () => $scope.displayedOrders.selected;
-
-        $scope.getStructureGroupsList = (structureGroups: string[]): string => {
-            return structureGroups.join(', ');
         };
 
         function endLoading(newData: any) {
@@ -246,11 +220,12 @@ export const orderController = ng.controller('orderController',
                 }
             }
             Utils.safeApply($scope);
-        }
+        };
+
         $scope.openLightboxRefuseOrder = () => {
                 template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
                 $scope.display.lightbox.refuseOrder = true;
-        }
+        };
 
         $scope.cancelBasketDelete = () => {
             $scope.display.lightbox.validOrder = false;
@@ -292,7 +267,7 @@ export const orderController = ng.controller('orderController',
             }
         };
 
-        $scope.closedLighbtox= () =>{
+        $scope.closedLighbtox = () =>{
             $scope.display.lightbox.validOrder = false;
             if($scope.operationId) {
                 $scope.redirectTo(`/operation/order/${$scope.operationId}`)
@@ -338,21 +313,6 @@ export const orderController = ng.controller('orderController',
         // Functions specific for baskets interactions
 
         $scope.displayedBasketsOrders = [];
-
-        $scope.checkParentSwitch = (basket, checker) : void => {
-            if (checker) {
-                let testAllTrue = true;
-                basket.orders.forEach(function (order) {
-                    if (!order.selected) {
-                        testAllTrue = false;
-                    }
-                });
-                basket.selected = testAllTrue;
-            }
-            else {
-                basket.selected = false;
-            }
-        };
 
         $scope.cancelRefuseOrder = () => {
             $scope.display.lightbox.refuseOrder = false;

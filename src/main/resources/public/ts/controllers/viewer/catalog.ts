@@ -6,9 +6,7 @@ export const catalogController = ng.controller('catalogController',
         this.init = () => {
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
-            $scope.alloptionsSelected = false;
             $scope.equipment = new Equipment();
-            $scope.subjects = [];
             $scope.loading = true;
             $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
                 "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
@@ -27,6 +25,7 @@ export const catalogController = ng.controller('catalogController',
                 docsType : '_index',
                 editors : 'editeur'
             };
+
             if($scope.isAdministrator()){
                 $scope.goBackUrl = "crre#/equipments/catalog";
             }else if($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor()){
@@ -73,7 +72,6 @@ export const catalogController = ng.controller('catalogController',
             $scope.catalog[key] = _.without($scope.catalog[key], item);
             $scope.getFilter();
         };
-
 
         $scope.validArticle = () => {
             return $scope.basket.amount > 0;

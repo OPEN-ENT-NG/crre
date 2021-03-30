@@ -7,7 +7,6 @@ import {
     Campaigns,
     Equipment,
     Equipments,
-    Exports,
     Logs,
     OrderClient,
     OrderRegion,
@@ -16,9 +15,12 @@ import {
     Structures,
     Utils,
     Filters,
-    Student, Offers, Offer, COMBO_LABELS
+    Student,
+    Offers,
+    Offer
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
+import {COMBO_LABELS} from "../enum/comboLabels";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -47,7 +49,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.filters = new Filters();
         $scope.student = new Student();
         $scope.total_licence = 0;
-        $scope.exports = new Exports([]);
         $scope.loadingArray = false;
         $scope.query = {
             word: "",
@@ -65,21 +66,21 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 } else {
                     await $scope.initStructures();
                     await $scope.initCampaign($scope.current.structure);
-                    template.open('main-profile', 'customer/campaign/campaign-list');
+                    await template.open('main-profile', 'customer/campaign/campaign-list');
                 }
                 Utils.safeApply($scope);
             },
             viewLogs: async () => {
                 $scope.loadingArray = true;
                 $scope.logs.reset();
-                template.open('administrator-main', 'administrator/log/view-logs');
+                await template.open('administrator-main', 'administrator/log/view-logs');
                 await $scope.logs.loadPage($scope.current.page);
                 $scope.loadingArray = false;
                 Utils.safeApply($scope);
             },
             manageCampaigns: async () => {
-                template.open('administrator-main', 'administrator/campaign/campaign_container');
-                template.open('campaigns-main', 'administrator/campaign/manage-campaign');
+                await template.open('administrator-main', 'administrator/campaign/campaign_container');
+                await template.open('campaigns-main', 'administrator/campaign/manage-campaign');
                 await $scope.campaigns.sync();
                 Utils.safeApply($scope);
             },
@@ -87,17 +88,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/campaigns');
                 }
-                template.open('campaigns-main', 'administrator/campaign/campaign_form');
+                await template.open('campaigns-main', 'administrator/campaign/campaign_form');
                 Utils.safeApply($scope);
             },
             managePurse: async () => {
-                template.open('administrator-main', 'administrator/purse/manage-purse');
+                await template.open('administrator-main', 'administrator/purse/manage-purse');
                 Utils.safeApply($scope);
             },
             manageStructureGroups: async () => {
-                template.open('administrator-main', 'administrator/structureGroup/structureGroup-container');
+                await template.open('administrator-main', 'administrator/structureGroup/structureGroup-container');
                 await $scope.structureGroups.sync();
-                template.open('structureGroups-main', 'administrator/structureGroup/manage-structureGroup');
+                await template.open('structureGroups-main', 'administrator/structureGroup/manage-structureGroup');
                 $scope.structures = new Structures();
                 await $scope.structures.sync();
                 Utils.safeApply($scope);
@@ -106,33 +107,33 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/structureGroups');
                 }
-                template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
+                await template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
             showCatalog: async (params) => {
                 await $scope.setCampaign(params);
                 template.close('administrator-main');
-                template.open('main-profile', 'customer/campaign/campaign-detail');
-                template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
+                await template.open('main-profile', 'customer/campaign/campaign-detail');
+                await template.open('campaign-main', 'customer/campaign/catalog/catalog-list');
                 await $scope.selectCatalog();
                 Utils.safeApply($scope);
             },
             showAdminCatalog: async () => {
-                template.open('administrator-main', 'customer/campaign/catalog/catalog-list');
+                await template.open('administrator-main', 'customer/campaign/catalog/catalog-list');
                 await $scope.selectCatalog();
                 Utils.safeApply($scope);
             },
             equipmentDetail: async (params) => {
                 await $scope.setCampaign(params);
                 template.close('administrator-main');
-                template.open('main-profile', 'customer/campaign/campaign-detail');
-                template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
+                await template.open('main-profile', 'customer/campaign/campaign-detail');
+                await template.open('campaign-main', 'customer/campaign/catalog/equipment-detail');
                 await $scope.selectEquipment(params);
                 Utils.safeApply($scope);
             },
             adminEquipmentDetail: async (params) => {
                 await $scope.selectEquipment(params);
-                template.open('administrator-main', 'customer/campaign/catalog/equipment-detail');
+                await template.open('administrator-main', 'customer/campaign/catalog/equipment-detail');
                 Utils.safeApply($scope);
             },
             campaignOrder: async (params) => {
@@ -140,18 +141,18 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
                     await $scope.initStructures() ;
-                $scope.initCampaignOrderView();
+                await template.open('order-list', 'customer/campaign/order/orders-list');
                 await $scope.selectCampaign(idCampaign);
                 $scope.campaign.order_notification = 0;
                 template.close('administrator-main');
-                template.open('main-profile', 'customer/campaign/campaign-detail');
-                template.open('campaign-main', 'customer/campaign/order/manage-order');
+                await template.open('main-profile', 'customer/campaign/campaign-detail');
+                await template.open('campaign-main', 'customer/campaign/order/manage-order');
                 Utils.safeApply($scope);
             },
             campaignBasket: async (params) => {
                 template.close('administrator-main');
-                template.open('main-profile', 'customer/campaign/campaign-detail');
-                template.open('campaign-main', 'customer/campaign/basket/manage-basket');
+                await template.open('main-profile', 'customer/campaign/campaign-detail');
+                await template.open('campaign-main', 'customer/campaign/basket/manage-basket');
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);
                 if(!$scope.current.structure)
@@ -166,8 +167,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.loading = true;
                 template.close('campaign-main');
                 $scope.ordersClient.all = [];
-                template.open('main-profile', 'customer/campaign/campaign-detail');
-                template.open('administrator-main', 'validator/order-waiting');
+                await template.open('main-profile', 'customer/campaign/campaign-detail');
+                await template.open('administrator-main', 'validator/order-waiting');
                 Utils.safeApply($scope);
                 let idCampaign = params.idCampaign;
                 $scope.idIsInteger(idCampaign);
@@ -203,23 +204,30 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             orderWaitingAdmin: async () => {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
-                template.open('administrator-main', 'administrator/order/order-waiting');
+                await template.open('administrator-main', 'administrator/order/order-waiting');
                 Utils.safeApply($scope);
             },
             orderHistoricAdmin: async () => {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
-                template.open('administrator-main', 'administrator/order/order-sent-library');
+                await template.open('administrator-main', 'administrator/order/order-sent-library');
                 Utils.safeApply($scope);
-            },
-            exportList: async () => {
-                $scope.loadingArray = true;
-                await $scope.exports.getExports();
-                template.open('administrator-main', 'administrator/exports/export-list');
-                $scope.loadingArray = false;
-                Utils.safeApply($scope);
-
             }
         });
+
+        $scope.checkParentSwitch = (basket, checker) : void => {
+            if (checker) {
+                let testAllTrue = true;
+                basket.orders.forEach(function (order) {
+                    if (!order.selected) {
+                        testAllTrue = false;
+                    }
+                });
+                basket.selected = testAllTrue;
+            }
+            else {
+                basket.selected = false;
+            }
+        };
 
         $scope.setCampaign = async function (params) {
             let idCampaign = params.idCampaign;
@@ -309,15 +317,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     }
                 }
             }
-        };
-
-        $scope.initInstructions = async ()=>{
-            $scope.loadingArray = true;
-            await $scope.instructions.sync();
-            $scope.loadingArray = false;
-        };
-        $scope.initCampaignOrderView=()=>{
-            template.open('order-list', 'customer/campaign/order/orders-list');
         };
 
         $scope.initBasketItem = async (idEquipment: number, idCampaign: number, structure) => {

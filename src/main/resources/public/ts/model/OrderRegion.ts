@@ -8,7 +8,7 @@ import {
     OrderClient,
     Equipment
 } from "./index";
-import {Mix, Selection} from "entcore-toolkit";
+import {Selection} from "entcore-toolkit";
 
 
 export class OrderRegion implements Order  {

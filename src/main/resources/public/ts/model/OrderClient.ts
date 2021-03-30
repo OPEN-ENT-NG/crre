@@ -98,33 +98,6 @@ export class OrderClient implements Order  {
         }
     }
 
-    static formatSqlDataToModel(data: any):any {
-        return {
-            action: data.action,
-            amount: data.amount,
-            cause_status: data.cause_status,
-            comment: data.comment,
-            creation_date: moment(data.creation_date).format('DD-MM-YYYY').toString(),
-            description: data.description,
-            equipment_key: data.equipment_key,
-            id: data.id,
-            id_campaign: data.id_campaign,
-            id_contract: data.id_contract,
-            id_operation: data.id_operation,
-            id_order: data.id_order,
-            id_project: data.id_project,
-            id_structure: data.id_structure,
-            image: data.image,
-            name: data.name,
-            price: data.price,
-            program: data.program,
-            status: data.status,
-            summary: data.summary,
-            tax_amount: data.tax_amount
-        }
-            ;
-    }
-
     toJson():any {
         return {
             amount: this.amount,
@@ -167,20 +140,7 @@ export class OrdersClient extends Selection<OrderClient> {
             const {data} = await http.get(`/crre/orders/search?q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
             if(newOrderClient.length>0) {
-                await this.getEquipments(newOrderClient).then(equipments => {
-                    for (let order of newOrderClient) {
-                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                        order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-                        order.price = Utils.calculatePriceTTC(equipment,2);
-                        order.name = equipment.titre;
-                        order.image = equipment.urlcouverture;
-                        order.creation_date = moment(order.creation_date).format('L');
-                        if(equipment.type === "articlenumerique") {
-                            order.offers = this.computeOffer(order, equipment);
-                        }
-                    }
-                });
-                this.all = this.all.concat(newOrderClient);
+                await this.reformatOrders(newOrderClient);
                 return true;
             }
         } catch (err) {
@@ -211,20 +171,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 if(newOrderClient.length>0) {
-                    await this.getEquipments(newOrderClient).then(equipments => {
-                        for (let order of newOrderClient) {
-                            let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-                            order.price = Utils.calculatePriceTTC(equipment,2);
-                            order.name = equipment.titre;
-                            order.image = equipment.urlcouverture;
-                            order.creation_date = moment(order.creation_date).format('L');
-                            if(equipment.type === "articlenumerique") {
-                                order.offers = this.computeOffer(order, equipment);
-                            }
-                        }
-                    });
-                    this.all = this.all.concat(newOrderClient);
+                    await this.reformatOrders(newOrderClient);
                     return true;
                 }
             } else {
@@ -234,6 +181,27 @@ export class OrdersClient extends Selection<OrderClient> {
             toasts.warning('crre.equipment.sync.err');
             throw e;
         } finally {
+        }
+    }
+
+    private async reformatOrders(newOrderClient: any[]) {
+        await this.getEquipments(newOrderClient).then(equipments => {
+            for (let order of newOrderClient) {
+                this.reformatOrder(equipments, order);
+                order.creation_date = moment(order.creation_date).format('L');
+            }
+        });
+        this.all = this.all.concat(newOrderClient);
+    }
+
+    private reformatOrder(equipments, order) {
+        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+        order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
+        order.price = Utils.calculatePriceTTC(equipment, 2);
+        order.name = equipment.titre;
+        order.image = equipment.urlcouverture;
+        if (equipment.type === "articlenumerique") {
+            order.offers = this.computeOffer(order, equipment);
         }
     }
 
@@ -270,18 +238,11 @@ export class OrdersClient extends Selection<OrderClient> {
                 if(newOrderClient.length>0) {
                     await this.getEquipments(newOrderClient).then(equipments => {
                         for (let order of newOrderClient) {
-                            let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-                            order.price = Utils.calculatePriceTTC(equipment,2);
-                            order.name = equipment.titre;
-                            order.image = equipment.urlcouverture;
+                            this.reformatOrder(equipments, order);
                             order.name_structure = structures && structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
                             order.structure = structures && structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                             order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
                             order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
-                            if(equipment.type === "articlenumerique") {
-                                order.offers = this.computeOffer(order, equipment);
-                            }
                             if (order.files.length > 1)
                                 order.files.sort(function (a, b) {
                                     return a.filename.localeCompare(b.filename);

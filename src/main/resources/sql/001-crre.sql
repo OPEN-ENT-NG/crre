@@ -66,26 +66,20 @@ CREATE TABLE crre.purse(
     id bigserial NOT NULL,
     id_structure character varying(36),
     amount numeric,
-    id_campaign bigint,
     initial_amount NUMERIC,
     CONSTRAINT purse_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
-       REFERENCES crre.campaign (id) MATCH SIMPLE
-       ON UPDATE NO ACTION ON DELETE CASCADE,
-    CONSTRAINT purse_id_structure_id_campaign_key UNIQUE (id_structure, id_campaign),
+    CONSTRAINT purse_structure_unique UNIQUE (id_structure),
     CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric)
 );
 
 CREATE TABLE crre.licences
 (
-    id_purse bigint NOT NULL,
-    name character varying(36),
+    id_structure character varying(50) NOT NULL,
     amount bigint,
     initial_amount bigint,
-    id bigint NOT NULL,
-    CONSTRAINT licences_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_purse_id FOREIGN KEY (id_purse)
-        REFERENCES crre.purse (id) MATCH SIMPLE
+    CONSTRAINT licences_pkey PRIMARY KEY (id_structure),
+    CONSTRAINT licences_id_structure_fkey FOREIGN KEY (id_structure)
+        REFERENCES crre.students (id_structure) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
@@ -97,7 +91,7 @@ CREATE TABLE crre.basket_equipment (
     id_equipment VARCHAR NOT NULL,
     id_campaign bigint NOT NULL,
     id_structure character varying NOT NULL,
-    "comment" TEXT,
+    comment TEXT,
     price_proposal numeric,
     id_type bigint DEFAULT 1,
     owner_id character varying,
@@ -137,33 +131,24 @@ CREATE TABLE crre.order_client_equipment (
 
 CREATE INDEX fki_fk_basket_id ON crre.order_client_equipment USING btree (id_basket);
 
-CREATE TABLE crre.order_file (
-    id character varying (36) NOT NULL,
-    id_order_client_equipment bigint NOT NULL,
-    filename character varying (255) NOT NULL,
-    CONSTRAINT order_file_pkey PRIMARY KEY (id, id_order_client_equipment),
-    CONSTRAINT fk_order_client_equipment_id FOREIGN KEY (id_order_client_equipment)
-        REFERENCES crre.order_client_equipment (id) MATCH SIMPLE
-        ON UPDATE NO ACTION ON DELETE CASCADE
-);
-
 CREATE TABLE crre."order-region-equipment"
 (
     id bigserial NOT NULL,
     amount bigint NOT NULL,
-    creation_date date NOT NULL,
+    creation_date date NOT NULL DEFAULT now(),
     modification_date date,
     owner_name character varying NOT NULL,
     owner_id character varying NOT NULL,
     status character varying(50),
-    equipment_key VARCHAR NOT NULL,
-    id_campaign bigint NOT NULL,
+    equipment_key VARCHAR,
+    id_campaign bigint,
     id_structure character varying COLLATE pg_catalog."default" NOT NULL,
     cause_status character varying(300),
     comment text,
     id_project bigint,
     id_order_client_equipment bigint,
     reassort boolean NOT NULL DEFAULT false,
+    id_offer_equipment character varying(100),
 
     CONSTRAINT order_region_equipment_pkey PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
@@ -182,7 +167,6 @@ CREATE TABLE crre."order-region-equipment"
 CREATE TABLE crre.project (
     id bigserial NOT NULL,
     title character varying(50),
-
     PRIMARY KEY (id)
 );
 
@@ -196,7 +180,6 @@ CREATE TABLE crre.basket_order (
     total double precision,
     amount bigint,
     created date,
-
     CONSTRAINT basket_order_pkey PRIMARY KEY (id)
 );
 
@@ -207,6 +190,20 @@ CREATE TABLE crre.students
     "Premiere" bigint DEFAULT 0,
     "Terminale" bigint DEFAULT 0,
     "pro" boolean DEFAULT false,
+    total_april bigint DEFAULT 0,
     PRIMARY KEY (id_structure),
     CONSTRAINT structure_unique UNIQUE (id_structure)
 );
+
+CREATE TABLE crre.quote
+(
+    id bigserial NOT NULL,
+    title character varying,
+    creation_date timestamp without time zone NOT NULL DEFAULT now(),
+    owner_name character varying,
+    owner_id character varying,
+    nb_structures integer,
+    attachment character varying,
+    quotation character varying,
+    PRIMARY KEY (id)
+)

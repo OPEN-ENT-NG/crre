@@ -4,14 +4,10 @@ import {Basket, Baskets, Utils} from '../../model';
 export const basketController = ng.controller('basketController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
         $scope.display = {
-            equipmentOption : [],
             lightbox : {
                 deleteBasket : false,
                 confirmOrder: false,
-                createProject: false,
-                addDocuments: false
             },
-            grade: "",
         };
 
         $scope.hasOneSelected = (baskets: Baskets) => {

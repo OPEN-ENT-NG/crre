@@ -9,10 +9,6 @@ import {
 
 export const configurationController = ng.controller('configurationController',
     ['$scope', ($scope) => {
-        $scope.pageSize = 20;
-        $scope.nbItemsDisplay = $scope.pageSize;
-        $scope.itemsFilter = 'name';
-        $scope.filterOrder = false;
         $scope.display = {
             lightbox: {
                 campaign: false,
@@ -24,21 +20,6 @@ export const configurationController = ng.controller('configurationController',
         };
 
         $scope.search = {};
-
-        $scope.filterEquipments = (type: string, reverse: boolean) => {
-            $scope.nbItemsDisplay = $scope.pageSize;
-            switch(type) {
-                case 'name': $scope.itemsFilter = 'name'; break;
-                case 'price': $scope.itemsFilter = 'price'; break;
-                case 'supplier': $scope.itemsFilter = 'supplier_name'; break;
-                case 'contract': $scope.itemsFilter = 'contract_name'; break;
-                case 'status': $scope.itemsFilter = 'status'; break;
-                default: $scope.itemsFilter = 'reference'; break;
-            }
-            $scope.filterOrder = reverse;
-            $scope.sort.equipment.reverse = reverse;
-            $scope.sort.equipment.type = type;
-        };
 
         $scope.switchAll = (model: boolean, collection) => {
             model ? collection.selectAll() : collection.deselectAll();
@@ -77,8 +58,8 @@ export const configurationController = ng.controller('configurationController',
 
         $scope.validCampaignForm = (campaign: Campaign) => {
             return campaign.name !== undefined
-            && campaign.name.trim() !== ''
-            && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined;
+                && campaign.name.trim() !== ''
+                && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined;
 
         };
 
@@ -100,9 +81,10 @@ export const configurationController = ng.controller('configurationController',
         };
 
         $scope.selectCampaignsStructureGroup = (group) => {
-            group.selected ? $scope.campaign.groups.push(group) : $scope.campaign.groups = _.reject($scope.campaign.groups, (groups) => {
-                return groups.id === group.id;
-            });
+            group.selected ? $scope.campaign.groups.push(group) :
+                $scope.campaign.groups = _.reject($scope.campaign.groups, (groups) => {
+                    return groups.id === group.id;
+                });
         };
 
         $scope.openStructureGroupForm = (structureGroup: StructureGroup = new StructureGroup()) => {
@@ -145,7 +127,8 @@ export const configurationController = ng.controller('configurationController',
         };
 
         $scope.deleteStructuresofGroup = () => {
-            $scope.structureGroup.structures = _.difference($scope.structureGroup.structures, $scope.structureGroup.structures.filter(structureRight => structureRight.selected));
+            $scope.structureGroup.structures = _.difference($scope.structureGroup.structures,
+                $scope.structureGroup.structures.filter(structureRight => structureRight.selected));
             $scope.structures.deselectAll();
             $scope.search.structureRight = '';
             Utils.safeApply($scope);
@@ -169,7 +152,6 @@ export const configurationController = ng.controller('configurationController',
             $scope.display.lightbox.structureGroup = true;
         };
 
-        // noinspection DuplicatedCode
         $scope.importStructureGroups = async (importer: StructureGroupImporter): Promise<void> => {
             try {
                 await importer.validate();

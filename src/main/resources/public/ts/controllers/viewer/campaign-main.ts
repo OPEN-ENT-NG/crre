@@ -23,7 +23,6 @@ export const campaignMainController = ng.controller('campaignMainController',
         $scope.returnPath = (s: string) => {
             return /[^\/]+[\/]?$/.exec(s);
         }
-
     }]);
 
 

@@ -2,7 +2,6 @@ import {ng, toasts} from "entcore";
 import http from "axios";
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 import {Utils} from "../../model";
-import {attachment} from "entcore/types/src/ts/editor/options";
 
 declare let window: any;
 export const quoteController = ng.controller('quoteController',
@@ -21,7 +20,7 @@ export const quoteController = ng.controller('quoteController',
             } catch (e) {
                 toasts.warning('crre.quote.list.error');
             }
-        }
+        };
 
         $scope.generateCSV = async(attachment:string, title:string) => {
             try {
@@ -29,15 +28,19 @@ export const quoteController = ng.controller('quoteController',
             } catch (e) {
                 toasts.warning('crre.quote.generate.csv.error');
             }
-        }
-        const syncQuotes = async() => {
-            let data = await $scope.getQuotes();
-            data.map(quote =>{
+        };
+
+        $scope.onScroll = async (): Promise<void> => {
+            $scope.filter.page++;
+            await $scope.search($scope.query_name);
+        };
+
+        function setQuotes(data) {
+            data.map(quote => {
                 let date = new Date(quote.creation_date);
-                let newDateString = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
-                quote.creation_date = newDateString;
+                quote.creation_date = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
             });
-            if(data.length > 0 ) {
+            if (data.length > 0) {
                 $scope.quotes = $scope.quotes.concat(data);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
@@ -45,11 +48,9 @@ export const quoteController = ng.controller('quoteController',
             Utils.safeApply($scope);
         }
 
-        syncQuotes();
-
-        $scope.onScroll = async (): Promise<void> => {
-            $scope.filter.page++;
-            await $scope.search($scope.query_name);
+        const syncQuotes = async() => {
+            let data = await $scope.getQuotes();
+            setQuotes(data);
         };
 
         $scope.search = async (name: string, init: boolean = false) => {
@@ -59,19 +60,13 @@ export const quoteController = ng.controller('quoteController',
             }
             if (!!name) {
                 let {data} = await http.get(`/crre/quote/search?q=${name}&page=${$scope.filter.page}`);
-                data.map(quote =>{
-                    let date = new Date(quote.creation_date);
-                    let newDateString = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
-                    quote.creation_date = newDateString;
-                });
-                if(data.length > 0 ) {
-                    $scope.quotes = $scope.quotes.concat(data);
-                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                }
-                Utils.safeApply($scope);
+                setQuotes(data);
             } else {
                 await syncQuotes();
                 Utils.safeApply($scope);
-                }
             }
-    }])
+        };
+
+        syncQuotes();
+
+    }]);

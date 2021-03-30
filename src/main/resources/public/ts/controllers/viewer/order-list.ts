@@ -1,4 +1,4 @@
-import {_, moment, ng, template, toasts} from 'entcore';
+import {moment, ng, toasts} from 'entcore';
 import {
     BasketOrder,
     BasketsOrders,
@@ -16,13 +16,9 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
     ['$scope', '$routeParams', ($scope, $routeParams) => {
 
         $scope.display = {
-            ordersClientOption: [],
             lightbox: {
                 deleteOrder: false,
-                deleteProject: false,
-                udpateProject: false,
             },
-            list: $scope.campaign.priority_field
         };
         $scope.allOrdersListSelected = false;
         $scope.show = {
@@ -37,7 +33,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             $scope.users = [];
             $scope.reassorts = [{reassort: "true"}, {reassort: "false"}];
             $scope.filters = new Filters();
-            $scope.initPopUpFilters();
         };
 
         $scope.exportCSV = () => {
@@ -63,72 +58,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 });
             });
         }
-
-        $scope.initPopUpFilters = (filter?:string) => {
-            let value = $scope.$eval(filter);
-            $scope.showPopUpColumnsGrade = false;
-            $scope.showPopUpColumnsTeacher = false;
-            $scope.showPopUpColumnsReassort = false;
-            if (!value) {
-                switch (filter) {
-                    case 'showPopUpColumnsGrade': $scope.showPopUpColumnsGrade = true; break;
-                    case 'showPopUpColumnsTeacher': $scope.showPopUpColumnsTeacher = true; break;
-                    case 'showPopUpColumnsReassort': $scope.showPopUpColumnsReassort = true; break;
-                    default: break;
-                }
-            }
-        };
-
-        /*$scope.getFilter = async (word: string, filter: string) => {
-            let newFilter = new Filter();
-            newFilter.name = filter;
-            newFilter.value = word;
-            if ($scope.filters.all.some(f => f.value === word)) {
-                $scope.filters.all.splice($scope.filters.all.findIndex(a => a.value === word) , 1)
-            } else {
-                $scope.filters.all.push(newFilter);
-            }
-            $scope.loading = true;
-            Utils.safeApply($scope);
-            if($scope.filters.all.length > 0) {
-                if (!!$scope.query_name) {
-                    await $scope.basketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name);
-                    formatDisplayedBasketOrders();
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
-                } else {
-                    await $scope.basketsOrders.filter_order($scope.filters.all, $scope.campaign.id);
-                    formatDisplayedBasketOrders();
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
-                }
-            } else {
-                if (!!$scope.query_name) {
-                    await $scope.basketsOrders.search($scope.query_name, $scope.campaign.id)
-                    formatDisplayedBasketOrders();
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
-                } else {
-                    await $scope.basketsOrders.getMyOrders();
-                    formatDisplayedBasketOrders();
-                    $scope.loading = false;
-                    Utils.safeApply($scope);
-                }
-            }
-        };*/
-
-        /* $scope.getAllFilters = async () => {
-            await $scope.basketsOrders.getMyOrders().then(() => {
-                $scope.basketsOrders.all.forEach(function (basket) {
-                    if (!$scope.users.includes(basket.name_user)) {
-                        $scope.users.push({user_name: basket.name_user});
-                    }
-                });
-                $scope.users = $scope.users.filter((v, i, a) => a.findIndex(t => (t.user_name === v.user_name)) === i);
-                formatDisplayedBasketOrders();
-                Utils.safeApply($scope);
-            });
-        };*/
 
         $scope.searchByName =  async (noInit?:boolean) => {
             if(!noInit){
@@ -168,21 +97,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
 
         $scope.switchAllOrdersBasket = (basket) => {
             basket.orders.map((order) => order.selected = basket.selected);
-        };
-
-        $scope.checkParentSwitch = (basket, checker) : void => {
-            if (checker) {
-                let testAllTrue = true;
-                basket.orders.forEach(function (order) {
-                    if (!order.selected) {
-                        testAllTrue = false;
-                    }
-                });
-                basket.selected = testAllTrue;
-            }
-            else {
-                basket.selected = false;
-            }
         };
 
         $scope.displayEquipmentOption = (index: number) => {

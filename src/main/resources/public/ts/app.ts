@@ -54,9 +54,6 @@ routes.define(($routeProvider) => {
             })
             .when('/campaigns', {
                 action: 'manageCampaigns'
-            })
-            .when('/exports', {
-                action: 'exportList'
             });
     } else {
         $routeProvider

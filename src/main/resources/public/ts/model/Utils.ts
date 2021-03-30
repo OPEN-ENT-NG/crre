@@ -1,5 +1,3 @@
-import {moment} from "entcore";
-
 export class Utils {
 
     static parsePostgreSQLJson (json: any): any {
@@ -81,52 +79,5 @@ export class Utils {
                     project.status = "PARTIALLYVALIDED"
             }
         }
-    }
-
-    static formatGetParameters (obj: any): string {
-        let parameters = '';
-        Object.keys(obj).map((key) => {
-            if (obj[key] == null || obj[key] === undefined) return;
-            let type = obj[key].constructor.name;
-            switch (type) {
-                case 'Array' : {
-                    obj[key].map((value) => parameters += `${key}=${value.toString()}&`);
-                    break;
-                }
-                case 'Object': {
-                    for (let innerKey in obj[key]) {
-                        parameters += `${innerKey}=${obj[key][innerKey].toString()}&`;
-                    }
-                    break;
-                }
-                default: {
-                    parameters += `${key}=${obj[key].toString()}&`;
-                    break;
-                }
-            }
-        });
-
-        return parameters.slice(0, -1);
-    }
-
-    static formatDate (date:Date) {
-        if (date === null) return '-';
-        return moment(date).format('DD/MM/YY');
-    }
-
-    static generateRegexp (words: string[]): RegExp {
-        function escapeRegExp(str: string) {
-            return str.replace(/[\-\[\]\/{}()*+?.\\^$|]/g, '\\$&');
-        }
-        let reg;
-        if (words.length > 0) {
-            reg = '.*(';
-            words.map((word: string) => reg += `${escapeRegExp(word.toLowerCase())}|`);
-            reg = reg.slice(0, -1);
-            reg += ').*';
-        } else {
-            reg = '.*';
-        }
-        return new RegExp(reg);
     }
 }
