@@ -154,9 +154,11 @@ export const orderRegionController = ng.controller('orderRegionController',
             let data;
             if(init){
                 data = await $scope.filter_order(true);
+                Utils.safeApply($scope);
             }else{
                 $scope.filter.page++;
                 data = await $scope.filter_order(false);
+                Utils.safeApply($scope);
             }
             if(data.length > 0){
                 await synchroRegionOrders(true, data);

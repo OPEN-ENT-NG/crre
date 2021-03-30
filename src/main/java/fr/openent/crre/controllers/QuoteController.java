@@ -58,10 +58,11 @@ public class QuoteController extends BaseController {
     @ResourceFilter(AdministratorRight.class)
     public void getCSVQuote(HttpServerRequest request) {
         String b64_attachment = request.getParam("attachment");
+        String title = request.getParam("title");
         String attachment = new String(Base64.getDecoder().decode(b64_attachment));
         request.response()
                 .putHeader("Content-Type", "text/csv; charset=utf-8")
-                .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                .putHeader("Content-Disposition", "attachment; filename=" + title + ".csv")
                 .end(attachment);
   }
 

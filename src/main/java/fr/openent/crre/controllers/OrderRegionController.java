@@ -425,7 +425,7 @@ public class OrderRegionController extends BaseController {
                 handlerJsonObject(purseUpdateLicencesFuture));
     }
 
-    @Post("region/orders/exports")
+    @Get("region/orders/exports")
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
@@ -487,8 +487,41 @@ public class OrderRegionController extends BaseController {
                             order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                             order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                             order.put("name", equipment.getString("titre"));
-                            order.put("image", equipment.getString("image"));
+                            order.put("image", equipment.getString("urlcouverture"));
                             order.put("ean", equipment.getString("ean"));
+                            order.put("editor", equipment.getString("editeur"));
+                            order.put("diffusor", equipment.getString("distributeur"));
+                            order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                            order.put("type", equipment.getString("type"));
+                            if(equipment.getString("type").equals("articlenumerique")) {
+                                JsonArray offers = computeOffers(equipment, order);
+                                if(offers.size() > 0) {
+                                    for(int k = 0; k < offers.size(); k++) {
+                                        JsonObject orderOffer = new JsonObject();
+                                        orderOffer.put("name", offers.getJsonObject(k).getString("titre"));
+                                        orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
+                                        orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
+                                        orderOffer.put("unitedPriceTTC", 0);
+                                        orderOffer.put("totalPriceHT", 0);
+                                        orderOffer.put("totalPriceTTC", 0);
+                                        orderOffer.put("creation_date", order.getString("creation_date"));
+                                        orderOffer.put("id_structure", order.getString("id_structure"));
+                                        orderOffer.put("campaign_name", order.getString("campaign_name"));
+                                        orderOffer.put("id", order.getLong("id"));
+                                        orderOffer.put("title", order.getString("title"));
+                                        orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
+                                        for (int s = 0; s < structures.size(); s++) {
+                                            structure = structures.getJsonObject(s);
+                                            if (structure.getString("id").equals(order.getString("id_structure"))) {
+                                                orderOffer.put("uai_structure", structure.getString("uai"));
+                                                orderOffer.put("name_structure", structure.getString("name"));
+                                            }
+                                        }
+                                        orderRegion.add(orderOffer);
+                                        i++;
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -531,6 +564,39 @@ public class OrderRegionController extends BaseController {
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
     }
 
+    private static JsonArray computeOffers(JsonObject equipment, JsonObject order) {
+        JsonArray leps = equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps");
+        Long amount = order.getLong("amount");
+        int gratuit = 0;
+        int gratuite = 0;
+        JsonArray offers = new JsonArray();
+        for (int i = 0; i < leps.size(); i++) {
+            JsonObject offer = leps.getJsonObject(i);
+            JsonArray conditions = offer.getJsonArray("conditions");
+            JsonObject offerObject = new JsonObject().put("name", offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
+            if(conditions.size() > 1) {
+                for(int j = 0; j < conditions.size(); j++) {
+                    int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
+                    if(amount >= condition && gratuit < condition) {
+                        gratuit = condition;
+                        gratuite = conditions.getJsonObject(j).getInteger("gratuite");
+                    }
+                }
+            } else {
+                gratuit = offer.getJsonArray("conditions").getJsonObject(0).getInteger("conditionGratuite");
+                gratuite = (int) (offer.getJsonArray("conditions").getJsonObject(0).getInteger("gratuite") * Math.floor(amount / gratuit));
+            }
+            offerObject.put("value", gratuite);
+            offerObject.put("ean", offer.getString("ean"));
+            offerObject.put("titre", offer.getString("titre"));
+            offerObject.put("comment", equipment.getString("ean"));
+            if(gratuite > 0) {
+                offers.add(offerObject);
+            }
+        }
+        return offers;
+    }
+
     private static String generateExport(HttpServerRequest request, JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
@@ -556,8 +622,7 @@ public class OrderRegionController extends BaseController {
                 I18n.getInstance().translate("crre.unit.price.ttc", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.amountHT", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.amountTTC", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
+                I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request))
                 + "\n";
     }
 
@@ -575,12 +640,20 @@ public class OrderRegionController extends BaseController {
                 (log.getDouble("priceht") != null ? log.getDouble("priceht").toString() : "") + ";" +
                 (log.getDouble("tva5") != null ? log.getDouble("tva5").toString() : "") + ";" +
                 (log.getDouble("tva20") != null ? log.getDouble("tva20").toString() : "") + ";" +
-                (log.getDouble("unitedPriceTTC") != null ? log.getDouble("unitedPriceTTC").toString() : "") + ";" +
-                (log.getDouble("totalPriceHT") != null ? log.getDouble("totalPriceHT").toString() : "") + ";" +
-                (log.getDouble("totalPriceTTC") != null ? log.getDouble("totalPriceTTC").toString() : "") + ";" +
-                (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
-                (log.getString("status") != null ?
-                        I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
+                (log.getDouble("unitedPriceTTC") != null ? convertPriceString(log.getDouble("unitedPriceTTC")) : "") + ";" +
+                (log.getDouble("totalPriceHT") != null ? convertPriceString(log.getDouble("totalPriceHT")) : "") + ";" +
+                (log.getDouble("totalPriceTTC") != null ? convertPriceString(log.getDouble("totalPriceTTC")) : "") + ";" +
+                (log.getString("comment") != null ? log.getString("comment") : "")
                 + "\n";
+    }
+
+    private static String convertPriceString(double price) {
+        String priceString = "";
+        if(price == 0) {
+            priceString = "GRATUIT";
+        } else {
+            priceString = Double.toString(price);
+        }
+        return priceString;
     }
 }

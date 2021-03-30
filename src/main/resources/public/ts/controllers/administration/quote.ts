@@ -23,9 +23,9 @@ export const quoteController = ng.controller('quoteController',
             }
         }
 
-        $scope.generateCSV = async(attachment:string) => {
+        $scope.generateCSV = async(attachment:string, title:string) => {
             try {
-                window.location = `/crre/quote/csv?attachment=${attachment}`;
+                window.location = `/crre/quote/csv?attachment=${attachment}&title=${title}`;
             } catch (e) {
                 toasts.warning('crre.quote.generate.csv.error');
             }
