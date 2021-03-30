@@ -63,8 +63,8 @@ export const purseController = ng.controller('PurseController',
                 }
                 Utils.safeApply($scope);
             } else {
-                await $scope.purses.get().then((purses) => {
-                    $scope.purses.all = purses;
+                await $scope.purses.get($scope.filter.page).then((purses) => {
+                    $scope.purses.all.concat(purses);
                     Utils.safeApply($scope);
                 });
             }
