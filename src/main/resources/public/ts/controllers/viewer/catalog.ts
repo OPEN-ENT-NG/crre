@@ -2,7 +2,7 @@ import {_, ng, template} from 'entcore';
 import {Basket, Campaign, Equipment, Filter, Filters, Offer, Offers, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
-    ['$scope', '$routeParams', ($scope) => {
+    ['$scope', '$routeParams', '$anchorScroll', '$location', ($scope, $routeParams, $anchorScroll, $location) => {
         this.init = () => {
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
@@ -34,6 +34,10 @@ export const catalogController = ng.controller('catalogController',
                 $scope.goBackUrl = "crre#/equipments/catalog/" + $scope.campaign.id;
             }
         };
+
+        $scope.scrollTo = function(id) {
+            $anchorScroll(id);
+        }
 
         $scope.addFilter = async () => {
             $scope.query.word = $scope.queryWord;
