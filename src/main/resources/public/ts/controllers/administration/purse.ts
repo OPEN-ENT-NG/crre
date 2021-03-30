@@ -50,6 +50,7 @@ export const purseController = ng.controller('PurseController',
         };
 
         $scope.search = async (name: string, init: boolean = false) => {
+            $scope.loading = true;
             if(init) {
                 $scope.purses.all = [];
                 $scope.filter.page = 0;
@@ -62,9 +63,13 @@ export const purseController = ng.controller('PurseController',
                 }
                 Utils.safeApply($scope);
             } else {
-                await $scope.purses.get($scope.filter.page);
-                Utils.safeApply($scope);
+                await $scope.purses.get().then((purses) => {
+                    $scope.purses.all = purses;
+                    Utils.safeApply($scope);
+                });
             }
+            $scope.loading = false;
+            Utils.safeApply($scope);
         }
 
         $scope.cancelPurseForm = () => {
