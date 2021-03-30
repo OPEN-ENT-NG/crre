@@ -6,10 +6,11 @@ import {
     OrdersClient,
     OrdersRegion,
     Utils,
-    Filter, Filters
+    Filter, Filters, Offers, Offer
 } from '../../model';
 import {Mix} from 'entcore-toolkit';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
+import http from "axios";
 
 
 declare let window: any;
@@ -300,8 +301,46 @@ export const orderController = ng.controller('orderController',
                 basket.setIdBasket(orderClient.id_basket);
                 await basket.getAmount();
                 orderClient.amount = amount;
+                await getEquipment(orderClient).then(equipments => {
+                    let equipment = equipments.data;
+                        if(equipment.type === "articlenumerique") {
+                            orderClient.offers = computeOffer(orderClient, equipment);
+                        }
+                    });
                 $scope.$apply()
             }
+        };
+
+        const getEquipment = (order) :Promise <any> => {
+            return http.get(`/crre/equipment/${order.equipment_key}`);
+        }
+
+        const computeOffer = (order, equipment): Offers => {
+            let amount = order.amount;
+            let gratuit = 0;
+            let gratuite = 0;
+            let offre = null;
+            let offers = new Offers();
+            equipment.offres[0].leps.forEach(function (offer) {
+                offre = new Offer();
+                offre.name = "Manuel " + offer.licence[0].valeur;
+                if(offer.conditions.length > 1) {
+                    offer.conditions.forEach(function (condition) {
+                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                            gratuit = condition.conditionGratuite;
+                            gratuite = condition.gratuite;
+                        }
+                    });
+                } else {
+                    gratuit = offer.conditions[0].conditionGratuite;
+                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+                }
+                offre.value = gratuite;
+                if(gratuite > 0) {
+                    offers.all.push(offre);
+                }
+            });
+            return offers;
         };
 
         $scope.updateReassort = async (orderClient: OrderClient) => {

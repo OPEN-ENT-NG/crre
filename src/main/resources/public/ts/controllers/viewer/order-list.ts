@@ -2,12 +2,13 @@ import {moment, ng, toasts} from 'entcore';
 import {
     BasketOrder,
     BasketsOrders,
-    Filters,
+    Filters, Offer, Offers,
     OrderClient,
     OrdersClient,
     Utils
 } from '../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
+import http from "axios";
 
 
 declare let window: any;
@@ -121,12 +122,50 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         };
 
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
-            if(amount.toString() != 'undefined') {
+            if (amount.toString() != 'undefined') {
                 await orderClient.updateAmount(amount);
                 await basketOrder.getAmount();
                 orderClient.amount = amount;
+                await getEquipment(orderClient).then(equipments => {
+                    let equipment = equipments.data;
+                    if(equipment.type === "articlenumerique") {
+                        orderClient.offers = computeOffer(orderClient, equipment);
+                    }
+                });
                 $scope.$apply()
             }
+        };
+
+        const getEquipment = (order) :Promise <any> => {
+            return http.get(`/crre/equipment/${order.equipment_key}`);
+        }
+
+        const computeOffer = (order, equipment): Offers => {
+            let amount = order.amount;
+            let gratuit = 0;
+            let gratuite = 0;
+            let offre = null;
+            let offers = new Offers();
+            equipment.offres[0].leps.forEach(function (offer) {
+                offre = new Offer();
+                offre.name = "Manuel " + offer.licence[0].valeur;
+                if(offer.conditions.length > 1) {
+                    offer.conditions.forEach(function (condition) {
+                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                            gratuit = condition.conditionGratuite;
+                            gratuite = condition.gratuite;
+                        }
+                    });
+                } else {
+                    gratuit = offer.conditions[0].conditionGratuite;
+                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+                }
+                offre.value = gratuite;
+                if(gratuite > 0) {
+                    offers.all.push(offre);
+                }
+            });
+            return offers;
         };
 
         $scope.updateReassort = async (orderClient: OrderClient) => {
