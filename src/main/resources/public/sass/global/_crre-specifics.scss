@@ -1809,4 +1809,16 @@ body.crre {
     border-radius: 100px;
     border-style: none !important;
   }
+
+  .margin-top-10 {
+    margin-top: 10px;
+  }
+
+  .float {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }
