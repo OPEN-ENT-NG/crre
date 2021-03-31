@@ -44,11 +44,6 @@ export const purseController = ng.controller('PurseController',
         };
 
 
-        $scope.onScroll = async (): Promise<void> => {
-            $scope.filter.page++;
-            await $scope.search($scope.query_name);
-        };
-
         $scope.search = async (name: string, init: boolean = false) => {
             $scope.loading = true;
             if(init) {
@@ -64,7 +59,11 @@ export const purseController = ng.controller('PurseController',
                 Utils.safeApply($scope);
             } else {
                 await $scope.purses.get($scope.filter.page).then((purses) => {
-                    $scope.purses.all.concat(purses);
+                    if(purses.length > 0) {
+                        $scope.purses.all = $scope.purses.all.concat(purses);
+                        $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                    }
+
                     Utils.safeApply($scope);
                 });
             }
