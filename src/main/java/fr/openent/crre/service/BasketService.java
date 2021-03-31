@@ -41,9 +41,11 @@ public interface BasketService {
 
     /**
      * Get all my baskets orders
+     * @param startDate
+     * @param endDate
      * @param handler function handler returning data
      */
-    void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, Handler<Either<String, JsonArray>> handler);
+    void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Delete a basket item
@@ -103,27 +105,28 @@ public interface BasketService {
 
     /**
      * Search basket from a query (name, user_name or article)
-     *
-     * @param query searching query (name, user_name or article)
+     *  @param query searching query (name, user_name or article)
      * @param user   user object
      * @param id_campaign  campaign identifier
+     * @param startDate
+     * @param endDate
      * @param arrayResponseHandler  Function handler returning data
      */
 
-    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void updateAllAmount(Integer id, Handler<Either<String, JsonObject>> handler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
-    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Integer page,
+    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
                             Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler);

@@ -1,5 +1,5 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {_, toasts} from 'entcore';
+import {_, moment, toasts} from 'entcore';
 import http from 'axios';
 import {Equipment, Filter, Structure} from './index';
 
@@ -212,13 +212,15 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async search(text: String, id_campaign: number, page?:number) {
+    async search(text: String, id_campaign: number, start: string, end: string, page?:number) {
         try {
             if ((text.trim() === '' || !text)) return;
             let pageParams: string = "";
+            const startDate = moment(start).format('YYYY-MM-DD').toString();
+            const endDate = moment(end).format('YYYY-MM-DD').toString();
             if(page)
                 pageParams = `&page=${page}`;
-            const {data} = await http.get(`/crre/basketOrder/search?q=${text}&id=${id_campaign}${pageParams}`);
+            const {data} = await http.get(`/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&q=${text}&id=${id_campaign}${pageParams}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         } catch (err) {
             toasts.warning('crre.basket.sync.err');
@@ -226,7 +228,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, word?: string, page?:number){
+    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?:number){
         try {
             let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             let params = "";
@@ -239,11 +241,13 @@ export class BasketsOrders extends Selection<BasketOrder> {
             if(page)
                 pageParams = `&page=${page}`;
             let url;
+            const startDate = moment(start).format('YYYY-MM-DD').toString();
+            const endDate = moment(end).format('YYYY-MM-DD').toString();
             if(!format.test(word)) {
                 if(word) {
-                    url = `/crre/basketOrder/filter?q=${word}&id=${id_campaign}&${params}${pageParams}`;
+                    url = `/crre/basketOrder/filter?startDate=${startDate}&endDate=${endDate}&q=${word}&id=${id_campaign}&${params}${pageParams}`;
                 } else {
-                    url = `/crre/basketOrder/filter?id=${id_campaign}&${params}${pageParams}`;
+                    url = `/crre/basketOrder/filter?startDate=${startDate}&endDate=${endDate}&id=${id_campaign}&${params}${pageParams}`;
                 }
                 let {data} = await http.get(url);
                 this.all = Mix.castArrayAs(BasketOrder, data);
@@ -256,10 +260,12 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async getMyOrders (page:number, id_campaign: number) {
+    async getMyOrders (page:number, start: string, end: string, id_campaign: number) {
         try {
             const params: string = `?page=${page}`;
-            let { data } = await http.get(`/crre/basketOrder/allMyOrders${params}&id=${id_campaign}`);
+            const startDate = moment(start).format('YYYY-MM-DD').toString();
+            const endDate = moment(end).format('YYYY-MM-DD').toString();
+            let { data } = await http.get(`/crre/basketOrder/allMyOrders${params}&id=${id_campaign}&startDate=${startDate}&endDate=${endDate}`);
             this.all = Mix.castArrayAs(BasketOrder, data);
         }
         catch {

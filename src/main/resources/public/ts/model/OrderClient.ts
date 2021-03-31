@@ -50,6 +50,7 @@ export class OrderClient implements Order  {
     user_id:string;
     grade: string;
     reassort: boolean;
+    offers: Offers;
 
     constructor() {
         this.typeOrder= "client";
@@ -129,7 +130,7 @@ export class OrdersClient extends Selection<OrderClient> {
         this.filters = [];
     }
 
-    async search(text: String, id_campaign: number, page?: number) {
+    async search(text: String, id_campaign: number, start: string, end: string, page?: number) {
         try {
             if ((text.trim() === '' || !text)) return;
             let params = "";
@@ -137,7 +138,9 @@ export class OrdersClient extends Selection<OrderClient> {
                 params += `&id=${id_campaign}`
             if(page)
                 params = `&page=${page}`;
-            const {data} = await http.get(`/crre/orders/search?q=${text}${params}`);
+            const startDate = moment(start).format('YYYY-MM-DD').toString();
+            const endDate = moment(end).format('YYYY-MM-DD').toString();
+            const {data} = await http.get(`/crre/orders/search?startDate=${startDate}&endDate=${endDate}&q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
             if(newOrderClient.length>0) {
                 await this.reformatOrders(newOrderClient);
@@ -149,7 +152,7 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, word?: string, page?: number){
+    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?: number){
         try {
             let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             let params = "";
@@ -162,11 +165,13 @@ export class OrdersClient extends Selection<OrderClient> {
             if(page)
                 pageParams = `&page=${page}`;
             let url;
+            const startDate = moment(start).format('YYYY-MM-DD').toString();
+            const endDate = moment(end).format('YYYY-MM-DD').toString();
             if(!format.test(word)) {
                 if(word) {
-                    url = `/crre/orders/filter?q=${word}${params}${pageParams}`;
+                    url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}&q=${word}${params}${pageParams}`;
                 } else {
-                    url = `/crre/orders/filter?${params.substring(1)}${pageParams}`;
+                    url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params.substring(1)}${pageParams}`;
                 }
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
@@ -205,8 +210,10 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async sync (status: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string, ordersId?, page?:number):Promise<boolean> {
+    async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string, ordersId?, page?:number):Promise<boolean> {
         try {
+            const startDate = moment(start).format('YYYY-MM-DD').toString();
+            const endDate = moment(end).format('YYYY-MM-DD').toString();
             if (idCampaign && idStructure) {
                 let params = '';
                 if(ordersId) {
@@ -216,7 +223,7 @@ export class OrdersClient extends Selection<OrderClient> {
                     });
                     params = params.slice(0, -1);
                 }
-                const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}` );
+                const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}&startDate=${startDate}&endDate=${endDate}` );
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 await this.getEquipments(newOrderClient).then(equipments => {
                     for (let order of newOrderClient) {
@@ -233,7 +240,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 let pageParams = '';
                 if(page)
                     pageParams = `&page=${page}`;
-                const { data } = await http.get(  `/crre/orders?status=${status}${pageParams}`);
+                const { data } = await http.get(  `/crre/orders?startDate=${startDate}&endDate=${endDate}&status=${status}${pageParams}`);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 if(newOrderClient.length>0) {
                     await this.getEquipments(newOrderClient).then(equipments => {

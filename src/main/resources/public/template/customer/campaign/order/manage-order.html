@@ -1,6 +1,31 @@
 <div ng-controller="orderPersonnelController">
     <div class="basket-list">
         <div class="row margin-top-20">
+            <div class="cell min-width-date-picker margin-top-8 twelve-mobile">
+                <i18n>from</i18n>
+                &#58;&nbsp;
+                <!-- start date -->
+                <div class="date-picker-style">
+                    <i class="diary-calendar"></i>
+                    <date-picker
+                            ng-model="filtersDate.startDate"
+                            ng-change="filterByDate()"
+                            class="input-date-picker-style">
+                    </date-picker>
+                </div>
+                &nbsp;&nbsp;&nbsp;
+                <i18n>to</i18n>
+                &#58;&nbsp;
+                <!-- end date -->
+                <div class="date-picker-style">
+                    <i class="diary-calendar"></i>
+                    <date-picker
+                            ng-model="filtersDate.endDate"
+                            ng-change="filterByDate()"
+                            class="input-date-picker-style">
+                    </date-picker>
+                </div>
+            </div>
             <div class="cell two margin-top-8">
                 <div class="search-bar order-search-bar">
                     <i class="search padding-5"></i>

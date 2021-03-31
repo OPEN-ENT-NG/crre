@@ -69,10 +69,12 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
-    public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, Handler<Either<String, JsonArray>> handler){
+    public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b WHERE b.id_user = ? AND b.id_campaign = ? ORDER BY b.id DESC ";
-        values.add(user.getUserId()).add(id_campaign);
+        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b " +
+                "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? " +
+                "ORDER BY b.id DESC ";
+        values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
         if (page != null) {
             query += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);
@@ -166,15 +168,14 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     @Override
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
-                "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
-        values.add(id_campaign);
-        values.add(user.getUserId());
+                "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
+        values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
         if (!query.equals("")) {
             sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
             values.add(query);
@@ -193,43 +194,48 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     @Override
-    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, Integer page,
+    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
                                    Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.id_campaign = ? AND bo.id_user = ? AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
-        values.add(id_campaign);
-        values.add(user.getUserId());
-        values.add(query);
-        values.add(query);
+                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
+        values.add(startDate)
+                .add(endDate)
+                .add(id_campaign)
+                .add(user.getUserId())
+                .add(query)
+                .add(query);
         filterBasketSearch(filters, user, arrayResponseHandler, values, sqlquery, page);
     }
 
-    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
-
-        values.add(id_campaign);
-        values.add(user.getUserId());
+                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? ";
+        values.add(startDate)
+                .add(endDate)
+                .add(id_campaign)
+                .add(user.getUserId());
         sqlquery = DefaultOrderService.filterSQLTable(equipTab, values, sqlquery);
         filterBasketSearch(filters, user, arrayResponseHandler, values, sqlquery, page);
     }
 
-    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, Integer page,
+    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                               Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.id_campaign = ? AND bo.id_user = ? ";
-        values.add(id_campaign);
-        values.add(user.getUserId());
+                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? ";
+        values.add(startDate)
+                .add(endDate)
+                .add(id_campaign)
+                .add(user.getUserId());
         sqlquery = DefaultOrderService.queryFilterSQL(query, equipTab, values, sqlquery);
 
         sqlquery += " AND bo.id_structure IN ( ";

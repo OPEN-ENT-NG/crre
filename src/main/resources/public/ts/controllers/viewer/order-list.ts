@@ -14,7 +14,7 @@ import http from "axios";
 declare let window: any;
 
 export const orderPersonnelController = ng.controller('orderPersonnelController',
-    ['$scope', '$routeParams', ($scope, $routeParams) => {
+    ['$scope', '$routeParams', async ($scope, $routeParams) => {
 
         $scope.display = {
             lightbox: {
@@ -23,12 +23,16 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         };
         $scope.allOrdersListSelected = false;
         $scope.show = {
-            comment:false
+            comment: false
         };
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.filter = {
             page: 0
         };
+        $scope.isDate = false;
+        $scope.filtersDate = [];
+        $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
+        $scope.filtersDate.endDate = moment()._d;
         $scope.displayedBasketsOrders = [];
         this.init = () => {
             $scope.users = [];
@@ -40,17 +44,17 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             var order_selected = [];
             $scope.displayedBasketsOrders.forEach(function (basket) {
                 basket.orders.forEach(function (order) {
-                    if(order.selected) {
+                    if (order.selected) {
                         order_selected.push(order);
                     }
                 });
             });
-            if(order_selected.length == 0) {
+            if (order_selected.length == 0) {
                 order_selected = $scope.ordersClient.all;
             }
             let params_id_order = Utils.formatKeyToParameter(order_selected, 'id');
-            let equipments_key = order_selected.map( (value) => value.equipment_key).filter( (value, index, _arr) => _arr.indexOf(value) == index);
-            let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map( s => ({equipment_key:s})), "equipment_key");
+            let equipments_key = order_selected.map((value) => value.equipment_key).filter((value, index, _arr) => _arr.indexOf(value) == index);
+            let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map(s => ({equipment_key: s})), "equipment_key");
             window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
             $scope.displayedBasketsOrders.forEach(function (basket) {
                 basket.selected = false;
@@ -60,36 +64,65 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
             });
         }
 
-        $scope.searchByName =  async (noInit?:boolean) => {
-            if(!noInit){
+        $scope.filterByDate = async () => {
+            if($scope.isDate) {
+                if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+                    await $scope.searchByName(false);
+                } else {
+                    toasts.warning('crre.date.err');
+                }
+                $scope.isDate = false;
+            } else {
+                $scope.isDate = true;
+            }
+        }
+
+        async function searchProjectAndOrders() {
+            const isEmpty = await $scope.searchByName(false);
+            if (!isEmpty) {
+                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                Utils.safeApply($scope);
+            } else {
+                $scope.loading = false;
+                Utils.safeApply($scope);
+            }
+        }
+
+        $scope.searchByName = async (noInit?: boolean) => {
+            let isEmpty: boolean;
+            if (!noInit) {
                 $scope.loading = true;
                 $scope.filter.page = 0;
                 $scope.displayedBasketsOrders = [];
                 $scope.basketsOrders = new BasketsOrders();
                 Utils.safeApply($scope);
             }
-            if($scope.query_name && $scope.query_name != "") {
-                if($scope.filters.all.length == 0) {
-                    await $scope.newBasketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filter.page);
-                    await synchroMyBaskets(true);
+            if ($scope.query_name && $scope.query_name != "") {
+                if ($scope.filters.all.length == 0) {
+                    await $scope.newBasketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
+                        $scope.filtersDate.endDate, $scope.filter.page);
+                    isEmpty = await synchroMyBaskets(true);
                 } else {
-                    await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.query_name, $scope.filter.page);
-                    await synchroMyBaskets(true);
+                    await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.filtersDate.startDate,
+                        $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
+                    isEmpty = await synchroMyBaskets(true);
                 }
             } else {
-                if($scope.filters.all.length == 0) {
-                    await synchroMyBaskets(false);
+                if ($scope.filters.all.length == 0) {
+                    isEmpty = await synchroMyBaskets(false);
                 } else {
-                    await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.filter.page);
-                    await synchroMyBaskets(true);
+                    await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.filtersDate.startDate,
+                        $scope.filtersDate.endDate, $scope.filter.page);
+                    isEmpty = await synchroMyBaskets(true);
                 }
-
             }
+            return isEmpty;
             Utils.safeApply($scope);
         }
 
-        $scope.switchAllOrders = (allOrdersListSelected : boolean) => {
-            $scope.displayedBasketsOrders.map((basket) => {basket.selected = allOrdersListSelected;
+        $scope.switchAllOrders = (allOrdersListSelected: boolean) => {
+            $scope.displayedBasketsOrders.map((basket) => {
+                basket.selected = allOrdersListSelected;
                 basket.orders.forEach(function (order) {
                     order.selected = allOrdersListSelected;
                 });
@@ -187,36 +220,41 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         // Functions specific for baskets interactions
 
         $scope.displayedBasketsOrders = [];
-        const currencyFormatter = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+        const currencyFormatter = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'});
 
         $scope.onScroll = async (): Promise<void> => {
             $scope.filter.page++;
             await $scope.searchByName(true);
         };
 
-        const synchroMyBaskets = async (search? : boolean) : Promise<void> => {
-            if(!search){
+        const synchroMyBaskets = async (search?: boolean): Promise<boolean> => {
+            let isEmpty = true;
+            if (!search) {
                 $scope.newBasketsOrders = new BasketsOrders();
-                if($routeParams.idCampaign)
-                    await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $routeParams.idCampaign);
+                if ($routeParams.idCampaign) {
+                    await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $scope.filtersDate.startDate,
+                        $scope.filtersDate.endDate, $routeParams.idCampaign);
+                }
             }
-            if($scope.newBasketsOrders.all.length != 0) {
+            if ($scope.newBasketsOrders.all.length != 0) {
+                isEmpty = false;
                 let ordersId = [];
                 $scope.newBasketsOrders.forEach((order) => {
                     ordersId.push(order.id);
                 });
                 $scope.newOrders = new OrdersClient();
-                await $scope.newOrders.sync(null, [], $routeParams.idCampaign, $scope.current.structure.id, ordersId);
+                await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [], $routeParams.idCampaign, $scope.current.structure.id, ordersId);
                 formatDisplayedBasketOrders();
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
             $scope.loading = false;
             Utils.safeApply($scope);
+            return isEmpty;
         };
         $scope.loading = true;
         synchroMyBaskets(false);
 
-        const formatDisplayedBasketOrders = () : void  => {
+        const formatDisplayedBasketOrders = (): void => {
             $scope.newBasketsOrders.forEach(function (basketOrder) {
                 let displayedBasket = basketOrder;
                 displayedBasket.name_user = displayedBasket.name_user.toUpperCase();
@@ -229,7 +267,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                         displayedBasket.orders.push(order);
                     }
                 });
-                if(displayedBasket.orders.length > 0)
+                if (displayedBasket.orders.length > 0)
                     Utils.setStatus(displayedBasket, displayedBasket.orders[0]);
                 $scope.displayedBasketsOrders.push(displayedBasket);
                 $scope.basketsOrders.all.push(basketOrder);

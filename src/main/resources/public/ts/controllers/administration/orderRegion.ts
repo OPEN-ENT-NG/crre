@@ -30,6 +30,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filter = {
             page: 0
         };
+        $scope.isDate = false;
         $scope.projects = [];
         $scope.loading = true;
 
@@ -104,9 +105,11 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.getProjects = async() => {
             try {
+                const startDate = moment($scope.filtersDate.startDate).format('YYYY-MM-DD').toString();
+                const endDate = moment($scope.filtersDate.endDate).format('YYYY-MM-DD').toString();
                 const page: string = $scope.filter.page ? `page=${$scope.filter.page}&` : '';
                 const filterRejectedSentOrders = !$scope.selectedType.split('/').includes('historic');
-                let { data } = await http.get(`/crre/orderRegion/projects?${page}filterRejectedSentOrders=${filterRejectedSentOrders}`);
+                let { data } = await http.get(`/crre/orderRegion/projects?${page}startDate=${startDate}&endDate=${endDate}&filterRejectedSentOrders=${filterRejectedSentOrders}`);
                 return data;
             } catch (e) {
                 toasts.warning('crre.basket.sync.err');
@@ -361,10 +364,15 @@ export const orderRegionController = ng.controller('orderRegionController',
         }
 
         $scope.filterByDate = async () => {
-            if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
-                await searchProjectAndOrders();
+            if($scope.isDate) {
+                if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+                    await $scope.searchByName($scope.query_name);
+                } else {
+                    toasts.warning('crre.date.err');
+                }
+                $scope.isDate = false;
             } else {
-                toasts.warning('crre.date.err');
+                $scope.isDate = true;
             }
         }
 
@@ -502,35 +510,18 @@ export const orderRegionController = ng.controller('orderRegionController',
             let gratuit = 0;
             let gratuite = 0;
             let offre = null;
-            /*        $scope.offerStudent = "";
-                    $scope.offerTeacher = "";*/
             let offers = new Offers();
             equipment.offres[0].leps.forEach(function (offer) {
                 offre = new Offer();
                 offre.name = "Manuel " + offer.licence[0].valeur;
                 if(offer.conditions.length > 1) {
                     offer.conditions.forEach(function (condition) {
-                        if(offer.licence[0].valeur === "Elève") {
-                            /*                        $scope.offerStudent += condition.gratuite + " licence élève gratuite pour " + condition.conditionGratuite + ", ";*/
-                        } else {
-                            /*                        $scope.offerTeacher += condition.gratuite + " licence enseignant gratuite pour " + condition.conditionGratuite + ", ";*/
-                        }
                         if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
                             gratuit = condition.conditionGratuite;
                             gratuite = condition.gratuite;
                         }
                     });
-                    if(offer.licence[0].valeur === "Elève") {
-                        /*                    $scope.offerStudent = $scope.offerStudent.slice(0, -2);*/
-                    } else {
-                        /*                    $scope.offerTeacher = $scope.offerTeacher.slice(0, -2);*/
-                    }
                 } else {
-                    if(offer.licence[0].valeur === "Elève") {
-                        /*                    $scope.offerStudent += offer.conditions[0].gratuite + " licence élève gratuite pour " + offer.conditions[0].conditionGratuite;*/
-                    } else {
-                        /*                    $scope.offerTeacher += offer.conditions[0].gratuite + " licence enseignant gratuite pour " + offer.conditions[0].conditionGratuite;*/
-                    }
                     gratuit = offer.conditions[0].conditionGratuite;
                     gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
                 }

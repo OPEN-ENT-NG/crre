@@ -1,4 +1,4 @@
-import {_, idiom as lang, ng, template, toasts} from 'entcore';
+import {_, idiom as lang, moment, ng, template, toasts} from 'entcore';
 import {
     BasketOrder,
     OrderClient,
@@ -45,6 +45,9 @@ export const orderController = ng.controller('orderController',
                 reassorts : 'reassort'
             }
             $scope.users = [];
+            $scope.filtersDate = [];
+            $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
+            $scope.filtersDate.endDate = moment()._d;
             $scope.reassorts = [{name: 'true'}, {name: 'false'}];
             $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
             $scope.filters = new Filters();
@@ -87,18 +90,18 @@ export const orderController = ng.controller('orderController',
             }
             if($scope.filters.all.length > 0) {
                 if (!!$scope.query_name) {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.query_name, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page );
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page );
                     endLoading(newData);
                 }
             } else {
                 if (!!$scope.query_name) {
-                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filter.page );
+                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page );
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.sync('WAITING', $scope.structures.all, null, null, null, $scope.filter.page);
+                    const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.structures.all, null, null, null, $scope.filter.page);
                     endLoading(newData);
                 }
             }
@@ -107,6 +110,14 @@ export const orderController = ng.controller('orderController',
         $scope.getAllFilters = async () => {
             $scope.users = await $scope.ordersClient.getUsers('WAITING');
         };
+
+        $scope.filterByDate = async () => {
+            if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+                await $scope.searchByName(false);
+            } else {
+                toasts.warning('crre.date.err');
+            }
+        }
 
         $scope.licencesAvailable = () => {
             return $scope.campaign.nb_licences_available - $scope.displayedOrders.calculTotalAmount() < 0;
@@ -205,18 +216,18 @@ export const orderController = ng.controller('orderController',
             }
             if($scope.query_name && $scope.query_name != "") {
                 if($scope.filters.all.length == 0) {
-                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filter.page );
+                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page );
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.query_name, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page );
                     endLoading(newData);
                 }
             } else {
                 if($scope.filters.all.length == 0) {
-                    const newData = await $scope.ordersClient.sync('WAITING',  $scope.structures.all, null, null, null, $scope.filter.page);
+                    const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.structures.all, null, null, null, $scope.filter.page);
                     endLoading(newData);
                 } else {
-                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, null, $scope.filter.page );
+                    const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page );
                     endLoading(newData);
                 }
             }

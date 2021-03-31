@@ -185,8 +185,10 @@ public class OrderRegionController extends BaseController {
     public void getAllProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+            String startDate = request.getParam("startDate");
+            String endDate = request.getParam("endDate");
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            orderRegionService.getAllProjects(user, page, filterRejectedSentOrders, arrayResponseHandler(request));
+            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, arrayResponseHandler(request));
         });
     }
 

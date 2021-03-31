@@ -81,7 +81,9 @@ public class OrderController extends ControllerHelper {
                 Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
                 String idStructure = request.params().get("idStructure");
                 List<String> ordersIds = request.params().getAll("order_id");
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, orders -> {
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, orders -> {
                     if (orders.isRight()) {
                         List<String> idEquipments = new ArrayList<>();
                         for(Object order : orders.right().getValue()){
@@ -128,8 +130,10 @@ public class OrderController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
                 final String status = request.params().get("status");
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                orderService.listOrder(status, page, user, arrayResponseHandler(request));
+                orderService.listOrder(status, page, user, startDate, endDate, arrayResponseHandler(request));
             } else {
                 badRequest(request);
             }
@@ -165,11 +169,13 @@ public class OrderController extends ControllerHelper {
                     }
                     Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                     Integer finalId_campaign = id_campaign;
+                    String startDate = request.getParam("startDate");
+                    String endDate = request.getParam("endDate");
                     orderService.searchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
-                            orderService.search(query, null, user, equipments.right().getValue(), finalId_campaign, page, arrayResponseHandler(request));
+                            orderService.search(query, null, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         } else {
-                            orderService.searchWithoutEquip(query, null, user, finalId_campaign, page, arrayResponseHandler(request));
+                            orderService.searchWithoutEquip(query, null, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         }
                     });
                 } catch (UnsupportedEncodingException e) {
@@ -194,14 +200,18 @@ public class OrderController extends ControllerHelper {
                     if (request.params().contains("niveaux.libelle")) {
                         params = request.params().getAll("niveaux.libelle");
                     }
+                    String startDate = request.getParam("startDate");
+                    String endDate = request.getParam("endDate");
 
                     // Récupération de tout les filtres hors grade
                     JsonArray filters = new JsonArray();
                     int length = request.params().entries().size();
                     for (int i = 0; i < length; i++) {
                         String key = request.params().entries().get(i).getKey();
-                        if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page"))
+                        if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page") &&
+                            !key.equals("startDate") && !key.equals("endDate")) {
                             filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                        }
                     }
                     // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
                     if (request.params().contains("q")) {
@@ -228,12 +238,12 @@ public class OrderController extends ControllerHelper {
                                 // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
                                 if (equipmentsGrade.size() > 0) {
                                     if (request.params().contains("q")) {
-                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, finalId_campaign, page, arrayResponseHandler(request));
+                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                     } else {
-                                        orderService.filter(filters, user, equipmentsGrade, finalId_campaign, page, arrayResponseHandler(request));
+                                        orderService.filter(filters, user, equipmentsGrade, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                     }
                                 } else {
-                                    orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, page, arrayResponseHandler(request));
+                                    orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                 }
                             }
                         });
@@ -244,9 +254,9 @@ public class OrderController extends ControllerHelper {
                         Integer finalId_campaign = id_campaign;
                         orderService.searchName(finalQ, equipments -> {
                             if (equipments.right().getValue().size() > 0) {
-                                orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, page, arrayResponseHandler(request));
+                                orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                             } else {
-                                orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, page, arrayResponseHandler(request));
+                                orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                             }
                         });
                     }

@@ -139,7 +139,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "       campaign.name AS campaign_name, " +
                 "       p.title AS title, " +
                 "       to_json(oce.*) AS order_parent, " +
-                "       bo.name AS basket_name " +
+                "       bo.name AS basket_name, " +
+                "       bo.id AS basket_id " +
                 "FROM  " + Crre.crreSchema + ".\"order-region-equipment\" AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oce ON ore.id_order_client_equipment = oce.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
@@ -158,16 +159,18 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getAllProjects(UserInfos user, Integer page, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
                 "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
-                "WHERE ore.equipment_key IS NOT NULL ");
+                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ");
+        values.add(startDate);
+        values.add(endDate);
 
         if(filterRejectedSentOrders) {
-            query.append("AND ore.status != 'SENT' AND ore.status != 'REJECTED' ");
+            query.append(" AND ore.status != 'SENT' AND ore.status != 'REJECTED' ");
         }
 
         if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&

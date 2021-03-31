@@ -26,7 +26,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId,  Handler<Either<String, JsonArray>> handler) {
+    public void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId, String startDate,
+                          String endDate,  Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new JsonArray();
         String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
                 "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
@@ -35,9 +36,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
-                "WHERE oe.id_campaign = ? AND oe.id_structure = ? ";
-
-        values.add(idCampaign).add(idStructure);
+                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND oe.id_structure = ? ";
+        values.add(startDate).add(endDate).add(idCampaign).add(idStructure);
 
         if(user != null){
             query += "AND user_id = ? ";
@@ -58,7 +58,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public  void listOrder(String status, Integer page, UserInfos user, Handler<Either<String, JsonArray>> handler){
+    public  void listOrder(String status, Integer page, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
         String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups, " +
                 "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " +
@@ -73,7 +73,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oce.id = ore.id_order_client_equipment ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query = filterWaitingOrder(status, user, query, values);
+        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
 
         query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status) " +
                 "ORDER BY oce.creation_date DESC ";
@@ -91,12 +91,17 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oce ON bo.id = oce.id_basket ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query = filterWaitingOrder(status, user, query, values);
+        query = filterWaitingOrder(status, user, query, null, null, values);
         sql.prepared(query, values , SqlResult.validResultHandler(handler));
     }
 
-    private String filterWaitingOrder(String status, UserInfos user, String query, JsonArray values) {
-        query += "WHERE oce.id_structure IN ( ";
+    private String filterWaitingOrder(String status, UserInfos user, String query, String startDate, String endDate, JsonArray values) {
+        query += "WHERE ";
+        if(startDate != null || endDate != null) {
+            query += "oce.creation_date BETWEEN ? AND ? AND ";
+            values.add(startDate).add(endDate);
+        }
+        query += "oce.id_structure IN ( ";
         StringBuilder queryBuilder = new StringBuilder(query);
         for (String idStruct : user.getStructures()) {
             queryBuilder.append("?,");
@@ -268,31 +273,33 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, Integer page,
+    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, String startDate, String endDate, Integer page,
                                    Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE ";
+                "WHERE oe.creation_date BETWEEN ? AND ? AND ";
+        values.add(startDate).add(endDate);
         if(id_campaign != null){
-            sqlquery += "oe.id_campaign = ? AND";
+            sqlquery += "oe.id_campaign = ? AND ";
             values.add(id_campaign);
         }
-        sqlquery += " oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
+        sqlquery += "oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
 
         values.add(query);
         values.add(query);
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.status = 'WAITING' ";
+                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.status = 'WAITING' ";
+        values.add(startDate).add(endDate);
 
         if(id_campaign != null){
             sqlquery += "AND oe.id_campaign = ? ";
@@ -316,13 +323,14 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 
-    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
+    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                               Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.status = 'WAITING' ";
+                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.status = 'WAITING' ";
+        values.add(startDate).add(endDate);
         if(id_campaign != null){
             sqlquery += "AND oe.id_campaign = ? ";
             values.add(id_campaign);
@@ -367,13 +375,14 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         return sqlquery;
     }
 
-    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, Integer page,
+    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.status = 'WAITING' ";
+                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.status = 'WAITING' ";
+        values.add(startDate).add(endDate);
         if(id_campaign != null){
             sqlquery += "AND oe.id_campaign = ? ";
             values.add(id_campaign);

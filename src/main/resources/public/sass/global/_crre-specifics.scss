@@ -37,10 +37,6 @@ body.crre {
     font-weight: bold !important;
   }
 
-  input[type=button].cancel {
-    color: $red
-  }
-
   h4 {
     &.highlighted {
       border-bottom: solid 1px $solid-grey;

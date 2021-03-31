@@ -1,5 +1,30 @@
 <div ng-controller="orderRegionController" class="crre-table">
     <div class="row margin-top-20 vertical-spacing-twice">
+        <div class="min-width-date-picker margin-top-8 twelve-mobile">
+            <i18n>from</i18n>
+            &#58;&nbsp;
+            <!-- start date -->
+            <div class="date-picker-style">
+                <i class="diary-calendar"></i>
+                <date-picker
+                        ng-model="filtersDate.startDate"
+                        ng-change="filterByDate()"
+                        class="input-date-picker-style">
+                </date-picker>
+            </div>
+            &nbsp;&nbsp;&nbsp;
+            <i18n>to</i18n>
+            &#58;&nbsp;
+            <!-- end date -->
+            <div class="date-picker-style">
+                <i class="diary-calendar"></i>
+                <date-picker
+                        ng-model="filtersDate.endDate"
+                        ng-change="filterByDate()"
+                        class="input-date-picker-style">
+                </date-picker>
+            </div>
+        </div>
         <div class="cell two margin-top-8 twelve-mobile">
             <div class="search-bar order-search-bar">
                 <i class="search padding-5"></i>
@@ -150,10 +175,10 @@
                 <td><span class="arrowOffer">[[offer.name]]</span></td>
                 <td><div class="smallTabElem center"></div></td>
                 <td></td>
+                <td></td>
+                <td></td>
                 <td class="center">[[offer.value]]</td>
                 <td class="center">GRATUIT</td>
-                <td></td>
-                <td></td>
                 <td></td>
             </tr>
             </tbody>

@@ -13,7 +13,6 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -145,7 +144,9 @@ public class BasketController extends ControllerHelper {
             try {
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                 int id_campaign = parseInt(request.getParam("id"));
-                basketService.getMyBasketOrders(user, page, id_campaign, arrayResponseHandler(request));
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
+                basketService.getMyBasketOrders(user, page, id_campaign, startDate, endDate, arrayResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
             }
@@ -162,11 +163,13 @@ public class BasketController extends ControllerHelper {
                     Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                     String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
                     int id_campaign = parseInt(request.getParam("id"));
+                    String startDate = request.getParam("startDate");
+                    String endDate = request.getParam("endDate");
                     basketService.searchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
-                            basketService.search(query, null, user, equipments.right().getValue(), id_campaign, page, arrayResponseHandler(request));
+                            basketService.search(query, null, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         } else {
-                            basketService.searchWithoutEquip(query, null, user, id_campaign, page, arrayResponseHandler(request));
+                            basketService.searchWithoutEquip(query, null, user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         }
                     });
                 } catch (UnsupportedEncodingException e) {
@@ -186,6 +189,8 @@ public class BasketController extends ControllerHelper {
             try {
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                 List<String> params = new ArrayList<>();
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
                 if (request.params().contains("niveaux.libelle")) {
                     params = request.params().getAll("niveaux.libelle");
@@ -219,12 +224,12 @@ public class BasketController extends ControllerHelper {
                             // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
                             if (equipmentsGrade.size() > 0) {
                                 if (request.params().contains("q")) {
-                                    basketService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, page, arrayResponseHandler(request));
+                                    basketService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                 } else {
-                                    basketService.filter(filters, user, equipmentsGrade, id_campaign, page, arrayResponseHandler(request));
+                                    basketService.filter(filters, user, equipmentsGrade, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                 }
                             } else {
-                                basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, page, arrayResponseHandler(request));
+                                basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                             }
                         }
                     });
@@ -234,9 +239,9 @@ public class BasketController extends ControllerHelper {
                     // Recherche avec les filtres autres que grade
                     basketService.searchName(finalQ, equipments -> {
                         if (equipments.right().getValue().size() > 0) {
-                            basketService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, page, arrayResponseHandler(request));
+                            basketService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         } else {
-                            basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, page, arrayResponseHandler(request));
+                            basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         }
                     });
                 }
@@ -317,7 +322,7 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Update a basket's reassort")
     @SecuredAction(Crre.REASSORT_RIGHT)
     @ResourceFilter(AccessOrderReassortRight.class)
-    public void updateReassort(final HttpServerRequest request){
+        public void updateReassort(final HttpServerRequest request){
         RequestUtils.bodyToJson(request, basket -> {
             if (!basket.containsKey("reassort")) {
                 badRequest(request);

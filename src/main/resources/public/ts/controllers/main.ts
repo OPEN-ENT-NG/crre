@@ -435,7 +435,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.syncOrders = async (status: string) =>{
             $scope.ordersClient = new OrdersClient();
-            const newData = await $scope.ordersClient.sync(status, $scope.structures.all, null, null, null, 0);
+            let startDate = moment().add(-1, 'years')._d;
+            let endDate = moment()._d;
+            const newData = await $scope.ordersClient.sync(status, startDate, endDate, $scope.structures.all, null, null, null, 0);
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.displayedOrders.all = $scope.ordersClient.all;
