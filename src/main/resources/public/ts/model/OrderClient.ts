@@ -346,35 +346,18 @@ export class OrdersClient extends Selection<OrderClient> {
         let gratuit = 0;
         let gratuite = 0;
         let offre = null;
-/*        $scope.offerStudent = "";
-        $scope.offerTeacher = "";*/
         let offers = new Offers();
         equipment.offres[0].leps.forEach(function (offer) {
             offre = new Offer();
             offre.name = "Manuel " + offer.licence[0].valeur;
             if(offer.conditions.length > 1) {
                 offer.conditions.forEach(function (condition) {
-                    if(offer.licence[0].valeur === "Elève") {
-/*                        $scope.offerStudent += condition.gratuite + " licence élève gratuite pour " + condition.conditionGratuite + ", ";*/
-                    } else {
-/*                        $scope.offerTeacher += condition.gratuite + " licence enseignant gratuite pour " + condition.conditionGratuite + ", ";*/
-                    }
                     if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
                         gratuit = condition.conditionGratuite;
                         gratuite = condition.gratuite;
                     }
                 });
-                if(offer.licence[0].valeur === "Elève") {
-/*                    $scope.offerStudent = $scope.offerStudent.slice(0, -2);*/
-                } else {
-/*                    $scope.offerTeacher = $scope.offerTeacher.slice(0, -2);*/
-                }
             } else {
-                if(offer.licence[0].valeur === "Elève") {
-/*                    $scope.offerStudent += offer.conditions[0].gratuite + " licence élève gratuite pour " + offer.conditions[0].conditionGratuite;*/
-                } else {
-/*                    $scope.offerTeacher += offer.conditions[0].gratuite + " licence enseignant gratuite pour " + offer.conditions[0].conditionGratuite;*/
-                }
                 gratuit = offer.conditions[0].conditionGratuite;
                 gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
             }

@@ -30,20 +30,22 @@
                                 <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
                                 <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
-                            <div ng-if="!!offerTeacher || !!offerStudent">
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0">
                                 <span class="grayUnderline"><i18n>crre.equipment.offer.free</i18n></span>
                             </div>
-                            <div ng-if="!!offerTeacher || !!offerStudent"></div>
-                            <div ng-if="!!offerTeacher">
-                                <span class="gray12" ng-bind="offerTeacher.split(',', 1).toString().concat(' ', 'licences élèves achetées')"></span>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0"></div>
+                            <div ng-if="offerTeacher.length > 0">
+                                <span class="gray12" ng-bind="offerTeacher[0].split(',', 1).toString()"></span>
                             </div>
-                            <div ng-if="!!offerTeacher"></div>
-                            <div ng-if="!!offerStudent">
-                                <span class="gray12" ng-bind="offerStudent.split(',', 1).toString().concat(' ', 'licences élèves achetées')"></span>
+                            <div ng-if="offerTeacher.length > 0"></div>
+                            <div ng-if="offerStudent.length > 0">
+                                <span class="gray12" ng-bind="offerStudent[0].split(',', 1).toString()"></span>
                             </div>
-                            <div ng-if="!!offerStudent"></div>
-                            <div ng-if="!!offerStudent || !!offerTeacher"><span class="grayUnderlineBold" ng-click="scrollTo('offer')">Voir plus</span></div>
-                            <div ng-if="!!offerStudent || !!offerTeacher"></div>
+                            <div ng-if="offerStudent.length > 0"></div>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0">
+                                <span class="grayUnderlineBold" ng-click="scrollTo('offer')">Voir plus</span>
+                            </div>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0"></div>
                         </div>
                         <div class="boxF" ng-repeat="offer in offers.all">
                             <div>
@@ -175,13 +177,13 @@
                     <td class="one"><strong><i18n>crre.equipment.duration</i18n></strong></td>
                     <td ng-bind="basket.equipment.offres[0].duree"></td>
                 </tr>
-                <tr ng-if="!!offerStudent">
+                <tr ng-if="offerStudent.length > 0" ng-repeat="offer in offerStudent track by $index">
                     <td class="one"><strong><i18n>crre.equipment.conditions</i18n></strong></td>
-                    <td>[[offerStudent]]</td>
+                    <td>[[offer]]</td>
                 </tr>
-                <tr ng-if="!!offerTeacher">
+                <tr ng-if="offerTeacher.length > 0" ng-repeat="offer in offerTeacher track by $index">
                     <td class="one"><strong><i18n>crre.equipment.conditions</i18n></strong></td>
-                    <td>[[offerTeacher]]</td>
+                    <td>[[offer]]</td>
                 </tr>
                 </tbody>
             </table>

@@ -671,6 +671,8 @@
   "crre.second.part.warning.purse": "Si vous souhaitez modifier le nombre d'élèves, importez directement un CSV",
   "PU": "Lycée Publique",
   "PR": "Lycée Privé",
-  "crre.licences.types": "Types de licences"
-
+  "crre.licences.types": "Types de licences",
+  "crre.licences.buy": " licences achetées",
+  "crre.free.licences.student.for": " licence élève gratuite pour ",
+  "crre.free.licences.teacher.for": " licence enseignante gratuite pour "
 }

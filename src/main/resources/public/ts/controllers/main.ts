@@ -409,7 +409,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.redirectTo(url);
         };
 
-         $scope.initStructures = async () => {
+        $scope.initStructures = async () => {
             await $scope.structures.syncUserStructures();
             $scope.current.structure = $scope.structures.all[0];
         };
@@ -486,34 +486,45 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             let gratuit = 0;
             let gratuite = 0;
             let offre = null;
-            $scope.offerStudent = "";
-            $scope.offerTeacher = "";
+            $scope.offerStudent = [];
+            $scope.offerTeacher = [];
             $scope.offers = new Offers();
             $scope.basket.equipment.offres[0].leps.forEach(function (offer) {
                 offre = new Offer();
                 offre.name = offer.licence[0].valeur;
                 if(offer.conditions.length > 1) {
-                    offer.conditions.forEach(function (condition) {
-                        if(offer.licence[0].valeur === "Elève") {
-                            $scope.offerStudent += condition.gratuite + " licence élève gratuite pour " + condition.conditionGratuite + ", ";
-                        } else {
-                            $scope.offerTeacher += condition.gratuite + " licence enseignant gratuite pour " + condition.conditionGratuite + ", ";
-                        }
-                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
-                            gratuit = condition.conditionGratuite;
-                            gratuite = condition.gratuite;
-                        }
-                    });
                     if(offer.licence[0].valeur === "Elève") {
-                        $scope.offerStudent = $scope.offerStudent.slice(0, -2);
-                    } else {
-                        $scope.offerTeacher = $scope.offerTeacher.slice(0, -2);
+                        let stringStudent = "";
+                        offer.conditions.forEach(function (condition) {
+                            stringStudent += condition.gratuite + lang.translate('crre.free.licences.student.for') +
+                                condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
+                            if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                                gratuit = condition.conditionGratuite;
+                                gratuite = condition.gratuite;
+                            }
+                        });
+                        stringStudent.slice(0, -2);
+                        $scope.offerStudent.push(stringStudent);
+                    } else{
+                        let stringTeacher = "";
+                        offer.conditions.forEach(function (condition) {
+                            stringTeacher += condition.gratuite + lang.translate('crre.free.licences.teacher.for') +
+                                condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
+                            if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                                gratuit = condition.conditionGratuite;
+                                gratuite = condition.gratuite;
+                            }
+                        });
+                        stringTeacher.slice(0, -2);
+                        $scope.offerTeacher.push(stringTeacher);
                     }
                 } else {
                     if(offer.licence[0].valeur === "Elève") {
-                        $scope.offerStudent += offer.conditions[0].gratuite + " licence élève gratuite pour " + offer.conditions[0].conditionGratuite;
+                        $scope.offerStudent.push(offer.conditions[0].gratuite + lang.translate('crre.free.licences.student.for') +
+                            offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
                     } else {
-                        $scope.offerTeacher += offer.conditions[0].gratuite + " licence enseignant gratuite pour " + offer.conditions[0].conditionGratuite;
+                        $scope.offerTeacher.push(offer.conditions[0].gratuite + lang.translate('crre.free.licences.teacher.for') +
+                            offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
                     }
                     gratuit = offer.conditions[0].conditionGratuite;
                     gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
