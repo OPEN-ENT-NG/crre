@@ -9,7 +9,7 @@
                 <h2><i18n>crre.information</i18n></h2>
                 <label class="row twelve vertical-spacing">
                     <span class="twelve"><i18n>crre.form.structureGroups.name</i18n></span>
-                    <input type ="text" class="twelve" ng-model="structureGroup.name">
+                    <input type ="text" class="twelve" ng-model="structureGroup.name"/>
                 </label>
             </div>
             <div class="twelve cell horizontal-spacing">
@@ -27,7 +27,7 @@
                 <h2 class="">[[getStructureNumber()]] <i18n>crre.form.structureGroups.structures.no.affect</i18n></h2>
                 <div class="card listStructure ">
                     <div class="toolbox vertical-spacing horizontal-spacing">
-                        <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structure">
+                        <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structure"/>
                         <a class="instantButtons deselect right-magnet button" ng-click="deselectAllStructures(structures)" tooltip="deselectAll"></a>
                         <a class="instantButtons select right-magnet button" ng-click="selectAllStructures(structures)" tooltip="multi-combo.selectAll"></a>
                     </div>
@@ -51,7 +51,7 @@
                 <h2 class="row">[[structureGroup.structures.length]] <i18n>crre.form.structureGroups.structures.affect</i18n></h2>
                 <div class="card listStructure ">
                     <div class="toolbox vertical-spacing horizontal-spacing">
-                        <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structureRight">
+                        <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structureRight"/>
                         <a class="instantButtons deselect right-magnet button" ng-click="updateSelection(structureGroup.structures, false)" tooltip="deselectAll"></a>
                         <a class="instantButtons select right-magnet button" ng-click="updateSelection(structureGroup.structures, true)" tooltip="multi-combo.selectAll"></a>
                     </div>

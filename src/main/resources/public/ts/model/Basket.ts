@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {_, moment, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, Filter, Structure} from './index';
+import {Equipment, Filter, Offers, Structure, Utils} from './index';
 
 
 export class Basket implements Selectable {
@@ -15,6 +15,7 @@ export class Basket implements Selectable {
     comment?: string;
     basket_name: string;
     reassort:boolean;
+    offers: Offers;
 
     constructor (equipment: Equipment , id_campaign?: number, id_structure?: string ) {
         this.equipment = Mix.castAs(Equipment, equipment) ;
@@ -22,6 +23,7 @@ export class Basket implements Selectable {
         this.id_structure = id_structure;
         if(equipment.type === "articlenumerique") {
             this.amount = equipment.offres[0].quantiteminimaleachat;
+            this.offers = Utils.computeOffer(this, equipment);
         } else {
             this.amount = 1;
         }
@@ -56,7 +58,12 @@ export class Basket implements Selectable {
 
     async updateAmount () {
         try {
-            http.put(`/crre/basket/${this.id}/amount`, this.toJson());
+            if(this.amount) {
+                http.put(`/crre/basket/${this.id}/amount`, this.toJson());
+                if (this.equipment.type === "articlenumerique") {
+                    this.offers = Utils.computeOffer(this, this.equipment);
+                }
+            }
         } catch (e) {
             toasts.warning('crre.basket.update.err');
             throw e;
@@ -116,6 +123,9 @@ export class Baskets extends Selection<Basket> {
             this.all = Mix.castArrayAs(Basket, data);
             this.all.map((basket) => {
                 basket.equipment = Mix.castAs(Equipment, basket.equipment);
+                if(basket.equipment.type === "articlenumerique") {
+                    basket.offers = Utils.computeOffer(basket, basket.equipment);
+                }
             });
         } catch (e) {
             toasts.warning('crre.basket.sync.err');

@@ -8,7 +8,7 @@
             <i class="moins"
                ng-click="purse.licence_initial_amount = purse.licence_initial_amount - 1;"></i>
             <input class="three numberWithoutArrow" type="number" ng-model="purse.licence_initial_amount"
-                   min="[[purse.second + purse.premiere + purse.terminale]]">
+                   min="[[purse.second + purse.premiere + purse.terminale]]"/>
             <i class="plus"
                ng-click="purse.licence_initial_amount = purse.licence_initial_amount + 1;"></i>
         </div>
@@ -32,7 +32,7 @@
             <label><i18n>purse</i18n> : </label>
             <i class="moins" ng-click="purse.initial_amount = purse.initial_amount - 1;"></i>
             <input class="five numberWithoutArrow" type="number" ng-model="purse.initial_amount"
-                   min="[[purses.selected[0].initial_amount - purses.selected[0].amount]]" step="any">
+                   min="[[purses.selected[0].initial_amount - purses.selected[0].amount]]" step="any"/>
             <i class="plus" ng-click="purse.initial_amount = purse.initial_amount + 1;"></i>
         </div>
         <div class="vertical-spacing">

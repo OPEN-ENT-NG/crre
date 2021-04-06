@@ -27,7 +27,9 @@
                             </div>
                             <div class="centerColumnInput" ng-if="!isAdministrator()" workflow="crre.prescriptor">
                                 <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
-                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
+                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                                       class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
+                                       ng-change="computeOffer()" ng-model="basket.amount"/>
                                 <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
                             <div ng-if="offerTeacher.length + offerStudent.length > 0">
@@ -57,8 +59,14 @@
                         </div>
                         <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="boxF">
                             <div></div>
-                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined"><input type="button" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
-                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)"><input type="button" ng-disabled="!validArticle() && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                                <input type="button" ng-disabled="!validArticle()" ng-click="chooseCampaign()"
+                                       i18n-value="crre.add.to.basket" />
+                            </div>
+                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                                <input type="button" ng-disabled="!validArticle() && basket.id_campaign === undefined"
+                                       ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" />
+                            </div>
                         </div>
                     </div>
                 </label>
@@ -86,40 +94,24 @@
                             </div>
                             <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="centerColumnInput">
                                 <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
-                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)" class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min" ng-change="computeOffer()" ng-model="basket.amount">
+                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                                       class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
+                                       ng-change="computeOffer()" ng-model="basket.amount"/>
                                 <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
                         </div>
                         <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="boxF">
                             <div></div>
-                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined"><input type="button" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
-                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)"><input type="button" ng-disabled="!validArticle() && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
+                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                                <input type="button" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
+                            </div>
+                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                                <input type="button" ng-disabled="!validArticle() && basket.id_campaign === undefined"
+                                       ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" />
+                            </div>
                         </div>
                     </div>
             </div>
-<!--            <div class="add-basket centered row twelve vertical-spacing twelve-mobile">
-                <div class="twelve cell">
-                    <h4 class="cell"><i18n>etablissement.price</i18n></h4>
-                    <h3 class="right-text">[[calculatePriceOfEquipment(basket.equipment,2) | currency]]<i18n>per.student.per.year</i18n></h3>
-                </div>
-                <div class="twelve cell" ng-if="!isAdministrator()" workflow="crre.prescriptor">
-                    <div class="quantity">
-                        <h4 class="cell" style="margin-left: 83px"><i18n>crre.quantity</i18n></h4>
-                        <div class="right-text">
-                            <i class="moins" ng-click="amountDecrease()"></i>
-                            <input type="number"
-                                   step="1"
-                                   min="0"
-                                   ng-keypress="avoidDecimals($event)"
-                                   class="numberWithoutArrow two"
-                                   ng-model="basket.amount"/>
-                            <i class="plus" ng-click="amountIncrease()"></i>
-                        </div>
-                    </div>
-                    <div class="row vertical-spacing"><input type="button" ng-show="basket.id_campaign == undefined" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" /> </div>
-                    <div class="row vertical-spacing"><input type="button" ng-show="!(basket.id_campaign == undefined)" ng-disabled="!validArticle() && basket.id_campaign === undefined" ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" /> </div>
-                </div>
-            </div>-->
         </div>
         <div class="thirteen-small cell twelve-mobile">
             <div class="two cell twelve-mobile margin-right-4">

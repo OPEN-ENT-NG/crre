@@ -461,7 +461,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                             for (let order of orders) {
                                 let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
                                 if(equipment.type === "articlenumerique") {
-                                    order.offers = computeOffer(order, equipment);
+                                    order.offers = Utils.computeOffer(order, equipment);
                                 }
                             }
                         });
@@ -504,34 +504,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             params = params.slice(0, -1);
             return http.get(`/crre/equipments?${params}`);
         }
-
-        const computeOffer = (order, equipment): Offers => {
-            let amount = order.amount;
-            let gratuit = 0;
-            let gratuite = 0;
-            let offre = null;
-            let offers = new Offers();
-            equipment.offres[0].leps.forEach(function (offer) {
-                offre = new Offer();
-                offre.name = "Manuel " + offer.licence[0].valeur;
-                if(offer.conditions.length > 1) {
-                    offer.conditions.forEach(function (condition) {
-                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
-                            gratuit = condition.conditionGratuite;
-                            gratuite = condition.gratuite;
-                        }
-                    });
-                } else {
-                    gratuit = offer.conditions[0].conditionGratuite;
-                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
-                }
-                offre.value = gratuite;
-                if(gratuite > 0) {
-                    offers.all.push(offre);
-                }
-            });
-            return offers;
-        };
 
         $scope.cancelBasketDelete = (): void => {
             $scope.display.lightbox.validOrder = false;

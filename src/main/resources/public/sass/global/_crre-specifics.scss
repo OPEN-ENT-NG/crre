@@ -444,6 +444,10 @@ body.crre {
     height: 30px;
   }
 
+  .editor {
+    color: lightgray;
+  }
+
   .equipment-detail {
     h1, h2, a {
       color: $secondary !important;
@@ -459,10 +463,6 @@ body.crre {
 
     h4 {
       font-weight: 400;
-    }
-
-    .editor {
-      color: lightgray;
     }
 
     table {
@@ -612,6 +612,39 @@ body.crre {
     text-shadow: 0.5px 0.25px #ccc;
   }
 
+  p.ean-small {
+    font-size: 12px;
+    margin: initial;
+    display: inline-flex;
+
+    > i {
+      background-image: url(/crre/public/img/scss/barcode.svg);
+      background-size: 17px;
+      background-repeat: no-repeat;
+      position: relative;
+      top: 3px;
+    }
+
+    > b {
+      white-space: nowrap;
+    }
+  }
+
+  p.ean {
+    display: inline-flex;
+
+    > i {
+      background-image: url(/crre/public/img/scss/barcode.svg);
+      background-size: 23px;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+
+    > b {
+      white-space: nowrap;
+    }
+  }
+
   .catalog-list {
     .dominos {
       display: flex;
@@ -681,24 +714,6 @@ body.crre {
           h4 {
             position: relative;
             margin: 0;
-          }
-
-          p.description {
-            font-size: 12px;
-            margin: initial;
-            display: inline-flex;
-
-            > i {
-              background-image: url(/crre/public/img/scss/barcode.svg);
-              background-size: 17px;
-              background-repeat: no-repeat;
-              position: relative;
-              top: 3px;
-            }
-
-            > b {
-              white-space: nowrap;
-            }
           }
 
           strong {

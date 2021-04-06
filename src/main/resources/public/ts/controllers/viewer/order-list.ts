@@ -13,7 +13,7 @@ import http from "axios";
 
 declare let window: any;
 
-export const orderPersonnelController = ng.controller('orderPersonnelController',
+export const orderValidatorController = ng.controller('orderValidatorController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
 
         $scope.display = {
@@ -76,18 +76,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 $scope.isDate = true;
             }
         }
-
-        async function searchProjectAndOrders() {
-            const isEmpty = await $scope.searchByName(false);
-            if (!isEmpty) {
-                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                Utils.safeApply($scope);
-            } else {
-                $scope.loading = false;
-                Utils.safeApply($scope);
-            }
-        }
-
         $scope.searchByName = async (noInit?: boolean) => {
             let isEmpty: boolean;
             if (!noInit) {
@@ -116,8 +104,8 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                     isEmpty = await synchroMyBaskets(true);
                 }
             }
-            return isEmpty;
             Utils.safeApply($scope);
+            return isEmpty;
         }
 
         $scope.switchAllOrders = (allOrdersListSelected: boolean) => {
@@ -162,7 +150,7 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
                 await getEquipment(orderClient).then(equipments => {
                     let equipment = equipments.data;
                     if(equipment.type === "articlenumerique") {
-                        orderClient.offers = computeOffer(orderClient, equipment);
+                        orderClient.offers = Utils.computeOffer(orderClient, equipment);
                     }
                 });
                 $scope.$apply()
@@ -172,34 +160,6 @@ export const orderPersonnelController = ng.controller('orderPersonnelController'
         const getEquipment = (order) :Promise <any> => {
             return http.get(`/crre/equipment/${order.equipment_key}`);
         }
-
-        const computeOffer = (order, equipment): Offers => {
-            let amount = order.amount;
-            let gratuit = 0;
-            let gratuite = 0;
-            let offre = null;
-            let offers = new Offers();
-            equipment.offres[0].leps.forEach(function (offer) {
-                offre = new Offer();
-                offre.name = "Manuel " + offer.licence[0].valeur;
-                if(offer.conditions.length > 1) {
-                    offer.conditions.forEach(function (condition) {
-                        if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
-                            gratuit = condition.conditionGratuite;
-                            gratuite = condition.gratuite;
-                        }
-                    });
-                } else {
-                    gratuit = offer.conditions[0].conditionGratuite;
-                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
-                }
-                offre.value = gratuite;
-                if(gratuite > 0) {
-                    offers.all.push(offre);
-                }
-            });
-            return offers;
-        };
 
         $scope.updateReassort = async (orderClient: OrderClient) => {
             orderClient.reassort = !orderClient.reassort;

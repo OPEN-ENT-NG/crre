@@ -17,7 +17,6 @@
         <div class="basket-list">
             <div ng-repeat="basket in baskets.all track by $index" class="row">
                 <h1 ng-class="{disabled: equipment.status !== 'DISPONIBLE'} " ng-show="basket.equipment.status !== 'DISPONIBLE'">
-<!--                    <i18n ng-show="basket.equipment.status === 'UNAVAILABLE'">crre.UNAVAILABLE</i18n>-->
                     <i18n ng-show="basket.equipment.status === 'EPUISE'">crre.OUT_OF_STOCK</i18n>
                 </h1>
                 <article class="basket-item twelve cell"
@@ -25,7 +24,7 @@
                     <div class="cell width-40">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="basket.selected"
-                                   ng-checked="basket.selected">
+                                   ng-checked="basket.selected"/>
                             <span></span>
                         </label>
                     </div>
@@ -40,7 +39,14 @@
                             <div class="cell eight" ng-click="openEquipment(basket.equipment)">
                                 <div class="eleven centered">
                                     <h3>[[basket.equipment.titre]]</h3>
-                                    <p ng-bind-html="basket.equipment.description" style="-webkit-box-orient: vertical;" class="line-clamp-6"></p>
+                                    <div class="editor" ng-show="!!basket.equipment.editeur" >
+                                        <div ng-bind-html="basket.equipment.editeur"></div>
+                                    </div>
+                                    <p class="ean" ng-if="basket.equipment.ean"><i></i> <b> EAN :  </b> &nbsp; [[basket.equipment.ean]] </p>
+                                    <h5>Plus d'infos sur la ressource</h5>
+                                    <div ng-repeat="offer in basket.offers.all" ng-if="basket.offers.all.length > 0" ng-repeat-end>
+                                        <span class="arrowOffer no-margin" > [[offer.value]] [[offer.name]] [[lang.translate('crre.FREE')]]</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="three cell text-right">
@@ -58,6 +64,7 @@
                                                    step="1"
                                                    min="0"
                                                    ng-keypress="avoidDecimals($event)"
+                                                   ng-change="basket.updateAmount()"
                                                    class="numberWithoutArrow two"
                                                    ng-model="basket.amount"/>
                                             <i class="plus" ng-click="basket.amountIncrease()"></i>
@@ -67,7 +74,7 @@
                                         <label class="checkbox">
                                             <input type="checkbox" ng-model="basket.reassort"
                                                    ng-checked="basket.reassort" ng-change="basket.updateReassort()"
-                                                   ng-disabled="!canUpdateReassort()">
+                                                   ng-disabled="!canUpdateReassort()"/>
                                             <span><i18n>&nbsp;&nbsp;&nbsp;crre.reassort</i18n></span>
                                         </label>
                                     </div>

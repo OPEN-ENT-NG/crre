@@ -1,3 +1,5 @@
+import {Offer, Offers} from "./Equipment";
+
 export class Utils {
 
     static parsePostgreSQLJson (json: any): any {
@@ -80,4 +82,32 @@ export class Utils {
             }
         }
     }
+
+    static computeOffer = (order, equipment): Offers => {
+        let amount = order.amount;
+        let gratuit = 0;
+        let gratuite = 0;
+        let offre = null;
+        let offers = new Offers();
+        equipment.offres[0].leps.forEach(function (offer) {
+            offre = new Offer();
+            offre.name = "Manuel " + offer.licence[0].valeur;
+            if(offer.conditions.length > 1) {
+                offer.conditions.forEach(function (condition) {
+                    if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
+                        gratuit = condition.conditionGratuite;
+                        gratuite = condition.gratuite;
+                    }
+                });
+            } else {
+                gratuit = offer.conditions[0].conditionGratuite;
+                gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
+            }
+            offre.value = gratuite;
+            if(gratuite > 0) {
+                offers.all.push(offre);
+            }
+        });
+        return offers;
+    };
 }

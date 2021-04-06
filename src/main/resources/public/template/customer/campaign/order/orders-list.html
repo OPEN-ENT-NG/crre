@@ -6,7 +6,7 @@
                 <label class="checkbox">
                     <input type="checkbox"
                            ng-change="switchAllOrders(allOrdersListSelected)"
-                           ng-model="allOrdersListSelected">
+                           ng-model="allOrdersListSelected"/>
                     <span></span>
                 </label>
             </td>
@@ -23,7 +23,7 @@
         <tr ng-click="basket.expanded=!basket.expanded" class="line">
             <td class="table-selector">
                 <label class="checkbox">
-                    <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket)">
+                    <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket)"/>
                     <span></span>
                 </label>
             </td>
@@ -44,7 +44,7 @@
             ng-if="basket.expanded" class="subline">
             <td class="table-selector">
                 <label class="checkbox">
-                    <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)">
+                    <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)"/>
                     <span></span>
                 </label>
             </td>
@@ -58,9 +58,10 @@
             <td>
                 <div class="smallTabElem center centerInputAmount">
                     <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
-                    <input type="number" class="quantity-input" ng-disabled="order.status === 'IN PROGRESS'" name="input"
-                           ng-change="updateAmount(basket, order, order.amount)" ng-model="order.amount">
-                    <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount +1)"></i>
+                    <input type="number" class="quantity-input numberWithoutArrow" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                           ng-disabled="order.status === 'IN PROGRESS'" ng-change="updateAmount(basket, order, order.amount)"
+                           ng-model="order.amount"/>
+                    <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount + 1)"></i>
                 </div>
             </td>
             <td>
@@ -100,7 +101,7 @@
             <td><span class="arrowOffer">[[offer.name]]</span></td>
             <td><div class="smallTabElem center"></div></td>
             <td class="center">[[offer.value]]</td>
-            <td class="center">GRATUIT</td>
+            <td class="center">[[lang.translate('crre.FREE')]]</td>
             <td></td>
             <td></td>
         </tr>
