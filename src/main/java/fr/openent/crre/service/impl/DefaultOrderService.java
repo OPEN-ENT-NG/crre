@@ -285,7 +285,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             sqlquery += "oe.id_campaign = ? AND ";
             values.add(id_campaign);
         }
-        sqlquery += "oe.status = 'WAITING' AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
+        sqlquery += "oe.status = 'WAITING' AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
 
         values.add(query);
         values.add(query);
@@ -307,11 +307,11 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         }
 
         if (!query.equals("")) {
-            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
             values.add(query);
             values.add(query);
         } else {
-            sqlquery += "AND (bo.name ~* bo.name OR bo.name_user ~* bo.name_user OR oe.equipment_key IN (";
+            sqlquery += "AND (oe.equipment_key IN (";
         }
 
         for (int i = 0; i < equipTab.size(); i++) {
@@ -345,9 +345,9 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         values.add(query);
         values.add(query);
         if(equipTab.getJsonArray(1).isEmpty()){
-            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ?) ";
+            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) ";
         } else {
-            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
             sqlquery = insertValuesQuery(equipTab, values, sqlquery);
         }
 

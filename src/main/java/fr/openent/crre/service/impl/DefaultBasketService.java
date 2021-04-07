@@ -177,11 +177,11 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
         if (!query.equals("")) {
-            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_key IN (";
+            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
             values.add(query);
             values.add(query);
         } else {
-            sqlquery += "AND (bo.name ~* '' OR bo.name_user ~* '' OR oe.equipment_key IN (";
+            sqlquery += "AND (oe.equipment_key IN (";
         }
 
         for (int i = 0; i < equipTab.size(); i++) {
@@ -200,7 +200,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? AND (bo.name ~* ? OR bo.name_user ~* ?) AND oe.id_structure IN (";
+                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
         values.add(startDate)
                 .add(endDate)
                 .add(id_campaign)

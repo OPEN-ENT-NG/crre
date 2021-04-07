@@ -57,7 +57,7 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT * " +
                 "FROM  " + Crre.crreSchema + ".quote q " +
-                "WHERE q.title ~* ? OR q.owner_name ~* ? ";
+                "WHERE lower(q.title) ~* ? OR lower(q.owner_name) ~* ? ";
 
         values.add(query);
         values.add(query);

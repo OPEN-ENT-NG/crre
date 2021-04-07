@@ -160,9 +160,9 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+            if (request.params().contains("q") && !request.params().get("q").trim().isEmpty()) {
                 try {
-                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
                     Integer id_campaign = null;
                     if(request.getParam("id") != null) {
                         id_campaign = parseInt(request.getParam("id"));
@@ -215,7 +215,7 @@ public class OrderController extends ControllerHelper {
                     }
                     // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
                     if (request.params().contains("q")) {
-                        q = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                        q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
                     }
                     Integer id_campaign = null;
                     if(request.getParam("id") != null) {

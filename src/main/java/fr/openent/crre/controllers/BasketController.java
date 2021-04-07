@@ -158,10 +158,10 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && request.params().get("q").trim() != "") {
+            if (request.params().contains("q") && !request.params().get("q").trim().isEmpty()) {
                 try {
                     Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
                     int id_campaign = parseInt(request.getParam("id"));
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
@@ -205,7 +205,7 @@ public class BasketController extends ControllerHelper {
                 }
                 // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
                 if (request.params().contains("q")) {
-                    q = URLDecoder.decode(request.getParam("q"), "UTF-8");
+                    q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
                 }
                 int id_campaign = parseInt(request.getParam("id"));
                 String finalQ = q;

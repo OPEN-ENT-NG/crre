@@ -74,7 +74,7 @@ public class QuoteController extends BaseController {
          String query = "";
          Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
          if (request.params().contains("q")) {
-           query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+           query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
          }
          quoteService.search(query, page, arrayResponseHandler(request));
   }

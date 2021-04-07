@@ -7,10 +7,8 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.service.CampaignService;
 import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.StructureService;
-import fr.openent.crre.service.impl.DefaultCampaignService;
 import fr.openent.crre.service.impl.DefaultPurseService;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
@@ -45,14 +43,12 @@ public class PurseController extends ControllerHelper {
     private final ImportCSVHelper importCSVHelper;
     private final StructureService structureService;
     private final PurseService purseService;
-    private final CampaignService campaignService;
 
     public PurseController(Vertx vertx) {
         super();
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
         this.structureService = new DefaultStructureService(Crre.crreSchema);
         this.purseService = new DefaultPurseService();
-        this.campaignService = new DefaultCampaignService(Crre.crreSchema, "campaign");
     }
 
     @Post("/purses/import")
@@ -458,7 +454,7 @@ public class PurseController extends ControllerHelper {
         String query = "";
         Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
         if (request.params().contains("q")) {
-            query = URLDecoder.decode(request.getParam("q"), "UTF-8");
+            query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
         }
         String finalQuery = query;
         purseService.getAll(event -> {

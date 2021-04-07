@@ -207,12 +207,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         String sqlquery = selectSQLOrders(startDate, endDate, values);
 
         if (!query.equals("")) {
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR oe.equipment_key IN (";
+            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR oe.equipment_key IN (";
             values.add(query);
             values.add(query);
             values.add(query);
         } else {
-            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name OR oe.equipment_key IN (";
+            sqlquery += "AND (oe.equipment_key IN (";
         }
 
         for (int i = 0; i < equipTab.size(); i++) {
@@ -243,9 +243,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         String sqlquery = selectSQLOrders(startDate, endDate, values);
 
         if(equipTab.getJsonArray(1).isEmpty()){
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?) ";
+            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?) ";
         } else {
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_key IN (";
+            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR ore.equipment_key IN (";
             sqlquery = DefaultOrderService.insertValuesQuery(equipTab, values, sqlquery);
         }
 
@@ -306,12 +306,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         HashMap<String, ArrayList> hashMap = new HashMap<>();
         String sqlquery = selectSQLOrders(startDate, endDate, values);
         if (!query.equals("")) {
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ?)";
+            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?)";
             values.add(query);
             values.add(query);
             values.add(query);
-        } else {
-            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name)";
         }
 
         filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery);
