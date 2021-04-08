@@ -675,5 +675,11 @@
   "crre.licences.buy": " licences achetées",
   "crre.free.licences.student.for": " licence élève gratuite pour ",
   "crre.free.licences.teacher.for": " licence enseignante gratuite pour ",
-  "crre.FREE": "GRATUIT"
+  "crre.FREE": "GRATUIT",
+  "EPUISE" : "Épuisé",
+  "A_PARAITRE" : "À paraître",
+  "EN_COURS_DE_REIMPRESSION" : "En cours de réimpression",
+  "NON_DISPONIBLE_PROVISOIREMENT" : "Provisoirement indisponible",
+  "EN_COURS_D_IMPRESSION" : "En cours d'impression",
+  "crre.to.see" : "A voir..."
 }

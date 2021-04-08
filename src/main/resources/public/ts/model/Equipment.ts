@@ -24,6 +24,8 @@ export class Equipment implements Selectable {
     offres: any;
     prixht: number;
     tvas: any;
+    commentaire: string;
+    commandable: boolean;
 
     constructor () {
         this._loading = false;
@@ -37,19 +39,15 @@ export class Equipment implements Selectable {
                 url +=  `?idStructure=${idStructure}`
             }
             let { data } =  await http.get(url);
-             Mix.extend(this, data);
-                this.id = this.ean;
-                this.status = this.disponibilite[0].valeur;
-                if(this.disciplines.length != 0) {
-                    this.discipline = this.disciplines[0].libelle;
-                }
-                if(this.type === 'articlenumerique') {
-                    this.offres[0].leps.forEach(function (offre) {
-                        offre.conditions.sort(function (a, b) {
-                            return a.gratuite - b.gratuite;
-                        });
+            Mix.extend(this, data);
+            reformatEquipment(this);
+            if(this.type === 'articlenumerique') {
+                this.offres[0].leps.forEach(function (offre) {
+                    offre.conditions.sort(function (a, b) {
+                        return a.gratuite - b.gratuite;
                     });
-                }
+                });
+            }
         } catch (e) {
             console.error(e);
             toasts.warning('crre.equipment.sync.err');
@@ -100,6 +98,27 @@ export interface Equipments {
     distributeurs: String[];
 }
 
+function reformatEquipment(equipment: Equipment) {
+    equipment.id = equipment.ean;
+    equipment.status = equipment.disponibilite[0].valeur;
+    equipment.commandable = equipment.disponibilite[0].commandable;
+    let commentaire = equipment.disponibilite[0].commentaire
+        .replace("À paraître", "").replace("Épuisé", "").replace("Epuisé", "Épuisé").replace("En cours de réimpression", "")
+        .replace("Non disponible provisoirement", "").replace("En cours d'impression", "");
+    if (commentaire) {
+        if(commentaire == lang.translate(equipment.status)) {
+            equipment.commentaire = null;
+        }else{
+            equipment.commentaire = commentaire;
+        }
+    } else {
+        equipment.commentaire = equipment.status;
+    }
+    if (equipment.disciplines.length != 0) {
+        equipment.discipline = equipment.disciplines[0].libelle;
+    }
+}
+
 export class Equipments extends Selection<Equipment> {
     constructor() {
         super([]);
@@ -115,6 +134,7 @@ export class Equipments extends Selection<Equipment> {
     }
 
     async syncEquip (data: any) {
+
         function setFilterValues(filters, group) {
             this[group] = filters[group].map(v => ({name: v}));
             if(group === 'public'){
@@ -142,11 +162,7 @@ export class Equipments extends Selection<Equipment> {
             }
             this.all = Mix.castArrayAs(Equipment, data);
             this.all.map((equipment) => {
-                equipment.id = equipment.ean;
-                equipment.status = equipment.disponibilite[0].valeur;
-                if(equipment.disciplines.length != 0) {
-                    equipment.discipline = equipment.disciplines[0].libelle;
-                }
+                reformatEquipment(equipment);
             });
         } else {
             this.all = [];
@@ -166,11 +182,11 @@ export class Equipments extends Selection<Equipment> {
                 });
             }
             if(!format.test(queryword)) {
-                    if(!!queryword) {
-                        uri = (`/crre/equipments/catalog/search?word=${queryword}${params}`);
-                    } else {
-                        uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);
-                    }
+                if(!!queryword) {
+                    uri = (`/crre/equipments/catalog/search?word=${queryword}${params}`);
+                } else {
+                    uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);
+                }
                 let {data} = await http.get(uri);
                 await this.syncEquip(data);
             } else {

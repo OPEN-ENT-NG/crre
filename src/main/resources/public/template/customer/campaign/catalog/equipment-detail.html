@@ -11,21 +11,23 @@
         </div>
         <div class="card row padding-20" ng-show="display.equipment">
         <h1 class="eight cell">[[basket.equipment.titre]] </h1>
-        <div class="twelve-small padding-20 cell right-magnet twelve-mobile" ng-style="{height: offers.all.length > 1 ? '400px' : '250px'}" >
+        <div class="twelve-small padding-20 cell right-magnet twelve-mobile"
+             ng-if="!isAdministrator()" workflow="crre.prescriptor"
+             ng-style="{height: offers.all.length > 1 ? '480px' : '330px'}" >
             <div ng-if="basket.equipment.type === 'articlenumerique'" id="box">
                 <input type="radio" id="item_1" name="box" checked />
                 <label for="item_1" class="labeltab">
                     Licences élèves
                     <div class="contentTab">
                         <div class="boxF">
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor"></div>
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="centerColumn">
+                            <div></div>
+                            <div class="centerColumn">
                                 <span class="italic16">Quantité</span>
                             </div>
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor">
+                            <div>
                                <span class="bold15"><i18n>Licences élèves</i18n></span>
                             </div>
-                            <div class="centerColumnInput" ng-if="!isAdministrator()" workflow="crre.prescriptor">
+                            <div class="centerColumnInput">
                                 <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
                                 <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
                                        class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
@@ -57,15 +59,21 @@
                                 <span class="bold15">[[offer.value]]</span>
                             </div>
                         </div>
-                        <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="boxF">
+                        <div class="boxF">
                             <div></div>
                             <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
-                                <input type="button" ng-disabled="!validArticle()" ng-click="chooseCampaign()"
-                                       i18n-value="crre.add.to.basket" />
+                                <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
+                                       ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
                             </div>
                             <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
-                                <input type="button" ng-disabled="!validArticle() && basket.id_campaign === undefined"
+                                <input type="button" ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                        ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" />
+                            </div>
+                        </div>
+                        <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'" style="width: fit-content;">
+                            <div><strong>Statut : </strong> <span> [[lang.translate(basket.equipment.status)]] </span></div>
+                            <div ng-if="basket.equipment.commentaire">
+                                <strong>Commentaire : </strong> <span> [[basket.equipment.commentaire]] </span>
                             </div>
                         </div>
                     </div>
@@ -74,7 +82,7 @@
                 <label for="item_2" class="labeltab">
                     Licences élèves adoptant
                     <div class="contentTab">
-                        A voir...
+                        <i18n>crre.to.see</i18n>
                     </div>
                 </label>
             </div>
@@ -85,14 +93,14 @@
                                 <span class="bold22"><i18n>Manuels élèves</i18n></span>
                             </div>
                             <div></div>
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor"></div>
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="centerColumn">
+                            <div></div>
+                            <div class="centerColumn">
                                 <span class="italic16">Quantité</span>
                             </div>
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor">
+                            <div>
                                 <span class="bold15"><i18n>Quantité Manuels élèves</i18n></span>
                             </div>
-                            <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="centerColumnInput">
+                            <div class="centerColumnInput">
                                 <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
                                 <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
                                        class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
@@ -100,14 +108,21 @@
                                 <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
                         </div>
-                        <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="boxF">
+                        <div class="boxF">
                             <div></div>
                             <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
-                                <input type="button" ng-disabled="!validArticle()" ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
+                                <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
+                                       ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
                             </div>
                             <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
-                                <input type="button" ng-disabled="!validArticle() && basket.id_campaign === undefined"
+                                <input type="button" ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                        ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" />
+                            </div>
+                        </div>
+                        <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'" style="width: fit-content;">
+                            <div><strong>Statut : </strong> <span> [[lang.translate(basket.equipment.status)]] </span></div>
+                            <div ng-if="basket.equipment.commentaire">
+                                <strong>Commentaire : </strong> <span> [[basket.equipment.commentaire]] </span>
                             </div>
                         </div>
                     </div>
