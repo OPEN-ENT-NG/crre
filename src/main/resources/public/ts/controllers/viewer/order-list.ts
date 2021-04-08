@@ -30,6 +30,7 @@ export const orderValidatorController = ng.controller('orderValidatorController'
             page: 0
         };
         $scope.isDate = false;
+        $scope.isOld = false;
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
         $scope.filtersDate.endDate = moment()._d;
@@ -55,13 +56,26 @@ export const orderValidatorController = ng.controller('orderValidatorController'
             let params_id_order = Utils.formatKeyToParameter(order_selected, 'id');
             let equipments_key = order_selected.map((value) => value.equipment_key).filter((value, index, _arr) => _arr.indexOf(value) == index);
             let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map(s => ({equipment_key: s})), "equipment_key");
-            window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
+            if($scope.isOld) {
+                window.location = `/crre/orders/old/exports?${params_id_order}&${params_id_equipment}`;
+            } else {
+                window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
+            }
             $scope.displayedBasketsOrders.forEach(function (basket) {
                 basket.selected = false;
                 basket.orders.forEach(function (order) {
                     order.selected = false;
                 });
             });
+        }
+
+        $scope.changeOld = async (old: boolean) => {
+            $scope.isOld = old;
+            $scope.filter.page = 0;
+            $scope.displayedBasketsOrders = [];
+            $scope.basketsOrders = new BasketsOrders();
+            await synchroMyBaskets(false, $scope.isOld)
+            Utils.safeApply($scope);
         }
 
         $scope.filterByDate = async () => {
@@ -88,20 +102,20 @@ export const orderValidatorController = ng.controller('orderValidatorController'
             if ($scope.query_name && $scope.query_name != "") {
                 if ($scope.filters.all.length == 0) {
                     await $scope.newBasketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $scope.filter.page);
-                    isEmpty = await synchroMyBaskets(true);
+                        $scope.filtersDate.endDate, $scope.filter.page, $scope.isOld);
+                    isEmpty = await synchroMyBaskets(true, $scope.isOld);
                 } else {
                     await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
-                    isEmpty = await synchroMyBaskets(true);
+                        $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page, $scope.isOld);
+                    isEmpty = await synchroMyBaskets(true, $scope.isOld);
                 }
             } else {
                 if ($scope.filters.all.length == 0) {
-                    isEmpty = await synchroMyBaskets(false);
+                    isEmpty = await synchroMyBaskets(false, $scope.isOld);
                 } else {
                     await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $scope.filter.page);
-                    isEmpty = await synchroMyBaskets(true);
+                        $scope.filtersDate.endDate, $scope.filter.page, $scope.isOld);
+                    isEmpty = await synchroMyBaskets(true, $scope.isOld);
                 }
             }
             Utils.safeApply($scope);
@@ -184,16 +198,16 @@ export const orderValidatorController = ng.controller('orderValidatorController'
 
         $scope.onScroll = async (): Promise<void> => {
             $scope.filter.page++;
-            await $scope.searchByName(true);
+            await $scope.searchByName(true, $scope.isOld);
         };
 
-        const synchroMyBaskets = async (search?: boolean): Promise<boolean> => {
+        const synchroMyBaskets = async (search?: boolean, old = false): Promise<boolean> => {
             let isEmpty = true;
             if (!search) {
                 $scope.newBasketsOrders = new BasketsOrders();
                 if ($routeParams.idCampaign) {
                     await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $routeParams.idCampaign);
+                        $scope.filtersDate.endDate, $routeParams.idCampaign, old);
                 }
             }
             if ($scope.newBasketsOrders.all.length != 0) {
@@ -203,7 +217,7 @@ export const orderValidatorController = ng.controller('orderValidatorController'
                     ordersId.push(order.id);
                 });
                 $scope.newOrders = new OrdersClient();
-                await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [], $routeParams.idCampaign, $scope.current.structure.id, ordersId);
+                await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [], $routeParams.idCampaign, $scope.current.structure.id, ordersId, null, old);
                 formatDisplayedBasketOrders();
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
@@ -215,7 +229,7 @@ export const orderValidatorController = ng.controller('orderValidatorController'
         synchroMyBaskets(false);
 
         const formatDisplayedBasketOrders = (): void => {
-            $scope.newBasketsOrders.forEach(function (basketOrder) {
+            $scope.newBasketsOrders.forEach(function (basketOrder, index) {
                 let displayedBasket = basketOrder;
                 displayedBasket.name_user = displayedBasket.name_user.toUpperCase();
                 displayedBasket.total = currencyFormatter.format(basketOrder.total);
@@ -227,8 +241,9 @@ export const orderValidatorController = ng.controller('orderValidatorController'
                         displayedBasket.orders.push(order);
                     }
                 });
-                if (displayedBasket.orders.length > 0)
+                if (displayedBasket.orders.length > 0) {
                     Utils.setStatus(displayedBasket, displayedBasket.orders[0]);
+                }
                 $scope.displayedBasketsOrders.push(displayedBasket);
                 $scope.basketsOrders.all.push(basketOrder);
             });

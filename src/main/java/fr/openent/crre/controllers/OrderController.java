@@ -122,6 +122,33 @@ public class OrderController extends ControllerHelper {
         }
     }
 
+    @Get("/orders/old/mine/:idCampaign/:idStructure")
+    @ApiDoc("Get my list of orders by idCampaign and idstructure")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessOrderRight.class)
+    public void listMyOrdersOldByCampaignByStructure(final HttpServerRequest request){
+        try {
+            UserUtils.getUserInfos(eb, request, user -> {
+                Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
+                String idStructure = request.params().get("idStructure");
+                List<String> ordersIds = request.params().getAll("order_id");
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
+                orderService.listOrderOld(idCampaign,idStructure, user, ordersIds, startDate, endDate, orders -> {
+                    if (orders.isRight()) {
+                        final JsonArray finalResult = orders.right().getValue();
+                        renderJson(request, finalResult);
+                    } else {
+                        badRequest(request);
+                        log.error("Problem when catching orders");
+                    }
+                });
+            });
+        }catch (ClassCastException e ){
+            log.error("An error occured when casting campaign id ",e);
+        }
+    }
+
     @Get("/orders")
     @ApiDoc("Get the list of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -335,8 +362,61 @@ public class OrderController extends ControllerHelper {
 
     }
 
+    @Get("/orders/old/exports")
+    @ApiDoc("Export list of custumer's orders as CSV")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PrescriptorRight.class)
+    public void exportOld (final HttpServerRequest request){
+        List<String> params = request.params().getAll("id");
+        List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
+        JsonArray orders = new JsonArray();
+        getOrderEquipmentOld(idsOrders, event -> {
+            if (event.isRight()) {
+                JsonArray orderClients = event.right().getValue();
+                JsonObject orderMap;
+                JsonObject order;
+                for (int i = 0; i < orderClients.size(); i++) {
+                    order = orderClients.getJsonObject(i);
+                            orderMap = new JsonObject();
+                            orderMap.put("name", order.getString("equipment_name"));
+                            orderMap.put("id", order.getInteger("id"));
+                            DecimalFormat df = new DecimalFormat("0.00");
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                            ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                            String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                            orderMap.put("creation_date", creation_date);
+                            orderMap.put("ean", order.getString("equipment_key"));
+                            orderMap.put("status", order.getString("status"));
+                            orderMap.put("basket_name", order.getString("basket_name"));
+                            orderMap.put("comment", order.getString("comment"));
+                            orderMap.put("amount", order.getInteger("amount"));
+                            DecimalFormat df2 = new DecimalFormat("#.##");
+                            Double price = Double.parseDouble(order.getString("equipment_price"));
+                            Double priceht = order.getDouble("equipment_priceht");
+                            double priceTTC = price * order.getInteger("amount");
+                            double priceHT = priceht * order.getInteger("amount");
+                            orderMap.put("priceht", priceht);
+                            orderMap.put("tva5",order.getDouble("equipment_tva5"));
+                            orderMap.put("tva20",order.getDouble("equipment_tva20"));
+                            orderMap.put("unitedPriceTTC", price);
+                            orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                            orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+                            orders.add(orderMap);
+                    }
+                request.response()
+                        .putHeader("Content-Type", "text/csv; charset=utf-8")
+                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                        .end(generateExport(request, orders));
+                }
+        });
+    }
+
     private void getOrderEquipmentEquipment(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
         orderService.listExport(idsOrders, handlerJsonArray);
+    }
+
+    private void getOrderEquipmentOld(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        orderService.listExportOld(idsOrders, handlerJsonArray);
     }
 
     private void getEquipment(List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {

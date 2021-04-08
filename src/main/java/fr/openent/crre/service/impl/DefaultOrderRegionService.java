@@ -14,6 +14,8 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -400,4 +402,117 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
 
     }
+
+    @Override
+    public void insertOldOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "" +
+                " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
+                " (id, amount, creation_date,  owner_name, owner_id," +
+                " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
+                " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
+                " comment, id_order_client_equipment, id_project, reassort) VALUES ";
+
+        for (int i = 0; i < orderRegions.size(); i++) {
+            if(orderRegions.getJsonObject(i).containsKey("id_project")) {
+                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),";
+                JsonObject order = orderRegions.getJsonObject(i);
+                Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
+                String creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                params.add(order.getLong("id"))
+                        .add(order.getInteger("amount"))
+                        .add(creation_date)
+                        .add(order.getString("owner_name"))
+                        .add(order.getString("owner_id"))
+                        .add(order.getString("status"))
+                        .add(order.getString("ean"))
+                        .add(order.getString("name"))
+                        .add(order.getString("image"))
+                        .add(order.getDouble("unitedPriceTTC"))
+                        .add(order.getString("grade"))
+                        .add(order.getString("editor"))
+                        .add(order.getString("diffusor"))
+                        .add(order.getString("type"))
+                        .add(order.getInteger("id_campaign"))
+                        .add(order.getString("id_structure"))
+                        .add(order.getString("comment"))
+                        .add(order.getInteger("id_order_client_equipment"))
+                        .add(order.getLong("id_project"))
+                        .add(order.getBoolean("reassort"));
+            }
+        }
+        query = query.substring(0, query.length()-1);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "" +
+                " INSERT INTO " + Crre.crreSchema + ".\"order_client_equipment_old\"" +
+                " (id, amount, creation_date, user_id," +
+                " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
+                " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
+                " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ";
+
+        for (int i = 0; i < orderRegions.size(); i++) {
+            if(orderRegions.getJsonObject(i).containsKey("id_project")) {
+                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),";
+                JsonObject order = orderRegions.getJsonObject(i);
+                Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
+                String creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                params.add(order.getLong("id_order_client_equipment"))
+                        .add(order.getInteger("amount"))
+                        .add(creation_date)
+                        .add(order.getString("owner_id"))
+                        .add(order.getString("status"))
+                        .add(order.getString("ean"))
+                        .add(order.getString("name"))
+                        .add(order.getString("image"))
+                        .add(order.getDouble("unitedPriceTTC"))
+                        .add(order.getString("grade"))
+                        .add(order.getString("editor"))
+                        .add(order.getString("diffusor"))
+                        .add(order.getString("type"))
+                        .add(order.getInteger("id_campaign"))
+                        .add(order.getString("id_structure"))
+                        .add(order.getString("comment"))
+                        .add(order.getInteger("basket_id"))
+                        .add(order.getBoolean("reassort"))
+                        .add(order.getJsonArray("offers"))
+                        .add(order.getDouble("tva5"))
+                        .add(order.getDouble("tva20"))
+                        .add(order.getDouble("priceht"));
+            }
+        }
+        query = query.substring(0, query.length()-1);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void deleteOldOrderClient(JsonArray ordersClient, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "DELETE FROM " + Crre.crreSchema + ".order_client_equipment oce " +
+                "WHERE oce.id IN ( ";
+        for (int i = 0; i < ordersClient.size(); i++) {
+            query += "?,";
+            params.add(ordersClient.getLong(i));
+        }
+        query = query.substring(0, query.length() - 1) + ")";
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
+    }
+
+    @Override
+    public void deleteOldRegionClient(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "DELETE FROM " + Crre.crreSchema + ".\"order-region-equipment\" ore " +
+                "WHERE ore.id IN ( ";
+        for (int i = 0; i < ordersRegion.size(); i++) {
+            query += "?,";
+            params.add(ordersRegion.getLong(i));
+        }
+        query = query.substring(0, query.length() - 1) + ")";
+        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
+    }
+
 }

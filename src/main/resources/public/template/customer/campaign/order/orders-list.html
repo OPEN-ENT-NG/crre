@@ -1,3 +1,10 @@
+<div style="margin-bottom: -0.5%; margin-top: 1%">
+    <input type="radio" id="item_1" name="box" checked="">
+    <label for="item_1" ng-click="changeOld(false)" class="labeltabOrder">Demandes en cours de traitement</label>
+    <input type="radio" id="item_2" name="box">
+    <label for="item_2" ng-click="changeOld(true)" class="labeltabOrder">Demandes envoyées
+    </label>
+</div>
 <div class="flex-row">
     <table class="twelve-mobile twelve">
         <thead>
@@ -99,9 +106,9 @@
             <td></td>
             <td></td>
             <td><span class="arrowOffer">[[offer.name]]</span></td>
-            <td><div class="smallTabElem center"></div></td>
             <td class="center">[[offer.value]]</td>
             <td class="center">[[lang.translate('crre.FREE')]]</td>
+            <td><div class="smallTabElem center"></div></td>
             <td></td>
             <td></td>
         </tr>

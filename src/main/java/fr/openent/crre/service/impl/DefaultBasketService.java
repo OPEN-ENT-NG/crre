@@ -71,7 +71,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
     public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order b " +
+        String query = "SELECT distinct b.* FROM " + Crre.crreSchema + ".basket_order b " +
+                "INNER JOIN " + Crre.crreSchema + ".order_client_equipment oce on (oce.id_basket = b.id) " +
                 "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? " +
                 "ORDER BY b.id DESC ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
@@ -173,7 +174,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
+                "INNER JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
         if (!query.equals("")) {

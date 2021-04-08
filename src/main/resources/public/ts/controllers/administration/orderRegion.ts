@@ -5,7 +5,7 @@ import {
     StructureGroups,
     Structures,
     Utils,
-    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront
+    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront, Offers, Offer
 } from "../../model";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
@@ -24,6 +24,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             },
         };
         $scope.filtersDate = [];
+        $scope.isOld = false;
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
         $scope.filtersDate.endDate = moment()._d;
         $scope.translate = (key: string):string => lang.translate(key);
@@ -107,13 +108,19 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.getFilter();
         };
 
-        $scope.getProjects = async() => {
+        $scope.getProjects = async(old = false) => {
             try {
                 const startDate = moment($scope.filtersDate.startDate).format('YYYY-MM-DD').toString();
                 const endDate = moment($scope.filtersDate.endDate).format('YYYY-MM-DD').toString();
                 const page: string = $scope.filter.page ? `page=${$scope.filter.page}&` : '';
                 const filterRejectedSentOrders = !$scope.selectedType.split('/').includes('historic');
-                let { data } = await http.get(`/crre/orderRegion/projects?${page}startDate=${startDate}&endDate=${endDate}&filterRejectedSentOrders=${filterRejectedSentOrders}`);
+                let url;
+                if(old) {
+                    url = `/crre/orderRegion/projects/old?${page}startDate=${startDate}&endDate=${endDate}&filterRejectedSentOrders=${filterRejectedSentOrders}`;
+                } else {
+                    url = `/crre/orderRegion/projects?${page}startDate=${startDate}&endDate=${endDate}&filterRejectedSentOrders=${filterRejectedSentOrders}`;
+                }
+                let { data } = await http.get(url);
                 return data;
             } catch (e) {
                 toasts.warning('crre.basket.sync.err');
@@ -137,6 +144,14 @@ export const orderRegionController = ng.controller('orderRegionController',
             Utils.safeApply($scope);
         };
 
+        $scope.changeOld = async (old: boolean) => {
+            $scope.isOld = old;
+            $scope.filter.page = 0;
+            $scope.projects = [];
+            await synchroRegionOrders(null, null, $scope.isOld);
+            Utils.safeApply($scope);
+        }
+
         $scope.filterAll = function (order) {
             let test = true;
             let i = 0
@@ -157,18 +172,18 @@ export const orderRegionController = ng.controller('orderRegionController',
             return test;
         }
 
-        $scope.onScroll = async (init?:boolean): Promise<void> => {
+        $scope.onScroll = async (init?:boolean, old = false): Promise<void> => {
             let data;
             if(init){
-                data = await $scope.filter_order(true);
+                data = await $scope.filter_order(true, old);
                 Utils.safeApply($scope);
             }else{
                 $scope.filter.page++;
-                data = await $scope.filter_order(false);
+                data = await $scope.filter_order(false, old);
                 Utils.safeApply($scope);
             }
             if(data.length > 0){
-                await synchroRegionOrders(true, data);
+                await synchroRegionOrders(true, data, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
@@ -238,12 +253,18 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         };
 
-        $scope.exportCSV = () => {
+        $scope.exportCSV = (old = false) => {
             let selectedOrders = extractSelectedOrders();
             let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
             let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
             let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
-            window.location = `/crre/region/orders/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
+            let url;
+            if(old) {
+                url = `/crre/region/orders/old/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
+            } else {
+                url = `/crre/region/orders/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
+            }
+            window.location = url;
             $scope.uncheckAll();
         }
 
@@ -340,10 +361,10 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         };
 
-        async function searchProjectAndOrders() {
-            const data = await $scope.filter_order(true);
+        async function searchProjectAndOrders(old = false) {
+            const data = await $scope.filter_order(true, old);
             if (data.length > 0) {
-                await synchroRegionOrders(true, data);
+                await synchroRegionOrders(true, data, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
@@ -352,25 +373,25 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.searchByName = async (name: string) => {
+        $scope.searchByName = async (name: string, old = false) => {
             $scope.query_name = name;
             if ($scope.filters.all.length == 0 && !name) {
                 $scope.filter.page = 0;
                 $scope.loading = true;
                 $scope.projects = [];
                 Utils.safeApply($scope);
-                await synchroRegionOrders();
+                await synchroRegionOrders(false, null, true);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
-                await searchProjectAndOrders();
+                await searchProjectAndOrders(old);
             }
         }
 
-        $scope.filterByDate = async () => {
+        $scope.filterByDate = async (old = false) => {
             if($scope.isDate) {
                 if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
-                    await $scope.searchByName($scope.query_name);
+                    await $scope.searchByName($scope.query_name, old);
                 } else {
                     toasts.warning('crre.date.err');
                 }
@@ -380,7 +401,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.filter_order = async (initProject?: boolean) => {
+        $scope.filter_order = async (initProject?: boolean, old = false) => {
             try {
                 let params = "";
                 const format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
@@ -401,10 +422,18 @@ export const orderRegionController = ng.controller('orderRegionController',
                 const page: string = `page=${$scope.filter.page}`;
                 params += page;
                 if (!format.test(word)) {
-                    if (!!word) {
-                        url = `/crre/ordersRegion/projects/search_filter?startDate=${startDate}&endDate=${endDate}&q=${word}&${params}`;
+                    if(old) {
+                        if (!!word) {
+                            url = `/crre/ordersRegion/projects/old/search_filter?startDate=${startDate}&endDate=${endDate}&q=${word}&${params}`;
+                        } else {
+                            url = `/crre/ordersRegion/projects/old/search_filter?startDate=${startDate}&endDate=${endDate}&${params}`;
+                        }
                     } else {
-                        url = `/crre/ordersRegion/projects/search_filter?startDate=${startDate}&endDate=${endDate}&${params}`;
+                        if (!!word) {
+                            url = `/crre/ordersRegion/projects/search_filter?startDate=${startDate}&endDate=${endDate}&q=${word}&${params}`;
+                        } else {
+                            url = `/crre/ordersRegion/projects/search_filter?startDate=${startDate}&endDate=${endDate}&${params}`;
+                        }
                     }
                 } else {
                     toasts.warning('crre.equipment.special');
@@ -420,7 +449,13 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.calculateTotalRegion = (orders: OrderRegion[], roundNumber: number) => {
             let totalPrice = 0;
             orders.forEach(order => {
-                totalPrice += order.price;
+                let price;
+                if(typeof order.price === 'string') {
+                    price = parseFloat(order.price);
+                } else {
+                    price = order.price
+                }
+                totalPrice += price;
             });
             return totalPrice.toFixed(roundNumber);
         };
@@ -435,10 +470,14 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         const currencyFormatter = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'});
 
-        const synchroRegionOrders = async (isSearching: boolean = false, projects?): Promise<void> => {
+        const synchroRegionOrders = async (isSearching: boolean = false, projects?, old = false): Promise<void> => {
             let projets;
             if (!isSearching) {
-                projets = await $scope.getProjects();
+                if(old) {
+                    projets = await $scope.getProjects(true);
+                } else {
+                    projets = await $scope.getProjects();
+                }
             } else if (projects) {
                 projets = projects;
             } else {
@@ -450,7 +489,13 @@ export const orderRegionController = ng.controller('orderRegionController',
             });
             params = params.slice(0, -1);
             const filterRejectedSentOrders = !isSearching && !$scope.selectedType.split('/').includes('historic');
-            let promesses = [http.get(`/crre/ordersRegion/orders?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}`)];
+            let url;
+            if(old) {
+                url = `/crre/ordersRegion/orders/old?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}`;
+            } else {
+                url = `/crre/ordersRegion/orders?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}`;
+            }
+            let promesses = [http.get(url)];
             if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
                 promesses.push($scope.structures.sync());
             }
@@ -461,14 +506,30 @@ export const orderRegionController = ng.controller('orderRegionController',
                     if (orders.length > 0) {
                         const idProject = orders[0].id_project;
                         orders = orders.filter($scope.filterAll);
-                        await getEquipments(orders).then(equipments => {
+                        if(!old) {
+                            await getEquipments(orders).then(equipments => {
+                                for (let order of orders) {
+                                    let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+                                    if(equipment.type === "articlenumerique") {
+                                        order.offers = Utils.computeOffer(order, equipment);
+                                    }
+                                }
+                            });
+                        } else {
                             for (let order of orders) {
-                                let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                                if(equipment.type === "articlenumerique") {
-                                    order.offers = Utils.computeOffer(order, equipment);
+                                if(order.offers != null) {
+                                    let offers = new Offers();
+                                    let offersJson = JSON.parse(order.offers);
+                                    for(let offerJson of offersJson) {
+                                        let offer = new Offer();
+                                        offer.name = offerJson.titre;
+                                        offer.value = offerJson.amount;
+                                        offers.all.push(offer);
+                                    }
+                                    order.offers = offers;
                                 }
                             }
-                        });
+                        }
                         projets.find(project => project.id == idProject).orders = orders;
                     }
                 }

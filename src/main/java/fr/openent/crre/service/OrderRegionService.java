@@ -48,4 +48,11 @@ public interface OrderRegionService {
 
     void filterES(HashMap<String, ArrayList<String>> params, String query, Handler<Either<String, JsonArray>> handlerJsonArray);
 
+    void insertOldOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
+
+    void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException;
+
+    void deleteOldOrderClient(JsonArray ordersClient, Handler<Either<String, JsonObject>> handlerJsonObject);
+
+    void deleteOldRegionClient(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handlerJsonObject);
 }

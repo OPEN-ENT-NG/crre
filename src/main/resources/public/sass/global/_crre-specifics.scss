@@ -1666,7 +1666,24 @@ body.crre {
     color: white;
   }
 
-  input[type="radio"]:checked + .labeltab {
+  .labeltabOrder {
+    display: inline-block;
+    height: 27px;
+    padding: 10px 10px;
+    background: #cecece;
+    box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.25);
+    width: 15.5%;
+    font-size: 18px;
+    color: white;
+  }
+
+  input[type="radio"]:checked + .labeltab,  {
+    background: rgb(251, 251, 251);
+    color: black;
+    font-size: 18px;
+  }
+
+  input[type="radio"]:checked + .labeltabOrder,  {
     background: rgb(251, 251, 251);
     color: black;
     font-size: 18px;

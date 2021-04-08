@@ -58,6 +58,39 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
+    public void listOrderOld(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId, String startDate,
+                          String endDate,  Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new JsonArray();
+        String query = "SELECT oe.equipment_key, oe.id as id, oe.equipment_image as image, oe.equipment_name as name, " +
+                "oe.equipment_price as price, oe.offers as offers, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
+                "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
+                "ore.status as region_status " +
+                "FROM "+ Crre.crreSchema + ".order_client_equipment_old oe " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
+                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND oe.id_structure = ? ";
+        values.add(startDate).add(endDate).add(idCampaign).add(idStructure);
+
+        if(user != null){
+            query += "AND user_id = ? ";
+            values.add(user.getUserId());
+        }
+        if(ordersId != null){
+            query += "AND oe.id_basket IN " + Sql.listPrepared(ordersId.toArray());
+            for (String id : ordersId) {
+                values.add(Integer.parseInt(id));
+            }
+        }
+        query +=" GROUP BY ( oe.id, campaign.priority_enabled, ore.status) " +
+                "ORDER BY CASE WHEN campaign.priority_enabled = false " +
+                "THEN oe.creation_date END ASC";
+
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+
+    }
+
+    @Override
     public  void listOrder(String status, Integer page, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
         String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups, " +
@@ -175,6 +208,23 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
         String query = "SELECT oe.amount, oe.creation_date, oe.status, oe.equipment_key, oe.comment, bo.name as basket_name " +
                 "FROM "+ Crre.crreSchema + ".order_client_equipment  oe " +
+                "LEFT JOIN "+ Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "WHERE oe.id IN ( ";
+
+        for (int id : idsOrders) {
+            query += "?,";
+            values.add(id);
+        }
+        query = query.substring(0, query.length() - 1) + ")";
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void listExportOld(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = "SELECT oe.*, bo.name as basket_name " +
+                "FROM "+ Crre.crreSchema + ".order_client_equipment_old  oe " +
                 "LEFT JOIN "+ Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "WHERE oe.id IN ( ";
 

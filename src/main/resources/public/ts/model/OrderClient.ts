@@ -171,7 +171,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 if(word) {
                     url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}&q=${word}${params}${pageParams}`;
                 } else {
-                    url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params.substring(1)}${pageParams}`;
+                    url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params}${pageParams}`;
                 }
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
@@ -210,10 +210,11 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string, ordersId?, page?:number):Promise<boolean> {
+    async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string, ordersId?, page?:number, old = false):Promise<boolean> {
         try {
             const startDate = moment(start).format('YYYY-MM-DD').toString();
             const endDate = moment(end).format('YYYY-MM-DD').toString();
+            let url;
             if (idCampaign && idStructure) {
                 let params = '';
                 if(ordersId) {
@@ -223,7 +224,12 @@ export class OrdersClient extends Selection<OrderClient> {
                     });
                     params = params.slice(0, -1);
                 }
-                const { data } = await http.get(  `/crre/orders/mine/${idCampaign}/${idStructure}${params}&startDate=${startDate}&endDate=${endDate}` );
+                if(old) {
+                    url = `/crre/orders/old/mine/${idCampaign}/${idStructure}${params}&startDate=${startDate}&endDate=${endDate}`;
+                } else {
+                    url = `/crre/orders/mine/${idCampaign}/${idStructure}${params}&startDate=${startDate}&endDate=${endDate}`;
+                }
+                const { data } = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 await this.getEquipments(newOrderClient).then(equipments => {
                     for (let order of newOrderClient) {

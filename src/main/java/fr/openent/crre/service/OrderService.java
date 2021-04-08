@@ -21,7 +21,22 @@ public interface OrderService {
     void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId,
                    String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
+    /**
+     * List of olders orders of a campaign and a structure in data base
+     * @param idCampaign campaign identifier
+     * @param idStructure structure identifier
+     * @param user user who is connected
+     * @param startDate
+     * @param endDate
+     * @param handler function handler returning data
+     */
+
+    void listOrderOld(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId,
+                   String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
+
     void listExport(List<Integer> idsOrders, Handler<Either<String, JsonArray>> catalog);
+
+    void listExportOld(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handler);
     /**
      * Get the list of all orders
      * @param status order status to retrieve
