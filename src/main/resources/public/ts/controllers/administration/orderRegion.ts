@@ -5,7 +5,7 @@ import {
     StructureGroups,
     Structures,
     Utils,
-    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront, Offers, Offer
+    Basket, Equipment, Filter, Filters, OrderClient, FilterFront, FiltersFront
 } from "../../model";
 import http from "axios";
 import {Mix} from "entcore-toolkit";
@@ -16,7 +16,8 @@ export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
 
         $scope.structure_groups = new StructureGroups();
-        $scope.structuresToDisplay = new Structures();
+        $scope.structures = new Structures();
+        $scope.structuresFilter = [];
         $scope.display = {
             lightbox: {
                 validOrder: false,
@@ -41,22 +42,24 @@ export const orderRegionController = ng.controller('orderRegionController',
                 states : [],
                 distributeurs : [],
                 editors : [],
-                schools : [],
+                schoolType : [],
                 campaigns : [],
                 docType : [],
                 reassort : [],
                 licence : [],
+                id_structure : [],
             }
             $scope.filterChoiceCorrelation = {
-                keys : ["docType","reassort","licence","campaigns", "schools", "editors", "distributeurs", "states"],
+                keys : ["docType","reassort","licence","campaigns", "schoolType", "editors", "distributeurs", "states", "id_structure"],
                 states : 'status',
                 distributeurs : 'distributeur',
                 editors : 'editeur',
-                schools : 'type',
+                schoolType : 'type',
                 campaigns : 'id_campaign',
                 docType : '_index',
                 reassort : 'reassort',
-                licence : 'licence'
+                licence : 'licence',
+                id_structure : "id_structure"
             }
             if(!$scope.selectedType.split('/').includes('historic')){
                 $scope.states = [{status: "WAITING"},{status: "IN PROGRESS"},{status: "VALID"},{status: "DONE"},{status: "REJECTED"}];
@@ -85,11 +88,12 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.reassorts = [{name: 'true'}, {name: 'false'}];
                 $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
 
-                $scope.schools = [{name: 'PU'},{name:'PR'}];
-                $scope.schools.forEach((item) => item.toString = () => $scope.translate(item.name));
+                $scope.schoolType = [{name: 'PU'},{name:'PR'}];
+                $scope.schoolType.forEach((item) => item.toString = () => $scope.translate(item.name));
 
                 await $scope.campaigns.sync();
                 $scope.campaigns.all.forEach((item) => item.toString = () => $scope.translate(item.name));
+
                 $scope.equipments.loading = true;
                 $scope.equipments.all = [];
                 Utils.safeApply($scope);
@@ -318,7 +322,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     let newFilter = new Filter();
                     newFilter.name = $scope.filterChoiceCorrelation[key];
                     let value = item.name;
-                    if(key === "campaigns"){
+                    if(key === "campaigns" || key === "id_structure"){
                         value = item.id;
                     } else if(key === "states"){
                         value = item.status;
@@ -447,8 +451,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             params = params.slice(0, -1);
             const filterRejectedSentOrders = !isSearching && !$scope.selectedType.split('/').includes('historic');
             let promesses = [http.get(`/crre/ordersRegion/orders?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}`)];
-            if ($scope.structuresToDisplay.all.length == 0 && $scope.isAdministrator()) {
-                promesses.push($scope.structuresToDisplay.sync());
+            if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
+                promesses.push($scope.structures.sync());
             }
             const responses = await Promise.all(promesses);
             if (responses[0]) {
@@ -469,6 +473,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     }
                 }
                 let projectWithOrders = [];
+                let structures = [];
                 for (const project of projets) {
                     if (project.orders && project.orders.length > 0) {
                         project.total = currencyFormatter.format($scope.calculateTotalRegion(project.orders, 2));
@@ -477,13 +482,23 @@ export const orderRegionController = ng.controller('orderRegionController',
                         project.creation_date = firstOrder.creation_date;
                         Utils.setStatus(project, firstOrder);
                         project.campaign_name = firstOrder.campaign_name;
-                        const structure = $scope.structuresToDisplay.all.find(structure => firstOrder.id_structure == structure.id);
+                        const structure = $scope.structures.all.find(structure => firstOrder.id_structure == structure.id);
                         if (structure) {
                             project.uai = structure.uai;
                             project.structure_name = structure.name;
+                            if(structures.indexOf(structure) === -1){
+                                structures.push(structure);
+                            }
                         }
                         projectWithOrders.push(project);
                     }
+                }
+                if($scope.structuresFilter.length === 0){
+                    $scope.structuresFilter = structures;
+                    $scope.structuresFilter.forEach((item) => {
+                        item.toString = () => item.name + " / " + item.uai;
+                        item.search = item.name + item.uai;
+                    });
                 }
                 if (!isSearching || projects) {
                     $scope.projects = $scope.projects.concat(projectWithOrders);

@@ -35,14 +35,14 @@
                        i18n-placeholder="search.filter.order"/>
             </div>
         </div>
-        <div class="cell eight-small twelve-mobile" style="min-width: 575px; margin-top: 7px;">
+        <div class="cell seven twelve-mobile" style="min-width: 1100px; margin-top: 7px;">
             <multi-combo title="[[lang.translate('docsType')]]"
                          combo-model="equipments.docsType"
                          search-on="name" order-by="name"
                          labels="comboLabels" filtered-model="filterChoice.docType"
                          selection-event="getFilter()"
                          deselection-event="getFilter()"
-                         class="inline-block horizontal-spacing">
+                         class="inline-block horizontal-spacing no-border">
             </multi-combo>
             <multi-combo title="[[lang.translate('crre.reassort')]]"
                          combo-model="reassorts"
@@ -50,7 +50,7 @@
                          labels="comboLabels" filtered-model="filterChoice.reassort"
                          selection-event="getFilter()"
                          deselection-event="getFilter()"
-                         class="inline-block horizontal-spacing">
+                         class="inline-block horizontal-spacing no-border">
             </multi-combo>
             <multi-combo title="[[lang.translate('crre.request.state')]]"
                          combo-model="states"
@@ -58,7 +58,16 @@
                          labels="comboLabels" filtered-model="filterChoice.states"
                          selection-event="getFilter()"
                          deselection-event="getFilter()"
-                         class="inline-block horizontal-spacing">
+                         class="inline-block horizontal-spacing no-border two">
+            </multi-combo>
+            <multi-combo title="[[lang.translate('crre.lycee')]]"
+                         combo-model="structuresFilter"
+                         search-on="search" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.id_structure"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         max-selected="10"
+                         class="inline-block horizontal-spacing no-border five">
             </multi-combo>
         </div>
         <div class="cell one margin-top-14 twelve-mobile" ng-click="openFiltersLightbox()">

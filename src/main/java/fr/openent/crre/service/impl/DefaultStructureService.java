@@ -13,6 +13,8 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.List;
+
 /**
  * Created by agnes.lapeyronnie on 09/01/2018.
  */
@@ -34,10 +36,19 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void getStructuresByType(String type, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL AND s.contract = {type} "+
-                "RETURN s.id as uai ";
-        neo4j.execute(query, new JsonObject().put("type", type), Neo4jResult.validResultHandler(handler));
+    public void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL ";
+        JsonObject values =  new JsonObject();
+        if(type != null){
+            query += "AND s.contract = {type} ";
+            values.put("type", type);
+        }
+        if(filterStructures != null && !filterStructures.isEmpty()){
+            query += "AND s.id IN {stuctureIds} ";
+            values.put("stuctureIds", new JsonArray(filterStructures));
+        }
+        query += "RETURN s.id as idStructure; ";
+        neo4j.execute(query, values, Neo4jResult.validResultHandler(handler));
     }
 
     @Override

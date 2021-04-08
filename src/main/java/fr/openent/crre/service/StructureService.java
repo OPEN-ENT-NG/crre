@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public interface StructureService {
 
     /**
@@ -13,7 +15,7 @@ public interface StructureService {
      */
     void getStructures(Handler<Either<String,JsonArray>> handler);
 
-    void getStructuresByType(String type, Handler<Either<String, JsonArray>> handler);
+    void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler);
 
     void getStructureByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler);
 

@@ -322,9 +322,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             for (int i = 0; i < filters.size(); i++) {
                 String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(i).fieldNames().toString().length() -1);
                 if(key.equals("id_structure")) {
-                    JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
-                    for (int j = 0; j < uai.size(); j++) {
-                        addValues(key, uai.getJsonObject(j).getString("uai"), hashMap);
+                    JsonArray idStructures = filters.getJsonObject(i).getJsonArray(key);
+                    for (int j = 0; j < idStructures.size(); j++) {
+                        addValues(key, idStructures.getJsonObject(j).getString("idStructure"), hashMap);
                     }
                 } else {
                     String value = filters.getJsonObject(i).getString(key);

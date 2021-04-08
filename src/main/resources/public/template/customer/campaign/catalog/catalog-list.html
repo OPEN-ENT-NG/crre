@@ -1,7 +1,7 @@
 <div ng-controller="catalogController" class="catalog" bottom-scroll="nbItemsDisplay = nbItemsDisplay + pageSize">
     <div class="cell twelve horizontal-spacing search-pagination vertical-spacing-twice">
         <a ng-show="display.equipment" class="zero block-mobile"
-            href="#/equipments/catalog">
+           href="#/equipments/catalog">
             <i class="angle-double-left horizontal-spacing"></i>
             <i18n>back.to.catalog</i18n>
         </a>
@@ -25,7 +25,7 @@
                      selection-event="getFilter()"
                      deselection-event="getFilter()"
                      max-selected="10"
-                     class="inline-block four-small horizontal-spacing"
+                     class="inline-block four-small horizontal-spacing no-border"
                      ng-repeat="key in correlationFilterES.keys">
         </multi-combo>
     </div>
@@ -56,8 +56,10 @@
                 <article class="domino"  ng-class="{ disabled: equipment.status !== 'DISPONIBLE' }">
                     <div class="top" ng-class="{ item: display.equipment }">
                         <div class="image-container">
-                            <img ng-src="[[equipment.urlcouverture]]" ng-show="equipment.urlcouverture!==null && equipment.urlcouverture!==undefined" alt=""/>
-                            <img skin-src="/img/illustrations/pages-default.png" ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined" alt=""/>
+                            <img ng-src="[[equipment.urlcouverture]]"
+                                 ng-show="equipment.urlcouverture!==null && equipment.urlcouverture!==undefined" alt=""/>
+                            <img skin-src="/img/illustrations/pages-default.png"
+                                 ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined" alt=""/>
                         </div>
                         <div>
                             <strong class="ellipsis" tooltip="[[equipment.titre]]">[[equipment.titre]]</strong>

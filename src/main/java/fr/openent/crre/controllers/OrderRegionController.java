@@ -193,73 +193,65 @@ public class OrderRegionController extends BaseController {
     }
 
     private void getOrders (String query, JsonArray filters, UserInfos user, Integer page, HttpServerRequest request) {
-        try {
-            // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
-            if (request.params().contains("q")) {
-                query = URLDecoder.decode(request.getParam("q"), "UTF-8");
-            }
-            HashMap<String, ArrayList<String>> params = new HashMap<String, ArrayList<String>>();
-            if (request.params().contains("editeur")) {
-                params.put("editeur", new ArrayList<>(request.params().getAll("editeur")));
-            }
-            if (request.params().contains("distributeur")) {
-                params.put("distributeur", new ArrayList<>(request.params().getAll("distributeur")));
-            }
-            if (request.params().contains("_index")) {
-                params.put("_index", new ArrayList<>(request.params().getAll("_index")));
-            }
+        HashMap<String, ArrayList<String>> params = new HashMap<>();
+        if (request.params().contains("editeur")) {
+            params.put("editeur", new ArrayList<>(request.params().getAll("editeur")));
+        }
+        if (request.params().contains("distributeur")) {
+            params.put("distributeur", new ArrayList<>(request.params().getAll("distributeur")));
+        }
+        if (request.params().contains("_index")) {
+            params.put("_index", new ArrayList<>(request.params().getAll("_index")));
+        }
 
-            String startDate = request.getParam("startDate");
-            String endDate = request.getParam("endDate");
-            int length = request.params().entries().size();
-            for (int i = 0; i < length; i++) {
-                if (!request.params().entries().get(i).getKey().equals("q") &&
-                        !request.params().entries().get(i).getKey().equals("startDate") &&
-                        !request.params().entries().get(i).getKey().equals("distributeur") &&
-                        !request.params().entries().get(i).getKey().equals("editeur") &&
-                        !request.params().entries().get(i).getKey().equals("_index") &&
-                        !request.params().entries().get(i).getKey().equals("type") &&
-                        !request.params().entries().get(i).getKey().equals("endDate") &&
-                        !request.params().entries().get(i).getKey().equals("page"))
-                    filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
-                            request.params().entries().get(i).getValue()));
-            }
-            String finalQuery = query;
-            if (params.size() > 0) {
-                Future<JsonArray> equipmentFilterFuture = Future.future();
-                Future<JsonArray> equipmentFilterAndQFuture = Future.future();
+        String startDate = request.getParam("startDate");
+        String endDate = request.getParam("endDate");
+        int length = request.params().entries().size();
+        for (int i = 0; i < length; i++) {
+            if (!request.params().entries().get(i).getKey().equals("q") &&
+                    !request.params().entries().get(i).getKey().equals("startDate") &&
+                    !request.params().entries().get(i).getKey().equals("distributeur") &&
+                    !request.params().entries().get(i).getKey().equals("editeur") &&
+                    !request.params().entries().get(i).getKey().equals("_index") &&
+                    !request.params().entries().get(i).getKey().equals("type") &&
+                    !request.params().entries().get(i).getKey().equals("endDate") &&
+                    !request.params().entries().get(i).getKey().equals("page") &&
+                    !request.params().entries().get(i).getKey().equals("id_structure") )
+                filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
+                        request.params().entries().get(i).getValue()));
+        }
+        if (params.size() > 0) {
+            Future<JsonArray> equipmentFilterFuture = Future.future();
+            Future<JsonArray> equipmentFilterAndQFuture = Future.future();
 
-                CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
-                    if (event.succeeded()) {
-                        JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
-                        JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
-                        JsonArray allEquipments = new JsonArray();
-                        allEquipments.add(equipmentsGrade);
-                        allEquipments.add(equipmentsGradeAndQ);
-                        if (request.params().contains("q")) {
-                            orderRegionService.filterSearch(user, allEquipments, finalQuery, startDate,
-                                    endDate, filters, page, arrayResponseHandler(request));
-                        } else {
-                            orderRegionService.filter_only(user, equipmentsGrade, startDate,
-                                    endDate, filters, page, arrayResponseHandler(request));
-                        }
-                    }
-                });
-                orderRegionService.filterES(params, null, handlerJsonArray(equipmentFilterFuture));
-                orderRegionService.filterES(params, query, handlerJsonArray(equipmentFilterAndQFuture));
-            } else {
-                orderRegionService.searchName(query, equipments -> {
-                    if (equipments.right().getValue().size() > 0) {
-                        orderRegionService.search(user, equipments.right().getValue(), finalQuery, startDate,
+            CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
+                if (event.succeeded()) {
+                    JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
+                    JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
+                    JsonArray allEquipments = new JsonArray();
+                    allEquipments.add(equipmentsGrade);
+                    allEquipments.add(equipmentsGradeAndQ);
+                    if (request.params().contains("q")) {
+                        orderRegionService.filterSearch(user, allEquipments, query, startDate,
                                 endDate, filters, page, arrayResponseHandler(request));
                     } else {
-                        orderRegionService.filterSearchWithoutEquip(user, finalQuery, startDate, endDate, filters, page,
-                                arrayResponseHandler(request));
+                        orderRegionService.filter_only(user, equipmentsGrade, startDate,
+                                endDate, filters, page, arrayResponseHandler(request));
                     }
-                });
-            }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+                }
+            });
+            orderRegionService.filterES(params, null, handlerJsonArray(equipmentFilterFuture));
+            orderRegionService.filterES(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+        } else {
+            orderRegionService.searchName(query, equipments -> {
+                if (equipments.right().getValue().size() > 0) {
+                    orderRegionService.search(user, equipments.right().getValue(), query, startDate,
+                            endDate, filters, page, arrayResponseHandler(request));
+                } else {
+                    orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, filters, page,
+                            arrayResponseHandler(request));
+                }
+            });
         }
     }
 
@@ -272,16 +264,25 @@ public class OrderRegionController extends BaseController {
             String query = "";
             JsonArray filters = new JsonArray();
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-            if (request.params().contains("type")) {
-                Future<JsonArray> listeUAIFuture = Future.future();
-                listeUAIFuture.setHandler(event -> {
-                    if(event.succeeded()) {
-                        JsonArray listeUAI = listeUAIFuture.result();
-                        filters.add(new JsonObject().put("id_structure", listeUAI));
-                        getOrders(query, filters, user, page, request);
+            if (request.params().contains("q")) {
+                try {
+                    query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(request.params().contains("type") || request.params().contains("id_structure")) {
+                String finalQuery = query;
+                structureService.getStructuresByTypeAndFilter(request.getParam("type"), request.params().getAll("id_structure"), event -> {
+                    if (event.isRight()) {
+                        JsonArray listeIdStructure = event.right().getValue();
+                        filters.add(new JsonObject().put("id_structure", listeIdStructure));
+                        getOrders(finalQuery, filters, user, page, request);
+                    } else {
+                        log.error(event.left().getValue());
+                        badRequest(request);
                     }
                 });
-                structureService.getStructuresByType(request.getParam("type"), handlerJsonArray(listeUAIFuture));
             } else {
                 getOrders(query, filters, user, page, request);
             }

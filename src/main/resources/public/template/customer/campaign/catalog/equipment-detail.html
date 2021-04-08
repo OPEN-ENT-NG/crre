@@ -115,8 +115,10 @@
         </div>
         <div class="thirteen-small cell twelve-mobile">
             <div class="two cell twelve-mobile margin-right-4">
-                <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]" ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
-                <img class="img-equipment" skin-src="/img/illustrations/pages-default.png" ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+                <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]"
+                     ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
+                <img class="img-equipment" skin-src="/img/illustrations/pages-default.png"
+                     ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
             </div>
             <div class="editor" ng-show="!!basket.equipment.editeur" >
                 <div ng-bind-html="basket.equipment.editeur"></div>
