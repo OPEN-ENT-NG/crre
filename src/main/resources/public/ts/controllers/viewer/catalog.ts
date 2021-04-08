@@ -1,5 +1,5 @@
 import {_, ng, template} from 'entcore';
-import {Basket, Campaign, Equipment, Filter, Filters, Offer, Offers, Utils} from '../../model';
+import {Basket, Campaign, Equipment, Filter, Filters, Utils} from '../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', '$routeParams', '$anchorScroll', '$location', ($scope, $routeParams, $anchorScroll, $location) => {

@@ -243,6 +243,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.fromCatalog=true
             $scope.display.equipment = false;
             $scope.equipments.loading = true;
+            $scope.equipments.all = [];
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
             Utils.safeApply($scope);
