@@ -23,7 +23,7 @@ CREATE TABLE crre."order-region-equipment-old"
     id_order_client_equipment bigint,
     reassort boolean NOT NULL DEFAULT false,
 
-    CONSTRAINT order_region_equipment_pkey PRIMARY KEY (id),
+    CONSTRAINT order_region_equipment_old_pkey PRIMARY KEY (id),
     CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
         REFERENCES crre.campaign (id) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -31,8 +31,8 @@ CREATE TABLE crre."order-region-equipment-old"
     CONSTRAINT fk_order_client_id FOREIGN KEY (id_order_client_equipment)
         REFERENCES crre.order_client_equipment_old (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
-    CONSTRAINT constraint_unique_id_order_client_equipment UNIQUE (id_order_client_equipment),
+        ON DELETE CASCADE,
+    CONSTRAINT constraint_unique_id_order_client_equipment_old UNIQUE (id_order_client_equipment),
     CONSTRAINT "Check_amount_positive" CHECK (amount::numeric >= 0::numeric) NOT VALID,
     CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
 );
