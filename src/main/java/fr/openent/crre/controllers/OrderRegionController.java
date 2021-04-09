@@ -557,15 +557,15 @@ public class OrderRegionController extends BaseController {
                             if (response.isRight()) {
                                 quoteService.insertQuote(user, nbEtab, base64File, response2 -> {
                                     if (response2.isRight()) {
-/*                                        JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-                                        attachment.add(new JsonObject().put("name", "orders.csv").put("content", base64File));
+                                        JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
+                                        attachment.add(new JsonObject().put("name", "orders.csv").put("content",base64File));
                                         String mail = this.mail.getString("address");
                                         emailSender.sendMail(request, mail, "Test",
                                                 "Bonjour", attachment, message -> {
                                                     if(!message.isRight()) {
                                                         log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                                     }
-                                                });*/
+                                                });
                                         renderJson(request, response2.right().getValue());
                                     }
                                 });
