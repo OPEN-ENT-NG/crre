@@ -478,7 +478,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(creation_date)
                         .add(order.getString("owner_id"))
                         .add(order.getString("status"))
-                        .add(order.getString("ean"))
+                        .add(order.getString("equipment_key"))
                         .add(order.getString("name"))
                         .add(order.getString("image"))
                         .add(order.getDouble("unitedPriceTTC"))

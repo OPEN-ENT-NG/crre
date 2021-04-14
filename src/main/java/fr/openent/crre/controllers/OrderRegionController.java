@@ -529,10 +529,12 @@ public class OrderRegionController extends BaseController {
                 JsonArray ordersClient = new JsonArray(), ordersRegion = new JsonArray();
                 for (int i = 0; i < orderRegion.size(); i++) {
                     order = orderRegion.getJsonObject(i);
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                    order.put("creation_date", creation_date);
+                    if(order.containsKey("owner_name")) {
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                        order.put("creation_date", creation_date);
+                    }
                     ordersRegion.add(order.getLong("id"));
                     ordersClient.add(order.getLong("id_order_client_equipment"));
 

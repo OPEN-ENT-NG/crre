@@ -225,6 +225,8 @@ public class OldOrderRegionController extends BaseController {
                     finalResult.add(orders);
                     for (Object order : orders) {
                         JsonObject orderJson = (JsonObject) order;
+                        double price = Double.parseDouble(orderJson.getString("price")) * orderJson.getInteger("amount");
+                        orderJson.put("price", price);
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
                         ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
