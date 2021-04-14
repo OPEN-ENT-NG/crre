@@ -24,7 +24,6 @@ export class Utils {
         }
     }
 
-
     static formatKeyToParameter (values: any[], key: string): string {
         let params: string = '';
         let array = []

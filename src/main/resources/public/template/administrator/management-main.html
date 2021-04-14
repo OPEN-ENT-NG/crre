@@ -20,8 +20,9 @@
             <opt ng-click="redirectTo('/order/historic')"><i18n>crre.orders.validate.historic</i18n></opt>
         </drop-down-menu>
     </header>
-    <header class="horizontal-spacing" ng-class="{ selected : selectedType.startsWith('/equipments/catalog') }" ng-click="redirectTo('/equipments/catalog')">
-            <i18n>crre.catalog</i18n>
+    <header class="horizontal-spacing" ng-class="{ selected : selectedType.startsWith('/equipments/catalog') }"
+            ng-click="redirectTo('/equipments/catalog')">
+        <i18n>crre.catalog</i18n>
     </header>
     <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/campaigns' || selectedType == '/structureGroups')}">
         <drop-down-menu title="[[lang.translate('crre.campaigns')]]">

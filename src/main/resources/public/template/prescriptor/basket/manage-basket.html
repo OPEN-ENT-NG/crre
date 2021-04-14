@@ -30,13 +30,13 @@
                     </div>
                     <div class="cell width-100-40">
                         <div class="row article-equipment">
-                            <div class="one cell basket-image zero-mobile" ng-click="openEquipment(basket.equipment)">
+                            <div class="one cell basket-image zero-mobile" ng-click="openEquipmentId(basket.equipment.id)">
                                 <img ng-src="[[basket.equipment.urlcouverture]]"
                                      ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined "/>
                                 <img skin-src="/img/illustrations/pages-default.png"
                                      ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
                             </div>
-                            <div class="cell eight" ng-click="openEquipment(basket.equipment)">
+                            <div class="cell eight" ng-click="openEquipmentId(basket.equipment.id)">
                                 <div class="eleven centered">
                                     <h3>[[basket.equipment.titre]]</h3>
                                     <div class="editor" ng-show="!!basket.equipment.editeur" >

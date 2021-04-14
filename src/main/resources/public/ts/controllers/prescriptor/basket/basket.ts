@@ -1,4 +1,4 @@
-import {_, idiom, idiom as lang, ng, template, toasts} from 'entcore';
+import {_, Behaviours, idiom, idiom as lang, model, ng, template, toasts} from 'entcore';
 import {Basket, Baskets, Utils} from '../../../model';
 
 export const basketController = ng.controller('basketController',
@@ -117,6 +117,10 @@ export const basketController = ng.controller('basketController',
                 $scope.baskets_test = baskets;
                 confirmBasketName();
             }
+        };
+
+        $scope.canUpdateReassort = () => {
+            return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.reassort);
         };
 
     }]);

@@ -4,9 +4,9 @@ import {
     Utils,
     Offers,
     Offer, StructureGroups, Structures, Filters, FiltersFront
-} from "../model";
+} from "../../model";
 import http from "axios";
-import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
+import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 
 declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',

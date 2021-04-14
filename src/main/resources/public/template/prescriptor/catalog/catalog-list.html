@@ -46,7 +46,7 @@
             <div class="item six-mobile"
                  ng-class="{disabled: equipment.status!== 'DISPONIBLE', 'list-item': display.equipment}"
                  ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay track by $index"
-                 ng-click="openEquipment(equipment)">
+                 ng-click="openEquipmentId(equipment.id)">
                 <article class="domino"  ng-class="{ disabled: equipment.status !== 'DISPONIBLE' }">
                     <span ng-show="equipment.status !== 'DISPONIBLE'" tooltip="[[equipment.commentaire]]">
                         <i18n>[[lang.translate(equipment.status)]]</i18n>
