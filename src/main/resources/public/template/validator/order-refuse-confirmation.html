@@ -1,28 +1,30 @@
-<h1><i18n>crre.order.refused</i18n></h1>
-<div>
-    Voulez-vous refuser les commandes suivantes :
-    <br>
-</div>
-<div class="flex-row">
-    <table class="ten-mobile twelve">
-        <thead>
-        <tr>
-            <td><div class="smallTabElem center"><i18n>Panier</i18n></div></td>
-            <td><div class="smallTabElem center"><i18n>Ressource</i18n></div></td>
-            <td><div class="smallTabElem center">Quantité</div></td>
-        </tr>
-        </thead>
-        <tbody ng-repeat="order in ordersClient.selected">
-        <tr>
-            <td><div class="smallTabElem center">[[order.basket_name]]</div></td>
-            <td><div class="smallTabElem center breakLines">[[order.name]]</div></td>
-            <td><div class="smallTabElem center">[[order.amount]]</div></td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-<div class="row">
-    <input type="submit" class="cancel right-magnet " ng-click="confirmRefuseOrder()" i18n-value="Valider"/>
-    <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelRefuseOrder()" i18n-value="cancel"/>
+<div ng-controller="orderRefuseController">
+    <h1><i18n>crre.order.refused</i18n></h1>
+    <div>
+        Voulez-vous refuser les commandes suivantes :
+        <br>
+    </div>
+    <div class="flex-row">
+        <table class="ten-mobile twelve">
+            <thead>
+            <tr>
+                <td><div class="smallTabElem center"><i18n>Panier</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>Ressource</i18n></div></td>
+                <td><div class="smallTabElem center">Quantité</div></td>
+            </tr>
+            </thead>
+            <tbody ng-repeat="order in ordersClient.selected">
+            <tr>
+                <td><div class="smallTabElem center">[[order.basket_name]]</div></td>
+                <td><div class="smallTabElem center breakLines">[[order.name]]</div></td>
+                <td><div class="smallTabElem center">[[order.amount]]</div></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <input type="submit" class="cancel right-magnet " ng-click="confirmRefuseOrder()" i18n-value="Valider"/>
+        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelRefuseOrder()" i18n-value="cancel"/>
+    </div>
 </div>
 

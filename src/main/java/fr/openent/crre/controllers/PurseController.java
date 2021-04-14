@@ -294,7 +294,7 @@ public class PurseController extends ControllerHelper {
     public void list(final HttpServerRequest request) {
         try {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-            purseService.getPursesStudentsAndLicences(page, event -> {
+            purseService.getPursesStudentsAndLicences(page, null, event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
                     JsonArray purses = event.right().getValue();
@@ -456,15 +456,31 @@ public class PurseController extends ControllerHelper {
         if (request.params().contains("q")) {
             query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
         }
-        String finalQuery = query;
-        purseService.getAll(event -> {
-            if (event.isRight()) {
-                JsonArray response = event.right().getValue();
-                JsonArray ids = new JsonArray();
-                for (int i = 0; i < response.size(); i++) {
-                    ids.add(response.getJsonObject(i).getString("id_structure"));
+        structureService.searchStructureByNameUai(query, structures -> {
+            if (structures.isRight()) {
+                JsonArray structuresJson = structures.right().getValue();
+                JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
+                for (int i = 0; i < structuresJson.size(); i++) {
+                    JsonObject structure = structuresJson.getJsonObject(i);
+                    ids.add(structure.getString("id"));
                 }
-                structureService.searchStructureByNameUai(finalQuery, ids, page, arrayResponseHandler(request));
+                if(ids.isEmpty()){
+                    Renders.renderJson(request, new JsonObject());
+                }else {
+                    purseService.getPursesStudentsAndLicences(page, ids, event -> {
+                        if (event.isRight()) {
+                            JsonArray purses = event.right().getValue();
+                            prepareDataPurses(purses, structures);
+                            Renders.renderJson(request, purses);
+                        } else {
+                            log.error(event.left().getValue());
+                            badRequest(request);
+                        }
+                    });
+                }
+            } else {
+                log.error(structures.left().getValue());
+                badRequest(request);
             }
         });
     }

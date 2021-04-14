@@ -1,4 +1,4 @@
-<div >
+<div>
     <h1>
         <i18n>crre.manage.structureGroups</i18n>
         <button class="right-magnet twelve-mobile" ng-click="openStructureGroupImporter()">
@@ -11,12 +11,12 @@
                 <i  class="add-group" ng-click="openStructureGroupForm()"></i>
             </article>
             <article ng-repeat="structureGroup in structureGroups.all">
-                    <h3>[[structureGroup.name]]</h3>
-                    <p> [[structureGroup.structures.length]] <i18n>structures</i18n> </p>
-                    <div workflow="crre.administrator" class="two-icons">
-                        <i class="edit" ng-click="openStructureGroupForm(structureGroup)"></i>
-                        <i class="delete" ng-click="openStructureGroupDeletion(structureGroup)"></i>
-                    </div>
+                <h3>[[structureGroup.name]]</h3>
+                <p> [[structureGroup.structures.length]] <i18n>structures</i18n> </p>
+                <div workflow="crre.administrator" class="two-icons">
+                    <i class="edit" ng-click="openStructureGroupForm(structureGroup)"></i>
+                    <i class="delete" ng-click="openStructureGroupDeletion(structureGroup)"></i>
+                </div>
             </article>
         </div>
     </div>

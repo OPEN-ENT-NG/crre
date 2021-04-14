@@ -1,0 +1,240 @@
+<div ng-controller="equipmentController" class="catalog">
+    <div class="twelve equipment-detail">
+    <div class="margin-top-20 margin-bottom-20">
+        <a ng-show="display.equipment" ng-href="[[goBackUrl]]">
+            <i class="back nav-arrow horizontal-spacing"></i>
+            <strong><i18n>back.to.catalog</i18n></strong>
+        </a>
+    </div>
+        <div class="warning center bold" ng-if="basket.equipment.structure_already_payed && !isAdministrator()">
+            <span><i18n>crre.structure.already.payed.ressource</i18n></span>
+        </div>
+        <div class="card row padding-20" ng-show="display.equipment">
+        <h1 class="eight cell">[[basket.equipment.titre]] </h1>
+        <div class="twelve-small padding-20 cell right-magnet twelve-mobile"
+             ng-if="!isAdministrator()" workflow="crre.prescriptor"
+             ng-style="{height: offers.all.length > 1 ? '480px' : '330px'}" >
+            <div ng-if="basket.equipment.type === 'articlenumerique'" id="box">
+                <input type="radio" id="item_1" name="box" checked />
+                <label for="item_1" class="labeltab">
+                    Licences élèves
+                    <div class="contentTab">
+                        <div class="boxF">
+                            <div></div>
+                            <div class="centerColumn">
+                                <span class="italic16">Quantité</span>
+                            </div>
+                            <div>
+                               <span class="bold15"><i18n>Licences élèves</i18n></span>
+                            </div>
+                            <div class="centerColumnInput">
+                                <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
+                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                                       class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
+                                       ng-change="computeOffer()" ng-model="basket.amount"/>
+                                <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
+                            </div>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0">
+                                <span class="grayUnderline"><i18n>crre.equipment.offer.free</i18n></span>
+                            </div>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0"></div>
+                            <div ng-if="offerTeacher.length > 0">
+                                <span class="gray12" ng-bind="offerTeacher[0].split(',', 1).toString()"></span>
+                            </div>
+                            <div ng-if="offerTeacher.length > 0"></div>
+                            <div ng-if="offerStudent.length > 0">
+                                <span class="gray12" ng-bind="offerStudent[0].split(',', 1).toString()"></span>
+                            </div>
+                            <div ng-if="offerStudent.length > 0"></div>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0">
+                                <span class="grayUnderlineBold" ng-click="scrollTo('offer')">Voir plus</span>
+                            </div>
+                            <div ng-if="offerTeacher.length + offerStudent.length > 0"></div>
+                        </div>
+                        <div class="boxF" ng-repeat="offer in offers.all">
+                            <div>
+                                <span class="bold15" ng-bind="lang.translate(offer.name)"></span>
+                            </div>
+                            <div class="centerColumn">
+                                <span class="bold15">[[offer.value]]</span>
+                            </div>
+                        </div>
+                        <div class="boxF">
+                            <div></div>
+                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                                <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
+                                       ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
+                            </div>
+                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                                <input type="button" ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
+                                       ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" />
+                            </div>
+                        </div>
+                        <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'" style="width: fit-content;">
+                            <div><strong>Statut : </strong> <span> [[lang.translate(basket.equipment.status)]] </span></div>
+                            <div ng-if="basket.equipment.commentaire">
+                                <strong>Commentaire : </strong> <span> [[basket.equipment.commentaire]] </span>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+                <input type="radio" id="item_2" name="box" />
+                <label for="item_2" class="labeltab">
+                    Licences élèves adoptant
+                    <div class="contentTab">
+                        <i18n>crre.to.see</i18n>
+                    </div>
+                </label>
+            </div>
+            <div ng-if="basket.equipment.type === 'articlepapier'" id="box2">
+                    <div class="contentTabPaper">
+                        <div class="boxF">
+                            <div>
+                                <span class="bold22"><i18n>Manuels élèves</i18n></span>
+                            </div>
+                            <div></div>
+                            <div></div>
+                            <div class="centerColumn">
+                                <span class="italic16">Quantité</span>
+                            </div>
+                            <div>
+                                <span class="bold15"><i18n>Quantité Manuels élèves</i18n></span>
+                            </div>
+                            <div class="centerColumnInput">
+                                <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
+                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                                       class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
+                                       ng-change="computeOffer()" ng-model="basket.amount"/>
+                                <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
+                            </div>
+                        </div>
+                        <div class="boxF">
+                            <div></div>
+                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                                <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
+                                       ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
+                            </div>
+                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                                <input type="button" ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
+                                       ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket" />
+                            </div>
+                        </div>
+                        <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'" style="width: fit-content;">
+                            <div><strong>Statut : </strong> <span> [[lang.translate(basket.equipment.status)]] </span></div>
+                            <div ng-if="basket.equipment.commentaire">
+                                <strong>Commentaire : </strong> <span> [[basket.equipment.commentaire]] </span>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="thirteen-small cell twelve-mobile">
+            <div class="two cell twelve-mobile margin-right-4">
+                <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]"
+                     ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
+                <img class="img-equipment" skin-src="/img/illustrations/pages-default.png"
+                     ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+            </div>
+            <div class="editor" ng-show="!!basket.equipment.editeur" >
+                <div ng-bind-html="basket.equipment.editeur"></div>
+            </div>
+            <div ng-show="!!basket.equipment.description" >
+                <p ng-bind-html="basket.equipment.description"></p>
+            </div>
+        </div>
+        <div class="twelve cell" id="offer">
+            <h2>
+                <i18n>crre.information</i18n>
+            </h2>
+            <table class="table twelve">
+                <tbody>
+                <tr ng-if="!!basket.equipment.editeur">
+                    <td class="one"><strong><i18n>crre.equipment.editor</i18n></strong></td>
+                    <td>[[basket.equipment.editeur]]</td>
+                </tr>
+                <tr ng-if="!!basket.equipment.auteur">
+                    <td class="one"><strong><i18n>crre.equipment.author</i18n></strong></td>
+                    <td>[[basket.equipment.auteur]]</td>
+                </tr>
+                <tr ng-if="!!basket.equipment.dateparution">
+                    <td class="one"><strong><i18n>crre.date</i18n></strong></td>
+                    <td>[[basket.equipment.dateparution]]</td>
+                </tr>
+                <tr ng-if="!!basket.equipment.discipline">
+                    <td class="one"><strong><i18n>crre.equipment.field</i18n></strong></td>
+                    <td>[[basket.equipment.discipline]]</td>
+                </tr>
+                <tr>
+                    <td class="one"><strong><i18n>crre.equipment.level</i18n></strong></td>
+                    <td ng-bind="formatGrade(basket.equipment.niveaux)"></td>
+                </tr>
+                <tr>
+                    <td class="one"><strong><i18n>crre.equipment.ean</i18n></strong></td>
+                    <td>[[basket.equipment.ean]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="twelve cell" ng-if="basket.equipment.offres">
+            <h2>
+                <i18n>crre.equipment.details</i18n>
+            </h2>
+            <table class="table twelve">
+                <tbody>
+                <tr ng-if="!!basket.equipment.offres[0]">
+                    <td class="one"><strong><i18n>crre.equipment.duration</i18n></strong></td>
+                    <td ng-bind="basket.equipment.offres[0].duree"></td>
+                </tr>
+                <tr ng-if="offerStudent.length > 0" ng-repeat="offer in offerStudent track by $index">
+                    <td class="one"><strong><i18n>crre.equipment.conditions</i18n></strong></td>
+                    <td>[[offer]]</td>
+                </tr>
+                <tr ng-if="offerTeacher.length > 0" ng-repeat="offer in offerTeacher track by $index">
+                    <td class="one"><strong><i18n>crre.equipment.conditions</i18n></strong></td>
+                    <td>[[offer]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="twelve cell" ng-if="basket.equipment.technos">
+            <h2>
+                <i18n>Détails Techniques</i18n>
+            </h2>
+            <table class="table six">
+                <tbody>
+                <tr ng-repeat="label in labels">
+                    <td class="bold-font-weight" ng-bind="lang.translate(label)"></td>
+                    <td class="center" ng-repeat="techno in basket.equipment.technos" ng-bind="lang.translate(techno[label])"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="twelve cell" ng-if="basket.equipment.tvas && basket.equipment.tvas.length > 0">
+            <h2>
+                <i18n>crre.tax</i18n>
+            </h2>
+            <table class="table twelve">
+                <thead>
+                <tr>
+                    <td><i18n>crre.tax</i18n></td>
+                    <td><i18n>crre.percentage</i18n></td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="tva in basket.equipment.tvas">
+                    <td class="one"><strong>[[tva.taux]]</strong></td>
+                    <td>[[tva.pourcent]]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+</div>
+    <lightbox show="display.lightbox.choosecampaign" on-close="cancelChooseCampaign()">
+        <container template="campaign.name"></container>
+    </lightbox>
+</div>

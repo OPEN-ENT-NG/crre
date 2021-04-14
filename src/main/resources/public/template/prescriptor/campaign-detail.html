@@ -1,0 +1,74 @@
+<div ng-controller="campaignMainController" >
+    <nav class="vertical twelve-mobile mobile-navigation" side-nav>
+        <ul>
+            <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
+            <li><a ng-click="openCatalog(campaign.id)"><i18n>crre.catalog</i18n></a></li>
+            <li>
+                <a ng-click="openOrder(campaign.id)">
+                    <i18n>crre.request.mine</i18n>
+                    <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
+                    </span>
+                </a>
+            </li>
+            <li>
+                <a ng-click="openBasket(campaign.id)">
+                    <i18n>crre.basket</i18n>
+                    <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
+                        [[campaign.nb_panier]]
+                    </span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="twelve tabs vertical-spacing heading-tabs zero-mobile" >
+        <header class="horizontal-spacing"  ng-click="backHome()">
+            <i class="home"></i>
+        </header>
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog(campaign.id)"  >
+            <i18n>crre.catalog</i18n>
+        </header>
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order') &&
+        selectedType.split('/').includes('campaign')}"
+                ng-click="openOrder(campaign.id)" workflow="crre.prescriptor" >
+            <span><i18n>crre.request.mine</i18n></span>
+            <span class="notification-bull right-magnet" ng-if="campaign.order_notification && campaign.order_notification > 0">
+                [[campaign.order_notification]]
+            </span>
+        </header>
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}"
+                 ng-click="openBasket(campaign.id)" workflow="crre.prescriptor">
+            <i18n>crre.basket</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
+                [[campaign.nb_panier]]
+            </span>
+        </header>
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('waiting')}"
+                 ng-click="openWaitingOrder(campaign.id)"
+                 workflow="crre.validator">
+            <i18n>crre.request.validate</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.nb_order_waiting > 0">
+                [[campaign.nb_order_waiting]]
+            </span>
+        </header>
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('historic')}"
+                 ng-click="openHistoric(campaign.id)"
+                 workflow="crre.validator">
+            <i18n>crre.structure.history</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.historic_etab_notification && campaign.historic_etab_notification > 0">
+                [[campaign.historic_etab_notification]]
+            </span>
+        </header>
+        <!--        <div class="purse-in-menue" ng-if="campaign.purse_enabled">
+                    <h4><i18n>purse</i18n> :</h4>&nbsp;
+                    <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
+                </div>-->
+    </div>
+    <div class="twelve-mobile tabs vertical-spacing heading-tabs mobile-navigation" >
+        <div class="purse-in-menue" ng-if="campaign.purse_enabled">
+            <h4><i18n>purse</i18n> :</h4>&nbsp;
+            <h2><span ng-bind="campaign.purse_amount ? campaign.purse_amount : 0 | currency"></span></h2>
+        </div>
+    </div>
+    <container template="campaign-main"></container>
+    <container ng-show="!loadingArray" template="administrator-main"></container>
+</div>

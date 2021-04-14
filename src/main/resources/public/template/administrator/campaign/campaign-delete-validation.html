@@ -1,4 +1,4 @@
-<form ng-submit="deleteCampaigns(campaigns.selected)" >
+<form ng-submit="deleteCampaigns(campaigns.selected)" ng-controller="campaignDeletionController">
     <h4><i18n>crre.campaign.delete</i18n></h4>
     <ul>
         <li ng-repeat="campaign in campaigns.selected">[[campaign.name]]</li>

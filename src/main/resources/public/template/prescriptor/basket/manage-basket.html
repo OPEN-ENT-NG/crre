@@ -1,0 +1,134 @@
+<div  ng-controller="basketController">
+    <div ng-show="baskets.all.length > 0">
+        <div class="right-magnet twelve-mobile" style="margin-top: -20px; margin-bottom: -10px;">
+            <h3 class="cell horizontal-margin horizontal-spacing ng-binding no-margin-bottom">
+                <span class="black-color">Total en € : </span>
+                <span ng-bind="calculatePriceOfEquipments(baskets,2) | currency"></span>
+            </h3>
+            <br/>
+            <h3 class="cell horizontal-margin horizontal-spacing ng-binding margin-bottom-10 no-margin-top">
+                <span class="black-color">Total en licences : </span>
+                <span ng-bind="calculateQuantity(baskets,false)"></span>
+            </h3>
+            <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.order"
+                   ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
+                   ng-if="campaign.purse_enabled" style="top:-20px;"/>
+        </div>
+        <div class="basket-list">
+            <div ng-repeat="basket in baskets.all track by $index" class="row">
+                <h1 ng-class="{disabled: equipment.status !== 'DISPONIBLE'} " ng-show="basket.equipment.status !== 'DISPONIBLE'">
+                    <i18n ng-show="basket.equipment.status === 'EPUISE'">crre.OUT_OF_STOCK</i18n>
+                </h1>
+                <article class="basket-item twelve cell"
+                         ng-class="{ openedOptions: display.equipmentOption[$index], disabled: false }">
+                    <div class="cell width-40">
+                        <label class="checkbox">
+                            <input type="checkbox" ng-model="basket.selected"
+                                   ng-checked="basket.selected"/>
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="cell width-100-40">
+                        <div class="row article-equipment">
+                            <div class="one cell basket-image zero-mobile" ng-click="openEquipment(basket.equipment)">
+                                <img ng-src="[[basket.equipment.urlcouverture]]"
+                                     ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined "/>
+                                <img skin-src="/img/illustrations/pages-default.png"
+                                     ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+                            </div>
+                            <div class="cell eight" ng-click="openEquipment(basket.equipment)">
+                                <div class="eleven centered">
+                                    <h3>[[basket.equipment.titre]]</h3>
+                                    <div class="editor" ng-show="!!basket.equipment.editeur" >
+                                        <div ng-bind-html="basket.equipment.editeur"></div>
+                                    </div>
+                                    <p class="ean" ng-if="basket.equipment.ean"><i></i> <b> EAN :  </b> &nbsp; [[basket.equipment.ean]] </p>
+                                    <h5>Plus d'infos sur la ressource</h5>
+                                    <div ng-repeat="offer in basket.offers.all" ng-if="basket.offers.all.length > 0" ng-repeat-end>
+                                        <span class="arrowOffer no-margin" > [[offer.value]] [[offer.name]] [[lang.translate('crre.FREE')]]</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="three cell text-right">
+                                <div class="vertical-spacing-twice price-field">
+                                    <h1 class="right-text">
+                                        <span ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></span>
+                                    </h1>
+                                    <h4 class="cell"><i18n>etablissement.price</i18n></h4>
+                                    <h3 class="right-text">[[priceDisplay(basket) | currency]]<i18n>per.student.per.year</i18n></h3>
+                                    <div class="quantity">
+                                        <h4 class="cell"><i18n>crre.quantity</i18n></h4>
+                                        <div class="right-text">
+                                            <i class="moins" ng-click="basket.amountDecrease()"></i>
+                                            <input type="number"
+                                                   step="1"
+                                                   min="0"
+                                                   ng-keypress="avoidDecimals($event)"
+                                                   ng-change="basket.updateAmount()"
+                                                   class="numberWithoutArrow two"
+                                                   ng-model="basket.amount"/>
+                                            <i class="plus" ng-click="basket.amountIncrease()"></i>
+                                        </div>
+                                    </div>
+                                    <div class="right-text vertical-spacing">
+                                        <label class="checkbox">
+                                            <input type="checkbox" ng-model="basket.reassort"
+                                                   ng-checked="basket.reassort" ng-change="basket.updateReassort()"
+                                                   ng-disabled="!canUpdateReassort()"/>
+                                            <span><i18n>&nbsp;&nbsp;&nbsp;crre.reassort</i18n></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="twelve cell commentDelete">
+                            <div class="row" ng-init="basket.commentOnEdition = false;">
+                                <span ng-if="(basket.comment === null || basket.comment.trim() === '') && !basket.commentOnEdition"
+                                        style="font-style: italic">
+                                    <i18n>crre.basket.no-comment</i18n>
+                                </span>
+                                <span ng-if="basket.comment !== null && !basket.commentOnEdition"
+                                   ng-click="basket.commentOnEdition = true" tooltip="Modifier le commentaire">
+                                    [[basket.comment]]
+                                </span>
+                                <textarea style="resize: none;" ng-model="basket.comment"
+                                          auto-height
+                                          ng-if="basket.commentOnEdition"
+                                          ng-blur="basket.commentOnEdition = false; updateBasketComment(basket)"></textarea>
+                            </div>
+                            <div class="row addComment">
+                                <span ng-if="basket.comment === null || basket.comment===''"
+                                        ng-click="basket.commentOnEdition = true">
+                                    <i18n>crre.basket.add-comment</i18n>
+                                </span>
+                                <span ng-if="basket.comment && basket.comment!=='' && !basket.commentOnEdition"
+                                        ng-click="basket.commentOnEdition = true">
+                                    <i18n>crre.update.comment</i18n>
+                                </span>
+                                <div class="cell right-magnet">
+                                    <input type="button" ng-click="deleteBasket(basket)"
+                                           class="right-magnet cancel" i18n-value="delete"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+    <div ng-show="baskets.all.length === 0" class="centered">
+        <div class="twelve cell centered-text" >
+            <h3>
+                <i18n>crre.info.empty.basket.1</i18n>
+                <span class="bold-font-weight secondary-color"><i18n>crre.info.empty.2</i18n></span>
+            </h3>
+        </div>
+        <br/>
+        <div class="twelve cell centered-text vertical-spacing">
+            <img class="four" src="/crre/public/img/PagePanierVide.svg" />
+        </div>
+    </div>
+    <lightbox show="display.lightbox.confirmbasketName" on-close="cancelConfirmBasketName()">
+        <container template="basket.name"></container>
+    </lightbox>
+</div>

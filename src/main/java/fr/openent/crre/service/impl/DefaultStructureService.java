@@ -76,18 +76,14 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void searchStructureByNameUai(String q, JsonArray ids, Integer page, Handler<Either<String, JsonArray>> handler) {
+    public void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler) {
             q = ".*" + q + ".*";
-            String query = "MATCH (s:Structure) WHERE s.id IN {ids} AND (toLower(s.name) =~ {word} OR toLower(s.UAI) =~ {word}) return s.id as id, s.UAI as uai," +
+            String query = "MATCH (s:Structure) WHERE (toLower(s.name) =~ {word} OR toLower(s.UAI) =~ {word}) return s.id as id, s.UAI as uai," +
                     " s.name as name, s.phone as phone, s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
-                    "s.zipCode  as zipCode, s.city as city, s.type as type " +
-                    "SKIP {skip} LIMIT {limit}";
+                    "s.zipCode  as zipCode, s.city as city, s.type as type;";
 
             Neo4j.getInstance().execute(query,
-                    new JsonObject().put("ids", ids)
-                                    .put("word", q)
-                                    .put("skip", PAGE_SIZE * page)
-                                    .put("limit", PAGE_SIZE),
+                    new JsonObject().put("word", q),
                     Neo4jResult.validResultHandler(handler));
     }
 

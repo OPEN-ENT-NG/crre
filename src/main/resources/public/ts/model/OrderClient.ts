@@ -168,7 +168,7 @@ export class OrdersClient extends Selection<OrderClient> {
             const startDate = moment(start).format('YYYY-MM-DD').toString();
             const endDate = moment(end).format('YYYY-MM-DD').toString();
             if(!format.test(word)) {
-                if(word) {
+                if(!!word) {
                     url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}&q=${word}${params}${pageParams}`;
                 } else {
                     url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params}${pageParams}`;
@@ -210,7 +210,8 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number, idStructure?: string, ordersId?, page?:number, old = false):Promise<boolean> {
+    async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number,
+                idStructure?: string, ordersId?, page?:number, old = false):Promise<boolean> {
         try {
             const startDate = moment(start).format('YYYY-MM-DD').toString();
             const endDate = moment(end).format('YYYY-MM-DD').toString();

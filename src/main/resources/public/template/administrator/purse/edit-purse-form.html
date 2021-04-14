@@ -1,51 +1,53 @@
-<h1><i18n>crre.purse.modify</i18n></h1>
-<h2 class="bold-font-weight black-color" ng-bind="purse.name"></h2>
-<form ng-submit="validPurse(purse)">
-    <div ng-if="purses.selected[0].licence_initial_amount">
-        <h2 class="bold-font-weight black-color"><i18n>crre.purse.licence</i18n></h2>
-        <div class="quantity">
-            <label><i18n>crre.initial.licences.number</i18n> : </label>
-            <i class="moins"
-               ng-click="purse.licence_initial_amount = purse.licence_initial_amount - 1;"></i>
-            <input class="three numberWithoutArrow" type="number" ng-model="purse.licence_initial_amount"
-                   min="[[purse.second + purse.premiere + purse.terminale]]"/>
-            <i class="plus"
-               ng-click="purse.licence_initial_amount = purse.licence_initial_amount + 1;"></i>
+<div ng-controller="purseEditFormController">
+    <h1><i18n>crre.purse.modify</i18n></h1>
+    <h2 class="bold-font-weight black-color" ng-bind="purse.name"></h2>
+    <form ng-submit="validPurse(purse)">
+        <div ng-if="purses.selected[0].licence_initial_amount">
+            <h2 class="bold-font-weight black-color"><i18n>crre.purse.licence</i18n></h2>
+            <div class="quantity">
+                <label><i18n>crre.initial.licences.number</i18n> : </label>
+                <i class="moins"
+                   ng-click="purse.licence_initial_amount = purse.licence_initial_amount - 1;"></i>
+                <input class="three numberWithoutArrow" type="number" ng-model="purse.licence_initial_amount"
+                       min="[[purse.second + purse.premiere + purse.terminale]]"/>
+                <i class="plus"
+                   ng-click="purse.licence_initial_amount = purse.licence_initial_amount + 1;"></i>
+            </div>
+            <div class="warning" ng-if="purse.second + purse.premiere + purse.terminale > purse.licence_initial_amount || !purse.licence_initial_amount">
+                <i18n>crre.first.part.warning.purse</i18n>
+                <br/>
+                <br/>
+                <div class="center">2nde : [[purse.seconde]]   /   1ère : [[purse.premiere]]   /   Tale : [[purse.terminale]]</div>
+                <br/>
+                <br/>
+                <i18n>crre.second.part.warning.purse</i18n>
+            </div>
+            <div class="vertical-spacing">
+                <label><i18n>crre.licences.rest</i18n> : </label>
+                <span ng-bind="purse.licence_amount + (purse.licence_initial_amount - purses.selected[0].licence_initial_amount)"></span>
+            </div>
         </div>
-        <div class="warning" ng-if="purse.second + purse.premiere + purse.terminale > purse.licence_initial_amount || !purse.licence_initial_amount">
-            <i18n>crre.first.part.warning.purse</i18n>
-            <br/>
-            <br/>
-            <div class="center">2nde : [[purse.seconde]]   /   1ère : [[purse.premiere]]   /   Tale : [[purse.terminale]]</div>
-            <br/>
-            <br/>
-            <i18n>crre.second.part.warning.purse</i18n>
+        <div ng-if="purses.selected[0].initial_amount">
+            <h2 class="bold-font-weight black-color"><i18n>crre.purse.money</i18n></h2>
+            <div class="quantity">
+                <label><i18n>purse</i18n> : </label>
+                <i class="moins" ng-click="purse.initial_amount = purse.initial_amount - 1;"></i>
+                <input class="five numberWithoutArrow" type="number" ng-model="purse.initial_amount"
+                       min="[[purses.selected[0].initial_amount - purses.selected[0].amount]]" step="any"/>
+                <i class="plus" ng-click="purse.initial_amount = purse.initial_amount + 1;"></i>
+            </div>
+            <div class="vertical-spacing">
+                <label><i18n>crre.rest</i18n> : </label>
+                <span ng-bind="purse.amount + (purse.initial_amount - purses.selected[0].initial_amount) | currency"></span>
+            </div>
         </div>
-        <div class="vertical-spacing">
-            <label><i18n>crre.licences.rest</i18n> : </label>
-            <span ng-bind="purse.licence_amount + (purse.licence_initial_amount - purses.selected[0].licence_initial_amount)"></span>
+        <div ng-show = "isNegativePurse" class="warning" >
+            <label><i18n>crre.error.purse.negative</i18n></label>
         </div>
-    </div>
-    <div ng-if="purses.selected[0].initial_amount">
-        <h2 class="bold-font-weight black-color"><i18n>crre.purse.money</i18n></h2>
-        <div class="quantity">
-            <label><i18n>purse</i18n> : </label>
-            <i class="moins" ng-click="purse.initial_amount = purse.initial_amount - 1;"></i>
-            <input class="five numberWithoutArrow" type="number" ng-model="purse.initial_amount"
-                   min="[[purses.selected[0].initial_amount - purses.selected[0].amount]]" step="any"/>
-            <i class="plus" ng-click="purse.initial_amount = purse.initial_amount + 1;"></i>
+        <div class="row vertical-spacing">
+            <input type="submit" class="button right-magnet" i18n-value="Validate"
+                   ng-disabled="checkPurse()"/>
+            <input type="button" class="cancel margin-right-10 right-magnet" ng-click="cancelPurseForm()" i18n-value="cancel"/>
         </div>
-        <div class="vertical-spacing">
-            <label><i18n>crre.rest</i18n> : </label>
-            <span ng-bind="purse.amount + (purse.initial_amount - purses.selected[0].initial_amount) | currency"></span>
-        </div>
-    </div>
-    <div ng-show = "isNegativePurse" class="warning" >
-        <label><i18n>crre.error.purse.negative</i18n></label>
-    </div>
-    <div class="row vertical-spacing">
-        <input type="submit" class="button right-magnet" i18n-value="Validate"
-               ng-disabled="checkPurse()"/>
-        <input type="button" class="cancel margin-right-10 right-magnet" ng-click="cancelPurseForm()" i18n-value="cancel"/>
-    </div>
-</form>
+    </form>
+</div>

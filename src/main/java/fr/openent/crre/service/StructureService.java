@@ -21,7 +21,7 @@ public interface StructureService {
 
     void getStructureById(JsonArray ids, Handler<Either<String, JsonArray>> handler);
 
-    void searchStructureByNameUai(String q, JsonArray ids, Integer page, Handler<Either<String, JsonArray>> handler);
+    void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler);
 
     void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler);
 

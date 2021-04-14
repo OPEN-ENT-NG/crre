@@ -1,4 +1,4 @@
-<div ng-controller="orderController" class="crre-table">
+<div ng-controller="waitingValidatorOrderController" class="crre-table">
     <div class="row margin-top-20">
         <div class="min-width-date-picker margin-top-8 twelve-mobile">
             <i18n>from</i18n>
@@ -192,10 +192,6 @@
             </div>-->
         </div>
     </div>
-    <lightbox on-close="closedLighbtox();"
-              show="display.lightbox.validOrder">
-        <container template="validOrder.lightbox"></container>hi
-    </lightbox>
     <lightbox on-close="closedLighbtox();"
               show="display.lightbox.refuseOrder">
         <container template="refuseOrder.lightbox"></container>

@@ -70,7 +70,7 @@ public class DefaultPurseService implements PurseService {
     }
 
     @Override
-    public void getPursesStudentsAndLicences(Integer page, Handler<Either<String, JsonArray>> handler) {
+    public void getPursesStudentsAndLicences(Integer page, JsonArray idStructures, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
                 "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount " +
                 "FROM " + Crre.crreSchema + ".purse " +
@@ -79,8 +79,15 @@ public class DefaultPurseService implements PurseService {
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
+        if(idStructures != null && !idStructures.isEmpty()){
+            query += "WHERE purse.id_structure IN " + Sql.listPrepared(idStructures);
+            for (int i = 0; i < idStructures.size(); i++) {
+                params.add(idStructures.getString(i));
+            }
+        }
+
         if (page != null) {
-            query+= "OFFSET ? LIMIT ? ";
+            query+= " OFFSET ? LIMIT ? ";
             Integer PAGE_SIZE = 15;
             params.add(PAGE_SIZE * page);
             params.add(PAGE_SIZE);

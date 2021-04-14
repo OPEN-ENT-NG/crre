@@ -1,0 +1,117 @@
+<div style="margin-bottom: -0.5%; margin-top: 1%">
+    <input type="radio" id="item_1" name="box" checked="">
+    <label for="item_1" ng-click="changeOld(false)" class="labeltabOrder">Demandes en cours de traitement</label>
+    <input type="radio" id="item_2" name="box">
+    <label for="item_2" ng-click="changeOld(true)" class="labeltabOrder">Demandes envoyées
+    </label>
+</div>
+<div class="flex-row">
+    <table class="twelve-mobile twelve">
+        <thead>
+        <tr>
+            <td class="table-selector main-selector">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-change="switchAllOrders(allOrdersListSelected)"
+                           ng-model="allOrdersListSelected"/>
+                    <span></span>
+                </label>
+            </td>
+            <td><div class="smallTabElem center"><i18n>crre.date</i18n></div></td>
+            <td><div class="tabElem"><i18n>crre.basket</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>Total</i18n> <i18n>crre.Licences</i18n></div></td>
+            <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>crre.reassort</i18n></div></td>
+            <td><div class="smallTabElem center"><i18n>crre.operation.status</i18n></div></td>
+        </tr>
+        </thead>
+        <tbody ng-repeat="basket in displayedBasketsOrders | orderBy:sort.order.type:sort.order.reverse">
+        <tr ng-click="basket.expanded=!basket.expanded" class="line">
+            <td class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket)"/>
+                    <span></span>
+                </label>
+            </td>
+            <td><div class="smallTabElem center">[[basket.created]]</div></td>
+            <td><div class="tabElem order">[[basket.name]]</div></td>
+            <td><div class="smallTabElem center">[[basket.amount]]</div></td>
+            <td><div class="smallTabElem center">[[basket.amount]]</div></td>
+            <td><div class="tabElem"></div></td>
+            <td><div class="tabElem"></div></td>
+            <td>
+                <div class="smallTabElem center ellipsis status" tooltip="[[basket.status]]">
+                    <div class="[[basket.status]] status-circle  cell row myOrder"></div>
+                    <span ng-bind="lang.translate(basket.status)" class="webkit-vertical-align zero-mobile"></span>
+                </div>
+            </td>
+        </tr>
+        <tr ng-repeat-start="order in basket.orders | orderBy:sort.order.type:sort.order.reverse"
+            ng-if="basket.expanded" class="subline">
+            <td class="table-selector">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(basket, order.selected)"/>
+                    <span></span>
+                </label>
+            </td>
+            <td><div class="smallTabElem"></div></td>
+            <td>
+                <div class="tabElem order" ng-click="openEquipmentId(order.equipment_key)">
+                    <img src="[[order.image]]"/>
+                    <div class="breakLines descriptionTruncate" style="-webkit-box-orient: vertical;">[[order.name]]</div>
+                </div>
+            </td>
+            <td>
+                <div class="smallTabElem center centerInputAmount">
+                    <i class="moins" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
+                    <input type="number" class="quantity-input numberWithoutArrow" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                           ng-disabled="order.status === 'IN PROGRESS'" ng-change="updateAmount(basket, order, order.amount)"
+                           ng-model="order.amount"/>
+                    <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS'" ng-click="updateAmount(basket, order, order.amount + 1)"></i>
+                </div>
+            </td>
+            <td>
+                <div class="smallTabElem center">
+                    <span ng-bind="order.price*order.amount | currency"></span>
+                </div>
+            </td>
+            <td>
+                <div ng-init="show.comment = false"
+                     class="tabElem"
+                     ng-class="{ellipsis:!show.comment}"
+                     ng-click="show.comment.fullDisplay = !show.comment.fullDisplay"> [[order.comment || '-']]</div>
+            </td>
+            <td>
+                <div class="smallTabElem center">
+                    <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"
+                       ng-click="order.status !== 'IN PROGRESS' && updateReassort(order)"></i>
+                    <i class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort"
+                       ng-click="order.status !== 'IN PROGRESS' && updateReassort(order)"></i>
+                </div>
+            </td>
+            <td>
+                <div class="justification-rejected cell"
+                     tooltip="[[order.cause_status]]"
+                     ng-if="order.cause_status">
+                    <i class="comment-icon"></i>
+                </div>
+                <div class="smallTabElem center ellipsis status" ng-if="order.displayStatus" tooltip="[[order.status]]" >
+                    <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile" ng-if="!order.cause_status"></div>
+                    <span ng-bind="lang.translate(order.status)" class="webkit-vertical-align zero-mobile"></span>
+                </div>
+            </td>
+        </tr>
+        <tr ng-if="basket.expanded && order.offers.all.length > 0" class="subline" ng-repeat="offer in order.offers.all" ng-repeat-end>
+            <td></td>
+            <td></td>
+            <td><span class="arrowOffer">[[offer.name]]</span></td>
+            <td class="center">[[offer.value]]</td>
+            <td class="center">[[lang.translate('crre.FREE')]]</td>
+            <td><div class="smallTabElem center"></div></td>
+            <td></td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+</div>

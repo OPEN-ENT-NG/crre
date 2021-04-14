@@ -1,56 +1,58 @@
-<div workflow="crre.administrator">
-    <input type="button" ng-click="openCampaignForm()" class="right-magnet twelve-mobile"
-           i18n-value="crre.campaigns.add"/>
-</div>
-<div class="twelve cell manage-campaign campaign-list"  workflow="crre.administrator">
-    <article class="twelve cell " ng-repeat="campaign in campaigns.all track by $index ">
-        <div class="row">
-            <div class="twelve cell" workflow="crre.administrator">
-                <label class="checkbox">
-                    <input type="checkbox" ng-model="campaign.selected"/>
-                    <span></span>
-                </label>
-            </div>
-            <div class="three cell twelve-mobile">
-                <h3>[[campaign.name]]</h3>
-                <p ng-bind-html="campaign.description"></p>
-                <div class="small-text" ng-if="campaign.purse_enabled">
-                    <i18n>crre.campaign.amount</i18n>
-                    : <span ng-bind="campaign.purse_amount | currency"></span></div>
-                <div class="small-text">[[campaign.nb_structures]] <i18n>structures</i18n></div>
-            </div>
-            <div class="twelve-mobile row-mobile cell">
-                <ul class="colored status-bar cell row">
-                    <li tooltip="[[lang.translate('crre.order.waiting')]]" style="background-color: #f71e35;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_waiting]]</span></li>
-                    <li tooltip="[[lang.translate('crre.order.valid')]]" style="background-color: #e39d00;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_valid]]</span></li>
-                    <li tooltip="[[lang.translate('crre.order.sent')]]" style="background-color: #1794a5;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_sent]]</span></li>
-                </ul>
-            </div>
-
-        </div>
-        <div class="row" workflow="crre.administrator">
-            <div class="right-magnet">
-                <span class="horizontal-spacing cell"><i18n>crre.campaign.accessibility</i18n></span>
-                <switch-toggle ng-model="campaign.accessible" ng-change="campaign.updateAccessibility()"
-                               class="cell"></switch-toggle>
-            </div>
-        </div>
-    </article>
-</div>
-
-<lightbox on-close="display.lightbox.campaign = false;"
-          show="display.lightbox.campaign"
-          workflow="crre.administrator">
-    <container template="campaign.lightbox"></container>
-</lightbox>
-
-<section class="toggle-buttons" ng-show="campaigns.selected.length > 0" workflow="crre.administrator">
-    <div class="toggle">
-        <div class="row">
-            <button ng-click="openCampaignForm(campaigns.selected[0])" ng-show="campaigns.selected.length === 1">
-                <i18n>modify</i18n>
-            </button>
-            <button ng-click="openCampaignsDeletion()"><i18n>delete</i18n></button>
-        </div>
+<div ng-controller="campaignsController">
+    <div workflow="crre.administrator">
+        <input type="button" ng-click="openCampaignForm()" class="right-magnet twelve-mobile"
+               i18n-value="crre.campaigns.add"/>
     </div>
-</section>
+    <div class="twelve cell manage-campaign campaign-list"  workflow="crre.administrator">
+        <article class="twelve cell " ng-repeat="campaign in campaigns.all track by $index ">
+            <div class="row">
+                <div class="twelve cell" workflow="crre.administrator">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="campaign.selected"/>
+                        <span></span>
+                    </label>
+                </div>
+                <div class="three cell twelve-mobile">
+                    <h3>[[campaign.name]]</h3>
+                    <p ng-bind-html="campaign.description"></p>
+                    <div class="small-text" ng-if="campaign.purse_enabled">
+                        <i18n>crre.campaign.amount</i18n>
+                        : <span ng-bind="campaign.purse_amount | currency"></span></div>
+                    <div class="small-text">[[campaign.nb_structures]] <i18n>structures</i18n></div>
+                </div>
+                <div class="twelve-mobile row-mobile cell">
+                    <ul class="colored status-bar cell row">
+                        <li tooltip="[[lang.translate('crre.order.waiting')]]" style="background-color: #f71e35;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_waiting]]</span></li>
+                        <li tooltip="[[lang.translate('crre.order.valid')]]" style="background-color: #e39d00;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_valid]]</span></li>
+                        <li tooltip="[[lang.translate('crre.order.sent')]]" style="background-color: #1794a5;" class="large"><i class="validated-status"></i><span>[[campaign.nb_orders_sent]]</span></li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="row" workflow="crre.administrator">
+                <div class="right-magnet">
+                    <span class="horizontal-spacing cell"><i18n>crre.campaign.accessibility</i18n></span>
+                    <switch-toggle ng-model="campaign.accessible" ng-change="campaign.updateAccessibility()"
+                                   class="cell"></switch-toggle>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <lightbox on-close="display.lightbox.campaign = false;"
+              show="display.lightbox.campaign"
+              workflow="crre.administrator">
+        <container template="campaign.lightbox"></container>
+    </lightbox>
+
+    <section class="toggle-buttons" ng-show="campaigns.selected.length > 0" workflow="crre.administrator">
+        <div class="toggle">
+            <div class="row">
+                <button ng-click="openCampaignForm(campaigns.selected[0])" ng-show="campaigns.selected.length === 1">
+                    <i18n>modify</i18n>
+                </button>
+                <button ng-click="openCampaignsDeletion()"><i18n>delete</i18n></button>
+            </div>
+        </div>
+    </section>
+</div>

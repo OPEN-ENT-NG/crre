@@ -1,4 +1,4 @@
-<div class ="row">
+<div class ="row" ng-controller="structureGroupFormController">
     <h1>
         <i18n ng-show="structureGroup.id == undefined">crre.form.structureGroups.add</i18n>
         <i18n ng-show="structureGroup.id !== undefined">crre.form.structureGroups.modify</i18n>
@@ -28,8 +28,10 @@
                 <div class="card listStructure ">
                     <div class="toolbox vertical-spacing horizontal-spacing">
                         <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structure"/>
-                        <a class="instantButtons deselect right-magnet button" ng-click="deselectAllStructures(structures)" tooltip="deselectAll"></a>
-                        <a class="instantButtons select right-magnet button" ng-click="selectAllStructures(structures)" tooltip="multi-combo.selectAll"></a>
+                        <a class="instantButtons deselect right-magnet button"
+                           ng-click="deselectAllStructures(structures)" tooltip="deselectAll"></a>
+                        <a class="instantButtons select right-magnet button"
+                           ng-click="selectAllStructures(structures)" tooltip="multi-combo.selectAll"></a>
                     </div>
                     <ul class="selectable-list">
                         <li class= "ellipsis"
@@ -52,13 +54,17 @@
                 <div class="card listStructure ">
                     <div class="toolbox vertical-spacing horizontal-spacing">
                         <input type="text" class="ten" i18n-placeholder="search" ng-model="search.structureRight"/>
-                        <a class="instantButtons deselect right-magnet button" ng-click="updateSelection(structureGroup.structures, false)" tooltip="deselectAll"></a>
-                        <a class="instantButtons select right-magnet button" ng-click="updateSelection(structureGroup.structures, true)" tooltip="multi-combo.selectAll"></a>
+                        <a class="instantButtons deselect right-magnet button"
+                           ng-click="updateSelection(structureGroup.structures, false)" tooltip="deselectAll"></a>
+                        <a class="instantButtons select right-magnet button"
+                           ng-click="updateSelection(structureGroup.structures, true)" tooltip="multi-combo.selectAll"></a>
                     </div>
                     <ul class="selectable-list" >
                         <li class= "ellipsis" ng-repeat="structureRight in structureGroup.structures | filter:search.structureRight"
                             ng-click="structureRight.selected = !structureRight.selected"
-                            ng-class="{selected: structureRight.selected}">[[structureRight.uai]] - [[structureRight.name]]<span>[[structureRight.city]]</span></li>
+                            ng-class="{selected: structureRight.selected}">
+                            [[structureRight.uai]] - [[structureRight.name]]<span>[[structureRight.city]]</span>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -67,9 +73,9 @@
         <div class="row">
             <div class="right-magnet">
                 <input type="button" class="cancel" ng-click="redirectTo('/structureGroups')" i18n-value="cancel"/>
-                <input type="submit" class="button" ng-click="validStructureGroup(structureGroup)" ng-disabled="!validStructureGroupForm(structureGroup)"/>
+                <input type="submit" class="button" ng-click="validStructureGroup(structureGroup)"
+                       ng-disabled="!validStructureGroupForm(structureGroup)"/>
             </div>
         </div>
-        </form>
     </article>
 </div>

@@ -26,7 +26,7 @@ public interface PurseService {
      * Get purses by campaign id
      * @param handler handler function returning data
      */
-    void getPursesStudentsAndLicences(Integer page, Handler<Either<String, JsonArray>> handler);
+    void getPursesStudentsAndLicences(Integer page, JsonArray idStructures,  Handler<Either<String, JsonArray>> handler);
 
     /**
      * Update a purse based on his id structure
