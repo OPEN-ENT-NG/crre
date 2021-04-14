@@ -133,6 +133,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
 
+    public void getRenew(Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        String query = "select * from " + Crre.crreSchema + ".\"order-region-equipment\" " +
+                        "where owner_id = 'renew2021-2022' order by id";
+        Sql.getInstance().raw(query, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
     @Override
     public void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String query = "" +
@@ -404,7 +410,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void insertOldOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException {
+    public void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handler) throws ParseException {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
@@ -417,8 +423,14 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             if(orderRegions.getJsonObject(i).containsKey("id_project")) {
                 query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),";
                 JsonObject order = orderRegions.getJsonObject(i);
-                Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
-                String creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                String creation_date = "";
+                if(isRenew) {
+                    creation_date = order.getString("creation_date");
+                } else {
+                    Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
+                    creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                }
+
                 params.add(order.getLong("id"))
                         .add(order.getInteger("amount"))
                         .add(creation_date)

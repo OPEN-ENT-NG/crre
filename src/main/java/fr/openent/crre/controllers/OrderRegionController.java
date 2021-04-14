@@ -6,10 +6,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.ValidatorRight;
-import fr.openent.crre.service.OrderRegionService;
-import fr.openent.crre.service.PurseService;
-import fr.openent.crre.service.QuoteService;
-import fr.openent.crre.service.StructureService;
+import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.*;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
@@ -60,6 +57,7 @@ public class OrderRegionController extends BaseController {
     private final PurseService purseService;
     private final StructureService structureService;
     private final QuoteService quoteService;
+    private final EquipmentService equipmentService;
     private final EmailSendService emailSender;
     private final JsonObject mail;
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
@@ -72,6 +70,7 @@ public class OrderRegionController extends BaseController {
         this.mail = mail;
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
+        this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.quoteService = new DefaultQuoteService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
@@ -429,6 +428,64 @@ public class OrderRegionController extends BaseController {
                 handlerJsonObject(purseUpdateLicencesFuture));
     }
 
+    @Get("/orderRegion/renew/update")
+    @ApiDoc("get all projects ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void updateRenew(HttpServerRequest request) {
+                List<Future> inserts = new ArrayList<>();
+                orderRegionService.getRenew(event -> {
+                    if(event.isRight()) {
+                        JsonArray renews = event.right().getValue();
+                        int size = renews.size() / 4;
+                        for(int i = 0; i < 4; i++) {
+                            inserts.add(Future.future());
+                            insertRenew(renews, size * i, size * (i + 1), i, inserts);
+                        }
+                        CompositeFuture.all(inserts).setHandler(evt -> {
+                            if (evt.failed()) {
+                                log.error("[CRRE@UpdateRenewCompositeFuture] Failed to retrieve results", evt.cause());
+                                Future.failedFuture(evt.cause());
+                            } else {
+                                // Remove all older region renew
+                            }
+                        });
+                    }
+                });
+    }
+
+    private void insertRenew(JsonArray renews, int start, int end, int k, List<Future> inserts) {
+        JsonArray newRenews = new JsonArray();
+        for (int i = start; i < end; i++) {
+            JsonObject renew = renews.getJsonObject(i);
+            String id = renew.getString("equipment_key");
+            if(id != null) {
+                int finalI = i;
+                equipmentService.equipment(id, equipment -> {
+                    if(equipment.isRight()) {
+                        JsonObject equip = equipment.right().getValue().getJsonObject(0);
+                        renew.put("ean", id);
+                        renew.put("name", equip.getString("titre"));
+                        renew.put("image", equip.getString("urlcouverture"));
+                        renew.put("unitedPriceTTC", equip.getJsonArray("offres").getJsonObject(0).getDouble("prixht"));
+                        renew.put("grade", equip.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                        renew.put("editor", equip.getString("editeur"));
+                        renew.put("diffusor", equip.getString("distributeur"));
+                        renew.put("type", equip.getString("type"));
+                        newRenews.add(renew);
+                    }
+                    if (finalI == end - 1) {
+                        try {
+                            orderRegionService.insertOldOrders(newRenews, true, handlerJsonObject(inserts.get(k)));
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        }
+    }
+
     @Get("region/orders/exports")
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -575,7 +632,7 @@ public class OrderRegionController extends BaseController {
                                 orderRegionService.deleteOldOrderClient(ordersClient, handlerJsonObject(deleteOldOrderClientFuture));
                                 orderRegionService.deleteOldRegionClient(ordersRegion, handlerJsonObject(deleteOldOrderRegionFuture));
                                 try {
-                                    orderRegionService.insertOldOrders(orderRegion, handlerJsonObject(insertOldOrdersFuture));
+                                    orderRegionService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
