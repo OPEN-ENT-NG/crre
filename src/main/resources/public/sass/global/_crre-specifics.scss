@@ -1038,6 +1038,21 @@ body.crre {
     }
   }
 
+  @mixin keyframes($animationName) {
+    @-webkit-keyframes #{$animationName} {
+      @content;
+    }
+    @-moz-keyframes #{$animationName} {
+      @content;
+    }
+    @-o-keyframes #{$animationName} {
+      @content;
+    }
+    @keyframes #{$animationName} {
+      @content;
+    }
+  }
+
   @include keyframes(loadingBar) {
     to {
       width: 95%;
