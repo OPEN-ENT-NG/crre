@@ -3,10 +3,8 @@ import {
     OrdersRegion,
     Utils,
     Filter,
-    OrderClient,
     FilterFront,
 } from "../../../model";
-import {Mix} from "entcore-toolkit";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
     ['$scope', ($scope) => {
@@ -21,7 +19,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 reassort : [],
                 licence : [],
                 id_structure : [],
-            }
+            };
             $scope.filterChoiceCorrelation = {
                 keys : ["docType","reassort","licence","campaigns", "schoolType", "editors", "distributeurs", "states", "id_structure"],
                 states : 'status',
@@ -33,7 +31,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 reassort : 'reassort',
                 licence : 'licence',
                 id_structure : "id_structure"
-            }
+            };
 
             $scope.states = [{status: "WAITING"},{status: "IN PROGRESS"},{status: "VALID"},{status: "DONE"},{status: "REJECTED"}];
             $scope.states.forEach((item) => item.toString = () => {
@@ -111,8 +109,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.generateLibraryOrder = async () => {
-            let selectedOrders = $scope.extractSelectedOrders();
-            let promesses = [selectedOrders.updateStatus('SENT'),selectedOrders.generateLibraryOrder()];
+            let selectedOrders = $scope.projects.extractSelectedOrders();
+            let promesses = [await selectedOrders.updateStatus('SENT'),await selectedOrders.generateLibraryOrder()];
             let responses = await Promise.all(promesses);
             let statusOK = true;
             if (responses[0].status) {
@@ -122,7 +120,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     }
                 }
                 if (statusOK) {
-                    let selectedOrders = $scope.extractSelectedOrders(true);
+                    let selectedOrders = $scope.projects.extractSelectedOrders(true);
                     if(selectedOrders.length == 0) {
                         $scope.projects.all = [];
                     } else {
@@ -143,7 +141,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     toasts.confirm('crre.order.region.library.create.message');
                     $scope.display.toggle = false;
                     Utils.safeApply($scope);
-                    $scope.allOrdersSelected = false;
+                    $scope.display.allOrdersSelected = false;
                     $scope.onScroll(true);
                 } else {
                     toasts.warning('crre.order.region.library.create.err');
@@ -184,6 +182,28 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             } else {
                 await $scope.searchByName($scope.query_name);
             }
+        };
+
+        $scope.openRefusingOrderLightbox= () => {
+            template.open('lightbox.waitingAdmin', 'administrator/order/refuse-order');
+            $scope.display.lightbox.waitingAdmin = true;
+            Utils.safeApply($scope);
+        };
+
+        $scope.closeWaitingAdminLightbox= () =>{
+            $scope.display.lightbox.waitingAdmin = false;
+            Utils.safeApply($scope);
+        };
+
+        $scope.switchAllOrders = () => {
+            $scope.projects.all.forEach(project => {
+                project.selected = $scope.display.allOrdersSelected;
+                project.orders.forEach(async order => {
+                    order.selected = $scope.display.allOrdersSelected;
+                });
+            });
+            $scope.display.toggle = $scope.display.allOrdersSelected;
+            Utils.safeApply($scope);
         };
 
         this.init();

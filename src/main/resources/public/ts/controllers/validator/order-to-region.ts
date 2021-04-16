@@ -5,7 +5,7 @@ import {
     FiltersFront,
     Offer,
     Offers,
-    OrdersRegion, Project,
+    OrdersRegion,
     Projects,
     StructureGroups,
     Structures,
@@ -13,7 +13,6 @@ import {
 } from "../../model";
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 
-declare let window: any;
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
         $scope.filters = new Filters();
@@ -25,19 +24,17 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filtersDate.endDate = moment()._d;
         $scope.display = {
             toggle : false,
-            loading : true
+            loading : true,
+            allOrdersSelected : false,
+            lightbox : {
+                waitingAdmin : false
+            }
         };
         $scope.filter = {
             page: 0,
             isDate: false,
         };
         $scope.projects = new Projects();
-        $scope.allOrdersSelected;
-
-        $scope.closeWaitingAdminLightbox= () =>{
-            $scope.display.lightbox.waitingAdmin = false;
-            Utils.safeApply($scope);
-        };
 
         $scope.onScroll = async (init?:boolean, old?:boolean): Promise<void> => {
             let projets = new Projects();
@@ -250,14 +247,14 @@ export const orderRegionController = ng.controller('orderRegionController',
             });
             $scope.display.toggle = $scope.projects.all.some(project => project.selected) || orderSelected;
             Utils.safeApply($scope);
-        }
+        };
 
         $scope.switchAllOrdersOfProject = (project) => {
             project.orders.forEach(order => {
                 order.selected = project.selected;
             });
             switchDisplayToggle();
-        }
+        };
 
         $scope.checkParentSwitch = (project) => {
             let all = true;
@@ -267,26 +264,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             });
             project.selected = all;
             switchDisplayToggle();
-        }
-
-        $scope.uncheckAll = () => {
-            $scope.projects.all.forEach(project => {
-                project.selected = false;
-                project.orders.forEach(async order => {order.selected = false;});
-            });
-            $scope.display.toggle = false;
-            Utils.safeApply($scope);
-        }
-
-        $scope.switchAllOrders = () => {
-            $scope.projects.all.forEach(project => {
-                project.selected = $scope.allOrdersSelected;
-                project.orders.forEach(async order => {
-                    order.selected = $scope.allOrdersSelected;
-                });
-            });
-            $scope.display.toggle = $scope.allOrdersSelected;
-            Utils.safeApply($scope);
-        }
+        };
     }
     ]);

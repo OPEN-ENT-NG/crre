@@ -82,7 +82,7 @@ export class Projects extends Selection<Project> {
         window.location = `/crre/region/orders/${oldString}exports?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
     }
 
-    private extractSelectedOrders() {
+    private extractSelectedOrders(select: boolean = false) {
         let selectedOrders = new OrdersRegion();
         let allOrders = new OrdersRegion();
         this.all.forEach(project => {
@@ -91,6 +91,6 @@ export class Projects extends Selection<Project> {
                 if(order.selected){selectedOrders.all.push(order);}
             });
         });
-        return (selectedOrders.length == 0) ? allOrders : selectedOrders;
+        return (selectedOrders.length == 0 && !select) ? allOrders : selectedOrders;
     }
 }

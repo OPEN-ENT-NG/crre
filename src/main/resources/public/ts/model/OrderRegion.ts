@@ -7,7 +7,7 @@ import {
     OrderClient,
     Equipment, Utils, Projects
 } from "./index";
-import {Selection} from "entcore-toolkit";
+import {Mix, Selection} from "entcore-toolkit";
 
 
 export class OrderRegion implements Order  {
@@ -100,8 +100,8 @@ export class OrdersRegion extends Selection<OrderRegion> {
 
     async create():Promise<any> {
         let orders = [];
-        this.all.map(order => {
-            orders.push(order.toJson());
+        this.forEach(order => {
+            orders.push(Mix.castAs(OrderRegion, order).toJson());
         });
         try {
             return await http.post(`/crre/region/orders/`, {orders: orders});
@@ -114,8 +114,8 @@ export class OrdersRegion extends Selection<OrderRegion> {
     toJson (status: string, justification:string):any {
         const ids = _.pluck(this.all, 'id');
         let orders = [];
-        this.all.map(order => {
-            orders.push(order.toJson());
+        this.forEach(order => {
+            orders.push(Mix.castAs(OrderRegion, order).toJson());
         });
         return {
             ids,

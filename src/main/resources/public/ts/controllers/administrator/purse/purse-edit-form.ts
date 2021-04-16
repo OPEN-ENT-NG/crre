@@ -19,6 +19,8 @@ export const purseEditFormController = ng.controller('purseEditFormController',
             purse.selected = false;
             $scope.purses.all = $scope.purses.all.filter(purse => { return purse.id != $scope.purses.selected[0].id });
             $scope.purses.push(purse);
+            $scope.purses.forEach(purse => {purse.selected = false;});
+            $scope.allPurseSelected = false;
             Utils.safeApply($scope);
         };
 

@@ -70,9 +70,18 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             if (responses[0].status) {
                 newElementTab();
                 notify();
-                $scope.uncheckAll();
+                uncheckAll();
                 Utils.safeApply($scope);
             }
         };
+
+        const uncheckAll = () => {
+            $scope.projects.all.forEach(project => {
+                project.selected = false;
+                project.orders.forEach(async order => {order.selected = false;});
+            });
+            $scope.display.toggle = false;
+            Utils.safeApply($scope);
+        }
     }
     ]);

@@ -67,9 +67,7 @@ export const purseController = ng.controller('PurseController',
         };
 
         $scope.switchAll = () => {
-            $scope.quotes.all.forEach(project => {
-                project.selected = $scope.allSelected;
-            });
+            $scope.purses.forEach(purse => {purse.selected = $scope.allPurseSelected;});
             Utils.safeApply($scope);
         }
 
