@@ -8,8 +8,6 @@ import {
 } from '../../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 
-declare let window: any;
-
 export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
 
@@ -19,10 +17,10 @@ export const manageOrderController = ng.controller('manageOrderController',
         };
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.filter = {
-            page: 0
+            page: 0,
+            isDate: false,
+            isOld: false
         };
-        $scope.isDate = false;
-        $scope.isOld = false;
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
         $scope.filtersDate.endDate = moment()._d;
@@ -36,43 +34,34 @@ export const manageOrderController = ng.controller('manageOrderController',
         };
 
         $scope.exportCSV = () => {
-            let order_selected = [];
-            $scope.displayedBasketsOrders.forEach(function (basket) {
-                basket.orders.forEach(function (order) {
-                    if (order.selected) {
-                        order_selected.push(order);
-                    }
-                });
-            });
-            if (order_selected.length == 0) {
-                order_selected = $scope.ordersClient.all;
-            }
-            let params_id_order = Utils.formatKeyToParameter(order_selected, 'id');
-            let equipments_key = order_selected.map((value) => value.equipment_key).filter((value, index, _arr) => _arr.indexOf(value) == index);
-            let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map(s => ({equipment_key: s})), "equipment_key");
-            let url = `/crre/orders/`
-            if($scope.isOld) {
-                url += `old/`;
-            }
-            window.location = url + `exports?${params_id_order}&${params_id_equipment}`;
+            let order_selected = new OrdersClient();
+            let all_order = new OrdersClient();
             $scope.displayedBasketsOrders.forEach(function (basket) {
                 basket.selected = false;
                 basket.orders.forEach(function (order) {
+                    if (order.selected) {order_selected.all.push(order);}
+                    all_order.all.push(order);
                     order.selected = false;
                 });
             });
+            $scope.allOrdersListSelected = false;
+            if (order_selected.length != 0) {
+                order_selected.exportCSV($scope.filter.isOld);
+            }else{
+                all_order.exportCSV($scope.filter.isOld);
+            }
         };
 
         $scope.filterByDate = async () => {
-            if($scope.isDate) {
+            if($scope.filter.isDate) {
                 if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
                     await $scope.searchByName(false);
                 } else {
                     toasts.warning('crre.date.err');
                 }
-                $scope.isDate = false;
+                $scope.filter.isDate = false;
             } else {
-                $scope.isDate = true;
+                $scope.filter.isDate = true;
             }
         };
 
@@ -90,15 +79,15 @@ export const manageOrderController = ng.controller('manageOrderController',
             }
             if ($scope.filters.all.length > 0) {
                 await $scope.newBasketsOrders.filter_order($scope.filters.all, $scope.campaign.id, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page, $scope.isOld);
-                return await $scope.synchroMyBaskets(true, $scope.isOld);
+                    $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page, $scope.filter.isOld);
+                return await $scope.synchroMyBaskets(true);
             } else {
                 if ($scope.query_name && $scope.query_name != "") {
                     await $scope.newBasketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $scope.filter.page, $scope.isOld);
-                    return await $scope.synchroMyBaskets(true, $scope.isOld);
+                        $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld);
+                    return await $scope.synchroMyBaskets(true);
                 } else {
-                    return await $scope.synchroMyBaskets(false, $scope.isOld);
+                    return await $scope.synchroMyBaskets(false);
                 }
             }
         }
@@ -108,12 +97,12 @@ export const manageOrderController = ng.controller('manageOrderController',
             await $scope.searchByName(true);
         };
 
-        $scope.synchroMyBaskets = async (search?: boolean, old = false): Promise<boolean> => {
+        $scope.synchroMyBaskets = async (search: boolean): Promise<boolean> => {
             if (!search) {
                 $scope.newBasketsOrders = new BasketsOrders();
                 if ($routeParams.idCampaign) {
-                    await $scope.newBasketsOrders.getMyOrders($scope.filter.page, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $routeParams.idCampaign, old);
+                    await $scope.newBasketsOrders.getMyOrders($scope.filter.page,
+                        $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld);
                 }
             }
             if ($scope.newBasketsOrders.all.length != 0) {
@@ -123,7 +112,7 @@ export const manageOrderController = ng.controller('manageOrderController',
                 });
                 $scope.newOrders = new OrdersClient();
                 await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [],
-                    $routeParams.idCampaign, $scope.current.structure.id, ordersId, null, old);
+                    $routeParams.idCampaign, $scope.current.structure.id, ordersId, null, $scope.filter.isOld);
                 formatDisplayedBasketOrders();
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }

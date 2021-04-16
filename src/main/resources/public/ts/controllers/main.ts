@@ -53,7 +53,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         route({
             main: async () => {
                 if ($scope.isAdministrator()) {
-                    template.open('main-profile', 'administrator/management-main');
                     $scope.redirectTo("/order/waiting");
                 } else{
                     if ( $scope.isValidator() || $scope.isPrescriptor()) {
@@ -69,12 +68,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             viewLogs: async () => {
                 $scope.loadingArray = true;
                 $scope.logs.reset();
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/log/view-logs');
                 await $scope.logs.loadPage($scope.current.page);
                 $scope.loadingArray = false;
                 Utils.safeApply($scope);
             },
             manageCampaigns: async () => {
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/campaign/campaign_container');
                 await template.open('campaigns-main', 'administrator/campaign/manage-campaign');
                 await $scope.campaigns.sync();
@@ -84,14 +85,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/campaigns');
                 }
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('campaigns-main', 'administrator/campaign/campaign_form');
                 Utils.safeApply($scope);
             },
             managePurse: async () => {
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/purse/manage-purse');
                 Utils.safeApply($scope);
             },
             manageStructureGroups: async () => {
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/structureGroup/structureGroup-container');
                 await $scope.structureGroups.sync();
                 await template.open('structureGroups-main', 'administrator/structureGroup/manage-structureGroup');
@@ -102,6 +106,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/structureGroups');
                 }
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('structureGroups-main', 'administrator/structureGroup/structureGroup-form');
                 Utils.safeApply($scope);
             },
@@ -113,6 +118,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showAdminCatalog: async () => {
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'prescriptor/catalog/catalog-list');
                 await selectCatalog();
                 Utils.safeApply($scope);
@@ -126,6 +132,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             adminEquipmentDetail: async (params) => {
                 await selectEquipment(params);
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'prescriptor/catalog/equipment-detail');
                 Utils.safeApply($scope);
             },
@@ -178,11 +185,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             orderWaitingAdmin: async () => {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/order/order-waiting');
                 Utils.safeApply($scope);
             },
             orderHistoricAdmin: async () => {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
+                template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/order/order-sent-library');
                 Utils.safeApply($scope);
             }
@@ -199,8 +208,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     }
                 });
                 basket.selected = testAllTrue;
-            }
-            else {
+            } else {
                 basket.selected = false;
             }
         };

@@ -1,11 +1,11 @@
 import {_, ng, template, toasts} from 'entcore';
 import {
-    OrderRegion,
     OrdersRegion,
     Utils,
-    Filter, Filters, OrderClient, FilterFront, FiltersFront,
+    Filter,
+    OrderClient,
+    FilterFront,
 } from "../../../model";
-import http from "axios";
 import {Mix} from "entcore-toolkit";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
@@ -86,26 +86,20 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.validateOrders = async () =>{
-            let selectedOrders = [];
+            let selectedOrders = new OrdersRegion();
             $scope.projects.all.forEach(project => {
                 project.orders.forEach( async order => {
-                    if(order.selected) {
-                        selectedOrders.push(order);
-                    }
+                    if(order.selected) {selectedOrders.all.push(order);}
                 });
             });
-            let ordersToValidate  = new OrdersRegion();
-            ordersToValidate.all = Mix.castArrayAs(OrderClient, selectedOrders);
-            let {status} = await ordersToValidate.updateStatus('VALID');
+            let {status} = await selectedOrders.updateStatus('VALID');
             if(status == 200){
                 $scope.projects.all.forEach(project => {
                     project.orders.forEach( async order => {
-                        if(order.selected) {
-                            order.status="VALID";
-                            order.selected = false;
-                        }
-                        project.selected =false;
+                        if(order.selected) {order.status="VALID";}
+                        order.selected = false;
                     });
+                    project.selected =false;
                     Utils.setStatus(project, project.orders[0]);
                 });
                 toasts.confirm('crre.order.validated');
@@ -118,14 +112,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
 
         $scope.generateLibraryOrder = async () => {
             let selectedOrders = $scope.extractSelectedOrders();
-            let ordersToSend = new OrdersRegion();
-            ordersToSend.all = Mix.castArrayAs(OrderRegion, selectedOrders);
-            let params_id_order = Utils.formatKeyToParameter(selectedOrders, 'id');
-            let params_id_equipment = Utils.formatKeyToParameter(selectedOrders, "equipment_key");
-            let params_id_structure = Utils.formatKeyToParameter(selectedOrders, "id_structure");
-            let promesses = []
-            promesses.push(ordersToSend.updateStatus('SENT'));
-            promesses.push(http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`));
+            let promesses = [selectedOrders.updateStatus('SENT'),selectedOrders.generateLibraryOrder()];
             let responses = await Promise.all(promesses);
             let statusOK = true;
             if (responses[0].status) {

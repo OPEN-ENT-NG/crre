@@ -5,13 +5,11 @@ import {
     OrdersClient,
     OrdersRegion,
     Utils,
-    Filter, Filters
+    Filter,
+    Filters
 } from '../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
-import http from "axios";
 
-
-declare let window: any;
 export const waitingValidatorOrderController = ng.controller('waitingValidatorOrderController',
     ['$scope', ($scope,) => {
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
@@ -231,38 +229,24 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.exportCSV = () => {
-            let order_selected;
             if($scope.ordersClient.selectedElements.length == 0) {
-                order_selected = $scope.ordersClient.all;
+                $scope.ordersClient.exportCSV(false);
             } else {
-                order_selected = $scope.ordersClient.selectedElements;
+                let selectedOrders = new OrdersClient();
+                selectedOrders.all = $scope.ordersClient.selectedElements;
+                selectedOrders.exportCSV(false);
             }
-            let params_id_order = Utils.formatKeyToParameter(order_selected, 'id');
-            let equipments_key = order_selected.map( (value) => value.equipment_key).filter( (value, index, _arr) => _arr.indexOf(value) == index);
-            let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map( s => ({equipment_key:s})), "equipment_key");
-            window.location = `/crre/orders/exports?${params_id_order}&${params_id_equipment}`;
-            $scope.ordersClient.selectedElements.forEach(function (order) {
-                order.selected = false;
-            });
+            $scope.ordersClient.forEach(function (order) {order.selected = false;});
+            $scope.allOrdersSelected = false;
         }
 
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
             if(amount.toString() != 'undefined') {
-                await orderClient.updateAmount(amount);
                 orderClient.amount = amount;
-                await getEquipment(orderClient).then(equipments => {
-                    let equipment = equipments.data;
-                    if(equipment.type === "articlenumerique") {
-                        orderClient.offers = Utils.computeOffer(orderClient, equipment);
-                    }
-                });
+                await orderClient.updateAmount(amount);
                 Utils.safeApply($scope);
             }
         };
-
-        const getEquipment = (order) :Promise <any> => {
-            return http.get(`/crre/equipment/${order.equipment_key}`);
-        }
 
         $scope.updateReassort = async (orderClient: OrderClient) => {
             orderClient.reassort = !orderClient.reassort;

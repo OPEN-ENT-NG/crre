@@ -28,7 +28,7 @@ export const campaignsController = ng.controller('campaignsController',
             $scope.structureGroups.all = $scope.structureGroups.all.map((group) => {
                 let Cgroup = _.findWhere($scope.campaign.groups, {id: group.id});
                 if (Cgroup !== undefined) {
-                    group.selected = true;
+                    group.select();
                     group.tags = Cgroup.tags;
                 }
                 return group;

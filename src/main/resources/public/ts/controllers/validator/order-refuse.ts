@@ -1,10 +1,8 @@
 import {ng, template, toasts} from 'entcore';
 import {
-    OrderClient,
     OrdersClient,
     Utils,
 } from '../../model';
-import {Mix} from 'entcore-toolkit';
 
 export const orderRefuseController = ng.controller('orderRefuseController',
     ['$scope', ($scope,) => {
@@ -13,7 +11,7 @@ export const orderRefuseController = ng.controller('orderRefuseController',
             $scope.display.lightbox.refuseOrder = false;
             template.close('refuseOrder.lightbox');
             let ordersToRefuse  = new OrdersClient();
-            ordersToRefuse.all = Mix.castArrayAs(OrderClient, $scope.ordersClient.selected);
+            ordersToRefuse.all = $scope.ordersClient.selected;
             let {status} = await ordersToRefuse.updateStatus('REFUSED');
             if(status == 200){
                 $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selected.length;

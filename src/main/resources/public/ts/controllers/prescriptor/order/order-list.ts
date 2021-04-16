@@ -4,16 +4,15 @@ import {
     OrderClient,
     Utils
 } from '../../../model';
-import http from "axios";
 
 export const orderController = ng.controller('orderController',
     ['$scope', async ($scope) => {
 
         $scope.changeOld = async (old: boolean) => {
-            if($scope.isOld !== old) {
-                $scope.isOld = old;
+            if($scope.filter.isOld !== old) {
+                $scope.filter.isOld = old;
                 $scope.startInitLoading();
-                await $scope.synchroMyBaskets(false, $scope.isOld)
+                await $scope.synchroMyBaskets(false)
             }
         };
 
@@ -32,22 +31,11 @@ export const orderController = ng.controller('orderController',
 
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
             if (amount.toString() != 'undefined') {
+                basketOrder.amount = orderClient.amount = amount;
                 await orderClient.updateAmount(amount);
-                await basketOrder.getAmount();
-                orderClient.amount = amount;
-                await getEquipment(orderClient).then(equipments => {
-                    let equipment = equipments.data;
-                    if(equipment.type === "articlenumerique") {
-                        orderClient.offers = Utils.computeOffer(orderClient, equipment);
-                    }
-                });
                 Utils.safeApply($scope);
             }
         };
-
-        const getEquipment = (order) :Promise <any> => {
-            return http.get(`/crre/equipment/${order.equipment_key}`);
-        }
 
         $scope.updateReassort = async (orderClient: OrderClient) => {
             orderClient.reassort = !orderClient.reassort;

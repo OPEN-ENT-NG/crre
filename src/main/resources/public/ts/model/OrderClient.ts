@@ -2,16 +2,19 @@ import {_, model, moment, toasts} from 'entcore';
 import {Mix, Selection} from 'entcore-toolkit';
 import {
     Campaign,
-    Equipment, Filter, Offer, Offers,
+    Equipment, Equipments,
+    Filter,
+    Offers,
     Order,
     OrderRegion,
     OrderUtils,
     Structure,
     Structures,
-    TechnicalSpec,
     Utils
 } from './index';
 import http from 'axios';
+
+declare let window: any;
 
 export class OrderClient implements Order  {
 
@@ -45,7 +48,6 @@ export class OrderClient implements Order  {
     summary:string;
     image:string;
     status:string;
-    technical_spec:TechnicalSpec;
     user_name:string;
     user_id:string;
     grade: string;
@@ -56,26 +58,14 @@ export class OrderClient implements Order  {
         this.typeOrder= "client";
     }
 
-    async updateComment():Promise<void>{
-        try{
-            http.put(`/crre/order/${this.id}/comment`, { comment: this.comment });
-        }catch (e){
-            toasts.warning('crre.basket.update.err');
-            throw e;
-        }
-    }
-
-    async delete ():Promise<any> {
-        try {
-            return await http.delete(`/crre/order/${this.id}/${this.id_structure}/${this.id_campaign}`);
-        } catch (e) {
-            toasts.warning('crre.order.delete.err');
-        }
-    }
-
     async updateAmount(amount: number):Promise<void>{
         try {
             await http.put(`/crre/order/${this.id}/amount`,{ amount: amount });
+            let equipment = new Equipment()
+            await equipment.sync(this.equipment_key);
+            if(equipment.type === "articlenumerique") {
+                this.offers = Utils.computeOffer(this, equipment);
+            }
         }
         catch {
             toasts.warning('crre.order.getMine.err');
@@ -88,34 +78,6 @@ export class OrderClient implements Order  {
         }
         catch {
             toasts.warning('crre.order.getMine.err');
-        }
-    }
-
-    async updateStatusOrder(status: String, id:number = this.id):Promise<void>{
-        try {
-            await http.put(`/crre/order/${id}`, {status: status});
-        } catch (e) {
-            toasts.warning('crre.order.update.err');
-        }
-    }
-
-    toJson():any {
-        return {
-            amount: this.amount,
-            price: this.price,
-            creation_date: moment().format('YYYY-MM-DD'),
-            status: this.status,
-            files: this.files,
-            name_structure: this.name_structure,
-            id_campaign: this.id_campaign,
-            id_structure: this.id_structure,
-            id_project: this.id_project,
-            equipment_key: this.equipment_key,
-            comment: (this.comment) ? this.comment : "",
-            user_name: this.user_name,
-            user_id: this.user_id,
-            reassort: this.reassort,
-            priceTotalTTC: this.priceTotalTTC
         }
     }
 }
@@ -133,13 +95,9 @@ export class OrdersClient extends Selection<OrderClient> {
     async search(text: String, id_campaign: number, start: string, end: string, page?: number) {
         try {
             if ((text.trim() === '' || !text)) return;
-            let params = "";
-            if(id_campaign)
-                params += `&id=${id_campaign}`
-            if(page)
-                params = `&page=${page}`;
-            const startDate = moment(start).format('YYYY-MM-DD').toString();
-            const endDate = moment(end).format('YYYY-MM-DD').toString();
+            let params = (id_campaign) ? `&id=${id_campaign}` : ``;
+            params += (page) ? `&page=${page}` : ``;
+            const {startDate, endDate} = Utils.formatDate(start, end);
             const {data} = await http.get(`/crre/orders/search?startDate=${startDate}&endDate=${endDate}&q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
             if(newOrderClient.length>0) {
@@ -154,25 +112,15 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?: number){
         try {
-            let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
-            let params = "";
-            if(id_campaign)
-                params += `&id=${id_campaign}`
-            filters.forEach(function (f, index) {
+            let params = (id_campaign) ? `&id=${id_campaign}` : ``;
+            params += (page) ? `&page=${page}` : ``;
+            filters.forEach(function (f) {
                 params += "&" + f.name + "=" + f.value;
             });
-            let pageParams = "";
-            if(page)
-                pageParams = `&page=${page}`;
-            let url;
-            const startDate = moment(start).format('YYYY-MM-DD').toString();
-            const endDate = moment(end).format('YYYY-MM-DD').toString();
-            if(!format.test(word)) {
-                if(!!word) {
-                    url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}&q=${word}${params}${pageParams}`;
-                } else {
-                    url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params}${pageParams}`;
-                }
+            const {startDate, endDate} = Utils.formatDate(start, end);
+            if(!Utils.format.test(word)) {
+                let url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params}`;
+                url += (!!word) ? `&q=${word}` : ``;
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 if(newOrderClient.length>0) {
@@ -190,17 +138,17 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     private async reformatOrders(newOrderClient: any[]) {
-        await this.getEquipments(newOrderClient).then(equipments => {
-            for (let order of newOrderClient) {
-                this.reformatOrder(equipments, order);
-                order.creation_date = moment(order.creation_date).format('L');
-            }
-        });
+        let equipments = new Equipments();
+        await equipments.getEquipments(newOrderClient);
+        for (let order of newOrderClient) {
+            this.reformatOrder(equipments, order);
+            order.creation_date = moment(order.creation_date).format('L');
+        }
         this.all = this.all.concat(newOrderClient);
     }
 
     private reformatOrder(equipments, order) {
-        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
+        let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
         order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
         order.price = Utils.calculatePriceTTC(equipment, 2);
         order.name = equipment.titre;
@@ -213,60 +161,27 @@ export class OrdersClient extends Selection<OrderClient> {
     async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number,
                 idStructure?: string, ordersId?, page?:number, old = false):Promise<boolean> {
         try {
-            const startDate = moment(start).format('YYYY-MM-DD').toString();
-            const endDate = moment(end).format('YYYY-MM-DD').toString();
-            let url;
-            if (idCampaign && idStructure) {
-                let params = '';
-                if(ordersId) {
-                    params += '?';
-                    ordersId.map((order) => {
-                        params += `order_id=${order}&`;
-                    });
-                    params = params.slice(0, -1);
-                }
-                if(old) {
-                    url = `/crre/orders/old/mine/${idCampaign}/${idStructure}${params}&startDate=${startDate}&endDate=${endDate}`;
-                } else {
-                    url = `/crre/orders/mine/${idCampaign}/${idStructure}${params}&startDate=${startDate}&endDate=${endDate}`;
-                }
-                const { data } = await http.get(url);
-                let newOrderClient = Mix.castArrayAs(OrderClient, data);
-                await this.getEquipments(newOrderClient).then(equipments => {
-                    for (let order of newOrderClient) {
-                        let equipment = equipments.data.find(equipment => order.equipment_key == equipment.id);
-                        if(equipment.type === "articlenumerique") {
-                            order.offers = Utils.computeOffer(order, equipment);
-                        }
-                    }
-                });
-                this.all = newOrderClient;
-                this.syncWithIdsCampaignAndStructure();
-                return true;
+            const {startDate, endDate} = Utils.formatDate(start, end);
+            if (idCampaign && idStructure && ordersId) {
+                return await this.getSpecificOrders(ordersId, old, idCampaign, idStructure, startDate, endDate);
             } else {
-                let pageParams = '';
-                if(page)
-                    pageParams = `&page=${page}`;
+                let pageParams = (page) ? `&page=${page}` : ``;
                 const { data } = await http.get(  `/crre/orders?startDate=${startDate}&endDate=${endDate}&status=${status}${pageParams}`);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 if(newOrderClient.length>0) {
-                    await this.getEquipments(newOrderClient).then(equipments => {
-                        for (let order of newOrderClient) {
-                            this.reformatOrder(equipments, order);
-                            order.name_structure = structures && structures.length > 0 ? OrderUtils.initNameStructure(order.id_structure, structures) : '';
-                            order.structure = structures && structures.length > 0 ? OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                            order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
-                            order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
-                            if (order.files.length > 1)
-                                order.files.sort(function (a, b) {
-                                    return a.filename.localeCompare(b.filename);
-                                });
-                            if (status !== 'VALID') {
-                                this.makeOrderNotValid(order);
-                            }
-                            order.creation_date = moment(order.creation_date, 'DD/MM/YYYY').format('DD-MM-YYYY');
-                        }
-                    });
+                    let equipments = new Equipments();
+                    await equipments.getEquipments(newOrderClient);
+                    for (let order of newOrderClient) {
+                        this.reformatOrder(equipments, order);
+                        order.name_structure = (structures && structures.length > 0) ?
+                            OrderUtils.initNameStructure(order.id_structure, structures) : '';
+                        order.structure = (structures && structures.length > 0) ?
+                            OrderUtils.initStructure(order.id_structure, structures) : new Structure();
+                        order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
+                        order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
+                        order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
+                        order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
+                    }
                     this.all = this.all.concat(newOrderClient);
                     return true;
                 }
@@ -274,6 +189,28 @@ export class OrdersClient extends Selection<OrderClient> {
         } catch (e) {
             toasts.warning('crre.order.sync.err');
         }
+    }
+
+    private async getSpecificOrders(ordersId, old: boolean, idCampaign: number, idStructure: string, startDate, endDate) {
+        let params = '?';
+        ordersId.map((order) => {
+            params += `order_id=${order}&`;
+        });
+        const oldString = (old) ? `old/` : ``;
+        let url = `/crre/orders/${oldString}mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}`;
+        const {data} = await http.get(url);
+        let newOrderClient = Mix.castArrayAs(OrderClient, data);
+        let equipments = new Equipments();
+        await equipments.getEquipments(newOrderClient);
+        for (let order of newOrderClient) {
+            order.price = parseFloat(order.price.toString());
+            let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+            if (equipment.type === "articlenumerique") {
+                order.offers = Utils.computeOffer(order, equipment);
+            }
+        }
+        this.all = newOrderClient;
+        return true;
     }
 
     async getUsers (status: string):Promise<boolean> {
@@ -288,23 +225,6 @@ export class OrdersClient extends Selection<OrderClient> {
         });
         params = params.slice(0, -1);
         return http.get(`/crre/equipments?${params}`);
-    }
-
-    syncWithIdsCampaignAndStructure():void{
-        this.all.map((order) => {
-            order.price = parseFloat(order.price.toString());
-            order.files = order.files !== '[null]' ? Utils.parsePostgreSQLJson(order.files) : [];
-        });
-    }
-
-    makeOrderNotValid(order:OrderClient):void{
-        order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
-        order.creation_date = moment(order.creation_date).format('L');
-        order.priceTotalTTC = this.choosePriceTotal(order);
-    }
-
-    choosePriceTotal(order:OrderClient):number{
-        return parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
     }
 
     toJson (status: string):any {
@@ -347,4 +267,13 @@ export class OrdersClient extends Selection<OrderClient> {
         }
         return total;
     }
+
+    exportCSV(old:boolean) {
+        let params_id_order = Utils.formatKeyToParameter(this.all, 'id');
+        let equipments_key = this.all.map((value) => value.equipment_key)
+            .filter((value, index, _arr) => _arr.indexOf(value) == index);
+        let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map(s => ({equipment_key: s})), "equipment_key");
+        const oldString = (old) ? `old/` : ``;
+        window.location = `/crre/orders/${oldString}exports?${params_id_order}&${params_id_equipment}`;
+    };
 }

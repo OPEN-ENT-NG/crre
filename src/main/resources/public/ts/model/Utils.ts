@@ -1,4 +1,5 @@
 import {Offer, Offers} from "./Equipment";
+import {moment} from "entcore";
 
 export class Utils {
 
@@ -109,4 +110,12 @@ export class Utils {
         });
         return offers;
     };
+
+    static formatDate(start: string, end: string) {
+        const startDate = moment(start).format('YYYY-MM-DD').toString();
+        const endDate = moment(end).format('YYYY-MM-DD').toString();
+        return {startDate, endDate};
+    };
+
+    static format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
 }

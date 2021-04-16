@@ -1,5 +1,5 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {_, moment, toasts} from 'entcore';
+import {toasts} from 'entcore';
 import http from 'axios';
 import {Equipment, Filter, Offers, Structure, Utils} from './index';
 
@@ -44,15 +44,6 @@ export class Basket implements Selectable {
             return await  http.post(`/crre/basket/campaign/${this.id_campaign}`, this.toJson());
         } catch (e) {
             toasts.warning('crre.basket.create.err');
-        }
-    }
-
-    async update () {
-        try {
-            http.put(`/crre/basket/${this.id}`, this.toJson());
-        } catch (e) {
-            toasts.warning('crre.basket.update.err');
-            throw e;
         }
     }
 
@@ -111,10 +102,8 @@ export class Basket implements Selectable {
 }
 
 export class Baskets extends Selection<Basket> {
-    basketsToOrder: Selection<Basket>
     constructor() {
         super([]);
-        this.basketsToOrder = new Selection<Basket>([]);
     }
 
     async sync (idCampaign: number, idStructure: string ) {
@@ -171,41 +160,6 @@ export class BasketOrder implements Selectable {
     amount: number;
     created: string| Date;
     selected: boolean;
-
-    constructor (id_campaign?: number, id_structure?: string, id_user?: string) {
-        this.id_campaign = id_campaign;
-        this.id_structure = id_structure;
-        this.id_user = id_user;
-        this.amount = 1;
-    }
-    setIdBasket (id_basket: number) {
-        this.id = id_basket;
-    }
-    toJson () {
-        return {
-            id: this.id,
-            name: this.name,
-            id_structure: this.id_structure,
-            id_campaign: this.id_campaign,
-            name_user: this.name_user,
-            id_user: this.id_user,
-            total: this.total,
-            amount: this.amount,
-            created: this.created,
-            selected: this.selected
-        };
-    }
-
-    async getAmount():Promise<void>{
-        try {
-            let {data} = await http.get(`/crre/basketOrder/${this.id}/amount`);
-            this.amount = data.amount;
-        }
-        catch {
-            toasts.warning('crre.order.getMine.err');
-        }
-    }
-
 }
 
 export class BasketsOrders extends Selection<BasketOrder> {
@@ -213,29 +167,14 @@ export class BasketsOrders extends Selection<BasketOrder> {
         super([]);
     }
 
-    async sync (idCampaign: number) {
-        try {
-            let { data } = await http.get(`/crre/basketOrder/${idCampaign}`);
-            this.all = Mix.castArrayAs(BasketOrder, data);
-        } catch (e) {
-            toasts.warning('crre.basket.sync.err');
-        }
-    }
-
-    async search(text: String, id_campaign: number, start: string, end: string, page?:number, old = false) {
+    async search(text: String, id_campaign: number, start: string, end: string, page?:number, old?:boolean) {
         try {
             if ((text.trim() === '' || !text)) return;
-            let pageParams: string = "";
-            let url;
-            const startDate = moment(start).format('YYYY-MM-DD').toString();
-            const endDate = moment(end).format('YYYY-MM-DD').toString();
-            if(page)
-                pageParams = `&page=${page}`;
-            if(old) {
-                url = `/crre/basketOrder/old/search?startDate=${startDate}&endDate=${endDate}&q=${text}&id=${id_campaign}${pageParams}`;
-            } else {
-                url = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&q=${text}&id=${id_campaign}${pageParams}`;
-            }
+            const {startDate, endDate} = Utils.formatDate(start, end);
+            const oldString = (old) ? `old/` : ``;
+            const pageParams = (page) ? `&page=${page}` : ``;
+            let url = `/crre/basketOrder/${oldString}search?startDate=${startDate}&endDate=${endDate}&q=${text}`;
+            url += `&id=${id_campaign}${pageParams}`;
             const {data} = await http.get(url);
             this.all = Mix.castArrayAs(BasketOrder, data);
         } catch (err) {
@@ -244,36 +183,21 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?:number, old = false){
+    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?:number, old?:boolean){
         try {
-            let format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             let params = "";
             filters.forEach(function (f, index) {
                 params += f.name + "=" + f.value;
                 if(index != filters.length - 1) {
                     params += "&";
                 }});
-            let pageParams: string = "";
-            if(page)
-                pageParams = `&page=${page}`;
-            let url;
-            const startDate = moment(start).format('YYYY-MM-DD').toString();
-            const endDate = moment(end).format('YYYY-MM-DD').toString();
-            if(!format.test(word)) {
-                if(old) {
-                    if(word) {
-                        url = `/crre/basketOrder/old/filter?startDate=${startDate}&endDate=${endDate}&q=${word}&id=${id_campaign}&${params}${pageParams}`;
-                    } else {
-                        url = `/crre/basketOrder/old/filter?startDate=${startDate}&endDate=${endDate}&id=${id_campaign}&${params}${pageParams}`;
-                    }
-                } else {
-                    if(word) {
-                        url = `/crre/basketOrder/filter?startDate=${startDate}&endDate=${endDate}&q=${word}&id=${id_campaign}&${params}${pageParams}`;
-                    } else {
-                        url = `/crre/basketOrder/filter?startDate=${startDate}&endDate=${endDate}&id=${id_campaign}&${params}${pageParams}`;
-                    }
-                }
-
+            const {startDate, endDate} = Utils.formatDate(start, end);
+            if(!Utils.format.test(word)) {
+                const oldString = (old) ? `old/` : ``;
+                const pageParams = (page) ? `&page=${page}` : ``;
+                const wordParams = (word) ? `&q=${word}` : ``;
+                let url = `/crre/basketOrder/${oldString}filter?startDate=${startDate}&endDate=${endDate}${wordParams}`;
+                url += `&id=${id_campaign}&${params}${pageParams}`;
                 let {data} = await http.get(url);
                 this.all = Mix.castArrayAs(BasketOrder, data);
             } else {
@@ -285,22 +209,18 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async getMyOrders (page:number, start: string, end: string, id_campaign: number, old = false) {
+    async getMyOrders (page:number, start: string, end: string, id_campaign: string, old: boolean) {
         try {
-            const params: string = `?page=${page}`;
-            const startDate = moment(start).format('YYYY-MM-DD').toString();
-            const endDate = moment(end).format('YYYY-MM-DD').toString();
-            let url;
-            if(old) {
-                url = `/crre/basketOrder/old/allMyOrders${params}&id=${id_campaign}&startDate=${startDate}&endDate=${endDate}`;
-            } else {
-                url = `/crre/basketOrder/allMyOrders${params}&id=${id_campaign}&startDate=${startDate}&endDate=${endDate}`
-            }
+            const {startDate, endDate} = Utils.formatDate(start, end);
+            const oldString = (old) ? `old/` : ``;
+            const pageParams = (page) ? `&page=${page}` : ``;
+            let url = `/crre/basketOrder/${oldString}allMyOrders?id=${id_campaign}`;
+            url += `&startDate=${startDate}&endDate=${endDate}${pageParams}`;
             let { data } = await http.get(url);
             this.all = Mix.castArrayAs(BasketOrder, data);
-        }
-        catch {
+        } catch (e){
             toasts.warning('crre.order.getMine.err');
+            throw e;
         }
     }
 }

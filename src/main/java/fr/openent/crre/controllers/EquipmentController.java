@@ -42,7 +42,7 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @Override
     public void list(HttpServerRequest request) {
-        List<String> orderIds = request.params().getAll("order_id");
+        List<String> orderIds = request.params().getAll("id");
         List<String> orderIdsInt = new ArrayList<>(orderIds);
         searchByIds(orderIdsInt, arrayResponseHandler(request));
     }

@@ -11,26 +11,20 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
         $scope.confirmRefuseOrder= async (justification:string) =>{
             $scope.display.lightbox.waitingAdmin = false;
             template.close('lightbox.waitingAdmin');
-            let selectedOrders = [];
+            let selectedOrders = new OrdersRegion();
             $scope.projects.forEach(project => {
                 project.orders.forEach( async order => {
-                    if(order.selected) {
-                        selectedOrders.push(order);
-                    }
+                    if(order.selected) {selectedOrders.all.push(order);}
                 });
             });
-            let ordersToRefuse  = new OrdersRegion();
-            ordersToRefuse.all = Mix.castArrayAs(OrderRegion, selectedOrders);
-            let {status} = await ordersToRefuse.updateStatus('REJECTED', justification);
+            let {status} = await selectedOrders.updateStatus('REJECTED', justification);
             if(status == 200){
                 $scope.projects.forEach(project => {
                     project.orders.forEach( async order => {
-                        if(order.selected) {
-                            order.status="REJECTED";
-                            order.selected = false;
-                        }
-                        project.selected =false;
+                        if(order.selected) { order.status="REJECTED";}
+                        order.selected = false;
                     });
+                    project.selected =false;
                     Utils.setStatus(project, project.orders[0]);
                 });
                 toasts.confirm('crre.order.refused.succes');

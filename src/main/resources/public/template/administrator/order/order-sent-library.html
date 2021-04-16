@@ -18,8 +18,8 @@
                 <td class="table-selector main-selector">
                     <label class="checkbox">
                         <input type="checkbox"
-                               ng-change="switchAllOrders()"
-                               ng-model="allOrdersSelected"/>
+                               ng-change="switchAll()"
+                               ng-model="allSelected"/>
                         <span></span>
                     </label>
                 </td>
@@ -31,7 +31,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="quote in quotes">
+            <tr ng-repeat="quote in quotes.all">
                 <td class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="quote.selected" ng-change="switchAllOrdersOfProject(quote)"/>
@@ -43,7 +43,7 @@
                 <td><div class="smallTabElem center">[[quote.owner_name]]</div></td>
                 <td><div class="smallTabElem center">[[quote.nb_structures]]</div></td>
                 <td>
-                    <div class="smallTabElem center" ng-click="generateCSV(quote.attachment, quote.title)">
+                    <div class="smallTabElem center" ng-click="quote.generateCSV()">
                         <i class="attach-file" ></i>
                     </div>
                 </td>
@@ -53,7 +53,7 @@
     </div>
     <loader data-ng-show="loading" min-height="'250px'"></loader>
     <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
-    <div ng-show="quotes.length === 0 && !loading" class="centered">
+    <div ng-show="quotes.all.length === 0 && !loading" class="centered">
         <div class="twelve cell centered-text" >
             <h3><i18n>crre.info.empty.tab</i18n></h3>
         </div>

@@ -4,9 +4,8 @@ import {
     Campaign,
     Order,
     Structure,
-    TechnicalSpec,
     OrderClient,
-    Equipment
+    Equipment, Utils, Projects
 } from "./index";
 import {Selection} from "entcore-toolkit";
 
@@ -27,7 +26,6 @@ export class OrderRegion implements Order  {
     structure: Structure;
     typeOrder:string;
     description:string;
-    files: string;
     id_campaign:number;
     id_orderClient: number;
     id_project:number;
@@ -38,7 +36,6 @@ export class OrderRegion implements Order  {
     summary:string;
     image:string;
     status:string;
-    technical_spec:TechnicalSpec;
     title_id ?: number;
     user_name:string;
     user_id:string;
@@ -57,7 +54,6 @@ export class OrderRegion implements Order  {
             creation_date: moment().format('YYYY-MM-DD'),
             status: this.status,
             ...(this.title_id && {title_id: this.title_id}),
-            files: this.files,
             name_structure: this.name_structure,
             id_campaign: this.id_campaign,
             id_structure: this.id_structure,
@@ -81,10 +77,8 @@ export class OrderRegion implements Order  {
         this.image = order.image;
         this.creation_date = order.creation_date;
         this.status = order.status;
-        this.technical_spec = order.technical_spec;
         this.campaign = order.campaign;
         this.structure_groups = order.structure_groups;
-        this.files = order.files;
         this.name_structure = order.name_structure;
         this.id_campaign = order.id_campaign;
         this.id_structure = order.id_structure;
@@ -140,5 +134,27 @@ export class OrdersRegion extends Selection<OrderRegion> {
             toasts.warning('crre.order.update.error');
             throw e;
         }
+    }
+
+    async generateLibraryOrder():Promise<any> {
+        try {
+            let params_id_order = Utils.formatKeyToParameter(this.all, 'id');
+            let params_id_equipment = Utils.formatKeyToParameter(this.all, "equipment_key");
+            let params_id_structure = Utils.formatKeyToParameter(this.all, "id_structure");
+            return await  http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`);
+        } catch (e) {
+            toasts.warning('crre.order.update.error');
+            throw e;
+        }
+    }
+
+    async getOrdersFromProjects(projets: Projects, filterRejectedSentOrders : boolean, old: boolean):Promise<any> {
+        let params = '';
+        projets.all.map((project) => {
+            params += `project_id=${project.id}&`;
+        });
+        params = params.slice(0, -1);
+        const oldString = (old) ? `/old` : ``;
+        return http.get(`/crre/ordersRegion/orders${oldString}?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}`);
     }
 }

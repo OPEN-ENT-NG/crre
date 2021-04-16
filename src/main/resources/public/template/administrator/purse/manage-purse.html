@@ -22,7 +22,7 @@
                 <td class="table-selector main-selector">
                     <label class="checkbox">
                         <input type="checkbox"
-                               ng-change="switchAll(allPurseSelected, purses)"
+                               ng-change="switchAll()"
                                ng-model="allPurseSelected"/>
                         <span></span>
                     </label>
@@ -93,7 +93,7 @@
                 <button ng-click="openEditPurseForm(purses.selected[0])" ng-show="purses.selected.length === 1">
                     <i18n>modify</i18n>
                 </button>
-                <button ng-click="exportPurses()">
+                <button ng-click="purses.exportPurses()">
                     <i18n>crre.campaign.purse.export</i18n>
                 </button>
             </div>

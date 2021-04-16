@@ -12,3 +12,5 @@ export * from './Student';
 export * from './OrderClient';
 export * from './OrderRegion';
 export * from './Order';
+export * from './Quote';
+export * from './Project';

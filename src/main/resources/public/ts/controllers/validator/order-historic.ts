@@ -6,16 +6,18 @@ import {
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
     ['$scope', ($scope) => {
-        $scope.isOld = false;
+        $scope.filter = {
+            isOld : false
+        };
 
         $scope.changeOld = async (old: boolean) => {
-            if($scope.isOld !== old){
-                $scope.isOld = old;
+            if($scope.filter.isOld !== old){
+                $scope.filter.isOld = old;
                 $scope.filter.page = 0;
                 $scope.display.loading = true;
                 $scope.projects.all = [];
                 Utils.safeApply($scope);
-                await $scope.synchroRegionOrders(null, null, $scope.isOld);
+                await $scope.synchroRegionOrders(null, null, $scope.filter.isOld);
             }
         };
 

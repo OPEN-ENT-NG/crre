@@ -1,7 +1,9 @@
 import { toasts } from 'entcore';
 import http from 'axios';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
+import {Utils} from "./Utils";
 
+declare let window: any;
 export class Purse implements Selectable {
     id?: number;
     id_structure: string;
@@ -46,12 +48,20 @@ export class Purses extends Selection<Purse> {
     }
 
     async get (page?:number) {
-        let pageParams = '';
-        if(page)
-            pageParams = `?page=${page}`;
+        const pageParams = (page) ? `?page=${page}` : ``;
         let {data} = await http.get(`/crre/purses/list${pageParams}`);
         return Mix.castArrayAs(Purse, data);
     }
+
+    async search (name: string, page?:number) {
+        let {data} =  await http.get(`/crre/purse/search?q=${name}&page=${page}`);
+        return Mix.castArrayAs(Purse, data);
+    }
+
+    exportPurses() {
+        let params_id_purses = Utils.formatKeyToParameter(this.selected, 'id');
+        window.location = `/crre/purses/export?${params_id_purses}`;
+    };
 }
 
 export class PurseImporter {

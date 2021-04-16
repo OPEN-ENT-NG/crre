@@ -1,4 +1,4 @@
-import {_, Behaviours, idiom, idiom as lang, model, ng, template, toasts} from 'entcore';
+import {_, Behaviours, model, ng, template, toasts} from 'entcore';
 import {Basket, Baskets, Utils} from '../../../model';
 
 export const basketController = ng.controller('basketController',
@@ -12,9 +12,7 @@ export const basketController = ng.controller('basketController',
         const hasOneSelected = (baskets: Baskets) => {
             let hasSelected = false;
             baskets.all.map((basket) => {
-                if (basket.selected) {
-                    hasSelected = true;
-                }
+                if (basket.selected) { hasSelected = true; }
             });
             return hasSelected;
         };

@@ -2,9 +2,6 @@ import {ng, template} from 'entcore';
 import {Purse, PurseImporter, Purses, Utils} from '../../../model';
 import {Mix} from 'entcore-toolkit';
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
-import http from "axios";
-
-declare let window: any;
 
 export const purseController = ng.controller('PurseController',
     ['$scope', '$routeParams', ($scope) => {
@@ -19,6 +16,7 @@ export const purseController = ng.controller('PurseController',
             page: 0
         };
         $scope.loading = true;
+        $scope.allPurseSelected = false;
 
         $scope.onScroll = async (): Promise<void> => {
             $scope.filter.page++;
@@ -51,8 +49,9 @@ export const purseController = ng.controller('PurseController',
                 $scope.filter.page = 0;
             }
             if (!!name) {
-                let {data} = await http.get(`/crre/purse/search?q=${name}&page=${$scope.filter.page}`);
-                insertInPurses(data);
+                await $scope.purses.search(name, $scope.filter.page).then((purses) => {
+                    insertInPurses(purses);
+                });
             } else {
                 await $scope.purses.get($scope.filter.page).then((purses) => {
                     insertInPurses(purses);
@@ -67,15 +66,11 @@ export const purseController = ng.controller('PurseController',
             Utils.safeApply($scope);
         };
 
-        $scope.exportPurses = () => {
-            let selectedPurses = [];
-            $scope.purses.forEach(purse => {
-                if(purse.selected) {
-                    selectedPurses.push(purse);
-                }
+        $scope.switchAll = () => {
+            $scope.quotes.all.forEach(project => {
+                project.selected = $scope.allSelected;
             });
-            let params_id_purses = Utils.formatKeyToParameter(selectedPurses, 'id');
-            window.location = `/crre/purses/export?${params_id_purses}`;
-        };
+            Utils.safeApply($scope);
+        }
 
     }]);

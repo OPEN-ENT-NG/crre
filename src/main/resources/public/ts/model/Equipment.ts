@@ -2,6 +2,7 @@ import {idiom as lang, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import http from 'axios';
 import {Filters} from "./Filter";
+import {Utils} from "./Utils";
 
 export class Equipment implements Selectable {
     id?: string;
@@ -11,7 +12,6 @@ export class Equipment implements Selectable {
     price: number;
     status: string;
     urlcouverture: string;
-    technical_specs: TechnicalSpec[];
     selected: boolean;
     _loading: boolean;
     priceTTC?: number;
@@ -29,15 +29,12 @@ export class Equipment implements Selectable {
 
     constructor () {
         this._loading = false;
-        this.technical_specs = [];
     }
 
     async sync (id, idStructure?:string) {
         try {
-            let url = `/crre/equipment/${id}`;
-            if(idStructure){
-                url +=  `?idStructure=${idStructure}`
-            }
+            const stuctureParams = (idStructure) ? `?idStructure=${idStructure}` : ``;
+            let url = `/crre/equipment/${id}${stuctureParams}`;
             let { data } =  await http.get(url);
             Mix.extend(this, data);
             reformatEquipment(this);
@@ -67,37 +64,6 @@ export class Equipment implements Selectable {
 
 }
 
-export class TechnicalSpec {
-    name: string;
-    value: string;
-    constructor(){
-    }
-    toJson () {
-        return {
-            name: this.name,
-            value: this.value
-        };
-    }
-    toString () {
-        return this.name + ' ' + this.value;
-    }
-}
-
-export interface Equipments {
-    page: number;
-    _loading: boolean;
-    all: Equipment[];
-    page_count: number;
-    subjects: String[];
-    grades: String[];
-    editors: String[];
-    os: String[];
-    public: String[];
-    docsType: any;
-    filterFulfilled: boolean;
-    distributeurs: String[];
-}
-
 function reformatEquipment(equipment: Equipment) {
     equipment.id = equipment.ean;
     equipment.status = equipment.disponibilite[0].valeur;
@@ -120,6 +86,19 @@ function reformatEquipment(equipment: Equipment) {
 }
 
 export class Equipments extends Selection<Equipment> {
+    page: number;
+    _loading: boolean;
+    all: Equipment[];
+    page_count: number;
+    subjects: String[];
+    grades: String[];
+    editors: String[];
+    os: String[];
+    public: String[];
+    docsType: any;
+    filterFulfilled: boolean;
+    distributeurs: String[];
+
     constructor() {
         super([]);
         this.subjects = [];
@@ -167,21 +146,29 @@ export class Equipments extends Selection<Equipment> {
         } else {
             this.all = [];
         }
+    }
 
+    async getEquipments(orders) :Promise <any> {
+        let params = '';
+        orders.map((order) => {
+            params += `id=${order.equipment_key}&`;
+        });
+        params = params.slice(0, -1);
+        let {data} = await http.get(`/crre/equipments?${params}`);
+        this.all = Mix.castArrayAs(Equipment, data);
     }
 
     async getFilterEquipments(queryword?: string, filters?: Filters){
         try {
             let uri: string;
             let params = "";
-            const format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
             if(filters) {
                 params = "&";
                 filters.all.forEach(function (f) {
                     params += f.name + "=" + f.value + "&";
                 });
             }
-            if(!format.test(queryword)) {
+            if(!Utils.format.test(queryword)) {
                 if(!!queryword) {
                     uri = (`/crre/equipments/catalog/search?word=${queryword}${params}`);
                 } else {
@@ -192,7 +179,6 @@ export class Equipments extends Selection<Equipment> {
             } else {
                 toasts.warning('crre.equipment.special');
             }
-
         } catch (e) {
             toasts.warning('crre.equipment.sync.err');
             throw e;

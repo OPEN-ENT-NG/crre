@@ -1,8 +1,8 @@
 import http from 'axios';
 import { toasts } from 'entcore';
-import { Mix } from 'entcore-toolkit';
+import {Mix, Selectable, Selection} from 'entcore-toolkit';
 
-export class Log {
+export class Log implements Selectable{
     id: number;
     date: string;
     action: string;
@@ -14,12 +14,12 @@ export class Log {
     selected: boolean;
 }
 
-export class Logs {
+export class Logs extends Selection<Log>{
     all: Log[];
     numberOfPages: number;
 
     constructor () {
-        this.all = [];
+        super([]);
     }
 
     async loadPage (pageNumber: number = 1) {

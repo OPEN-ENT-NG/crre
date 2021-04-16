@@ -12,21 +12,8 @@ export class Structure implements Selectable {
     selected: boolean;
     search: string;
 
-    constructor (name?: string, uai?: string, city?: string, department?: number) {
-       if (name) this.name = name;
-       if (uai) this.uai = uai;
-       if (city) this.city = city;
-       if(department) this.department = department;
+    constructor () {
        this.selected = false;
-    }
-
-    toJson () {
-        return {
-            id: this.id,
-            name: this.name,
-            uai: this.uai,
-            city: this.city
-        };
     }
 
 }

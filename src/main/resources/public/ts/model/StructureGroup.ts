@@ -11,9 +11,7 @@ export class StructureGroup implements Selectable {
     structures: Structure [];
     selected: boolean;
 
-    constructor (name?: string, description?: string) {
-        if (name) this.name = name;
-        if (description) this.description = description;
+    constructor () {
         this.structures = [];
     }
 
@@ -45,7 +43,6 @@ export class StructureGroup implements Selectable {
     async update () {
         try {
             await http.put(`/crre/structure/group/${this.id}`, this.toJson());
-
         } catch (e) {
             toasts.warning('crre.structureGroup.update.err');
         }
@@ -53,8 +50,7 @@ export class StructureGroup implements Selectable {
 
     async delete () {
         try {
-            let id = `id=${this.id}`;
-            await http.delete(`/crre/structure/group?${id}`);
+            await http.delete(`/crre/structure/group?id=${this.id}`);
         } catch (e) {
             toasts.warning('crre.structureGroup.delete.err');
         }
@@ -112,24 +108,6 @@ export class StructureGroups extends Selection<StructureGroup> {
 
     constructor () {
         super([]);
-    }
-
-    async syncByCampaign(idCampaign: number) {
-        let {data} = await http.get(`/crre/structure/groups/campaign/${idCampaign}`);
-        this.all = Mix.castArrayAs(StructureGroup, data);
-        this.all.map((structureGroup) => {
-            structureGroup.structures = JSON.parse(structureGroup.structures.toString());
-        });
-    }
-    async delete (structureGroups: StructureGroup[]): Promise<void> {
-        try {
-            let filter = '';
-            structureGroups.map((structureGroup) => filter += `ìd=${structureGroup.id}&`);
-            filter = filter.slice(0, -1);
-            await http.delete(`/crre/structure/group?${filter}`);
-        } catch (e) {
-            toasts.warning('crre.structureGroup.sync.err');
-        }
     }
 
     async sync() {
