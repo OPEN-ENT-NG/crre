@@ -17,7 +17,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 $scope.display.loading = true;
                 $scope.projects.all = [];
                 Utils.safeApply($scope);
-                await $scope.synchroRegionOrders(null, null, $scope.filter.isOld);
+                await $scope.synchroRegionOrders(null, null, $scope.filter.isOld, $scope.filter.page);
             }
         };
 

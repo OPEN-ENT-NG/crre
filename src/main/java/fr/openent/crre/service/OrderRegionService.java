@@ -26,20 +26,20 @@ public interface OrderRegionService {
 
     void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, String idStructure, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
+    void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
-    void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, JsonArray filters,
+    void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, String idStructure, JsonArray filters,
                      Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
+    void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                       Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters,
+    void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                                   Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);

@@ -28,12 +28,12 @@ export class Projects extends Selection<Project> {
         super([]);
     }
 
-    async get(old = false, start: string, end: string,filterRejectedSentOrders: boolean, pageNumber: number) {
+    async get(old = false, start: string, end: string,filterRejectedSentOrders: boolean, pageNumber: number, idStructure: string) {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const page: string = pageNumber ? `page=${pageNumber}&` : '';
             const oldString = (old) ? `/old` : ``;
-            let url = `/crre/orderRegion/projects${oldString}?${page}startDate=${startDate}&endDate=${endDate}`;
+            let url = `/crre/orderRegion/projects${oldString}?${page}startDate=${startDate}&endDate=${endDate}&idStructure=${idStructure}`;
             url += `&filterRejectedSentOrders=${filterRejectedSentOrders}`;
             let { data } = await http.get(url);
             this.all =  Mix.castArrayAs(Project, data);
@@ -42,7 +42,7 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    async filter_order(old = false, query_name:string, filters: Filters, start: string, end: string, pageNumber: number) {
+    async filter_order(old = false, query_name:string, filters: Filters, start: string, end: string, pageNumber: number, idStructure: string) {
         function prepareParams() {
             let params = "";
             const word = query_name;
@@ -61,7 +61,7 @@ export class Projects extends Selection<Project> {
                 const oldString = (old) ? `old/` : ``;
                 const wordParams =  (!!word) ? `&q=${word}` : ``
                 let url = `/crre/ordersRegion/projects/${oldString}search_filter`;
-                url += `?startDate=${startDate}&endDate=${endDate}&${params}${wordParams}`;
+                url += `?startDate=${startDate}&endDate=${endDate}&idStructure=${idStructure}&${params}${wordParams}`;
                 const {data} = await http.get(url);
                 this.all = Mix.castArrayAs(Project, data);
             } else {

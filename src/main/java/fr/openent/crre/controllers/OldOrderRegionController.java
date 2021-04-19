@@ -108,8 +108,9 @@ public class OldOrderRegionController extends BaseController {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
+            String idStructure = request.getParam("idStructure");
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            oldOrderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, arrayResponseHandler(request));
+            oldOrderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, arrayResponseHandler(request));
         });
     }
 
@@ -132,6 +133,7 @@ public class OldOrderRegionController extends BaseController {
 
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
+            String idStructure = request.getParam("idStructure");
             int length = request.params().entries().size();
             for (int i = 0; i < length; i++) {
                 if (!request.params().entries().get(i).getKey().equals("q") &&
@@ -141,7 +143,8 @@ public class OldOrderRegionController extends BaseController {
                         !request.params().entries().get(i).getKey().equals("_index") &&
                         !request.params().entries().get(i).getKey().equals("type") &&
                         !request.params().entries().get(i).getKey().equals("endDate") &&
-                        !request.params().entries().get(i).getKey().equals("page"))
+                        !request.params().entries().get(i).getKey().equals("page") &&
+                        !request.params().entries().get(i).getKey().equals("idStructure"))
                     filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
                             request.params().entries().get(i).getValue()));
             }
@@ -149,14 +152,14 @@ public class OldOrderRegionController extends BaseController {
             if (params.size() > 0) {
                         if (request.params().contains("q")) {
                             oldOrderRegionService.filterSearch(user, finalQuery, startDate,
-                                    endDate, filters, page, arrayResponseHandler(request));
+                                    endDate, idStructure, filters, page, arrayResponseHandler(request));
                         } else {
                             oldOrderRegionService.filter_only(user, startDate,
-                                    endDate, filters, page, arrayResponseHandler(request));
+                                    endDate, idStructure, filters, page, arrayResponseHandler(request));
                         }
             } else { 
                             oldOrderRegionService.search(user, finalQuery, startDate,
-                                endDate, filters, page, arrayResponseHandler(request));
+                                endDate, idStructure, filters, page, arrayResponseHandler(request));
                     }
             } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -352,35 +355,6 @@ public class OldOrderRegionController extends BaseController {
                             order.put("editor", order.getString("editeur"));
                             order.put("diffusor", order.getString("distributeur"));
                             order.put("type", order.getString("type"));
-/*                            if (order.getString("type").equals("articlenumerique")) {
-                                JsonArray offers = computeOffers(equipment, order);
-                                if (offers.size() > 0) {
-                                    for (int k = 0; k < offers.size(); k++) {
-                                        JsonObject orderOffer = new JsonObject();
-                                        orderOffer.put("name", offers.getJsonObject(k).getString("titre"));
-                                        orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
-                                        orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
-                                        orderOffer.put("unitedPriceTTC", 0);
-                                        orderOffer.put("totalPriceHT", 0);
-                                        orderOffer.put("totalPriceTTC", 0);
-                                        orderOffer.put("creation_date", order.getString("creation_date"));
-                                        orderOffer.put("id_structure", order.getString("id_structure"));
-                                        orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                        orderOffer.put("id", order.getLong("id"));
-                                        orderOffer.put("title", order.getString("title"));
-                                        orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
-                                        for (int s = 0; s < structures.size(); s++) {
-                                            structure = structures.getJsonObject(s);
-                                            if (structure.getString("id").equals(order.getString("id_structure"))) {
-                                                orderOffer.put("uai_structure", structure.getString("uai"));
-                                                orderOffer.put("name_structure", structure.getString("name"));
-                                            }
-                                        }
-                                        orderRegion.add(orderOffer);
-                                        i++;
-                                    }
-                                }
-                            }*/
 
                     for (int j = 0; j < structures.size(); j++) {
                         structure = structures.getJsonObject(j);

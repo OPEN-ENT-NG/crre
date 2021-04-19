@@ -6,6 +6,7 @@ import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
@@ -167,7 +168,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, String idStructure, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
                 "SELECT DISTINCT (p.*), ore.creation_date " +
@@ -183,12 +184,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
         if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
                 WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())){
-            query.append(" AND ore.id_structure IN ( ");
-            for (String idStruct : user.getStructures()) {
-                query.append("?,");
-                values.add(idStruct);
-            }
-            query = new StringBuilder(query.substring(0, query.length() - 1) + ")");
+            query.append(" AND ore.id_structure = ?");
+            values.add(idStructure);
         }
         query.append(" ORDER BY ore.creation_date DESC ");
         if (page != null) {
@@ -208,11 +205,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     }
 
-    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
+    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                        Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values);
+        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure);
 
         if (!query.equals("")) {
             sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR oe.equipment_key IN (";
@@ -231,24 +228,25 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery);
     }
 
-    private String selectSQLOrders(String startDate, String endDate, JsonArray values) {
+    private String selectSQLOrders(String startDate, String endDate, JsonArray values, String idStructure) {
         String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? ";
+                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.id_structure = ? ";
         values.add(startDate);
         values.add(endDate);
+        values.add(idStructure);
         return sqlquery;
     }
 
     @Override
-    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, JsonArray filters,
+    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                              Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values);
+        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure);
 
         if(equipTab.getJsonArray(1).isEmpty()){
             sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?) ";
@@ -272,11 +270,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, JsonArray filters,
+    public void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, String idStructure, JsonArray filters,
                             Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values);
+        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure);
 
         sqlquery += "AND oe.equipment_key IN (";
 
@@ -308,11 +306,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, JsonArray filters,
+    public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                                          Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values);
+        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure);
         if (!query.equals("")) {
             sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?)";
             values.add(query);
@@ -454,7 +452,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
         }
         query = query.substring(0, query.length()-1);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override

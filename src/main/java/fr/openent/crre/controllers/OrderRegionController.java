@@ -8,16 +8,19 @@ import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.*;
+import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -187,8 +190,9 @@ public class OrderRegionController extends BaseController {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
+            String idStructure = request.getParam("idStructure");
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, arrayResponseHandler(request));
+            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, arrayResponseHandler(request));
         });
     }
 
@@ -206,6 +210,7 @@ public class OrderRegionController extends BaseController {
 
         String startDate = request.getParam("startDate");
         String endDate = request.getParam("endDate");
+        String idStructure = request.getParam("idStructure");
         int length = request.params().entries().size();
         for (int i = 0; i < length; i++) {
             if (!request.params().entries().get(i).getKey().equals("q") &&
@@ -216,7 +221,7 @@ public class OrderRegionController extends BaseController {
                     !request.params().entries().get(i).getKey().equals("type") &&
                     !request.params().entries().get(i).getKey().equals("endDate") &&
                     !request.params().entries().get(i).getKey().equals("page") &&
-                    !request.params().entries().get(i).getKey().equals("id_structure") )
+                    !request.params().entries().get(i).getKey().equals("idStructure") )
                 filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
                         request.params().entries().get(i).getValue()));
         }
@@ -233,10 +238,10 @@ public class OrderRegionController extends BaseController {
                     allEquipments.add(equipmentsGradeAndQ);
                     if (request.params().contains("q")) {
                         orderRegionService.filterSearch(user, allEquipments, query, startDate,
-                                endDate, filters, page, arrayResponseHandler(request));
+                                endDate, idStructure, filters, page, arrayResponseHandler(request));
                     } else {
                         orderRegionService.filter_only(user, equipmentsGrade, startDate,
-                                endDate, filters, page, arrayResponseHandler(request));
+                                endDate, idStructure, filters, page, arrayResponseHandler(request));
                     }
                 }
             });
@@ -246,9 +251,9 @@ public class OrderRegionController extends BaseController {
             orderRegionService.searchName(query, equipments -> {
                 if (equipments.right().getValue().size() > 0) {
                     orderRegionService.search(user, equipments.right().getValue(), query, startDate,
-                            endDate, filters, page, arrayResponseHandler(request));
+                            endDate, idStructure, filters, page, arrayResponseHandler(request));
                 } else {
-                    orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, filters, page,
+                    orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
                             arrayResponseHandler(request));
                 }
             });
@@ -460,7 +465,6 @@ public class OrderRegionController extends BaseController {
             JsonObject renew = renews.getJsonObject(i);
             String id = renew.getString("equipment_key");
             if(id != null) {
-                int finalI = i;
                 equipmentService.equipment(id, equipment -> {
                     if(equipment.isRight()) {
                         JsonObject equip = equipment.right().getValue().getJsonObject(0);
