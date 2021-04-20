@@ -226,11 +226,20 @@ public class DefaultOldOrderRegionService extends SqlCrudService implements OldO
             for(Map.Entry mapentry : hashMap.entrySet()) {
                 ArrayList list = (ArrayList) mapentry.getValue();
                 String keys = mapentry.getKey().toString();
-                sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
-                for(int k = 0; k < list.size(); k++) {
-                    sqlquery += k+1 == list.size() ? "?)" : "?, ";
-                    values.add(list.get(k).toString());
+                if(keys.equals("renew")) {
+                    if (Boolean.parseBoolean(String.valueOf(list.get(0)))) {
+                        sqlquery += "ore.owner_id ~* 'renew'";
+                    } else {
+                        sqlquery += "ore.owner_id !~* 'renew'";
+                    }
+                } else {
+                    sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
+                    for(int k = 0; k < list.size(); k++) {
+                        sqlquery += k+1 == list.size() ? "?)" : "?, ";
+                        values.add(list.get(k).toString());
+                    }
                 }
+
                 if(!(count == hashMap.entrySet().size() - 1)) {
                     sqlquery += " AND ";
                 } else {
