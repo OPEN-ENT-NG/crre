@@ -1349,6 +1349,16 @@ body.crre {
     grid-gap: 0px 5em;
   }
 
+  .boxBasket {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-gap: 20px 5em;
+  }
+
+  .boxBasket :first-child {
+    align-self: center;
+  }
+
   .boxF :first-child {
     align-self: center;
   }
@@ -1485,11 +1495,19 @@ body.crre {
     margin-top: 10px;
   }
 
+  .margin-top-2 {
+    margin-top: 2px;
+  }
+
   .float {
     position: fixed;
     bottom: 20px;
     right: 20px;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  .font20 {
+    font-size: 20px;
   }
 }

@@ -34,13 +34,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             page: 0,
             isDate: false,
         };
-        $scope.filterChoice = {
-            renew : []
-        }
-        $scope.filterChoiceCorrelation = {
-            keys : ["renew"],
-            renew : 'renew'
-        }
 
         $scope.renews = [{name: 'true'}, {name: 'false'}];
         $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
