@@ -234,10 +234,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.id_structure = ? ";
+                "WHERE ore.creation_date BETWEEN ? AND ?";
         values.add(startDate);
         values.add(endDate);
-        values.add(idStructure);
+        if(!idStructure.equals("null")) {
+            sqlquery += " AND ore.id_structure = ?";
+            values.add(idStructure);
+        }
         return sqlquery;
     }
 

@@ -221,6 +221,7 @@ public class OrderRegionController extends BaseController {
                     !request.params().entries().get(i).getKey().equals("type") &&
                     !request.params().entries().get(i).getKey().equals("endDate") &&
                     !request.params().entries().get(i).getKey().equals("page") &&
+                    !request.params().entries().get(i).getKey().equals("id_structure") &&
                     !request.params().entries().get(i).getKey().equals("idStructure") )
                 filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
                         request.params().entries().get(i).getValue()));
