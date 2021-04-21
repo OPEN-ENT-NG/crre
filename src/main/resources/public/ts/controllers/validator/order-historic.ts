@@ -10,14 +10,6 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             isOld : false
         };
 
-        $scope.filterChoice = {
-            renew : []
-        }
-        $scope.filterChoiceCorrelation = {
-            keys : ["renew"],
-            renew : 'renew'
-        }
-
         $scope.changeOld = async (old: boolean) => {
             if($scope.filter.isOld !== old){
                 $scope.filter.isOld = old;

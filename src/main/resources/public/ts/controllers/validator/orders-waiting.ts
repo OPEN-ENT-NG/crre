@@ -212,7 +212,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     endLoading(newData);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate,
-                        $scope.structures.all, null, null, null);
+                        $scope.structures.all, null, null, null, $scope.filter.page);
                     endLoading(newData);
                 }
             }else{

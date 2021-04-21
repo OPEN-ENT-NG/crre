@@ -22,6 +22,15 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
         $scope.filtersDate.endDate = moment()._d;
+        $scope.filterChoice = {
+            renew : []
+        };
+        $scope.filterChoiceCorrelation = {
+            keys : ["renew"],
+            renew : 'renew'
+        };
+        $scope.renews = [{name: 'true'}, {name: 'false'}];
+        $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
         $scope.display = {
             toggle : false,
             loading : true,
@@ -34,10 +43,11 @@ export const orderRegionController = ng.controller('orderRegionController',
             page: 0,
             isDate: false,
         };
-
-        $scope.renews = [{name: 'true'}, {name: 'false'}];
-        $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
-
+        if(!$scope.selectedType.split('/').includes('historic')) {
+            $scope.current = {};
+            $scope.current.structure = {};
+            $scope.current.structure.id = null;
+        }
         $scope.projects = new Projects();
 
         $scope.onScroll = async (init?:boolean, old?:boolean): Promise<void> => {
@@ -109,6 +119,42 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
+        $scope.getFilter = async () => {
+            $scope.loading = true;
+            $scope.filter.page = 0;
+            $scope.projects = new Projects();
+            let projets = new Projects();
+            Utils.safeApply($scope);
+            $scope.filters = new Filters();
+            for (const key of Object.keys($scope.filterChoice)) {
+                $scope.filterChoice[key].forEach(item => {
+                    let newFilter = new Filter();
+                    newFilter.name = $scope.filterChoiceCorrelation[key];
+                    let value = item.name;
+                    newFilter.value = value;
+                    $scope.filters.all.push(newFilter);
+                });
+            }
+            if($scope.filters.all.length > 0) {
+                await projets.filter_order(true,$scope.query_name, $scope.filters,
+                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id)
+                if (projets.all.length > 0) {
+                    await $scope.synchroRegionOrders(true, projets, true);
+                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+                    Utils.safeApply($scope);
+                } else {
+                    $scope.display.loading = false;
+                    Utils.safeApply($scope);
+                }
+            } else {
+                if (!!$scope.query_name) {
+                    $scope.searchByName(null, true)
+                } else {
+                    $scope.searchByName($scope.query_name, true)
+                }
+            }
+        };
+
         const calculateTotalRegion = (orders: OrdersRegion, roundNumber: number) => {
             let totalPrice = 0;
             orders.forEach(order => {
@@ -152,42 +198,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
             return test;
         }
-
-        $scope.getFilter = async () => {
-            $scope.loading = true;
-            $scope.filter.page = 0;
-            $scope.projects = new Projects();
-            let projets = new Projects();
-            Utils.safeApply($scope);
-            $scope.filters = new Filters();
-            for (const key of Object.keys($scope.filterChoice)) {
-                $scope.filterChoice[key].forEach(item => {
-                    let newFilter = new Filter();
-                    newFilter.name = $scope.filterChoiceCorrelation[key];
-                    let value = item.name;
-                    newFilter.value = value;
-                    $scope.filters.all.push(newFilter);
-                });
-            }
-            if($scope.filters.all.length > 0) {
-                await projets.filter_order(true,$scope.query_name, $scope.filters,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id)
-                if (projets.all.length > 0) {
-                    await $scope.synchroRegionOrders(true, projets, true);
-                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                    Utils.safeApply($scope);
-                } else {
-                    $scope.display.loading = false;
-                    Utils.safeApply($scope);
-                }
-            } else {
-                if (!!$scope.query_name) {
-                    $scope.searchByName(null, true)
-                } else {
-                    $scope.searchByName($scope.query_name, true)
-                }
-            }
-        };
 
         async function getOrdersOfProjects(isSearching: boolean, old: boolean, projects: Projects) {
             let projets = new Projects();

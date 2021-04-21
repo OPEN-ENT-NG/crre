@@ -51,7 +51,7 @@
                         <p class="small-text-align" ng-if="campaign.purse_enabled">
                             <span class="bold-font-weight"><i18n>crre.campaign.purse.region</i18n></span>
                         </p>
-                        <p class="small-text-align" ng-if="campaign.purse_enabled">
+                        <p class="small-text-align" ng-if="campaign.purse_enabled && campaign.initial_purse_amount != 0">
                             <em class="small-text">
                                 <i18n>crre.campaign.amount.init</i18n> : <span ng-bind="campaign.initial_purse_amount | currency"></span>
                                 <i18n>crre.remainder</i18n> : <span ng-bind="campaign.purse_amount | currency"></span>
