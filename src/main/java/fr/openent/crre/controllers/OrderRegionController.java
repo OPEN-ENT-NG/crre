@@ -554,7 +554,6 @@ public class OrderRegionController extends BaseController {
                     int nbEtab = structures.size();
                     String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
                     Future<JsonObject> insertOldOrdersFuture = Future.future();
-                    Future<JsonObject> insertQuotationFuture = Future.future();
                     Future<JsonObject> deleteOldOrderClientFuture = Future.future();
                     Future<JsonObject> deleteOldOrderRegionFuture = Future.future();
 
@@ -576,9 +575,6 @@ public class OrderRegionController extends BaseController {
                                         renderJson(request, response2.right().getValue());
                                     }
                                 });
-
-
-                                quoteService.insertQuote(user, nbEtab, base64File, handlerJsonObject(insertQuotationFuture));
                                 orderRegionService.deleteOldOrderClient(ordersClient, handlerJsonObject(deleteOldOrderClientFuture));
                                 orderRegionService.deleteOldRegionClient(ordersRegion, handlerJsonObject(deleteOldOrderRegionFuture));
                                 try {

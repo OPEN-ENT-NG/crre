@@ -71,6 +71,8 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
+            $scope.display.loading = false;
+            Utils.safeApply($scope);
         };
 
         $scope.searchProjectAndOrders = async (old = false) => {
