@@ -8,8 +8,6 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
-                "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
             $scope.catalog = {
                 subjects : [],
                 public : [],

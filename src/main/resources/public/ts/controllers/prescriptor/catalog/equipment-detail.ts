@@ -3,6 +3,8 @@ import {Basket, Campaign, Utils} from '../../../model';
 
 export const equipmentController = ng.controller('equipmentController',
     ['$scope', '$routeParams', '$anchorScroll', ($scope, $routeParams, $anchorScroll) => {
+        $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
+            "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
 
         $scope.scrollTo = function(id) {
             $anchorScroll(id);
