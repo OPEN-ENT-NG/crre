@@ -47,6 +47,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.query = {
             word: "",
         };
+        $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
+            "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
         $scope.selectedType = $location.path();
         $scope.comboLabels = COMBO_LABELS;
 

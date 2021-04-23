@@ -1,10 +1,10 @@
 import {moment, ng, toasts} from 'entcore';
 import {
-    Equipments, Filter,
+    Equipments, FilterFront,
     Filters,
     FiltersFront,
     Offer,
-    Offers, OrdersClient,
+    Offers,
     OrdersRegion,
     Projects,
     StructureGroups,
@@ -22,15 +22,6 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
         $scope.filtersDate.endDate = moment()._d;
-        $scope.filterChoice = {
-            renew : []
-        };
-        $scope.filterChoiceCorrelation = {
-            keys : ["renew"],
-            renew : 'renew'
-        };
-        $scope.renews = [{name: 'true'}, {name: 'false'}];
-        $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
         $scope.display = {
             toggle : false,
             loading : true,
@@ -121,42 +112,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.getFilter = async () => {
-            $scope.loading = true;
-            $scope.filter.page = 0;
-            $scope.projects = new Projects();
-            let projets = new Projects();
-            Utils.safeApply($scope);
-            $scope.filters = new Filters();
-            for (const key of Object.keys($scope.filterChoice)) {
-                $scope.filterChoice[key].forEach(item => {
-                    let newFilter = new Filter();
-                    newFilter.name = $scope.filterChoiceCorrelation[key];
-                    let value = item.name;
-                    newFilter.value = value;
-                    $scope.filters.all.push(newFilter);
-                });
-            }
-            if($scope.filters.all.length > 0) {
-                await projets.filter_order(true,$scope.query_name, $scope.filters,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id)
-                if (projets.all.length > 0) {
-                    await $scope.synchroRegionOrders(true, projets, true);
-                    $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                    Utils.safeApply($scope);
-                } else {
-                    $scope.display.loading = false;
-                    Utils.safeApply($scope);
-                }
-            } else {
-                if (!!$scope.query_name) {
-                    $scope.searchByName(null, true)
-                } else {
-                    $scope.searchByName($scope.query_name, true)
-                }
-            }
-        };
-
         const calculateTotalRegion = (orders: OrdersRegion, roundNumber: number) => {
             let totalPrice = 0;
             orders.forEach(order => {
@@ -222,8 +177,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             for (let orders of data) {
                 if (orders.length > 0) {
                     const idProject = orders[0].id_project;
-                    orders = orders.filter(filterAll);
                     if (!old) {
+                        orders = orders.filter(filterAll);
                         let equipments = new Equipments();
                         await equipments.getEquipments(orders);
                         for (let order of orders) {
