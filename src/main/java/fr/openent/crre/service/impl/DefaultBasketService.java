@@ -11,16 +11,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-
-import java.util.List;
-
-import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
-import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 
 public class DefaultBasketService extends SqlCrudService implements BasketService {
 
@@ -46,33 +40,11 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
-    public void getBasketOrder(Integer idBasketOrder, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id = ?";
-        values.add(idBasketOrder);
-
-        sql.prepared(query, values, SqlResult.validResultHandler(handler));
-    }
-
-    public void getBasketsOrders(Integer idCampaign, Handler<Either<String, JsonArray>> handler, UserInfos user) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id_campaign = ? AND id_structure IN (";
-        values.add(idCampaign);
-
-        for (String idStruct : user.getStructures()) {
-            query += "?,";
-            values.add(idStruct);
-        }
-        query = query.substring(0, query.length() - 1) + ")";
-        query += " ORDER BY basket_order.id DESC;";
-
-        sql.prepared(query, values, SqlResult.validResultHandler(handler));
-    }
-
-    public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
+    public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate,
+                                  boolean oldTable, Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT distinct b.* FROM " + Crre.crreSchema + ".basket_order b " +
-                "INNER JOIN " + Crre.crreSchema + ".order_client_equipment oce on (oce.id_basket = b.id) " +
+                "INNER JOIN " + Crre.crreSchema + "." + (oldTable ? "order_client_equipment_old" :"order_client_equipment") + " oce on (oce.id_basket = b.id) " +
                 "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? " +
                 "ORDER BY b.id DESC ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
@@ -103,11 +75,13 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             }
         }));
     }
+
     public void delete(final Integer idBasket,final Handler<Either<String, JsonObject>> handler){
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
                 .add(getEquipmentBasketDeletion(idBasket));
         sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event, idBasket)));
     }
+
     public void updateAmount(Integer idBasket, Integer amount, Handler<Either<String, JsonObject>> handler ) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".basket_equipment " +
@@ -143,7 +117,6 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 
-
     public void listebasketItemForOrder(Integer idCampaign, String idStructure, JsonArray baskets,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -169,14 +142,21 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     @Override
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign,
+                       String startDate, String endDate, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
                 "INNER JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
+        sqlquery = SQLConditionQueryEquipments(query, equipTab, values, sqlquery);
+        sqlquery += ") AND bo.id_structure IN ( ";
+        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, String sqlquery) {
         if (!query.equals("")) {
             sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
             values.add(query);
@@ -190,8 +170,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             values.add(equipTab.getJsonObject(i).getString("ean"));
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += ") AND bo.id_structure IN ( ";
-        filterBasketSearch(filters, user, arrayResponseHandler, values, sqlquery, page);
+        return sqlquery;
     }
 
     @Override
@@ -201,14 +180,16 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
+                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? " +
+                "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
         values.add(startDate)
                 .add(endDate)
                 .add(id_campaign)
                 .add(user.getUserId())
                 .add(query)
                 .add(query);
-        filterBasketSearch(filters, user, arrayResponseHandler, values, sqlquery, page);
+        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
@@ -223,10 +204,12 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 .add(id_campaign)
                 .add(user.getUserId());
         sqlquery = DefaultOrderService.filterSQLTable(equipTab, values, sqlquery);
-        filterBasketSearch(filters, user, arrayResponseHandler, values, sqlquery, page);
+        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
+    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign,
+                              String startDate, String endDate, Integer page,
                               Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
@@ -240,19 +223,20 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sqlquery = DefaultOrderService.queryFilterSQL(query, equipTab, values, sqlquery);
 
         sqlquery += " AND bo.id_structure IN ( ";
-        filterBasketSearch(filters, user, arrayResponseHandler, values, sqlquery, page);
+        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    private void filterBasketSearch(JsonArray filters, UserInfos user, Handler<Either<String, JsonArray>> arrayResponseHandler,
-                                    JsonArray values, String sqlquery, Integer page) {
+    static String filterBasketSearch(JsonArray filters, UserInfos user,
+                                   JsonArray values, String sqlquery, Integer page, Integer limitPage) {
         sqlquery = filterSQLTable(filters, user, values, sqlquery);
         sqlquery += " ORDER BY bo.id DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
-            values.add(PAGE_SIZE * page);
-            values.add(PAGE_SIZE);
+            values.add(limitPage * page);
+            values.add(limitPage);
         }
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+        return sqlquery;
     }
 
     static String filterSQLTable(JsonArray filters, UserInfos user, JsonArray values, String sqlquery) {
@@ -277,22 +261,6 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             }
         }
         return sqlquery;
-    }
-
-    @Override
-    public void updateAllAmount(Integer id, Handler<Either<String, JsonObject>> handler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = " UPDATE " + Crre.crreSchema + ".basket_order bo " +
-                " SET amount = " +
-                " (SELECT SUM(oce.amount)" +
-                " FROM " + Crre.crreSchema + ".basket_order bo" +
-                " JOIN " + Crre.crreSchema + ".order_client_equipment oce " +
-                " ON (bo.id = oce.id_basket) " +
-                " WHERE bo.id = ?) " +
-                " WHERE id = ? " +
-                " RETURNING bo.*;";
-        values.add(id).add(id);
-        sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler));
     }
 
     public void takeOrder(final HttpServerRequest request, final JsonArray baskets, Integer idCampaign, UserInfos user,
@@ -525,19 +493,4 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             handler.handle(new Either.Left<>(""));
         }
     }
-
-    public void searchName(String word, Handler<Either<String, JsonArray>> handler) {
-        plainTextSearchName(word, handler);
-    }
-
-    @Override
-    public void filterGrade(List<String> filter, String query, Handler<Either<String, JsonArray>> handler) {
-        if(StringUtils.isEmpty(query)) {
-            filter_waiting(filter, null, handler);
-        } else {
-            filter_waiting(filter, query, handler);
-        }
-    }
-
-
 }

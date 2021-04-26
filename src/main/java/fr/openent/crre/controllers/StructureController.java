@@ -36,8 +36,6 @@ public class StructureController extends ControllerHelper {
         structureService.getStructures(arrayResponseHandler(request));
     }
 
-
-
     @Put("/structure/amount/update")
     @ApiDoc("Update student amount in structure")
     @SecuredAction(Crre.UPDATE_STUDENT_RIGHT)

@@ -14,24 +14,19 @@ import java.util.List;
 public interface OrderRegionService {
     void createOrdersRegion(JsonObject order, UserInfos event, Number id_project, Handler<Either<String, JsonObject>> handler);
 
-    void deleteOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
-
     void equipmentAlreadyPayed(String idEquipment, String idStructure, Handler<Either<String, JsonObject>> handler);
-
-    void getOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
 
     void createProject (String title,  Handler<Either<String, JsonObject>> handler);
 
     void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, String idStructure, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders,
+                        String idStructure, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
     void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, String idStructure, JsonArray filters,
                      Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
@@ -46,15 +41,8 @@ public interface OrderRegionService {
 
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 
-    void filterES(HashMap<String, ArrayList<String>> params, String query, Handler<Either<String, JsonArray>> handlerJsonArray);
+    void deletedOrderClient(JsonArray ordersClient, Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
+    void deleteOrderRegion(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException;
-
-    void deleteOldOrderClient(JsonArray ordersClient, Handler<Either<String, JsonObject>> handlerJsonObject);
-
-    void deleteOldRegionClient(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handlerJsonObject);
-
-    void getRenew(Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

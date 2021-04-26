@@ -34,7 +34,6 @@ import java.net.URLDecoder;
 import java.util.List;
 import java.util.UUID;
 
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class PurseController extends ControllerHelper {
@@ -103,31 +102,6 @@ public class PurseController extends ControllerHelper {
             log.error("[Crre@CSVImport]: csv exception", e);
             returnErrorMessage(request, e.getCause(), path);
         }
-    }
-
-    /**
-     * Match ids
-     *
-     * @param realIds     provided ids
-     * @param expectedIds expected ids
-     * @return JsonArray containing structure campaign ids specified in CSV file.
-     */
-    private static JsonArray deleteWrongIds(JsonArray realIds, JsonArray expectedIds) {
-        JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray correctIds = new fr.wseduc.webutils.collections.JsonArray();
-        JsonObject structure;
-        for (int i = 0; i < expectedIds.size(); i++) {
-            structure = expectedIds.getJsonObject(i);
-            ids.add(structure.getString("id_structure"));
-        }
-        for (int j = 0; j < realIds.size(); j++) {
-            structure = realIds.getJsonObject(j);
-            if (ids.contains(structure.getString("id"))) {
-                correctIds.add(structure);
-            }
-        }
-
-        return correctIds;
     }
 
     /**

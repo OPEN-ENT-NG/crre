@@ -21,7 +21,7 @@ import java.util.List;
 public class DefaultStructureService extends SqlCrudService implements StructureService {
 
     private final Neo4j neo4j;
-    private final Integer PAGE_SIZE = 15;
+
     public DefaultStructureService(String schema){
         super(schema, "");
         this.neo4j = Neo4j.getInstance();
@@ -91,7 +91,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
                 "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;";
         neo4j.execute(query, new JsonObject().put("ids", structureIds), Neo4jResult.validResultHandler(handler));
-
     }
 
     public void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler) {
@@ -183,7 +182,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         }else{
             handler.handle(new Either.Right<>(new JsonObject()));
         }
-
     }
 
     public void getTotalStructure(Handler<Either<String, JsonArray>> handler) {
@@ -240,5 +238,4 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         String query = "SELECT DISTINCT id_structure FROM " + Crre.crreSchema + ".rel_group_structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
     }
-
 }

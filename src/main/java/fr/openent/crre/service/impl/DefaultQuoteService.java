@@ -34,7 +34,6 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
             values.add(PAGE_SIZE);
         }
         sql.prepared(query, values, SqlResult.validResultHandler(defaultResponseHandler));
-
     }
 
     @Override

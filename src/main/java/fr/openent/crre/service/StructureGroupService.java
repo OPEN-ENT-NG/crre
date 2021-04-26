@@ -42,5 +42,4 @@ public interface StructureGroupService {
      */
     void delete(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
-    void listStructureGroupsByCampaign(Integer campaignId, Handler<Either<String, JsonArray>> handler);
 }

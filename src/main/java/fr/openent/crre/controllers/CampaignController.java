@@ -13,7 +13,6 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
@@ -95,28 +94,7 @@ public class CampaignController extends ControllerHelper {
             }
         });
     }
-    @Put("/campaign/:idCampaign/projects/:idProject/preferences")
-    @ApiDoc("Update an preference in project")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
-    public void updatePriority(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, campaign -> {
-            if (!campaign.containsKey("preferences")) {
-                badRequest(request);
-                return;
-            }
-            JsonArray projectOrders;
-            projectOrders =campaign.getJsonArray("preferences");
-            Integer campaignId = Integer.parseInt(request.params().get("idCampaign"));
-            Integer projectId = Integer.parseInt(request.params().get("idProject"));
-            String structureId = request.getParam("structureId");
-            try{
-                campaignService.updatePreference(campaignId, projectId, structureId,projectOrders, defaultResponseHandler(request));
-            }catch(Exception e){
-                log.error(" An error occurred when casting campaign id", e);
-            }
-        });
-    }
+
     @Put("/campaign/:id")
     @ApiDoc("Update a campaign")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -137,6 +115,7 @@ public class CampaignController extends ControllerHelper {
             }
         });
     }
+
     @Delete("/campaign")
     @ApiDoc("Delete a campaign")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

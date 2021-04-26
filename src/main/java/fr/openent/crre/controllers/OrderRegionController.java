@@ -8,25 +8,26 @@ import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.*;
-import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
-import fr.wseduc.rs.*;
+import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
+import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -46,21 +47,23 @@ import java.util.HashMap;
 import java.util.List;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
-import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
+import static fr.openent.crre.controllers.OrderController.exportPriceComment;
+import static fr.openent.crre.helpers.ElasticSearchHelper.*;
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchfilter;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
+import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class OrderRegionController extends BaseController {
 
 
     private final OrderRegionService orderRegionService;
+    private final OldOrderService oldOrderService;
     private final PurseService purseService;
     private final StructureService structureService;
     private final QuoteService quoteService;
-    private final EquipmentService equipmentService;
     private final EmailSendService emailSender;
     private final JsonObject mail;
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
@@ -73,9 +76,9 @@ public class OrderRegionController extends BaseController {
         this.mail = mail;
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
-        this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
         this.quoteService = new DefaultQuoteService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.oldOrderService = new DefaultOldOrderService("equipment");
     }
 
     @Post("/region/orders/")
@@ -102,7 +105,6 @@ public class OrderRegionController extends BaseController {
                                     } else {
                                         title += "_1";
                                     }
-
                                     String finalTitle = title;
                                     orderRegionService.createProject(title, idProject -> {
                                         if(idProject.isRight()){
@@ -156,29 +158,6 @@ public class OrderRegionController extends BaseController {
             LOGGER.error("An error when you want create order region and project", e);
             request.response().setStatusCode(400).end();
         }
-    };
-
-    @Delete("/region/:id/order")
-    @ApiDoc("delete order by id order region ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void deleteOrderRegion(final HttpServerRequest request) {
-        int idRegion = Integer.parseInt(request.getParam("id"));
-        orderRegionService.deleteOneOrderRegion(idRegion, Logging.defaultResponseHandler(eb,
-                request,
-                Contexts.ORDERREGION.toString(),
-                Actions.DELETE.toString(),
-                Integer.toString(idRegion),
-                new JsonObject().put("idRegion", idRegion)));
-    }
-
-    @Get("/orderRegion/:id/order")
-    @ApiDoc("get order by id order region ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void getOneOrder(HttpServerRequest request) {
-        int idOrder = Integer.parseInt(request.getParam("id"));
-        orderRegionService.getOneOrderRegion(idOrder, defaultResponseHandler(request));
     }
 
     @Get("/orderRegion/projects")
@@ -191,8 +170,9 @@ public class OrderRegionController extends BaseController {
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
             String idStructure = request.getParam("idStructure");
-            boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, arrayResponseHandler(request));
+            boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null &&
+                    Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
+            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, false, arrayResponseHandler(request));
         });
     }
 
@@ -246,18 +226,27 @@ public class OrderRegionController extends BaseController {
                     }
                 }
             });
-            orderRegionService.filterES(params, null, handlerJsonArray(equipmentFilterFuture));
-            orderRegionService.filterES(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+            filters(params, handlerJsonArray(equipmentFilterFuture));
+            if(StringUtils.isEmpty(query)) {
+                filters(params, handlerJsonArray(equipmentFilterAndQFuture));
+            } else {
+                searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+            }
         } else {
-            orderRegionService.searchName(query, equipments -> {
-                if (equipments.right().getValue().size() > 0) {
-                    orderRegionService.search(user, equipments.right().getValue(), query, startDate,
-                            endDate, idStructure, filters, page, arrayResponseHandler(request));
-                } else {
-                    orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
-                            arrayResponseHandler(request));
-                }
-            });
+            if(!(query.equals(""))) {
+                plainTextSearchName(query, equipments -> {
+                    if (equipments.right().getValue().size() > 0) {
+                        orderRegionService.search(user, equipments.right().getValue(), query, startDate,
+                                endDate, idStructure, filters, page, arrayResponseHandler(request));
+                    } else {
+                        orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
+                                arrayResponseHandler(request));
+                    }
+                });
+            } else {
+                orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
+                        arrayResponseHandler(request));
+            }
         }
     }
 
@@ -279,7 +268,8 @@ public class OrderRegionController extends BaseController {
             }
             if(request.params().contains("type") || request.params().contains("id_structure")) {
                 String finalQuery = query;
-                structureService.getStructuresByTypeAndFilter(request.getParam("type"), request.params().getAll("id_structure"), event -> {
+                structureService.getStructuresByTypeAndFilter(request.getParam("type"),
+                        request.params().getAll("id_structure"), event -> {
                     if (event.isRight()) {
                         JsonArray listeIdStructure = event.right().getValue();
                         filters.add(new JsonObject().put("id_structure", listeIdStructure));
@@ -458,7 +448,8 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3, UserInfos user, boolean library) {
+    private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3,
+                              UserInfos user, boolean library) {
         JsonArray idStructures = new JsonArray();
         for(String structureId : params3){
             idStructures.add(structureId);
@@ -473,132 +464,132 @@ public class OrderRegionController extends BaseController {
                 JsonArray structures = structureFuture.result();
                 JsonArray orderRegion = orderRegionFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonObject order, equipment, structure;
                 JsonArray ordersClient = new JsonArray(), ordersRegion = new JsonArray();
-                for (int i = 0; i < orderRegion.size(); i++) {
-                    order = orderRegion.getJsonObject(i);
-                    if(order.containsKey("owner_name")) {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                        order.put("creation_date", creation_date);
-                    }
-                    ordersRegion.add(order.getLong("id"));
-                    ordersClient.add(order.getLong("id_order_client_equipment"));
-
-                    for (int j = 0; j < equipments.size(); j++) {
-                        equipment = equipments.getJsonObject(j);
-                        if (equipment.getString("id").equals(order.getString("equipment_key"))) {
-                            JsonObject priceDetails = getPriceTtc(equipment);
-                            DecimalFormat df2 = new DecimalFormat("#.##");
-                            double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
-                            double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
-                            order.put("priceht", priceDetails.getDouble("prixht"));
-                            order.put("tva5", priceDetails.getDouble("partTVA5"));
-                            order.put("tva20", priceDetails.getDouble("partTVA20"));
-                            order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
-                            order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-                            order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                            order.put("name", equipment.getString("titre"));
-                            order.put("image", equipment.getString("urlcouverture"));
-                            order.put("ean", equipment.getString("ean"));
-                            order.put("editor", equipment.getString("editeur"));
-                            order.put("diffusor", equipment.getString("distributeur"));
-                            order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
-                            order.put("type", equipment.getString("type"));
-                            if (equipment.getString("type").equals("articlenumerique")) {
-                                JsonArray offers = computeOffers(equipment, order);
-                                if (offers.size() > 0) {
-                                    JsonArray orderOfferArray = new JsonArray();
-                                    for (int k = 0; k < offers.size(); k++) {
-                                        JsonObject orderOffer = new JsonObject();
-                                        orderOffer.put("name", offers.getJsonObject(k).getString("name"));
-                                        orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
-                                        orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
-                                        orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
-                                        orderOffer.put("unitedPriceTTC", 0);
-                                        orderOffer.put("totalPriceHT", 0);
-                                        orderOffer.put("totalPriceTTC", 0);
-                                        orderOffer.put("creation_date", order.getString("creation_date"));
-                                        orderOffer.put("id_structure", order.getString("id_structure"));
-                                        orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                        orderOffer.put("id", order.getLong("id"));
-                                        orderOffer.put("title", order.getString("title"));
-                                        orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
-                                        for (int s = 0; s < structures.size(); s++) {
-                                            structure = structures.getJsonObject(s);
-                                            if (structure.getString("id").equals(order.getString("id_structure"))) {
-                                                orderOffer.put("uai_structure", structure.getString("uai"));
-                                                orderOffer.put("name_structure", structure.getString("name"));
-                                            }
-                                        }
-                                        orderOfferArray.add(orderOffer);
-                                        orderRegion.add(orderOffer);
-                                        i++;
-                                    }
-                                    order.put("offers", orderOfferArray);
-                                }
-                            }
-                        }
-                    }
-
-                    for (int j = 0; j < structures.size(); j++) {
-                        structure = structures.getJsonObject(j);
-                        if (structure.getString("id").equals(order.getString("id_structure"))) {
-                            order.put("uai_structure", structure.getString("uai"));
-                            order.put("name_structure", structure.getString("name"));
-                        }
-                    }
-                }
+                beautifyOrders(structures, orderRegion, equipments, ordersClient, ordersRegion);
                 if (library) {
-                    int nbEtab = structures.size();
-                    String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
-                    Future<JsonObject> insertOldOrdersFuture = Future.future();
-                    Future<JsonObject> deleteOldOrderClientFuture = Future.future();
-                    Future<JsonObject> deleteOldOrderRegionFuture = Future.future();
-
-
-                    try {
-                        orderRegionService.insertOldClientOrders(orderRegion, response -> {
-                            if (response.isRight()) {
-                                quoteService.insertQuote(user, nbEtab, base64File, response2 -> {
-                                    if (response2.isRight()) {
-                                        JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-                                        attachment.add(new JsonObject().put("name", "orders.csv").put("content",base64File));
-                                        String mail = this.mail.getString("address");
-                                        emailSender.sendMail(request, mail, "Test",
-                                                "Bonjour", attachment, message -> {
-                                                    if(!message.isRight()) {
-                                                        log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
-                                                    }
-                                                });
-                                        renderJson(request, response2.right().getValue());
-                                    }
-                                });
-                                orderRegionService.deleteOldOrderClient(ordersClient, handlerJsonObject(deleteOldOrderClientFuture));
-                                orderRegionService.deleteOldRegionClient(ordersRegion, handlerJsonObject(deleteOldOrderRegionFuture));
-                                try {
-                                    orderRegionService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+                    sendMailLibraryAndRemoveWaitingAdmin(request, user, structures, orderRegion, ordersClient, ordersRegion);
                 } else{
+                    //Export CSV
                     request.response()
                             .putHeader("Content-Type", "text/csv; charset=utf-8")
                             .putHeader("Content-Disposition", "attachment; filename=orders.csv")
                             .end(generateExport(request, orderRegion));
                     }
 
-            };
+            }
         });
-        orderRegionService.getOrdersRegionById(idsOrders, handlerJsonArray(orderRegionFuture));
+        orderRegionService.getOrdersRegionById(idsOrders, false, handlerJsonArray(orderRegionFuture));
         structureService.getStructureById(idStructures,handlerJsonArray(structureFuture));
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
+    }
+
+    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray structures,
+                                                      JsonArray orderRegion, JsonArray ordersClient, JsonArray ordersRegion) {
+        int nbEtab = structures.size();
+        String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
+        Future<JsonObject> insertOldOrdersFuture = Future.future();
+        Future<JsonObject> deleteOldOrderClientFuture = Future.future();
+        Future<JsonObject> deleteOldOrderRegionFuture = Future.future();
+
+
+        try {
+            oldOrderService.insertOldClientOrders(orderRegion, response -> {
+                if (response.isRight()) {
+                    quoteService.insertQuote(user, nbEtab, base64File, response2 -> {
+                        if (response2.isRight()) {
+                            JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
+                            attachment.add(new JsonObject().put("name", "orders.csv").put("content",base64File));
+                            String mail = this.mail.getString("address");
+                            emailSender.sendMail(request, mail, "Test",
+                                    "Bonjour", attachment, message -> {
+                                        if(!message.isRight()) {
+                                            log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
+                                        }
+                                    });
+                            renderJson(request, response2.right().getValue());
+                        }
+                    });
+                    orderRegionService.deletedOrderClient(ordersClient, handlerJsonObject(deleteOldOrderClientFuture));
+                    orderRegionService.deleteOrderRegion(ordersRegion, handlerJsonObject(deleteOldOrderRegionFuture));
+                    try {
+                        oldOrderService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClient, JsonArray ordersRegion) {
+        JsonObject order;
+        JsonObject equipment;
+        for (int i = 0; i < orderRegion.size(); i++) {
+            order = orderRegion.getJsonObject(i);
+            if(order.containsKey("owner_name")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                order.put("creation_date", creation_date);
+            }
+            ordersRegion.add(order.getLong("id"));
+            ordersClient.add(order.getLong("id_order_client_equipment"));
+
+            for (int j = 0; j < equipments.size(); j++) {
+                equipment = equipments.getJsonObject(j);
+                if (equipment.getString("id").equals(order.getString("equipment_key"))) {
+                    JsonObject priceDetails = getPriceTtc(equipment);
+                    DecimalFormat df2 = new DecimalFormat("#.##");
+                    double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
+                    double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
+                    order.put("priceht", priceDetails.getDouble("prixht"));
+                    order.put("tva5", priceDetails.getDouble("partTVA5"));
+                    order.put("tva20", priceDetails.getDouble("partTVA20"));
+                    order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
+                    order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                    order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+                    extractedEquipmentInfo(equipment);
+                    order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                    if (equipment.getString("type").equals("articlenumerique")) {
+                        JsonArray offers = computeOffers(equipment, order);
+                        if (offers.size() > 0) {
+                            JsonArray orderOfferArray = new JsonArray();
+                            for (int k = 0; k < offers.size(); k++) {
+                                JsonObject orderOffer = new JsonObject();
+                                orderOffer.put("name", offers.getJsonObject(k).getString("name"));
+                                orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
+                                orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
+                                orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
+                                orderOffer.put("unitedPriceTTC", 0);
+                                orderOffer.put("totalPriceHT", 0);
+                                orderOffer.put("totalPriceTTC", 0);
+                                orderOffer.put("creation_date", order.getString("creation_date"));
+                                orderOffer.put("id_structure", order.getString("id_structure"));
+                                orderOffer.put("campaign_name", order.getString("campaign_name"));
+                                orderOffer.put("id", order.getLong("id"));
+                                orderOffer.put("title", order.getString("title"));
+                                orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
+                                for (int s = 0; s < structures.size(); s++) {
+                                    JsonObject structure = structures.getJsonObject(s);
+                                    if (structure.getString("id").equals(order.getString("id_structure"))) {
+                                        orderOffer.put("uai_structure", structure.getString("uai"));
+                                        orderOffer.put("name_structure", structure.getString("name"));
+                                        order.put("uai_structure", structure.getString("uai"));
+                                        order.put("name_structure", structure.getString("name"));
+                                    }
+                                }
+                                orderOfferArray.add(orderOffer);
+                                orderRegion.add(orderOffer);
+                                i++;
+                            }
+                            order.put("offers", orderOfferArray);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static JsonArray computeOffers(JsonObject equipment, JsonObject order) {
@@ -610,7 +601,8 @@ public class OrderRegionController extends BaseController {
         for (int i = 0; i < leps.size(); i++) {
             JsonObject offer = leps.getJsonObject(i);
             JsonArray conditions = offer.getJsonArray("conditions");
-            JsonObject offerObject = new JsonObject().put("titre", "Manuel " + offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
+            JsonObject offerObject = new JsonObject().put("titre", "Manuel " +
+                    offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
             if(conditions.size() > 1) {
                 for(int j = 0; j < conditions.size(); j++) {
                     int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
@@ -637,12 +629,12 @@ public class OrderRegionController extends BaseController {
     private static String generateExport(HttpServerRequest request, JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
-            report.append(generateExportLine(request, logs.getJsonObject(i)));
+            report.append(generateExportLine(logs.getJsonObject(i)));
         }
         return report.toString();
     }
 
-    private static String getExportHeader (HttpServerRequest request) {
+    public static String getExportHeader (HttpServerRequest request) {
         return "Id" + ";" +
                 I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -663,7 +655,7 @@ public class OrderRegionController extends BaseController {
                 + "\n";
     }
 
-    private static String generateExportLine (HttpServerRequest request, JsonObject log) {
+    public static String generateExportLine(JsonObject log) {
         return  (log.getInteger("id") != null ? log.getInteger("id").toString() : "") + ";" +
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
@@ -673,24 +665,9 @@ public class OrderRegionController extends BaseController {
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non")  : "") + ";" +
-                (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
-                (log.getDouble("priceht") != null ? log.getDouble("priceht").toString() : "") + ";" +
-                (log.getDouble("tva5") != null ? log.getDouble("tva5").toString() : "") + ";" +
-                (log.getDouble("tva20") != null ? log.getDouble("tva20").toString() : "") + ";" +
-                (log.getDouble("unitedPriceTTC") != null ? convertPriceString(log.getDouble("unitedPriceTTC")) : "") + ";" +
-                (log.getDouble("totalPriceHT") != null ? convertPriceString(log.getDouble("totalPriceHT")) : "") + ";" +
-                (log.getDouble("totalPriceTTC") != null ? convertPriceString(log.getDouble("totalPriceTTC")) : "") + ";" +
-                (log.getString("comment") != null ? log.getString("comment") : "")
+                exportPriceComment(log)
                 + "\n";
     }
 
-    private static String convertPriceString(double price) {
-        String priceString = "";
-        if(price == 0) {
-            priceString = "GRATUIT";
-        } else {
-            priceString = Double.toString(price);
-        }
-        return priceString;
-    }
+
 }

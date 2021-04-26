@@ -38,13 +38,13 @@ public class EquipmentController extends ControllerHelper {
     }
 
     @Get("/equipments")
-    @ApiDoc("List all equipments in database")
+    @ApiDoc("Get specific equipments ids")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @Override
     public void list(HttpServerRequest request) {
-        List<String> orderIds = request.params().getAll("id");
-        List<String> orderIdsInt = new ArrayList<>(orderIds);
-        searchByIds(orderIdsInt, arrayResponseHandler(request));
+        List<String> ids = request.params().getAll("id");
+        List<String> idsInt = new ArrayList<>(ids);
+        searchByIds(idsInt, arrayResponseHandler(request));
     }
 
     @Get("/equipment/:id")
@@ -83,19 +83,19 @@ public class EquipmentController extends ControllerHelper {
             log.error("An error occurred casting campaign id", e);
         }
     }
+
     @Get("/equipments/catalog")
     @ApiDoc("List equipments of campaign in database")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            searchAllWithFilter(request);
-
+            getAllWithFilter(request);
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }
     }
 
-    private void searchAllWithFilter(HttpServerRequest request) {
+    private void getAllWithFilter(HttpServerRequest request) {
         equipmentService.searchAll(event -> {
             JsonArray ressources = event.right().getValue();
             JsonArray filtres = new JsonArray();
@@ -169,7 +169,7 @@ public class EquipmentController extends ControllerHelper {
             HashMap<String, ArrayList<String>> params = new HashMap<>();
             getFilterFromRequest(request, params);
             if (emptyFilter) {
-                searchAllWithFilter(request);
+                getAllWithFilter(request);
             } else {
                 equipmentService.filterWord(params, arrayResponseHandler(request));
             }

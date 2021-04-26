@@ -187,11 +187,4 @@ public class DefaultPurseService implements PurseService {
 
         Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
     }
-
-    @Override
-    public void getAll(Handler<Either<String, JsonArray>> arrayResponseHandler) {
-            String sqlquery = "SELECT p.id_structure " +
-                    "FROM  " + Crre.crreSchema + ".purse p";
-            Sql.getInstance().raw(sqlquery, SqlResult.validResultHandler(arrayResponseHandler));
-        }
 }

@@ -55,18 +55,6 @@ public class ElasticSearchHelper {
         ESHandler(query, handler);
     }
 
-    public static void getAllFilters(Handler<Either<String, JsonArray>> handler) {
-        JsonArray fields = new JsonArray().add("disciplines.libelle")
-                                        .add("niveaux.libelle")
-                                        .add("editeur");
-        JsonObject query = new JsonObject()
-                .put("from", 0)
-                .put("size", PAGE_SIZE)
-                .put("_source", fields);
-
-        ESHandler(query, handler);
-    }
-
 
     public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
@@ -105,10 +93,6 @@ public class ElasticSearchHelper {
         JsonArray should = new JsonArray();
         JsonObject queryObject = new JsonObject();
 
-        if (query != null) {
-            JsonObject regexp = regexpField("titre", query);
-            should.add(regexp);
-        }
         ArrayList<String> filter_tab = new ArrayList<>(filters);
         term = new JsonObject().put("terms", new JsonObject().put("niveaux.libelle", new JsonArray(filter_tab)));
         JsonObject bool = new JsonObject().put("bool", new JsonObject().put("filter", term));
@@ -116,10 +100,9 @@ public class ElasticSearchHelper {
                 .put("query", bool);
         JsonArray j = new JsonArray().add(new JsonObject().put("nested", nested));
 
-
-
-
         if(query != null) {
+            JsonObject regexp = regexpField("titre", query);
+            should.add(regexp);
             JsonObject request = new JsonObject()
                     .put("filter", j)
                     .put("minimum_should_match", 1)
@@ -139,7 +122,7 @@ public class ElasticSearchHelper {
         JsonObject filter = new JsonObject();
         JsonArray j = new JsonArray();
 
-        j = prepareFilterES(result, term, j);
+        prepareFilterES(result, term, j);
         filter.put("filter", term.addAll(j));
 
         JsonObject queryObject = new JsonObject()
@@ -196,15 +179,13 @@ public class ElasticSearchHelper {
             should.add(regexp);
         }
 
-
-        j = prepareFilterES(result, term, j);
+        prepareFilterES(result, term, j);
         request.put("filter", term.addAll(j))
                 .put("minimum_should_match", 1)
                 .put("should", should);
 
         JsonObject queryObject = new JsonObject()
                 .put("bool", request);
-
 
         search(esQueryObject(queryObject), handler);
     }

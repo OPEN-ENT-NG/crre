@@ -83,9 +83,9 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 handler.handle(new Either.Left<>("An error occurred when retrieving campaigns"));
             }
         });
-        getCampaignsInfo(handlerJsonArray(campaignFuture));
+        getCampaignsInfo(null,handlerJsonArray(campaignFuture));
         getCampaignsPurses(handlerJsonArray(purseFuture));
-        getCampaignOrderStatusCount(handlerJsonArray(orderFuture));
+        getCampaignOrderStatusCount(null, handlerJsonArray(orderFuture));
     }
 
     private void getCampaignsPurses(Handler<Either<String, JsonArray>> handler) {
@@ -113,58 +113,45 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
     }
 
-    private void getCampaignOrderStatusCount(Handler<Either<String, JsonArray>> handler) {
-        String sub_query_waiting_order = "WITH count_order_waiting AS (" +
-                "SELECT COUNT(order_client_equipment.id) as nb_order_waiting, campaign.id as id_campaign " +
-                "FROM " + Crre.crreSchema +".order_client_equipment " +
-                "INNER JOIN " + Crre.crreSchema +".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE status = 'WAITING' GROUP BY campaign.id) ";
-
-        String query = sub_query_waiting_order +
-                "SELECT bo.id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, cow.nb_order_waiting " +
-                "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "INNER JOIN count_order_waiting cow ON bo.id_campaign = cow.id_campaign " +
-                "GROUP BY bo.id_campaign, id_user, nb_order_waiting;";
-
-        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
-    }
-
     private void getCampaignOrderStatusCount(String idStructure, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new JsonArray();
         String sub_query_waiting_order = "WITH count_order_waiting AS (" +
                 "SELECT COUNT(order_client_equipment.id) as nb_order_waiting, campaign.id as id_campaign " +
                 "FROM " + Crre.crreSchema +".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema +".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE id_structure = ? AND status = 'WAITING' GROUP BY campaign.id) ";
+                "WHERE";
+        if(idStructure != null){
+            sub_query_waiting_order += " id_structure = ? AND ";
+            values.add(idStructure);
+        }
+        sub_query_waiting_order += "status = 'WAITING' GROUP BY campaign.id) ";
 
         String query = sub_query_waiting_order +
                 "SELECT bo.id_campaign, id_user as user_id, COUNT(bo.id) as nb_order, cow.nb_order_waiting " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "INNER JOIN count_order_waiting cow ON bo.id_campaign = cow.id_campaign " +
-                "WHERE id_structure = ? " +
-                "GROUP BY bo.id_campaign, id_user, nb_order_waiting;";
+                "INNER JOIN count_order_waiting cow ON bo.id_campaign = cow.id_campaign ";
+        if(idStructure != null){
+            query += "WHERE id_structure = ? ";
+            values.add(idStructure);
+        }
+        query += "GROUP BY bo.id_campaign, id_user, nb_order_waiting;";
 
-        Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(idStructure), SqlResult.validResultHandler(handler));
-    }
-
-    private void getCampaignsInfo(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT campaign.*, COUNT(DISTINCT rel_group_structure.id_structure) as nb_structures " +
-                "FROM " + Crre.crreSchema + ".campaign " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_structure.id_structure_group = rel_group_campaign.id_structure_group) " +
-                "GROUP BY campaign.id;";
-
-        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_campaign.id_structure_group = rel_group_structure.id_structure_group) " +
-                "WHERE rel_group_structure.id_structure = ? " +
-                "GROUP BY campaign.id;";
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_campaign.id_structure_group = rel_group_structure.id_structure_group) ";
+        JsonArray values = new JsonArray();
+        if(idStructure != null){
+            query += "WHERE rel_group_structure.id_structure = ? ";
+            values.add(idStructure);
+        }
+        query += "GROUP BY campaign.id;";
 
-        Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     public void listCampaigns(String idStructure,  Handler<Either<String, JsonArray>> handler, UserInfos user) {
@@ -356,39 +343,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     @Override
-    public void getCampaignStructures(Integer campaignId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT distinct id_structure FROM " + Crre.crreSchema + ".campaign " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure " +
-                "ON (rel_group_structure.id_structure_group = rel_group_campaign.id_structure_group) " +
-                "WHERE campaign.id = ?;";
-
-        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(campaignId), SqlResult.validResultHandler(handler));
-    }
-
-    @Override
-    public void updatePreference(Integer campaignId,Integer projectId, String structureId,
-                                 JsonArray projectOrders, Handler<Either<String, JsonObject>> handler) {
-        String query= "UPDATE " + Crre.crreSchema + ".project SET "+
-                "preference = ? " +
-                "WHERE id = ?; " +
-                "UPDATE " + Crre.crreSchema + ".project SET "+
-                "preference = ? " +
-                "WHERE id = ?; ";
-        JsonArray values = new JsonArray();
-        for(Object object : projectOrders){
-            values.add(((JsonObject) object).getInteger("preference"));
-            values.add(((JsonObject) object).getInteger("id"));
-        }
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-        statements.add(new JsonObject()
-                .put("statement",query)
-                .put("values",values)
-                .put("action","prepared"));
-        sql.transaction(statements, jsonObjectMessage -> handler.handle(getTransactionHandler(jsonObjectMessage,projectId)));
-    }
-
-    @Override
     public void getStructures(Integer idCampaign, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id_structure as id " +
                 "FROM " + Crre.crreSchema + ".campaign " +
@@ -447,51 +401,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .put("action", "prepared");
     }
 
-    /**
-     * Returns the update statement.
-     *
-     * @param id        resource Id
-     * @param campaign campaign to update
-     * @return Update statement
-     */
-    private JsonObject getCampaignUpdateStatement(Number id, JsonObject campaign) {
-        String query = "UPDATE " + Crre.crreSchema + ".campaign " +
-                "SET  name=?, description=?, image=?, purse_enabled=?, priority_enabled=?, priority_field=? " +
-                "WHERE id = ?";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(campaign.getString("name"))
-                .add(campaign.getString("description"))
-                .add(campaign.getString("image"))
-                .add(campaign.getBoolean("purse_enabled"))
-                .add(campaign.getBoolean("priority_enabled"))
-                .add(campaign.getString("priority_field"))
-                .add(id);
-
-        return new JsonObject()
-                .put("statement", query)
-                .put("values", params)
-                .put("action", "prepared");
-    }
-    private JsonObject getCampaignCreationStatement(Number id, JsonObject campaign) {
-        String insertCampaignQuery =
-                "INSERT INTO " + Crre.crreSchema + ".campaign(id, name, description, image, accessible, purse_enabled, priority_enabled, priority_field )" +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id; ";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(id)
-                .add(campaign.getString("name"))
-                .add(campaign.getString("description"))
-                .add(campaign.getString("image"))
-                .add(campaign.getBoolean("accessible"))
-                .add(campaign.getBoolean("purse_enabled"))
-                .add(campaign.getBoolean("priority_enabled"))
-                .add(campaign.getString("priority_field"));
-
-        return new JsonObject()
-                .put("statement", insertCampaignQuery)
-                .put("values", params)
-                .put("action", "prepared");
-    }
     private JsonObject getCampaignsGroupRelationshipDeletion(List<Integer> ids) {
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_campaign " +
                 " WHERE id_campaign in  " +

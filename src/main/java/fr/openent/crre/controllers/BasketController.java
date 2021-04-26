@@ -16,6 +16,7 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
@@ -25,7 +26,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
+import static fr.openent.crre.helpers.ElasticSearchHelper.*;
+import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -88,54 +90,6 @@ public class BasketController extends ControllerHelper {
         });
     }
 
-    @Get("/basketOrder/:idBasketOrder")
-    @ApiDoc("Get basket order thanks to the id")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getBasketOrder(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            try {
-                Integer idBasketOrder = request.params().contains("idBasketOrder")
-                        ? parseInt(request.params().get("idBasketOrder"))
-                        : null;
-                basketService.getBasketOrder(idBasketOrder, arrayResponseHandler(request));
-            } catch (ClassCastException e) {
-                log.error("An error occurred casting campaign id", e);
-            }
-        });
-    }
-
-    @Get("/basketOrder/:idCampaign")
-    @ApiDoc("Get baskets orders of my structures for this campaign")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getBasketsOrders(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            try {
-                Integer idCampaign = request.params().contains("idCampaign")
-                        ? parseInt(request.params().get("idCampaign"))
-                        : null;
-                basketService.getBasketsOrders(idCampaign, arrayResponseHandler(request), user);
-            } catch (ClassCastException e) {
-                log.error("An error occurred casting campaign id", e);
-            }
-        });
-    }
-
-    @Get("/basketOrder/:idBasketOrder/amount")
-    @ApiDoc("Update an order's amount")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void updateAmounts(final HttpServerRequest request) {
-        try {
-            Integer id = Integer.parseInt(request.params().get("idBasketOrder"));
-            basketService.updateAllAmount(id, event -> {
-                if (event.isRight()) {
-                    final JsonObject orders = event.right().getValue();
-                    renderJson(request, orders);
-                }});
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Get("/basketOrder/allMyOrders")
     @ApiDoc("Get all my baskets orders")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
@@ -146,7 +100,7 @@ public class BasketController extends ControllerHelper {
                 int id_campaign = parseInt(request.getParam("id"));
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                basketService.getMyBasketOrders(user, page, id_campaign, startDate, endDate, arrayResponseHandler(request));
+                basketService.getMyBasketOrders(user, page, id_campaign, startDate, endDate, false, arrayResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
             }
@@ -165,7 +119,7 @@ public class BasketController extends ControllerHelper {
                     int id_campaign = parseInt(request.getParam("id"));
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
-                    basketService.searchName(query, equipments -> {
+                    plainTextSearchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
                             basketService.search(query, null, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         } else {
@@ -200,7 +154,8 @@ public class BasketController extends ControllerHelper {
                 JsonArray filters = new JsonArray();
                 int length = request.params().entries().size();
                 for (int i = 0; i < length; i++) {
-                    if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q") && !request.params().entries().get(i).getKey().equals("niveaux.libelle"))
+                    if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q")
+                            && !request.params().entries().get(i).getKey().equals("niveaux.libelle"))
                         filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
                 }
                 // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
@@ -233,11 +188,11 @@ public class BasketController extends ControllerHelper {
                             }
                         }
                     });
-                    basketService.filterGrade(params, null, handlerJsonArray(equipmentGradeFuture));
-                    basketService.filterGrade(params, q, handlerJsonArray(equipmentGradeAndQFuture));
+                    filter_waiting(params, null, handlerJsonArray(equipmentGradeFuture));
+                    filter_waiting(params, StringUtils.isEmpty(q) ? null : q, handlerJsonArray(equipmentGradeAndQFuture));
                 } else {
                     // Recherche avec les filtres autres que grade
-                    basketService.searchName(finalQ, equipments -> {
+                    plainTextSearchName(finalQ, equipments -> {
                         if (equipments.right().getValue().size() > 0) {
                             basketService.search(finalQ, filters, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         } else {

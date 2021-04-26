@@ -2,12 +2,12 @@ package fr.openent.crre.service.impl;
 
 
 import fr.openent.crre.Crre;
-import fr.openent.crre.controllers.CrreController;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -18,15 +18,19 @@ import org.entcore.common.sql.SqlResult;
 
 import java.util.List;
 
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+
 /**
  * Created by agnes.lapeyronnie on 28/12/2017.
  */
 public class DefaultStructureGroupService extends SqlCrudService implements StructureGroupService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStructureGroupService.class);
+    private final DefaultStructureService structureService;
 
     public DefaultStructureGroupService(String schema, String table){
         super(schema, table);
+        this.structureService = new DefaultStructureService( Crre.crreSchema);
     }
 
     @Override
@@ -53,22 +57,13 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                     JsonArray idsStructures = structureGroup.getJsonArray("structures");
                     JsonArray allIds = new JsonArray();
                     JsonArray newIds = new JsonArray();
-                    CrreController crreController = new CrreController();
                     sql.raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event2 -> {
-                        JsonArray structure_id = event2.right().getValue();
-                        for (int i = 0; i < structure_id.size(); i++) {
-                            allIds.add(structure_id.getJsonObject(i).getString("id_structure"));
-                        }
-                        for (int j = 0; j < idsStructures.size(); j++) {
-                            if (!allIds.contains(idsStructures.getString(j))) {
-                                newIds.add(idsStructures.getString(j));
-                            }
-                        }
+                        setAllAndNewIds(idsStructures, allIds, newIds, event2);
                         statements.add(getGroupStructureRelationshipStatement(id, idsStructures));
 
                         sql.transaction(statements, event1 -> {
                             if(!newIds.isEmpty()) {
-                                crreController.getStudentsByStructures(newIds, handler);
+                                getStudentsByStructures(newIds);
                             }
                             handler.handle(SqlQueryUtils.getTransactionHandler(event1, id));
                         });
@@ -85,63 +80,73 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
         }));
     }
 
+    private void getStudentsByStructures(JsonArray structures) {
+        Future<JsonArray> getStudentsByStructureFuture = Future.future();
+        Future<JsonArray> insertStructuresFuture = Future.future();
+        CompositeFuture.all(getStudentsByStructureFuture, insertStructuresFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonArray students = getStudentsByStructureFuture.result();
+                structureService.insertStudents(students, result -> {
+                    if(result.isRight()) {
+                        structureService.getTotalStructure(total_structure -> {
+                            JsonArray total = total_structure.right().getValue();
+                            structureService.insertTotalStructure(total, event2 -> {
+                                if(event2.isRight()) {
+                                    LOGGER.info("Insert total success");
+                                } else {
+                                    LOGGER.error("Failed to insert");
+                                }
+                            });
+                        });
+                    }
+                });
+            } else {
+                LOGGER.error("Failed to get students or insert into structure");
+            }
+        });
+        structureService.insertStructures(structures, handlerJsonArray(insertStructuresFuture));
+        structureService.getStudentsByStructure(structures, handlerJsonArray(getStudentsByStructureFuture));
+    }
+
+    private void setAllAndNewIds(JsonArray idsStructures, JsonArray allIds, JsonArray newIds, Either<String, JsonArray> event2) {
+        JsonArray structure_id = event2.right().getValue();
+        for (int i = 0; i < structure_id.size(); i++) {
+            allIds.add(structure_id.getJsonObject(i).getString("id_structure"));
+        }
+        for (int j = 0; j < idsStructures.size(); j++) {
+            if (!allIds.contains(idsStructures.getString(j))) {
+                newIds.add(idsStructures.getString(j));
+            }
+        }
+    }
+
     @Override
     public void update(final Integer id, JsonObject structureGroup,final Handler<Either<String, JsonObject>> handler) {
         JsonArray idsStructures = structureGroup.getJsonArray("structures");
         JsonArray allIds = new JsonArray();
         JsonArray newIds = new JsonArray();
-        CrreController crreController = new CrreController();
         sql.raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event -> {
-            JsonArray structure_id = event.right().getValue();
-            for (int i = 0; i < structure_id.size(); i++) {
-                allIds.add(structure_id.getJsonObject(i).getString("id_structure"));
-            }
-            for(int j = 0; j < idsStructures.size(); j++) {
-                if(!allIds.contains(idsStructures.getString(j))) {
-                    newIds.add(idsStructures.getString(j));
-                }
-            }
+            setAllAndNewIds(idsStructures, allIds, newIds, event);
             JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
                     .add(getStructureGroupUpdateStatement(id,structureGroup))
-                    .add(getStrctureGroupRelationshipDeletion(id))
+                    .add(getStructureGroupRelationshipDeletion(id))
                     .add(getGroupStructureRelationshipStatement(id,idsStructures));
             sql.transaction(statements, event2 -> {
                 if(!newIds.isEmpty()) {
-                    crreController.getStudentsByStructures(newIds, handler);
+                    getStudentsByStructures(newIds);
                 }
                 handler.handle(SqlQueryUtils.getTransactionHandler(event2, id));
             });
         }));
     }
 
-/*    private void getAllStructures(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT r.id_structure " +
-                "FROM " + Crre.crreSchema + ".rel_group_structure r ";
-        sql.prepared(query, idsStructures, SqlResult.validResultHandler(handler));
-    }*/
-
     @Override
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                .add(getStrctureGroupRelationshipDeletion(ids))
+                .add(getStructureGroupRelationshipDeletion(ids))
                 .add(getStructureGroupDeletion(ids));
 
         sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event,ids.get(0))));
-    }
-
-    @Override
-    public void listStructureGroupsByCampaign(Integer campaignId, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT structure.id as id, name, description, array_to_json(array_agg(DISTINCT id_structure)) as structures " +
-                " FROM " + Crre.crreSchema + ".structure_group  as structure " +
-                " INNER JOIN " + Crre.crreSchema + ".rel_group_campaign" +
-                " on structure.id = rel_group_campaign.id_structure_group " +
-                " INNER JOIN " + Crre.crreSchema + ".rel_group_structure" +
-                " on structure.id = rel_group_structure.id_structure_group " +
-                " WHERE rel_group_campaign.id_campaign = ?" +
-                " group by (structure.id, name , description ) ";
-        JsonArray params = new JsonArray().add(campaignId);
-
-        sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     /**
@@ -215,14 +220,13 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param idStructureGroup of structureGroup
      * @return Delete statement
      */
-    private JsonObject getStrctureGroupRelationshipDeletion(Number idStructureGroup){
+    private JsonObject getStructureGroupRelationshipDeletion(Number idStructureGroup){
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_structure WHERE id_structure_group = ?;";
 
         return new JsonObject()
                 .put("statement", query)
                 .put("values", new fr.wseduc.webutils.collections.JsonArray().add(idStructureGroup))
                 .put("action", "prepared");
-
     }
 
     /**
@@ -230,7 +234,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param ids list of id group
      * @return Delete statement
      */
-    private JsonObject getStrctureGroupRelationshipDeletion(List<Integer> ids){
+    private JsonObject getStructureGroupRelationshipDeletion(List<Integer> ids){
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_structure " +
                 "WHERE id_structure_group IN " +Sql.listPrepared(ids.toArray());
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
@@ -242,7 +246,6 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                 .put("statement", query)
                 .put("values",params)
                 .put("action","prepared");
-
     }
 
     /**

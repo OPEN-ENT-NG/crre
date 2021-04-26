@@ -1,6 +1,6 @@
 import {moment, ng, toasts} from 'entcore';
 import {
-    Equipments, FilterFront,
+    Equipments,
     Filters,
     FiltersFront,
     Offer,
@@ -41,13 +41,17 @@ export const orderRegionController = ng.controller('orderRegionController',
         }
         $scope.projects = new Projects();
 
+        function initProjects() {
+            $scope.projects = new Projects();
+            $scope.filter.page = 0;
+            $scope.display.loading = true;
+            Utils.safeApply($scope);
+        }
+
         $scope.onScroll = async (init?:boolean, old?:boolean): Promise<void> => {
             let projets = new Projects();
             if(init){
-                $scope.projects = new Projects();
-                $scope.filter.page = 0;
-                $scope.display.loading = true;
-                Utils.safeApply($scope);
+                initProjects();
                 await projets.filter_order(old,$scope.query_name, $scope.filters,
                     $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
                 Utils.safeApply($scope);
@@ -67,11 +71,8 @@ export const orderRegionController = ng.controller('orderRegionController',
         };
 
         $scope.searchProjectAndOrders = async (old = false) => {
-            $scope.projects = new Projects();
             let projets = new Projects();
-            $scope.filter.page = 0;
-            $scope.display.loading = true;
-            Utils.safeApply($scope);
+            initProjects();
             await projets.filter_order(old,$scope.query_name, $scope.filters,
                 $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
             if (projets.all.length > 0) {
@@ -87,10 +88,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.searchByName = async (name: string, old = false) => {
             $scope.query_name = name;
             if ($scope.filters.all.length == 0 && !name) {
-                $scope.filter.page = 0;
-                $scope.display.loading = true;
-                $scope.projects = new Projects();
-                Utils.safeApply($scope);
+                initProjects();
                 await $scope.synchroRegionOrders(false, null, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);

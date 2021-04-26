@@ -58,21 +58,6 @@ public interface CampaignService {
     void delete(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
 
     /**
-     * Get structure list ids based on provided campaign id
-     * @param campaignId campaign id
-     * @param handler function handler returning data
-     */
-    void getCampaignStructures(Integer campaignId, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Update  preference in project
-     * @param campaignId
-     * @param structureId
-     * @param handler
-     */
-    void updatePreference(Integer campaignId,Integer projectId, String structureId,JsonArray projectOrders, Handler<Either<String, JsonObject>> handler);
-
-    /**
      * List all structure identifiers in the campaign
      *
      * @param idCampaign Campaign identifier

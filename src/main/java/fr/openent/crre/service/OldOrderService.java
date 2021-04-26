@@ -6,23 +6,15 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.text.ParseException;
 import java.util.List;
 
-public interface OldOrderRegionService {
-
-
-    void getOneOrderRegion(int idOrderRegion, Handler<Either<String, JsonObject>> handler);
+public interface OldOrderService {
 
     void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getOrdersRegionById(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders, String idStructure, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
     void search(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void searchName(String word, Handler<Either<String, JsonArray>> handler);
 
     void filter_only(UserInfos user, String startDate, String endDate, String idStructure, JsonArray filters,
                      Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
@@ -30,8 +22,9 @@ public interface OldOrderRegionService {
     void filterSearch(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                       Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
+    void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
 
-    void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
+    void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException;
 
-    void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
+
 }

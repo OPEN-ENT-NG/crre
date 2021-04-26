@@ -221,7 +221,7 @@ export class OrdersClient extends Selection<OrderClient> {
     getEquipments (orders):Promise<any>{
         let params = '';
         orders.map((order) => {
-            params += `order_id=${order.equipment_key}&`;
+            params += `id=${order.equipment_key}&`;
         });
         params = params.slice(0, -1);
         return http.get(`/crre/equipments?${params}`);

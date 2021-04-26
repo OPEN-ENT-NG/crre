@@ -183,20 +183,6 @@ public class StructureGroupController extends ControllerHelper {
         structureGroupService.listStructureGroups(arrayResponseHandler(request));
     }
 
-    @Get("/structure/groups/campaign/:idCampaign")
-    @ApiDoc("List all goups of structures")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void listByCampaign(final HttpServerRequest request) {
-        try {
-            Integer campaignId = Integer.parseInt(request.getParam("idCampaign"));
-            structureGroupService.listStructureGroupsByCampaign(campaignId, arrayResponseHandler(request));
-        } catch (NumberFormatException e) {
-            log.error("An error occurred when casting Campaign identifier");
-            badRequest(request);
-        }
-    }
-
-
     @Post("/structure/group")
     @ApiDoc("Create a group of Structures")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

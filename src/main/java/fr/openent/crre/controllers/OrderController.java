@@ -5,12 +5,8 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.*;
-import fr.openent.crre.service.ExportService;
 import fr.openent.crre.service.OrderService;
-import fr.openent.crre.service.StructureService;
-import fr.openent.crre.service.impl.DefaultExportServiceService;
 import fr.openent.crre.service.impl.DefaultOrderService;
-import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -19,35 +15,29 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.text.DecimalFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
+import static fr.openent.crre.helpers.ElasticSearchHelper.*;
+import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
-import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
-import static fr.openent.crre.utils.OrderUtils.retrieveUaiNameStructure;
+import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Integer.parseInt;
@@ -55,20 +45,12 @@ import static java.lang.Integer.parseInt;
 
 public class OrderController extends ControllerHelper {
 
-    private final Storage storage;
     private final OrderService orderService;
-    private final StructureService structureService;
-    private final ExportService exportService;
 
     public static final String UTF8_BOM = "\uFEFF";
 
-    public OrderController (Storage storage, Vertx vertx, JsonObject config, EventBus eb) {
-        this.storage = storage;
-        EmailFactory emailFactory = new EmailFactory(vertx, config);
-        EmailSender emailSender = emailFactory.getSender();
+    public OrderController() {
         this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment");
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
-        exportService = new DefaultExportServiceService(storage);
     }
 
     @Get("/orders/mine/:idCampaign/:idStructure")
@@ -83,7 +65,7 @@ public class OrderController extends ControllerHelper {
                 List<String> ordersIds = request.params().getAll("order_id");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, orders -> {
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, false, orders -> {
                     if (orders.isRight()) {
                         List<String> idEquipments = new ArrayList<>();
                         for(Object order : orders.right().getValue()){
@@ -134,7 +116,7 @@ public class OrderController extends ControllerHelper {
                 List<String> ordersIds = request.params().getAll("order_id");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                orderService.listOrderOld(idCampaign,idStructure, user, ordersIds, startDate, endDate, orders -> {
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, true, orders -> {
                     if (orders.isRight()) {
                         final JsonArray finalResult = orders.right().getValue();
                         renderJson(request, finalResult);
@@ -198,7 +180,7 @@ public class OrderController extends ControllerHelper {
                     Integer finalId_campaign = id_campaign;
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
-                    orderService.searchName(query, equipments -> {
+                    plainTextSearchName(query, equipments -> {
                         if(equipments.right().getValue().size() > 0) {
                             orderService.search(query, null, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         } else {
@@ -220,77 +202,77 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-                try {
-                    Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                    List<String> params = new ArrayList<>();
-                    String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
-                    if (request.params().contains("niveaux.libelle")) {
-                        params = request.params().getAll("niveaux.libelle");
-                    }
-                    String startDate = request.getParam("startDate");
-                    String endDate = request.getParam("endDate");
+            try {
+                Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+                List<String> params = new ArrayList<>();
+                String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
+                if (request.params().contains("niveaux.libelle")) {
+                    params = request.params().getAll("niveaux.libelle");
+                }
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
 
-                    // Récupération de tout les filtres hors grade
-                    JsonArray filters = new JsonArray();
-                    int length = request.params().entries().size();
-                    for (int i = 0; i < length; i++) {
-                        String key = request.params().entries().get(i).getKey();
-                        if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page") &&
+                // Récupération de tout les filtres hors grade
+                JsonArray filters = new JsonArray();
+                int length = request.params().entries().size();
+                for (int i = 0; i < length; i++) {
+                    String key = request.params().entries().get(i).getKey();
+                    if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
-                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
-                        }
+                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
                     }
-                    // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
-                    if (request.params().contains("q")) {
-                        q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-                    }
-                    Integer id_campaign = null;
-                    if(request.getParam("id") != null) {
-                        id_campaign = parseInt(request.getParam("id"));
-                    }
-                    String finalQ = q;
-                    // Si nous avons des filtres de grade
-                    if (params.size() > 0) {
-                        Future<JsonArray> equipmentGradeFuture = Future.future();
-                        Future<JsonArray> equipmentGradeAndQFuture = Future.future();
+                }
+                // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
+                if (request.params().contains("q")) {
+                    q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
+                }
+                Integer id_campaign = null;
+                if(request.getParam("id") != null) {
+                    id_campaign = parseInt(request.getParam("id"));
+                }
+                String finalQ = q;
+                // Si nous avons des filtres de grade
+                if (params.size() > 0) {
+                    Future<JsonArray> equipmentGradeFuture = Future.future();
+                    Future<JsonArray> equipmentGradeAndQFuture = Future.future();
 
-                        Integer finalId_campaign = id_campaign;
-                        CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
-                            if (event.succeeded()) {
-                                JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
-                                JsonArray equipmentsGradeAndQ = equipmentGradeAndQFuture.result(); // Tout les équipement correspondant aux grades et à la query
-                                JsonArray allEquipments = new JsonArray();
-                                allEquipments.add(equipmentsGrade);
-                                allEquipments.add(equipmentsGradeAndQ);
-                                // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
-                                if (equipmentsGrade.size() > 0) {
-                                    if (request.params().contains("q")) {
-                                        orderService.searchWithAll(finalQ, filters, user, allEquipments, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                    } else {
-                                        orderService.filter(filters, user, equipmentsGrade, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                    }
+                    Integer finalId_campaign = id_campaign;
+                    CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
+                        if (event.succeeded()) {
+                            JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
+                            JsonArray equipmentsGradeAndQ = equipmentGradeAndQFuture.result(); // Tout les équipement correspondant aux grades et à la query
+                            JsonArray allEquipments = new JsonArray();
+                            allEquipments.add(equipmentsGrade);
+                            allEquipments.add(equipmentsGradeAndQ);
+                            // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
+                            if (equipmentsGrade.size() > 0) {
+                                if (request.params().contains("q")) {
+                                    orderService.searchWithAll(finalQ, filters, user, allEquipments, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                 } else {
-                                    orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                                    orderService.filter(filters, user, equipmentsGrade, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                                 }
-                            }
-                        });
-                        orderService.filterGrade(params, null, handlerJsonArray(equipmentGradeFuture));
-                        orderService.filterGrade(params, q, handlerJsonArray(equipmentGradeAndQFuture));
-                    } else {
-                        // Recherche avec les filtres autres que grade
-                        Integer finalId_campaign = id_campaign;
-                        orderService.searchName(finalQ, equipments -> {
-                            if (equipments.right().getValue().size() > 0) {
-                                orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                             } else {
                                 orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                             }
-                        });
-                    }
-
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                        }
+                    });
+                    filter_waiting(params, null, handlerJsonArray(equipmentGradeFuture));
+                    filter_waiting(params, StringUtils.isEmpty(q) ? null : q, handlerJsonArray(equipmentGradeAndQFuture));
+                } else {
+                    // Recherche avec les filtres autres que grade
+                    Integer finalId_campaign = id_campaign;
+                    plainTextSearchName(finalQ, equipments -> {
+                        if (equipments.right().getValue().size() > 0) {
+                            orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                        } else {
+                            orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                        }
+                    });
                 }
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         });
     }
 
@@ -306,55 +288,35 @@ public class OrderController extends ControllerHelper {
         Future<JsonArray> orderClientFuture = Future.future();
 
         CompositeFuture.all(equipmentFuture, orderClientFuture).setHandler(event -> {
-                    if (event.succeeded()) {
-                        JsonArray equipments = equipmentFuture.result();
-                        JsonArray orderClients = orderClientFuture.result();
-                        JsonObject orderMap;
-                        JsonArray orders = new JsonArray();
-                        JsonObject order, equipment;
-                        boolean check;
-                        int j;
-                        for (int i = 0; i < orderClients.size(); i++) {
-                            order = orderClients.getJsonObject(i);
-                            check = true;
-                            j = 0;
-                            while(check && j < equipments.size()) {
-                                if(equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
-                                    orderMap = new JsonObject();
-                                    equipment = equipments.getJsonObject(j);
-                                    orderMap.put("name", equipment.getString("titre"));
-                                    orderMap.put("id", order.getInteger("id"));
-                                    DecimalFormat df = new DecimalFormat("0.00");
-                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                                    orderMap.put("creation_date", creation_date);
-                                    orderMap.put("ean", equipment.getString("ean"));
-                                    orderMap.put("status", order.getString("status"));
-                                    orderMap.put("basket_name", order.getString("basket_name"));
-                                    orderMap.put("comment", order.getString("comment"));
-                                    orderMap.put("amount", order.getInteger("amount"));
-                                    JsonObject priceDetails = getPriceTtc(equipment);
-                                    DecimalFormat df2 = new DecimalFormat("#.##");
-                                    double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
-                                    double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
-                                    orderMap.put("priceht", priceDetails.getDouble("prixht"));
-                                    orderMap.put("tva5",priceDetails.getDouble("partTVA5"));
-                                    orderMap.put("tva20",priceDetails.getDouble("partTVA20"));
-                                    orderMap.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
-                                    orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-                                    orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                                    orders.add(orderMap);
-                                    check = false;
-                                }
-                                j++;
-                            }
+            if (event.succeeded()) {
+                JsonArray equipments = equipmentFuture.result();
+                JsonArray orderClients = orderClientFuture.result();
+                JsonObject orderMap;
+                JsonArray orders = new JsonArray();
+                JsonObject order, equipment;
+                boolean check;
+                int j;
+                for (int i = 0; i < orderClients.size(); i++) {
+                    order = orderClients.getJsonObject(i);
+                    check = true;
+                    j = 0;
+                    while(check && j < equipments.size()) {
+                        if(equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
+                            orderMap = new JsonObject();
+                            equipment = equipments.getJsonObject(j);
+                            orderMap.put("name", equipment.getString("titre"));
+                            orderMap.put("ean", equipment.getString("ean"));
+                            setOrderMap(orders, orderMap, order);
+                            check = false;
                         }
-                        request.response()
-                                .putHeader("Content-Type", "text/csv; charset=utf-8")
-                                .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                .end(generateExport(request, orders));
+                        j++;
                     }
+                }
+                request.response()
+                        .putHeader("Content-Type", "text/csv; charset=utf-8")
+                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                        .end(generateExport(request, orders));
+            }
         });
 
         getEquipment(idsEquipment, handlerJsonArray(equipmentFuture));
@@ -377,46 +339,39 @@ public class OrderController extends ControllerHelper {
                 JsonObject order;
                 for (int i = 0; i < orderClients.size(); i++) {
                     order = orderClients.getJsonObject(i);
-                            orderMap = new JsonObject();
-                            orderMap.put("name", order.getString("equipment_name"));
-                            orderMap.put("id", order.getInteger("id"));
-                            DecimalFormat df = new DecimalFormat("0.00");
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                            ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                            String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                            orderMap.put("creation_date", creation_date);
-                            orderMap.put("ean", order.getString("equipment_key"));
-                            orderMap.put("status", order.getString("status"));
-                            orderMap.put("basket_name", order.getString("basket_name"));
-                            orderMap.put("comment", order.getString("comment"));
-                            orderMap.put("amount", order.getInteger("amount"));
-                            DecimalFormat df2 = new DecimalFormat("#.##");
-                            Double price = Double.parseDouble(order.getString("equipment_price"));
-                            Double priceht = order.getDouble("equipment_priceht");
-                            double priceTTC = price * order.getInteger("amount");
-                            double priceHT = priceht * order.getInteger("amount");
-                            orderMap.put("priceht", priceht);
-                            orderMap.put("tva5",order.getDouble("equipment_tva5"));
-                            orderMap.put("tva20",order.getDouble("equipment_tva20"));
-                            orderMap.put("unitedPriceTTC", price);
-                            orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-                            orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                            orders.add(orderMap);
-                    }
+                    orderMap = new JsonObject();
+                    orderMap.put("name", order.getString("equipment_name"));
+                    orderMap.put("ean", order.getString("equipment_key"));
+                    setOrderMap(orders, orderMap, order);
+                }
                 request.response()
                         .putHeader("Content-Type", "text/csv; charset=utf-8")
                         .putHeader("Content-Disposition", "attachment; filename=orders.csv")
                         .end(generateExport(request, orders));
-                }
+            }
         });
     }
 
+    private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order) {
+        orderMap.put("id", order.getInteger("id"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+        orderMap.put("creation_date", creation_date);
+        orderMap.put("status", order.getString("status"));
+        orderMap.put("basket_name", order.getString("basket_name"));
+        orderMap.put("comment", order.getString("comment"));
+        orderMap.put("amount", order.getInteger("amount"));
+        dealWithPriceTTC_HT(orderMap);
+        orders.add(orderMap);
+    }
+
     private void getOrderEquipmentEquipment(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        orderService.listExport(idsOrders, handlerJsonArray);
+        orderService.listExport(idsOrders, false, handlerJsonArray);
     }
 
     private void getOrderEquipmentOld(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        orderService.listExportOld(idsOrders, handlerJsonArray);
+        orderService.listExport(idsOrders, true, handlerJsonArray);
     }
 
     private void getEquipment(List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
@@ -449,20 +404,24 @@ public class OrderController extends ControllerHelper {
     }
 
     private static String generateExportLine (HttpServerRequest request, JsonObject log) {
-        return  (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
+        return (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
-                (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
+                exportPriceComment(log) + ";" +
+                (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
+                + "\n";
+    }
+
+    public static String exportPriceComment(JsonObject log) {
+        return (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
                 (log.getDouble("priceht") != null ? log.getDouble("priceht").toString() : "") + ";" +
                 (log.getDouble("tva5") != null ? log.getDouble("tva5").toString() : "") + ";" +
                 (log.getDouble("tva20") != null ? log.getDouble("tva20").toString() : "") + ";" +
-                (log.getDouble("unitedPriceTTC") != null ? log.getDouble("unitedPriceTTC").toString() : "") + ";" +
-                (log.getDouble("totalPriceHT") != null ? log.getDouble("totalPriceHT").toString() : "") + ";" +
-                (log.getDouble("totalPriceTTC") != null ? log.getDouble("totalPriceTTC").toString() : "") + ";" +
-                (log.getString("comment") != null ? log.getString("comment") : "") + ";" +
-                (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
-                + "\n";
+                (log.getDouble("unitedPriceTTC") != null ? convertPriceString(log.getDouble("unitedPriceTTC")) : "") + ";" +
+                (log.getDouble("totalPriceHT") != null ? convertPriceString(log.getDouble("totalPriceHT")) : "") + ";" +
+                (log.getDouble("totalPriceTTC") != null ? convertPriceString(log.getDouble("totalPriceTTC")) : "") + ";" +
+                (log.getString("comment") != null ? log.getString("comment") : "");
     }
 
     @Put("/orders/valid")
@@ -501,25 +460,25 @@ public class OrderController extends ControllerHelper {
     public void refuseOrders (final HttpServerRequest request){
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
                 orders -> {
-                            try {
-                                List<String> params = new ArrayList<>();
-                                for (Object id: orders.getJsonArray("ids") ) {
-                                    params.add( id.toString());
-                                }
+                    try {
+                        List<String> params = new ArrayList<>();
+                        for (Object id: orders.getJsonArray("ids") ) {
+                            params.add( id.toString());
+                        }
 
-                                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                                orderService.rejectOrders(ids,
-                                        Logging.defaultResponsesHandler(eb,
-                                                request,
-                                                Contexts.ORDER.toString(),
-                                                Actions.UPDATE.toString(),
-                                                params,
-                                                null));
+                        List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
+                        orderService.rejectOrders(ids,
+                                Logging.defaultResponsesHandler(eb,
+                                        request,
+                                        Contexts.ORDER.toString(),
+                                        Actions.UPDATE.toString(),
+                                        params,
+                                        null));
 
-                            } catch (ClassCastException e) {
-                                log.error("An error occurred when casting order id", e);
-                            }
-                        });
+                    } catch (ClassCastException e) {
+                        log.error("An error occurred when casting order id", e);
+                    }
+                });
     }
 
     @Put("/orders/inprogress")
@@ -530,26 +489,6 @@ public class OrderController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
             final JsonArray ids = orders.getJsonArray("ids");
             orderService.setInProgress(ids, defaultResponseHandler(request));
-        });
-    }
-
-    @Put("/order/:idOrder/comment")
-    @ApiDoc("Update an order's comment")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessOrderCommentRight.class)
-    public void updateComment(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, order -> {
-            if (!order.containsKey("comment")) {
-                badRequest(request);
-                return;
-            }
-            try {
-                Integer id = Integer.parseInt(request.params().get("idOrder"));
-                String comment = order.getString("comment");
-                orderService.updateComment(id, comment, defaultResponseHandler(request));
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
         });
     }
 
@@ -591,93 +530,5 @@ public class OrderController extends ControllerHelper {
                 e.printStackTrace();
             }
         });
-    }
-
-    @Get("/orders/export")
-    @ApiDoc("Export list of waiting orders as CSV")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessOrderRight.class)
-    public void exportCSVordersSelected(final HttpServerRequest request) {
-        List<String> params = request.params().getAll("id");
-        List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
-        if (!idsOrders.isEmpty()) {
-            orderService.getExportCsvOrdersAdmin(idsOrders, ordersWithIdStructure -> {
-                if (ordersWithIdStructure.isRight()) {
-                    final JsonArray orders = ordersWithIdStructure.right().getValue();
-                    JsonArray idsStructures = new fr.wseduc.webutils.collections.JsonArray();
-                    for (int i = 0; i < orders.size(); i++) {
-                        JsonObject order = orders.getJsonObject(i);
-                        idsStructures.add(order.getString("idstructure"));
-                    }
-                    structureService.getStructureById(idsStructures, repStructures -> {
-                        if (repStructures.isRight()) {
-                            JsonArray structures = repStructures.right().getValue();
-
-                            Map<String, String> structuresMap = retrieveUaiNameStructure(structures);
-                            for (int i = 0; i < orders.size(); i++) {
-                                JsonObject order = orders.getJsonObject(i);
-                                order.put("uaiNameStructure", structuresMap.get(order.getString("idstructure")));
-                            }
-
-                            request.response()
-                                    .putHeader("Content-Type", "text/csv; charset=utf-8")
-                                    .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                    .end(generateExport(request, orders));
-
-                        } else {
-                            log.error("An error occured when collecting StructureById");
-                            renderError(request);
-                        }
-                    });
-                } else {
-                    log.error("An error occurred when collecting ordersSqlwithIdStructure");
-                    renderError(request);
-                }
-            });
-        } else {
-            badRequest(request);
-        }
-    }
-
-    @Get("/order/:id/file/:fileId")
-    @ApiDoc("Download specific file")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getFile(HttpServerRequest request) {
-        Integer orderId = Integer.parseInt(request.getParam("id"));
-        String fileId = request.getParam("fileId");
-        orderService.getFile(orderId, fileId, event -> {
-            if (event.isRight()) {
-                storage.sendFile(fileId, event.right().getValue().getString("filename"), request, false, new JsonObject());
-            } else {
-                notFound(request);
-            }
-        });
-    }
-
-    @Put("/order/:idOrder")
-    @ApiDoc("update status in orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void updateStatusOrder(final HttpServerRequest request) {
-        final Integer idOrder = Integer.parseInt(request.params().get("idOrder"));
-        RequestUtils.bodyToJson(request, statusEdit -> orderService.updateStatusOrder(idOrder, statusEdit, Logging.defaultResponseHandler(eb,
-                request,
-                Contexts.ORDER.toString(),
-                Actions.UPDATE.toString(),
-                idOrder.toString(),
-                statusEdit)));
-    }
-
-    @Get("/order/:idOrder")
-    @ApiDoc("get an order")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getOrder(HttpServerRequest request) {
-        try {
-            Integer orderId = Integer.parseInt(request.getParam("idOrder"));
-            orderService.getOrder(orderId, defaultResponseHandler(request));
-        } catch (ClassCastException e) {
-            log.error(" An error occurred when casting order id", e);
-        }
-
     }
 }

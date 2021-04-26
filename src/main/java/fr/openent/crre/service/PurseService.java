@@ -45,5 +45,4 @@ public interface PurseService {
      */
     void updatePurseAmount(Double price, String idStructure, String operation, Handler<Either<String, JsonObject>> handler);
 
-    void getAll( Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

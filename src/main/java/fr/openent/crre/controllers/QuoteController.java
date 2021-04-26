@@ -1,29 +1,18 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.security.ValidatorRight;
-import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.QuoteService;
-import fr.openent.crre.service.StructureService;
-import fr.openent.crre.service.impl.DefaultOrderService;
-import fr.openent.crre.service.impl.DefaultPurseService;
 import fr.openent.crre.service.impl.DefaultQuoteService;
-import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.BaseController;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -32,15 +21,10 @@ public class QuoteController extends BaseController {
 
 
     private final QuoteService quoteService;
-    private final PurseService purseService;
-    private final StructureService structureService;
-    private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
 
 
     public QuoteController() {
         this.quoteService = new DefaultQuoteService("equipment");
-        this.purseService = new DefaultPurseService();
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
     @Get("/quote")
