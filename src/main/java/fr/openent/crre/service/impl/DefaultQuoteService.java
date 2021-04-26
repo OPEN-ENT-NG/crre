@@ -26,7 +26,7 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
     public void getAllQuote(Integer page, Handler<Either<String, JsonArray>> defaultResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
-                "SELECT *, creation_date at time zone 'europe/paris' " +
+                "SELECT *, creation_date at time zone 'europe/paris' as creation_date " +
                 "FROM " + Crre.crreSchema + ".quote AS q ";
         query = query + "ORDER BY q.creation_date DESC ";
         if (page != null) {
