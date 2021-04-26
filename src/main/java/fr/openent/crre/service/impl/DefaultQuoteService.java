@@ -12,6 +12,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class DefaultQuoteService extends SqlCrudService implements QuoteService {
 
@@ -25,7 +26,7 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
     public void getAllQuote(Integer page, Handler<Either<String, JsonArray>> defaultResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
-                "SELECT * " +
+                "SELECT *, creation_date at time zone 'europe/paris' " +
                 "FROM " + Crre.crreSchema + ".quote AS q ";
         query = query + "ORDER BY q.creation_date DESC ";
         if (page != null) {
@@ -48,6 +49,7 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
         String query = "INSERT INTO " + Crre.crreSchema + ".quote(title, owner_name, owner_id, nb_structures, attachment) " +
                        "VALUES (?, ?, ?, ?, ?)";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmm");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         String dateStr = "DD" + simpleDateFormat.format(new Date());
         params.add(dateStr)
               .add(user.getUsername())

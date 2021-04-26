@@ -114,7 +114,8 @@ public class DefaultOldOrderService extends SqlCrudService implements OldOrderSe
             }
         }
         query = query.substring(0, query.length()-1);
-        Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     private void setOrderValuesSQL(JsonArray params, JsonObject order) {
