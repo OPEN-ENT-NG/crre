@@ -349,12 +349,12 @@ public class OldOrderRegionController extends BaseController {
                             order.put("unitedPriceTTC", price);
                             order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                             order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                            order.put("name", order.getString("titre"));
+                            order.put("name", order.getString("equipment_name"));
                             order.put("image", order.getString("urlcouverture"));
-                            order.put("ean", order.getString("ean"));
+                            order.put("ean", order.getString("equipment_key"));
                             order.put("editor", order.getString("editeur"));
                             order.put("diffusor", order.getString("distributeur"));
-                            order.put("type", order.getString("type"));
+                            order.put("type", order.getString("equipment_format"));
 
                     for (int j = 0; j < structures.size(); j++) {
                         structure = structures.getJsonObject(j);

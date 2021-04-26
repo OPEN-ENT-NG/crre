@@ -3,13 +3,13 @@ CREATE EXTENSION IF NOT EXISTS unaccent;
 
 CREATE TABLE crre.scripts (
     filename character varying(255) NOT NULL,
-    passed timestamp without time zone NOT NULL DEFAULT now(),
+    passed timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT scripts_pkey PRIMARY KEY (filename)
 );
 
 CREATE TABLE crre.logs (
     id bigserial NOT NULL,
-    date timestamp without time zone DEFAULT now(),
+    date timestamp with time zone DEFAULT now(),
     action character varying(30),
     context character varying(30),
     value json,
@@ -199,7 +199,7 @@ CREATE TABLE crre.quote
 (
     id bigserial NOT NULL,
     title character varying,
-    creation_date timestamp without time zone NOT NULL DEFAULT now(),
+    creation_date timestamp with time zone NOT NULL DEFAULT now(),
     owner_name character varying,
     owner_id character varying,
     nb_structures integer,

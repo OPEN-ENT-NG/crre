@@ -71,23 +71,24 @@
                              class="inline-block horizontal-spacing no-border five">
                 </multi-combo>
             </div>
-            <div class="cell one margin-top-14 twelve-mobile" ng-click="openFiltersLightbox()">
+            <div class="cell one margin-top-14 twelve-mobile right-magnet" ng-click="openFiltersLightbox()">
                 <span class="color-red" style="text-decoration: underline;"><i18n>crre.more.filters</i18n></span>
+            </div>
+            <div class="cell six twelve-mobile" ng-if="filters.all.length > 0">
+                <div class="remove-margin-bottom">
+                    <div ng-repeat="key in filterChoiceCorrelation.keys" class="select-blocks inline-block">
+                        <div ng-repeat="item in filterChoice[key]"
+                             ng-click="dropElement(item,key)">
+                            [[item.toString()]]
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="cell twelve-mobile right-magnet">
                 <button ng-click="generateLibraryOrder()" class="right-magnet"><i18n>crre.take.order.library</i18n></button>
             </div>
         </div>
-        <div class="row" ng-if="filters.all.length > 0">
-            <div class="remove-margin-bottom">
-                <div ng-repeat="key in filterChoiceCorrelation.keys" class="select-blocks inline-block">
-                    <div ng-repeat="item in filterChoice[key]"
-                         ng-click="dropElement(item,key)">
-                        [[item.toString()]]
-                    </div>
-                </div>
-            </div>
-        </div>
+
         <div class="flex-row">
             <table class="twelve">
                 <thead>
