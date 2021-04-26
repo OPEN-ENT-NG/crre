@@ -552,6 +552,7 @@ public class OrderRegionController extends BaseController {
                     order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                     extractedEquipmentInfo(equipment);
                     order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                    putStructuresNameUAI(structures, order);
                     if (equipment.getString("type").equals("articlenumerique")) {
                         JsonArray offers = computeOffers(equipment, order);
                         if (offers.size() > 0) {
@@ -571,15 +572,7 @@ public class OrderRegionController extends BaseController {
                                 orderOffer.put("id", order.getLong("id"));
                                 orderOffer.put("title", order.getString("title"));
                                 orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
-                                for (int s = 0; s < structures.size(); s++) {
-                                    JsonObject structure = structures.getJsonObject(s);
-                                    if (structure.getString("id").equals(order.getString("id_structure"))) {
-                                        orderOffer.put("uai_structure", structure.getString("uai"));
-                                        orderOffer.put("name_structure", structure.getString("name"));
-                                        order.put("uai_structure", structure.getString("uai"));
-                                        order.put("name_structure", structure.getString("name"));
-                                    }
-                                }
+                                putStructuresNameUAI(structures, orderOffer);
                                 orderOfferArray.add(orderOffer);
                                 orderRegion.add(orderOffer);
                                 i++;
@@ -588,6 +581,16 @@ public class OrderRegionController extends BaseController {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void putStructuresNameUAI(JsonArray structures, JsonObject order) {
+        for (int s = 0; s < structures.size(); s++) {
+            JsonObject structure = structures.getJsonObject(s);
+            if (structure.getString("id").equals(order.getString("id_structure"))) {
+                order.put("uai_structure", structure.getString("uai"));
+                order.put("name_structure", structure.getString("name"));
             }
         }
     }
