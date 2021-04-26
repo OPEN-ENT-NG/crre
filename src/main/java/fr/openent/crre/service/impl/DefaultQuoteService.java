@@ -37,6 +37,12 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
     }
 
     @Override
+    public void getQuote(Integer id, Handler<Either<String, JsonObject>> defaultResponseHandler) {
+        String query = "SELECT * FROM " + Crre.crreSchema + ".quote WHERE id = ?;";
+        sql.prepared(query, new JsonArray().add(id), SqlResult.validUniqueResultHandler(defaultResponseHandler));
+    }
+
+    @Override
     public void insertQuote(UserInfos user, Integer nbEtab, String base64File, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Crre.crreSchema + ".quote(title, owner_name, owner_id, nb_structures, attachment) " +

@@ -9,6 +9,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.BaseController;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.filter.ResourceFilter;
 
 import java.io.UnsupportedEncodingException;
@@ -16,6 +17,7 @@ import java.net.URLDecoder;
 import java.util.Base64;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static java.lang.Integer.parseInt;
 
 public class QuoteController extends BaseController {
 
@@ -36,18 +38,34 @@ public class QuoteController extends BaseController {
         quoteService.getAllQuote(page, arrayResponseHandler(request));
     }
 
-    @Get("/quote/csv")
+    @Get("/quote/csv/:id")
     @ApiDoc("generate csv attachment ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void getCSVQuote(HttpServerRequest request) {
-        String b64_attachment = request.getParam("attachment");
-        String title = request.getParam("title");
-        String attachment = new String(Base64.getDecoder().decode(b64_attachment));
-        request.response()
-                .putHeader("Content-Type", "text/csv; charset=utf-8")
-                .putHeader("Content-Disposition", "attachment; filename=" + title + ".csv")
-                .end(attachment);
+        Integer id = request.params().contains("id")
+                ? parseInt(request.params().get("id"))
+                : null;
+        if(id != null){
+            quoteService.getQuote(id, quote -> {
+                if(quote.isRight()) {
+                    JsonObject quoteResult = quote.right().getValue();
+                    String b64_attachment = quoteResult.getString("attachment");
+                    String title = quoteResult.getString("title");
+                    String attachment = new String(Base64.getDecoder().decode(b64_attachment));
+                    request.response()
+                            .putHeader("Content-Type", "text/csv; charset=utf-8")
+                            .putHeader("Content-Disposition", "attachment; filename=" + title + ".csv")
+                            .end(attachment);
+                }else{
+                    log.error("An error occured during SQL Quote request",quote.left());
+                    renderError(request);
+                }
+            });
+        }else{
+            log.error("Unable to get the id of the quote");
+            renderError(request);
+        }
   }
 
    @Get("/quote/search")

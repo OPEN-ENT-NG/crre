@@ -10,7 +10,6 @@ export class Quote implements Selectable {
     creation_date: string;
     owner_name: string;
     owner_id: string;
-    attachment: string;
     quotation: any;
     selected: boolean;
     nb_structures: number;
@@ -20,7 +19,7 @@ export class Quote implements Selectable {
 
     async generateCSV() {
         try {
-            window.location = `/crre/quote/csv?attachment=${this.attachment}&title=${this.title}`;
+            window.location = `/crre/quote/csv/${this.id}`;
         } catch (e) {
             toasts.warning('crre.quote.generate.csv.error');
         }
@@ -55,7 +54,8 @@ export class Quotes extends Selection<Quote> {
     private setQuotes(data) {
         data.map(quote => {
             let date = new Date(quote.creation_date);
-            quote.creation_date = date.toLocaleDateString().replace(/\//g, "-") + " - " + date.toLocaleTimeString();
+            quote.creation_date = date.toLocaleDateString().replace(/\//g, "-") + " - " +
+                date.toLocaleTimeString('fr-FR');
         });
         this.all = this.all.concat(Mix.castArrayAs(Quote, data));
         return data.length > 0;
