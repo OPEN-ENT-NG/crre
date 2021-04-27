@@ -97,9 +97,8 @@ export const basketController = ng.controller('basketController',
         };
 
         $scope.validOrder = (baskets: Baskets) => {
-            let equipmentsBasket = _.pluck(baskets.all, 'equipment' );
-            return $scope.calculatePriceOfEquipments(baskets) <= $scope.campaign.purse_amount
-                && _.findWhere( equipmentsBasket, {status : 'EPUISE'}) === undefined;
+            //return $scope.calculatePriceOfEquipments(baskets) <= $scope.campaign.purse_amount;
+            return true;
         };
 
         $scope.checkPrice = async (baskets: Baskets) => {
