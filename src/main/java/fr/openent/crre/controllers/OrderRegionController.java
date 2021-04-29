@@ -60,7 +60,6 @@ public class OrderRegionController extends BaseController {
 
 
     private final OrderRegionService orderRegionService;
-    private final OldOrderService oldOrderService;
     private final PurseService purseService;
     private final StructureService structureService;
     private final QuoteService quoteService;
@@ -78,7 +77,6 @@ public class OrderRegionController extends BaseController {
         this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema);
-        this.oldOrderService = new DefaultOldOrderService("equipment");
     }
 
     @Post("/region/orders/")
@@ -169,10 +167,11 @@ public class OrderRegionController extends BaseController {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
+            Boolean old = Boolean.valueOf(request.getParam("old"));
             String idStructure = request.getParam("idStructure");
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null &&
                     Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, false, arrayResponseHandler(request));
+            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, old, arrayResponseHandler(request));
         });
     }
 
@@ -191,6 +190,8 @@ public class OrderRegionController extends BaseController {
         String startDate = request.getParam("startDate");
         String endDate = request.getParam("endDate");
         String idStructure = request.getParam("idStructure");
+        Boolean old = Boolean.valueOf(request.getParam("old"));
+
         int length = request.params().entries().size();
         for (int i = 0; i < length; i++) {
             if (!request.params().entries().get(i).getKey().equals("q") &&
@@ -202,50 +203,66 @@ public class OrderRegionController extends BaseController {
                     !request.params().entries().get(i).getKey().equals("endDate") &&
                     !request.params().entries().get(i).getKey().equals("page") &&
                     !request.params().entries().get(i).getKey().equals("id_structure") &&
-                    !request.params().entries().get(i).getKey().equals("idStructure") )
+                    !request.params().entries().get(i).getKey().equals("old") &&
+                    !request.params().entries().get(i).getKey().equals("idStructure"))
                 filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
                         request.params().entries().get(i).getValue()));
         }
         if (params.size() > 0) {
-            Future<JsonArray> equipmentFilterFuture = Future.future();
-            Future<JsonArray> equipmentFilterAndQFuture = Future.future();
+            if(!old) {
+                Future<JsonArray> equipmentFilterFuture = Future.future();
+                Future<JsonArray> equipmentFilterAndQFuture = Future.future();
 
-            CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
-                if (event.succeeded()) {
-                    JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
-                    JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
-                    JsonArray allEquipments = new JsonArray();
-                    allEquipments.add(equipmentsGrade);
-                    allEquipments.add(equipmentsGradeAndQ);
-                    if (request.params().contains("q")) {
-                        orderRegionService.filterSearch(user, allEquipments, query, startDate,
-                                endDate, idStructure, filters, page, arrayResponseHandler(request));
-                    } else {
-                        orderRegionService.filter_only(user, equipmentsGrade, startDate,
-                                endDate, idStructure, filters, page, arrayResponseHandler(request));
-                    }
-                }
-            });
-            filters(params, handlerJsonArray(equipmentFilterFuture));
-            if(StringUtils.isEmpty(query)) {
-                filters(params, handlerJsonArray(equipmentFilterAndQFuture));
-            } else {
-                searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
-            }
-        } else {
-            if(!(query.equals(""))) {
-                plainTextSearchName(query, equipments -> {
-                    if (equipments.right().getValue().size() > 0) {
-                        orderRegionService.search(user, equipments.right().getValue(), query, startDate,
-                                endDate, idStructure, filters, page, arrayResponseHandler(request));
-                    } else {
-                        orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
-                                arrayResponseHandler(request));
+                CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
+                    if (event.succeeded()) {
+                        JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
+                        JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
+                        JsonArray allEquipments = new JsonArray();
+                        allEquipments.add(equipmentsGrade);
+                        allEquipments.add(equipmentsGradeAndQ);
+                        if (request.params().contains("q")) {
+                            orderRegionService.filterSearch(user, allEquipments, query, startDate,
+                                    endDate, idStructure, filters, page, old, arrayResponseHandler(request));
+                        } else {
+                            orderRegionService.filter_only(user, equipmentsGrade, startDate,
+                                    endDate, idStructure, filters, page, old, arrayResponseHandler(request));
+                        }
                     }
                 });
+                filters(params, handlerJsonArray(equipmentFilterFuture));
+                if (StringUtils.isEmpty(query)) {
+                    filters(params, handlerJsonArray(equipmentFilterAndQFuture));
+                } else {
+                    searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+                }
             } else {
-                orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
-                        arrayResponseHandler(request));
+                if (request.params().contains("q")) {
+                    orderRegionService.filterSearch(user, null, query, startDate,
+                            endDate, idStructure, filters, page, old, arrayResponseHandler(request));
+                } else {
+                    orderRegionService.filter_only(user, null, startDate,
+                            endDate, idStructure, filters, page, old, arrayResponseHandler(request));
+                }
+            }
+        } else {
+            if (!old) {
+                if (!(query.equals(""))) {
+                    plainTextSearchName(query, equipments -> {
+                        if (equipments.right().getValue().size() > 0) {
+                            orderRegionService.search(user, equipments.right().getValue(), query, startDate,
+                                    endDate, idStructure, filters, page, old, arrayResponseHandler(request));
+                        } else {
+                            orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
+                                    arrayResponseHandler(request));
+                        }
+                    });
+                } else {
+                    orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
+                            arrayResponseHandler(request));
+                }
+            } else {
+                orderRegionService.search(user, null, query, startDate,
+                        endDate, idStructure, filters, page, old, arrayResponseHandler(request));
             }
         }
     }
@@ -292,29 +309,35 @@ public class OrderRegionController extends BaseController {
         UserUtils.getUserInfos(eb, request, user -> {
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
                     && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
+            Boolean old = Boolean.valueOf(request.getParam("old"));
             List<String> projectIds = request.params().getAll("project_id");
             List<Future> futures = new ArrayList<>();
             for(String id : projectIds){
                 Future<JsonArray> projectIdFuture = Future.future();
                 futures.add(projectIdFuture);
                 int idProject = Integer.parseInt(id);
-                orderRegionService.getAllOrderRegionByProject(idProject, filterRejectedSentOrders, handlerJsonArray(projectIdFuture));
+                orderRegionService.getAllOrderRegionByProject(idProject, filterRejectedSentOrders, old, handlerJsonArray(projectIdFuture));
             }
-            getCompositeFutureAllOrderRegionByProject(request, futures);
+            getCompositeFutureAllOrderRegionByProject(request, old, futures);
         });
     }
 
-    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, List<Future> futures) {
+    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, Boolean old, List<Future> futures) {
         CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 List<JsonArray> resultsList = event.result().list();
-                List<String> listIdsEquipment = new ArrayList<>();
-                for (JsonArray orders : resultsList) {
-                    for (Object order : orders) {
-                        listIdsEquipment.add(((JsonObject) order).getString("equipment_key"));
+                if(!old) {
+                    List<String> listIdsEquipment = new ArrayList<>();
+                    for (JsonArray orders : resultsList) {
+                        for (Object order : orders) {
+                            listIdsEquipment.add(((JsonObject) order).getString("equipment_key"));
+                        }
                     }
+                    getSearchByIds(request, resultsList, listIdsEquipment);
+                } else {
+                    getSearchByIdsOld(request, resultsList);
                 }
-                getSearchByIds(request, resultsList, listIdsEquipment);
+
             } else {
                 log.error(event.cause());
                 badRequest(request);
@@ -357,6 +380,23 @@ public class OrderRegionController extends BaseController {
                 badRequest(request);
             }
         });
+    }
+
+    private void getSearchByIdsOld(HttpServerRequest request, List<JsonArray> resultsList) {
+        JsonArray finalResult = new JsonArray();
+        for (JsonArray orders : resultsList) {
+            finalResult.add(orders);
+            for (Object order : orders) {
+                JsonObject orderJson = (JsonObject) order;
+                double price = Double.parseDouble(orderJson.getString("equipment_price")) * orderJson.getInteger("amount");
+                orderJson.put("price", price);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
+                String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                orderJson.put("creation_date",creation_date);
+            }
+        }
+        renderJson(request, finalResult);
     }
 
     @Put("/region/orders/:status")
@@ -432,7 +472,8 @@ public class OrderRegionController extends BaseController {
         List<String> params = request.params().getAll("id");
         List<String> idsEquipment = request.params().getAll("equipment_key");
         List<String> params3 = request.params().getAll("id_structure");
-        generateLogs(request, params, idsEquipment, params3, null, false);
+        Boolean old = Boolean.valueOf(request.getParam("old"));
+        generateLogs(request, params, idsEquipment, params3, null, old, false);
     }
 
     @Post("region/orders/library")
@@ -444,12 +485,12 @@ public class OrderRegionController extends BaseController {
             List<String> params = request.params().getAll("id");
             List<String> idsEquipment = request.params().getAll("equipment_key");
             List<String> params3 = request.params().getAll("id_structure");
-            generateLogs(request, params, idsEquipment, params3, user, true);
+            generateLogs(request, params, idsEquipment, params3, user, true, true);
         });
     }
 
     private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3,
-                              UserInfos user, boolean library) {
+                              UserInfos user, Boolean old, boolean library) {
         JsonArray idStructures = new JsonArray();
         for(String structureId : params3){
             idStructures.add(structureId);
@@ -478,7 +519,11 @@ public class OrderRegionController extends BaseController {
 
             }
         });
-        orderRegionService.getOrdersRegionById(idsOrders, false, handlerJsonArray(orderRegionFuture));
+        if(library) {
+            orderRegionService.getOrdersRegionById(idsOrders, false, handlerJsonArray(orderRegionFuture));
+        } else {
+            orderRegionService.getOrdersRegionById(idsOrders, old, handlerJsonArray(orderRegionFuture));
+        }
         structureService.getStructureById(idStructures,handlerJsonArray(structureFuture));
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
     }
@@ -493,7 +538,7 @@ public class OrderRegionController extends BaseController {
 
 
         try {
-            oldOrderService.insertOldClientOrders(orderRegion, response -> {
+            orderRegionService.insertOldClientOrders(orderRegion, response -> {
                 if (response.isRight()) {
                     quoteService.insertQuote(user, nbEtab, base64File, response2 -> {
                         if (response2.isRight()) {
@@ -512,7 +557,7 @@ public class OrderRegionController extends BaseController {
                     orderRegionService.deletedOrderClient(ordersClient, handlerJsonObject(deleteOldOrderClientFuture));
                     orderRegionService.deleteOrderRegion(ordersRegion, handlerJsonObject(deleteOldOrderRegionFuture));
                     try {
-                        oldOrderService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
+                        orderRegionService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
@@ -550,7 +595,7 @@ public class OrderRegionController extends BaseController {
                     order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
                     order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                     order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                    extractedEquipmentInfo(equipment);
+                    extractedEquipmentInfo(order, equipment);
                     order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                     putStructuresNameUAI(structures, order);
                     if (equipment.getString("type").equals("articlenumerique")) {

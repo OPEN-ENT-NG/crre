@@ -41,7 +41,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     public void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate,
-                                  boolean oldTable, Handler<Either<String, JsonArray>> handler){
+                                  boolean oldTable, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT distinct b.* FROM " + Crre.crreSchema + ".basket_order b " +
                 "INNER JOIN " + Crre.crreSchema + "." + (oldTable ? "order_client_equipment_old" :"order_client_equipment") + " oce on (oce.id_basket = b.id) " +
@@ -143,33 +143,40 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
     @Override
     public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign,
-                       String startDate, String endDate, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+                       String startDate, String endDate, Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "INNER JOIN " + Crre.crreSchema + ".order_client_equipment oe ON (bo.id = oe.id_basket) " +
+                "INNER JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON (bo.id = oe.id_basket) " +
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
-        sqlquery = SQLConditionQueryEquipments(query, equipTab, values, sqlquery);
+        sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
         sqlquery += ") AND bo.id_structure IN ( ";
         sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, String sqlquery) {
-        if (!query.equals("")) {
-            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
-            values.add(query);
-            values.add(query);
-        } else {
-            sqlquery += "AND (oe.equipment_key IN (";
-        }
+    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlquery) {
+        if(!old) {
+            if (!query.equals("")) {
+                sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
+                values.add(query);
+                values.add(query);
+            } else {
+                sqlquery += "AND (oe.equipment_key IN (";
+            }
 
-        for (int i = 0; i < equipTab.size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getString("ean"));
+            for (int i = 0; i < equipTab.size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonObject(i).getString("ean"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        } else {
+            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_name ~* ?";
+            values.add(query);
+            values.add(query);
+            values.add(query);
         }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         return sqlquery;
     }
 
@@ -249,12 +256,16 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
-                String key = filters.getJsonObject(i).fieldNames().toString().substring(1, filters.getJsonObject(0).fieldNames().toString().length() -1);
-                String value = filters.getJsonObject(i).getString(key);
-                sqlquery += !key.equals("reassort") ? "bo." + key + " = " + "?" : "oe." + key + " = " + "?";
-                values.add(value);
+                String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
+                JsonArray value = filters.getJsonObject(i).getJsonArray(key);
+                sqlquery += !key.equals("reassort") ? "bo." + key + " IN ( " : "oe." + key + " IN ( ";
+                for (int k = 0; k < value.size(); k++) {
+                    sqlquery += "?,";
+                    values.add(value.getString(k));
+                }
+                sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
                 if(!(i == filters.size() - 1)) {
-                    sqlquery += " OR ";
+                    sqlquery += " AND ";
                 } else {
                     sqlquery += ")";
                 }

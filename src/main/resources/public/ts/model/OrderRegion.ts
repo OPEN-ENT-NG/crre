@@ -154,7 +154,6 @@ export class OrdersRegion extends Selection<OrderRegion> {
             params += `project_id=${project.id}&`;
         });
         params = params.slice(0, -1);
-        const oldString = (old) ? `/old` : ``;
-        return http.get(`/crre/ordersRegion/orders${oldString}?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}`);
+        return http.get(`/crre/ordersRegion/orders?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}&old=${old}`);
     }
 }

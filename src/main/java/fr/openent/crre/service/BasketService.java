@@ -90,16 +90,17 @@ public interface BasketService {
 
     /**
      * Search basket from a query (name, user_name or article)
-     *  @param query searching query (name, user_name or article)
+     * @param query searching query (name, user_name or article)
      * @param user   user object
      * @param id_campaign  campaign identifier
      * @param startDate
      * @param endDate
+     * @param old
      * @param arrayResponseHandler  Function handler returning data
      */
 
     void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
-                Handler<Either<String, JsonArray>> arrayResponseHandler);
+                Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler);

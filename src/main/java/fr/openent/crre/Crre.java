@@ -52,10 +52,8 @@ public class Crre extends BaseServer {
         addController(new StructureController());
         addController(new BasketController());
         addController(new OrderController());
-        addController(new OldBasketController());
         addController(new UserController());
         addController(new OrderRegionController(vertx, config, mail));
-        addController(new OldOrderRegionController());
         addController(new QuoteController());
         CONFIG = config;
     }

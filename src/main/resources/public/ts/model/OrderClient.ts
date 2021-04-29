@@ -169,18 +169,20 @@ export class OrdersClient extends Selection<OrderClient> {
                 const { data } = await http.get(  `/crre/orders?startDate=${startDate}&endDate=${endDate}&status=${status}${pageParams}`);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 if(newOrderClient.length>0) {
-                    let equipments = new Equipments();
-                    await equipments.getEquipments(newOrderClient);
-                    for (let order of newOrderClient) {
-                        this.reformatOrder(equipments, order);
-                        order.name_structure = (structures && structures.length > 0) ?
-                            OrderUtils.initNameStructure(order.id_structure, structures) : '';
-                        order.structure = (structures && structures.length > 0) ?
-                            OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                        order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
-                        order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
-                        order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
-                        order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
+                    if(!old) {
+                        let equipments = new Equipments();
+                        await equipments.getEquipments(newOrderClient);
+                        for (let order of newOrderClient) {
+                            this.reformatOrder(equipments, order);
+                            order.name_structure = (structures && structures.length > 0) ?
+                                OrderUtils.initNameStructure(order.id_structure, structures) : '';
+                            order.structure = (structures && structures.length > 0) ?
+                                OrderUtils.initStructure(order.id_structure, structures) : new Structure();
+                            order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
+                            order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
+                            order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
+                            order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
+                        }
                     }
                     this.all = this.all.concat(newOrderClient);
                     return true;
@@ -196,8 +198,7 @@ export class OrdersClient extends Selection<OrderClient> {
         ordersId.map((order) => {
             params += `order_id=${order}&`;
         });
-        const oldString = (old) ? `old/` : ``;
-        let url = `/crre/orders/${oldString}mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}`;
+        let url = `/crre/orders/mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}&old=${old}`;
         const {data} = await http.get(url);
         let newOrderClient = Mix.castArrayAs(OrderClient, data);
         let equipments = new Equipments();

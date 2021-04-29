@@ -23,14 +23,6 @@ export const catalogController = ng.controller('catalogController',
                 docsType : '_index',
                 editors : 'editeur'
             };
-
-            if($scope.isAdministrator()){
-                $scope.goBackUrl = "crre#/equipments/catalog";
-            }else if($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor()){
-                $scope.goBackUrl = "crre#/equipments/catalog/0";
-            }else{
-                $scope.goBackUrl = "crre#/equipments/catalog/" + $scope.campaign.id;
-            }
         };
 
         $scope.addFilter = async () => {

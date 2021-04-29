@@ -32,8 +32,7 @@ export class Projects extends Selection<Project> {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const page: string = pageNumber ? `page=${pageNumber}&` : '';
-            const oldString = (old) ? `/old` : ``;
-            let url = `/crre/orderRegion/projects${oldString}?${page}startDate=${startDate}&endDate=${endDate}&idStructure=${idStructure}`;
+            let url = `/crre/orderRegion/projects?${page}startDate=${startDate}&endDate=${endDate}&old=${old}&idStructure=${idStructure}`;
             url += `&filterRejectedSentOrders=${filterRejectedSentOrders}`;
             let { data } = await http.get(url);
             this.all =  Mix.castArrayAs(Project, data);
@@ -58,10 +57,9 @@ export class Projects extends Selection<Project> {
         try {
             let {params, word, startDate, endDate} = prepareParams();
             if (!Utils.format.test(word)) {
-                const oldString = (old) ? `old/` : ``;
                 const wordParams =  (!!word) ? `&q=${word}` : ``
-                let url = `/crre/ordersRegion/projects/${oldString}search_filter`;
-                url += `?startDate=${startDate}&endDate=${endDate}&idStructure=${idStructure}&${params}${wordParams}`;
+                let url = `/crre/ordersRegion/projects/search_filter`;
+                url += `?startDate=${startDate}&endDate=${endDate}&old=${old}&idStructure=${idStructure}&${params}${wordParams}`;
                 const {data} = await http.get(url);
                 this.all = Mix.castArrayAs(Project, data);
             } else {
@@ -78,8 +76,7 @@ export class Projects extends Selection<Project> {
         let params_id_order = Utils.formatKeyToParameter(selectedOrders.all, 'id');
         let params_id_equipment = Utils.formatKeyToParameter(selectedOrders.all, "equipment_key");
         let params_id_structure = Utils.formatKeyToParameter(selectedOrders.all, "id_structure");
-        const oldString = (old) ? `old/` : ``;
-        window.location = `/crre/region/orders/${oldString}exports?${params_id_order}&${params_id_equipment}&${params_id_structure}`;
+        window.location = `/crre/region/orders/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}&old=${old}`;
     }
 
     private extractSelectedOrders(select: boolean = false) {

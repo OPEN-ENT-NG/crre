@@ -37,27 +37,41 @@ public class OrderUtils {
         return result;
     }
 
-    public static void dealWithPriceTTC_HT(JsonObject order) {
+    public static void dealWithPriceTTC_HT(JsonObject orderMap, JsonObject equipment, JsonObject order, boolean old) {
         DecimalFormat df2 = new DecimalFormat("#.##");
-        Double price = Double.parseDouble(order.getString("equipment_price"));
-        Double priceht = order.getDouble("equipment_priceht");
-        double priceTTC = price * order.getInteger("amount");
-        double priceHT = priceht * order.getInteger("amount");
-        order.put("priceht", priceht);
-        order.put("tva5", order.getDouble("equipment_tva5"));
-        order.put("tva20", order.getDouble("equipment_tva20"));
-        order.put("unitedPriceTTC", price);
-        order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-        order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+        if(!old) {
+            JsonObject priceInfo = getPriceTtc(equipment);
+            Double priceht = priceInfo.getDouble("prixht");
+            Double price = priceInfo.getDouble("priceTTC");
+            double priceHT = priceht * orderMap.getInteger("amount");
+            double priceTTC = price * orderMap.getInteger("amount");
+            orderMap.put("priceht", priceht);
+            orderMap.put("tva5", priceInfo.getDouble("partTVA5"));
+            orderMap.put("tva20", priceInfo.getDouble("partTVA20"));
+            orderMap.put("unitedPriceTTC", price);
+            orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+            orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+        } else {
+            Double price = Double.parseDouble(order.getString("equipment_price"));
+            Double priceht = order.getDouble("equipment_priceht");
+            double priceTTC = price * orderMap.getInteger("amount");
+            double priceHT = priceht * orderMap.getInteger("amount");
+            orderMap.put("priceht", priceht);
+            orderMap.put("tva5", order.getDouble("equipment_tva5"));
+            orderMap.put("tva20", order.getDouble("equipment_tva20"));
+            orderMap.put("unitedPriceTTC", price);
+            orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+            orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+        }
     }
 
-    public static void extractedEquipmentInfo(JsonObject order) {
-        order.put("name", order.getString("titre"));
-        order.put("image", order.getString("urlcouverture"));
-        order.put("ean", order.getString("ean"));
-        order.put("editor", order.getString("editeur"));
-        order.put("diffusor", order.getString("distributeur"));
-        order.put("type", order.getString("type"));
+    public static void extractedEquipmentInfo(JsonObject order, JsonObject equipment) {
+        order.put("name", equipment.getString("titre"));
+        order.put("image", equipment.getString("urlcouverture"));
+        order.put("ean", equipment.getString("ean"));
+        order.put("editor", equipment.getString("editeur"));
+        order.put("diffusor", equipment.getString("distributeur"));
+        order.put("type", equipment.getString("type"));
     }
 
     public static String convertPriceString(double price) {

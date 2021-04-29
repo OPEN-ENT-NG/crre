@@ -129,7 +129,7 @@ export const manageOrderController = ng.controller('manageOrderController',
                 displayedBasket.created = moment(basketOrder.created).format('DD-MM-YYYY').toString();
                 displayedBasket.expanded = false;
                 displayedBasket.orders = [];
-                $scope.newOrders.forEach(function (order) {
+                $scope.newOrders.arr.forEach(function (order) {
                     if (order.id_basket === basketOrder.id) {
                         displayedBasket.orders.push(order);
                     }

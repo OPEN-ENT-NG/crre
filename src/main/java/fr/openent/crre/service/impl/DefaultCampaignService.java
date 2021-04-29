@@ -119,7 +119,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 "SELECT COUNT(order_client_equipment.id) as nb_order_waiting, campaign.id as id_campaign " +
                 "FROM " + Crre.crreSchema +".order_client_equipment " +
                 "INNER JOIN " + Crre.crreSchema +".campaign ON (order_client_equipment.id_campaign = campaign.id) " +
-                "WHERE";
+                "WHERE ";
         if(idStructure != null){
             sub_query_waiting_order += " id_structure = ? AND ";
             values.add(idStructure);

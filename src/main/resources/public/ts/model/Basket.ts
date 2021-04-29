@@ -171,9 +171,8 @@ export class BasketsOrders extends Selection<BasketOrder> {
         try {
             if ((text.trim() === '' || !text)) return;
             const {startDate, endDate} = Utils.formatDate(start, end);
-            const oldString = (old) ? `old/` : ``;
             const pageParams = (page) ? `&page=${page}` : ``;
-            let url = `/crre/basketOrder/${oldString}search?startDate=${startDate}&endDate=${endDate}&q=${text}`;
+            let url = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&old=${old}&q=${text}`;
             url += `&id=${id_campaign}${pageParams}`;
             const {data} = await http.get(url);
             this.all = Mix.castArrayAs(BasketOrder, data);
@@ -193,10 +192,9 @@ export class BasketsOrders extends Selection<BasketOrder> {
                 }});
             const {startDate, endDate} = Utils.formatDate(start, end);
             if(!Utils.format.test(word)) {
-                const oldString = (old) ? `old/` : ``;
                 const pageParams = (page) ? `&page=${page}` : ``;
                 const wordParams = (word) ? `&q=${word}` : ``;
-                let url = `/crre/basketOrder/${oldString}filter?startDate=${startDate}&endDate=${endDate}${wordParams}`;
+                let url = `/crre/basketOrder/filter?startDate=${startDate}&endDate=${endDate}&old=${old}${wordParams}`;
                 url += `&id=${id_campaign}&${params}${pageParams}`;
                 let {data} = await http.get(url);
                 this.all = Mix.castArrayAs(BasketOrder, data);
@@ -212,9 +210,8 @@ export class BasketsOrders extends Selection<BasketOrder> {
     async getMyOrders (page:number, start: string, end: string, id_campaign: string, old: boolean) {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
-            const oldString = (old) ? `old/` : ``;
             const pageParams = (page) ? `&page=${page}` : ``;
-            let url = `/crre/basketOrder/${oldString}allMyOrders?id=${id_campaign}`;
+            let url = `/crre/basketOrder/allMyOrders?id=${id_campaign}&old=${old}`;
             url += `&startDate=${startDate}&endDate=${endDate}${pageParams}`;
             let { data } = await http.get(url);
             this.all = Mix.castArrayAs(BasketOrder, data);

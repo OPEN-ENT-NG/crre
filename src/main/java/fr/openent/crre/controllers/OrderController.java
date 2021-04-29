@@ -65,34 +65,40 @@ public class OrderController extends ControllerHelper {
                 List<String> ordersIds = request.params().getAll("order_id");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, false, orders -> {
+                Boolean old = Boolean.valueOf(request.getParam("old"));
+
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, old, orders -> {
                     if (orders.isRight()) {
-                        List<String> idEquipments = new ArrayList<>();
-                        for(Object order : orders.right().getValue()){
-                            String idEquipment = ((JsonObject)order).getString("equipment_key");
-                            idEquipments.add(idEquipment);
-                        }
-                        searchByIds(idEquipments, equipments -> {
-                            if(equipments.isRight()) {
-                                for(Object order : orders.right().getValue()){
-                                    JsonObject orderJson = ((JsonObject)order);
-                                    String idEquipment = orderJson.getString("equipment_key");
-                                    for(Object equipment : equipments.right().getValue()){
-                                        JsonObject equipmentJson = ((JsonObject)equipment);
-                                        if(idEquipment.equals(equipmentJson.getString("id"))){
-                                            orderJson.put("price",getPriceTtc(equipmentJson).getDouble("priceTTC"));
-                                            orderJson.put("name",equipmentJson.getString("titre"));
-                                            orderJson.put("image",equipmentJson.getString("urlcouverture"));
+                        if(!old) {
+                            List<String> idEquipments = new ArrayList<>();
+                            for (Object order : orders.right().getValue()) {
+                                String idEquipment = ((JsonObject) order).getString("equipment_key");
+                                idEquipments.add(idEquipment);
+                            }
+                            searchByIds(idEquipments, equipments -> {
+                                if (equipments.isRight()) {
+                                    for (Object order : orders.right().getValue()) {
+                                        JsonObject orderJson = ((JsonObject) order);
+                                        String idEquipment = orderJson.getString("equipment_key");
+                                        for (Object equipment : equipments.right().getValue()) {
+                                            JsonObject equipmentJson = ((JsonObject) equipment);
+                                            if (idEquipment.equals(equipmentJson.getString("id"))) {
+                                                orderJson.put("price", getPriceTtc(equipmentJson).getDouble("priceTTC"));
+                                                orderJson.put("name", equipmentJson.getString("titre"));
+                                                orderJson.put("image", equipmentJson.getString("urlcouverture"));
+                                            }
                                         }
                                     }
+                                    final JsonArray finalResult = orders.right().getValue();
+                                    renderJson(request, finalResult);
+                                } else {
+                                    badRequest(request);
+                                    log.error("Problem when catching equipments");
                                 }
-                                final JsonArray finalResult = orders.right().getValue();
-                                renderJson(request, finalResult);
-                            }else{
-                                badRequest(request);
-                                log.error("Problem when catching equipments");
-                            }
-                        });
+                            });
+                        } else {
+                            renderJson(request, orders.right().getValue());
+                        }
                     } else {
                         badRequest(request);
                         log.error("Problem when catching orders");
@@ -116,7 +122,9 @@ public class OrderController extends ControllerHelper {
                 List<String> ordersIds = request.params().getAll("order_id");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, true, orders -> {
+                Boolean old = Boolean.valueOf(request.getParam("old"));
+
+                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, old, orders -> {
                     if (orders.isRight()) {
                         final JsonArray finalResult = orders.right().getValue();
                         renderJson(request, finalResult);
@@ -214,12 +222,22 @@ public class OrderController extends ControllerHelper {
 
                 // Récupération de tout les filtres hors grade
                 JsonArray filters = new JsonArray();
+                boolean exist = false;
                 int length = request.params().entries().size();
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
+                    exist = false;
                     if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
-                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
+                        for(int f = 0; f < filters.size(); f ++) {
+                            if (filters.getJsonObject(f).containsKey(key)) {
+                                filters.getJsonObject(f).getJsonArray(key).add(request.params().entries().get(i).getValue());
+                                exist = true;
+                            }
+                        }
+                        if (!exist) {
+                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), new JsonArray().add(request.params().entries().get(i).getValue())));
+                        }
                     }
                 }
                 // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
@@ -306,7 +324,7 @@ public class OrderController extends ControllerHelper {
                             equipment = equipments.getJsonObject(j);
                             orderMap.put("name", equipment.getString("titre"));
                             orderMap.put("ean", equipment.getString("ean"));
-                            setOrderMap(orders, orderMap, order);
+                            setOrderMap(orders, orderMap, order, equipment, false);
                             check = false;
                         }
                         j++;
@@ -342,7 +360,7 @@ public class OrderController extends ControllerHelper {
                     orderMap = new JsonObject();
                     orderMap.put("name", order.getString("equipment_name"));
                     orderMap.put("ean", order.getString("equipment_key"));
-                    setOrderMap(orders, orderMap, order);
+                    setOrderMap(orders, orderMap, order, null, true);
                 }
                 request.response()
                         .putHeader("Content-Type", "text/csv; charset=utf-8")
@@ -352,7 +370,7 @@ public class OrderController extends ControllerHelper {
         });
     }
 
-    private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order) {
+    private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order, JsonObject equipment, boolean old) {
         orderMap.put("id", order.getInteger("id"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
@@ -362,7 +380,7 @@ public class OrderController extends ControllerHelper {
         orderMap.put("basket_name", order.getString("basket_name"));
         orderMap.put("comment", order.getString("comment"));
         orderMap.put("amount", order.getInteger("amount"));
-        dealWithPriceTTC_HT(orderMap);
+        dealWithPriceTTC_HT(orderMap, equipment, order, old);
         orders.add(orderMap);
     }
 

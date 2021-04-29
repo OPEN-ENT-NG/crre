@@ -25,12 +25,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId, String startDate,
                           String endDate, boolean oldTable,  Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new JsonArray();
+        String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, oe.equipment_price as price " : "";
         String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
                 "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
-                "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " +
+                "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " + selectOld +
                 "FROM "+ Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oe " : ".order_client_equipment  oe ") +
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ((oldTable) ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_order_client_equipment = oe.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
                 "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND oe.id_structure = ? ";
         values.add(startDate).add(endDate).add(idCampaign).add(idStructure);
@@ -151,7 +152,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listExport(List<Integer> idsOrders, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT oe.* bo.name as basket_name " +
+        String query = "SELECT oe.*, bo.name as basket_name " +
                 "FROM "+ Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oe " : ".order_client_equipment  oe ") +
                 "LEFT JOIN "+ Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "WHERE oe.id IN ( ";
@@ -222,7 +223,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE oe.creation_date BETWEEN ? AND ?";
+                "WHERE oe.creation_date BETWEEN ? AND ? ";
         values.add(startDate).add(endDate);
         if(id_campaign != null){
             sqlquery += "AND oe.id_campaign = ? ";
@@ -235,8 +236,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
-        sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, sqlquery);
-        sqlquery += ") AND oe.id_structure IN ( ";
+        sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
+        sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure IN ( ";
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 

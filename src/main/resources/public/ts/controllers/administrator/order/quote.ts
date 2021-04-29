@@ -18,12 +18,12 @@ export const quoteController = ng.controller('quoteController',
 
         $scope.search = async (name: string, init: boolean = false) => {
             if (init) {
-                $scope.quotes = [];
+                $scope.quotes = new Quotes();
                 $scope.filter.page = 0;
             }
             let newData: boolean;
             if (!!name) {
-                newData = await $scope.quotes.get(name, $scope.filter.page);
+                newData = await $scope.quotes.search(name, $scope.filter.page);
             } else {
                 newData = await $scope.quotes.get($scope.filter.page);
                 Utils.safeApply($scope);

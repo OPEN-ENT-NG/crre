@@ -7,8 +7,6 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public interface OrderRegionService {
@@ -18,7 +16,7 @@ public interface OrderRegionService {
 
     void createProject (String title,  Handler<Either<String, JsonObject>> handler);
 
-    void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
@@ -26,18 +24,22 @@ public interface OrderRegionService {
                         String idStructure, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
+                Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, String idStructure, JsonArray filters,
-                     Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
+                     Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                      Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
+                      Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                                   Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
+
+    void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
+
+    void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException;
 
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 
