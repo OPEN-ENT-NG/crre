@@ -142,7 +142,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     @Override
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign,
+    public void search(String query, UserInfos user, JsonArray equipTab, int id_campaign,
                        String startDate, String endDate, Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
@@ -152,7 +152,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
         sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
         sqlquery += ") AND bo.id_structure IN ( ";
-        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
+        sqlquery = orderBasketSearch(user, values, sqlquery, page, PAGE_SIZE);
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -181,7 +181,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     }
 
     @Override
-    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
+    public void searchWithoutEquip(String query, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
                                    Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT distinct bo.* " +
@@ -195,81 +195,22 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 .add(user.getUserId())
                 .add(query)
                 .add(query);
-        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
+        sqlquery = orderBasketSearch(user, values, sqlquery, page, PAGE_SIZE);
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT distinct bo.* " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? ";
-        values.add(startDate)
-                .add(endDate)
-                .add(id_campaign)
-                .add(user.getUserId());
-        sqlquery = DefaultOrderService.filterSQLTable(equipTab, values, sqlquery);
-        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign,
-                              String startDate, String endDate, Integer page,
-                              Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT distinct bo.* " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? ";
-        values.add(startDate)
-                .add(endDate)
-                .add(id_campaign)
-                .add(user.getUserId());
-        sqlquery = DefaultOrderService.queryFilterSQL(query, equipTab, values, sqlquery);
-
-        sqlquery += " AND bo.id_structure IN ( ";
-        sqlquery = filterBasketSearch(filters, user, values, sqlquery, page, PAGE_SIZE);
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    static String filterBasketSearch(JsonArray filters, UserInfos user,
-                                   JsonArray values, String sqlquery, Integer page, Integer limitPage) {
-        sqlquery = filterSQLTable(filters, user, values, sqlquery);
-        sqlquery += " ORDER BY bo.id DESC ";
-        if (page != null) {
-            sqlquery += "OFFSET ? LIMIT ? ";
-            values.add(limitPage * page);
-            values.add(limitPage);
-        }
-        return sqlquery;
-    }
-
-    static String filterSQLTable(JsonArray filters, UserInfos user, JsonArray values, String sqlquery) {
+    static String orderBasketSearch(UserInfos user, JsonArray values, String sqlquery, Integer page, Integer limitPage) {
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 
-        if(filters != null && filters.size() > 0) {
-            sqlquery += " AND ( ";
-            for (int i = 0; i < filters.size(); i++) {
-                String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
-                JsonArray value = filters.getJsonObject(i).getJsonArray(key);
-                sqlquery += !key.equals("reassort") ? "bo." + key + " IN ( " : "oe." + key + " IN ( ";
-                for (int k = 0; k < value.size(); k++) {
-                    sqlquery += "?,";
-                    values.add(value.getString(k));
-                }
-                sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-                if(!(i == filters.size() - 1)) {
-                    sqlquery += " AND ";
-                } else {
-                    sqlquery += ")";
-                }
-            }
+        sqlquery += " ORDER BY bo.id DESC ";
+        if (page != null) {
+            sqlquery += "OFFSET ? LIMIT ? ";
+            values.add(limitPage * page);
+            values.add(limitPage);
         }
         return sqlquery;
     }

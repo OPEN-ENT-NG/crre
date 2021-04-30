@@ -98,7 +98,7 @@ export class OrdersClient extends Selection<OrderClient> {
             let params = (id_campaign) ? `&id=${id_campaign}` : ``;
             params += (page) ? `&page=${page}` : ``;
             const {startDate, endDate} = Utils.formatDate(start, end);
-            const {data} = await http.get(`/crre/orders/search?startDate=${startDate}&endDate=${endDate}&q=${text}${params}`);
+            const {data} = await http.get(`/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}&q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
             if(newOrderClient.length>0) {
                 await this.reformatOrders(newOrderClient);
@@ -119,7 +119,7 @@ export class OrdersClient extends Selection<OrderClient> {
             });
             const {startDate, endDate} = Utils.formatDate(start, end);
             if(!Utils.format.test(word)) {
-                let url = `/crre/orders/filter?startDate=${startDate}&endDate=${endDate}${params}`;
+                let url = `/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}${params}`;
                 url += (!!word) ? `&q=${word}` : ``;
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);

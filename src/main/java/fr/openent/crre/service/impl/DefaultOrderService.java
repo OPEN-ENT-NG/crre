@@ -241,30 +241,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 
-    public void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
-                              Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
-        sqlquery +=  " AND oe.status = 'WAITING' ";
-        sqlquery = queryFilterSQL(query, equipTab, values, sqlquery);
-        sqlquery += " AND oe.id_structure IN ( ";
-        orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
-    }
-
-    static String queryFilterSQL(String query, JsonArray equipTab, JsonArray values, String sqlquery) {
-        values.add(query);
-        values.add(query);
-        if(equipTab.getJsonArray(1).isEmpty()){
-            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) ";
-        } else {
-            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
-            sqlquery = insertValuesQuery(equipTab, values, sqlquery);
-        }
-        sqlquery += " AND oe.equipment_key IN (";
-        sqlquery = insertEquipmentEAN(equipTab, values, sqlquery);
-        return sqlquery;
-    }
-
     static String insertEquipmentEAN(JsonArray equipTab, JsonArray values, String sqlquery) {
         for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
             sqlquery += "?,";
@@ -284,18 +260,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         return sqlquery;
     }
 
-    public void filter(JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
-        sqlquery +=  " AND oe.status = 'WAITING' ";
-        sqlquery = filterSQLTable(equipTab, values, sqlquery);
-        orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
-    }
 
     private void orderPaginationSQL(JsonArray filters, UserInfos user, Integer page,
                                     Handler<Either<String, JsonArray>> arrayResponseHandler, JsonArray values, String sqlquery) {
-        sqlquery = DefaultBasketService.filterSQLTable(filters, user, values, sqlquery);
+        sqlquery = filterSQLTable(filters, user, values, sqlquery);
         sqlquery += " ORDER BY creation_date DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
@@ -305,16 +273,34 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    static String filterSQLTable(JsonArray equipTab, JsonArray values, String sqlquery) {
-        sqlquery += " AND oe.equipment_key IN (";
-        for (int i = 0; i < equipTab.size(); i++) {
+    static String filterSQLTable(JsonArray filters, UserInfos user, JsonArray values, String sqlquery) {
+        for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
-            values.add(equipTab.getJsonObject(i).getString("ean"));
+            values.add(idStruct);
         }
         sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
 
-        sqlquery += " AND oe.id_structure IN ( ";
+        if(filters != null && filters.size() > 0) {
+            sqlquery += " AND ( ";
+            for (int i = 0; i < filters.size(); i++) {
+                String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
+                JsonArray value = filters.getJsonObject(i).getJsonArray(key);
+                sqlquery += !key.equals("reassort") ? "bo." + key + " IN ( " : "oe." + key + " IN ( ";
+                for (int k = 0; k < value.size(); k++) {
+                    sqlquery += "?,";
+                    values.add(value.getString(k));
+                }
+                sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+                if(!(i == filters.size() - 1)) {
+                    sqlquery += " AND ";
+                } else {
+                    sqlquery += ")";
+                }
+            }
+        }
         return sqlquery;
     }
+
+
 }
 

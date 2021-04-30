@@ -62,10 +62,4 @@ public interface OrderService {
     void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, String startDate, String endDate, Integer page,
                             Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
-                Handler<Either<String, JsonArray>> arrayResponseHandler);
-
 }

@@ -124,13 +124,13 @@ public class BasketController extends ControllerHelper {
                     if(!old) {
                         plainTextSearchName(query, equipments -> {
                             if(equipments.right().getValue().size() > 0) {
-                                basketService.search(query, null, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
+                                basketService.search(query, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
                             } else {
-                                basketService.searchWithoutEquip(query, null, user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                                basketService.searchWithoutEquip(query,user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
                             }
                         });
                     } else {
-                        basketService.search(query, null, user, null, id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
+                        basketService.search(query, user, null, id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
                     }
 
                 } catch (UnsupportedEncodingException e) {
@@ -141,69 +141,6 @@ public class BasketController extends ControllerHelper {
             }
         });
     }
-
-/*    @Get("/basketOrder/filter")
-    @ApiDoc("Filter order")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void filter(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            try {
-                Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-*//*                List<String> params = new ArrayList<>();*//*
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                Boolean old = Boolean.valueOf(request.getParam("old"));
-                String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
-*//*                if (request.params().contains("niveaux.libelle")) {
-                    params = request.params().getAll("niveaux.libelle");
-                }*//*
-
-                // Récupération de tout les filtres hors grade
-                JsonArray filters = new JsonArray();
-                int length = request.params().entries().size();
-                for (int i = 0; i < length; i++) {
-                    if (!request.params().entries().get(i).getKey().equals("id") && !request.params().entries().get(i).getKey().equals("q")
-                            && !request.params().entries().get(i).getKey().equals("niveaux.libelle"))
-                        filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), request.params().entries().get(i).getValue()));
-                }
-                // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
-                if (request.params().contains("q")) {
-                    q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-                }
-                int id_campaign = parseInt(request.getParam("id"));
-                String finalQ = q;
-                // Si nous avons des filtres de grade
-                    if(!old) {
-                        CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
-                            if (event.succeeded()) {
-                                JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
-                                JsonArray equipmentsGradeAndQ = equipmentGradeAndQFuture.result(); // Tout les équipement correspondant aux grades et à la query
-                                JsonArray allEquipments = new JsonArray();
-                                allEquipments.add(equipmentsGrade);
-                                allEquipments.add(equipmentsGradeAndQ);
-                                // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
-                                if (equipmentsGrade.size() > 0) {
-                                    if (request.params().contains("q")) {
-                                        basketService.searchWithAll(finalQ, filters, user, allEquipments, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                    } else {
-                                        basketService.filter(filters, user, equipmentsGrade, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                    }
-                                } else {
-                                    basketService.searchWithoutEquip(finalQ, filters, user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                }
-                            }
-                        });
-                        filter_waiting(null, handlerJsonArray(equipmentGradeFuture));
-                        filter_waiting(StringUtils.isEmpty(q) ? null : q, handlerJsonArray(equipmentGradeAndQFuture));
-                    } else {
-
-                    }
-
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        });
-    }*/
 
     @Post("/basket/campaign/:idCampaign")
     @ApiDoc("Create a basket item")

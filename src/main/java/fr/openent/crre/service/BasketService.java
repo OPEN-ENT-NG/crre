@@ -99,16 +99,10 @@ public interface BasketService {
      * @param arrayResponseHandler  Function handler returning data
      */
 
-    void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
+    void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                 Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithAll(String query, JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
+    void searchWithoutEquip(String query, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
                             Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void filter(JsonArray filters, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
-                Handler<Either<String, JsonArray>> arrayResponseHandler);
 
 }

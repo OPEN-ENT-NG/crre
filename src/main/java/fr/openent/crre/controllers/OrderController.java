@@ -172,62 +172,25 @@ public class OrderController extends ControllerHelper {
         });
     }
 
-    @Get("/orders/search")
-    @ApiDoc("Search order through name")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void search(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && !request.params().get("q").trim().isEmpty()) {
-                try {
-                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-                    Integer id_campaign = null;
-                    if(request.getParam("id") != null) {
-                        id_campaign = parseInt(request.getParam("id"));
-                    }
-                    Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                    Integer finalId_campaign = id_campaign;
-                    String startDate = request.getParam("startDate");
-                    String endDate = request.getParam("endDate");
-                    plainTextSearchName(query, equipments -> {
-                        if(equipments.right().getValue().size() > 0) {
-                            orderService.search(query, null, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                        } else {
-                            orderService.searchWithoutEquip(query, null, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                        }
-                    });
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-                badRequest(request);
-            }
-        });
-    }
-
-    @Get("/orders/filter")
+    @Get("/orders/search_filter")
     @ApiDoc("Filter order")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                List<String> params = new ArrayList<>();
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
-                if (request.params().contains("niveaux.libelle")) {
-                    params = request.params().getAll("niveaux.libelle");
-                }
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
 
-                // Récupération de tout les filtres hors grade
+                // Récupération de tout les filtres
                 JsonArray filters = new JsonArray();
-                boolean exist = false;
+                boolean exist;
                 int length = request.params().entries().size();
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals("id") && !key.equals("q") && !key.equals("niveaux.libelle") && !key.equals("page") &&
+                    if (!key.equals("id") && !key.equals("q")  && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
                         for(int f = 0; f < filters.size(); f ++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
@@ -249,35 +212,6 @@ public class OrderController extends ControllerHelper {
                     id_campaign = parseInt(request.getParam("id"));
                 }
                 String finalQ = q;
-                // Si nous avons des filtres de grade
-                if (params.size() > 0) {
-                    Future<JsonArray> equipmentGradeFuture = Future.future();
-                    Future<JsonArray> equipmentGradeAndQFuture = Future.future();
-
-                    Integer finalId_campaign = id_campaign;
-                    CompositeFuture.all(equipmentGradeFuture, equipmentGradeAndQFuture).setHandler(event -> {
-                        if (event.succeeded()) {
-                            JsonArray equipmentsGrade = equipmentGradeFuture.result(); // Tout les équipements correspondant aux grades
-                            JsonArray equipmentsGradeAndQ = equipmentGradeAndQFuture.result(); // Tout les équipement correspondant aux grades et à la query
-                            JsonArray allEquipments = new JsonArray();
-                            allEquipments.add(equipmentsGrade);
-                            allEquipments.add(equipmentsGradeAndQ);
-                            // Si le tableau trouve des equipements, on recherche avec ou sans query sinon ou cherche sans equipement
-                            if (equipmentsGrade.size() > 0) {
-                                if (request.params().contains("q")) {
-                                    orderService.searchWithAll(finalQ, filters, user, allEquipments, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                } else {
-                                    orderService.filter(filters, user, equipmentsGrade, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                                }
-                            } else {
-                                orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                            }
-                        }
-                    });
-                    filter_waiting(params, null, handlerJsonArray(equipmentGradeFuture));
-                    filter_waiting(params, StringUtils.isEmpty(q) ? null : q, handlerJsonArray(equipmentGradeAndQFuture));
-                } else {
-                    // Recherche avec les filtres autres que grade
                     Integer finalId_campaign = id_campaign;
                     plainTextSearchName(finalQ, equipments -> {
                         if (equipments.right().getValue().size() > 0) {
@@ -286,8 +220,6 @@ public class OrderController extends ControllerHelper {
                             orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                         }
                     });
-                }
-
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
