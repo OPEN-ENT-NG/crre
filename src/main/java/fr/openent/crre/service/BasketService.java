@@ -102,7 +102,5 @@ public interface BasketService {
     void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
                 Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void searchWithoutEquip(String query, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
-                            Handler<Either<String, JsonArray>> arrayResponseHandler);
 
 }

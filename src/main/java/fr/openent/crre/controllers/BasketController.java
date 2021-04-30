@@ -123,14 +123,10 @@ public class BasketController extends ControllerHelper {
                     Boolean old = Boolean.valueOf(request.getParam("old"));
                     if(!old) {
                         plainTextSearchName(query, equipments -> {
-                            if(equipments.right().getValue().size() > 0) {
-                                basketService.search(query, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
-                            } else {
-                                basketService.searchWithoutEquip(query,user, id_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                            }
+                            basketService.search(query, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
                         });
                     } else {
-                        basketService.search(query, user, null, id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
+                        basketService.search(query, user, new JsonArray(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
                     }
 
                 } catch (UnsupportedEncodingException e) {

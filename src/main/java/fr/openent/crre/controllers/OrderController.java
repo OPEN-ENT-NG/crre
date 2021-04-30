@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
-import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -214,11 +213,7 @@ public class OrderController extends ControllerHelper {
                 String finalQ = q;
                     Integer finalId_campaign = id_campaign;
                     plainTextSearchName(finalQ, equipments -> {
-                        if (equipments.right().getValue().size() > 0) {
                             orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                        } else {
-                            orderService.searchWithoutEquip(finalQ, filters, user, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                        }
                     });
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

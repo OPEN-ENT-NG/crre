@@ -150,7 +150,16 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "INNER JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON (bo.id = oe.id_basket) " +
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
-        sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
+        if(equipTab.isEmpty()) {
+            if(old) {
+                sqlquery = SQLConditionQueryEquipments(query, equipTab, values, true, sqlquery);
+            } else {
+                sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?";
+                values.add(query).add(query);
+            }
+        } else {
+            sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
+        }
         sqlquery += ") AND bo.id_structure IN ( ";
         sqlquery = orderBasketSearch(user, values, sqlquery, page, PAGE_SIZE);
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
@@ -165,38 +174,18 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
             } else {
                 sqlquery += "AND (oe.equipment_key IN (";
             }
-
             for (int i = 0; i < equipTab.size(); i++) {
                 sqlquery += "?,";
                 values.add(equipTab.getJsonObject(i).getString("ean"));
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         } else {
-            sqlquery += "AND (bo.name ~* ? OR bo.name_user ~* ? OR oe.equipment_name ~* ?";
+            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_name ~* ?";
             values.add(query);
             values.add(query);
             values.add(query);
         }
         return sqlquery;
-    }
-
-    @Override
-    public void searchWithoutEquip(String query, UserInfos user, int id_campaign, String startDate, String endDate, Integer page,
-                                   Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT distinct bo.* " +
-                "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
-                "WHERE bo.created BETWEEN ? AND ? AND bo.id_campaign = ? AND bo.id_user = ? " +
-                "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
-        values.add(startDate)
-                .add(endDate)
-                .add(id_campaign)
-                .add(user.getUserId())
-                .add(query)
-                .add(query);
-        sqlquery = orderBasketSearch(user, values, sqlquery, page, PAGE_SIZE);
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     static String orderBasketSearch(UserInfos user, JsonArray values, String sqlquery, Integer page, Integer limitPage) {

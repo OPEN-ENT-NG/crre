@@ -207,17 +207,16 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     }
 
-    @Override
+/*    @Override
     public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, String startDate, String endDate, Integer page,
                                    Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
         sqlquery += "AND oe.status = 'WAITING' AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
-
         values.add(query);
         values.add(query);
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
-    }
+    }*/
 
     private String getSqlquery(Integer id_campaign, String startDate, String endDate, JsonArray values) {
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
@@ -236,8 +235,15 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
-        sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
-        sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure IN ( ";
+        if(equipTab.isEmpty()) {
+            sqlquery += " AND oe.status = 'WAITING' AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
+            values.add(query);
+            values.add(query);
+        } else {
+            //avec equip
+            sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
+            sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure IN ( ";
+        }
         orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
     }
 
