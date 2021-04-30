@@ -58,8 +58,4 @@ public interface OrderService {
 
     void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-/*    void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, String startDate, String endDate, Integer page,
-                            Handler<Either<String, JsonArray>> arrayResponseHandler);*/
-
 }

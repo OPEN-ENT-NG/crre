@@ -150,45 +150,10 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                 "INNER JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON (bo.id = oe.id_basket) " +
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(id_campaign);
-        if(equipTab.isEmpty()) {
-            if(old) {
-                sqlquery = SQLConditionQueryEquipments(query, equipTab, values, true, sqlquery);
-            } else {
-                sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?";
-                values.add(query).add(query);
-            }
-        } else {
-            sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
-        }
+
+        sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
+
         sqlquery += ") AND bo.id_structure IN ( ";
-        sqlquery = orderBasketSearch(user, values, sqlquery, page, PAGE_SIZE);
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlquery) {
-        if(!old) {
-            if (!query.equals("")) {
-                sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (";
-                values.add(query);
-                values.add(query);
-            } else {
-                sqlquery += "AND (oe.equipment_key IN (";
-            }
-            for (int i = 0; i < equipTab.size(); i++) {
-                sqlquery += "?,";
-                values.add(equipTab.getJsonObject(i).getString("ean"));
-            }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        } else {
-            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_name ~* ?";
-            values.add(query);
-            values.add(query);
-            values.add(query);
-        }
-        return sqlquery;
-    }
-
-    static String orderBasketSearch(UserInfos user, JsonArray values, String sqlquery, Integer page, Integer limitPage) {
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);
@@ -198,8 +163,37 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sqlquery += " ORDER BY bo.id DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
-            values.add(limitPage * page);
-            values.add(limitPage);
+            values.add(PAGE_SIZE * page);
+            values.add(PAGE_SIZE);
+        }
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlquery) {
+        if(!old) {
+            if (!query.equals("")) {
+                sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? ";
+                values.add(query);
+                values.add(query);
+            }
+            if(!equipTab.isEmpty()) {
+                if (!query.equals("")) {
+                    sqlquery += "OR ";
+                } else {
+                    sqlquery += "AND (";
+                }
+                sqlquery += "oe.equipment_key IN (";
+                for (int i = 0; i < equipTab.size(); i++) {
+                    sqlquery += "?,";
+                    values.add(equipTab.getJsonObject(i).getString("ean"));
+                }
+                sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+            }
+        } else {
+            sqlquery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_name ~* ?";
+            values.add(query);
+            values.add(query);
+            values.add(query);
         }
         return sqlquery;
     }

@@ -11,12 +11,9 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
@@ -26,9 +23,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.*;
-import static fr.openent.crre.helpers.ElasticSearchHelper.filter_waiting;
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Integer.parseInt;
@@ -100,7 +96,7 @@ public class BasketController extends ControllerHelper {
                 int id_campaign = parseInt(request.getParam("id"));
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                Boolean old = Boolean.valueOf(request.getParam("old"));
+                boolean old = Boolean.parseBoolean(request.getParam("old"));
                 basketService.getMyBasketOrders(user, page, id_campaign, startDate, endDate, old, arrayResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred casting campaign id", e);
@@ -121,14 +117,9 @@ public class BasketController extends ControllerHelper {
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
                     Boolean old = Boolean.valueOf(request.getParam("old"));
-                    if(!old) {
-                        plainTextSearchName(query, equipments -> {
-                            basketService.search(query, user, equipments.right().getValue(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
-                        });
-                    } else {
-                        basketService.search(query, user, new JsonArray(), id_campaign, startDate, endDate, page, old, arrayResponseHandler(request));
-                    }
-
+                    plainTextSearchName(query, equipments -> basketService.search(query, user,
+                                equipments.right().getValue(), id_campaign, startDate, endDate, page, old,
+                                arrayResponseHandler(request)));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }

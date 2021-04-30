@@ -207,18 +207,9 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     }
 
-/*    @Override
-    public void searchWithoutEquip(String query, JsonArray filters, UserInfos user, Integer id_campaign, String startDate, String endDate, Integer page,
-                                   Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
+                       Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
-        sqlquery += "AND oe.status = 'WAITING' AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
-        values.add(query);
-        values.add(query);
-        orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
-    }*/
-
-    private String getSqlquery(Integer id_campaign, String startDate, String endDate, JsonArray values) {
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
@@ -228,58 +219,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             sqlquery += "AND oe.id_campaign = ? ";
             values.add(id_campaign);
         }
-        return sqlquery;
-    }
 
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = getSqlquery(id_campaign, startDate, endDate, values);
-        if(equipTab.isEmpty()) {
-            sqlquery += " AND oe.status = 'WAITING' AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?) AND oe.id_structure IN (";
-            values.add(query);
-            values.add(query);
-        } else {
-            //avec equip
-            sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
-            sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure IN ( ";
-        }
-        orderPaginationSQL(filters, user, page, arrayResponseHandler, values, sqlquery);
-    }
+        sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
 
-    static String insertEquipmentEAN(JsonArray equipTab, JsonArray values, String sqlquery) {
-        for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonArray(0).getJsonObject(i).getString("ean"));
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        return sqlquery;
-    }
-
-    static String insertValuesQuery(JsonArray equipTab, JsonArray values, String sqlquery) {
-        for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonArray(1).getJsonObject(i).getString("ean"));
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += ")";
-        return sqlquery;
-    }
-
-
-    private void orderPaginationSQL(JsonArray filters, UserInfos user, Integer page,
-                                    Handler<Either<String, JsonArray>> arrayResponseHandler, JsonArray values, String sqlquery) {
-        sqlquery = filterSQLTable(filters, user, values, sqlquery);
-        sqlquery += " ORDER BY creation_date DESC ";
-        if (page != null) {
-            sqlquery += "OFFSET ? LIMIT ? ";
-            values.add(PAGE_SIZE * page);
-            values.add(PAGE_SIZE);
-        }
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    static String filterSQLTable(JsonArray filters, UserInfos user, JsonArray values, String sqlquery) {
+        sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure IN ( ";
         for (String idStruct : user.getStructures()) {
             sqlquery += "?,";
             values.add(idStruct);
@@ -304,9 +247,33 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 }
             }
         }
+
+        sqlquery += " ORDER BY creation_date DESC ";
+        if (page != null) {
+            sqlquery += "OFFSET ? LIMIT ? ";
+            values.add(PAGE_SIZE * page);
+            values.add(PAGE_SIZE);
+        }
+        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    static String insertEquipmentEAN(JsonArray equipTab, JsonArray values, String sqlquery) {
+        for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonArray(0).getJsonObject(i).getString("ean"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         return sqlquery;
     }
 
-
+    static String insertValuesQuery(JsonArray equipTab, JsonArray values, String sqlquery) {
+        for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
+            sqlquery += "?,";
+            values.add(equipTab.getJsonArray(1).getJsonObject(i).getString("ean"));
+        }
+        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery += ")";
+        return sqlquery;
+    }
 }
 
