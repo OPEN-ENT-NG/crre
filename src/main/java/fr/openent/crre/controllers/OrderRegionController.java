@@ -220,13 +220,8 @@ public class OrderRegionController extends BaseController {
                         JsonArray allEquipments = new JsonArray();
                         allEquipments.add(equipmentsGrade);
                         allEquipments.add(equipmentsGradeAndQ);
-                        if (request.params().contains("q")) {
-                            orderRegionService.filterSearch(user, allEquipments, query, startDate,
-                                    endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                        } else {
-                            orderRegionService.filter_only(user, equipmentsGrade, startDate,
-                                    endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                        }
+                        orderRegionService.filterSearch(user, allEquipments, query, startDate,
+                                endDate, idStructure, filters, page, old, arrayResponseHandler(request));
                     }
                 });
                 filters(params, handlerJsonArray(equipmentFilterFuture));
@@ -235,35 +230,12 @@ public class OrderRegionController extends BaseController {
                 } else {
                     searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
                 }
-            } else {
-                if (request.params().contains("q")) {
-                    orderRegionService.filterSearch(user, null, query, startDate,
-                            endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                } else {
-                    orderRegionService.filter_only(user, null, startDate,
-                            endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                }
             }
         } else {
-            if (!old) {
-                if (!(query.equals(""))) {
-                    plainTextSearchName(query, equipments -> {
-                        if (equipments.right().getValue().size() > 0) {
-                            orderRegionService.search(user, equipments.right().getValue(), query, startDate,
-                                    endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                        } else {
-                            orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
-                                    arrayResponseHandler(request));
-                        }
-                    });
-                } else {
-                    orderRegionService.filterSearchWithoutEquip(user, query, startDate, endDate, idStructure, filters, page,
-                            arrayResponseHandler(request));
-                }
-            } else {
-                orderRegionService.search(user, null, query, startDate,
+            plainTextSearchName(query, equipments -> {
+                orderRegionService.search(user, equipments.right().getValue(), query, startDate,
                         endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-            }
+            });
         }
     }
 

@@ -26,14 +26,8 @@ public interface OrderRegionService {
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, String idStructure, JsonArray filters,
-                     Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
     void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                       Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                                  Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
 

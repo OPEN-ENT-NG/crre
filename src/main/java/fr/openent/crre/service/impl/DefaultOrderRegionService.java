@@ -159,40 +159,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
     }
 
-    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                       Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, old);
-        if(!old) {
-            if (!query.equals("")) {
-                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR oe.equipment_key IN (";
-                values.add(query);
-                values.add(query);
-                values.add(query);
-            } else {
-                sqlquery += "AND (oe.equipment_key IN (";
-            }
-
-            for (int i = 0; i < equipTab.size(); i++) {
-                sqlquery += "?,";
-                values.add(equipTab.getJsonObject(i).getString("ean"));
-            }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + "))";
-        } else {
-            if (!query.equals("")) {
-                sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_name ~* ?) ";
-                values.add(query);
-                values.add(query);
-                values.add(query);
-                values.add(query);
-            } else {
-                sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name) ";
-            }
-        }
-        filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery, PAGE_SIZE);
-    }
-
     static String selectSQLOrders(String startDate, String endDate, JsonArray values, String idStructure, boolean oldTable) {
         String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
                 "FROM  " + Crre.crreSchema + ".project p " +
@@ -209,6 +175,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return sqlquery;
     }
 
+
     @Override
     public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                              Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
@@ -216,11 +183,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         HashMap<String, ArrayList> hashMap = new HashMap<>();
         String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, old);
         if(!old) {
-            if(equipTab.getJsonArray(1).isEmpty()){
-                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?) ";
-            } else {
-                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR ore.equipment_key IN (";
-                sqlquery = DefaultOrderService.insertValuesQuery(equipTab, values, sqlquery);
+            if(!query.isEmpty()) {
+                values.add(query);
+                values.add(query);
+                values.add(query);
+                if(equipTab.getJsonArray(1).isEmpty()){
+                    sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?) ";
+                } else {
+                    sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR ore.equipment_key IN (";
+                    sqlquery = DefaultOrderService.insertValuesQuery(equipTab, values, sqlquery);
+                }
             }
             sqlquery += " AND oe.equipment_key IN (";
             if(equipTab.getJsonArray(0).isEmpty()) {
@@ -232,33 +204,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         } else {
             sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_name ~* ?) ";
             values.add(query);
-        }
-
-        values.add(query);
-        values.add(query);
-        values.add(query);
-        filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery, PAGE_SIZE);
-    }
-
-    @Override
-    public void filter_only(UserInfos user, JsonArray equipTab, String startDate, String endDate, String idStructure, JsonArray filters,
-                            Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, old);
-        if(!old) {
-            sqlquery += "AND oe.equipment_key IN (";
-
-            if(equipTab.isEmpty()) {
-                sqlquery += "?)";
-                values.add("null");
-            } else {
-                for (int i = 0; i < equipTab.size(); i++) {
-                    sqlquery += "?,";
-                    values.add(equipTab.getJsonObject(i).getString("ean"));
-                }
-                sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-            }
+            values.add(query);
+            values.add(query);
+            values.add(query);
         }
         filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery, PAGE_SIZE);
     }
@@ -277,19 +225,52 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         hashMap.put(key,tempList);
     }
 
-    @Override
-    public void filterSearchWithoutEquip(UserInfos user, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                                         Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlquery) {
+        if(!old) {
+            if (!query.equals("")) {
+                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR oe.equipment_key IN (";
+                values.add(query);
+                values.add(query);
+                values.add(query);
+            } else {
+                sqlquery += "AND (oe.equipment_key IN (";
+            }
+            for (int i = 0; i < equipTab.size(); i++) {
+                sqlquery += "?,";
+                values.add(equipTab.getJsonObject(i).getString("ean"));
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + "))";
+        } else {
+        if (!query.equals("")) {
+            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_name ~* ?) ";
+            values.add(query);
+            values.add(query);
+            values.add(query);
+            values.add(query);
+        } else {
+            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name) ";
+        }
+    }
+        return sqlquery;
+    }
+
+    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
+                       Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, false);
-        if (!query.equals("")) {
-            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?)";
-            values.add(query);
-            values.add(query);
-            values.add(query);
+        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, old);
+        if(!old) {
+            if(equipTab.isEmpty()) {
+                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?)";
+                values.add(query);
+                values.add(query);
+                values.add(query);
+            } else {
+                sqlquery = SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
+            }
+        } else {
+            sqlquery = SQLConditionQueryEquipments(query, equipTab, values, true, sqlquery);
         }
-
         filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery, PAGE_SIZE);
     }
 
