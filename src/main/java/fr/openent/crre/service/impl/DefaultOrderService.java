@@ -257,23 +257,5 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
-    static String insertEquipmentEAN(JsonArray equipTab, JsonArray values, String sqlquery) {
-        for (int i = 0; i < equipTab.getJsonArray(0).size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonArray(0).getJsonObject(i).getString("ean"));
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        return sqlquery;
-    }
-
-    static String insertValuesQuery(JsonArray equipTab, JsonArray values, String sqlquery) {
-        for (int i = 0; i < equipTab.getJsonArray(1).size(); i++) {
-            sqlquery += "?,";
-            values.add(equipTab.getJsonArray(1).getJsonObject(i).getString("ean"));
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        sqlquery += ")";
-        return sqlquery;
-    }
 }
 

@@ -81,10 +81,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name " + selectOld +
                 "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
-        jointureAndFilter(idProject, filterRejectedSentOrders, arrayResponseHandler, query);
-    }
-
-    static void jointureAndFilter(int idProject, boolean filterRejectedSentOrders, Handler<Either<String, JsonArray>> arrayResponseHandler, String query) {
         query = innerJoin(query);
         query += "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
         if(filterRejectedSentOrders) {
@@ -100,11 +96,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id " + selectOld +
                 "FROM  " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
-        jointureAndFilter(idsOrder, arrayResponseHandler, query);
-    }
-
-
-    static void jointureAndFilter(List<Integer> idsOrder, Handler<Either<String, JsonArray>> arrayResponseHandler, String query) {
         query = innerJoin(query);
         query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray()) + " ; ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
@@ -132,13 +123,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
                 "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ");
-        prepareSQLConditionOrderRegion(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, values, query, PAGE_SIZE);
-        sql.prepared(query.toString(), values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    static void prepareSQLConditionOrderRegion(UserInfos user, String startDate, String endDate, Integer page,
-                                               boolean filterRejectedSentOrders, String idStructure, JsonArray values,
-                                               StringBuilder query, Integer limitpage) {
         values.add(startDate);
         values.add(endDate);
 
@@ -154,61 +138,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         query.append(" ORDER BY ore.creation_date DESC ");
         if (page != null) {
             query.append("OFFSET ? LIMIT ? ");
-            values.add(limitpage * page);
-            values.add(limitpage);
+            values.add(PAGE_SIZE * page);
+            values.add(PAGE_SIZE);
         }
-    }
-
-    static String selectSQLOrders(String startDate, String endDate, JsonArray values, String idStructure, boolean oldTable) {
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ?";
-        values.add(startDate);
-        values.add(endDate);
-        if(!idStructure.equals("null")) {
-            sqlquery += " AND ore.id_structure = ?";
-            values.add(idStructure);
-        }
-        return sqlquery;
-    }
-
-
-    @Override
-    public void filterSearch(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                             Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, old);
-        if(!old) {
-            if(!query.isEmpty()) {
-                values.add(query);
-                values.add(query);
-                values.add(query);
-                if(equipTab.getJsonArray(1).isEmpty()){
-                    sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?) ";
-                } else {
-                    sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR ore.equipment_key IN (";
-                    sqlquery = DefaultOrderService.insertValuesQuery(equipTab, values, sqlquery);
-                }
-            }
-            sqlquery += " AND oe.equipment_key IN (";
-            if(equipTab.getJsonArray(0).isEmpty()) {
-                sqlquery += "?)";
-                values.add("null");
-            } else {
-                sqlquery = DefaultOrderService.insertEquipmentEAN(equipTab, values, sqlquery);
-            }
-        } else {
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_name ~* ?) ";
-            values.add(query);
-            values.add(query);
-            values.add(query);
-            values.add(query);
-        }
-        filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery, PAGE_SIZE);
+        sql.prepared(query.toString(), values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     static void addValues(String key, String value, HashMap<String, ArrayList> hashMap) {
@@ -225,57 +158,48 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         hashMap.put(key,tempList);
     }
 
-    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlquery) {
-        if(!old) {
-            if (!query.equals("")) {
-                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? OR oe.equipment_key IN (";
+    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
+                       Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap<String, ArrayList> hashMap = new HashMap<>();
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
+                "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "WHERE ore.creation_date BETWEEN ? AND ?";
+        values.add(startDate);
+        values.add(endDate);
+        if(!idStructure.equals("null")) {
+            sqlquery += " AND ore.id_structure = ?";
+            values.add(idStructure);
+        }
+        //condition with query
+        if (!query.equals("")) {
+            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? ";
+            values.add(query);
+            values.add(query);
+            values.add(query);
+            if(old){
+                sqlquery += " OR ore.equipment_name ~* ? ";
                 values.add(query);
-                values.add(query);
-                values.add(query);
+            }
+        }
+        //condition with equipment
+        if(!equipTab.isEmpty() && !old){
+            if(!query.equals("")){
+                sqlquery += " OR ore.equipment_key IN (";
             } else {
-                sqlquery += "AND (oe.equipment_key IN (";
+                sqlquery += "AND (ore.equipment_key IN (";
             }
             for (int i = 0; i < equipTab.size(); i++) {
                 sqlquery += "?,";
                 values.add(equipTab.getJsonObject(i).getString("ean"));
             }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + "))";
-        } else {
-        if (!query.equals("")) {
-            sqlquery += "AND (p.title ~* ? OR ore.owner_name ~* ? OR b.name ~* ? OR ore.equipment_name ~* ?) ";
-            values.add(query);
-            values.add(query);
-            values.add(query);
-            values.add(query);
-        } else {
-            sqlquery += "AND (p.title ~* p.title OR ore.owner_name ~* ore.owner_name OR b.name ~* b.name) ";
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-    }
-        return sqlquery;
-    }
+        sqlquery += ")";
 
-    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                       Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = selectSQLOrders(startDate, endDate, values, idStructure, old);
-        if(!old) {
-            if(equipTab.isEmpty()) {
-                sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ?)";
-                values.add(query);
-                values.add(query);
-                values.add(query);
-            } else {
-                sqlquery = SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
-            }
-        } else {
-            sqlquery = SQLConditionQueryEquipments(query, equipTab, values, true, sqlquery);
-        }
-        filtersSQLCondition(filters, page, arrayResponseHandler, values, hashMap, sqlquery, PAGE_SIZE);
-    }
-
-    static void filtersSQLCondition(JsonArray filters, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler,
-                                     JsonArray values, HashMap<String, ArrayList> hashMap, String sqlquery, Integer pagelimit) {
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
@@ -323,8 +247,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         sqlquery = sqlquery + " ORDER BY ore.creation_date DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
-            values.add(pagelimit * page);
-            values.add(pagelimit);
+            values.add(PAGE_SIZE * page);
+            values.add(PAGE_SIZE);
         }
         Sql.getInstance().prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
@@ -451,29 +375,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void deletedOrderClient(JsonArray ordersClient, Handler<Either<String, JsonObject>> handlerJsonObject) {
+    public void deletedOrders(JsonArray orders, String table, Handler<Either<String, JsonObject>> handlerJsonObject) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "DELETE FROM " + Crre.crreSchema + ".order_client_equipment oce " +
-                "WHERE oce.id IN ( ";
-        for (int i = 0; i < ordersClient.size(); i++) {
+        String query = "DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" table " +
+                "WHERE table.id IN ( ";
+        for (int i = 0; i < orders.size(); i++) {
             query += "?,";
-            params.add(ordersClient.getLong(i));
+            params.add(orders.getLong(i));
         }
         query = query.substring(0, query.length() - 1) + ")";
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
-
-    @Override
-    public void deleteOrderRegion(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handlerJsonObject) {
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "DELETE FROM " + Crre.crreSchema + ".\"order-region-equipment\" ore " +
-                "WHERE ore.id IN ( ";
-        for (int i = 0; i < ordersRegion.size(); i++) {
-            query += "?,";
-            params.add(ordersRegion.getLong(i));
-        }
-        query = query.substring(0, query.length() - 1) + ")";
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
-    }
-
 }

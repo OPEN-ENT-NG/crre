@@ -19,6 +19,7 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -167,7 +168,7 @@ public class OrderRegionController extends BaseController {
             Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
-            Boolean old = Boolean.valueOf(request.getParam("old"));
+            boolean old = Boolean.parseBoolean(request.getParam("old"));
             String idStructure = request.getParam("idStructure");
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null &&
                     Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
@@ -213,23 +214,25 @@ public class OrderRegionController extends BaseController {
                 Future<JsonArray> equipmentFilterFuture = Future.future();
                 Future<JsonArray> equipmentFilterAndQFuture = Future.future();
 
+                filters(params, handlerJsonArray(equipmentFilterFuture));
+
+                if (StringUtils.isEmpty(query)) {
+                    equipmentFilterAndQFuture.complete(new JsonArray());
+                } else {
+                    searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+                }
+
                 CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
                     if (event.succeeded()) {
                         JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
                         JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
                         JsonArray allEquipments = new JsonArray();
-                        allEquipments.add(equipmentsGrade);
-                        allEquipments.add(equipmentsGradeAndQ);
-                        orderRegionService.filterSearch(user, allEquipments, query, startDate,
+                        allEquipments.addAll(equipmentsGrade);
+                        allEquipments.addAll(equipmentsGradeAndQ);
+                        orderRegionService.search(user, allEquipments, query, startDate,
                                 endDate, idStructure, filters, page, old, arrayResponseHandler(request));
                     }
                 });
-                filters(params, handlerJsonArray(equipmentFilterFuture));
-                if (StringUtils.isEmpty(query)) {
-                    filters(params, handlerJsonArray(equipmentFilterAndQFuture));
-                } else {
-                    searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
-                }
             }
         } else {
             plainTextSearchName(query, equipments -> {
@@ -526,8 +529,8 @@ public class OrderRegionController extends BaseController {
                             renderJson(request, response2.right().getValue());
                         }
                     });
-                    orderRegionService.deletedOrderClient(ordersClient, handlerJsonObject(deleteOldOrderClientFuture));
-                    orderRegionService.deleteOrderRegion(ordersRegion, handlerJsonObject(deleteOldOrderRegionFuture));
+                    orderRegionService.deletedOrders(ordersClient, "order_client_equipment", handlerJsonObject(deleteOldOrderClientFuture));
+                    orderRegionService.deletedOrders(ordersRegion, "order-region-equipment", handlerJsonObject(deleteOldOrderRegionFuture));
                     try {
                         orderRegionService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
                     } catch (ParseException e) {
