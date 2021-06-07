@@ -198,7 +198,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        sqlquery += ")";
+        if(!query.equals("") || (!equipTab.isEmpty() && !old)){
+            sqlquery += ")";
+        }
 
         if(filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
@@ -229,7 +231,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         }
                     }
                 } else {
-                    sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN(" : "ore." + keys + " IN(";
+                    sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN (" : "ore." + keys + " IN (";
                     for(int k = 0; k < list.size(); k++) {
                         sqlquery += k+1 == list.size() ? "?)" : "?, ";
                         values.add(list.get(k).toString());
