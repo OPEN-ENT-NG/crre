@@ -84,10 +84,10 @@
             </td>
             <td>
                 <div class="smallTabElem center">
-                    <i class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"
-                       ng-click="order.status !== 'IN PROGRESS' && !filter.isOld && updateReassort(order)"></i>
-                    <i class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort"
-                       ng-click="order.status !== 'IN PROGRESS' && !filter.isOld && updateReassort(order)"></i>
+                    <span class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"
+                       ng-click="order.status !== 'IN PROGRESS' && !filter.isOld && updateReassort(order)"></span>
+                    <span class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort"
+                       ng-click="order.status !== 'IN PROGRESS' && !filter.isOld && updateReassort(order)"></span>
                 </div>
             </td>
             <td>

@@ -379,8 +379,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void deletedOrders(JsonArray orders, String table, Handler<Either<String, JsonObject>> handlerJsonObject) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" table " +
-                "WHERE table.id IN ( ";
+        String query = "DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" as t " +
+                "WHERE t.id IN ( ";
         for (int i = 0; i < orders.size(); i++) {
             query += "?,";
             params.add(orders.getLong(i));

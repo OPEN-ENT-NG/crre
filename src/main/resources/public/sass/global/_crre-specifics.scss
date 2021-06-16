@@ -248,18 +248,28 @@ body.crre {
     padding: 5px 12px;
   }
 
-  i.check-circle-crre {
+  .check-circle-crre {
     padding: 5px 12px;
-    background-repeat: no-repeat;
-    filter: invert(58%) sepia(79%) saturate(4662%) hue-rotate(156deg) brightness(88%) contrast(82%);
-    background-image: url(/crre/public/img/scss/check-circle.svg);
   }
 
-  i.close-circle {
+  .close-circle {
     padding: 5px 12px;
-    background-repeat: no-repeat;
-    background-image: url(/crre/public/img/scss/close-circle.svg);
+  }
+
+  .check-circle-crre:before {
+    padding: 5px 12px;
+    filter: invert(58%) sepia(79%) saturate(4662%) hue-rotate(156deg) brightness(88%) contrast(82%);
+    font-family: 'material-icons';
+    content: "\F06F";
+    font-size: 25px;
+  }
+
+  .close-circle:before {
+    padding: 5px 12px;
     filter: invert(0.65);
+    font-family: 'material-icons';
+    content: "\F06F";
+    font-size: 25px;
   }
 
   i.diary-calendar {
@@ -1304,7 +1314,7 @@ body.crre {
     padding: 10px 10px;
     background: #cecece;
     box-shadow: -1px 3px 5px 0px rgba(0, 0, 0, 0.25);
-    width: 19.5%;
+    width: 30%;
     font-size: 18px;
     color: white;
   }
