@@ -234,7 +234,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 await filterAndBeautifyOrders(data, old, projets);
                 let projectWithOrders = new Projects();
                 beautifyProjectsFromOrders(projets, projectWithOrders);
-                if (!isSearching || projects) {
+                if ((!isSearching || projects) && !isSameProjects(projects)) {
                     $scope.projects.all = $scope.projects.all.concat(projectWithOrders.all);
                 } else {
                     $scope.projects = projectWithOrders;
@@ -245,6 +245,22 @@ export const orderRegionController = ng.controller('orderRegionController',
         };
 
         $scope.synchroRegionOrders();
+
+        const isSameProjects = (projects) => {
+            let isSame = true;
+            $scope.projects.all.forEach(function (projet) {
+                if(isSame) {
+                    projects.all.forEach(function (project) {
+                        if(projet.id == project.id) {
+                            isSame = true;
+                        }
+                    });
+                } else {
+                    return false;
+                }
+            });
+            return isSame;
+        }
 
         const switchDisplayToggle = () => {
             let orderSelected = false

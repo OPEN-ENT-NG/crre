@@ -548,56 +548,58 @@ public class OrderRegionController extends BaseController {
         JsonObject equipment;
         for (int i = 0; i < orderRegion.size(); i++) {
             order = orderRegion.getJsonObject(i);
-            if(order.containsKey("owner_name")) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                order.put("creation_date", creation_date);
-            }
-            ordersRegion.add(order.getLong("id"));
-            ordersClient.add(order.getLong("id_order_client_equipment"));
+            // Skip offers
+            if (!order.containsKey("totalPriceTTC")) {
+                if (order.containsKey("owner_name")) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                    order.put("creation_date", creation_date);
+                }
+                ordersRegion.add(order.getLong("id"));
+                ordersClient.add(order.getLong("id_order_client_equipment"));
 
-            for (int j = 0; j < equipments.size(); j++) {
-                equipment = equipments.getJsonObject(j);
-                if (equipment.getString("id").equals(order.getString("equipment_key"))) {
-                    JsonObject priceDetails = getPriceTtc(equipment);
-                    DecimalFormat df2 = new DecimalFormat("#.##");
-                    double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
-                    double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
-                    order.put("priceht", priceDetails.getDouble("prixht"));
-                    order.put("tva5", priceDetails.getDouble("partTVA5"));
-                    order.put("tva20", priceDetails.getDouble("partTVA20"));
-                    order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
-                    order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-                    order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                    extractedEquipmentInfo(order, equipment);
-                    order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
-                    putStructuresNameUAI(structures, order);
-                    if (equipment.getString("type").equals("articlenumerique")) {
-                        JsonArray offers = computeOffers(equipment, order);
-                        if (offers.size() > 0) {
-                            JsonArray orderOfferArray = new JsonArray();
-                            for (int k = 0; k < offers.size(); k++) {
-                                JsonObject orderOffer = new JsonObject();
-                                orderOffer.put("name", offers.getJsonObject(k).getString("name"));
-                                orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
-                                orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
-                                orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
-                                orderOffer.put("unitedPriceTTC", 0);
-                                orderOffer.put("totalPriceHT", 0);
-                                orderOffer.put("totalPriceTTC", 0);
-                                orderOffer.put("creation_date", order.getString("creation_date"));
-                                orderOffer.put("id_structure", order.getString("id_structure"));
-                                orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                orderOffer.put("id", order.getLong("id"));
-                                orderOffer.put("title", order.getString("title"));
-                                orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
-                                putStructuresNameUAI(structures, orderOffer);
-                                orderOfferArray.add(orderOffer);
-                                orderRegion.add(orderOffer);
-                                i++;
+                for (int j = 0; j < equipments.size(); j++) {
+                    equipment = equipments.getJsonObject(j);
+                    if (equipment.getString("id").equals(order.getString("equipment_key"))) {
+                        JsonObject priceDetails = getPriceTtc(equipment);
+                        DecimalFormat df2 = new DecimalFormat("#.##");
+                        double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
+                        double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
+                        order.put("priceht", priceDetails.getDouble("prixht"));
+                        order.put("tva5", priceDetails.getDouble("partTVA5"));
+                        order.put("tva20", priceDetails.getDouble("partTVA20"));
+                        order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
+                        order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                        order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+                        extractedEquipmentInfo(order, equipment);
+                        order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                        putStructuresNameUAI(structures, order);
+                        if (equipment.getString("type").equals("articlenumerique")) {
+                            JsonArray offers = computeOffers(equipment, order);
+                            if (offers.size() > 0) {
+                                JsonArray orderOfferArray = new JsonArray();
+                                for (int k = 0; k < offers.size(); k++) {
+                                    JsonObject orderOffer = new JsonObject();
+                                    orderOffer.put("name", offers.getJsonObject(k).getString("name"));
+                                    orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
+                                    orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
+                                    orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
+                                    orderOffer.put("unitedPriceTTC", 0);
+                                    orderOffer.put("totalPriceHT", 0);
+                                    orderOffer.put("totalPriceTTC", 0);
+                                    orderOffer.put("creation_date", order.getString("creation_date"));
+                                    orderOffer.put("id_structure", order.getString("id_structure"));
+                                    orderOffer.put("campaign_name", order.getString("campaign_name"));
+                                    orderOffer.put("id", order.getLong("id"));
+                                    orderOffer.put("title", order.getString("title"));
+                                    orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
+                                    putStructuresNameUAI(structures, orderOffer);
+                                    orderOfferArray.add(orderOffer);
+                                    orderRegion.add(orderOffer);
+                                }
+                                order.put("offers", orderOfferArray);
                             }
-                            order.put("offers", orderOfferArray);
                         }
                     }
                 }
