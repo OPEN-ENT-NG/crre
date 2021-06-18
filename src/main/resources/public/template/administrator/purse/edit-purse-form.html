@@ -9,11 +9,11 @@
                 <i class="moins"
                    ng-click="purse.licence_initial_amount = purse.licence_initial_amount - 1;"></i>
                 <input class="three numberWithoutArrow" type="number" ng-model="purse.licence_initial_amount"
-                       min="[[purse.second + purse.premiere + purse.terminale]]"/>
+                       min="[[purse.seconde + purse.premiere + purse.terminale]]"/>
                 <i class="plus"
                    ng-click="purse.licence_initial_amount = purse.licence_initial_amount + 1;"></i>
             </div>
-            <div class="warning" ng-if="purse.second + purse.premiere + purse.terminale > purse.licence_initial_amount || !purse.licence_initial_amount">
+            <div class="warning" ng-if="purse.seconde + purse.premiere + purse.terminale > purse.licence_initial_amount || !purse.licence_initial_amount">
                 <i18n>crre.first.part.warning.purse</i18n>
                 <br/>
                 <br/>
