@@ -272,6 +272,28 @@ body.crre {
     font-size: 25px;
   }
 
+  .laptop-icon:before {
+    font-family: 'material-icons';
+    content: "\F322";
+    font-size: 25px;
+    float: left;
+    background-color: lightgray;
+    padding: 5px;
+    margin-left: -10px;
+    margin-top: -10px;
+  }
+
+  .book-icon:before {
+    font-family: 'material-icons';
+    content: "\F0BD";
+    font-size: 25px;
+    float: left;
+    background-color: lightgray;
+    padding: 5px;
+    margin-left: -10px;
+    margin-top: -10px;
+  }
+
   i.diary-calendar {
     padding: 3px 12px;
     margin: 5px;
