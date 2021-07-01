@@ -202,6 +202,9 @@
             <div ng-show="!!basket.equipment.description" >
                 <p ng-bind-html="basket.equipment.description"></p>
             </div>
+            <div ng-show="!!basket.equipment.urldemo">
+                <a ng-href=[[basket.equipment.urldemo]]>Aperçu</a>
+            </div>
         </div>
         <div class="twelve cell" id="offer">
             <h2>
