@@ -8,13 +8,16 @@
         <article>
             <div class="row horizontal-spacing vertical-spacing">
                 <div class="eight cell horizontal-spacing twelve-mobile">
-                    <h2><i18n>crre.information</i18n></h2>
-                    <label class="row twelve vertical-spacing">
-                        <span class="twelve">
+                    <h2><i18n>crre.information.general</i18n></h2>
+                    <label class="four vertical-spacing" style = "margin-right: 120px;">
+                        <span class="four">
                             <i18n>crre.campaigns.name</i18n> *
                         </span>
-                        <input type="text" class="twelve" ng-model="campaign.name" required>
+                        <input type="text" class="four" ng-model="campaign.name" required>
                     </label>
+                    <select class = "four" ng-model="campaign_type" ng-change="changeList()" ng-options="format.name_type for format in formatCheck">
+                        <option value="" disabled selected>Type de campagne</option>
+                    </select>
                     <div class="row twelve">
                         <label class="row twelve vertical-spacing">
                         <span class="twelve">
@@ -25,38 +28,114 @@
                     </div>
                 </div>
             </div>
-        </article>
-        <h4 style="margin: 50px 0 10px 0">
-            <i18n>crre.campaign.groups</i18n>
-            :
-        </h4>
-        <article class="responsive-table" style="margin: 0;">
-            <table class="twelve">
-                <thead>
-                <td class="one checkbox ">
-                    <label class="checkbox">
-                        <input type="checkbox"
-                               ng-change="switchAll(allGroupSelected, structureGroups)"
-                               ng-model="allGroupSelected">
-                        <span></span>
-                    </label></td>
-                <td class="tree ">
-                    <i18n>crre.name.of.group</i18n>
-                </td>
-                </thead>
-                <tbody>
-                <tr ng-repeat="group in structureGroups.all track by $index ">
-                    <td class="one">
-                        <label class="checkbox">
-                            <input type="checkbox" ng-model="group.selected">
+            <div class="eight horizontal-spacing twelve-mobile">
+        <h2 style="margin: 25px 0 10px 0">
+            <i18n>crre.campaign.options</i18n>
+        </h2>
+            <div>
+        <label class="checkbox">
+            <input type="checkbox" ng-model="campaign.use_credit"
+            />
+            <span><i18n>Utilisez les crédits</i18n></span>
+        </label>
+        <label class="checkbox">
+            <input type="checkbox" ng-model="campaign.reassort"
+            />
+            <span><i18n>Campagne de réassort</i18n></span>
+        </label>
+            </div>
+            <div class="margin-top-14">
+        <span>Accès catalogue : </span>
+        <select ng-model="campaign.catalog" ng-options="article.name for article in articleFormat"></select>
+            </div>
+            <div class="margin-top-14">
+                    <label class="four vertical-spacing">
+                        <label class="one checkbox">
+                            <input type="checkbox"
+                                   ng-model="campaign.automatic_close"/>
                             <span></span>
-                        </label></td>
-                    <td class="tree">[[group.name]]</td>
-                </tr>
-                </tbody>
-            </table>
-        </article>
-        <h4 style="margin: 50px 0 10px 0">
+                        </label>
+                        <span>
+                            <i18n>crre.campaigns.date.automatisation</i18n>
+                        </span>
+                        <div class="vertical-spacing"
+                             ng-show="campaign.automatic_close">
+                            <span class="four cell">
+                            <i18n>crre.campaigns.date.start</i18n>
+                        </span>
+                            <div class="six cell">
+                                <date-picker ng-model="campaign.start_date" class="cell six twelve-mobile " ></date-picker>
+                            </div>
+                            <span class="four cell">
+                            <i18n>crre.campaigns.date.end</i18n>
+                        </span>
+                            <div class="six cell">
+                                <date-picker ng-model="campaign.end_date" class="cell six twelve-mobile "></date-picker>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        <!--<h2 style="margin: 30px 0 10px 0">
+            <i18n>crre.campaign.structure.choice</i18n>
+        </h2>
+            <div style="display: inline-grid; grid-auto-rows: minmax(40px, auto);">
+ <label class="checkbox">
+     <input type="checkbox" ng-model="basket.reassort"
+            ng-checked="campaign.structure == 'tous'" ng-change="basket.updateReassort()"
+     />
+     <span><i18n>Tous les regroupements</i18n></span>
+ </label>
+ <label class="checkbox">
+     <input type="checkbox" ng-model="basket.reassort"
+            ng-checked="campaign.structure == 'papier'" ng-change="basket.updateReassort()"
+     />
+     <span><i18n>Etablissements papier</i18n></span>
+ </label>
+ <label class="checkbox">
+     <input type="checkbox" ng-model="basket.reassort"
+            ng-checked="campaign.structure == 'numerique'" ng-change="basket.updateReassort()"
+     />
+     <span><i18n>Etablissement numériques</i18n></span>
+ </label>
+ <label class="checkbox">
+     <input type="checkbox" ng-model="basket.reassort"
+            ng-checked="campaign.structure == 'mixte'" ng-change="basket.updateReassort()"
+     />
+     <span><i18n>Etablissement mixtes</i18n></span>
+ </label>
+            </div>
+        </article>-->
+<h2 style="margin: 25px 0 10px 0">
+     <i18n>crre.campaign.groups</i18n>
+     :
+ </h2>
+     <table class="twelve">
+         <thead>
+         <td class="one checkbox ">
+             <label class="checkbox">
+                 <input type="checkbox"
+                        ng-change="switchAll(allGroupSelected, structureGroups)"
+                        ng-model="allGroupSelected">
+                 <span></span>
+             </label></td>
+         <td class="tree ">
+             <i18n>crre.name.of.group</i18n>
+         </td>
+         </thead>
+         <tbody>
+         <tr ng-repeat="group in structureGroups.all track by $index ">
+             <td class="one">
+                 <label class="checkbox">
+                     <input type="checkbox" ng-model="group.selected">
+                     <span></span>
+                 </label></td>
+             <td class="tree">[[group.name]]</td>
+         </tr>
+         </tbody>
+     </table>
+
+        <!-- <h4 style="margin: 50px 0 10px 0">
             <i18n>crre.campaign.options</i18n>
             :
         </h4>
@@ -85,7 +164,7 @@
                     <label ><i18n>crre.on.project</i18n></label>
                 </div>
             </div>
-        </article>
+        </article>-->
         <div class="right-magnet warning" ng-show="!validCampaignForm(campaign)">
             <i18n>not.valid.campaign.form</i18n>
         </div>
@@ -96,6 +175,6 @@
                        ng-disabled="!validCampaignForm(campaign)"/>
             </div>
         </div>
-
+        </article>
     </form>
 </div>

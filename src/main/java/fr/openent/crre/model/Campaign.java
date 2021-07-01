@@ -15,6 +15,13 @@ public class Campaign extends Model {
     private boolean purse_enabled;
     private boolean priority_enabled;
     private String priority_field;
+    private String catalog;
+    private Boolean reassort;
+    private String start_date;
+    private String end_date;
+    private Boolean automatic_close;
+    private Boolean use_credit;
+    private Integer id_type;
 
     public Integer getId() {
         return id;
@@ -80,7 +87,36 @@ public class Campaign extends Model {
         this.priority_field = priority_field;
     }
 
-    public Campaign(Integer id, String name, String description, String image, Boolean accessible, Boolean purse_enabled, Boolean priority_enabled, String priority_field) {
+    public String getCatalog() { return catalog; }
+
+    public void setCatalog(String catalog) { this.catalog = catalog; }
+
+    public Boolean getReassort() { return reassort; }
+
+    public void setReassort(Boolean reassort) { this.reassort = reassort; }
+
+    public String getStart_date() { return start_date; }
+
+    public void setStart_date(String start_date) { this.start_date = start_date; }
+
+    public String getEnd_date() { return end_date; }
+
+    public void setEnd_date(String end_date) { this.end_date = end_date; }
+
+    public Boolean getAutomatic_close() { return automatic_close; }
+
+    public void setAutomatic_close(Boolean automatic_close) { this.automatic_close = automatic_close; }
+
+    public Boolean getUse_credit() { return use_credit; }
+
+    public void setUse_credit(Boolean use_credit) { this.use_credit = use_credit; }
+
+    public Integer getId_type() { return id_type; }
+
+    public void setId_type(Integer id_type) { this.id_type = id_type; }
+
+    public Campaign(Integer id, String name, String description, String image, Boolean accessible, Boolean purse_enabled, Boolean priority_enabled, String priority_field,
+                    String catalog, Boolean reassort, String start_date, String end_date, Boolean automatic_close) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -89,6 +125,13 @@ public class Campaign extends Model {
         this.purse_enabled = purse_enabled;
         this.priority_enabled = priority_enabled;
         this.priority_field = priority_field;
+        this.catalog = catalog;
+        this.reassort = reassort;
+        this.start_date = start_date;
+        this.end_date = end_date;
+        this.automatic_close = automatic_close;
+        this.use_credit = use_credit;
+        this.id_type = id_type;
 
     }
 
@@ -101,6 +144,13 @@ public class Campaign extends Model {
         this.purse_enabled = campaign.getBoolean("purse_enabled", null);
         this.priority_enabled = campaign.getBoolean("priority_enabled", null);
         this.priority_field = campaign.getString("priority_field", null);
+        this.catalog = campaign.getString("catalog", null);
+        this.reassort = campaign.getBoolean("reassort", null);
+        this.start_date = campaign.getString("start_date", null);
+        this.end_date = campaign.getString("end_date", null);
+        this.automatic_close = campaign.getBoolean("automatic_close", null);
+        this.use_credit = campaign.getBoolean("use_credit", null);
+        this.id_type = campaign.getInteger("id_type", null);
     }
 
     public Campaign() {
@@ -114,6 +164,13 @@ public class Campaign extends Model {
         fillables.put("purse_enabled", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("priority_enabled",Arrays.asList("CREATE", "UPDATE"));
         fillables.put("priority_field", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("catalog", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("reassort", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("start_date", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("end_date", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("automatic_close", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("use_credit", Arrays.asList("CREATE", "UPDATE"));
+        fillables.put("id_type", Arrays.asList("CREATE", "UPDATE"));
     }
 
     @Override
@@ -126,7 +183,14 @@ public class Campaign extends Model {
                 .put("accessible", this.accessible)
                 .put("purse_enabled", this.purse_enabled)
                 .put("priority_field", this.priority_field)
-                .put("priority_enabled", this.priority_enabled);
+                .put("priority_enabled", this.priority_enabled)
+                .put("catalog", this.catalog)
+                .put("reassort", this.reassort)
+                .put("start_date", this.start_date)
+                .put("end_date", this.end_date)
+                .put("automatic_close", this.automatic_close)
+                .put("use_credit", this.use_credit)
+                .put("id_type", this.use_credit);
     }
 }
 

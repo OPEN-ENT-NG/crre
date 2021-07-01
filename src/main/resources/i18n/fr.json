@@ -17,6 +17,7 @@
   "crre.equipments": "Équipements",
   "crre.campaigns": "Campagnes",
   "crre.campaign.choice": "Choix de la campagne ",
+  "crre.campaign.structure.choice": "Choix de l'établissement ",
   "crre.campaigns.empty": "Aucune campagne n'est actuellement affectée à l'établissement",
   "crre.campaign.purse.region": "Financement Région Île-de-France",
   "crre.remainder": "Reste",
@@ -120,6 +121,7 @@
   "crre.price.TTC": "Prix (TTC)",
   "crre.equipment.details": "Détails de l'offre",
   "crre.information": "Informations",
+  "crre.information.general": "Informations générales",
   "crre.availability": "Disponibilité",
   "crre.set.AVAILABLE": "Rendre disponible",
   "crre.set.OUT_OF_STOCK": "Rendre épuisé",
@@ -603,6 +605,7 @@
   "First.name": "Nom",
   "crre.reassort": "Réassort",
   "crre.not.reassort": "Non réassort",
+  "crre.type.campaign" : "Type de campagne",
   "from": "Du",
   "to": "Au",
   "crre.resubmit": "Resoumettre",
@@ -682,5 +685,10 @@
   "EN_COURS_DE_REIMPRESSION" : "En cours de réimpression",
   "NON_DISPONIBLE_PROVISOIREMENT" : "Provisoirement indisponible",
   "EN_COURS_D_IMPRESSION" : "En cours d'impression",
-  "crre.to.see" : "A voir..."
+  "crre.to.see" : "A voir...",
+  "crre.campaigns.date.automatisation" : "Activer l'ouverture et la fermeture automatique de la campagne",
+  "crre.campaigns.date.start": "Date d'ouverture",
+  "crre.campaigns.date.end": "Date de fermeture",
+  "crre.campaign.delete": "Supprimer la(es) campagne(s): ",
+  "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?"
 }

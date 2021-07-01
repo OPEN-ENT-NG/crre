@@ -26,6 +26,30 @@
     },
     "priority_field":{
       "type":  [ "string", "null" ]
+    },
+    "reassort": {
+      "type": "boolean"
+    },
+    "catalog":{
+      "type":  [ "string", "null" ]
+    },
+    "start_date": {
+      "type":[ "string", "null" ]
+    },
+    "end_date": {
+      "type": [ "string", "null" ]
+    },
+    "structure": {
+      "type": [ "string", "null" ]
+    },
+    "automatic_close": {
+      "type": "boolean"
+    },
+    "use_credit": {
+      "type": "boolean"
+    },
+    "id_type": {
+      "type": "number"
     }
   },
   "required": [

@@ -15,7 +15,7 @@ import {
     Filters,
     Student,
     Offers,
-    Offer
+    Offer, Filter
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
@@ -158,7 +158,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 if(!$scope.current.structure)
                     await $scope.initStructures() ;
                 if($scope.current.structure) {
-                    await $scope.baskets.sync(idCampaign, $scope.current.structure.id);
+                    await $scope.baskets.sync(idCampaign, $scope.current.structure.id, $scope.campaign.reassort);
                 }
                 await selectCampaign(idCampaign);
                 Utils.safeApply($scope);
@@ -230,8 +230,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.display.equipment = false;
             $scope.equipments.loading = true;
             $scope.equipments.all = [];
-            Utils.safeApply($scope);
-            await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
             Utils.safeApply($scope);
         }
 

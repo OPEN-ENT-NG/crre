@@ -58,11 +58,12 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public  void listOrder(String status, Integer page, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
         String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups, " +
-                "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " +
+                "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status, type_campaign.name as type_name " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo " +
                 "ON bo.id = oce.id_basket " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON oce.id_campaign = campaign.id " +
+                "INNER JOIN " + Crre.crreSchema + ".type_campaign ON campaign.id_type = type_campaign.id " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
@@ -72,7 +73,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query = filterWaitingOrder(status, user, query, startDate, endDate, values);
 
-        query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status) " +
+        query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status, type_name) " +
                 "ORDER BY oce.creation_date DESC ";
         if (page != null) {
             query += "OFFSET ? LIMIT ? ";
@@ -210,9 +211,11 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id " +
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id, tc.name as type_name " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
+                "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = oe.id_campaign) " +
+                "LEFT JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = c.id_type) " +
                 "WHERE oe.creation_date BETWEEN ? AND ? ";
         values.add(startDate).add(endDate);
         if(id_campaign != null){
@@ -234,7 +237,19 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             for (int i = 0; i < filters.size(); i++) {
                 String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
                 JsonArray value = filters.getJsonObject(i).getJsonArray(key);
-                sqlquery += !key.equals("reassort") ? "bo." + key + " IN ( " : "oe." + key + " IN ( ";
+                switch (key) {
+                    case "reassort":
+                        sqlquery += "oe." + key + " IN ( ";
+                        break;
+                    case "id_user":
+                        sqlquery += "bo." + key + " IN ( ";
+                        break;
+                    case "name":
+                        sqlquery += "tc." + key + " IN ( ";
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + key);
+                }
                 for (int k = 0; k < value.size(); k++) {
                     sqlquery += "?,";
                     values.add(value.getString(k));

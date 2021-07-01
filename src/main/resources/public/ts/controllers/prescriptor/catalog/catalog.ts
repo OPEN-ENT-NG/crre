@@ -3,27 +3,34 @@ import {Equipment, Filter, Filters, Utils} from '../../../model';
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', ($scope) => {
-        this.init = () => {
+        this.init = async () => {
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
+            if (!!$scope.campaign.catalog) {
+                $scope.filters = new Filters();
+                let newFilter = new Filter();
+                newFilter.name = "_index";
+                newFilter.value = $scope.campaign.catalog;
+                $scope.filters.all.push(newFilter);
+            }
             $scope.catalog = {
-                subjects : [],
-                public : [],
-                grades : [],
-                docsType : [],
-                editors : []
+                subjects: [],
+                public: [],
+                grades: [],
+                docsType: [],
+                editors: []
             };
             $scope.correlationFilterES = {
-                keys : ["subjects","public","grades","docsType","editors"],
-                subjects : 'disciplines.libelle',
-                public : 'publiccible',
-                grades : 'niveaux.libelle',
-                docsType : '_index',
-                editors : 'editeur'
+                keys: ["subjects", "public", "grades", "docsType", "editors"],
+                subjects: 'disciplines.libelle',
+                public: 'publiccible',
+                grades: 'niveaux.libelle',
+                docsType: '_index',
+                editors: 'editeur'
             };
-        };
+        }
 
         $scope.addFilter = async () => {
             $scope.query.word = $scope.queryWord;
@@ -64,4 +71,5 @@ export const catalogController = ng.controller('catalogController',
         };
 
         this.init();
+        $scope.addFilter();
     }]);

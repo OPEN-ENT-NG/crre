@@ -10,8 +10,25 @@ export const campaignsController = ng.controller('campaignsController',
         $scope.display = {
             lightbox: {
                 campaign: false,
+                automaticCampaign:false
             }
         };
+
+        $scope.updateAccessibility = async (campaign: Campaign) => {
+            $scope.automaticCampaign = campaign;
+            if (campaign.automatic_close) {
+                template.open('campaign.lightbox.automaticCampaign', 'administrator/campaign/campaign-change-manual');
+                $scope.display.lightbox.automaticCampaign = true;
+            } else {
+                $scope.loadingArray = true;
+                Utils.safeApply($scope);
+                await campaign.updateAccessibility();
+                await $scope.campaigns.sync();
+                $scope.allCampaignSelected = false;
+                $scope.loadingArray = false;
+                Utils.safeApply($scope);
+            }
+        }
 
         $scope.openCampaignForm = async (campaign: Campaign = new Campaign()) => {
             let id = campaign.id;

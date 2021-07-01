@@ -72,7 +72,7 @@ export const basketController = ng.controller('basketController',
                 $scope.campaign.nb_panier -= 1;
                 await $scope.notifyBasket('deleted', basket);
             }
-            await $scope.baskets.sync($routeParams.idCampaign, $scope.current.structure.id);
+            await $scope.baskets.sync($routeParams.idCampaign, $scope.current.structure.id, $scope.campaign.reassort);
             Utils.safeApply($scope);
         };
 

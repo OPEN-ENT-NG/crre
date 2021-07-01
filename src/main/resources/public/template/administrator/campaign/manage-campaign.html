@@ -32,7 +32,7 @@
             <div class="row" workflow="crre.administrator">
                 <div class="right-magnet">
                     <span class="horizontal-spacing cell"><i18n>crre.campaign.accessibility</i18n></span>
-                    <switch-toggle ng-model="campaign.accessible" ng-change="campaign.updateAccessibility()"
+                    <switch-toggle ng-model="campaign.accessible" ng-change="updateAccessibility(campaign)"
                                    class="cell"></switch-toggle>
                 </div>
             </div>
@@ -44,6 +44,13 @@
               workflow="crre.administrator">
         <container template="campaign.lightbox"></container>
     </lightbox>
+
+    <lightbox on-close="display.lightbox.automaticCampaign = false;"
+              show="display.lightbox.automaticCampaign"
+              workflow="crre.administrator">
+        <container template="campaign.lightbox.automaticCampaign"></container>
+    </lightbox>
+
 
     <section class="toggle-buttons" ng-show="campaigns.selected.length > 0" workflow="crre.administrator">
         <div class="toggle">

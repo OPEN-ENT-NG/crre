@@ -33,13 +33,16 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.filterChoice = {
                 users : [],
                 reassorts : [],
+                type_campaign: []
             }
             $scope.filterChoiceCorrelation = {
                 keys : ["users","reassorts"],
                 users : 'id_user',
-                reassorts : 'reassort'
+                reassorts : 'reassort',
+                type_campaign : 'name'
             }
             $scope.users = [];
+            $scope.type_campaign = [];
 
             $scope.filtersDate = [];
             $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
@@ -51,6 +54,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.filters = new Filters();
             await $scope.getAllFilters();
             $scope.users.forEach((item) => item.toString = () => item.user_name);
+            $scope.type_campaign = Array.from(new Set($scope.ordersClient.all.map((item: any) => item.type_name)));
+            $scope.type_campaign = $scope.type_campaign.map(k => ({ 'name': k }));
+            $scope.type_campaign.forEach((item) => item.toString = () => item.name);
             Utils.safeApply($scope);
         };
 
@@ -120,8 +126,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         function updateOrders(totalPrice: number, totalAmount: number, ordersToRemove: OrdersClient) {
-            $scope.campaign.purse_amount -= totalPrice;
-            $scope.campaign.nb_licences_available -= totalAmount;
+            if($scope.campaign.use_credit) {
+                $scope.campaign.purse_amount -= totalPrice;
+                $scope.campaign.nb_licences_available -= totalAmount;
+            }
             if ($scope.ordersClient.selectedElements.length > 0) {
                 $scope.campaign.nb_order_waiting -= $scope.ordersClient.selectedElements.length;
                 $scope.campaign.historic_etab_notification += $scope.ordersClient.selectedElements.length;

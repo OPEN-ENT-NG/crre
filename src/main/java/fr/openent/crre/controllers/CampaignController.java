@@ -140,4 +140,16 @@ public class CampaignController extends ControllerHelper {
             badRequest(request);
         }
     }
+
+    @Get("/campaigns/types")
+    @ApiDoc("Get all types of campaign in database")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void campaignTypes(HttpServerRequest request) {
+        try {
+            campaignService.getCampaignTypes(arrayResponseHandler(request));
+        } catch (ClassCastException e) {
+            log.error(" An error occurred when getting campaign types", e);
+        }
+    }
 }

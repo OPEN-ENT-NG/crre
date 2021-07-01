@@ -89,14 +89,15 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            getAllWithFilter(request);
+            HashMap<String, ArrayList<String>> params = new HashMap<>();
+            getAllWithFilter(request, params);
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }
     }
 
-    private void getAllWithFilter(HttpServerRequest request) {
-        equipmentService.searchAll(event -> {
+    private void getAllWithFilter(HttpServerRequest request, HashMap<String, ArrayList<String>> params) {
+        equipmentService.filterWord(params, event -> {
             JsonArray ressources = event.right().getValue();
             JsonArray filtres = new JsonArray();
             JsonArray response = new JsonArray();
@@ -169,7 +170,7 @@ public class EquipmentController extends ControllerHelper {
             HashMap<String, ArrayList<String>> params = new HashMap<>();
             getFilterFromRequest(request, params);
             if (emptyFilter) {
-                getAllWithFilter(request);
+                getAllWithFilter(request, params);
             } else {
                 equipmentService.filterWord(params, arrayResponseHandler(request));
             }

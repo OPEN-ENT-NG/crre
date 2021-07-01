@@ -1,5 +1,5 @@
 import http from 'axios';
-import {_, toasts} from 'entcore';
+import {_, moment, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {StructureGroup} from './index';
 
@@ -16,15 +16,27 @@ export class Campaign implements Selectable  {
     nb_panier?: number;
     purse_enabled: boolean;
     priority_enabled: boolean;
+    reassort: boolean;
+    catalog: string;
+    structure: string;
     priority_field: null|PRIORITY_FIELD;
+    end_date :Date;
+    start_date : Date;
+    automatic_close : boolean;
+    use_credit : boolean;
+    id_type: number;
 
     constructor (name?: string, description?: string) {
         if (name) this.name = name;
         if (description) this.description = description;
         this.groups = [];
-        this.purse_enabled = false;
-        this.priority_enabled = true;
-        this.priority_field = PRIORITY_FIELD.ORDER
+        this.purse_enabled = true;
+        this.priority_enabled = false;
+        this.priority_field = PRIORITY_FIELD.ORDER;
+        this.reassort = false;
+        this.automatic_close = false;
+        this.use_credit = false;
+        this.id_type = null;
     }
 
     toJson () {
@@ -37,12 +49,21 @@ export class Campaign implements Selectable  {
             }),
             purse_enabled: this.purse_enabled,
             priority_enabled: this.priority_enabled,
-            priority_field: this.priority_field
+            priority_field: this.priority_field,
+            reassort: this.reassort,
+            catalog: this.catalog,
+            end_date : this.end_date,
+            start_date: this.start_date,
+            automatic_close: this.automatic_close,
+            use_credit : this.use_credit,
+            id_type: this.id_type
         };
     }
 
     async save () {
         if (this.id) {
+            if(this.automatic_close)
+                this.accessible = false;
             await this.update();
         } else {
             await this.create();
@@ -84,6 +105,9 @@ export class Campaign implements Selectable  {
         try {
             let { data } = await http.get(`/crre/campaigns/${id}`);
             Mix.extend(this, Mix.castAs(Campaign, data));
+            this.start_date =  moment(this.start_date);
+            this.end_date = moment(this.end_date);
+            this.accessible = this.accessible|| (this.start_date < this.end_date);
             if (this.groups[0] !== null ) {
                 this.groups = Mix.castArrayAs(StructureGroup, JSON.parse(this.groups.toString())) ;
             } else this.groups = [];
@@ -116,6 +140,14 @@ export class Campaigns extends Selection<Campaign> {
         try {
             let { data } = await http.get( Structure ? `/crre/campaigns?idStructure=${Structure}`  : `/crre/campaigns`  );
             this.all = Mix.castArrayAs(Campaign, data);
+            this.all.forEach(c =>{
+                if(c.end_date != null && c.start_date != null) {
+                    c.accessible = c.accessible
+                        ||
+                        (moment(c.start_date).diff(moment(),'days') <= 0
+                            && moment(c.end_date).diff(moment(),'days') >= 0);
+                }
+            })
         } catch (e) {
             toasts.warning('crre.campaigns.sync.err');
         }

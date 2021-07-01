@@ -106,11 +106,13 @@ export class Baskets extends Selection<Basket> {
         super([]);
     }
 
-    async sync (idCampaign: number, idStructure: string ) {
+    async sync (idCampaign: number, idStructure: string, reassort: boolean ) {
         try {
             let { data } = await http.get(`/crre/basket/${idCampaign}/${idStructure}`);
             this.all = Mix.castArrayAs(Basket, data);
             this.all.map((basket) => {
+                basket.reassort = reassort;
+                basket.updateReassort();
                 basket.equipment = Mix.castAs(Equipment, basket.equipment);
                 if(basket.equipment.type === "articlenumerique") {
                     basket.offers = Utils.computeOffer(basket, basket.equipment);

@@ -64,4 +64,11 @@ public interface CampaignService {
      * @param handler    Function handler returning data
      */
     void getStructures(Integer idCampaign, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * List all types in the campaign
+     *
+     * @param handler    Function handler returning data
+     */
+    void getCampaignTypes(Handler<Either<String, JsonArray>> handler);
 }

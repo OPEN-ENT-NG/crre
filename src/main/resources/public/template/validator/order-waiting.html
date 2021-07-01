@@ -52,6 +52,14 @@
                          deselection-event="getFilter()"
                          class="inline-block horizontal-spacing no-border">
             </multi-combo>
+            <multi-combo title="[[lang.translate('crre.type.campaign')]]"
+                         combo-model="type_campaign"
+                         search-on="name" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.type_campaign"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block horizontal-spacing no-border">
+            </multi-combo>
         </div>
         <div class="cell twelve-mobile right-magnet">
             <button ng-disabled="licencesAvailable()" ng-click="createOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>

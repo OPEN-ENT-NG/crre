@@ -356,12 +356,41 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
+    @Override
+    public void getCampaignTypes(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT id as id_type, name as name_type, credit, reassort, catalog, automatic_close, structure " +
+                "FROM " + Crre.crreSchema + ".type_campaign ";
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
+    }
+
     public void updateAccessibility(final Integer id,final JsonObject campaign,
                                     final Handler<Either<String, JsonObject>> handler){
+        String options = "";
+        String finalCondition  = "";
+        if(!campaign.getBoolean("automatic_close")) {
+            if (campaign.getValue("start_date") == null && campaign.getBoolean("accessible")) {
+                options += "start_date = NOW() ,";
+            }
+            if(!campaign.getBoolean("accessible")){
+                options += "end_date = NOW() ,";
+            }else {
+                options += "end_date = NULL ,";
+            }
+        }else{
+            if(campaign.getBoolean("accessible")){
+                options += "start_date = NOW (),";
+                finalCondition = " AND start_date > NOW()";
+            }else{
+                options += "end_date = NOW() ,";
+            }
+        }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         String query = "UPDATE " + Crre.crreSchema + ".campaign SET " +
+                options +
                 "accessible= ? " +
-                "WHERE id = ?";
+                "WHERE id = ? " +
+                finalCondition +
+                ";";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(campaign.getBoolean("accessible"))
                 .add(id);
@@ -369,7 +398,12 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .put("statement", query)
                 .put("values",params)
                 .put("action", "prepared"));
-        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
+        sql.transaction(statements, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> event) {
+                handler.handle(getTransactionHandler(event, id));
+            }
+        });
     }
 
     private JsonObject getCampaignTagsGroupsRelationshipStatement(Number id, JsonArray groups) {
