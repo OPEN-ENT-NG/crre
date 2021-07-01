@@ -126,10 +126,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         function updateOrders(totalPrice: number, totalAmount: number, ordersToRemove: OrdersClient) {
-            if($scope.campaign.use_credit) {
                 $scope.campaign.purse_amount -= totalPrice;
                 $scope.campaign.nb_licences_available -= totalAmount;
-            }
             if ($scope.ordersClient.selectedElements.length > 0) {
                 $scope.campaign.nb_order_waiting -= $scope.ordersClient.selectedElements.length;
                 $scope.campaign.historic_etab_notification += $scope.ordersClient.selectedElements.length;
@@ -152,8 +150,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             orderRegionTemp.createFromOrderClient(order);
             ordersToCreate.all.push(orderRegionTemp);
             ordersToRemove.all.push(order);
-            totalPrice += order.price * order.amount
-            totalAmount += order.amount
+            if(order.campaign.use_credit) {
+                totalPrice += order.price * order.amount;
+                totalAmount += order.amount;
+            }
             return {totalPrice, totalAmount};
         }
 
@@ -175,8 +175,11 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
                     ordersToRemove.all.push(order);
-                    totalPrice += order.price * order.amount
-                    totalAmount += order.amount
+                    if(order.campaign.use_credit) {
+                        totalPrice += order.price * order.amount;
+                        totalAmount += order.amount;
+                    }
+
                 });
             }
             ordersToCreate.create().then(async data =>{
