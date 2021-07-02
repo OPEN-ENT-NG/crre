@@ -36,10 +36,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 type_campaign: []
             }
             $scope.filterChoiceCorrelation = {
-                keys : ["users","reassorts"],
+                keys : ["users", "reassorts", "type_campaign"],
                 users : 'id_user',
                 reassorts : 'reassort',
-                type_campaign : 'name'
+                type_campaign : 'id_campaign'
             }
             $scope.users = [];
             $scope.type_campaign = [];
@@ -54,8 +54,12 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.filters = new Filters();
             await $scope.getAllFilters();
             $scope.users.forEach((item) => item.toString = () => item.user_name);
-            $scope.type_campaign = Array.from(new Set($scope.ordersClient.all.map((item: any) => item.type_name)));
-            $scope.type_campaign = $scope.type_campaign.map(k => ({ 'name': k }));
+            let distinctOrdersCampaign = $scope.ordersClient.all.reduce((acc, x) =>
+                    acc.concat(acc.find(y => y.campaign.id === x.campaign.id) ? [] : [x])
+                , []);
+            distinctOrdersCampaign.forEach(order => {
+                $scope.type_campaign.push(order.campaign);
+            });
             $scope.type_campaign.forEach((item) => item.toString = () => item.name);
             Utils.safeApply($scope);
         };
@@ -87,6 +91,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     let value = item.name;
                     if(key === "users"){
                         value = item.id_user;
+                    }
+                    if(key === "type_campaign"){
+                        value = item.id;
                     }
                     newFilter.value = value;
                     $scope.filters.all.push(newFilter);
@@ -219,7 +226,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             if($scope.filters.all.length == 0) {
                 if ($scope.query_name && $scope.query_name != "") {
                     const newData = await $scope.ordersClient.search($scope.query_name, null,
-                        $scope.filtersDate.startDate, $scope.filtersDate.endDate);
+                        $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page);
                     endLoading(newData);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate,
@@ -228,7 +235,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 }
             }else{
                 const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.query_name);
+                    $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
             }
             Utils.safeApply($scope);
