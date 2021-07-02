@@ -12,6 +12,12 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Catalogue numérique", value: "articlenumerique"}];
             $scope.formatCheck = [];
             await $scope.getTypesCampaign();
+            if(!!$scope.campaign.id) {
+                $scope.campaign.catalog = $scope.articleFormat.find(format => $scope.campaign.catalog == format.value);
+                $scope.campaign.name_type = $scope.formatCheck.find(format => $scope.campaign.id_type == format.id_type).name_type;
+                $scope.campaign_type = $scope.formatCheck.find(format => $scope.campaign.id_type == format.id_type);
+                Utils.safeApply($scope);
+            }
         }
 
 
@@ -30,7 +36,6 @@ export const campaignFormController = ng.controller('campaignFormController',
             data.forEach(function (type) {
                 type.catalog = $scope.articleFormat.find(format => type.catalog == format.name);
                 $scope.formatCheck.push(type);
-               /* JSON.parse(type);*/
             });
             Utils.safeApply($scope);
         }

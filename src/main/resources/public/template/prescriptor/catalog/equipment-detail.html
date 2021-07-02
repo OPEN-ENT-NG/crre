@@ -195,15 +195,15 @@
                      ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png"
                      ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+                <div ng-show="!!basket.equipment.urldemo">
+                    <a style="text-decoration: underline;" ng-href=[[basket.equipment.urldemo]]>Aperçu</a>
+                </div>
             </div>
             <div class="editor" ng-show="!!basket.equipment.editeur" >
                 <div ng-bind-html="basket.equipment.editeur"></div>
             </div>
             <div ng-show="!!basket.equipment.description" >
                 <p ng-bind-html="basket.equipment.description"></p>
-            </div>
-            <div ng-show="!!basket.equipment.urldemo">
-                <a ng-href=[[basket.equipment.urldemo]]>Aperçu</a>
             </div>
         </div>
         <div class="twelve cell" id="offer">

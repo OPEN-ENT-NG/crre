@@ -32,20 +32,23 @@ export const campaignsController = ng.controller('campaignsController',
 
         $scope.openCampaignForm = async (campaign: Campaign = new Campaign()) => {
             let id = campaign.id;
-            id ? $scope.redirectTo('/campaigns/update') : $scope.redirectTo('/campaigns/create');
-            $scope.campaign = new Campaign();
-            Mix.extend($scope.campaign, campaign);
+            // Create if id not found
+            if(!!!id) {
+                $scope.campaign = new Campaign();
+                Mix.extend($scope.campaign, campaign);
+            }
             await $scope.structureGroups.sync();
             id ? await updateSelectedCampaign(id) : null;
+            id ? $scope.redirectTo('/campaigns/update') : $scope.redirectTo('/campaigns/create');
             Utils.safeApply($scope);
         };
 
         const updateSelectedCampaign = async (id) => {
-            await $scope.campaign.sync(id, $scope.tags.all);
+            await $scope.campaign.sync(id);
             $scope.structureGroups.all = $scope.structureGroups.all.map((group) => {
                 let Cgroup = _.findWhere($scope.campaign.groups, {id: group.id});
                 if (Cgroup !== undefined) {
-                    group.select();
+                    group.selected = true
                     group.tags = Cgroup.tags;
                 }
                 return group;

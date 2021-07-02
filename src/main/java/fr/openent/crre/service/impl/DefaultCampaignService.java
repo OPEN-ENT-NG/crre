@@ -149,7 +149,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             query += "WHERE rel_group_structure.id_structure = ? ";
             values.add(idStructure);
         }
-        query += "GROUP BY campaign.id;";
+        query += "GROUP BY campaign.id ORDER BY campaign.id DESC;";
 
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
@@ -265,10 +265,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     public void getCampaign(Integer id, Handler<Either<String, JsonObject>> handler){
-        String query = "  SELECT campaign.*,array_to_json(array_agg(groupe)) as  groups"+
+        String query = "  SELECT campaign.*,array_to_json(array_agg(groupe)) as  groups "+
                 "FROM  " + Crre.crreSchema + ".campaign campaign  "+
                 "LEFT JOIN  "+
-                "(SELECT rel_group_campaign.id_campaign, structure_group.*)" +
+                "(SELECT rel_group_campaign.id_campaign, structure_group.* as tags " +
                 "FROM " + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign" +
                 " ON structure_group.id = rel_group_campaign.id_structure_group "+
@@ -276,7 +276,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 "GROUP BY (rel_group_campaign.id_campaign, structure_group.id)) as groupe " +
                 "ON groupe.id_campaign = campaign.id "+
                 "where campaign.id = ?  "+
-                "group By (campaign.id);  " ;
+                "group by (campaign.id);  " ;
 
         sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(id).add(id), SqlResult.validUniqueResultHandler(handler));
     }
