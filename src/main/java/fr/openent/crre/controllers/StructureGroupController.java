@@ -176,12 +176,13 @@ public class StructureGroupController extends ControllerHelper {
     }
 
     @Get("/structure/groups")
-    @ApiDoc("List all goups of structures")
+    @ApiDoc("List all groups of structures")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @Override
     public void list(final HttpServerRequest request) {
         structureGroupService.listStructureGroups(arrayResponseHandler(request));
     }
+
 
     @Post("/structure/group")
     @ApiDoc("Create a group of Structures")

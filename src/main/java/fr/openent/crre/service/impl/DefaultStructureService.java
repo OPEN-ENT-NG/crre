@@ -13,6 +13,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -237,5 +238,26 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void getAllStructure(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT id_structure FROM " + Crre.crreSchema + ".rel_group_structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "" +
+                " INSERT INTO " + Crre.crreSchema + ".structure" +
+                " (uai, id_structure, name, public,  mixte, catalog) VALUES ";
+
+        for (int i = 0; i < structures.size(); i++) {
+                query += "(?, ?, ?, ?, ?, ?),";
+                JsonObject structure = structures.getJsonObject(i);
+                params.add(structure.getString("uai"))
+                        .add(structure.getString("id"))
+                        .add(structure.getString("name"))
+                        .add(structure.getString("public"))
+                        .add((structure.getString("mixte").equals("Vrai") ? true : false))
+                        .add(structure.getString("catalog"));
+        }
+        query = query.substring(0, query.length()-1);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 }

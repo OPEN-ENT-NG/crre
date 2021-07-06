@@ -48,7 +48,9 @@
             </div>
             <div class="margin-top-14">
         <span>Accès catalogue : </span>
-        <select ng-model="campaign.catalog" ng-options="article.name for article in articleFormat"></select>
+        <select ng-model="campaign.catalog" ng-options="article.name for article in articleFormat">
+            <option value="" disabled selected>Type de catalogue</option>
+        </select>
             </div>
             <div class="margin-top-14">
                     <label class="four vertical-spacing">
@@ -61,7 +63,7 @@
                             <i18n>crre.campaigns.date.automatisation</i18n>
                         </span>
                         <div class="vertical-spacing"
-                             ng-show="campaign.automatic_close">
+                             ng-show="campaign.automatic_close" style="padding-bottom: 55px">
                             <span class="four cell">
                             <i18n>crre.campaigns.date.start</i18n>
                         </span>
@@ -78,64 +80,23 @@
                     </label>
                 </div>
             </div>
-        <!--<h2 style="margin: 30px 0 10px 0">
-            <i18n>crre.campaign.structure.choice</i18n>
-        </h2>
-            <div style="display: inline-grid; grid-auto-rows: minmax(40px, auto);">
- <label class="checkbox">
-     <input type="checkbox" ng-model="basket.reassort"
-            ng-checked="campaign.structure == 'tous'" ng-change="basket.updateReassort()"
-     />
-     <span><i18n>Tous les regroupements</i18n></span>
- </label>
- <label class="checkbox">
-     <input type="checkbox" ng-model="basket.reassort"
-            ng-checked="campaign.structure == 'papier'" ng-change="basket.updateReassort()"
-     />
-     <span><i18n>Etablissements papier</i18n></span>
- </label>
- <label class="checkbox">
-     <input type="checkbox" ng-model="basket.reassort"
-            ng-checked="campaign.structure == 'numerique'" ng-change="basket.updateReassort()"
-     />
-     <span><i18n>Etablissement numériques</i18n></span>
- </label>
- <label class="checkbox">
-     <input type="checkbox" ng-model="basket.reassort"
-            ng-checked="campaign.structure == 'mixte'" ng-change="basket.updateReassort()"
-     />
-     <span><i18n>Etablissement mixtes</i18n></span>
- </label>
+            <div class="horizontal-spacing ">
+                <h2 style="margin: 25px 0 10px 0">
+                    <i18n>crre.campaign.groups</i18n>
+                    :
+                </h2>
+                <table class="twelve">
+                    <div class="campaignCheckbox">
+                        <label class="checkbox" ng-class="{true:'campaignCheckboxIcons'}[categories.includes(group.name)]" ng-repeat="group in structureGroups.all track by $index ">
+                            <input type="checkbox" ng-model="group.selected">
+                            <span>[[group.name]]</span>
+                        </label>
+                    </div>
+                </table>
             </div>
-        </article>-->
-<h2 style="margin: 25px 0 10px 0">
-     <i18n>crre.campaign.groups</i18n>
-     :
- </h2>
-     <table class="twelve">
-         <thead>
-         <td class="one checkbox ">
-             <label class="checkbox">
-                 <input type="checkbox"
-                        ng-change="switchAll(allGroupSelected, structureGroups)"
-                        ng-model="allGroupSelected">
-                 <span></span>
-             </label></td>
-         <td class="tree ">
-             <i18n>crre.name.of.group</i18n>
-         </td>
-         </thead>
-         <tbody>
-         <tr ng-repeat="group in structureGroups.all track by $index ">
-             <td class="one">
-                 <label class="checkbox">
-                     <input type="checkbox" ng-model="group.selected">
-                     <span></span>
-                 </label></td>
-             <td class="tree">[[group.name]]</td>
-         </tr>
-         </tbody>
-     </table>
+<!--
+            <div ng-class="{'articlenumerique':'laptop-icon', 'articlepapier':'book-icon'}[equipment.type]">
+-->
 
         <!-- <h4 style="margin: 50px 0 10px 0">
             <i18n>crre.campaign.options</i18n>

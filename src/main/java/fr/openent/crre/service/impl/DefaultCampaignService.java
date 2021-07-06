@@ -407,20 +407,19 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private JsonObject getCampaignTagsGroupsRelationshipStatement(Number id, JsonArray groups) {
-        StringBuilder insertTagCampaignRelationshipQuery = new StringBuilder("INSERT INTO " +
+        String insertTagCampaignRelationshipQuery = "INSERT INTO " +
                 Crre.crreSchema + ".rel_group_campaign" +
-                "(id_campaign, id_structure_group) VALUES ");
+                "(id_campaign, id_structure_group) VALUES ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for(int j = 0; j < groups.size(); j++ ){
             JsonObject group =  groups.getJsonObject(j);
-            insertTagCampaignRelationshipQuery.append("(?, ?)");
+            insertTagCampaignRelationshipQuery += "(?, ?), ";
             params.add(id)
                     .add(group.getInteger("id"));
         }
-        System.out.print(insertTagCampaignRelationshipQuery.toString());
-
+        insertTagCampaignRelationshipQuery = insertTagCampaignRelationshipQuery.substring(0, insertTagCampaignRelationshipQuery.length() - 2);
         return new JsonObject()
-                .put("statement", insertTagCampaignRelationshipQuery.toString())
+                .put("statement", insertTagCampaignRelationshipQuery)
                 .put("values", params)
                 .put("action", "prepared");
     }

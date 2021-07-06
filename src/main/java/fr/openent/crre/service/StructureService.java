@@ -5,6 +5,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.text.ParseException;
 import java.util.List;
 
 public interface StructureService {
@@ -43,4 +44,5 @@ public interface StructureService {
 
     void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
 
+    void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;
 }

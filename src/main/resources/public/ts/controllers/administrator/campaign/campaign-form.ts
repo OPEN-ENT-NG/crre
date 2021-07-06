@@ -8,9 +8,10 @@ import http from "axios";
 export const campaignFormController = ng.controller('campaignFormController',
     ['$scope', ($scope) => {
         this.init = async () => {
-            $scope.articleFormat = [{name: "Catalogue papier", value: "articlepapier"},
+            $scope.articleFormat = [{name : "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}];
             $scope.formatCheck = [];
+            $scope.categories = ["Tous", "Papier", "Numérique", "Mixte"];
             await $scope.getTypesCampaign();
             if(!!$scope.campaign.id) {
                 $scope.campaign.catalog = $scope.articleFormat.find(format => $scope.campaign.catalog == format.value);
@@ -28,6 +29,14 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.id_type = $scope.campaign_type.id_type;
             $scope.campaign.name_type = $scope.campaign_type.name_type;
             $scope.campaign.catalog = $scope.campaign_type.catalog;
+            $scope.structureGroups.all.forEach(structure => {
+                if(_.contains($scope.campaign_type.structure, structure.name)) {
+                    structure.selected = true;
+                } else {
+                    structure.selected = false;
+                }
+            });
+            $scope.campaign_type.structure
             Utils.safeApply($scope);
         }
 
@@ -35,6 +44,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             let {data} = await http.get(`/crre/campaigns/types`);
             data.forEach(function (type) {
                 type.catalog = $scope.articleFormat.find(format => type.catalog == format.name);
+                type.structure = JSON.parse(type.structure);
                 $scope.formatCheck.push(type);
             });
             Utils.safeApply($scope);

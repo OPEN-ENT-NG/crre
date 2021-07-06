@@ -1,20 +1,30 @@
 package fr.openent.crre.controllers;
 
+import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
 import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.security.updateStudentRight;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+
+import java.io.*;
+import java.text.ParseException;
+import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -35,6 +45,83 @@ public class StructureController extends ControllerHelper {
     public void getStructures(HttpServerRequest request){
         structureService.getStructures(arrayResponseHandler(request));
     }
+
+    @Post("/structures/new")
+    @ApiDoc("Returns all new structures")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getStructuresNew(HttpServerRequest request) throws FileNotFoundException {
+        {
+            request.setExpectMultipart(true);
+            final Buffer buff = Buffer.buffer();
+            log.info("--START getAllStructures --");
+            request.uploadHandler(upload -> {
+                upload.handler(buff::appendBuffer);
+                upload.endHandler(end -> {
+                    try {
+                        log.info("Unzip  : " + upload.filename());
+                        ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(buff.getBytes()));
+                        ZipEntry userFileZipEntry = zipStream.getNextEntry();
+                        assert userFileZipEntry != null;
+                        log.info("Reading : " + userFileZipEntry.getName());
+                        Scanner sc = new Scanner(zipStream, "ISO-8859-1");
+                        sc.useDelimiter(";");
+                        // skip header
+                        if (sc.hasNextLine()) {
+                            sc.nextLine();
+                        } else {
+                            log.info("Empty user file");
+                            return;
+                        }
+                        JsonArray uais = new JsonArray();
+                        JsonArray structures = new JsonArray();
+                        JsonArray finalStructures = new JsonArray();
+                        while (sc.hasNextLine()) {
+                            String userLine = sc.nextLine();
+                            String[] values = userLine.split(";");
+                            uais.add(values[1]);
+                            JsonObject structure = new JsonObject();
+                            structure.put("uai", values[1]);
+                            structure.put("name", values[2]);
+                            structure.put("public", values[6]);
+                            structure.put("mixte", values[7]);
+                            structure.put("catalog", values[8]);
+                            structures.add(structure);
+                        }
+                        structureService.getStructureByUAI(uais, event -> {
+                            if(event.isRight()) {
+                                log.info("success");
+                                JsonArray uaisNeo = event.right().getValue();
+                                for(int i = 0; i < structures.size(); i++) {
+                                    String uai = structures.getJsonObject(i).getString("uai");
+                                    for(int j = 0; j < uaisNeo.size(); j++) {
+                                        if(uaisNeo.getJsonObject(j).getString("uai").equals(uai)) {
+                                            structures.getJsonObject(i).put("id", uaisNeo.getJsonObject(j).getString("id"));
+                                            finalStructures.add(structures.getJsonObject(i));
+                                            break;
+                                        }
+                                    }
+                                }
+                                try {
+                                    structureService.insertNewStructures(finalStructures, event2 -> {
+                                      if(event2.isRight()) {
+                                          renderJson(request, event2.right().getValue());
+                                      }
+                                    });
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    } catch (IOException e) {
+                        log.error("Error reading zip", e);
+                    } finally {
+                        log.info("--END getAllStructures --");
+                    }
+                });
+            });
+        }
+    }
+
 
     @Put("/structure/amount/update")
     @ApiDoc("Update student amount in structure")

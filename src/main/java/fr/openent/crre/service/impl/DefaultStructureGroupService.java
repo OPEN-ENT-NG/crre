@@ -38,9 +38,8 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
         String query = "SELECT id, name, description, array_to_json(array_agg(id_structure)) as structures FROM "
                 + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure" +
-                " on structure_group.id = rel_group_structure.id_structure_group group by (id, name , description ) " +
-                "ORDER BY id;";
-
+                " on structure_group.id = rel_group_structure.id_structure_group " +
+                "group by (id, name , description ) ORDER BY id;";
         this.sql.prepared(query,new fr.wseduc.webutils.collections.JsonArray(), SqlResult.validResultHandler(handler));
     }
 

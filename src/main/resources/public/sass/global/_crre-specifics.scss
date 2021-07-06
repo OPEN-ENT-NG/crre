@@ -1464,6 +1464,13 @@ body.crre {
     font-size: 30px;
   }
 
+  .campaignCheckboxIcons:after {
+    font-family: 'material-icons';
+    content: "\F0208";
+    font-size: 25px;
+    vertical-align: middle;
+  }
+
   @mixin line-clamp($lines: 1, $line-height: null) {
     overflow: hidden;
 
@@ -1551,5 +1558,10 @@ body.crre {
     vertical-align: middle;
     margin-left: 10px;
     margin-right: 10px;
+  }
+
+  .campaignCheckbox {
+    display: grid;
+    gap: 15px;
   }
 }

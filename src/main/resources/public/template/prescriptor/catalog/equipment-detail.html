@@ -196,7 +196,7 @@
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png"
                      ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
                 <div ng-show="!!basket.equipment.urldemo">
-                    <a style="text-decoration: underline;" ng-href=[[basket.equipment.urldemo]]>Aperçu</a>
+                    <a style="text-decoration: underline;" target="_blank" ng-href=[[basket.equipment.urldemo]]><i18n>crre.equipment.preview</i18n></a>
                 </div>
             </div>
             <div class="editor" ng-show="!!basket.equipment.editeur" >

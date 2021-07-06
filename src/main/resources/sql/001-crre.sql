@@ -72,6 +72,31 @@ CREATE TABLE crre.purse(
     CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric)
 );
 
+CREATE TABLE crre.basket_order (
+    id integer NOT NULL,
+    name character varying(255),
+    id_structure character varying(255),
+    id_campaign bigint,
+    name_user character varying(255),
+    id_user character varying(255),
+    total double precision,
+    amount bigint,
+    created date,
+    CONSTRAINT basket_order_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE crre.students
+(
+    "id_structure" character varying(50),
+    "Seconde" bigint DEFAULT 0,
+    "Premiere" bigint DEFAULT 0,
+    "Terminale" bigint DEFAULT 0,
+    "pro" boolean DEFAULT false,
+    total_april bigint DEFAULT 0,
+    PRIMARY KEY (id_structure),
+    CONSTRAINT structure_unique UNIQUE (id_structure)
+);
+
 CREATE TABLE crre.licences
 (
     id_structure character varying(50) NOT NULL,
@@ -169,30 +194,6 @@ CREATE TABLE crre.project (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE crre.basket_order (
-    id integer NOT NULL,
-    name character varying(255),
-    id_structure character varying(255),
-    id_campaign bigint,
-    name_user character varying(255),
-    id_user character varying(255),
-    total double precision,
-    amount bigint,
-    created date,
-    CONSTRAINT basket_order_pkey PRIMARY KEY (id)
-);
-
-CREATE TABLE crre.students
-(
-    "id_structure" character varying(50),
-    "Seconde" bigint DEFAULT 0,
-    "Premiere" bigint DEFAULT 0,
-    "Terminale" bigint DEFAULT 0,
-    "pro" boolean DEFAULT false,
-    total_april bigint DEFAULT 0,
-    PRIMARY KEY (id_structure),
-    CONSTRAINT structure_unique UNIQUE (id_structure)
-);
 
 CREATE TABLE crre.quote
 (
