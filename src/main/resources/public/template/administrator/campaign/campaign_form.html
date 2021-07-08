@@ -87,6 +87,10 @@
                 </h2>
                 <table class="twelve">
                     <div class="campaignCheckbox">
+                        <label class = "checkbox">
+                            <input type="checkbox" ng-model="allSelected" ng-change="selectStructures()">
+                            <span>Tous/Aucun</span>
+                        </label>
                         <label class="checkbox" ng-repeat="group in structureGroups.all track by $index ">
                             <input type="checkbox" ng-model="group.selected">
                             <span>[[group.name]]</span>

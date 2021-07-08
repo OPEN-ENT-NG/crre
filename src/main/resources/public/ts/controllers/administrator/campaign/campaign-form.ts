@@ -11,7 +11,8 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.articleFormat = [{name : "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}];
             $scope.formatCheck = [];
-            $scope.categories = ["Tous", "Papier", "Numérique", "Mixte"];
+            $scope.categories = ["Papier", "Numérique", "Mixte"];
+            $scope.allSelected = false;
             await $scope.getTypesCampaign();
             if(new RegExp('update').test(window.location.hash)) {
                 $scope.campaign.catalog = $scope.articleFormat.find(format => $scope.campaign.catalog == format.value);
@@ -38,6 +39,7 @@ export const campaignFormController = ng.controller('campaignFormController',
                     structure.selected = false;
                 }
             });
+            $scope.allSelected = false;
             $scope.campaign_type.structure
             Utils.safeApply($scope);
         }
@@ -70,6 +72,15 @@ export const campaignFormController = ng.controller('campaignFormController',
                     return groups.id === group.id;
                 });
         };
+
+        $scope.selectStructures = () => {
+            if($scope.allSelected) {
+                $scope.structureGroups.selectAll();
+            } else {
+                $scope.structureGroups.deselectAll();
+            }
+            Utils.safeApply($scope);
+        }
 
         $scope.validCampaign = async (campaign: Campaign) => {
             $scope.campaign.groups = [];
