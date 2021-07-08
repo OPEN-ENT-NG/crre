@@ -18,6 +18,8 @@ export const campaignFormController = ng.controller('campaignFormController',
                 $scope.campaign.name_type = $scope.formatCheck.find(format => $scope.campaign.id_type == format.id_type).name_type;
                 $scope.campaign_type = $scope.formatCheck.find(format => $scope.campaign.id_type == format.id_type);
                 Utils.safeApply($scope);
+            } else {
+                $scope.campaign = new Campaign();
             }
         }
 

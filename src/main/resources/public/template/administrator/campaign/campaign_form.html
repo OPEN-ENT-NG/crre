@@ -87,9 +87,10 @@
                 </h2>
                 <table class="twelve">
                     <div class="campaignCheckbox">
-                        <label class="checkbox" ng-class="{true:'campaignCheckboxIcons'}[categories.includes(group.name)]" ng-repeat="group in structureGroups.all track by $index ">
+                        <label class="checkbox" ng-repeat="group in structureGroups.all track by $index ">
                             <input type="checkbox" ng-model="group.selected">
                             <span>[[group.name]]</span>
+                            <span tooltip="crre.regroup.permanent" ng-if="categories.includes(group.name)" ng-class="{true:'campaignCheckboxIcons'}[categories.includes(group.name)]"></span>
                         </label>
                     </div>
                 </table>
