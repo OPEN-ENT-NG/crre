@@ -1464,12 +1464,16 @@ body.crre {
     font-size: 30px;
   }
 
-  .campaignCheckboxIcons:after {
+  .regroupPermanentIcons:after {
     font-family: 'material-icons';
     content: "\F0208";
     font-size: 25px;
     vertical-align: middle;
+    font-size: 33px;
+    margin-left: 10px;
   }
+
+
 
   @mixin line-clamp($lines: 1, $line-height: null) {
     overflow: hidden;
