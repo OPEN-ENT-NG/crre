@@ -11,7 +11,6 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.articleFormat = [{name : "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}];
             $scope.formatCheck = [];
-            $scope.categories = ["Papier", "Numérique", "Mixte"];
             $scope.allSelected = false;
             await $scope.getTypesCampaign();
             if(new RegExp('update').test(window.location.hash)) {

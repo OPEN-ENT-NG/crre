@@ -49,6 +49,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
         $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
             "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
+        $scope.categories = ["Papier", "Numérique", "Mixte"];
         $scope.selectedType = $location.path();
         $scope.comboLabels = COMBO_LABELS;
 
@@ -473,6 +474,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 offre.value = gratuite;
                 $scope.offers.all.push(offre);
             });
+            Utils.safeApply($scope);
         };
 
 

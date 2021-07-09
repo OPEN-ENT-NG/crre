@@ -63,18 +63,20 @@ export const equipmentController = ng.controller('equipmentController',
             Utils.safeApply($scope);
         };
 
-        $scope.amountIncrease = () => {
+        $scope.amountIncrease = async () => {
             $scope.basket.amount += 1;
-            if($scope.basket.equipment.type === 'articlenumerique') {
-                $scope.offers = Utils.computeOffer($scope.basket,$scope.basket.equipment);
+            if ($scope.basket.equipment.type === 'articlenumerique') {
+                await $scope.computeOffer();
             }
         };
 
-        $scope.amountDecrease = () => {
-            if($scope.basket.amount)
+        $scope.amountDecrease = async () => {
+            if ($scope.basket.amount)
                 $scope.basket.amount -= 1;
-            if($scope.basket.equipment.type === 'articlenumerique') {
-                $scope.offers = Utils.computeOffer($scope.basket,$scope.basket.equipment);
+            if ($scope.basket.equipment.type === 'articlenumerique') {
+                await $scope.computeOffer();
             }
         };
+
+
     }]);
