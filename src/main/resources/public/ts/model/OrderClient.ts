@@ -67,7 +67,7 @@ export class OrderClient implements Order  {
                 this.offers = Utils.computeOffer(this, equipment);
             }
         }
-        catch {
+        catch (e) {
             toasts.warning('crre.order.getMine.err');
         }
     }
@@ -76,7 +76,7 @@ export class OrderClient implements Order  {
         try {
             await http.put(`/crre/order/${this.id}/reassort`,{ reassort: this.reassort });
         }
-        catch {
+        catch (e) {
             toasts.warning('crre.order.getMine.err');
         }
     }

@@ -18,7 +18,7 @@ export class Student {
             url += `&id_structure=${id_structure}&pro=${pro}&previousTotal=${previousTotal}`;
             await http.put( url);
         }
-        catch {
+        catch (e) {
             toasts.warning('crre.structure.update.err');
         }
     }
@@ -28,7 +28,7 @@ export class Student {
             let {data} = await http.get(`/crre/structure/amount?id_structure=${id_structure}`);
             Mix.extend(this, Mix.castAs(Student, data));
         }
-        catch {
+        catch (e) {
             toasts.warning('crre.structure.amount.err');
         }
     }
