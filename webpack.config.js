@@ -25,9 +25,9 @@ module.exports = {
     devtool: "source-map",
     module: {
         loaders: [
-            {
+           {
                 test: /\.ts$/,
-                loader: 'awesome-typescript-loader'
+                loader: 'ts-loader'
             }
         ]
     }
