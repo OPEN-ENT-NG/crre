@@ -9,7 +9,7 @@ export class Campaign implements Selectable  {
     name: string;
     description: string;
     accessible: boolean;
-    groups: StructureGroup[];ni
+    groups: StructureGroup[];
     selected: boolean;
     purse_amount?: number;
     nb_structures: number;
