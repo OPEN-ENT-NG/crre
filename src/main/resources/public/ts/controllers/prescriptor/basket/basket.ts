@@ -96,11 +96,6 @@ export const basketController = ng.controller('basketController',
             Utils.safeApply($scope);
         };
 
-        $scope.validOrder = (baskets: Baskets) => {
-            //return $scope.calculatePriceOfEquipments(baskets) <= $scope.campaign.purse_amount;
-            return true;
-        };
-
         $scope.checkPrice = async (baskets: Baskets) => {
             let priceIs0 = false;
             baskets.all.forEach(basket =>{

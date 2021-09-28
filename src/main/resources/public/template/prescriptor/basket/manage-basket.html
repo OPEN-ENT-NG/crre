@@ -11,7 +11,7 @@
                 <span ng-bind="calculatePriceOfEquipments(baskets,2) | currency"></span>
             </h3>
             <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.order"
-                   ng-disabled="campaign.purse_enabled && !validOrder(baskets)"
+                   ng-disabled="!campaign.purse_enabled"
                    ng-if="campaign.purse_enabled" style="top:-20px;"/>
         </div>
         <div class="basket-list">
@@ -67,16 +67,8 @@
                                     <span class="black-color font20" ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></span>
                                 </div>
                             </div>
-                                    <div class="right-text vertical-spacing">
-                                        <label class="checkbox">
-                                            <input type="checkbox" ng-model="basket.reassort"
-                                                   ng-checked="basket.reassort" ng-change="basket.updateReassort()"
-                                                   ng-disabled="!canUpdateReassort()"/>
-                                            <span><i18n>crre.reassort</i18n></span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
                         <div class="twelve cell commentDelete">
                             <div class="row" ng-init="basket.commentOnEdition = false;">
                                 <span ng-if="(basket.comment === null || basket.comment.trim() === '') && !basket.commentOnEdition"

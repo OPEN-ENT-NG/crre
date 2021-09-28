@@ -73,7 +73,7 @@ CREATE TABLE crre.purse(
 );
 
 CREATE TABLE crre.basket_order (
-    id integer NOT NULL,
+    id bigserial NOT NULL,
     name character varying(255),
     id_structure character varying(255),
     id_campaign bigint,
@@ -280,3 +280,37 @@ CREATE TABLE crre."order-region-equipment-old"
     CONSTRAINT "Check_amount_positive" CHECK (amount::numeric >= 0::numeric) NOT VALID,
     CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
 );
+
+CREATE TABLE crre.order_file (
+                                 id character varying(36) NOT NULL,
+                                 id_order_client_equipment bigint NOT NULL,
+                                 filename character varying(255) NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION crre.region_override_client_order() RETURNS TRIGGER AS $$
+BEGIN
+UPDATE crre.order_client_equipment
+SET status= 'IN PROGRESS'
+WHERE order_client_equipment.id = NEW.id_order_client_equipment;
+RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER region_override_client_order_trigger AFTER
+    INSERT
+    OR
+UPDATE ON crre."order-region-equipment"
+    FOR EACH ROW WHEN (NEW.id_order_client_equipment IS NOT NULL) EXECUTE PROCEDURE crre.region_override_client_order();
+
+CREATE FUNCTION crre.region_delete_order_override_client() RETURNS TRIGGER AS $$
+BEGIN
+UPDATE crre.order_client_equipment
+SET override_region = false
+WHERE order_client_equipment.id = OLD.id_order_client_equipment;
+RETURN OLD;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER region_delete_override_client_order_trigger AFTER
+    DELETE ON crre."order-region-equipment"
+    FOR EACH ROW EXECUTE PROCEDURE crre.region_delete_order_override_client();

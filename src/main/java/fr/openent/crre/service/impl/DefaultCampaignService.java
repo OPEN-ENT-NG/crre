@@ -208,8 +208,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                              nb_terminale = object.getInteger("Terminale") * 7;
                         }
 
-                        int nb_total = Integer.parseInt(object.getString("initial_amount"));
-                        int nb_total_available = Integer.parseInt(object.getString("amount"));
+                        int nb_total = object.getInteger("initial_amount");
+                        int nb_total_available = object.getInteger("amount");
                         for (int s = 0; s < campaigns.size(); s++) {
                             campaign = campaignMap.getJsonObject(campaigns.getJsonObject(s).getInteger("id").toString());
                             campaign.put("nb_licences_total", nb_total);

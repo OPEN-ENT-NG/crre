@@ -174,7 +174,11 @@
                             <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
                             <span class="zero-mobile"><i18n>crre.new</i18n></span>
                         </div>
-                        <div class="smallTabElem status center ellipsis" ng-if="order.displayStatus && order.status !== 'IN PROGRESS'" tooltip="[[order.status]]">
+                        <div class="smallTabElem status center ellipsis" ng-if="order.displayStatus && order.status !== 'IN PROGRESS' && order.status !== 'REJECTED'" tooltip="[[order.status]]">
+                            <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile"></div>
+                            <span ng-bind="lang.translate(order.status)" class="zero-mobile"></span>
+                        </div>
+                        <div class="smallTabElem status center ellipsis" ng-if="order.status === 'REJECTED'" tooltip="[[order.cause_status]]">
                             <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile"></div>
                             <span ng-bind="lang.translate(order.status)" class="zero-mobile"></span>
                         </div>
