@@ -86,6 +86,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if(filterRejectedSentOrders) {
             query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
+        query += "GROUP BY ore.id, campaign.name, campaign.*, p.title, oce.*, bo.name";
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -109,7 +110,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
                 "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
                 "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
-                "INNER JOIN  " + Crre.crreSchema + ".rel_group_campaign ON (ore.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) ";
         return query;
     }

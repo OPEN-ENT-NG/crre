@@ -646,6 +646,7 @@
   "crre.all.editors": "Tout éditeur",
   "crre.all.diffusors": "Tout diffuseur",
   "crre.all.states": "Tout état",
+  "crre.all": "Tous",
   "crre.justificate.denied.order": "Justification refus de commande",
   "crre.new": "Nouveau",
   "NEW": "Nouveau",
@@ -702,5 +703,9 @@
   "crre.all.etab" : "Tout les établissements",
   "pro" :  "LP/LPO",
   "lgt" : "LG/LGT",
-  "crre.campaign.detail" : "Détails de la campagne"
+  "crre.campaign.detail" : "Détails de la campagne",
+  "crre.use_credit" : "Utilisez les crédits",
+  "crre.campaign.reassort" : "Campagne de réassort",
+  "crre.catalog.access" : "Accès catalogue :",
+  "crre.catalog.type" : "Type de catalogue"
 }

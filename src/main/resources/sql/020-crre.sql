@@ -30,10 +30,10 @@ CREATE TABLE crre.type_campaign (
     reassort boolean,
     catalog character varying,
     automatic_close boolean,
-    structure character varying
+    structure json
 );
 
-INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (1, 'Type numérique', true, false, 'Catalogue numérique', false, '["Numérique", "Mixte"]');
-INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (2, 'Type papier', false, false, 'Catalogue papier', false, '["Papier", "Mixte"]');
+INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (1, 'Type numérique', true, false, 'Catalogue numérique', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}]');
+INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (2, 'Type papier', false, false, 'Catalogue papier', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}]');
 
 

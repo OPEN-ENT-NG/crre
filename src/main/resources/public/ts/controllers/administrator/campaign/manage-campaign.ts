@@ -66,7 +66,7 @@ export const campaignsController = ng.controller('campaignsController',
             let structures = JSON.parse(structure);
             let structure_string = "";
             structures.forEach((structure) => {
-                    structure_string += structure + ", ";
+                    structure_string += structure.libelle + ", ";
                 });
             return structure_string.slice(0, -2);
         }

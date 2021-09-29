@@ -32,14 +32,13 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.name_type = $scope.campaign_type.name_type;
             $scope.campaign.catalog = $scope.campaign_type.catalog;
             $scope.structureGroups.all.forEach(structure => {
-                if(_.contains($scope.campaign_type.structure, structure.name)) {
+                if($scope.campaign_type.structure.find(item => {return item.libelle == structure.name})) {
                     structure.selected = true;
                 } else {
                     structure.selected = false;
                 }
             });
             $scope.allSelected = false;
-            $scope.campaign_type.structure
             Utils.safeApply($scope);
         }
 

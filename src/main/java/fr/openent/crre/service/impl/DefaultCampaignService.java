@@ -140,7 +140,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, tc.structure, tc.name as type_name " +
+        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, jsonb(tc.structure) as structure, tc.name as type_name " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = campaign.id_type) " +
@@ -150,7 +150,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             query += "WHERE rel_group_structure.id_structure = ? ";
             values.add(idStructure);
         }
-        query += "GROUP BY campaign.id, tc.structure, tc.name ORDER BY campaign.id DESC;";
+        query += "GROUP BY campaign.id, jsonb(tc.structure), tc.name ORDER BY campaign.id DESC;";
 
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
@@ -209,8 +209,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                              nb_terminale = object.getInteger("Terminale") * 7;
                         }
 
-                        int nb_total = Integer.parseInt(object.getString("initial_amount"));
-                        int nb_total_available = Integer.parseInt(object.getString("amount"));
+                        int nb_total = object.getInteger("initial_amount");
+                        int nb_total_available = object.getInteger("amount");
                         for (int s = 0; s < campaigns.size(); s++) {
                             campaign = campaignMap.getJsonObject(campaigns.getJsonObject(s).getInteger("id").toString());
                             campaign.put("nb_licences_total", nb_total);

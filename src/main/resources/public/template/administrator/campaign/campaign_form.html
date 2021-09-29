@@ -16,7 +16,7 @@
                         <input type="text" class="four" ng-model="campaign.name" required>
                     </label>
                     <select class = "four" ng-model="campaign_type" ng-change="changeList()" ng-options="format.name_type for format in formatCheck">
-                        <option value="" disabled selected>Type de campagne</option>
+                        <option value="" disabled selected> <i18n>[[lang.translate('crre.catalog.type')]] </i18n> </option>
                     </select>
                     <div class="row twelve">
                         <label class="row twelve vertical-spacing">
@@ -36,20 +36,20 @@
         <label class="checkbox">
             <input type="checkbox" ng-model="campaign.use_credit"
             />
-            <span><i18n>Utilisez les crédits</i18n></span>
+            <span><i18n>crre.use_credit</i18n></span>
             <i class="info-circle campaignTooltip" tooltip="Si cette case est cochée, les crédits des établissements seront décrémentés lors des commandes."></i>
         </label>
         <label class="checkbox">
             <input type="checkbox" ng-model="campaign.reassort"
             />
-            <span><i18n>Campagne de réassort</i18n></span>
+            <span><i18n>crre.campaign.reassort</i18n></span>
             <i class="info-circle campaignTooltip" tooltip="Toutes les références commandées dans cette campagne seront automatiquement taguées réassort."></i>
         </label>
             </div>
             <div class="margin-top-14">
-        <span>Accès catalogue : </span>
+                <span><i18n>crre.catalog.access</i18n></span>
         <select ng-model="campaign.catalog" ng-options="article.name for article in articleFormat">
-            <option value="" disabled selected>Type de catalogue</option>
+            <option value="" disabled selected> [[lang.translate('crre.catalog.type')]] </option>
         </select>
             </div>
             <div class="margin-top-14">
@@ -82,14 +82,14 @@
             </div>
             <div class="horizontal-spacing ">
                 <h2 style="margin: 25px 0 10px 0">
-                    <i18n>crre.campaign.groups</i18n>
+                    <i18n>crre.campaign.groups.etab</i18n>
                     :
                 </h2>
                 <table class="twelve">
                     <div class="campaignCheckbox">
                         <label class = "checkbox">
                             <input type="checkbox" ng-model="allSelected" ng-change="selectStructures()">
-                            <span>Tous/Aucun</span>
+                            <span>Tous les regroupements</span>
                         </label>
                         <label class="checkbox" ng-repeat="group in structureGroups.all track by $index ">
                             <input type="checkbox" ng-model="group.selected">
