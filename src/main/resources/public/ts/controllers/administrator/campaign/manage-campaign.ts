@@ -61,4 +61,13 @@ export const campaignsController = ng.controller('campaignsController',
             template.open('campaign.lightbox', 'administrator/campaign/campaign-delete-validation');
             $scope.display.lightbox.campaign = true;
         };
+
+        $scope.formatStructureCampaign = (structure : string) => {
+            let structures = JSON.parse(structure);
+            let structure_string = "";
+            structures.forEach((structure) => {
+                    structure_string += structure + ", ";
+                });
+            return structure_string.slice(0, -2);
+        }
     }]);

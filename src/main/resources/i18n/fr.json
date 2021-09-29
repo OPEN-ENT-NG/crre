@@ -158,7 +158,8 @@
   "crre.campaigns.description": "Descriptif",
   "crre.campaigns.summary.length": "(300 caractères max)",
   "crre.manage.structure.groups": "gestion des groupes d'établissements",
-  "crre.campaign.groups": "Groupes d'établissements concernés",
+  "crre.campaign.groups.etab": "Etablissements Papier, numérique, mixte",
+  "crre.campaign.groups.pro": "Etablissements LG/LGT, LP/LPO",
   "crre.campaign.options": "Options",
   "crre.campaign.type.choose": "Activer les crédits",
   "crre.campaign.priority.choose": "Activer les priorités",
@@ -294,6 +295,7 @@
   "city": "Commune",
   "structures": "établissement(s)",
   "Structure": "Établissement",
+  "nb_structures": "Nombre d'établissements : ",
   "amount": "Montant",
   "name": "Nom",
   "reference": "Référence",
@@ -693,5 +695,12 @@
   "crre.campaigns.date.end": "Date de fermeture",
   "crre.campaign.delete": "Supprimer la(es) campagne(s): ",
   "crre.regroup.permanent": "Regroupement permanent",
-  "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?"
+  "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?",
+  "articlepapier" : "Catalogue papier",
+  "articlenumerique" : "Catalogue numérique",
+  "crre.all.catalog" : "Tout le catalogue",
+  "crre.all.etab" : "Tout les établissements",
+  "pro" :  "LP/LPO",
+  "lgt" : "LG/LGT",
+  "crre.campaign.detail" : "Détails de la campagne"
 }

@@ -17,7 +17,10 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
             if(status == 200){
                 $scope.projects.all.forEach(project => {
                     project.orders.forEach( async order => {
-                        if(order.selected) {order.status="REJECTED";}
+                        if(order.selected) {
+                           order.status="REJECTED";
+                           order.cause_status = justification;
+                        }
                         order.selected = false;
                     });
                     project.selected =false;

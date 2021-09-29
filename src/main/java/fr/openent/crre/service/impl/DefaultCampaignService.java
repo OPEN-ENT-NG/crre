@@ -140,16 +140,17 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures " +
+        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, tc.structure, tc.name as type_name " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
+                "INNER JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = campaign.id_type) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_campaign.id_structure_group = rel_group_structure.id_structure_group) ";
         JsonArray values = new JsonArray();
         if(idStructure != null){
             query += "WHERE rel_group_structure.id_structure = ? ";
             values.add(idStructure);
         }
-        query += "GROUP BY campaign.id ORDER BY campaign.id DESC;";
+        query += "GROUP BY campaign.id, tc.structure, tc.name ORDER BY campaign.id DESC;";
 
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }

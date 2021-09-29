@@ -15,10 +15,19 @@
                 <div class="eight cell twelve-mobile">
                     <h3>[[campaign.name]]</h3>
                     <p ng-bind-html="campaign.description"></p>
-<!--                    <div class="small-text" ng-if="campaign.purse_enabled">
-                        <i18n>crre.campaign.amount</i18n>
-                        : <span ng-bind="campaign.purse_amount | currency"></span></div>-->
-                    <div class="small-text">[[campaign.nb_structures]] <i18n>structures</i18n></div>
+                    <label>
+                        <i class="info-circle" style="margin-right: 10px;"></i>
+                        <span class="font19"><i18n>crre.campaign.detail</i18n></span>
+                    </label>
+                    <div class="small-text" style="padding-top: 10px;"><i18n class="bold-font-weight">crre.type.campaign</i18n> : <span ng-bind="lang.translate(campaign.type_name)"></span></div>
+                    <div class="small-text"><i18n class="bold-font-weight">crre.purses</i18n> : <span ng-bind="lang.translate(campaign.use_credit)"></span></div>
+                    <div class="small-text"><i18n class="bold-font-weight">crre.reassort</i18n> : <span ng-bind="lang.translate(campaign.reassort)"></span></div>
+                    <div ng-if="!!campaign.catalog" class="small-text"><i18n class="bold-font-weight">crre.catalog</i18n> : <span ng-bind="lang.translate(campaign.catalog)"></span></div>
+                    <div ng-if="!!!campaign.catalog" class="small-text"><i18n class="bold-font-weight">crre.catalog</i18n> : <i18n>crre.all.catalog</i18n></div>
+                    <div class="small-text"><i18n class="bold-font-weight">crre.campaign.groups.etab</i18n> : <span ng-bind="formatStructureCampaign(campaign.structure)"></span></div>
+                    <div ng-if="!!campaign.school" class="small-text"><i18n class="bold-font-weight">crre.campaign.groups.pro</i18n> : <span ng-bind="lang.translate(campaign.school)"></span></div>
+                    <div ng-if="!!!campaign.school" class="small-text"><i18n class="bold-font-weight">crre.campaign.groups.pro</i18n> : <i18n>crre.all.etab</i18n></div>
+                    <div class="small-text"><i18n class="bold-font-weight">nb_structures</i18n>[[campaign.nb_structures]]</div>
                 </div>
             </div>
             <div class="row" workflow="crre.administrator">
