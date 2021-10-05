@@ -344,8 +344,8 @@ public class PurseController extends ControllerHelper {
                     // we also convert amount to get a number instead of a string
                     purse.put("amount", Double.parseDouble(purse.getString("amount")));
                     purse.put("initial_amount", Double.parseDouble(purse.getString("initial_amount")));
-                    purse.put("licence_amount", Integer.parseInt(purse.getString("licence_amount")));
-                    purse.put("licence_initial_amount", Integer.parseInt(purse.getString("licence_initial_amount")));
+                    purse.put("licence_amount", purse.getInteger("licence_amount"));
+                    purse.put("licence_initial_amount", purse.getInteger("licence_initial_amount"));
                     if (purse.getBoolean("pro")) {
                         purse.put("seconde", purse.getInteger("seconde") * 3);
                         purse.put("premiere", purse.getInteger("premiere") * 3);
