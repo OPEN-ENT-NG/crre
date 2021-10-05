@@ -25,15 +25,20 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId, String startDate,
                           String endDate, boolean oldTable,  Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new JsonArray();
-        String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, oe.equipment_price as price " : "";
+        String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, s.name as status_name, s.id as status_id, oe.equipment_price as price " : "";
         String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
                 "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
                 "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " + selectOld +
                 "FROM "+ Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oe " : ".order_client_equipment  oe ") +
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ((oldTable) ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_order_client_equipment = oe.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id " +
-                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND oe.id_structure = ? ";
+                "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id ";
+
+        if(oldTable) {
+            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status ";
+        }
+
+        query += "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND oe.id_structure = ? ";
         values.add(startDate).add(endDate).add(idCampaign).add(idStructure);
 
         if(user != null){
@@ -46,7 +51,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 values.add(Integer.parseInt(id));
             }
         }
-        query +=" GROUP BY ( oe.id, campaign.priority_enabled, ore.status) " +
+        query +=" GROUP BY ( oe.id, campaign.priority_enabled, ore.status" + ((oldTable) ? ", s.name, s.id) " : ") ") +
                 "ORDER BY CASE WHEN campaign.priority_enabled = false " +
                 "THEN oe.creation_date END ASC";
 
