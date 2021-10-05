@@ -26,7 +26,7 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
                     project.selected =false;
                     Utils.setStatus(project, project.orders[0]);
                 });
-                toasts.confirm('crre.order.validated');
+                toasts.confirm('crre.order.refused');
                 $scope.display.toggle = false;
                 $scope.display.lightbox.waitingAdmin = false;
                 template.close('lightbox.waitingAdmin');
