@@ -36,4 +36,7 @@ public interface OrderRegionService {
 
     void deletedOrders(JsonArray ordersClient, String table, Handler<Either<String, JsonObject>> handlerJsonObject);
 
+    void getStatusByOrderId(Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    void updateStatus(JsonArray listIdOrders, Handler<Either<String, JsonObject>> handlerJsonObject);
 }

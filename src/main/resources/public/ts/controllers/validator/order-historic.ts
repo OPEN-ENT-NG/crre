@@ -3,24 +3,27 @@ import {
     Utils,
     Basket, Equipment, FilterFront, Filter,
 } from "../../model";
+import http from "axios";
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
-    ['$scope', ($scope) => {
-            $scope.filter = {
-                isOld: false
-            };
-            $scope.filterChoice = {
-                renew: []
-            };
-            $scope.filterChoiceCorrelation = {
-                keys: ["renew"],
-                renew: 'renew'
-            };
-            $scope.renews = [{name: 'true'}, {name: 'false'}];
-            $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
+    ['$scope', async ($scope) => {
+        $scope.filter = {
+            isOld: false
+        };
+        $scope.filterChoice = {
+            renew: []
+        };
+        $scope.filterChoiceCorrelation = {
+            keys: ["renew"],
+            renew: 'renew'
+        };
+        $scope.renews = [{name: 'true'}, {name: 'false'}];
+        $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
+
 
         $scope.changeOld = async (old: boolean) => {
-            if($scope.filter.isOld !== old){
+            if ($scope.filter.isOld !== old) {
+                await $scope.updateAllStatus();
                 $scope.filter.isOld = old;
                 $scope.filter.page = 0;
                 $scope.filtersFront.all = [];
@@ -113,10 +116,78 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
         const uncheckAll = () => {
             $scope.projects.all.forEach(project => {
                 project.selected = false;
-                project.orders.forEach(async order => {order.selected = false;});
+                project.orders.forEach(async order => {
+                    order.selected = false;
+                });
             });
             $scope.display.toggle = false;
             Utils.safeApply($scope);
-        }
+        };
+
+        $scope.updateAllStatus = async () => {
+            let {data} = await http.get('/crre/region/orders/old/status');
+            return data;
+        };
+
+        $scope.getColor = (id) => {
+            let color = "";
+            switch (id)
+            {
+                case 0:
+                    color = "SENT";
+                    break;
+                case 1:
+                    color = "NEW";
+                    break;
+                case 2:
+                    color = "GRAY";
+                    break;
+                case 3:
+                    color = "GRAY";
+                    break;
+                case 4:
+                    color = "GRAY";
+                    break;
+                case 6:
+                    color = "GRAY";
+                    break;
+                case 7:
+                    color = "GRAY";
+                    break;
+                case 9:
+                    color = "GRAY";
+                    break;
+                case 10:
+                    color = "DONE";
+                    break;
+                case 14:
+                    color = "WAITING_FOR_ACCEPTANCE";
+                    break;
+                case 15:
+                    color = "REJECTED";
+                    break;
+                case 20:
+                    color = "REJECTED";
+                    break;
+                case 35:
+                    color = "WAITING_FOR_ACCEPTANCE";
+                    break;
+                case 55:
+                    color = "SENT";
+                    break;
+                case 57:
+                    color = "SENT";
+                    break;
+                case 58:
+                    color = "BLUE";
+                    break;
+                case 59:
+                    color = "REJECTED";
+                    break;
+            }
+            return color;
+        };
+
+
     }
     ]);

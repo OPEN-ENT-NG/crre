@@ -62,11 +62,11 @@ export const campaignsController = ng.controller('campaignsController',
             $scope.display.lightbox.campaign = true;
         };
 
-        $scope.formatStructureCampaign = (structure : string) => {
-            let structures = JSON.parse(structure);
+        $scope.formatStructureCampaign = (groups : string) => {
+            let structures_object = JSON.parse(groups);
             let structure_string = "";
-            structures.forEach((structure) => {
-                    structure_string += structure.libelle + ", ";
+            structures_object.structures.forEach((structure) => {
+                    structure_string += structure + ", ";
                 });
             return structure_string.slice(0, -2);
         }

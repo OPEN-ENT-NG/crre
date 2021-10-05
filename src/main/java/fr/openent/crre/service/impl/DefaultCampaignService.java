@@ -140,8 +140,15 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, jsonb(tc.structure) as structure, tc.name as type_name " +
+        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, tc.name as type_name, ((to_jsonb(array_agg(groupe)))->> 0) as groups " +
                 "FROM " + Crre.crreSchema + ".campaign " +
+                "LEFT JOIN " +
+                    "(SELECT rel_group_campaign.id_campaign, json_agg(structure_group.name) as structures " +
+                    "FROM crre.structure_group " +
+                    "INNER JOIN crre.rel_group_campaign ON structure_group.id = rel_group_campaign.id_structure_group " +
+                    "INNER JOIN crre.campaign c ON c.id = rel_group_campaign.id_campaign " +
+                    "WHERE rel_group_campaign.id_campaign = c.id " +
+                    "GROUP BY id_campaign) AS groupe ON groupe.id_campaign = campaign.id " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = campaign.id_type) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_campaign.id_structure_group = rel_group_structure.id_structure_group) ";
@@ -150,7 +157,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             query += "WHERE rel_group_structure.id_structure = ? ";
             values.add(idStructure);
         }
-        query += "GROUP BY campaign.id, jsonb(tc.structure), tc.name ORDER BY campaign.id DESC;";
+        query += "GROUP BY campaign.id, tc.name ORDER BY campaign.id DESC;";
 
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
@@ -266,7 +273,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     public void getCampaign(Integer id, Handler<Either<String, JsonObject>> handler){
-        String query = "  SELECT campaign.*,array_to_json(array_agg(groupe)) as  groups "+
+        String query = "  SELECT campaign.*,jsonb(array_to_json(array_agg(groupe))) as  groups "+
                 "FROM  " + Crre.crreSchema + ".campaign campaign  "+
                 "LEFT JOIN  "+
                 "(SELECT rel_group_campaign.id_campaign, structure_group.* as tags " +

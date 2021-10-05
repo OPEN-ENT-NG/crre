@@ -42,10 +42,7 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
@@ -451,6 +448,36 @@ public class OrderRegionController extends BaseController {
         generateLogs(request, params, idsEquipment, params3, null, old, false);
     }
 
+    @Get("region/orders/old/status")
+    @ApiDoc("Update status of orders")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void updateStatusOrders (final HttpServerRequest request){
+        // LDE function that returns status widh order id
+        orderRegionService.getStatusByOrderId(event -> {
+            if(event.isRight()) {
+                JsonArray listIdOrders = event.right().getValue();
+                for(int i = 0; i < listIdOrders.size(); i++) {
+                    listIdOrders.getJsonObject(i).put("status", randomStatus());
+                }
+                // Update status in sql base
+                orderRegionService.updateStatus(listIdOrders, event2 -> {
+                    if(event2.isRight()) {
+                        renderJson(request, event2.right().getValue());
+                    }
+                });
+            }
+        });
+    }
+
+    int randomStatus() {
+        int tab[] = {1,2,3,4,6,7,9,10,14,15,20,35,55,57,58,59};
+        Random rn = new Random();
+        int range = 15 - 0 + 1;
+        int randomNum =  rn.nextInt(range) + 0;
+        return tab[randomNum];
+    }
+
     @Post("region/orders/library")
     @ApiDoc("Generate and send mail to library")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -520,12 +547,12 @@ public class OrderRegionController extends BaseController {
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
                             attachment.add(new JsonObject().put("name", "orders.csv").put("content",base64File));
                             String mail = this.mail.getString("address");
-                            emailSender.sendMail(request, mail, "Test",
+/*                            emailSender.sendMail(request, mail, "Test",
                                     "Bonjour", attachment, message -> {
                                         if(!message.isRight()) {
                                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                         }
-                                    });
+                                    });*/
                             renderJson(request, response2.right().getValue());
                         }
                     });

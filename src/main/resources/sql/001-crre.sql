@@ -301,16 +301,3 @@ CREATE TRIGGER region_override_client_order_trigger AFTER
     OR
 UPDATE ON crre."order-region-equipment"
     FOR EACH ROW WHEN (NEW.id_order_client_equipment IS NOT NULL) EXECUTE PROCEDURE crre.region_override_client_order();
-
-CREATE FUNCTION crre.region_delete_order_override_client() RETURNS TRIGGER AS $$
-BEGIN
-UPDATE crre.order_client_equipment
-SET override_region = false
-WHERE order_client_equipment.id = OLD.id_order_client_equipment;
-RETURN OLD;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER region_delete_override_client_order_trigger AFTER
-    DELETE ON crre."order-region-equipment"
-    FOR EACH ROW EXECUTE PROCEDURE crre.region_delete_order_override_client();

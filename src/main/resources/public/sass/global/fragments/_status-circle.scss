@@ -58,7 +58,7 @@
       fill: white;
     }
   }
-  &.REJECTED, &.CANCELED{
+  &.REJECTED, &.CANCELED {
     background: $red;
     >i:after{
       content: '\e866';
@@ -74,8 +74,21 @@
     }
   }
 
-  &.VALID{
+  &.VALID {
     background: $green;
+    >i{
+      background-image: url(/crre/public/img/scss/check.svg);
+    }
+  }
+  &.BLUE {
+    background: blue;
+    >i{
+      background-image: url(/crre/public/img/scss/check.svg);
+    }
+  }
+
+  &.GRAY {
+    background: gray;
     >i{
       background-image: url(/crre/public/img/scss/check.svg);
     }

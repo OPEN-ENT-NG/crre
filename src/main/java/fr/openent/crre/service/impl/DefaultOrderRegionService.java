@@ -76,27 +76,36 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     @Override
     public void getAllOrderRegionByProject(int idProject, boolean filterRejectedSentOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        String selectOld = old ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers " : "";
+        String selectOld = old ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, s.name as status_name, s.id as status_id " : "";
         String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, p.title AS title, " +
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name " + selectOld +
                 "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
+        if(old) {
+            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status ";
+        }
         query = innerJoin(query);
         query += "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
         if(filterRejectedSentOrders) {
             query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
-        query += "GROUP BY ore.id, campaign.name, campaign.*, p.title, oce.*, bo.name";
+        query += "GROUP BY ore.id, campaign.name, campaign.*, p.title, oce.id, bo.name";
+        if(old) {
+            query += ", s.name, s.id";
+        }
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
 
     @Override
     public void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        String selectOld = oldTable ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, oce.* " : "";
+        String selectOld = oldTable ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, oce.*, s.name as status_name, s.id as status_id " : "";
         String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, p.title AS title, " +
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id " + selectOld +
                 "FROM  " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
+        if(oldTable) {
+            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status ";
+        }
         query = innerJoin(query);
         query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray()) + " ; ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
@@ -387,5 +396,23 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         query = query.substring(0, query.length() - 1) + ")";
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
+    }
+
+    @Override
+    public void getStatusByOrderId(Handler<Either<String, JsonArray>> arrayResponseHandler) {
+        String query = "SELECT id FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" WHERE owner_id != 'renew2021-2022'";
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(arrayResponseHandler));
+
+    }
+
+    @Override
+    public void updateStatus(JsonArray listIdOrders, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        String query = "";
+        JsonArray params = new JsonArray();
+        for(int i = 0; i < listIdOrders.size(); i++) {
+            query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" SET id_status = ? WHERE id = ?;";
+            params.add(listIdOrders.getJsonObject(i).getInteger("status")).add(listIdOrders.getJsonObject(i).getInteger("id"));
+        }
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
 }
