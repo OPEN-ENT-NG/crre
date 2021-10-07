@@ -1,6 +1,7 @@
 package fr.openent.crre;
 
 import fr.openent.crre.controllers.*;
+import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.json.JsonObject;
@@ -38,6 +39,9 @@ public class Crre extends BaseServer {
         try {
             new CronTrigger(vertx, config.getString("timeSecondSynchCron")).schedule(
                     new synchTotalStudents(vertx)
+            );
+            new CronTrigger(vertx, config.getString("timeSecondStatCron")).schedule(
+                    new statistics(vertx)
             );
         } catch (Exception e) {
             log.fatal("Invalid CRRE cron expression.", e);

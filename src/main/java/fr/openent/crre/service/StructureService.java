@@ -45,4 +45,6 @@ public interface StructureService {
     void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
 
     void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;
+
+    void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler);
 }

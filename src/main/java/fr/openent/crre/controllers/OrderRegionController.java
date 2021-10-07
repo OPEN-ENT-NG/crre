@@ -61,6 +61,7 @@ public class OrderRegionController extends BaseController {
     private final PurseService purseService;
     private final StructureService structureService;
     private final QuoteService quoteService;
+    private final DefaultStatisticsService statisticsService;
     private final EmailSendService emailSender;
     private final JsonObject mail;
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
@@ -72,6 +73,7 @@ public class OrderRegionController extends BaseController {
         this.emailSender = new EmailSendService(emailSender);
         this.mail = mail;
         this.orderRegionService = new DefaultOrderRegionService("equipment");
+        this.statisticsService = new DefaultStatisticsService(Crre.crreSchema);
         this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema);
@@ -491,6 +493,97 @@ public class OrderRegionController extends BaseController {
         });
     }
 
+    @Get("region/orders/mongo")
+    @ApiDoc("Generate and send mail to library")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void exportMongo (final HttpServerRequest request){
+        List<Future> futures = new ArrayList<>();
+        structureService.getAllStructuresDetail(event -> {
+            if(event.isRight()) {
+                JsonArray structures = event.right().getValue();
+                for (int i = 0; i < structures.size(); i++) {
+                    Future<JsonObject> addStructureStatFuture = Future.future();
+                    futures.add(addStructureStatFuture);
+                    JsonObject structure = structures.getJsonObject(i);
+                    // All compute with structure object
+                    structure.put("date", LocalDate.now().toString());
+                    List<Future> futuresStat = new ArrayList<>();
+                    Future<JsonArray> freeLicenceFuture = Future.future();
+                    Future<JsonArray> totalRessourcesFuture = Future.future();
+                    Future<JsonArray> ordersByYearFuture = Future.future();
+                    Future<JsonArray> ordersByCampaignFuture = Future.future();
+                    Future<JsonArray> ordersReassortFuture = Future.future();
+                    Future<JsonArray> allRessourcesFuture = Future.future();
+                    Future<JsonArray> numeriqueRessourceFuture = Future.future();
+                    Future<JsonArray> papierRessourceFuture = Future.future();
+                    futuresStat.add(freeLicenceFuture);
+                    futuresStat.add(ordersByCampaignFuture);
+                    futuresStat.add(ordersByYearFuture);
+                    futuresStat.add(totalRessourcesFuture);
+                    futuresStat.add(ordersReassortFuture);
+                    futuresStat.add(allRessourcesFuture);
+                    futuresStat.add(numeriqueRessourceFuture);
+                    futuresStat.add(papierRessourceFuture);
+
+                    CompositeFuture.all(futuresStat).setHandler(event2 -> {
+                        if (event2.succeeded()) {
+                            JsonArray free_total = freeLicenceFuture.result();
+                            JsonArray ressources_total = totalRessourcesFuture.result();
+                            JsonArray order_year = ordersByYearFuture.result();
+                            JsonArray order_campaign = ordersByCampaignFuture.result();
+                            JsonArray order_reassort = ordersReassortFuture.result();
+                            JsonArray all_ressources = allRessourcesFuture.result();
+                            JsonArray numeric_ressources = numeriqueRessourceFuture.result();
+                            JsonArray paper_ressources = papierRessourceFuture.result();
+
+                            if(free_total.size() > 0 || ressources_total.size() > 0) {
+                                JsonObject stats = new JsonObject();
+                                stats.put("free_total", free_total);
+                                stats.put("ressources_total", ressources_total);
+                                stats.put("order_year", order_year);
+                                stats.put("order_campaign", order_campaign);
+                                stats.put("order_reassort", order_reassort);
+                                stats.put("all_ressources", all_ressources);
+                                stats.put("numeric_ressources", numeric_ressources);
+                                stats.put("paper_ressources", paper_ressources);
+                                structure.put("stats", stats);
+                                statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
+                            }
+
+                        }
+                    });
+
+                    // Commandes
+
+                    statisticsService.getOrdersByYear(structure.getString("id_structure"), handlerJsonArray(ordersByYearFuture));
+                    statisticsService.getOrdersByCampaign(structure.getString("id_structure"), handlerJsonArray(ordersByCampaignFuture));
+                    statisticsService.getOrdersReassort(structure.getString("id_structure"), handlerJsonArray(ordersReassortFuture));
+
+                    // Licences
+
+                    statisticsService.getFreeLicences(structure.getString("id_structure"), handlerJsonArray(freeLicenceFuture));
+
+                    // Finances
+
+                    statisticsService.getTotalRessources(structure.getString("id_structure"), handlerJsonArray(totalRessourcesFuture));
+
+                    // Ressources
+
+                    statisticsService.getRessources(structure.getString("id_structure"), null, handlerJsonArray(allRessourcesFuture));
+                    statisticsService.getRessources(structure.getString("id_structure"), "articlenumerique", handlerJsonArray(numeriqueRessourceFuture));
+                    statisticsService.getRessources(structure.getString("id_structure"), "articlepapier", handlerJsonArray(papierRessourceFuture));
+
+                }
+                CompositeFuture.all(futures).setHandler(event2 -> {
+                    if (event2.succeeded()) {
+                        log.info("export mongo ok");
+                    }
+                });
+            }
+        });
+    }
+
     private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3,
                               UserInfos user, Boolean old, boolean library) {
         JsonArray idStructures = new JsonArray();
@@ -603,14 +696,17 @@ public class OrderRegionController extends BaseController {
                         order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                         putStructuresNameUAI(structures, order);
                         if (equipment.getString("type").equals("articlenumerique")) {
+                            //order.put("cible", equipment.)
                             JsonArray offers = computeOffers(equipment, order);
                             if (offers.size() > 0) {
                                 JsonArray orderOfferArray = new JsonArray();
+                                int freeAmount = 0;
                                 for (int k = 0; k < offers.size(); k++) {
                                     JsonObject orderOffer = new JsonObject();
                                     orderOffer.put("name", offers.getJsonObject(k).getString("name"));
                                     orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
                                     orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
+                                    freeAmount += offers.getJsonObject(k).getLong("value");
                                     orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
                                     orderOffer.put("unitedPriceTTC", 0);
                                     orderOffer.put("totalPriceHT", 0);
@@ -625,6 +721,7 @@ public class OrderRegionController extends BaseController {
                                     orderOfferArray.add(orderOffer);
                                     orderRegion.add(orderOffer);
                                 }
+                                order.put("total_free", freeAmount);
                                 order.put("offers", orderOfferArray);
                             }
                         }

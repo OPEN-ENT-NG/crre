@@ -260,4 +260,9 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         query = query.substring(0, query.length()-1);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+    public void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT DISTINCT id_structure, public, mixte, catalog FROM " + Crre.crreSchema + ".structure";
+        sql.raw(query, SqlResult.validResultHandler(handler));
+    }
 }
