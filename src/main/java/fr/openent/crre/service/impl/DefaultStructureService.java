@@ -254,7 +254,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         .add(structure.getString("id"))
                         .add(structure.getString("name"))
                         .add(structure.getString("public"))
-                        .add((structure.getString("mixte").equals("Vrai") ? true : false))
+                        .add((structure.getString("mixte").equals("Vrai")))
                         .add(structure.getString("catalog"));
         }
         query = query.substring(0, query.length()-1);

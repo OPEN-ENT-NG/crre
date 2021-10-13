@@ -200,7 +200,7 @@
             </table>
         </div>
         <loader data-ng-show="display.loading" min-height="'250px'"></loader>
-        <infinite-scroll scrolled="onScroll()" loading-mode="true"></infinite-scroll>
+        <infinite-scroll scrolled="onScroll()" loading-mode="true" ng-if="projects.length != 0"></infinite-scroll>
         <div ng-show="projects.all.length === 0 && !display.loading" class="centered">
             <div class="twelve cell centered-text" >
                 <h3><i18n>crre.info.empty.tab</i18n></h3>
