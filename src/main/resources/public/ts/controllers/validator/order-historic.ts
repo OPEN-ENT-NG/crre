@@ -3,7 +3,6 @@ import {
     Utils,
     Basket, Equipment, FilterFront, Filter,
 } from "../../model";
-import http from "axios";
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
     ['$scope', async ($scope) => {

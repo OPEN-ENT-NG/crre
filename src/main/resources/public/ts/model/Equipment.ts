@@ -83,6 +83,7 @@ function reformatEquipment(equipment: Equipment) {
     if (equipment.disciplines.length != 0) {
         equipment.discipline = equipment.disciplines[0].libelle;
     }
+    equipment.urlcouverture = equipment.urlcouverture.replace("cns-edu.org","www.cns-edu.com");
 }
 
 export class Equipments extends Selection<Equipment> {

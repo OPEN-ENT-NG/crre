@@ -152,7 +152,7 @@ export class OrdersClient extends Selection<OrderClient> {
         order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
         order.price = Utils.calculatePriceTTC(equipment, 2);
         order.name = equipment.titre;
-        order.image = equipment.urlcouverture;
+        order.image = equipment.urlcouverture.replace("cns-edu.org","www.cns-edu.com");
         if (equipment.type === "articlenumerique") {
             order.offers = Utils.computeOffer(order, equipment);
         }
