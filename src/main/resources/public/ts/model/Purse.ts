@@ -15,7 +15,9 @@ export class Purse implements Selectable {
     terminale: number;
     total: number;
     licence_amount: number;
+    consumable_licence_amount: number;
     licence_initial_amount: number;
+    consumable_licence_initial_amount: number;
 
     constructor (id_structure?: string, amount?: number) {
         if (id_structure) this.id_structure = id_structure;
@@ -36,7 +38,8 @@ export class Purse implements Selectable {
         return {
             id_structure: this.id_structure,
             initial_amount: this.initial_amount,
-            licence_initial_amount: this.licence_initial_amount
+            licence_initial_amount: this.licence_initial_amount,
+            consumable_licence_initial_amount: this.consumable_licence_initial_amount
         };
     }
 }

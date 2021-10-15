@@ -23,7 +23,7 @@ export class Campaign implements Selectable  {
     end_date :Date;
     start_date : Date;
     automatic_close : boolean;
-    use_credit : boolean;
+    use_credit : string;
     id_type: number;
 
     constructor (name?: string, description?: string) {
@@ -35,7 +35,6 @@ export class Campaign implements Selectable  {
         this.priority_field = PRIORITY_FIELD.ORDER;
         this.reassort = false;
         this.automatic_close = false;
-        this.use_credit = false;
         this.id_type = null;
     }
 

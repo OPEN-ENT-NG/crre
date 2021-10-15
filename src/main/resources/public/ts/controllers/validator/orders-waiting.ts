@@ -128,20 +128,28 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             }
         };
 
-        $scope.licencesAvailable = () => {
-            return $scope.campaign.nb_licences_available - $scope.displayedOrders.calculTotalAmount() < 0;
+        $scope.remainAvailable = () => {
+            if($scope.campaign.use_credit == 'licences'){
+                return $scope.campaign.nb_licences_available - $scope.displayedOrders.calculTotalAmount() < 0;
+            }else if($scope.campaign.use_credit == 'consumable_licences'){
+                return $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0;
+            }else if($scope.campaign.use_credit == 'credits'){
+                return $scope.campaign.purse_amount - $scope.displayedOrders.calculTotalPriceTTC() < 0;
+            }
         };
 
-        function updateOrders(totalPrice: number, totalAmount: number, ordersToRemove: OrdersClient) {
-                $scope.campaign.purse_amount -= totalPrice;
+        function updateOrders(totalPrice: number, totalAmount: number, ordersToRemove: OrdersClient, numberOrdered : number) {
+            if($scope.campaign.use_credit == 'licences'){
                 $scope.campaign.nb_licences_available -= totalAmount;
-            if ($scope.ordersClient.selectedElements.length > 0) {
-                $scope.campaign.nb_order_waiting -= $scope.ordersClient.selectedElements.length;
-                $scope.campaign.historic_etab_notification += $scope.ordersClient.selectedElements.length;
-            } else {
-                $scope.campaign.nb_order_waiting -= $scope.ordersClient.all.length;
-                $scope.campaign.historic_etab_notification += $scope.ordersClient.all.length;
+            }else if($scope.campaign.use_credit == 'consumable_licences'){
+                $scope.campaign.nb_licences_consumable_available -= totalAmount;
+            }else if($scope.campaign.use_credit == 'credits'){
+                $scope.campaign.purse_amount -= totalPrice;
             }
+
+            $scope.campaign.nb_order_waiting -= numberOrdered;
+            $scope.campaign.historic_etab_notification += numberOrdered;
+
             ordersToRemove.all.forEach(order => {
                 $scope.ordersClient.all.forEach((orderClient, i) => {
                     if (orderClient.id == order.id) {
@@ -157,7 +165,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             orderRegionTemp.createFromOrderClient(order);
             ordersToCreate.all.push(orderRegionTemp);
             ordersToRemove.all.push(order);
-            if(order.campaign.use_credit) {
+            if(order.campaign.use_credit == "credits") {
                 totalPrice += order.price * order.amount;
                 totalAmount += order.amount;
             }
@@ -170,29 +178,19 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let totalPrice = 0;
             let totalAmount = 0;
 
-            if($scope.ordersClient.selectedElements.length > 0) {
-                $scope.ordersClient.selectedElements.forEach(order => {
-                    const __ret = reformatOrders(order, ordersToCreate, ordersToRemove, totalPrice, totalAmount);
-                    totalPrice = __ret.totalPrice;
-                    totalAmount = __ret.totalAmount;
-                });
-            } else {
-                $scope.ordersClient.all.forEach(order => {
-                    let orderRegionTemp = new OrderRegion();
-                    orderRegionTemp.createFromOrderClient(order);
-                    ordersToCreate.all.push(orderRegionTemp);
-                    ordersToRemove.all.push(order);
-                    if(order.campaign.use_credit) {
-                        totalPrice += order.price * order.amount;
-                        totalAmount += order.amount;
-                    }
+            const ordersToReformat =
+                ($scope.ordersClient.selectedElements.length > 0) ? $scope.ordersClient.selectedElements : $scope.ordersClient.all;
 
-                });
-            }
-            ordersToCreate.create().then(async data =>{
+            ordersToReformat.forEach(order => {
+                const result = reformatOrders(order, ordersToCreate, ordersToRemove, totalPrice, totalAmount);
+                totalPrice = result.totalPrice;
+                totalAmount = result.totalAmount;
+            });
+
+            ordersToCreate.create($scope.campaign.use_credit).then(async data =>{
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
-                    updateOrders(totalPrice, totalAmount, ordersToRemove);
+                    updateOrders(totalPrice, totalAmount, ordersToRemove, ordersToReformat.length);
                     $scope.displayedOrders.all = $scope.ordersClient.all;
                     await $scope.getAllFilters();
                     Utils.safeApply($scope);

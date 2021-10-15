@@ -192,9 +192,9 @@
         <div class="thirteen-small cell twelve-mobile">
             <div class="two cell twelve-mobile margin-right-4">
                 <img class="img-equipment" ng-src="[[basket.equipment.urlcouverture]]"
-                     ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined " />
+                     ng-show="basket.equipment.urlcouverture" />
                 <img class="img-equipment" skin-src="/img/illustrations/pages-default.png"
-                     ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+                     ng-show="!basket.equipment.urlcouverture"/>
                 <div ng-show="!!basket.equipment.urldemo">
                     <a style="text-decoration: underline;" target="_blank" ng-href=[[basket.equipment.urldemo]]><i18n>crre.equipment.preview</i18n></a>
                 </div>

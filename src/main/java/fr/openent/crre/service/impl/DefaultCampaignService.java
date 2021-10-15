@@ -105,7 +105,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsLicences(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT \"Seconde\", \"Premiere\", \"Terminale\", pro, amount, initial_amount " +
+        String query = "SELECT \"Seconde\", \"Premiere\", \"Terminale\", pro, l.* " +
                 "FROM " + Crre.crreSchema + ".licences l " +
                 "JOIN " + Crre.crreSchema + ".students s ON (s.id_structure = l.id_structure) "+
                 "WHERE l.id_structure = ?";
@@ -140,17 +140,16 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, tc.name as type_name, ((to_jsonb(array_agg(groupe)))->> 0) as groups " +
+        String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, " +
+                "tc.name as type_name, jsonb(array_to_json(array_agg(groupe))) as groups " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "LEFT JOIN " +
-                    "(SELECT rel_group_campaign.id_campaign, json_agg(structure_group.name) as structures " +
-                    "FROM crre.structure_group " +
-                    "INNER JOIN crre.rel_group_campaign ON structure_group.id = rel_group_campaign.id_structure_group " +
-                    "INNER JOIN crre.campaign c ON c.id = rel_group_campaign.id_campaign " +
-                    "WHERE rel_group_campaign.id_campaign = c.id " +
-                    "GROUP BY id_campaign) AS groupe ON groupe.id_campaign = campaign.id " +
+                    "(SELECT rel_group_campaign.id_campaign, structure_group.* as tags " +
+                    "FROM " + Crre.crreSchema + ".structure_group " +
+                    "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON structure_group.id = rel_group_campaign.id_structure_group " +
+                    "GROUP BY rel_group_campaign.id_campaign, structure_group.id) AS groupe ON groupe.id_campaign = campaign.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = campaign.id_type) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (campaign.id = rel_group_campaign.id_campaign) " +
-                "INNER JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = campaign.id_type) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (rel_group_campaign.id_structure_group = rel_group_structure.id_structure_group) ";
         JsonArray values = new JsonArray();
         if(idStructure != null){
@@ -183,8 +182,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     campaign = campaigns.getJsonObject(i);
                         object = purses.getJsonObject(0);
                         try {
-                            campaign.put("purse_amount", object.getString("amount"));
-                            campaign.put("initial_purse_amount",object.getString("initial_amount"));
+                            campaign.put("purse_amount", object.getString("amount","0"));
+                            campaign.put("initial_purse_amount",object.getString("initial_amount","0"));
                         }catch (NullPointerException e){
                             LOGGER.warn("A purse is present on this structure but the structure is not linked to the campaign");
                         }
@@ -207,21 +206,25 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         int nb_premiere;
                         int nb_terminale;
                         if(object.getBoolean("pro")) {
-                             nb_seconde = object.getInteger("Seconde") * 3;
-                             nb_premiere = object.getInteger("Premiere") * 3;
-                             nb_terminale = object.getInteger("Terminale") * 3;
+                             nb_seconde = object.getInteger("Seconde",0) * 3;
+                             nb_premiere = object.getInteger("Premiere",0) * 3;
+                             nb_terminale = object.getInteger("Terminale",0) * 3;
                         } else {
-                             nb_seconde = object.getInteger("Seconde") * 9;
-                             nb_premiere = object.getInteger("Premiere") * 8;
-                             nb_terminale = object.getInteger("Terminale") * 7;
+                             nb_seconde = object.getInteger("Seconde",0) * 9;
+                             nb_premiere = object.getInteger("Premiere",0) * 8;
+                             nb_terminale = object.getInteger("Terminale",0) * 7;
                         }
 
-                        int nb_total = object.getInteger("initial_amount");
-                        int nb_total_available = object.getInteger("amount");
+                        int nb_total = object.getInteger("initial_amount",0);
+                        int nb_total_available = object.getInteger("amount",0);
+                        int nb_total_consumable = object.getInteger("consumable_initial_amount",0);
+                        int nb_total_available_consumable = object.getInteger("consumable_amount",0);
                         for (int s = 0; s < campaigns.size(); s++) {
                             campaign = campaignMap.getJsonObject(campaigns.getJsonObject(s).getInteger("id").toString());
                             campaign.put("nb_licences_total", nb_total);
                             campaign.put("nb_licences_available", nb_total_available);
+                            campaign.put("nb_licences_consumable_total", nb_total_consumable);
+                            campaign.put("nb_licences_consumable_available", nb_total_available_consumable);
                             campaign.put("nb_licences_2de", nb_seconde);
                             campaign.put("nb_licences_1ere", nb_premiere);
                             campaign.put("nb_licences_Tale", nb_terminale);
@@ -406,12 +409,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 .put("statement", query)
                 .put("values",params)
                 .put("action", "prepared"));
-        sql.transaction(statements, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> event) {
-                handler.handle(getTransactionHandler(event, id));
-            }
-        });
+        sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
     }
 
     private JsonObject getCampaignTagsGroupsRelationshipStatement(Number id, JsonArray groups) {

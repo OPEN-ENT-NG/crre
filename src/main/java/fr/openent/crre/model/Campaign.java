@@ -20,7 +20,7 @@ public class Campaign extends Model {
     private String start_date;
     private String end_date;
     private Boolean automatic_close;
-    private Boolean use_credit;
+    private String use_credit;
     private Integer id_type;
 
     public Integer getId() {
@@ -107,9 +107,9 @@ public class Campaign extends Model {
 
     public void setAutomatic_close(Boolean automatic_close) { this.automatic_close = automatic_close; }
 
-    public Boolean getUse_credit() { return use_credit; }
+    public String getUse_credit() { return use_credit; }
 
-    public void setUse_credit(Boolean use_credit) { this.use_credit = use_credit; }
+    public void setUse_credit(String use_credit) { this.use_credit = use_credit; }
 
     public Integer getId_type() { return id_type; }
 
@@ -149,7 +149,7 @@ public class Campaign extends Model {
         this.start_date = campaign.getString("start_date", null);
         this.end_date = campaign.getString("end_date", null);
         this.automatic_close = campaign.getBoolean("automatic_close", null);
-        this.use_credit = campaign.getBoolean("use_credit", null);
+        this.use_credit = campaign.getString("use_credit", null);
         this.id_type = campaign.getInteger("id_type", null);
     }
 

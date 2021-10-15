@@ -2,12 +2,12 @@
     <div ng-show="baskets.all.length > 0">
         <div class="right-magnet twelve-mobile" style="margin-top: -20px; margin-bottom: -10px;">
             <h3 class="cell horizontal-margin horizontal-spacing ng-binding no-margin-bottom">
-                <span class="black-color">Total en licences : </span>
+                <span class="black-color"><i18n>crre.total.licences</i18n> : </span>
                 <span ng-bind="calculateQuantity(baskets,false)"></span>
             </h3>
             <br/>
             <h3 class="cell horizontal-margin horizontal-spacing ng-binding margin-bottom-10 no-margin-top">
-                <span class="black-color">Total en € : </span>
+                <span class="black-color"><i18n>crre.total.credits</i18n> : </span>
                 <span ng-bind="calculatePriceOfEquipments(baskets,2) | currency"></span>
             </h3>
             <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.order"
@@ -32,9 +32,9 @@
                         <div class="row article-equipment">
                             <div class="one cell basket-image zero-mobile" ng-click="openEquipmentId(basket.equipment.id)">
                                 <img ng-src="[[basket.equipment.urlcouverture]]"
-                                     ng-show="basket.equipment.urlcouverture!==null && basket.equipment.urlcouverture!==undefined "/>
+                                     ng-show="basket.equipment.urlcouverture"/>
                                 <img skin-src="/img/illustrations/pages-default.png"
-                                     ng-show="basket.equipment.urlcouverture===null || basket.equipment.urlcouverture===undefined "/>
+                                     ng-show="!basket.equipment.urlcouverture"/>
                             </div>
                             <div class="cell eight" ng-click="openEquipmentId(basket.equipment.id)">
                                 <div class="eleven centered">

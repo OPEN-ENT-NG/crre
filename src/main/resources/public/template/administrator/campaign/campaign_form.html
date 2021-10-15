@@ -16,7 +16,7 @@
                         <input type="text" class="four" ng-model="campaign.name" required>
                     </label>
                     <select class = "four" ng-model="campaign_type" ng-change="changeList()" ng-options="format.name_type for format in formatCheck">
-                        <option value="" disabled selected> <i18n>[[lang.translate('crre.catalog.type')]] </i18n> </option>
+                        <option value="" disabled selected> <i18n>[[lang.translate('crre.type.campaign')]] </i18n> </option>
                     </select>
                     <div class="row twelve">
                         <label class="row twelve vertical-spacing">
@@ -29,30 +29,28 @@
                 </div>
             </div>
             <div class="eight horizontal-spacing twelve-mobile">
-        <h2 style="margin: 25px 0 10px 0">
-            <i18n>crre.campaign.options</i18n>
-        </h2>
-            <div>
-        <label class="checkbox">
-            <input type="checkbox" ng-model="campaign.use_credit"
-            />
-            <span><i18n>crre.use_credit</i18n></span>
-            <i class="info-circle campaignTooltip" tooltip="Si cette case est cochée, les crédits des établissements seront décrémentés lors des commandes."></i>
-        </label>
-        <label class="checkbox">
-            <input type="checkbox" ng-model="campaign.reassort"
-            />
-            <span><i18n>crre.campaign.reassort</i18n></span>
-            <i class="info-circle campaignTooltip" tooltip="Toutes les références commandées dans cette campagne seront automatiquement taguées réassort."></i>
-        </label>
-            </div>
-            <div class="margin-top-14">
-                <span><i18n>crre.catalog.access</i18n></span>
-        <select ng-model="campaign.catalog" ng-options="article.name for article in articleFormat">
-            <option value="" disabled selected> [[lang.translate('crre.catalog.type')]] </option>
-        </select>
-            </div>
-            <div class="margin-top-14">
+                <h2 style="margin: 25px 0 10px 0">
+                    <i18n>crre.campaign.options</i18n>
+                </h2>
+                <div>
+                    <div>
+                        <span><i18n>crre.use_credit</i18n></span>
+                        <select ng-model="campaign.use_credit" ng-options="credit.name for credit in creditFormat">
+                        </select>
+                    </div>
+                    <label class="checkbox margin-top-14">
+                        <input type="checkbox" ng-model="campaign.reassort"/>
+                        <span><i18n>crre.campaign.reassort</i18n></span>
+                        <i class="info-circle campaignTooltip" tooltip="crre.tag.reassort.auto"></i>
+                    </label>
+                </div>
+                <div class="margin-top-14">
+                    <span><i18n>crre.catalog.access</i18n></span>
+                    <select ng-model="campaign.catalog" ng-options="article.name for article in articleFormat">
+                        <option value="" disabled selected> [[lang.translate('crre.catalog.type')]] </option>
+                    </select>
+                </div>
+                <div class="margin-top-14">
                     <label class="four vertical-spacing">
                         <label class="one checkbox">
                             <input type="checkbox"
@@ -94,55 +92,56 @@
                         <label class="checkbox" ng-repeat="group in structureGroups.all track by $index ">
                             <input type="checkbox" ng-model="group.selected">
                             <span>[[group.name]]</span>
-                            <span tooltip="crre.regroup.permanent" ng-if="categories.includes(group.name)" ng-class="{true:'campaignCheckboxIcons'}[categories.includes(group.name)]"></span>
+                            <span tooltip="crre.regroup.permanent" ng-if="categories.includes(group.name)"
+                                  ng-class="{true:'campaignCheckboxIcons'}[categories.includes(group.name)]"></span>
                         </label>
                     </div>
                 </table>
             </div>
-<!--
-            <div ng-class="{'articlenumerique':'laptop-icon', 'articlepapier':'book-icon'}[equipment.type]">
--->
+            <!--
+                        <div ng-class="{'articlenumerique':'laptop-icon', 'articlepapier':'book-icon'}[equipment.type]">
+            -->
 
-        <!-- <h4 style="margin: 50px 0 10px 0">
-            <i18n>crre.campaign.options</i18n>
-            :
-        </h4>
-        <article>
-            <div class="row">
-                <span class="cell">
-                    <i18n>crre.campaign.type.choose</i18n>
-                    :
-                </span>
-                <switch-toggle ng-model="campaign.purse_enabled" class="cell horizontal-margin-four"></switch-toggle>
-            </div>
-            <div class="row">
-                <span class="cell">
-                    <i18n>crre.campaign.priority.choose</i18n>
-                    :
-                </span>
-                <switch-toggle ng-model="campaign.priority_enabled" class="cell horizontal-margin-four"></switch-toggle>
-            </div>
-            <div ng-if="campaign.priority_enabled" class="priority_field" >
-                <div>
-                    <input type="radio" ng-model="campaign.priority_field" value="ORDER"/>
-                    <label ><i18n>crre.on.order</i18n></label>
+            <!-- <h4 style="margin: 50px 0 10px 0">
+                <i18n>crre.campaign.options</i18n>
+                :
+            </h4>
+            <article>
+                <div class="row">
+                    <span class="cell">
+                        <i18n>crre.campaign.type.choose</i18n>
+                        :
+                    </span>
+                    <switch-toggle ng-model="campaign.purse_enabled" class="cell horizontal-margin-four"></switch-toggle>
                 </div>
-                <div>
-                    <input type="radio" ng-model="campaign.priority_field" value="PROJECT"/>
-                    <label ><i18n>crre.on.project</i18n></label>
+                <div class="row">
+                    <span class="cell">
+                        <i18n>crre.campaign.priority.choose</i18n>
+                        :
+                    </span>
+                    <switch-toggle ng-model="campaign.priority_enabled" class="cell horizontal-margin-four"></switch-toggle>
+                </div>
+                <div ng-if="campaign.priority_enabled" class="priority_field" >
+                    <div>
+                        <input type="radio" ng-model="campaign.priority_field" value="ORDER"/>
+                        <label ><i18n>crre.on.order</i18n></label>
+                    </div>
+                    <div>
+                        <input type="radio" ng-model="campaign.priority_field" value="PROJECT"/>
+                        <label ><i18n>crre.on.project</i18n></label>
+                    </div>
+                </div>
+            </article>-->
+            <div class="right-magnet warning" ng-show="!validCampaignForm(campaign)">
+                <i18n>not.valid.campaign.form</i18n>
+            </div>
+            <div class="row">
+                <div class="right-magnet">
+                    <input type="button" class="cancel" ng-click="redirectTo('/campaigns')" i18n-value="cancel"/>
+                    <input type="submit" class="button" ng-click="validCampaign(campaign)"
+                           ng-disabled="!validCampaignForm(campaign)" i18n-value="validate"/>
                 </div>
             </div>
-        </article>-->
-        <div class="right-magnet warning" ng-show="!validCampaignForm(campaign)">
-            <i18n>not.valid.campaign.form</i18n>
-        </div>
-        <div class="row">
-            <div class="right-magnet">
-                <input type="button" class="cancel" ng-click="redirectTo('/campaigns')" i18n-value="cancel"/>
-                <input type="submit" class="button" ng-click="validCampaign(campaign)"
-                       ng-disabled="!validCampaignForm(campaign)" i18n-value="validate"/>
-            </div>
-        </div>
         </article>
     </form>
 </div>

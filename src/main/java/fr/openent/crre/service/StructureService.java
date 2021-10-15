@@ -18,13 +18,15 @@ public interface StructureService {
 
     void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler);
 
-    void getStructureByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler);
+    void getStructureByUAI(JsonArray uais, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler);
 
-    void getStructureById(JsonArray ids, Handler<Either<String, JsonArray>> handler);
+    void getStructureById(JsonArray ids, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler);
 
     void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler);
 
     void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler);
+
+    void getConsumableFormation(Handler<Either<String, JsonArray>> handler);
 
     void getTotalStructure(Handler<Either<String, JsonArray>> handler);
 
@@ -43,6 +45,8 @@ public interface StructureService {
     void reinitAmountLicence(String id_structure, Integer difference, Handler<Either<String, JsonObject>> defaultResponseHandler);
 
     void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
+
+    void updateAmountConsumableLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
 
     void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;
 

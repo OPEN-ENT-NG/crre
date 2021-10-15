@@ -87,7 +87,7 @@ public class StructureController extends ControllerHelper {
                             structure.put("catalog", values[8]);
                             structures.add(structure);
                         }
-                        structureService.getStructureByUAI(uais, event -> {
+                        structureService.getStructureByUAI(uais, null, event -> {
                             if(event.isRight()) {
                                 log.info("success");
                                 JsonArray uaisNeo = event.right().getValue();

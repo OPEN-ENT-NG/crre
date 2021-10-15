@@ -51,16 +51,22 @@
                         <p class="small-text-align" ng-if="campaign.purse_enabled">
                             <span class="bold-font-weight"><i18n>crre.campaign.purse.region</i18n></span>
                         </p>
-                        <p class="small-text-align" ng-if="campaign.purse_enabled && campaign.initial_purse_amount != 0">
+                        <p class="small-text-align" ng-if="campaign.use_credit == 'credits'">
                             <em class="small-text">
                                 <i18n>crre.campaign.amount.init</i18n> : <span ng-bind="campaign.initial_purse_amount | currency"></span>
                                 <i18n>crre.remainder</i18n> : <span ng-bind="campaign.purse_amount | currency"></span>
                             </em>
                         </p>
-                        <p class="small-text-align" ng-if="campaign.purse_enabled">
+                        <p class="small-text-align" ng-if="campaign.use_credit == 'licences'">
                             <em class="small-text">
-                                <i18n>crre.campaign.licence</i18n> : <span ng-bind="campaign.nb_licences_total"></span>
+                                <i18n>crre.Licences</i18n> : <span ng-bind="campaign.nb_licences_total"></span>
                                 <i18n>crre.remainder</i18n> : <span ng-bind="campaign.nb_licences_available"></span>
+                            </em>
+                        </p>
+                        <p class="small-text-align" ng-if="campaign.use_credit == 'consumable_licences'">
+                            <em class="small-text">
+                                <i18n>crre.ConsumableLicences</i18n> : <span ng-bind="campaign.nb_licences_consumable_total"></span>
+                                <i18n>crre.remainder</i18n> : <span ng-bind="campaign.nb_licences_consumable_available"></span>
                             </em>
                         </p>
                         <p class="small-text-align" ng-show="campaign.nb_order && campaign.nb_order !== 0">

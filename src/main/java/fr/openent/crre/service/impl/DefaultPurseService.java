@@ -26,9 +26,11 @@ public class DefaultPurseService implements PurseService {
                 statements.add(getImportStatementStudent(field,
                         values.getString("second"), values.getString("premiere"), values.getString("terminale"), values.getBoolean("pro")));
                 statements.add(getImportStatementAmount(field,
-                        values.getString("amount"), "purse"));
+                        values.getString("amount"), "purse",false));
                 statements.add(getImportStatementAmount(field,
-                        values.getString("licence"), "licences"));
+                        values.getString("licence"), "licences",false));
+                statements.add(getImportStatementAmount(field,
+                        values.getString("consumable_licence"), "licences",true));
             }
         }
         if(invalidDatas){
@@ -53,11 +55,7 @@ public class DefaultPurseService implements PurseService {
 
     @Override
     public void getPursesStudentsAndLicences(List<String> ids, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
-                "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount " +
-                "FROM " + Crre.crreSchema + ".purse " +
-                "INNER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
-                "INNER JOIN " + Crre.crreSchema + ".licences ON licences.id_structure = purse.id_structure ";
+        String query = getQueryPursesAndLicences();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         if(ids.size() > 0){
@@ -69,13 +67,18 @@ public class DefaultPurseService implements PurseService {
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    @Override
-    public void getPursesStudentsAndLicences(Integer page, JsonArray idStructures, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
-                "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount " +
+    private String getQueryPursesAndLicences() {
+        return "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
+                "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
+                "licences.consumable_amount as consumable_licence_amount, licences.consumable_initial_amount as consumable_licence_initial_amount " +
                 "FROM " + Crre.crreSchema + ".purse " +
                 "INNER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
                 "INNER JOIN " + Crre.crreSchema + ".licences ON licences.id_structure = purse.id_structure ";
+    }
+
+    @Override
+    public void getPursesStudentsAndLicences(Integer page, JsonArray idStructures, Handler<Either<String, JsonArray>> handler) {
+        String query = getQueryPursesAndLicences();
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -103,20 +106,45 @@ public class DefaultPurseService implements PurseService {
                 "WHERE id_structure = ? ;" +
                 "UPDATE " + Crre.crreSchema + ".licences " +
                 "SET initial_amount = ?, amount = amount + ( ? - initial_amount) " +
+                "WHERE id_structure = ? ;" +
+                "UPDATE " + Crre.crreSchema + ".licences " +
+                "SET consumable_initial_amount = ?, consumable_amount = consumable_amount + ( ? - consumable_initial_amount) " +
                 "WHERE id_structure = ? ;" ;
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(purse.getDouble("initial_amount")).add(purse.getDouble("initial_amount")).add(id_structure)
-                .add(purse.getInteger("licence_initial_amount")).add(purse.getInteger("licence_initial_amount")).add(id_structure);
+                .add(purse.getInteger("licence_initial_amount")).add(purse.getInteger("licence_initial_amount")).add(id_structure)
+                .add(purse.getInteger("consumable_licence_initial_amount")).add(purse.getInteger("consumable_licence_initial_amount")).add(id_structure);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    private JsonObject getImportStatementAmount(String structureId, String amount, String table) {
-        String statement = "INSERT INTO " + Crre.crreSchema + "." + table + " (id_structure, amount, initial_amount) " +
-                "VALUES (?,?,?) " +
-                "ON CONFLICT (id_structure) DO UPDATE " +
-                "SET initial_amount = ?, amount = " + table + ".amount + ( ? - " + table + ".initial_amount) " +
-                "WHERE " + table + ".id_structure = ? ;";
+    private JsonObject getImportStatementAmount(String structureId, String amount, String table, Boolean consumable_licences) {
+        String statement = "INSERT INTO " + Crre.crreSchema + "." + table + " (id_structure, ";
+        if(consumable_licences){
+            statement += "consumable_amount, consumable_initial_amount) " +
+                    "VALUES (?,?,?) " +
+                    "ON CONFLICT (id_structure) DO UPDATE " +
+                    "SET consumable_initial_amount = ?, " +
+                    "consumable_amount = (" +
+                    "  CASE " +
+                    "    WHEN " + table + ".consumable_amount IS NOT NULL THEN " + table + ".consumable_amount + ( ? - " + table + ".consumable_initial_amount) " +
+                    "    ELSE ?" +
+                    "  END" +
+                    ") " +
+                    "WHERE " + table + ".id_structure = ? ;";
+        }else{
+            statement += "amount, initial_amount) " +
+                    "VALUES (?,?,?) " +
+                    "ON CONFLICT (id_structure) DO UPDATE " +
+                    "SET initial_amount = ?, " +
+                    "amount = (" +
+                    "  CASE " +
+                    "    WHEN " + table + ".amount IS NOT NULL THEN " + table + ".amount + ( ? - " + table + ".initial_amount) " +
+                    "    ELSE ?" +
+                    "  END" +
+                    ") " +
+                    "WHERE " + table + ".id_structure = ? ;";
+        }
         JsonArray params =  new fr.wseduc.webutils.collections.JsonArray();
         try {
             params.add(structureId);
@@ -124,9 +152,11 @@ public class DefaultPurseService implements PurseService {
                 params.add(Integer.parseInt(amount))
                         .add(Integer.parseInt(amount))
                         .add(Integer.parseInt(amount))
+                        .add(Integer.parseInt(amount))
                         .add(Integer.parseInt(amount));
             } else {
                 params.add(Double.parseDouble(amount))
+                        .add(Double.parseDouble(amount))
                         .add(Double.parseDouble(amount))
                         .add(Double.parseDouble(amount))
                         .add(Double.parseDouble(amount));

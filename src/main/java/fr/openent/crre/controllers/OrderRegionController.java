@@ -79,7 +79,7 @@ public class OrderRegionController extends BaseController {
         this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
-    @Post("/region/orders/")
+    @Post("/region/orders/:useCredit")
     @ApiDoc("Create orders for region")
     @SecuredAction(Crre.VALIDATOR_RIGHT)
     @ResourceFilter(ValidatorRight.class)
@@ -113,13 +113,15 @@ public class OrderRegionController extends BaseController {
                                                     Actions.CREATE.toString(),
                                                     idProjectRight.toString(),
                                                     new JsonObject().put("id", idProjectRight).put("title", finalTitle));
+                                            String use_credit = request.getParam("useCredit");
                                             for(int i = 0 ; i<ordersList.size() ; i++){
                                                 List<Future> futures = new ArrayList<>();
                                                 JsonObject newOrder = ordersList.getJsonObject(i);
                                                 Future<JsonObject> createOrdersRegionFuture = Future.future();
                                                 futures.add(createOrdersRegionFuture);
-                                                Double price = Double.parseDouble(newOrder.getDouble("price").toString())*newOrder.getInteger("amount");
-                                                updatePurseLicence(futures, newOrder,"-",price);
+                                                Double price = Double.parseDouble(newOrder.getDouble("price").toString())
+                                                        *newOrder.getInteger("amount");
+                                                updatePurseLicence(futures, newOrder,"-",price,use_credit);
                                                 orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
                                                         handlerJsonObject(createOrdersRegionFuture));
                                                 int finalI = i;
@@ -396,11 +398,13 @@ public class OrderRegionController extends BaseController {
                                     Double price = Double.parseDouble(newOrder.getDouble("price").toString());
                                     if(newOrder.getString("status").equals("REJECTED")) {
                                         if (status.equals("valid")) {
-                                            updatePurseLicence(futures, newOrder, "-",price);
+                                            updatePurseLicence(futures, newOrder, "-",price,
+                                                    newOrder.getString("use_credit"));
                                         }
                                     }else{
                                         if (status.equals("rejected")) {
-                                            updatePurseLicence(futures, newOrder, "+",price);
+                                            updatePurseLicence(futures, newOrder, "+",price,
+                                                    newOrder.getString("use_credit"));
                                         }
                                     }
                                 }
@@ -414,7 +418,8 @@ public class OrderRegionController extends BaseController {
                                                         params,
                                                         null));
                                     } else {
-                                        LOGGER.error("An error when you want get id after create order region ", event.cause());
+                                        LOGGER.error("An error when you want get id after create order region ",
+                                                event.cause());
                                         request.response().setStatusCode(400).end();
                                     }
                                 });
@@ -425,17 +430,29 @@ public class OrderRegionController extends BaseController {
 
     }
 
-    private void updatePurseLicence(List<Future> futures, JsonObject newOrder,String operation, Double price) {
-        Future<JsonObject> purseUpdateFuture = Future.future();
-        futures.add(purseUpdateFuture);
-        Future<JsonObject> purseUpdateLicencesFuture = Future.future();
-        futures.add(purseUpdateLicencesFuture);
-        purseService.updatePurseAmount(price,
-                newOrder.getString("id_structure"), operation,
-                handlerJsonObject(purseUpdateFuture));
-        structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
-                newOrder.getInteger("amount"),
-                handlerJsonObject(purseUpdateLicencesFuture));
+    private void updatePurseLicence(List<Future> futures, JsonObject newOrder,String operation, Double price, String use_credit) {
+        Future<JsonObject> updateFuture = Future.future();
+        futures.add(updateFuture);
+        switch (use_credit) {
+            case "licences": {
+                structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
+                        newOrder.getInteger("amount"),
+                        handlerJsonObject(updateFuture));
+                break;
+            }
+            case "consumable_licences": {
+                structureService.updateAmountConsumableLicence(newOrder.getString("id_structure"), operation,
+                        newOrder.getInteger("amount"),
+                        handlerJsonObject(updateFuture));
+                break;
+            }
+            case "credits": {
+                purseService.updatePurseAmount(price,
+                        newOrder.getString("id_structure"), operation,
+                        handlerJsonObject(updateFuture));
+                break;
+            }
+        }
     }
 
     @Get("region/orders/exports")
@@ -619,7 +636,7 @@ public class OrderRegionController extends BaseController {
         } else {
             orderRegionService.getOrdersRegionById(idsOrders, old, handlerJsonArray(orderRegionFuture));
         }
-        structureService.getStructureById(idStructures,handlerJsonArray(structureFuture));
+        structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
     }
 

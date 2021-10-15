@@ -77,7 +77,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void getAllOrderRegionByProject(int idProject, boolean filterRejectedSentOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String selectOld = old ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, s.name as status_name, s.id as status_id " : "";
-        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, p.title AS title, " +
+        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name " + selectOld +
                 "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
@@ -89,7 +89,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if(filterRejectedSentOrders) {
             query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
-        query += "GROUP BY ore.id, campaign.name, campaign.*, p.title, oce.id, bo.name";
+        query += "GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name";
         if(old) {
             query += ", s.name, s.id";
         }
@@ -99,7 +99,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     @Override
     public void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String selectOld = oldTable ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, oce.*, s.name as status_name, s.id as status_id " : "";
-        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, p.title AS title, " +
+        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id " + selectOld +
                 "FROM  " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";

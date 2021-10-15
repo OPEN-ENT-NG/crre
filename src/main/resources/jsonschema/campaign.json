@@ -46,7 +46,7 @@
       "type": "boolean"
     },
     "use_credit": {
-      "type": "boolean"
+      "type": "string"
     },
     "id_type": {
       "type": [ "number", "null" ]

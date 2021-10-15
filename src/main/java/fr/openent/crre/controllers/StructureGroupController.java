@@ -109,7 +109,7 @@ public class StructureGroupController extends ControllerHelper {
      * @param uais    UAIs list
      */
     private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais) {
-        structureService.getStructureByUAI(uais, uaisEvent -> {
+        structureService.getStructureByUAI(uais, null, uaisEvent -> {
             if (uaisEvent.isRight()) {
                 vertx.fileSystem().readDir(path, event -> {
                     if (event.succeeded()) {

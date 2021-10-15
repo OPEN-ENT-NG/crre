@@ -82,19 +82,21 @@ public class PurseController extends ControllerHelper {
             JsonArray uais = new fr.wseduc.webutils.collections.JsonArray();
             JsonObject amounts = new JsonObject();
             JsonObject licences = new JsonObject();
+            JsonObject consumable_licences = new JsonObject();
             JsonObject seconds = new JsonObject();
             JsonObject premieres = new JsonObject();
             JsonObject terminales = new JsonObject();
             while ((values = csv.readNext()) != null) {
                 amounts.put(values[0], values[1]);
                 licences.put(values[0], values[2]);
-                seconds.put(values[0], values[3]);
-                premieres.put(values[0], values[4]);
-                terminales.put(values[0], values[5]);
+                consumable_licences.put(values[0], values[3]);
+                seconds.put(values[0], values[4]);
+                premieres.put(values[0], values[5]);
+                terminales.put(values[0], values[6]);
                 uais.add(values[0]);
             }
             if (uais.size() > 0) {
-                matchUAIID(request, path, uais, amounts, licences, seconds, premieres, terminales, content.toString());
+                matchUAIID(request, path, uais, amounts, licences, consumable_licences, seconds, premieres, terminales, content.toString());
             } else {
                 returnErrorMessage(request, new Throwable("missing.uai"), path);
             }
@@ -113,47 +115,64 @@ public class PurseController extends ControllerHelper {
      * @param amount  Object containing UAI as key and purse amount as value
      */
     private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais,
-                            final JsonObject amount, final JsonObject licence, final JsonObject seconds, final JsonObject premieres,
-                            final JsonObject terminales, final String contentFile) {
-        structureService.getStructureByUAI(uais, event -> {
-            if (event.isRight()) {
-                final JsonArray structures = event.right().getValue();
-                    JsonObject statementsValues = new JsonObject();
-                    JsonObject structure;
-                boolean invalidDatas = false;
-                    for (int i = 0; i < structures.size(); i++) {
-                        structure = structures.getJsonObject(i);
-                        boolean professionnal_structure = structure.getString("type").equals("LYCEE PROFESSIONNEL");
-                        try {
-                            int licences = Integer.parseInt(licence.getString(structure.getString("uai")));
-                            int seconde = Integer.parseInt(seconds.getString(structure.getString("uai")));
-                            int premiere = Integer.parseInt(premieres.getString(structure.getString("uai")));
-                            int terminale = Integer.parseInt(terminales.getString(structure.getString("uai")));
-                            int minimumLicences;
-                            if(professionnal_structure){
-                                minimumLicences = seconde * 3 + premiere * 3 + terminale * 3;
-                            } else {
-                                minimumLicences = seconde * 9 + premiere * 8 + terminale * 7;
-                            }
-                            if(licences < minimumLicences){
-                                licence.put(structure.getString("uai"), Integer.toString(minimumLicences));
-                            }
-                        } catch (NumberFormatException e){
-                            invalidDatas = true;
-                        }
-                        statementsValues.put(structure.getString("id"), new JsonObject()
-                                .put("amount",amount.getString(structure.getString("uai")))
-                                .put("licence",licence.getString(structure.getString("uai")))
-                                .put("second",seconds.getString(structure.getString("uai")))
-                                .put("premiere",premieres.getString(structure.getString("uai")))
-                                .put("terminale",terminales.getString(structure.getString("uai")))
-                                .put("pro",professionnal_structure)
-                        );
-                    }
-                    launchImport(request, path, statementsValues, contentFile, invalidDatas);
+                            final JsonObject amount, final JsonObject licence, final JsonObject consumable_licence,
+                            final JsonObject seconds, final JsonObject premieres, final JsonObject terminales, final String contentFile) {
+        structureService.getConsumableFormation(formations -> {
+            if(formations.isRight()) {
+                JsonArray consumable_formations = formations.right().getValue();
+                structureService.getStructureByUAI(uais, consumable_formations, event -> {
+                    if (event.isRight()) {
+                        final JsonArray structures = event.right().getValue();
+                        JsonObject statementsValues = new JsonObject();
+                        JsonObject structure;
+                        boolean invalidDatas = false;
+                        for (int i = 0; i < structures.size(); i++) {
+                            structure = structures.getJsonObject(i);
+                            boolean professionnal_structure = structure.getString("type").equals("LYCEE PROFESSIONNEL");
+                            try {
+                                int licences = Integer.parseInt(licence.getString(structure.getString("uai")));
+                                int consumable_licences =  Integer.parseInt(consumable_licence.getString(structure.getString("uai")));
+                                int seconde = Integer.parseInt(seconds.getString(structure.getString("uai")));
+                                int premiere = Integer.parseInt(premieres.getString(structure.getString("uai")));
+                                int terminale = Integer.parseInt(terminales.getString(structure.getString("uai")));
 
-            } else {
-                returnErrorMessage(request, new Throwable(event.left().getValue()), path);
+                                int minimumLicences;
+                                if(professionnal_structure){
+                                    minimumLicences = seconde * 3 + premiere * 3 + terminale * 3;
+                                } else {
+                                    minimumLicences = seconde * 9 + premiere * 8 + terminale * 7;
+                                }
+                                if(licences < minimumLicences){
+                                    licence.put(structure.getString("uai"), Integer.toString(minimumLicences));
+                                }
+
+                                int minimumConsumableLicences;
+                                minimumConsumableLicences = structure.getInteger("nbr_students_consumables") * 2;
+                                if(consumable_licences < minimumConsumableLicences){
+                                    consumable_licence.put(structure.getString("uai"), Integer.toString(minimumConsumableLicences));
+                                }
+
+                            } catch (NumberFormatException e){
+                                invalidDatas = true;
+                            }
+                            statementsValues.put(structure.getString("id"), new JsonObject()
+                                    .put("amount",amount.getString(structure.getString("uai")))
+                                    .put("licence",licence.getString(structure.getString("uai")))
+                                    .put("consumable_licence",consumable_licence.getString(structure.getString("uai")))
+                                    .put("second",seconds.getString(structure.getString("uai")))
+                                    .put("premiere",premieres.getString(structure.getString("uai")))
+                                    .put("terminale",terminales.getString(structure.getString("uai")))
+                                    .put("pro",professionnal_structure)
+                            );
+                        }
+                        launchImport(request, path, statementsValues, contentFile, invalidDatas);
+
+                    } else {
+                        returnErrorMessage(request, new Throwable(event.left().getValue()), path);
+                    }
+                });
+            }else{
+                returnErrorMessage(request, new Throwable(formations.left().getValue()), path);
             }
         });
     }
@@ -203,7 +222,7 @@ public class PurseController extends ControllerHelper {
      * @param request Http request
      * @param cause   Cause error
      */
-    private static void renderErrorMessage(HttpServerRequest request, Throwable cause) {
+    private void renderErrorMessage(HttpServerRequest request, Throwable cause) {
         renderError(request, new JsonObject().put("message", cause.getMessage()));
     }
 
@@ -277,7 +296,14 @@ public class PurseController extends ControllerHelper {
                         purse = purses.getJsonObject(i);
                         ids.add(purse.getString("id_structure"));
                     }
-                    retrieveStructuresData(ids, purses, request);
+                    structureService.getConsumableFormation(formations -> {
+                        if(formations.isRight()) {
+                            JsonArray consumable_formations = formations.right().getValue();
+                            retrieveStructuresData(ids, consumable_formations, purses, request);
+                        } else {
+                            renderErrorMessage(request, new Throwable(formations.left().getValue()));
+                        }
+                    });
                 } else {
                     badRequest(request);
                 }
@@ -294,8 +320,9 @@ public class PurseController extends ControllerHelper {
      * @param purses JsonArray containing purses list
      * @param request Http request
      */
-    private void retrieveStructuresData(JsonArray ids, final JsonArray purses, final HttpServerRequest request) {
-        structureService.getStructureById(ids, event -> {
+    private void retrieveStructuresData(JsonArray ids, JsonArray consumable_formations, final JsonArray purses,
+                                        final HttpServerRequest request) {
+        structureService.getStructureById(ids, consumable_formations, event -> {
             if (event.isRight()) {
                 prepareDataPurses(purses, event);
                 Renders.renderJson(request, purses);
@@ -315,7 +342,7 @@ public class PurseController extends ControllerHelper {
      */
     private void retrieveStructures(JsonArray ids, final JsonArray purses,
                               final HttpServerRequest request) {
-        structureService.getStructureById(ids, event -> {
+        structureService.getStructureById(ids, null, event -> {
             if (event.isRight()) {
                 prepareDataPurses(purses, event);
                 launchExport(purses, request);
@@ -340,12 +367,14 @@ public class PurseController extends ControllerHelper {
                 if (purse.getString("id_structure").equals(structure.getString("id"))) {
                     purse.put("name", structure.getString("name"));
                     purse.put("uai", structure.getString("uai"));
-
+                    purse.put("minimum_licences_consumables",structure.getInteger("minimum_licences_consumables"));
                     // we also convert amount to get a number instead of a string
                     purse.put("amount", Double.parseDouble(purse.getString("amount")));
                     purse.put("initial_amount", Double.parseDouble(purse.getString("initial_amount")));
                     purse.put("licence_amount", purse.getInteger("licence_amount"));
                     purse.put("licence_initial_amount", purse.getInteger("licence_initial_amount"));
+                    purse.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount"));
+                    purse.put("consumable_licence_initial_amount", purse.getInteger("consumable_licence_initial_amount"));
                     if (purse.getBoolean("pro")) {
                         purse.put("seconde", purse.getInteger("seconde") * 3);
                         purse.put("premiere", purse.getInteger("premiere") * 3);

@@ -10,22 +10,28 @@ export const campaignFormController = ng.controller('campaignFormController',
         this.init = async () => {
             $scope.articleFormat = [{name : "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}];
+            $scope.creditFormat = [{name : "Licences", value: "licences"}, {name: "Crédits", value: "credits"},
+                {name: "Licences consommables", value: "consumable_licences"}];
             $scope.formatCheck = [];
             $scope.allSelected = false;
             await $scope.getTypesCampaign();
             if(new RegExp('update').test(window.location.hash)) {
                 $scope.campaign.catalog = $scope.articleFormat.find(format => $scope.campaign.catalog == format.value);
+                $scope.campaign.use_credit = $scope.creditFormat.find(format => $scope.campaign.use_credit == format.value);
                 $scope.campaign.name_type = $scope.formatCheck.find(format => $scope.campaign.id_type == format.id_type).name_type;
                 $scope.campaign_type = $scope.formatCheck.find(format => $scope.campaign.id_type == format.id_type);
             } else {
                 $scope.campaign = new Campaign();
+                $scope.campaign.use_credit = $scope.creditFormat[0];
             }
             Utils.safeApply($scope);
         }
 
 
         $scope.changeList = () => {
-            $scope.campaign.use_credit = $scope.campaign_type.credit;
+            if($scope.campaign_type.credit == "credits"){
+                $scope.campaign.use_credit = $scope.campaign_type.credit;
+            }
             $scope.campaign.reassort = $scope.campaign_type.reassort;
             $scope.campaign.automatic_close = $scope.campaign_type.automatic_close;
             $scope.campaign.id_type = $scope.campaign_type.id_type;
@@ -60,7 +66,8 @@ export const campaignFormController = ng.controller('campaignFormController',
         $scope.validCampaignForm = (campaign: Campaign) => {
             return campaign.name !== undefined
                 && campaign.name.trim() !== ''
-                && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined;
+                && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined
+                && $scope.campaign.catalog !== undefined;
 
         };
 
@@ -83,6 +90,7 @@ export const campaignFormController = ng.controller('campaignFormController',
         $scope.validCampaign = async (campaign: Campaign) => {
             $scope.campaign.groups = [];
             $scope.campaign.catalog = $scope.campaign.catalog.value;
+            $scope.campaign.use_credit = $scope.campaign.use_credit.value;
             $scope.structureGroups.all.map((group) => selectCampaignsStructureGroup(group));
             _.uniq($scope.campaign.groups);
             await campaign.save();

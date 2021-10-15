@@ -41,6 +41,7 @@ export class OrderRegion implements Order  {
     user_id:string;
     reassort: boolean;
     priceTotalTTC ?: number;
+    use_credit: string;
 
     constructor() {
         this.typeOrder = "region";
@@ -63,7 +64,8 @@ export class OrderRegion implements Order  {
             user_name: this.user_name,
             user_id: this.user_id,
             reassort: this.reassort,
-            priceTotalTTC: this.priceTotalTTC
+            priceTotalTTC: this.priceTotalTTC,
+            use_credit: this.use_credit
         }
     }
 
@@ -98,13 +100,13 @@ export class OrdersRegion extends Selection<OrderRegion> {
         super([]);
     }
 
-    async create():Promise<any> {
+    async create(use_credit:string):Promise<any> {
         let orders = [];
         this.forEach(order => {
             orders.push(Mix.castAs(OrderRegion, order).toJson());
         });
         try {
-            return await http.post(`/crre/region/orders/`, {orders: orders});
+            return await http.post(`/crre/region/orders/${use_credit}`, {orders: orders});
         } catch (e) {
             toasts.warning('crre.order.create.err');
             throw e;

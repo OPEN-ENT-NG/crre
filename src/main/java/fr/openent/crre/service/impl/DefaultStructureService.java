@@ -53,26 +53,51 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void getStructureByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure) WHERE s.UAI IN {uais} return s.id as id, s.UAI as uai, s.type as type";
+    public void getStructureByUAI(JsonArray uais, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
+                " WHERE s.UAI IN {uais} ";
+        if(consumable_formations == null){
+            query += "RETURN s.id as id, s.UAI as uai, s.type as type";
+        }else{
+            query += "WITH s.id as id, s.UAI as uai, s.type as type, " +
+                    "CASE WHEN u.level IN {consumable_formations} " +
+                    "THEN count(u) " +
+                    "ELSE 0 " +
+                    "END as nbr_students " +
+                    "RETURN id, uai, type, sum(nbr_students) AS nbr_students_consumables;";
+        }
 
         Neo4j.getInstance().execute(query,
-                new JsonObject().put("uais", uais),
+                new JsonObject().put("uais", uais).put("consumable_formations", consumable_formations),
                 Neo4jResult.validResultHandler(handler));
     }
 
     @Override
-    public void getStructureById(JsonArray ids, Handler<Either<String, JsonArray>> handler) {
+    public void getStructureById(JsonArray ids, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler) {
         try {
-            String query = "MATCH (s:Structure) WHERE s.id IN {ids} return s.id as id, s.UAI as uai," +
-                    " s.name as name, s.phone as phone, s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
-                    "s.zipCode  as zipCode, s.city as city, s.type as type ";
+            String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
+                    " WHERE s.id IN {ids} ";
+
+            if(consumable_formations == null){
+                query += "RETURN s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
+                        "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
+                        "s.zipCode  as zipCode, s.city as city, s.type as type ";
+            }else{
+                query += "WITH s, " +
+                        "CASE WHEN u.level IN {consumable_formations} " +
+                        "THEN count(u) " +
+                        "ELSE 0 " +
+                        "END as nbr_students " +
+                        "RETURN s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
+                        "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
+                        "s.zipCode  as zipCode, s.city as city, s.type as type, sum(nbr_students)*2 AS minimum_licences_consumables;";
+            }
 
             Neo4j.getInstance().execute(query,
-                    new JsonObject().put("ids", ids),
+                    new JsonObject().put("ids", ids).put("consumable_formations", consumable_formations),
                     Neo4jResult.validResultHandler(handler));
         }catch (VertxException e){
-            getStructureById(ids,handler);
+            getStructureById(ids, null, handler);
         }
     }
 
@@ -92,6 +117,13 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
                 "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;";
         neo4j.execute(query, new JsonObject().put("ids", structureIds), Neo4jResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getConsumableFormation(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT label" +
+                " FROM " + Crre.crreSchema + ".consumable_formation";
+        sql.raw(query, SqlResult.validResultHandler(handler));
     }
 
     public void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler) {
@@ -223,9 +255,24 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler) {
+    public void updateAmountLicence(String idStructure, String operation, Integer licences,
+                                    Handler<Either<String, JsonObject>> handler) {
         String updateQuery = "UPDATE  " + Crre.crreSchema + ".licences " +
                 "SET amount = amount " +  operation + " ?  " +
+                "WHERE id_structure = ? ;";
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(licences)
+                .add(idStructure);
+
+        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void updateAmountConsumableLicence(String idStructure, String operation, Integer licences,
+                                              Handler<Either<String, JsonObject>> handler) {
+        String updateQuery = "UPDATE  " + Crre.crreSchema + ".licences " +
+                "SET consumable_amount = consumable_amount " +  operation + " ?  " +
                 "WHERE id_structure = ? ;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()

@@ -16,6 +16,8 @@ export const purseEditFormController = ng.controller('purseEditFormController',
                 (purse.initial_amount - $scope.purses.selected[0].initial_amount);
             purse.licence_amount = $scope.purses.selected[0].licence_amount +
                 (purse.licence_initial_amount - $scope.purses.selected[0].licence_initial_amount);
+            purse.consumable_licence_amount = $scope.purses.selected[0].consumable_licence_amount +
+                (purse.consumable_licence_initial_amount - $scope.purses.selected[0].consumable_licence_initial_amount);
             purse.selected = false;
             $scope.purses.all = $scope.purses.all.filter(purse => { return purse.id != $scope.purses.selected[0].id });
             $scope.purses.push(purse);
@@ -25,9 +27,8 @@ export const purseEditFormController = ng.controller('purseEditFormController',
         };
 
         $scope.checkPurse = () => {
-            return ($scope.purses.selected[0].licence_initial_amount && !$scope.purses.selected[0].initial_amount && !$scope.purse.licence_initial_amount) ||
-            ($scope.purses.selected[0].initial_amount && !$scope.purses.selected[0].licence_initial_amount && !$scope.purse.initial_amount) ||
-            ($scope.purses.selected[0].initial_amount && $scope.purses.selected[0].licence_initial_amount &&
-                !$scope.purse.initial_amount && !$scope.purse.licence_initial_amount);
+            return ($scope.purses.selected[0].initial_amount && !$scope.purse.initial_amount) ||
+                ($scope.purses.selected[0].licence_initial_amount && !$scope.purse.licence_initial_amount) ||
+                ($scope.purses.selected[0].consumable_licence_initial_amount && !$scope.purse.consumable_licence_initial_amount);
         }
     }]);

@@ -19,7 +19,7 @@
                         <i class="info-circle" style="margin-right: 10px;"></i>
                         <span class="font19"><i18n>crre.campaign.detail</i18n></span>
                     </label>
-                    <div class="small-text" style="padding-top: 10px;"><i18n class="bold-font-weight">crre.type.campaign</i18n> : <span ng-bind="lang.translate(campaign.type_name)"></span></div>
+                    <div class="small-text" ng-if="campaign.type_name" style="padding-top: 10px;"><i18n class="bold-font-weight">crre.type.campaign</i18n> : <span ng-bind="lang.translate(campaign.type_name)"></span></div>
                     <div class="small-text"><i18n class="bold-font-weight">crre.purses</i18n> : <span ng-bind="lang.translate(campaign.use_credit)"></span></div>
                     <div class="small-text"><i18n class="bold-font-weight">crre.reassort</i18n> : <span ng-bind="lang.translate(campaign.reassort)"></span></div>
                     <div ng-if="!!campaign.catalog" class="small-text"><i18n class="bold-font-weight">crre.catalog</i18n> : <span ng-bind="lang.translate(campaign.catalog)"></span></div>

@@ -38,7 +38,7 @@ public class CampaignController extends ControllerHelper {
     @Override
     public void list(final HttpServerRequest  request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if(! (WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()))){
+            if(!(WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()))){
                 String idStructure = request.params().contains("idStructure")
                         ? request.params().get("idStructure")
                         : null;

@@ -56,9 +56,9 @@
                         </div>
                         <div class="image-container">
                             <img ng-src="[[equipment.urlcouverture]]"
-                                 ng-show="equipment.urlcouverture!==null && equipment.urlcouverture!==undefined" alt=""/>
+                                 ng-show="equipment.urlcouverture" alt=""/>
                             <img skin-src="/img/illustrations/pages-default.png"
-                                 ng-show="equipment.urlcouverture===null || equipment.urlcouverture===undefined" alt=""/>
+                                 ng-show="!equipment.urlcouverture" alt=""/>
                         </div>
                         <div>
                             <strong class="ellipsis" tooltip="[[equipment.titre]]">[[equipment.titre]]</strong>
