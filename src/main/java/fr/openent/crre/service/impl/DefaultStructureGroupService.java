@@ -30,7 +30,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
 
     public DefaultStructureGroupService(String schema, String table){
         super(schema, table);
-        this.structureService = new DefaultStructureService( Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
     @Override
@@ -80,31 +80,13 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
     }
 
     private void getStudentsByStructures(JsonArray structures) {
-        Future<JsonArray> getStudentsByStructureFuture = Future.future();
-        Future<JsonArray> insertStructuresFuture = Future.future();
-        CompositeFuture.all(getStudentsByStructureFuture, insertStructuresFuture).setHandler(event -> {
-            if (event.succeeded()) {
-                JsonArray students = getStudentsByStructureFuture.result();
-                structureService.insertStudents(students, result -> {
-                    if(result.isRight()) {
-                        structureService.getTotalStructure(total_structure -> {
-                            JsonArray total = total_structure.right().getValue();
-                            structureService.insertTotalStructure(total, event2 -> {
-                                if(event2.isRight()) {
-                                    LOGGER.info("Insert total success");
-                                } else {
-                                    LOGGER.error("Failed to insert");
-                                }
-                            });
-                        });
-                    }
-                });
+        structureService.insertStudentsInfos(structures, event -> {
+            if(event.isRight()) {
+                LOGGER.info("Insert total success");
             } else {
-                LOGGER.error("Failed to get students or insert into structure");
+                LOGGER.error("Failed to insert : " + event.left());
             }
         });
-        structureService.insertStructures(structures, handlerJsonArray(insertStructuresFuture));
-        structureService.getStudentsByStructure(structures, handlerJsonArray(getStudentsByStructureFuture));
     }
 
     private void setAllAndNewIds(JsonArray idsStructures, JsonArray allIds, JsonArray newIds, Either<String, JsonArray> event2) {

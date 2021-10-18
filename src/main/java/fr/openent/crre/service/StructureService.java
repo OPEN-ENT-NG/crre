@@ -26,13 +26,15 @@ public interface StructureService {
 
     void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler);
 
+    JsonObject getNumberStudentsConsumableFormations(JsonArray students, JsonArray consumableFormations);
+
     void getConsumableFormation(Handler<Either<String, JsonArray>> handler);
 
     void getTotalStructure(Handler<Either<String, JsonArray>> handler);
 
     void getAllStructure(Handler<Either<String, JsonArray>> handler);
 
-    void insertTotalStructure(JsonArray total, Handler<Either<String, JsonObject>> handler);
+    void insertTotalStructure(JsonArray total, JsonObject consumableFormationsStudents, Handler<Either<String, JsonObject>> handler);
 
     void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler);
 
@@ -51,4 +53,6 @@ public interface StructureService {
     void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;
 
     void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler);
+
+    void insertStudentsInfos(JsonArray ids, Handler<Either<String, JsonObject>> eitherHandler);
 }

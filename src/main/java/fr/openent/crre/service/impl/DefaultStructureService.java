@@ -3,6 +3,8 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonArray;
@@ -15,6 +17,8 @@ import org.entcore.common.sql.SqlResult;
 
 import java.text.ParseException;
 import java.util.List;
+
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 
 /**
  * Created by agnes.lapeyronnie on 09/01/2018.
@@ -113,6 +117,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     Neo4jResult.validResultHandler(handler));
     }
 
+    @Override
     public void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
                 "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;";
@@ -126,6 +131,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         sql.raw(query, SqlResult.validResultHandler(handler));
     }
 
+    @Override
     public void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler) {
         String query = "INSERT INTO " + Crre.crreSchema + ".students(id_structure) VALUES ";
         JsonArray params = new JsonArray();
@@ -139,23 +145,33 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
-    public void insertTotalStructure(JsonArray total, Handler<Either<String, JsonObject>> handler) {
-        String query = "INSERT INTO " + Crre.crreSchema + ".licences(id_structure, initial_amount, amount) VALUES";
+    @Override
+    public void insertTotalStructure(JsonArray total, JsonObject consumableFormationsStudents,
+                                     Handler<Either<String, JsonObject>> handler) {
+        String query = "INSERT INTO " + Crre.crreSchema + ".licences" +
+                "(id_structure, initial_amount, amount, consumable_initial_amount, consumable_amount) VALUES";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < total.size(); i++) {
             JsonObject structure_total = total.getJsonObject(i);
-            query += i < total.size() - 1 ? "(?, ?, ?), " : "(?, ?, ?) ";
+            query += i < total.size() - 1 ? "(?, ?, ?, ?, ?), " : "(?, ?, ?, ?, ?) ";
             int total_licence;
+            int total_licence_consumable = 0;
             if(structure_total.getBoolean("pro")) {
-                total_licence = structure_total.getInteger("Seconde") * 3 + structure_total.getInteger("Premiere") * 3 + structure_total.getInteger("Terminale") * 3;
+                total_licence = structure_total.getInteger("Seconde") * 3 +
+                        structure_total.getInteger("Premiere") * 3 + structure_total.getInteger("Terminale") * 3;
             } else {
-                total_licence = structure_total.getInteger("Seconde") * 9 + structure_total.getInteger("Premiere") * 8 + structure_total.getInteger("Terminale") * 7;
+                total_licence = structure_total.getInteger("Seconde") * 9 +
+                        structure_total.getInteger("Premiere") * 8 + structure_total.getInteger("Terminale") * 7;
             }
-            params.add(structure_total.getString("id_structure")).add(total_licence).add(total_licence);
+            if(consumableFormationsStudents.containsKey(structure_total.getString("id_structure"))){
+                total_licence_consumable = consumableFormationsStudents.getInteger(structure_total.getString("id_structure")) * 2;
+            }
+            params.add(structure_total.getString("id_structure"))
+                    .add(total_licence).add(total_licence).add(total_licence_consumable).add(total_licence_consumable);
         }
         query += "ON CONFLICT (id_structure) DO UPDATE " +
-                "SET initial_amount = excluded.initial_amount," +
-                "amount = excluded.amount";
+                "SET initial_amount = excluded.initial_amount, amount = excluded.amount," +
+                "consumable_initial_amount = excluded.consumable_amount, consumable_amount = excluded.consumable_amount";
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
@@ -217,6 +233,24 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         }
     }
 
+    @Override
+    public JsonObject getNumberStudentsConsumableFormations(JsonArray students, JsonArray consumableFormations) {
+        JsonObject consumableFormationsStudentsPerStructures = new JsonObject();
+        for (int i = 0; i < students.size(); i++) {
+            JsonObject j = students.getJsonObject(i);
+            String s = j.getString("s.id");
+            Integer count = j.getInteger("count(u)");
+            if(j.getString("u.level") != null && consumableFormations.contains(j.getString("u.level"))) {
+                if(consumableFormationsStudentsPerStructures.containsKey(s)){
+                    count += consumableFormationsStudentsPerStructures.getInteger(s);
+                }
+                consumableFormationsStudentsPerStructures.put(s,count);
+            }
+        }
+        return consumableFormationsStudentsPerStructures;
+    }
+
+    @Override
     public void getTotalStructure(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT \"Premiere\", \"Terminale\", \"Seconde\", id_structure, pro" +
                 " FROM " + Crre.crreSchema + ".students";
@@ -282,6 +316,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
     }
 
+    @Override
     public void getAllStructure(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT id_structure FROM " + Crre.crreSchema + ".rel_group_structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
@@ -308,8 +343,50 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
+    @Override
     public void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT id_structure, public, mixte, catalog FROM " + Crre.crreSchema + ".structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void insertStudentsInfos(JsonArray ids, Handler<Either<String, JsonObject>> eitherHandler) {
+        Future<JsonArray> getStudentsByStructureFuture = Future.future();
+        Future<JsonArray> insertStructuresFuture = Future.future();
+
+        CompositeFuture.all(getStudentsByStructureFuture, insertStructuresFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                JsonArray students = getStudentsByStructureFuture.result();
+                insertStudents(students, result -> {
+                    if (result.isRight()) {
+                        getConsumableFormation(formations -> {
+                            if(formations.isRight()) {
+                                JsonArray consumable_formations = formations.right().getValue();
+                                JsonObject consumableFormationsStudents =
+                                        getNumberStudentsConsumableFormations(students,consumable_formations);
+                                getTotalStructure(total_structure -> {
+                                    JsonArray total = total_structure.right().getValue();
+                                    insertTotalStructure(total, consumableFormationsStudents, event2 -> {
+                                        if (event2.isRight()) {
+                                            eitherHandler.handle(new Either.Right<>(event2.right().getValue()));
+                                        } else {
+                                            eitherHandler.handle(new Either.Left<>("Failed to insert : " + event2.left()));
+                                        }
+                                    });
+                                });
+                            }else {
+                                eitherHandler.handle(new Either.Left<>("Failed to get all consumables formations : " + formations.left()));
+                            }
+                        });
+                    } else {
+                        eitherHandler.handle(new Either.Left<>("Failed to get students or insert into structure : " + result.left()));
+                    }
+                });
+            } else {
+                eitherHandler.handle(new Either.Left<>("Failed to get students or insert into structure : " + event.cause()));
+            }
+        });
+        insertStructures(ids, handlerJsonArray(insertStructuresFuture));
+        getStudentsByStructure(ids, handlerJsonArray(getStudentsByStructureFuture));
     }
 }
