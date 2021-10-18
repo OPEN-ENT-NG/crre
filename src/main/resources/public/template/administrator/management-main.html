@@ -7,6 +7,8 @@
         <li><a href="#/structureGroups"><i18n>crre.structureGroups.management</i18n></a></li>
         <li><a href="#/purses"><i18n>crre.purses</i18n></a></li>
         <li workflow="crre.administrator"><a href="#/logs"><i18n>crre.logs</i18n></a></li>
+        <li workflow="crre.administrator"><a href="#/statistics"><i18n>crre.statistics</i18n></a></li>
+
     </ul>
 </nav>
 
@@ -36,6 +38,10 @@
     <header class="horizontal-spacing" ng-class="{selected:selectedType == '/logs'}" ng-click="redirectTo('/logs')"
             workflow="crre.administrator">
         <i18n>crre.logs</i18n>
+    </header>
+    <header class="horizontal-spacing" ng-class="{selected:selectedType == '/statistics'}" ng-click="redirectTo('/statistics')"
+            workflow="crre.administrator">
+        <i18n>crre.statistics</i18n>
     </header>
 </div>
 <div class="loading-bar" ng-class="{loading: loadingArray}"></div>

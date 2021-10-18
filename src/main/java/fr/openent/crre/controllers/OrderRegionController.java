@@ -53,6 +53,7 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class OrderRegionController extends BaseController {
 
@@ -61,7 +62,7 @@ public class OrderRegionController extends BaseController {
     private final PurseService purseService;
     private final StructureService structureService;
     private final QuoteService quoteService;
-    private final DefaultStatisticsService statisticsService;
+    private final StatisticsService statisticsService;
     private final EmailSendService emailSender;
     private final JsonObject mail;
     private static final Logger LOGGER = LoggerFactory.getLogger (DefaultOrderService.class);
@@ -510,6 +511,74 @@ public class OrderRegionController extends BaseController {
         });
     }
 
+    @Get("region/statistics")
+    @ApiDoc("Get statistics")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void getStatistics (final HttpServerRequest request){
+        HashMap<String, ArrayList<String>> params = new HashMap<>();
+        if (request.params().contains("year")) {
+            params.put("year", new ArrayList<>(request.params().getAll("year")));
+        }
+        if (request.params().contains("catalog")) {
+            params.put("catalog", new ArrayList<>(request.params().getAll("catalog")));
+        }
+        if (request.params().contains("public")) {
+            params.put("public", new ArrayList<>(request.params().getAll("public")));
+        }
+        if (request.params().contains("reassort")) {
+            params.put("reassort", new ArrayList<>(request.params().getAll("reassort")));
+        }
+
+        List<Future> futures = new ArrayList<>();
+        Future<JsonObject> getNumericRessourcesFuture = Future.future();
+        Future<JsonObject> getPaperRessourcesFuture = Future.future();
+        Future<JsonObject> getRessourcesFuture = Future.future();
+        Future<JsonObject> getOrdersFuture = Future.future();
+        Future<JsonObject> getLicencesFuture = Future.future();
+        Future<JsonObject> getStructuresMoreOneOrderFuture = Future.future();
+        Future<JsonObject> getAllStructuresFuture = Future.future();
+        futures.add(getNumericRessourcesFuture);
+        futures.add(getPaperRessourcesFuture);
+        futures.add(getRessourcesFuture);
+        futures.add(getOrdersFuture);
+        futures.add(getLicencesFuture);
+        futures.add(getStructuresMoreOneOrderFuture);
+        futures.add(getAllStructuresFuture);
+
+        CompositeFuture.all(futures).setHandler(event -> {
+                    if (event.succeeded()) {
+                        JsonObject allNumericRessources = new JsonObject().put("allNumericRessources", getNumericRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch"));
+                        JsonObject allPaperRessources = new JsonObject().put("allPaperRessources", getPaperRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch"));
+                        JsonObject ressources = new JsonObject().put("ressources", getRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch").getJsonObject(0).getDouble("total"));
+                        JsonObject orders = new JsonObject().put("orders", getOrdersFuture.result().getJsonObject("cursor").getJsonArray("firstBatch").getJsonObject(0).getInteger("total"));
+                        JsonObject licencesResult = getLicencesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch").getJsonObject(0);
+                        JsonArray structuresMoreOneOrderResult = getStructuresMoreOneOrderFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
+                        JsonArray structuresResult = getAllStructuresFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
+
+                        JsonObject concatStats = allNumericRessources.mergeIn(allPaperRessources).mergeIn(ressources).mergeIn(orders).mergeIn(new JsonObject().put("licences", licencesResult))
+                                .mergeIn(new JsonObject().put("structuresMoreOneOrder", structuresMoreOneOrderResult))
+                                .mergeIn(new JsonObject().put("structures", structuresResult));
+                        JsonArray stats = new JsonArray().add(concatStats);
+                        renderJson(request, stats);
+                        log.info("ok");
+                    }
+
+                });
+
+        statisticsService.getOrdersCompute("numeric_ressources", params, true, handlerJsonObject(getNumericRessourcesFuture));
+        statisticsService.getOrdersCompute("paper_ressources", params, true, handlerJsonObject(getPaperRessourcesFuture));
+        statisticsService.getOrdersCompute("ressources_total", params, false, handlerJsonObject(getRessourcesFuture));
+        statisticsService.getOrdersCompute("order_year", params, false, handlerJsonObject(getOrdersFuture));
+
+        statisticsService.getLicencesCompute(params, handlerJsonObject(getLicencesFuture));
+
+        statisticsService.getStructureCompute(params, true, handlerJsonObject(getStructuresMoreOneOrderFuture));
+        statisticsService.getStructureCompute(params, false, handlerJsonObject(getAllStructuresFuture));
+
+
+    }
+
     @Get("region/orders/mongo")
     @ApiDoc("Generate and send mail to library")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -526,56 +595,68 @@ public class OrderRegionController extends BaseController {
                     // All compute with structure object
                     structure.put("date", LocalDate.now().toString());
                     List<Future> futuresStat = new ArrayList<>();
+                    Future<JsonArray> licencesFuture = Future.future();
                     Future<JsonArray> freeLicenceFuture = Future.future();
                     Future<JsonArray> totalRessourcesFuture = Future.future();
                     Future<JsonArray> ordersByYearFuture = Future.future();
                     Future<JsonArray> ordersByCampaignFuture = Future.future();
-                    Future<JsonArray> ordersReassortFuture = Future.future();
-                    Future<JsonArray> allRessourcesFuture = Future.future();
                     Future<JsonArray> numeriqueRessourceFuture = Future.future();
                     Future<JsonArray> papierRessourceFuture = Future.future();
+                    futuresStat.add(licencesFuture);
                     futuresStat.add(freeLicenceFuture);
                     futuresStat.add(ordersByCampaignFuture);
                     futuresStat.add(ordersByYearFuture);
                     futuresStat.add(totalRessourcesFuture);
-                    futuresStat.add(ordersReassortFuture);
-                    futuresStat.add(allRessourcesFuture);
                     futuresStat.add(numeriqueRessourceFuture);
                     futuresStat.add(papierRessourceFuture);
 
                     CompositeFuture.all(futuresStat).setHandler(event2 -> {
                         if (event2.succeeded()) {
+                            JsonArray licences = licencesFuture.result();
                             JsonArray free_total = freeLicenceFuture.result();
                             JsonArray ressources_total = totalRessourcesFuture.result();
                             JsonArray order_year = ordersByYearFuture.result();
                             JsonArray order_campaign = ordersByCampaignFuture.result();
-                            JsonArray order_reassort = ordersReassortFuture.result();
-                            JsonArray all_ressources = allRessourcesFuture.result();
                             JsonArray numeric_ressources = numeriqueRessourceFuture.result();
                             JsonArray paper_ressources = papierRessourceFuture.result();
 
                             if(free_total.size() > 0 || ressources_total.size() > 0) {
                                 JsonObject stats = new JsonObject();
+                                // Every 30/04, add a new line in licences mongo db with new year
+                                if(LocalDate.now().getMonthValue() == 5 && LocalDate.now().getDayOfMonth() == 1) {
+                                    licences.add(licences.getJsonObject(0));
+                                }
+                                // Put a n+1 year if after 30/04
+                                if(LocalDate.now().getMonthValue() < 5) {
+                                    licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + "");
+                                } else {
+                                    licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + 1 + "");
+                                }
+                                double licencesPercentage = (licences.getJsonObject(licences.size() - 1).getInteger("amount") / licences.getJsonObject(0).getInteger("initial_amount")) * 100;
+                                licences.getJsonObject(licences.size() - 1).put("percentage", 100 - licencesPercentage);
+                                stats.put("licences", licences);
                                 stats.put("free_total", free_total);
                                 stats.put("ressources_total", ressources_total);
                                 stats.put("order_year", order_year);
                                 stats.put("order_campaign", order_campaign);
-                                stats.put("order_reassort", order_reassort);
-                                stats.put("all_ressources", all_ressources);
                                 stats.put("numeric_ressources", numeric_ressources);
                                 stats.put("paper_ressources", paper_ressources);
-                                structure.put("stats", stats);
+                            }
+                                String JSON_DATA = "{ \"licences\":[ { \"amount\":5000, \"initial_amount\":10000, \"year\":\"2021\", \"percentage\":50 }, { \"amount\":2000, \"initial_amount\":10000, \"year\":\"2020\", \"percentage\":20 }, { \"amount\":3000, \"initial_amount\":10000, \"year\":\"2019\", \"percentage\":30 } ], \"free_total\":[ { \"total\":150, \"reassort\":false, \"year\":\"2021\" }, { \"total\":200, \"reassort\":false, \"year\":\"2020\" }, { \"total\":175, \"reassort\":false, \"year\":\"2019\" }, { \"total\":15, \"reassort\":true, \"year\":\"2021\" }, { \"total\":20, \"reassort\":true, \"year\":\"2020\" }, { \"total\":17, \"reassort\":true, \"year\":\"2019\" } ], \"ressources_total\":[ { \"total\":200000, \"reassort\":false, \"year\":\"2021\" }, { \"total\":250000, \"reassort\":false, \"year\":\"2020\" }, { \"total\":225000, \"reassort\":false, \"year\":\"2019\" }, { \"total\":2000, \"reassort\":true, \"year\":\"2021\" }, { \"total\":2500, \"reassort\":true, \"year\":\"2020\" }, { \"total\":2250, \"reassort\":true, \"year\":\"2019\" } ], \"order_year\":[ { \"total\":1000, \"reassort\":false, \"year\":\"2021\" }, { \"total\":1500, \"reassort\":false, \"year\":\"2020\" }, { \"total\":1250, \"reassort\":false, \"year\":\"2019\" }, { \"total\":100, \"reassort\":true, \"year\":\"2021\" }, { \"total\":150, \"reassort\":true, \"year\":\"2020\" }, { \"total\":125, \"reassort\":true, \"year\":\"2019\" } ], \"order_campaign\":[ { \"name\":\"Campagne papier\", \"id\":2, \"total\":750 }, { \"name\":\"Campagne numérique\", \"id\":1, \"total\":250 } ], \"numeric_ressources\":[ { \"total\":1500, \"reassort\":false, \"year\":\"2021\" }, { \"total\":2000, \"reassort\":false, \"year\":\"2020\" }, { \"total\":1750, \"reassort\":false, \"year\":\"2019\" }, { \"total\":150, \"reassort\":true, \"year\":\"2021\" }, { \"total\":200, \"reassort\":true, \"year\":\"2020\" }, { \"total\":175, \"reassort\":true, \"year\":\"2019\" } ], \"paper_ressources\":[ { \"total\":500, \"reassort\":false, \"year\":\"2021\" }, { \"total\":1000, \"reassort\":false, \"year\":\"2020\" }, { \"total\":750, \"reassort\":false, \"year\":\"2019\" }, { \"total\":50, \"reassort\":true, \"year\":\"2021\" }, { \"total\":100, \"reassort\":true, \"year\":\"2020\" }, { \"total\":75, \"reassort\":true, \"year\":\"2019\" } ] }";
+                                JsonObject statss = new JsonObject(JSON_DATA);
+                                structure.put("stats", statss);
                                 statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
                             }
-
-                        }
                     });
+
+                    // Licences
+
+                    statisticsService.getLicences(structure.getString("id_structure"), handlerJsonArray(licencesFuture));
 
                     // Commandes
 
                     statisticsService.getOrdersByYear(structure.getString("id_structure"), handlerJsonArray(ordersByYearFuture));
                     statisticsService.getOrdersByCampaign(structure.getString("id_structure"), handlerJsonArray(ordersByCampaignFuture));
-                    statisticsService.getOrdersReassort(structure.getString("id_structure"), handlerJsonArray(ordersReassortFuture));
 
                     // Licences
 
@@ -587,7 +668,6 @@ public class OrderRegionController extends BaseController {
 
                     // Ressources
 
-                    statisticsService.getRessources(structure.getString("id_structure"), null, handlerJsonArray(allRessourcesFuture));
                     statisticsService.getRessources(structure.getString("id_structure"), "articlenumerique", handlerJsonArray(numeriqueRessourceFuture));
                     statisticsService.getRessources(structure.getString("id_structure"), "articlepapier", handlerJsonArray(papierRessourceFuture));
 
@@ -599,6 +679,17 @@ public class OrderRegionController extends BaseController {
                 });
             }
         });
+    }
+
+    @Get("/region/statistics/years")
+    @ApiDoc("get all years from statistics ")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void getAllYears(HttpServerRequest request) {
+            statisticsService.getAllYears(event -> {
+                JsonArray yearsResult = event.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch");
+                renderJson(request, yearsResult);
+            });
     }
 
     private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3,

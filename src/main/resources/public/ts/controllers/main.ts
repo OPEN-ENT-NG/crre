@@ -20,6 +20,7 @@ import {
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
 import http from "axios";
+import {Statistics} from "../model/Statistics";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -43,6 +44,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.users = [];
         $scope.filters = new Filters();
         $scope.student = new Student();
+        $scope.stats = new Statistics();
         $scope.total_licence = 0;
         $scope.loadingArray = false;
         $scope.query = {
@@ -76,6 +78,22 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await template.open('administrator-main', 'administrator/log/view-logs');
                 await $scope.logs.loadPage($scope.current.page);
                 $scope.loadingArray = false;
+                Utils.safeApply($scope);
+            },
+            viewStats: async () => {
+                // Init the stat for the current year and reassort as false
+                let filterYear = new Filter();
+                filterYear.name = "year";
+                filterYear.value = new Date().getFullYear().toString();
+                let filterReassort = new Filter();
+                filterReassort.name = "reassort";
+                filterReassort.value = "false";
+                $scope.filters.all.push(filterYear);
+                $scope.filters.all.push(filterReassort);
+                await $scope.stats.get($scope.filters);
+                Utils.safeApply($scope);
+                template.open('main-profile', 'administrator/management-main');
+                await template.open('administrator-main', 'administrator/stats/view-stats');
                 Utils.safeApply($scope);
             },
             manageCampaigns: async () => {

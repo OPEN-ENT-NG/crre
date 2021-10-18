@@ -23,6 +23,7 @@
   "crre.remainder": "Reste",
   "crre.contracts": "Marchés",
   "crre.logs": "Logs",
+  "crre.statistics": "Statistiques",
   "crre.orders.validations.waiting": "Traiter les demandes en attente",
   "crre.orders.validate.historic": "Historique des demandes",
   "crre.order": "Bon de commande",
@@ -624,6 +625,7 @@
   "crre.number.student.april": "Nombre d'élèves au 30/04 : ",
   "crre.number.student.next.year": "Nombre d'élèves pour l'année n+1 : ",
   "crre.number.student.calcul": "Nombre de licences calculé à partir du nombre d'élèves (9 licences/élève de 2nde - 8 licences/élève de 1ère - 7 licences/élève pour les terminales) : ",
+  "crre.year": "Année",
   "crre.numeric": "Numérique",
   "Elève": "Licences élèves gratuites",
   "Enseignant": "Licences enseignantes gratuites",
@@ -713,5 +715,15 @@
   "crre.catalog.type" : "Type de catalogue",
   "crre.tag.reassort.auto" : "Toutes les références commandées dans cette campagne seront automatiquement taguées réassort",
   "crre.total.licences" : "Total en licences",
-  "crre.total.credits" : "Total en €"
+  "crre.total.credits" : "Total en €",
+  "crre.stat.consumed.licences" : "Licences consommées",
+  "crre.stat.total.licences" : "Licences totales",
+  "crre.stat.ordered.ressources" : "de ressources commandées",
+  "crre.stat.ordered" : "commandes passées",
+  "crre.stat.structures" : "etablissements",
+  "crre.stat.ressources.all" : "ressources total",
+  "crre.stat.ressources.paper" : "ressources papier",
+  "crre.stat.ressources.numeric" : "ressources numérique",
+  "crre.stat.public" : "Publics",
+  "crre.stat.prive" : "Privés"
 }

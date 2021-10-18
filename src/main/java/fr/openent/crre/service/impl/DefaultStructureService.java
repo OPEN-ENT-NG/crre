@@ -345,7 +345,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     @Override
     public void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT id_structure, public, mixte, catalog FROM " + Crre.crreSchema + ".structure";
+        String query = "SELECT DISTINCT id_structure, name, uai, public, mixte, catalog FROM " + Crre.crreSchema + ".structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
     }
 

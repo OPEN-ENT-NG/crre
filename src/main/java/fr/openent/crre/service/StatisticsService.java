@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public interface StatisticsService {
@@ -23,5 +25,13 @@ public interface StatisticsService {
 
     void getOrdersByCampaign(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
 
-    void getOrdersReassort(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
+    void getLicences(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
+
+    void getOrdersCompute(String ressources, HashMap<String, ArrayList<String>> params, boolean publicField, Handler<Either<String, JsonObject>> handlerJsonObject);
+
+    void getLicencesCompute(HashMap<String, ArrayList<String>> params, Handler<Either<String, JsonObject>> handlerJsonObject);
+
+    void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, Handler<Either<String, JsonObject>> handlerJsonObject);
+
+    void getAllYears(Handler<Either<String, JsonObject>> handlerJsonObject);
 }

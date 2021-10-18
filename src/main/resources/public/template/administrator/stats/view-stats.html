@@ -1,0 +1,130 @@
+<div class="log-view" ng-controller="statsController">
+    <div class="loading-bar" ng-class="{loading: loadingArrayLogs}"></div>
+    <div ng-show="loadingArrayLogs">
+        <h1>
+            <i18n>crre.loading</i18n>
+        </h1>
+    </div>
+
+    <div ng-show="!loadingArrayLogs" class="row">
+        <h1 class="cell">
+            <i18n>crre.statistics</i18n>
+        </h1>
+        <div class="right-magnet twelve-mobile">
+            <button ng-click="logs.export()" class="twelve-mobile">
+                <i18n>crre.logs.csv.export</i18n>
+            </button>
+        </div>
+    </div>
+    <div class="twelve margin-bottom-20">
+        <multi-combo title="[[lang.translate('crre.year')]]"
+                     combo-model="years"
+                     search-on="name" order-by=""
+                     labels="comboLabels" filtered-model="filterChoice.years"
+                     max-selected="1"
+                     selection-event="getFilter()"
+                     class="inline-block four-small horizontal-spacing no-border">
+        </multi-combo>
+        <multi-combo title="[[lang.translate('public')]]"
+                     combo-model="schoolType"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.schoolType"
+                     max-selected="2"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     class="inline-block four-small horizontal-spacing no-border">
+        </multi-combo>
+        <multi-combo title="[[lang.translate('docsType')]]"
+                     combo-model="docsType"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.docsType"
+                     max-selected="2"
+                     selection-event="getFilter()"
+                     deselection-event="getFilter()"
+                     class="inline-block four-small horizontal-spacing no-border">
+        </multi-combo>
+        <multi-combo title="[[lang.translate('crre.reassort')]]"
+                     combo-model="reassorts"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.reassorts"
+                     max-selected="1"
+                     selection-event="getFilter()"
+                     class="inline-block four-small horizontal-spacing no-border">
+        </multi-combo>
+    </div>
+
+    <div class="twelve flex-cards">
+        <div class="cards">
+            <span class="bold-font-weight red-text">[[stats.licences.amount]]</span>
+            <br>
+            <span class="red-text"><i18n>crre.stat.consumed.licences</i18n></span>
+            <br>
+            <span class="bold-font-weight"> / [[stats.licences.initial_amount]]</span>
+            <br>
+            <span><i18n>crre.stat.total.licences</i18n></span>
+        </div>
+        <div class="cards">
+            <span class="bold-font-weight">[[stats.ressources]] €</span>
+            <br>
+            <span><i18n>crre.stat.ordered.ressources</i18n></span>
+        </div>
+        <div class="cards">
+            <span class="bold-font-weight">[[stats.orders]]</span>
+            <br>
+            <span><i18n>crre.stat.ordered</i18n></span>
+        </div>
+        <div class="cards">
+            <span class="red-text bold-font-weight" ng-bind="computeAllEtabMoreThanOneOrder()"> </span>
+            <span class="red-text"><i18n>crre.stat.structures</i18n></span>
+            <br>
+            <span class="bold-font-weight"> / </span>
+            <span class="bold-font-weight" ng-bind="computeAllEtab()"> </span>
+            <br>
+            <span><i18n>crre.stat.structures</i18n></span>
+        </div>
+        <div ng-if="isPublic('Public')" class="cards bold-font-weight">
+            <span><i18n>crre.stat.public</i18n></span>
+            <br>
+            <span class="red-text" ng-bind="getPublic(stats.structuresMoreOneOrder, 'Public')"> </span>
+            <span> / </span>
+            <span ng-bind="getPublic(stats.structures, 'Public')"> </span>
+        </div>
+        <div ng-if="isPublic('Public')" class="cards">
+            <span class="bold-font-weight" ng-bind="getPublic(stats.allPaperRessources, 'Public')"> </span>
+            <br>
+            <span><i18n>crre.stat.ressources.paper</i18n></span>
+        </div>
+        <div ng-if="isPublic('Public')" class="cards">
+            <span class="bold-font-weight" ng-bind="getPublic(stats.allNumericRessources, 'Public')"> </span>
+            <br>
+            <span><i18n>crre.stat.ressources.numeric</i18n></span>
+        </div>
+        <div ng-if="isPublic('Public')" class="cards">
+            <span class="bold-font-weight" ng-bind="computeAllRessources('Public')"></span>
+            <br>
+            <span><i18n>crre.stat.ressources.all</i18n></span>
+        </div>
+        <div ng-if="isPublic('Privé')" class="cards bold-font-weight">
+            <span><i18n>crre.stat.prive</i18n></span>
+            <br>
+            <span class="red-text" ng-bind="getPublic(stats.structuresMoreOneOrder, 'Privé')"> </span>
+            <span> / </span>
+            <span ng-bind="getPublic(stats.structures, 'Privé')"> </span>
+        </div>
+        <div ng-if="isPublic('Privé')" class="cards">
+            <span class="bold-font-weight" ng-bind="getPublic(stats.allPaperRessources, 'Privé')"></span>
+            <br>
+            <span><i18n>crre.stat.ressources.paper</i18n></span>
+        </div>
+        <div ng-if="isPublic('Privé')" class="cards">
+            <span class="bold-font-weight" ng-bind="getPublic(stats.allNumericRessources, 'Privé')"> </span>
+            <br>
+            <span><i18n>crre.stat.ressources.numeric</i18n></span>
+        </div>
+        <div ng-if="isPublic('Privé')" class="cards">
+            <span class="bold-font-weight" ng-bind="computeAllRessources('Privé')"></span>
+            <br>
+            <span><i18n>crre.stat.ressources.all</i18n></span>
+        </div>
+    </div>
+</div>

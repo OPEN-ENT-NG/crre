@@ -62,16 +62,12 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                     Future<JsonArray> totalRessourcesFuture = Future.future();
                     Future<JsonArray> ordersByYearFuture = Future.future();
                     Future<JsonArray> ordersByCampaignFuture = Future.future();
-                    Future<JsonArray> ordersReassortFuture = Future.future();
-                    Future<JsonArray> allRessourcesFuture = Future.future();
                     Future<JsonArray> numeriqueRessourceFuture = Future.future();
                     Future<JsonArray> papierRessourceFuture = Future.future();
                     futuresStat.add(freeLicenceFuture);
                     futuresStat.add(ordersByCampaignFuture);
                     futuresStat.add(ordersByYearFuture);
                     futuresStat.add(totalRessourcesFuture);
-                    futuresStat.add(ordersReassortFuture);
-                    futuresStat.add(allRessourcesFuture);
                     futuresStat.add(numeriqueRessourceFuture);
                     futuresStat.add(papierRessourceFuture);
 
@@ -81,8 +77,6 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                             JsonArray ressources_total = totalRessourcesFuture.result();
                             JsonArray order_year = ordersByYearFuture.result();
                             JsonArray order_campaign = ordersByCampaignFuture.result();
-                            JsonArray order_reassort = ordersReassortFuture.result();
-                            JsonArray all_ressources = allRessourcesFuture.result();
                             JsonArray numeric_ressources = numeriqueRessourceFuture.result();
                             JsonArray paper_ressources = papierRessourceFuture.result();
 
@@ -92,8 +86,6 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                                 stats.put("ressources_total", ressources_total);
                                 stats.put("order_year", order_year);
                                 stats.put("order_campaign", order_campaign);
-                                stats.put("order_reassort", order_reassort);
-                                stats.put("all_ressources", all_ressources);
                                 stats.put("numeric_ressources", numeric_ressources);
                                 stats.put("paper_ressources", paper_ressources);
                                 structure.put("stats", stats);
@@ -110,7 +102,6 @@ public class statistics extends ControllerHelper implements Handler<Long> {
 
                     statisticsService.getOrdersByYear(structure.getString("id_structure"), handlerJsonArray(ordersByYearFuture));
                     statisticsService.getOrdersByCampaign(structure.getString("id_structure"), handlerJsonArray(ordersByCampaignFuture));
-                    statisticsService.getOrdersReassort(structure.getString("id_structure"), handlerJsonArray(ordersReassortFuture));
 
                     // Licences
 
@@ -122,7 +113,6 @@ public class statistics extends ControllerHelper implements Handler<Long> {
 
                     // Ressources
 
-                    statisticsService.getRessources(structure.getString("id_structure"), null, handlerJsonArray(allRessourcesFuture));
                     statisticsService.getRessources(structure.getString("id_structure"), "articlenumerique", handlerJsonArray(numeriqueRessourceFuture));
                     statisticsService.getRessources(structure.getString("id_structure"), "articlepapier", handlerJsonArray(papierRessourceFuture));
 

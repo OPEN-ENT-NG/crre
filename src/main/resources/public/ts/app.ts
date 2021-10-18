@@ -34,6 +34,9 @@ routes.define(($routeProvider) => {
             .when('/logs', {
                 action: 'viewLogs'
             })
+            .when('/statistics', {
+                action: 'viewStats'
+            })
             .when('/structureGroups/create', {
                 action: 'createStructureGroup'
             })
