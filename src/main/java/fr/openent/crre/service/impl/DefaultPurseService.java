@@ -68,12 +68,15 @@ public class DefaultPurseService implements PurseService {
     }
 
     private String getQueryPursesAndLicences() {
-        return "SELECT purse.*, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
+        return "SELECT DISTINCT COALESCE(licences.id_structure, purse.id_structure, students.id_structure) AS id_structure, " +
+                "purse.amount, purse.initial_amount, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
                 "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
-                "licences.consumable_amount as consumable_licence_amount, licences.consumable_initial_amount as consumable_licence_initial_amount " +
-                "FROM " + Crre.crreSchema + ".purse " +
-                "INNER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
-                "INNER JOIN " + Crre.crreSchema + ".licences ON licences.id_structure = purse.id_structure ";
+                "licences.consumable_amount as consumable_licence_amount, " +
+                "licences.consumable_initial_amount as consumable_licence_initial_amount " +
+                "FROM " + Crre.crreSchema + ".licences " +
+                "INNER JOIN "+ Crre.crreSchema +".students ON students.id_structure = licences.id_structure " +
+                "FULL OUTER JOIN "+ Crre.crreSchema +".purse ON purse.id_structure = licences.id_structure " +
+                "WHERE purse.initial_amount IS NOT NULL OR licences.initial_amount <> 0 OR licences.consumable_initial_amount <> 0";
     }
 
     @Override

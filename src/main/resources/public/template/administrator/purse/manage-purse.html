@@ -36,7 +36,7 @@
             </tr>
             </thead>
             <tbody ng-repeat="purse in purses.all">
-            <tr>
+            <tr ng-if="purse.licence_initial_amount ||  purse.initial_amount || purse.consumable_licence_initial_amount">
                 <td class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="purse.selected"/>

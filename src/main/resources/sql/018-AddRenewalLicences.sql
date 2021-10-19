@@ -9120,5 +9120,6 @@ INSERT INTO crre."order-region-equipment-old" (id, amount, creation_date, modifi
 
 SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre.project', 'id')), (SELECT (count(*) + 1) FROM crre.project), FALSE);
 SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre."order-region-equipment-old"', 'id')), (SELECT (count(*) + 1) FROM crre."order-region-equipment-old"), FALSE);
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre.structure_group', 'id')), (SELECT (count(*) + 1) FROM crre."order-region-equipment-old"), FALSE);
 
 DELETE FROM crre."order-region-equipment" WHERE owner_id = 'renew2021-2022'

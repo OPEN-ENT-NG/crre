@@ -33,6 +33,7 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
@@ -119,7 +120,11 @@ public class PurseController extends ControllerHelper {
                             final JsonObject seconds, final JsonObject premieres, final JsonObject terminales, final String contentFile) {
         structureService.getConsumableFormation(formations -> {
             if(formations.isRight()) {
-                JsonArray consumable_formations = formations.right().getValue();
+                JsonArray res_consumable_formations = formations.right().getValue();
+                List<String> consumable_formations = res_consumable_formations
+                        .stream()
+                        .map((json) -> ((JsonObject)json).getString("label"))
+                        .collect(Collectors.toList());
                 structureService.getStructureByUAI(uais, consumable_formations, event -> {
                     if (event.isRight()) {
                         final JsonArray structures = event.right().getValue();
@@ -298,7 +303,11 @@ public class PurseController extends ControllerHelper {
                     }
                     structureService.getConsumableFormation(formations -> {
                         if(formations.isRight()) {
-                            JsonArray consumable_formations = formations.right().getValue();
+                            JsonArray res_consumable_formations = formations.right().getValue();
+                            List<String> consumable_formations = res_consumable_formations
+                                    .stream()
+                                    .map((json) -> ((JsonObject)json).getString("label"))
+                                    .collect(Collectors.toList());
                             retrieveStructuresData(ids, consumable_formations, purses, request);
                         } else {
                             renderErrorMessage(request, new Throwable(formations.left().getValue()));
@@ -320,12 +329,11 @@ public class PurseController extends ControllerHelper {
      * @param purses JsonArray containing purses list
      * @param request Http request
      */
-    private void retrieveStructuresData(JsonArray ids, JsonArray consumable_formations, final JsonArray purses,
+    private void retrieveStructuresData(JsonArray ids, List<String> consumable_formations, final JsonArray purses,
                                         final HttpServerRequest request) {
         structureService.getStructureById(ids, consumable_formations, event -> {
             if (event.isRight()) {
-                prepareDataPurses(purses, event);
-                Renders.renderJson(request, purses);
+                Renders.renderJson(request, prepareDataPurses(purses, event));
 
             } else {
                 renderError(request, new JsonObject().put("message",
@@ -344,8 +352,7 @@ public class PurseController extends ControllerHelper {
                               final HttpServerRequest request) {
         structureService.getStructureById(ids, null, event -> {
             if (event.isRight()) {
-                prepareDataPurses(purses, event);
-                launchExport(purses, request);
+                launchExport(prepareDataPurses(purses, event), request);
             } else {
                 renderError(request, new JsonObject().put("message",
                         event.left().getValue()));
@@ -353,7 +360,7 @@ public class PurseController extends ControllerHelper {
         });
     }
 
-    private void prepareDataPurses(JsonArray purses, Either<String, JsonArray> event) {
+    private JsonArray prepareDataPurses(JsonArray purses, Either<String, JsonArray> event) {
         JsonArray structures = event.right().getValue();
         JsonObject structure;
         JsonObject purse;
@@ -365,28 +372,27 @@ public class PurseController extends ControllerHelper {
                 purse = purses.getJsonObject(j);
 
                 if (purse.getString("id_structure").equals(structure.getString("id"))) {
-                    purse.put("name", structure.getString("name"));
-                    purse.put("uai", structure.getString("uai"));
-                    purse.put("minimum_licences_consumables",structure.getInteger("minimum_licences_consumables"));
-                    // we also convert amount to get a number instead of a string
-                    purse.put("amount", Double.parseDouble(purse.getString("amount")));
-                    purse.put("initial_amount", Double.parseDouble(purse.getString("initial_amount")));
-                    purse.put("licence_amount", purse.getInteger("licence_amount"));
-                    purse.put("licence_initial_amount", purse.getInteger("licence_initial_amount"));
-                    purse.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount"));
-                    purse.put("consumable_licence_initial_amount", purse.getInteger("consumable_licence_initial_amount"));
+                    structure.put("id_structure",purse.getString("id_structure"));
+                    // we convert amount to get a number instead of a string
+                    structure.put("amount", Double.parseDouble(purse.getString("amount","0")));
+                    structure.put("initial_amount", Double.parseDouble(purse.getString("initial_amount","0")));
+                    structure.put("licence_amount", purse.getInteger("licence_amount",0));
+                    structure.put("licence_initial_amount", purse.getInteger("licence_initial_amount",0));
+                    structure.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount",0));
+                    structure.put("consumable_licence_initial_amount", purse.getInteger("consumable_licence_initial_amount",0));
                     if (purse.getBoolean("pro")) {
-                        purse.put("seconde", purse.getInteger("seconde") * 3);
-                        purse.put("premiere", purse.getInteger("premiere") * 3);
-                        purse.put("terminale", purse.getInteger("terminale") * 3);
+                        structure.put("seconde", purse.getInteger("seconde",0) * 3);
+                        structure.put("premiere", purse.getInteger("premiere",0) * 3);
+                        structure.put("terminale", purse.getInteger("terminale",0) * 3);
                     } else {
-                        purse.put("seconde", purse.getInteger("seconde") * 9);
-                        purse.put("premiere", purse.getInteger("premiere") * 8);
-                        purse.put("terminale", purse.getInteger("terminale") * 7);
+                        structure.put("seconde", purse.getInteger("seconde",0) * 9);
+                        structure.put("premiere", purse.getInteger("premiere",0) * 8);
+                        structure.put("terminale", purse.getInteger("terminale",0) * 7);
                     }
                 }
             }
         }
+        return structures;
     }
 
     /**
@@ -473,8 +479,7 @@ public class PurseController extends ControllerHelper {
                     purseService.getPursesStudentsAndLicences(page, ids, event -> {
                         if (event.isRight()) {
                             JsonArray purses = event.right().getValue();
-                            prepareDataPurses(purses, structures);
-                            Renders.renderJson(request, purses);
+                            Renders.renderJson(request, prepareDataPurses(purses, structures));
                         } else {
                             log.error(event.left().getValue());
                             badRequest(request);

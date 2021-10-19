@@ -18,15 +18,15 @@ public interface StructureService {
 
     void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler);
 
-    void getStructureByUAI(JsonArray uais, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler);
+    void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
-    void getStructureById(JsonArray ids, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler);
+    void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
     void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler);
 
     void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler);
 
-    JsonObject getNumberStudentsConsumableFormations(JsonArray students, JsonArray consumableFormations);
+    JsonObject getNumberStudentsConsumableFormations(JsonArray students, List<String> consumableFormations);
 
     void getConsumableFormation(Handler<Either<String, JsonArray>> handler);
 

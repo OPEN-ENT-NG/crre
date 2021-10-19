@@ -17,6 +17,7 @@ import org.entcore.common.sql.SqlResult;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 
@@ -57,9 +58,10 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void getStructureByUAI(JsonArray uais, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler) {
+    public void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
                 " WHERE s.UAI IN {uais} ";
+        JsonObject params = new JsonObject().put("uais", uais);
         if(consumable_formations == null){
             query += "RETURN s.id as id, s.UAI as uai, s.type as type";
         }else{
@@ -69,19 +71,18 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     "ELSE 0 " +
                     "END as nbr_students " +
                     "RETURN id, uai, type, sum(nbr_students) AS nbr_students_consumables;";
+            params.put("consumable_formations", new JsonArray(consumable_formations));
         }
 
-        Neo4j.getInstance().execute(query,
-                new JsonObject().put("uais", uais).put("consumable_formations", consumable_formations),
-                Neo4jResult.validResultHandler(handler));
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }
 
     @Override
-    public void getStructureById(JsonArray ids, JsonArray consumable_formations, Handler<Either<String, JsonArray>> handler) {
+    public void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
         try {
             String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
                     " WHERE s.id IN {ids} ";
-
+            JsonObject params = new JsonObject().put("ids", ids);
             if(consumable_formations == null){
                 query += "RETURN s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
                         "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
@@ -95,11 +96,9 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         "RETURN s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
                         "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
                         "s.zipCode  as zipCode, s.city as city, s.type as type, sum(nbr_students)*2 AS minimum_licences_consumables;";
+                params.put("consumable_formations", new JsonArray(consumable_formations));
             }
-
-            Neo4j.getInstance().execute(query,
-                    new JsonObject().put("ids", ids).put("consumable_formations", consumable_formations),
-                    Neo4jResult.validResultHandler(handler));
+            Neo4j.getInstance().execute(query,params,Neo4jResult.validResultHandler(handler));
         }catch (VertxException e){
             getStructureById(ids, null, handler);
         }
@@ -234,7 +233,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public JsonObject getNumberStudentsConsumableFormations(JsonArray students, JsonArray consumableFormations) {
+    public JsonObject getNumberStudentsConsumableFormations(JsonArray students, List<String> consumableFormations) {
         JsonObject consumableFormationsStudentsPerStructures = new JsonObject();
         for (int i = 0; i < students.size(); i++) {
             JsonObject j = students.getJsonObject(i);
@@ -361,7 +360,11 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     if (result.isRight()) {
                         getConsumableFormation(formations -> {
                             if(formations.isRight()) {
-                                JsonArray consumable_formations = formations.right().getValue();
+                                JsonArray res_consumable_formations = formations.right().getValue();
+                                List<String> consumable_formations = res_consumable_formations
+                                        .stream()
+                                        .map((json) -> ((JsonObject)json).getString("label"))
+                                        .collect(Collectors.toList());
                                 JsonObject consumableFormationsStudents =
                                         getNumberStudentsConsumableFormations(students,consumable_formations);
                                 getTotalStructure(total_structure -> {
