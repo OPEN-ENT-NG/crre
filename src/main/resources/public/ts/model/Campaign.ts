@@ -59,6 +59,20 @@ export class Campaign implements Selectable  {
         };
     }
 
+    reformatCampaign() {
+        if (this.end_date != null && this.start_date != null) {
+            this.accessible = this.accessible
+                ||
+                (moment(this.start_date).diff(moment()) <= 0
+                    && moment(this.end_date).diff(moment()) >= 0);
+            this.start_date = moment(this.start_date);
+            this.end_date = moment(this.end_date);
+        }
+        if (this.groups[0] !== null) {
+            this.groups = Mix.castArrayAs(StructureGroup, JSON.parse(this.groups.toString()));
+        } else this.groups = [];
+    }
+
     async save () {
         if (this.id) {
             if(this.automatic_close)
@@ -104,19 +118,12 @@ export class Campaign implements Selectable  {
         try {
             let { data } = await http.get(`/crre/campaigns/${id}`);
             Mix.extend(this, Mix.castAs(Campaign, data));
-            this.start_date =  moment(this.start_date);
-            this.end_date = moment(this.end_date);
-            this.accessible = this.accessible|| (this.start_date < this.end_date);
-            if (this.groups[0] !== null ) {
-                this.groups = Mix.castArrayAs(StructureGroup, JSON.parse(this.groups.toString())) ;
-            } else this.groups = [];
-
+            this.reformatCampaign();
         } catch (e) {
             toasts.warning('crre.campaign.sync.err');
         }
     }
 }
-
 
 export class Campaigns extends Selection<Campaign> {
 
@@ -139,14 +146,7 @@ export class Campaigns extends Selection<Campaign> {
         try {
             let { data } = await http.get( Structure ? `/crre/campaigns?idStructure=${Structure}`  : `/crre/campaigns`  );
             this.all = Mix.castArrayAs(Campaign, data);
-            this.all.forEach(c =>{
-                if(c.end_date != null && c.start_date != null) {
-                    c.accessible = c.accessible
-                        ||
-                        (moment(c.start_date).diff(moment(),'days') <= 0
-                            && moment(c.end_date).diff(moment(),'days') >= 0);
-                }
-            })
+            this.all.forEach(c => {c.reformatCampaign();});
         } catch (e) {
             toasts.warning('crre.campaigns.sync.err');
         }

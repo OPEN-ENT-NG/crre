@@ -1,7 +1,7 @@
 import {_, ng, template} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {
-    Campaign,
+    Campaign, StructureGroup,
     Utils
 } from '../../../model';
 
@@ -62,12 +62,11 @@ export const campaignsController = ng.controller('campaignsController',
             $scope.display.lightbox.campaign = true;
         };
 
-        $scope.formatStructureCampaign = (groups : string) => {
-            let structures_object = JSON.parse(groups);
-            let structure_string = "";
-            structures_object.structures.forEach((structure) => {
-                    structure_string += structure + ", ";
-                });
-            return structure_string.slice(0, -2);
+        $scope.formatStructureCampaign = (groups : StructureGroup[]) => {
+            let stringToReturn = "";
+            groups.forEach((structure) => {
+                stringToReturn += structure.name + ", ";
+            });
+            return stringToReturn.slice(0, -2);
         }
     }]);
