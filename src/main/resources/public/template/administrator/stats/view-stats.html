@@ -56,74 +56,97 @@
     <div class="twelve flex-cards">
         <div class="cards">
             <span class="bold-font-weight red-text">[[stats.licences.amount]]</span>
-            <br>
-            <span class="red-text"><i18n>crre.stat.consumed.licences</i18n></span>
-            <br>
+            <span class="red-text small-red"><i18n>crre.stat.consumed.licences</i18n></span>
             <span class="bold-font-weight"> / [[stats.licences.initial_amount]]</span>
-            <br>
             <span><i18n>crre.stat.total.licences</i18n></span>
         </div>
         <div class="cards">
             <span class="bold-font-weight">[[stats.ressources]] €</span>
-            <br>
             <span><i18n>crre.stat.ordered.ressources</i18n></span>
         </div>
         <div class="cards">
             <span class="bold-font-weight">[[stats.orders]]</span>
-            <br>
             <span><i18n>crre.stat.ordered</i18n></span>
         </div>
-        <div class="cards">
-            <span class="red-text bold-font-weight" ng-bind="computeAllEtabMoreThanOneOrder()"> </span>
-            <span class="red-text"><i18n>crre.stat.structures</i18n></span>
-            <br>
-            <span class="bold-font-weight"> / </span>
-            <span class="bold-font-weight" ng-bind="computeAllEtab()"> </span>
-            <br>
-            <span><i18n>crre.stat.structures</i18n></span>
+        <div class="cards size-cards leftPadding20">
+            <div>
+                <span class="red-text bold-font-weight" ng-bind="computeAllEtabMoreThanOneOrder()"> </span>
+                <br>
+                <span class="red-text small-red"><i18n>crre.stat.structures</i18n></span>
+                <br>
+                <span class="bold-font-weight"> / </span>
+                <span class="bold-font-weight" ng-bind="computeAllEtab()"> </span>
+                <br>
+                <span><i18n>crre.stat.structures</i18n></span>
+            </div>
+            <div>
+                <span class="bold-font-weight big-text" ng-bind="computePercentageAllStructure()"> </span>
+            </div>
+
         </div>
-        <div ng-if="isPublic('Public')" class="cards bold-font-weight">
-            <span><i18n>crre.stat.public</i18n></span>
-            <br>
-            <span class="red-text" ng-bind="getPublic(stats.structuresMoreOneOrder, 'Public')"> </span>
-            <span> / </span>
-            <span ng-bind="getPublic(stats.structures, 'Public')"> </span>
+        <div ng-if="isPublic('Public')" class="cards size-cards bold-font-weight">
+            <div>
+                <span class="font20"><i18n>crre.stat.public</i18n></span>
+                <br>
+                <span class="red-text" ng-bind="getPublic(stats.structuresMoreOneOrder, 'Public')"> </span>
+                <span> / </span>
+                <span ng-bind="getPublic(stats.structures, 'Public')"> </span>
+            </div>
+            <div>
+                <span class="big-text" ng-bind="computePercentageStructure('Public')"></span>
+            </div>
         </div>
-        <div ng-if="isPublic('Public')" class="cards">
-            <span class="bold-font-weight" ng-bind="getPublic(stats.allPaperRessources, 'Public')"> </span>
-            <br>
-            <span><i18n>crre.stat.ressources.paper</i18n></span>
+        <div ng-if="isPublic('Public')" class="cards size-cards">
+            <div class="paper-icon-stat"></div>
+            <div>
+                <span class="bold-font-weight" ng-bind="getPublic(stats.allPaperRessources, 'Public')"> </span>
+                <br>
+                <span><i18n>crre.stat.ressources.paper</i18n></span>
+            </div>
         </div>
-        <div ng-if="isPublic('Public')" class="cards">
-            <span class="bold-font-weight" ng-bind="getPublic(stats.allNumericRessources, 'Public')"> </span>
-            <br>
-            <span><i18n>crre.stat.ressources.numeric</i18n></span>
+        <div ng-if="isPublic('Public')" class="cards size-cards">
+            <div class="laptop-icon-stat"></div>
+            <div>
+                <span class="bold-font-weight" ng-bind="getPublic(stats.allNumericRessources, 'Public')"> </span>
+                <br>
+                <span><i18n>crre.stat.ressources.numeric</i18n></span>
+            </div>
         </div>
         <div ng-if="isPublic('Public')" class="cards">
             <span class="bold-font-weight" ng-bind="computeAllRessources('Public')"></span>
-            <br>
             <span><i18n>crre.stat.ressources.all</i18n></span>
         </div>
-        <div ng-if="isPublic('Privé')" class="cards bold-font-weight">
-            <span><i18n>crre.stat.prive</i18n></span>
-            <br>
-            <span class="red-text" ng-bind="getPublic(stats.structuresMoreOneOrder, 'Privé')"> </span>
-            <span> / </span>
-            <span ng-bind="getPublic(stats.structures, 'Privé')"> </span>
+        <div ng-if="isPublic('Privé')" class="cards size-cards bold-font-weight">
+            <div>
+                <span class="font20"><i18n>crre.stat.prive</i18n></span>
+                <br>
+                <span class="red-text" ng-bind="getPublic(stats.structuresMoreOneOrder, 'Privé')"> </span>
+                <span> / </span>
+                <span ng-bind="getPublic(stats.structures, 'Privé')"> </span>
+            </div>
+            <div>
+                <span class="big-text" ng-bind="computePercentageStructure('Privé')"></span>
+            </div>
         </div>
-        <div ng-if="isPublic('Privé')" class="cards">
-            <span class="bold-font-weight" ng-bind="getPublic(stats.allPaperRessources, 'Privé')"></span>
-            <br>
-            <span><i18n>crre.stat.ressources.paper</i18n></span>
+        <div ng-if="isPublic('Privé')" class="cards size-cards">
+            <div class="paper-icon-stat"></div>
+            <div>
+                <span class="bold-font-weight" ng-bind="getPublic(stats.allPaperRessources, 'Privé')"></span>
+                <br>
+                <span><i18n>crre.stat.ressources.paper</i18n></span>
+            </div>
         </div>
-        <div ng-if="isPublic('Privé')" class="cards">
-            <span class="bold-font-weight" ng-bind="getPublic(stats.allNumericRessources, 'Privé')"> </span>
-            <br>
-            <span><i18n>crre.stat.ressources.numeric</i18n></span>
+        <div ng-if="isPublic('Privé')" class="cards size-cards">
+            <div class="laptop-icon-stat"></div>
+            <div>
+                <span class="bold-font-weight" ng-bind="getPublic(stats.allNumericRessources, 'Privé')"> </span>
+                <br>
+                <span><i18n>crre.stat.ressources.numeric</i18n></span>
+            </div>
+
         </div>
         <div ng-if="isPublic('Privé')" class="cards">
             <span class="bold-font-weight" ng-bind="computeAllRessources('Privé')"></span>
-            <br>
             <span><i18n>crre.stat.ressources.all</i18n></span>
         </div>
     </div>

@@ -72,6 +72,14 @@ export const statsController = ng.controller('statsController', [
             return $scope.getPublic($scope.stats.allNumericRessources, publics) + $scope.getPublic($scope.stats.allPaperRessources, publics);
         }
 
+        $scope.computePercentageStructure = (publics) => {
+            return ($scope.getPublic($scope.stats.structuresMoreOneOrder, publics) / $scope.getPublic($scope.stats.structures, publics) * 100) + " %";
+        }
+
+        $scope.computePercentageAllStructure = () => {
+            return ($scope.computeAllEtabMoreThanOneOrder() / $scope.computeAllEtab() * 100) + " %";
+        }
+
         $scope.getFilter = async () => {
             $scope.filters.all = [];
             for (const key of Object.keys($scope.filterChoice)) {

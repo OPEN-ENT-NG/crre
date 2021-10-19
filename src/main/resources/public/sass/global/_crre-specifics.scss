@@ -83,6 +83,10 @@ body.crre {
     padding-left: 10px;
   }
 
+  .leftPadding20 {
+    padding-left: 20px;
+  }
+
   .flex-spacebetween {
     display: flex;
     justify-content: space-between
@@ -1582,8 +1586,16 @@ body.crre {
     background-color: #fff;
     box-shadow: 0 5px 5px rgba(0, 0, 0, .2);
     margin-bottom : 25px;
-    height: 100px;
-    text-align: center;
+    height: 120px;
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+
+    &.size-cards {
+      grid-template-columns: 1fr 2fr;
+    }
   }
 
   .flex-cards {
@@ -1596,6 +1608,25 @@ body.crre {
 
   .red-text {
     color: red;
+    font-size: 25px;
+
+    &.small-red {
+      font-size: 16px !important;
+    }
+  }
+
+  .laptop-icon-stat:before {
+    font-family: 'material-icons';
+    content: "\F322";
+    font-size: 50px;
+    float: right;
+  }
+
+  .paper-icon-stat:before {
+    font-family: 'material-icons';
+    content: "\F0BD";
+    font-size: 50px;
+    float: right;
   }
 
 }
