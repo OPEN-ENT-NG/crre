@@ -3,7 +3,7 @@ import { toasts } from 'entcore';
 import {Mix} from "entcore-toolkit";
 import {Filters} from "./Filter";
 
-export class Statistics{
+export class Statistics {
 
     allNumericRessources: object;
     allPaperRessources: object;

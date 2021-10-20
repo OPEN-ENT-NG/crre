@@ -28,50 +28,55 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     @Override
-    public void getFreeLicences(String id, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT sum(total_free) as total, reassort, CAST(CASE WHEN EXTRACT(MONTH FROM creation_date) < 5 THEN  (EXTRACT(YEAR FROM creation_date)) ELSE  (EXTRACT(YEAR FROM creation_date) + 1) END as character varying) as year " +
-                "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" where owner_id != 'renew2021-2022' and id_structure = ? group by year, reassort;";
-        Sql.getInstance().prepared(query, new JsonArray().add(id), SqlResult.validResultHandler(handler));
+    public void getStats(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        String query = "";
+        JsonArray params = new JsonArray().add(id_structure);
+        if(type.equals("orders")) {
+            query += "SELECT count(*) AS total, ";
+        }
+        if(type.equals("ressources")) {
+            query += "SELECT sum(equipment_price * amount) AS total, ";
+        }
+        if(type.equals("free")) {
+            query += "SELECT sum(total_free) AS total, ";
+        }
+        if(type.equals("articlenumerique") || type.equals("articlepapier")) {
+            query += "SELECT sum(amount) AS total, ";
+        }
+        query += "reassort, " +
+                "CAST(" +
+                "   CASE " +
+                "       WHEN EXTRACT(MONTH FROM creation_date) < 5 " +
+                "           THEN (EXTRACT(YEAR FROM creation_date)) " +
+                "           ELSE  (EXTRACT(YEAR FROM creation_date) + 1) " +
+                "       END AS character varying" +
+                ") AS year " +
+                "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
+                "WHERE owner_id != 'renew2021-2022' AND id_structure = ? ";
 
-    }
-
-    @Override
-    public void getTotalRessources(String id, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT sum(equipment_price * amount) as total, reassort, CAST(CASE WHEN EXTRACT(MONTH FROM creation_date) < 5 THEN  (EXTRACT(YEAR FROM creation_date)) ELSE  (EXTRACT(YEAR FROM creation_date) + 1) END as character varying) as year " +
-                "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" where owner_id != 'renew2021-2022' and id_structure = ? group by year, reassort;";
-        Sql.getInstance().prepared(query, new JsonArray().add(id), SqlResult.validResultHandler(handler));
-
-    }
-
-    @Override
-    public void getRessources(String id_structure, String type, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        JsonArray params = new JsonArray();
-        String query = "SELECT sum(amount) as total, reassort, CAST(CASE WHEN EXTRACT(MONTH FROM creation_date) < 5 THEN  (EXTRACT(YEAR FROM creation_date)) ELSE  (EXTRACT(YEAR FROM creation_date) + 1) END as character varying) as year FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" where owner_id != 'renew2021-2022' and id_structure = ? ";
-        params.add(id_structure);
-        if (type != null) {
-            query += "and equipment_format = ? ";
+        if(type.equals("articlenumerique") || type.equals("articlepapier")) {
+            query += "AND equipment_format = ? ";
             params.add(type);
         }
-        query += "group by year, reassort;";
+        query += "GROUP BY year, reassort;";
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handlerJsonArray));
-
-    }
-
-    @Override
-    public void getOrdersByYear(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        String query = "SELECT count(*) as total, reassort, CAST(CASE WHEN EXTRACT(MONTH FROM creation_date) < 5 THEN  (EXTRACT(YEAR FROM creation_date)) ELSE  (EXTRACT(YEAR FROM creation_date) + 1) END as character varying) as year FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" where owner_id != 'renew2021-2022' and id_structure = ? group by year, reassort;";
-        Sql.getInstance().prepared(query, new JsonArray().add(id_structure), SqlResult.validResultHandler(handlerJsonArray));
     }
 
     @Override
     public void getOrdersByCampaign(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        String query = "SELECT c.name, c.id, count(*) as total FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" left join " + Crre.crreSchema + ".campaign c on (c.id = id_campaign) where owner_id != 'renew2021-2022' and id_structure = ? group by c.id, c.name;";
+        String query = "SELECT c.name, c.id, count(*) AS total " +
+                "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
+                "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = id_campaign) " +
+                "WHERE owner_id != 'renew2021-2022' AND id_structure = ? " +
+                "GROUP BY c.id, c.name;";
         Sql.getInstance().prepared(query, new JsonArray().add(id_structure), SqlResult.validResultHandler(handlerJsonArray));
     }
 
     @Override
     public void getLicences(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        String query = "SELECT amount, initial_amount FROM " + Crre.crreSchema + ".licences where id_structure = ?;";
+        String query = "SELECT amount, initial_amount " +
+                "FROM " + Crre.crreSchema + ".licences " +
+                "WHERE id_structure = ?;";
         Sql.getInstance().prepared(query, new JsonArray().add(id_structure), SqlResult.validResultHandler(handlerJsonArray));
     }
 
@@ -93,6 +98,11 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     @Override
     public void getAllYears(Handler<Either<String, JsonObject>> handlerJsonObject) {
         MongoDb.getInstance().command(yearsMongo().toString(), MongoDbResult.validResultHandler(handlerJsonObject));
+    }
+
+    @Override
+    public void getStatsByStructure(HashMap<String, ArrayList<String>> params, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        MongoDb.getInstance().command(statsByStructureMongo(params).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
     }
 
     private JsonObject filterMatch(HashMap<String, ArrayList<String>> params) {
@@ -253,5 +263,61 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                 )
                         )
                 );
+    }
+
+    private JsonObject statsByStructureMongo(HashMap<String, ArrayList<String>> params) {
+        return new JsonObject()
+                .put("aggregate", "crre.statistics")
+                .put("allowDiskUse", true)
+                .put("cursor",
+                        new JsonObject().put("batchSize", 2147483647)
+                )
+                .put("pipeline",
+                        new JsonArray(
+                                Arrays.asList(
+                                        new JsonObject()
+                                                .put("$unwind", "$stats.order_year"),
+                                        new JsonObject()
+                                                .put("$unwind", "$stats.licences"),
+                                        new JsonObject()
+                                                .put("$unwind", "$stats.numeric_ressources"),
+                                        new JsonObject()
+                                                .put("$unwind", "$stats.paper_ressources"),
+                                        new JsonObject()
+                                                .put("$match", new JsonObject()
+                                                        .put("stats.licences.year", params.get("year").get(0))
+                                                        .put("stats.order_year.year", params.get("year").get(0))
+                                                        .put("stats.numeric_ressources.year", params.get("year").get(0))
+                                                        .put("stats.paper_ressources.year", params.get("year").get(0))
+                                                        .put("stats.order_year.reassort", Boolean.parseBoolean(params.get("reassort").get(0)))
+                                                        .put("stats.numeric_ressources.reassort", Boolean.parseBoolean(params.get("reassort").get(0)))
+                                                        .put("stats.paper_ressources.reassort", Boolean.parseBoolean(params.get("reassort").get(0)))
+                                                ),
+                                        new JsonObject()
+                                                .put("$group", new JsonObject().put("_id", new JsonObject()
+                                                                .put("id_structure", "$id_structure")
+                                                                .put("uai", "$uai")
+                                                                .put("name", "$name")
+                                                                .put("catalog", "$catalog")
+                                                                .put("public", "$public")
+                                                                .put("licences", "$stats.licences")
+                                                                .put("orders", "$stats.order_year.total")
+                                                                .put("ressources", new JsonObject().put("$add", new JsonArray().add("$stats.numeric_ressources.total").add("$stats.paper_ressources.total")))
+                                                        )
+                                                ),
+                                        new JsonObject()
+                                                .put("$project", new JsonObject()
+                                                        .put("_id", 0)
+                                                        .put("name", "$_id.name")
+                                                        .put("uai", "$_id.uai")
+                                                        .put("catalog", "$_id.catalog")
+                                                        .put("public", "$_id.public")
+                                                        .put("id_structure", "$_id.id")
+                                                        .put("licences", "$_id.licences")
+                                                        .put("orders", "$_id.orders")
+                                                        .put("ressources", "$_id.ressources")
+                                                )
+                                )
+                        ));
     }
 }

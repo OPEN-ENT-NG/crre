@@ -1,6 +1,5 @@
-import {moment, ng, idiom as lang, angular} from 'entcore';
-import {Filter, FilterFront, Filters, Utils} from '../../../model';
-import {Statistics} from "../../../model/Statistics";
+import {ng, template} from 'entcore';
+import {Filter, Utils} from '../../../model';
 import http from "axios";
 
 export const statsController = ng.controller('statsController', [
@@ -33,51 +32,35 @@ export const statsController = ng.controller('statsController', [
         };
 
 
-        $scope.init = async () => {
+        this.init = async () => {
+            // Init the stat for the current year and reassort as false
+            let filterYear = new Filter();
+            filterYear.name = "year";
+            filterYear.value = new Date().getFullYear().toString();
+            let filterReassort = new Filter();
+            filterReassort.name = "reassort";
+            filterReassort.value = "false";
+            $scope.filters.all.push(filterYear);
+            $scope.filters.all.push(filterReassort);
+            await $scope.stats.get($scope.filters);
+            Utils.safeApply($scope);
+
             // Init filter as last year and reassort false
             $scope.filterChoice.years.push($scope.years[0]);
             $scope.filterChoice.reassorts.push($scope.reassorts[1]);
             Utils.safeApply($scope);
         };
 
-        $scope.getPublic = (field, publics) => {
+        $scope.getPublicTotal = (field, publics) => {
             return field.find(r => r.public === publics).total;
+        }
+
+        $scope.getPublicPercentage = (field, publics) => {
+            return field.find(r => r.public === publics).percentage;
         }
 
         $scope.isPublic = (publics) => {
             return !!$scope.filterChoice.schoolType.find(r => r.name === publics) || $scope.filterChoice.schoolType.length == 0;
-        }
-
-        $scope.computeAllEtab = () => {
-            let total = 0;
-            if($scope.stats.structures.length > 1) {
-                total = $scope.stats.structures[0].total + $scope.stats.structures[1].total;
-            } else {
-                total = $scope.stats.structures[0].total;
-            }
-            return total;
-        }
-
-        $scope.computeAllEtabMoreThanOneOrder = () => {
-            let total = 0;
-            if($scope.stats.structuresMoreOneOrder.length > 1) {
-                total = $scope.stats.structuresMoreOneOrder[0].total + $scope.stats.structuresMoreOneOrder[1].total;
-            } else {
-                total = $scope.stats.structuresMoreOneOrder[0].total;
-            }
-            return total;
-        }
-
-        $scope.computeAllRessources = (publics) => {
-            return $scope.getPublic($scope.stats.allNumericRessources, publics) + $scope.getPublic($scope.stats.allPaperRessources, publics);
-        }
-
-        $scope.computePercentageStructure = (publics) => {
-            return ($scope.getPublic($scope.stats.structuresMoreOneOrder, publics) / $scope.getPublic($scope.stats.structures, publics) * 100) + " %";
-        }
-
-        $scope.computePercentageAllStructure = () => {
-            return ($scope.computeAllEtabMoreThanOneOrder() / $scope.computeAllEtab() * 100) + " %";
         }
 
         $scope.getFilter = async () => {
@@ -95,9 +78,13 @@ export const statsController = ng.controller('statsController', [
             Utils.safeApply($scope);
         }
 
-        angular.element(document).ready(function () {
-            $scope.init();
+        $scope.statsByStructures =  async () => {
+            template.open('main-profile', 'administrator/management-main');
+            await template.open('administrator-main', 'administrator/stats/view-stats-structures');
             Utils.safeApply($scope);
-        });
+        }
+
+        this.init();
+        Utils.safeApply($scope);
     }
 ]);

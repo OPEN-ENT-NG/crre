@@ -1,4 +1,4 @@
-import {_,Behaviours, idiom as lang, model, moment, ng, template, toasts} from 'entcore';
+import {_, Behaviours, idiom as lang, model, moment, ng, template, toasts} from 'entcore';
 import {
     Basket,
     Baskets,
@@ -7,20 +7,21 @@ import {
     Campaigns,
     Equipment,
     Equipments,
+    Filter,
+    Filters,
     Logs,
+    Offer,
+    Offers,
     OrdersClient,
     StructureGroups,
     Structures,
-    Utils,
-    Filters,
     Student,
-    Offers,
-    Offer, Filter
+    Utils,
+    Statistics
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
 import http from "axios";
-import {Statistics} from "../model/Statistics";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -81,17 +82,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             viewStats: async () => {
-                // Init the stat for the current year and reassort as false
-                let filterYear = new Filter();
-                filterYear.name = "year";
-                filterYear.value = new Date().getFullYear().toString();
-                let filterReassort = new Filter();
-                filterReassort.name = "reassort";
-                filterReassort.value = "false";
-                $scope.filters.all.push(filterYear);
-                $scope.filters.all.push(filterReassort);
-                await $scope.stats.get($scope.filters);
-                Utils.safeApply($scope);
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/stats/view-stats');
                 Utils.safeApply($scope);
