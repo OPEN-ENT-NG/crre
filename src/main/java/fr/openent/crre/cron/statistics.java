@@ -60,6 +60,7 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                     Future<JsonArray> totalRessourcesFuture = Future.future();
                     Future<JsonArray> ordersByYearFuture = Future.future();
                     Future<JsonArray> ordersByCampaignFuture = Future.future();
+                    Future<JsonArray> allRessourceFuture = Future.future();
                     Future<JsonArray> numeriqueRessourceFuture = Future.future();
                     Future<JsonArray> papierRessourceFuture = Future.future();
                     futuresStat.add(licencesFuture);
@@ -69,6 +70,7 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                     futuresStat.add(totalRessourcesFuture);
                     futuresStat.add(numeriqueRessourceFuture);
                     futuresStat.add(papierRessourceFuture);
+                    futuresStat.add(allRessourceFuture);
 
                     CompositeFuture.all(futuresStat).setHandler(event2 -> {
                         if (event2.succeeded()) {
@@ -79,8 +81,10 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                             JsonArray order_campaign = ordersByCampaignFuture.result();
                             JsonArray numeric_ressources = numeriqueRessourceFuture.result();
                             JsonArray paper_ressources = papierRessourceFuture.result();
+                            JsonArray all_ressources = allRessourceFuture.result();
 
-                            if (free_total.size() > 0 || ressources_total.size() > 0) {
+
+                            if (ressources_total.size() > 0 || order_year.size() > 0 || licences.size() > 0) {
                                 JsonObject stats = new JsonObject();
                                 // Every 30/04, add a new line in licences mongo db with new year
                                 if (LocalDate.now().getMonthValue() == 5 && LocalDate.now().getDayOfMonth() == 1) {
@@ -92,7 +96,13 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                                 } else {
                                     licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + 1 + "");
                                 }
-                                double licencesPercentage = (licences.getJsonObject(licences.size() - 1).getInteger("amount") / licences.getJsonObject(0).getInteger("initial_amount")) * 100;
+                                double licencesPercentage = 0;
+                                if(licences.getJsonObject(0).getInteger("initial_amount") == 0) {
+                                    licencesPercentage = 0;
+
+                                } else {
+                                    licencesPercentage = (licences.getJsonObject(licences.size() - 1).getInteger("amount") / licences.getJsonObject(0).getInteger("initial_amount")) * 100;
+                                }
                                 licences.getJsonObject(licences.size() - 1).put("percentage", 100 - licencesPercentage);
                                 stats.put("licences", licences);
                                 stats.put("free_total", free_total);
@@ -101,6 +111,7 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                                 stats.put("order_campaign", order_campaign);
                                 stats.put("numeric_ressources", numeric_ressources);
                                 stats.put("paper_ressources", paper_ressources);
+                                stats.put("all_ressources", all_ressources);
                                 structure.put("stats", stats);
                             }
                             statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
@@ -132,6 +143,7 @@ public class statistics extends ControllerHelper implements Handler<Long> {
 
                     statisticsService.getStats("articlenumerique", structure.getString("id_structure"), handlerJsonArray(numeriqueRessourceFuture));
                     statisticsService.getStats("articlepapier", structure.getString("id_structure"), handlerJsonArray(papierRessourceFuture));
+                    statisticsService.getStats("all_ressources", structure.getString("id_structure"), handlerJsonArray(allRessourceFuture));
 
                 }
                 CompositeFuture.all(futures).setHandler(event2 -> {
@@ -141,11 +153,13 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                     } else {
                         log.info("Failed to insert structures in mongo");
                         eitherHandler.handle(new Either.Left<>("Failed to insert structures in mongo"));
+
                     }
                 });
             } else {
                 log.info("Failed to get structures detail");
                 eitherHandler.handle(new Either.Left<>("Failed to get structures detail"));
+
             }
         });
     }

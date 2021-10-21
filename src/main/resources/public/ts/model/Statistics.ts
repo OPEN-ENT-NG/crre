@@ -1,5 +1,5 @@
 import http from 'axios';
-import { toasts } from 'entcore';
+import {toasts} from 'entcore';
 import {Mix} from "entcore-toolkit";
 import {Filters} from "./Filter";
 

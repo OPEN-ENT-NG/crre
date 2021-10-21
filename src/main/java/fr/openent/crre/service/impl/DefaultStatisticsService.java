@@ -32,16 +32,19 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         String query = "";
         JsonArray params = new JsonArray().add(id_structure);
         if(type.equals("orders")) {
-            query += "SELECT count(*) AS total, ";
+            query += "SELECT count(*)::integer AS total, ";
         }
         if(type.equals("ressources")) {
-            query += "SELECT sum(equipment_price * amount) AS total, ";
+            query += "SELECT sum(equipment_price * amount)::double precision AS total, ";
         }
         if(type.equals("free")) {
-            query += "SELECT sum(total_free) AS total, ";
+            query += "SELECT sum(total_free)::integer AS total, ";
         }
         if(type.equals("articlenumerique") || type.equals("articlepapier")) {
-            query += "SELECT sum(amount) AS total, ";
+            query += "SELECT sum(amount)::integer AS total, ";
+        }
+        if(type.equals("all_ressources")) {
+            query += "SELECT sum(amount)::integer AS total, ";
         }
         query += "reassort, " +
                 "CAST(" +
@@ -64,7 +67,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
 
     @Override
     public void getOrdersByCampaign(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        String query = "SELECT c.name, c.id, count(*) AS total " +
+        String query = "SELECT c.name, c.id, count(*)::integer AS total " +
                 "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = id_campaign) " +
                 "WHERE owner_id != 'renew2021-2022' AND id_structure = ? " +

@@ -7,17 +7,16 @@ import {
     Campaigns,
     Equipment,
     Equipments,
-    Filter,
     Filters,
     Logs,
     Offer,
     Offers,
     OrdersClient,
+    Statistics,
     StructureGroups,
     Structures,
     Student,
-    Utils,
-    Statistics
+    Utils
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";

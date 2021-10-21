@@ -13,7 +13,6 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.BaseController;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -43,20 +42,7 @@ public class StatisticsController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void getStatisticsByStructure(final HttpServerRequest request) {
-        HashMap<String, ArrayList<String>> params = new HashMap<>();
-        if (request.params().contains("year")) {
-            params.put("year", new ArrayList<>(request.params().getAll("year")));
-        }
-        if (request.params().contains("catalog")) {
-            params.put("catalog", new ArrayList<>(request.params().getAll("catalog")));
-        }
-        if (request.params().contains("public")) {
-            params.put("public", new ArrayList<>(request.params().getAll("public")));
-        }
-        if (request.params().contains("reassort")) {
-            params.put("reassort", new ArrayList<>(request.params().getAll("reassort")));
-        }
-
+        HashMap<String, ArrayList<String>> params = getParams(request);
         statisticsService.getStatsByStructure(params, event -> {
             if (event.isRight()) {
                 JsonArray stats = event.right().getValue().getJsonObject("cursor").getJsonArray("firstBatch");
@@ -69,11 +55,7 @@ public class StatisticsController extends BaseController {
         });
     }
 
-    @Get("region/statistics")
-    @ApiDoc("Get statistics")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void getStatistics(final HttpServerRequest request) {
+    private HashMap<String, ArrayList<String>> getParams(HttpServerRequest request) {
         HashMap<String, ArrayList<String>> params = new HashMap<>();
         if (request.params().contains("year")) {
             params.put("year", new ArrayList<>(request.params().getAll("year")));
@@ -87,10 +69,19 @@ public class StatisticsController extends BaseController {
         if (request.params().contains("reassort")) {
             params.put("reassort", new ArrayList<>(request.params().getAll("reassort")));
         }
+        return params;
+    }
 
+    @Get("region/statistics")
+    @ApiDoc("Get statistics")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void getStatistics(final HttpServerRequest request) {
+        HashMap<String, ArrayList<String>> params = getParams(request);
         List<Future> futures = new ArrayList<>();
         Future<JsonObject> getNumericRessourcesFuture = Future.future();
         Future<JsonObject> getPaperRessourcesFuture = Future.future();
+        Future<JsonObject> getAllRessourcesFuture = Future.future();
         Future<JsonObject> getRessourcesFuture = Future.future();
         Future<JsonObject> getOrdersFuture = Future.future();
         Future<JsonObject> getLicencesFuture = Future.future();
@@ -98,6 +89,7 @@ public class StatisticsController extends BaseController {
         Future<JsonObject> getAllStructuresFuture = Future.future();
         futures.add(getNumericRessourcesFuture);
         futures.add(getPaperRessourcesFuture);
+        futures.add(getAllRessourcesFuture);
         futures.add(getRessourcesFuture);
         futures.add(getOrdersFuture);
         futures.add(getLicencesFuture);
@@ -108,17 +100,24 @@ public class StatisticsController extends BaseController {
             if (event.succeeded()) {
                 JsonObject allNumericRessources = new JsonObject().put("allNumericRessources", getNumericRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch"));
                 JsonObject allPaperRessources = new JsonObject().put("allPaperRessources", getPaperRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch"));
-                JsonObject allRessources;
-                JsonObject allStructures;
-                JsonObject ressources = new JsonObject().put("ressources", getRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch").getJsonObject(0).getDouble("total"));
-                JsonObject orders = new JsonObject().put("orders", getOrdersFuture.result().getJsonObject("cursor").getJsonArray("firstBatch").getJsonObject(0).getInteger("total"));
-                JsonObject licencesResult = getLicencesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch").getJsonObject(0);
+                JsonObject allRessources = new JsonObject().put("allRessources", getAllRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch"));
+                JsonObject allStructures = new JsonObject().put("allStructures", new JsonObject().put("percentage", 0).put("structures", 0).put("structuresMoreOneOrder", 0));
+                JsonArray ressourcesArray = getRessourcesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
+                JsonObject ressources = new JsonObject().put("ressources", ressourcesArray.size() > 0 ? ressourcesArray.getJsonObject(0).getDouble("total") : 0);
+
+                JsonArray ordersArray = getOrdersFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
+                JsonObject orders = new JsonObject().put("orders", ordersArray.size() > 0 ? ordersArray.getJsonObject(0).getInteger("total") : 0);
+
+                JsonArray licencesArray = getLicencesFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
+                JsonObject licencesResult = licencesArray.size() > 0 ? licencesArray.getJsonObject(0) : new JsonObject().put("amount", 0).put("initial_amount", 0);
+
                 JsonArray structuresMoreOneOrderResult = getStructuresMoreOneOrderFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
                 JsonArray structuresResult = getAllStructuresFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
                 boolean multiplePublic = !(request.params().getAll("public").size() == 1);
-                computePercentageStructures(structuresMoreOneOrderResult, structuresResult, multiplePublic);
-                allStructures = new JsonObject().put("allStructures", computeTotalStructures(structuresMoreOneOrderResult, structuresResult, multiplePublic));
-                allRessources = computeAllRessources(allNumericRessources, allPaperRessources, multiplePublic, request.params());
+                if(structuresMoreOneOrderResult.size() > 0 && structuresResult.size() > 0) {
+                    computePercentageStructures(structuresMoreOneOrderResult, structuresResult, multiplePublic);
+                    allStructures = new JsonObject().put("allStructures", computeTotalStructures(structuresMoreOneOrderResult, structuresResult, multiplePublic));
+                }
 
                 JsonObject concatStats = allRessources
                         .mergeIn(allNumericRessources)
@@ -141,6 +140,7 @@ public class StatisticsController extends BaseController {
 
         statisticsService.getOrdersCompute("numeric_ressources", params, true, handlerJsonObject(getNumericRessourcesFuture));
         statisticsService.getOrdersCompute("paper_ressources", params, true, handlerJsonObject(getPaperRessourcesFuture));
+        statisticsService.getOrdersCompute("all_ressources", params, true, handlerJsonObject(getAllRessourcesFuture));
         statisticsService.getOrdersCompute("ressources_total", params, false, handlerJsonObject(getRessourcesFuture));
         statisticsService.getOrdersCompute("order_year", params, false, handlerJsonObject(getOrdersFuture));
 
@@ -151,6 +151,125 @@ public class StatisticsController extends BaseController {
 
 
     }
+
+    @Get("region/stats/mongo")
+    @ApiDoc("Generate and send mail to library")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void exportMongoStat(final HttpServerRequest request) {
+    List<Future> futures = new ArrayList<>();
+        structureService.getAllStructuresDetail(event -> {
+        if (event.isRight()) {
+            JsonArray structures = event.right().getValue();
+            for (int i = 0; i < structures.size(); i++) {
+                Future<JsonObject> addStructureStatFuture = Future.future();
+                futures.add(addStructureStatFuture);
+                JsonObject structure = structures.getJsonObject(i);
+                // All compute with structure object
+                structure.put("date", LocalDate.now().toString());
+                List<Future> futuresStat = new ArrayList<>();
+                Future<JsonArray> licencesFuture = Future.future();
+                Future<JsonArray> freeLicenceFuture = Future.future();
+                Future<JsonArray> totalRessourcesFuture = Future.future();
+                Future<JsonArray> ordersByYearFuture = Future.future();
+                Future<JsonArray> ordersByCampaignFuture = Future.future();
+                Future<JsonArray> allRessourceFuture = Future.future();
+                Future<JsonArray> numeriqueRessourceFuture = Future.future();
+                Future<JsonArray> papierRessourceFuture = Future.future();
+                futuresStat.add(licencesFuture);
+                futuresStat.add(freeLicenceFuture);
+                futuresStat.add(ordersByCampaignFuture);
+                futuresStat.add(ordersByYearFuture);
+                futuresStat.add(totalRessourcesFuture);
+                futuresStat.add(numeriqueRessourceFuture);
+                futuresStat.add(papierRessourceFuture);
+                futuresStat.add(allRessourceFuture);
+
+                CompositeFuture.all(futuresStat).setHandler(event2 -> {
+                    if (event2.succeeded()) {
+                        JsonArray licences = licencesFuture.result();
+                        JsonArray free_total = freeLicenceFuture.result();
+                        JsonArray ressources_total = totalRessourcesFuture.result();
+                        JsonArray order_year = ordersByYearFuture.result();
+                        JsonArray order_campaign = ordersByCampaignFuture.result();
+                        JsonArray numeric_ressources = numeriqueRessourceFuture.result();
+                        JsonArray paper_ressources = papierRessourceFuture.result();
+                        JsonArray all_ressources = allRessourceFuture.result();
+
+
+                        if (ressources_total.size() > 0 || order_year.size() > 0 || licences.size() > 0) {
+                            JsonObject stats = new JsonObject();
+                            // Every 30/04, add a new line in licences mongo db with new year
+                            if (LocalDate.now().getMonthValue() == 5 && LocalDate.now().getDayOfMonth() == 1) {
+                                licences.add(licences.getJsonObject(0));
+                            }
+                            // Put a n+1 year if after 30/04
+                            if (LocalDate.now().getMonthValue() < 5) {
+                                licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + "");
+                            } else {
+                                licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + 1 + "");
+                            }
+                            double licencesPercentage = 0;
+                            if(licences.getJsonObject(0).getInteger("initial_amount") == 0) {
+                                licencesPercentage = 0;
+
+                            } else {
+                                licencesPercentage = (licences.getJsonObject(licences.size() - 1).getInteger("amount") / licences.getJsonObject(0).getInteger("initial_amount")) * 100;
+                            }
+                            licences.getJsonObject(licences.size() - 1).put("percentage", 100 - licencesPercentage);
+                            stats.put("licences", licences);
+                            stats.put("free_total", free_total);
+                            stats.put("ressources_total", ressources_total);
+                            stats.put("order_year", order_year);
+                            stats.put("order_campaign", order_campaign);
+                            stats.put("numeric_ressources", numeric_ressources);
+                            stats.put("paper_ressources", paper_ressources);
+                            stats.put("all_ressources", all_ressources);
+                            structure.put("stats", stats);
+                        }
+                        statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
+
+                    } else {
+                        log.info("Failed to retrieve statistics for a structure");
+                    }
+                });
+
+                // Licences
+
+                statisticsService.getLicences(structure.getString("id_structure"), handlerJsonArray(licencesFuture));
+
+                // Commandes
+
+                statisticsService.getStats("orders", structure.getString("id_structure"), handlerJsonArray(ordersByYearFuture));
+                statisticsService.getOrdersByCampaign(structure.getString("id_structure"), handlerJsonArray(ordersByCampaignFuture));
+
+                // Licences
+
+                statisticsService.getStats("free", structure.getString("id_structure"), handlerJsonArray(freeLicenceFuture));
+
+                // Finances
+
+                statisticsService.getStats("ressources", structure.getString("id_structure"), handlerJsonArray(totalRessourcesFuture));
+
+                // Ressources
+
+                statisticsService.getStats("articlenumerique", structure.getString("id_structure"), handlerJsonArray(numeriqueRessourceFuture));
+                statisticsService.getStats("articlepapier", structure.getString("id_structure"), handlerJsonArray(papierRessourceFuture));
+                statisticsService.getStats("all_ressources", structure.getString("id_structure"), handlerJsonArray(allRessourceFuture));
+
+            }
+            CompositeFuture.all(futures).setHandler(event2 -> {
+                if (event2.succeeded()) {
+                    log.info("Insert structures in mongo successful");
+                } else {
+                    log.info("Failed to insert structures in mongo");
+                }
+            });
+        } else {
+            log.info("Failed to get structures detail");
+        }
+    });
+}
 
     @Get("region/orders/mongo")
     @ApiDoc("Generate and send mail to library")
@@ -267,7 +386,7 @@ public class StatisticsController extends BaseController {
 
     private void computePercentageStructures(JsonArray structuresMoreOneOrderResult, JsonArray structuresResult, boolean multiplePublic) {
         DecimalFormat df2 = new DecimalFormat("#.##");
-        if (multiplePublic) {
+        if (multiplePublic && structuresMoreOneOrderResult.size() > 1 && structuresResult.size() > 1) {
             // Add percentage for private
             Double percentagePrivate = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") / structuresResult.getJsonObject(0).getDouble("total") * 100;
             structuresMoreOneOrderResult.getJsonObject(0).put("percentage", df2.format(percentagePrivate));
@@ -275,7 +394,6 @@ public class StatisticsController extends BaseController {
             // Add percentage for public
             Double percentagePublic = structuresMoreOneOrderResult.getJsonObject(1).getDouble("total") / structuresResult.getJsonObject(1).getDouble("total") * 100;
             structuresMoreOneOrderResult.getJsonObject(1).put("percentage", df2.format(percentagePublic));
-
         } else {
             // Add percentage for private or public
             Double percentage = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") / structuresResult.getJsonObject(0).getDouble("total") * 100;
@@ -286,7 +404,7 @@ public class StatisticsController extends BaseController {
     private JsonObject computeTotalStructures(JsonArray structuresMoreOneOrderResult, JsonArray structuresResult, boolean multiplePublic) {
         DecimalFormat df2 = new DecimalFormat("#.##");
         JsonObject allStructuresObject;
-        if (multiplePublic) {
+        if (multiplePublic && structuresMoreOneOrderResult.size() > 1 && structuresResult.size() > 1) {
             //Compute total structure
             double totalStructure = structuresResult.getJsonObject(0).getDouble("total") + structuresResult.getJsonObject(1).getDouble("total");
             double totalStructureMoreOneOrder = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") + structuresMoreOneOrderResult.getJsonObject(1).getDouble("total");
@@ -304,23 +422,5 @@ public class StatisticsController extends BaseController {
             allStructuresObject.mergeIn(allStructuresMoreOneOrderObject).mergeIn(allStructuresPercentage);
         }
         return allStructuresObject;
-    }
-
-    private JsonObject computeAllRessources(JsonObject allNumericRessources, JsonObject allPaperRessources, boolean multiplePublic, MultiMap request) {
-        JsonObject allRessources = new JsonObject();
-        if (multiplePublic) {
-            // Compute all ressources (paper + numeric)
-            JsonObject allRessourcePublic = new JsonObject().put("total", allNumericRessources.getJsonArray("allNumericRessources").getJsonObject(0).getInteger("total") + allPaperRessources.getJsonArray("allPaperRessources").getJsonObject(0).getInteger("total"))
-                    .put("public", "Public");
-            JsonObject allRessourcePrive = new JsonObject().put("total", allNumericRessources.getJsonArray("allNumericRessources").getJsonObject(1).getInteger("total") + allPaperRessources.getJsonArray("allPaperRessources").getJsonObject(1).getInteger("total"))
-                    .put("public", "Privé");
-            allRessources.put("allRessources", new JsonArray().add(allRessourcePublic).add(allRessourcePrive));
-        } else {
-            // Compute all ressources (paper + numeric)
-            JsonObject allRessourceObject = new JsonObject().put("total", allNumericRessources.getJsonArray("allNumericRessources").getJsonObject(0).getInteger("total") + allPaperRessources.getJsonArray("allPaperRessources").getJsonObject(0).getInteger("total"))
-                    .put("public", request.getAll("public").get(0));
-            allRessources.put("allRessources", new JsonArray().add(allRessourceObject));
-        }
-        return allRessources;
     }
 }

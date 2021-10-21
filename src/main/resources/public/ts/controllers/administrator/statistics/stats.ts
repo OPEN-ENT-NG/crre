@@ -34,9 +34,16 @@ export const statsController = ng.controller('statsController', [
 
         this.init = async () => {
             // Init the stat for the current year and reassort as false
+            let date;
+            if(new Date().getMonth() > 4) {
+                date = new Date().getFullYear() + 1;
+                date = date.toString();
+            } else {
+                date = new Date().getFullYear().toString();
+            }
             let filterYear = new Filter();
             filterYear.name = "year";
-            filterYear.value = new Date().getFullYear().toString();
+            filterYear.value = date;
             let filterReassort = new Filter();
             filterReassort.name = "reassort";
             filterReassort.value = "false";
@@ -52,15 +59,25 @@ export const statsController = ng.controller('statsController', [
         };
 
         $scope.getPublicTotal = (field, publics) => {
-            return field.find(r => r.public === publics).total;
+            let total = 0;
+            if(field.find(r => r.public === publics)) {
+                total = field.find(r => r.public === publics).total;
+            }
+            return total;
         }
 
         $scope.getPublicPercentage = (field, publics) => {
-            return field.find(r => r.public === publics).percentage;
+            let total = 0;
+            if(field.find(r => r.public === publics)) {
+                total = field.find(r => r.public === publics).percentage;
+            }
+            return total;
         }
 
         $scope.isPublic = (publics) => {
-            return !!$scope.filterChoice.schoolType.find(r => r.name === publics) || $scope.filterChoice.schoolType.length == 0;
+
+            return !!$scope.filterChoice.schoolType.find(r => r.name === publics) || $scope.filterChoice.schoolType.length == 0
+                   || $scope.getPublicTotal($scope.stats.allRessources, publics);
         }
 
         $scope.getFilter = async () => {
