@@ -27,4 +27,6 @@ public interface StatisticsService {
     void getStatsByStructure(HashMap<String, ArrayList<String>> params, Handler<Either<String, JsonObject>> handlerJsonObject);
 
     void getStats(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
+
+    void deleteStatsDay(Handler<Either<String, JsonObject>> handlerJsonObject);
 }

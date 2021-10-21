@@ -261,6 +261,13 @@ public class StatisticsController extends BaseController {
             CompositeFuture.all(futures).setHandler(event2 -> {
                 if (event2.succeeded()) {
                     log.info("Insert structures in mongo successful");
+                    statisticsService.deleteStatsDay(event1 -> {
+                        if(event1.isRight()) {
+                            log.info("Remove old stats of the day succesful");
+                        } else {
+                            log.info("Remove old stats of the day failed");
+                        }
+                    });
                 } else {
                     log.info("Failed to insert structures in mongo");
                 }

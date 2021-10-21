@@ -75,9 +75,7 @@ export const statsController = ng.controller('statsController', [
         }
 
         $scope.isPublic = (publics) => {
-
-            return !!$scope.filterChoice.schoolType.find(r => r.name === publics) || $scope.filterChoice.schoolType.length == 0
-                   || $scope.getPublicTotal($scope.stats.allRessources, publics);
+            return !!$scope.filterChoice.schoolType.find(r => r.name === publics) || $scope.filterChoice.schoolType.length == 0;
         }
 
         $scope.getFilter = async () => {

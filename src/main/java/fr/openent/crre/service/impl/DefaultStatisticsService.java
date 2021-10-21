@@ -108,9 +108,14 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         MongoDb.getInstance().command(statsByStructureMongo(params).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
     }
 
+    @Override
+    public void deleteStatsDay(Handler<Either<String, JsonObject>> handlerJsonObject) {
+        MongoDb.getInstance().delete("crre.statistics", deleteStatsDay(), MongoDbResult.validResultHandler(handlerJsonObject));
+    }
+
     private JsonObject filterMatch(HashMap<String, ArrayList<String>> params) {
         JsonObject match = new JsonObject()
-                .put("date", LocalDate.now().minusDays(1).toString());
+                .put("date", LocalDate.now().toString());
 
         Set<Map.Entry<String, ArrayList<String>>> set = params.entrySet();
 
@@ -322,5 +327,11 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                 )
                                 )
                         ));
+    }
+
+    private JsonObject deleteStatsDay() {
+        JsonObject match = new JsonObject()
+                .put("date", LocalDate.now().toString());
+        return match;
     }
 }
