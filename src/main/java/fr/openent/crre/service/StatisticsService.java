@@ -16,11 +16,11 @@ public interface StatisticsService {
 
     void getLicences(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
 
-    void getOrdersCompute(String ressources, HashMap<String, ArrayList<String>> params, boolean publicField, Handler<Either<String, JsonObject>> handlerJsonObject);
+    void getOrdersCompute(String ressources, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject);
 
     void getLicencesCompute(HashMap<String, ArrayList<String>> params, Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, Handler<Either<String, JsonObject>> handlerJsonObject);
+    void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject);
 
     void getAllYears(Handler<Either<String, JsonObject>> handlerJsonObject);
 

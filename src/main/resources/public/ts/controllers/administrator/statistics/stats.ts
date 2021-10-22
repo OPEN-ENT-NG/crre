@@ -44,17 +44,13 @@ export const statsController = ng.controller('statsController', [
             let filterYear = new Filter();
             filterYear.name = "year";
             filterYear.value = date;
-            let filterReassort = new Filter();
-            filterReassort.name = "reassort";
-            filterReassort.value = "false";
             $scope.filters.all.push(filterYear);
-            $scope.filters.all.push(filterReassort);
             await $scope.stats.get($scope.filters);
+            //await $scope.statsStructure.get($scope.filters);
             Utils.safeApply($scope);
 
             // Init filter as last year and reassort false
             $scope.filterChoice.years.push($scope.years[0]);
-            $scope.filterChoice.reassorts.push($scope.reassorts[1]);
             Utils.safeApply($scope);
         };
 

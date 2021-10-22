@@ -81,6 +81,13 @@ public class StatisticsController extends BaseController {
     @ResourceFilter(AdministratorRight.class)
     public void getStatistics(final HttpServerRequest request) {
         HashMap<String, ArrayList<String>> params = getParams(request);
+        boolean isReassort = false;
+        if(!(params.get("reassort") == null)) {
+            if(params.get("reassort").size() == 1) {
+                isReassort = true;
+            }
+        }
+
         List<Future> futures = new ArrayList<>();
         Future<JsonObject> getNumericRessourcesFuture = Future.future();
         Future<JsonObject> getPaperRessourcesFuture = Future.future();
@@ -141,16 +148,16 @@ public class StatisticsController extends BaseController {
 
         });
 
-        statisticsService.getOrdersCompute("numeric_ressources", params, true, handlerJsonObject(getNumericRessourcesFuture));
-        statisticsService.getOrdersCompute("paper_ressources", params, true, handlerJsonObject(getPaperRessourcesFuture));
-        statisticsService.getOrdersCompute("all_ressources", params, true, handlerJsonObject(getAllRessourcesFuture));
-        statisticsService.getOrdersCompute("ressources_total", params, false, handlerJsonObject(getRessourcesFuture));
-        statisticsService.getOrdersCompute("order_year", params, false, handlerJsonObject(getOrdersFuture));
+        statisticsService.getOrdersCompute("numeric_ressources", params, true, isReassort, handlerJsonObject(getNumericRessourcesFuture));
+        statisticsService.getOrdersCompute("paper_ressources", params, true, isReassort, handlerJsonObject(getPaperRessourcesFuture));
+        statisticsService.getOrdersCompute("all_ressources", params, true, isReassort, handlerJsonObject(getAllRessourcesFuture));
+        statisticsService.getOrdersCompute("ressources_total", params, false, isReassort, handlerJsonObject(getRessourcesFuture));
+        statisticsService.getOrdersCompute("order_year", params, false, isReassort, handlerJsonObject(getOrdersFuture));
 
         statisticsService.getLicencesCompute(params, handlerJsonObject(getLicencesFuture));
 
-        statisticsService.getStructureCompute(params, true, handlerJsonObject(getStructuresMoreOneOrderFuture));
-        statisticsService.getStructureCompute(params, false, handlerJsonObject(getAllStructuresFuture));
+        statisticsService.getStructureCompute(params, true, isReassort, handlerJsonObject(getStructuresMoreOneOrderFuture));
+        statisticsService.getStructureCompute(params, false, isReassort, handlerJsonObject(getAllStructuresFuture));
 
 
     }

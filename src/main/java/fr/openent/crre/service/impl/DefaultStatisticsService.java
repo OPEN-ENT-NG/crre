@@ -31,19 +31,19 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     public void getStats(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
         String query = "";
         JsonArray params = new JsonArray().add(id_structure);
-        if(type.equals("orders")) {
+        if (type.equals("orders")) {
             query += "SELECT count(*)::integer AS total, ";
         }
-        if(type.equals("ressources")) {
+        if (type.equals("ressources")) {
             query += "SELECT sum(equipment_price * amount)::double precision AS total, ";
         }
-        if(type.equals("free")) {
+        if (type.equals("free")) {
             query += "SELECT sum(total_free)::integer AS total, ";
         }
-        if(type.equals("articlenumerique") || type.equals("articlepapier")) {
+        if (type.equals("articlenumerique") || type.equals("articlepapier")) {
             query += "SELECT sum(amount)::integer AS total, ";
         }
-        if(type.equals("all_ressources")) {
+        if (type.equals("all_ressources")) {
             query += "SELECT sum(amount)::integer AS total, ";
         }
         query += "reassort, " +
@@ -57,7 +57,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                 "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
                 "WHERE owner_id != 'renew2021-2022' AND id_structure = ? ";
 
-        if(type.equals("articlenumerique") || type.equals("articlepapier")) {
+        if (type.equals("articlenumerique") || type.equals("articlepapier")) {
             query += "AND equipment_format = ? ";
             params.add(type);
         }
@@ -84,8 +84,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     @Override
-    public void getOrdersCompute(String type, HashMap<String, ArrayList<String>> params, boolean publicField, Handler<Either<String, JsonObject>> handlerJsonObject) {
-        MongoDb.getInstance().command(ordersMongo(type, params, publicField).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
+    public void getOrdersCompute(String type, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        MongoDb.getInstance().command(ordersMongo(type, params, publicField, isReassort).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
     }
 
     @Override
@@ -94,8 +94,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     @Override
-    public void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, Handler<Either<String, JsonObject>> handlerJsonObject) {
-        MongoDb.getInstance().command(structuresMongo(params, MoreOneOrder).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
+    public void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        MongoDb.getInstance().command(structuresMongo(params, MoreOneOrder, isReassort).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
     }
 
     @Override
@@ -139,7 +139,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         return matchRequest;
     }
 
-    private JsonObject ordersMongo(String type, HashMap<String, ArrayList<String>> params, boolean publicField) {
+    private JsonObject ordersMongo(String type, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort) {
         String field = "$stats." + type;
         JsonObject id = new JsonObject().put("year", field + ".year");
         JsonObject project = null;
@@ -149,32 +149,32 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         } else {
             project = new JsonObject().put("$project", new JsonObject().put("_id", 0));
         }
+        ArrayList<JsonObject> listParameter = new ArrayList<>(Arrays.asList(
+                new JsonObject()
+                        .put("$unwind", field),
+                filterMatch(params)));
+        if (isReassort) {
+            listParameter.addAll(Arrays.asList(filterReassort(field.substring(1), params)));
+        }
+        listParameter.addAll(Arrays.asList(
+                new JsonObject()
+                        .put("$group", new JsonObject()
+                                .put("_id", id)
+                                .put("total", new JsonObject().put("$sum", field + ".total"))
+                        ),
+                new JsonObject()
+                        .put("$match", new JsonObject()
+                                .put("_id.year", params.get("year").get(0))
+                        ),
+                project));
+        JsonArray pipeline = new JsonArray();
         return new JsonObject()
                 .put("aggregate", "crre.statistics")
                 .put("allowDiskUse", true)
                 .put("cursor",
                         new JsonObject().put("batchSize", 2147483647)
                 )
-                .put("pipeline",
-                        new JsonArray(
-                                Arrays.asList(
-                                        new JsonObject()
-                                                .put("$unwind", field),
-                                        filterMatch(params),
-                                        filterReassort(field.substring(1), params),
-                                        new JsonObject()
-                                                .put("$group", new JsonObject()
-                                                        .put("_id", id)
-                                                        .put("total", new JsonObject().put("$sum", field + ".total"))
-                                                ),
-                                        new JsonObject()
-                                                .put("$match", new JsonObject()
-                                                        .put("_id.year", params.get("year").get(0))
-                                                ),
-                                        project
-                                )
-                        )
-                );
+                .put("pipeline", listParameter);
     }
 
     private JsonObject licencesMongo(HashMap<String, ArrayList<String>> params) {
@@ -209,10 +209,13 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                 );
     }
 
-    private JsonObject structuresMongo(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder) {
+    private JsonObject structuresMongo(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, boolean isReassort) {
         JsonObject match = new JsonObject()
-                .put("stats.order_year.year", params.get("year").get(0))
-                .put("stats.order_year.reassort", Boolean.parseBoolean(params.get("reassort").get(0)));
+                .put("stats.order_year.year", params.get("year").get(0));
+
+        if (isReassort) {
+            match.put("stats.order_year.reassort", Boolean.parseBoolean(params.get("reassort").get(0)));
+        }
 
         if (MoreOneOrder) {
             match.put("stats.order_year.total", new JsonObject().put("$gt", 0));
@@ -234,7 +237,13 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                 .put("$match", match),
                                         new JsonObject()
                                                 .put("$group", new JsonObject()
-                                                        .put("_id", "$public")
+                                                        .put("_id", new JsonObject()
+                                                                .put("id", "$public")
+                                                                .put("id_structure", "$id_structure"))
+                                                ),
+                                        new JsonObject()
+                                                .put("$group", new JsonObject()
+                                                        .put("_id", "$_id.id")
                                                         .put("total", new JsonObject().put("$sum", 1))
                                                 ),
                                         new JsonObject().put("$project", new JsonObject()
