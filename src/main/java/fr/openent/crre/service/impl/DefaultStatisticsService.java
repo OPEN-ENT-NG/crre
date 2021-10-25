@@ -120,9 +120,18 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         Set<Map.Entry<String, ArrayList<String>>> set = params.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
-            if (!me.getKey().equals("year") && !me.getKey().equals("reassort")) {
+            if (!me.getKey().equals("year") && !me.getKey().equals("reassort") && !me.getKey().equals("orientation")) {
                 JsonObject parameter = new JsonObject().put("$in", me.getValue());
                 match.put(me.getKey(), parameter);
+            } else if (me.getKey().equals("orientation")) {
+                if(me.getValue().get(0).equals("LG") && me.getValue().size() == 1) {
+                    match.put("general", true);
+                } else if(me.getValue().get(0).equals("LP") && me.getValue().size() == 1) {
+                    match.put("technical", true);
+                } else {
+                    match.put("technical", true);
+                    match.put("general", true);
+                }
             }
         }
 
@@ -210,15 +219,17 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     private JsonObject structuresMongo(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, boolean isReassort) {
-        JsonObject match = new JsonObject()
-                .put("stats.order_year.year", params.get("year").get(0));
+        JsonObject match = new JsonObject();
+        JsonObject unwind = new JsonObject().put("path", "$stats.order_year");
 
         if (isReassort) {
             match.put("stats.order_year.reassort", Boolean.parseBoolean(params.get("reassort").get(0)));
         }
-
         if (MoreOneOrder) {
-            match.put("stats.order_year.total", new JsonObject().put("$gt", 0));
+            match.put("stats.order_year.year", params.get("year").get(0))
+                 .put("stats.order_year.total", new JsonObject().put("$gt", 0));
+        } else {
+            unwind.put("preserveNullAndEmptyArrays", true);
         }
 
         return new JsonObject()
@@ -231,15 +242,13 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                         new JsonArray(
                                 Arrays.asList(
                                         new JsonObject()
-                                                .put("$unwind", "$stats.order_year"),
-                                        filterMatch(params),
-                                        new JsonObject()
-                                                .put("$match", match),
+                                                .put("$unwind", unwind),
+                                        new JsonObject().put("$match", filterMatch(params).getJsonObject("$match").mergeIn(match)),
                                         new JsonObject()
                                                 .put("$group", new JsonObject()
                                                         .put("_id", new JsonObject()
                                                                 .put("id", "$public")
-                                                                .put("id_structure", "$id_structure"))
+                                                                .put("id_structure", "$_id"))
                                                 ),
                                         new JsonObject()
                                                 .put("$group", new JsonObject()

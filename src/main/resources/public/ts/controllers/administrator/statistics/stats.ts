@@ -9,26 +9,31 @@ export const statsController = ng.controller('statsController', [
             docType: [],
             reassorts: [],
             years: [],
+            schoolOrientation: []
         };
         $scope.docsType = [{name: 'Papier'}, {name: 'Numerique'}];
         $scope.schoolType = [{name: 'Public'}, {name: 'Privé'}];
+        $scope.reassorts = [{name: 'true'}, {name: 'false'}];
+        $scope.schoolOrientation = [{name: 'LG'}, {name: 'LP'}];
+
 
         $scope.schoolType.forEach((item) => item.toString = () => $scope.translate(item.name));
         $scope.docsType.forEach((item) => item.toString = () => $scope.translate(item.name));
-
-        $scope.reassorts = [{name: 'true'}, {name: 'false'}];
         $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
+        $scope.schoolOrientation.forEach((item) => item.toString = () => $scope.translate(item.name));
+
 
         let { data } = await http.get(`/crre/region/statistics/years`);
         $scope.years = data;
         $scope.years.forEach((item) => item.toString = () => $scope.translate(item.name));
 
         $scope.filterChoiceCorrelation = {
-            keys : ["docsType","reassorts","year", "schoolType"],
+            keys : ["docsType","reassorts","year", "schoolType", "schoolOrientation"],
             years : 'year',
             schoolType : 'public',
             docsType : 'catalog',
-            reassorts : 'reassort'
+            reassorts : 'reassort',
+            schoolOrientation: 'orientation'
         };
 
 

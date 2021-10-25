@@ -7,11 +7,13 @@ export class Statistics {
 
     allNumericRessources: object;
     allPaperRessources: object;
+    allRessources: object;
     ressources: number;
     orders: number;
     licences: object;
     structuresMoreOneOrder: object;
     structures: object;
+    allStructures: object;
 
     async get (filters?: Filters) {
         try {

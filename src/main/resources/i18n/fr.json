@@ -728,5 +728,8 @@
   "crre.stat.ressources.paper" : "ressources papier",
   "crre.stat.ressources.numeric" : "ressources numérique",
   "crre.stat.public" : "Publics",
-  "crre.stat.prive" : "Privés"
+  "crre.stat.prive" : "Privés",
+  "LG" : "Général",
+  "LP": "Professionnel",
+  "crre.stat.type.etab": "LG/LP"
 }

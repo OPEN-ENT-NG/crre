@@ -72,6 +72,9 @@ public class StatisticsController extends BaseController {
         if (request.params().contains("reassort")) {
             params.put("reassort", new ArrayList<>(request.params().getAll("reassort")));
         }
+        if (request.params().contains("orientation")) {
+            params.put("orientation", new ArrayList<>(request.params().getAll("orientation")));
+        }
         return params;
     }
 
@@ -82,8 +85,8 @@ public class StatisticsController extends BaseController {
     public void getStatistics(final HttpServerRequest request) {
         HashMap<String, ArrayList<String>> params = getParams(request);
         boolean isReassort = false;
-        if(!(params.get("reassort") == null)) {
-            if(params.get("reassort").size() == 1) {
+        if (!(params.get("reassort") == null)) {
+            if (params.get("reassort").size() == 1) {
                 isReassort = true;
             }
         }
@@ -124,7 +127,7 @@ public class StatisticsController extends BaseController {
                 JsonArray structuresMoreOneOrderResult = getStructuresMoreOneOrderFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
                 JsonArray structuresResult = getAllStructuresFuture.result().getJsonObject("cursor").getJsonArray("firstBatch");
                 boolean multiplePublic = !(request.params().getAll("public").size() == 1);
-                if(structuresMoreOneOrderResult.size() > 0 && structuresResult.size() > 0) {
+                if (structuresMoreOneOrderResult.size() > 0 || structuresResult.size() > 0) {
                     computePercentageStructures(structuresMoreOneOrderResult, structuresResult, multiplePublic);
                     allStructures = new JsonObject().put("allStructures", computeTotalStructures(structuresMoreOneOrderResult, structuresResult, multiplePublic));
                 }
@@ -175,7 +178,7 @@ public class StatisticsController extends BaseController {
                 log.info("Update statistics failed");
             }
         });
-}
+    }
 
     @Get("region/orders/mongo")
     @ApiDoc("Generate and send mail to library")
@@ -302,29 +305,31 @@ public class StatisticsController extends BaseController {
             structuresMoreOneOrderResult.getJsonObject(1).put("percentage", df2.format(percentagePublic));
         } else {
             // Add percentage for private or public
-            Double percentage = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") / structuresResult.getJsonObject(0).getDouble("total") * 100;
-            structuresMoreOneOrderResult.getJsonObject(0).put("percentage", df2.format(percentage));
+            double totalStructuresMoreOneOrder = structuresMoreOneOrderResult.size() > 0 ? structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") : 0.0;
+            Double percentage = totalStructuresMoreOneOrder / structuresResult.getJsonObject(0).getDouble("total") * 100;
+            if (!structuresMoreOneOrderResult.isEmpty()) {
+                structuresMoreOneOrderResult.getJsonObject(0).put("percentage", df2.format(percentage));
+            }
         }
     }
 
     private JsonObject computeTotalStructures(JsonArray structuresMoreOneOrderResult, JsonArray structuresResult, boolean multiplePublic) {
         DecimalFormat df2 = new DecimalFormat("#.##");
-        JsonObject allStructuresObject;
-        if (multiplePublic && structuresMoreOneOrderResult.size() > 1 && structuresResult.size() > 1) {
+        JsonObject allStructuresObject = new JsonObject();
+        if (structuresMoreOneOrderResult.size() > 0 || structuresResult.size() > 0) {
             //Compute total structure
-            double totalStructure = structuresResult.getJsonObject(0).getDouble("total") + structuresResult.getJsonObject(1).getDouble("total");
-            double totalStructureMoreOneOrder = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") + structuresMoreOneOrderResult.getJsonObject(1).getDouble("total");
+            Double totalStructure = structuresResult.size() > 1 ? structuresResult.getJsonObject(0).getDouble("total") + structuresResult.getJsonObject(1).getDouble("total") : structuresResult.getJsonObject(0).getDouble("total");
+            Double totalStructureMoreOneOrder = 0.0;
+            if (structuresMoreOneOrderResult.size() > 1) {
+                totalStructureMoreOneOrder = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") + structuresMoreOneOrderResult.getJsonObject(1).getDouble("total");
+            }
+            if (structuresMoreOneOrderResult.size() == 1) {
+                totalStructureMoreOneOrder = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total");
+            }
 
             allStructuresObject = new JsonObject().put("structures", totalStructure);
             JsonObject allStructuresMoreOneOrderObject = new JsonObject().put("structuresMoreOneOrder", totalStructureMoreOneOrder);
             JsonObject allStructuresPercentage = new JsonObject().put("percentage", df2.format(totalStructureMoreOneOrder / totalStructure * 100));
-            allStructuresObject.mergeIn(allStructuresMoreOneOrderObject).mergeIn(allStructuresPercentage);
-
-        } else {
-            //Compute total structure
-            allStructuresObject = new JsonObject().put("structures", structuresResult.getJsonObject(0).getInteger("total"));
-            JsonObject allStructuresMoreOneOrderObject = new JsonObject().put("structuresMoreOneOrder", structuresMoreOneOrderResult.getJsonObject(0).getInteger("total"));
-            JsonObject allStructuresPercentage = new JsonObject().put("percentage", df2.format(structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") / structuresResult.getJsonObject(0).getDouble("total") * 100));
             allStructuresObject.mergeIn(allStructuresMoreOneOrderObject).mergeIn(allStructuresPercentage);
         }
         return allStructuresObject;
