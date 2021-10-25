@@ -86,52 +86,50 @@
                 <table class="twelve">
                     <div class="campaignCheckbox">
                         <label class = "checkbox">
-                            <input type="checkbox" ng-model="allSelected" ng-change="selectStructures()">
-                            <span>Tous les regroupements</span>
+                            <input type="checkbox" ng-model="allSelected" ng-change="selectStructures()"
+                                   ng-disabled="othersSelected">
+                            <span><i18n>crre.campaign.groups.etab.all</i18n></span>
                         </label>
-                        <label class="checkbox" ng-repeat="group in structureGroups.all track by $index ">
-                            <input type="checkbox" ng-model="group.selected">
+                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(0,3) track by $index">
+                            <input type="checkbox" ng-model="group.selected" ng-disabled="othersSelected">
                             <span>[[group.name]]</span>
-                            <span tooltip="crre.regroup.permanent" ng-if="categories.includes(group.name)"
-                                  ng-class="{true:'campaignCheckboxIcons'}[categories.includes(group.name)]"></span>
                         </label>
                     </div>
                 </table>
             </div>
-            <!--
-                        <div ng-class="{'articlenumerique':'laptop-icon', 'articlepapier':'book-icon'}[equipment.type]">
-            -->
-
-            <!-- <h4 style="margin: 50px 0 10px 0">
-                <i18n>crre.campaign.options</i18n>
-                :
-            </h4>
-            <article>
-                <div class="row">
-                    <span class="cell">
-                        <i18n>crre.campaign.type.choose</i18n>
-                        :
-                    </span>
-                    <switch-toggle ng-model="campaign.purse_enabled" class="cell horizontal-margin-four"></switch-toggle>
-                </div>
-                <div class="row">
-                    <span class="cell">
-                        <i18n>crre.campaign.priority.choose</i18n>
-                        :
-                    </span>
-                    <switch-toggle ng-model="campaign.priority_enabled" class="cell horizontal-margin-four"></switch-toggle>
-                </div>
-                <div ng-if="campaign.priority_enabled" class="priority_field" >
-                    <div>
-                        <input type="radio" ng-model="campaign.priority_field" value="ORDER"/>
-                        <label ><i18n>crre.on.order</i18n></label>
+            <div class="horizontal-spacing ">
+                <h2 style="margin: 25px 0 10px 0">
+                    <i18n>crre.campaign.groups.pro</i18n>
+                    :
+                </h2>
+                <table class="twelve">
+                    <div class="campaignCheckbox">
+                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(3,5) track by $index ">
+                            <input type="checkbox" ng-model="group.selected" ng-disabled="othersSelected">
+                            <span>[[group.name]]</span>
+                        </label>
+                        <label class = "checkbox">
+                            <input type="checkbox" ng-model="allProAndGenSelected" ng-change="selectProAndGenStructures()"
+                                   ng-disabled="othersSelected">
+                            <span><i18n>crre.all</i18n></span>
+                        </label>
                     </div>
-                    <div>
-                        <input type="radio" ng-model="campaign.priority_field" value="PROJECT"/>
-                        <label ><i18n>crre.on.project</i18n></label>
+                </table>
+            </div>
+            <div class="horizontal-spacing " ng-if="structureGroups.all.length > 11">
+                <h2 style="margin: 25px 0 10px 0">
+                    <i18n>crre.campaign.groups.others</i18n>
+                    :
+                </h2>
+                <table class="twelve">
+                    <div class="campaignCheckbox">
+                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(11) track by $index ">
+                            <input type="checkbox" ng-model="group.selected" ng-change="changeInOthersSelected(group.selected)">
+                            <span>[[group.name]]</span>
+                        </label>
                     </div>
-                </div>
-            </article>-->
+                </table>
+            </div>
             <div class="right-magnet warning" ng-show="!validCampaignForm(campaign)">
                 <i18n>not.valid.campaign.form</i18n>
             </div>

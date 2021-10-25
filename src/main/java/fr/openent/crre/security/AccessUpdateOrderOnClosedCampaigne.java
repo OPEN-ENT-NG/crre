@@ -29,7 +29,7 @@ public class AccessUpdateOrderOnClosedCampaigne implements ResourcesProvider {
                     JsonArray result = event.right().getValue();
                     boolean campaignIsAccessible = result.getJsonObject(0).getBoolean("accessible");
                     resourceRequest.resume();
-                    handler.handle( campaignIsAccessible && WorkflowActionUtils.hasRight(user, WorkflowActions.ACCESS_RIGHT.toString()));
+                    handler.handle( campaignIsAccessible && WorkflowActionUtils.hasRight(user, WorkflowActions.PRESCRIPTOR_RIGHT.toString()));
                 } else {
                     resourceRequest.resume();
                     handler.handle(false);

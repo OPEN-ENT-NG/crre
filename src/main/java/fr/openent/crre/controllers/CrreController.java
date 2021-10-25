@@ -9,6 +9,8 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 
+import static fr.openent.crre.Crre.ACCESS_RIGHT;
+
 
 public class CrreController extends ControllerHelper {
 
@@ -23,7 +25,7 @@ public class CrreController extends ControllerHelper {
 
     @Get("")
     @ApiDoc("Display the home view")
-    @SecuredAction("crre.access")
+    @SecuredAction(ACCESS_RIGHT)
     public void view(HttpServerRequest request) {
         renderView(request);
         eventStore.createAndStoreEvent(CrreEvent.ACCESS.name(), request);

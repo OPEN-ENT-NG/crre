@@ -20,7 +20,7 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
 
 
     public synchTotalStudents(Vertx vertx) {
-        this.structureService = new DefaultStructureService( Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema);
         this.vertx = vertx;
     }
 

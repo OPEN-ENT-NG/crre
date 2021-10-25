@@ -4,6 +4,7 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.*;
@@ -276,7 +277,8 @@ public class OrderRegionController extends BaseController {
 
     @Get("/ordersRegion/orders")
     @ApiDoc("get all orders of each project")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
     public void getOrdersByProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
@@ -486,10 +488,10 @@ public class OrderRegionController extends BaseController {
     }
 
     int randomStatus() {
-        int tab[] = {1, 2, 3, 4, 6, 7, 9, 10, 14, 15, 20, 35, 55, 57, 58, 59};
+        int[] tab = {1, 2, 3, 4, 6, 7, 9, 10, 14, 15, 20, 35, 55, 57, 58, 59};
         Random rn = new Random();
-        int range = 15 - 0 + 1;
-        int randomNum = rn.nextInt(range) + 0;
+        int range = 15 + 1;
+        int randomNum = rn.nextInt(range);
         return tab[randomNum];
     }
 

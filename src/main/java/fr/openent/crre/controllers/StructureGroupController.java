@@ -6,6 +6,7 @@ import fr.openent.crre.helpers.ImportCSVHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.service.StructureService;
@@ -177,7 +178,8 @@ public class StructureGroupController extends ControllerHelper {
 
     @Get("/structure/groups")
     @ApiDoc("List all groups of structures")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
     @Override
     public void list(final HttpServerRequest request) {
         structureGroupService.listStructureGroups(arrayResponseHandler(request));

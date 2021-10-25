@@ -17,7 +17,7 @@
             <input type="file" files-input-change ng-model="importer.files"/>
         </p>
         <div class="row">
-            <button class="right-magnet" ng-disabled="!importer.isValid()">
+            <button class="right-magnet" ng-disabled="!importer.isValid(categories)">
                 <i18n>import</i18n>
             </button>
         </div>

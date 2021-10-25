@@ -1,8 +1,8 @@
 CREATE TABLE crre.structure (
-    id serial,
-    id_structure character varying,
-    uai character varying,
-    name character varying,
+    id serial NOT NULL,
+    id_structure character varying NOT NULL,
+    uai character varying NOT NULL,
+    name character varying NOT NULL,
     public character varying,
     mixte boolean,
     catalog character varying

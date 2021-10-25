@@ -76,9 +76,10 @@ export class StructureGroupImporter {
         this.files = [];
     }
 
-    isValid(): boolean {
+    isValid(categories:string[]): boolean {
         return this.files.length > 0
-            ? this.files[0].name.endsWith('.csv') && this.files[0].name.trim() !== ''
+            ? this.files[0].name.endsWith('.csv') && this.files[0].name.trim() !== '' &&
+            categories.indexOf(this.files[0].name.slice(0,-4)) == -1
             : false;
     }
 

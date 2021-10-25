@@ -52,7 +52,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
         $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
             "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
-        $scope.categories = ["Papier", "Numérique", "Mixte"];
+        $scope.categories = ["Papier", "Numérique", "Mixte","Établissements professionnels","Établissements généraux",
+            "Établissements professionnels Papier","Établissements généraux Papier",
+            "Établissements professionnels Numérique","Établissements généraux Numérique",
+            "Établissements professionnels Mixte","Établissements généraux Mixte"];
         $scope.selectedType = $location.path();
         $scope.comboLabels = COMBO_LABELS;
 

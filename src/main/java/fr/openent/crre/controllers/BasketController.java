@@ -38,7 +38,8 @@ public class BasketController extends ControllerHelper {
     }
     @Get("/basket/:idCampaign/:idStructure")
     @ApiDoc("List baskets of a campaign and a structure")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void list(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
@@ -88,7 +89,8 @@ public class BasketController extends ControllerHelper {
 
     @Get("/basketOrder/allMyOrders")
     @ApiDoc("Get all my baskets orders")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PrescriptorRight.class)
     public void getMyBasketOrders(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
@@ -106,7 +108,8 @@ public class BasketController extends ControllerHelper {
 
     @Get("/basketOrder/search")
     @ApiDoc("Search order through name")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(PrescriptorRight.class)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && !request.params().get("q").trim().isEmpty()) {
@@ -162,7 +165,7 @@ public class BasketController extends ControllerHelper {
     @Put("/basket/:idBasket/amount")
     @ApiDoc("Update a basket's amount")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessRight.class)
+    @ResourceFilter(PrescriptorRight.class)
     public void updateAmount(final HttpServerRequest  request){
         RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
             try {
@@ -218,7 +221,7 @@ public class BasketController extends ControllerHelper {
     @Post("/baskets/to/orders/:idCampaign")
     @ApiDoc("Create an order list from basket")
     @SecuredAction(Crre.PRESCRIPTOR_RIGHT)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void takeOrder(final HttpServerRequest  request){
         RequestUtils.bodyToJson( request, pathPrefix + "basketToOrder", object -> {
             try {

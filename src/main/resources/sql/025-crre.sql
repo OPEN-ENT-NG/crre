@@ -35,3 +35,4 @@ INSERT INTO crre.consumable_formation VALUES (25, 'PREPA.DIVERSE PRE-BAC : 2EME 
 INSERT INTO crre.consumable_formation VALUES (26, 'PREPA.DIVERSE POST-BAC : 1ERE ANNEE');
 INSERT INTO crre.consumable_formation VALUES (27, 'PREPA.DIVERSE POST-BAC : 2EME ANNEE');
 INSERT INTO crre.consumable_formation VALUES (28, 'PREPA.DIVERSE POST-BAC : 3EME ANNEE');
+INSERT INTO crre.consumable_formation VALUES (28, '3EME');

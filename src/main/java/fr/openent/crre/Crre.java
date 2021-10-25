@@ -20,6 +20,7 @@ public class Crre extends BaseServer {
     public static final String PRESCRIPTOR_RIGHT = "crre.prescriptor";
     public static final String REASSORT_RIGHT = "crre.reassort";
     public static final String UPDATE_STUDENT_RIGHT = "crre.updateStudent";
+    public static final String ACCESS_RIGHT = "crre.access";
     public static long timeout = 99999999999L;
 
 

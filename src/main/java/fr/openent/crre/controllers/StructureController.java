@@ -2,8 +2,7 @@ package fr.openent.crre.controllers;
 
 import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
-import fr.openent.crre.security.AccessRight;
-import fr.openent.crre.security.updateStudentRight;
+import fr.openent.crre.security.*;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -41,15 +40,17 @@ public class StructureController extends ControllerHelper {
 
     @Get("/structures")
     @ApiDoc("Returns all structures")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
     public void getStructures(HttpServerRequest request){
         structureService.getStructures(arrayResponseHandler(request));
     }
 
     @Post("/structures/new")
-    @ApiDoc("Returns all new structures")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getStructuresNew(HttpServerRequest request) throws FileNotFoundException {
+    @ApiDoc("Insert new structures")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void getStructuresNew(HttpServerRequest request) {
         {
             request.setExpectMultipart(true);
             final Buffer buff = Buffer.buffer();
@@ -69,7 +70,7 @@ public class StructureController extends ControllerHelper {
                         if (sc.hasNextLine()) {
                             sc.nextLine();
                         } else {
-                            log.info("Empty user file");
+                            log.info("Empty structures file");
                             return;
                         }
                         JsonArray uais = new JsonArray();
@@ -166,7 +167,7 @@ public class StructureController extends ControllerHelper {
     @Get("/structure/amount")
     @ApiDoc("Get all students amount by structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessRight.class)
+    @ResourceFilter(PrescriptorRight.class)
     public void getAmount(final HttpServerRequest  request) {
             try {
                 String id_structure = request.params().get("id_structure");

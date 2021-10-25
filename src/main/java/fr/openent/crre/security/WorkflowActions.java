@@ -1,12 +1,14 @@
 package fr.openent.crre.security;
 
+import fr.openent.crre.Crre;
+
 public enum WorkflowActions {
-    ACCESS_RIGHT ("crre.access"),
-    ADMINISTRATOR_RIGHT ("crre.administrator"),
-    VALIDATOR_RIGHT ("crre.validator"),
-    PRESCRIPTOR_RIGHT ("crre.prescriptor"),
-    REASSORT_RIGHT ("crre.reassort"),
-    UPDATE_STUDENT_RIGHT("crre.updateStudent");
+    ACCESS_RIGHT (Crre.ACCESS_RIGHT),
+    ADMINISTRATOR_RIGHT (Crre.ADMINISTRATOR_RIGHT),
+    VALIDATOR_RIGHT (Crre.VALIDATOR_RIGHT),
+    PRESCRIPTOR_RIGHT (Crre.PRESCRIPTOR_RIGHT),
+    REASSORT_RIGHT (Crre.REASSORT_RIGHT),
+    UPDATE_STUDENT_RIGHT(Crre.UPDATE_STUDENT_RIGHT);
 
     private final String actionName;
 

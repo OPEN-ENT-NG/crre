@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.service.EquipmentService;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.impl.DefaultEquipmentService;
@@ -16,6 +17,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -39,7 +41,8 @@ public class EquipmentController extends ControllerHelper {
 
     @Get("/equipments")
     @ApiDoc("Get specific equipments ids")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessRight.class)
     @Override
     public void list(HttpServerRequest request) {
         List<String> ids = request.params().getAll("id");
@@ -49,7 +52,8 @@ public class EquipmentController extends ControllerHelper {
 
     @Get("/equipment/:id")
     @ApiDoc("Get an equipment")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessRight.class)
     public void equipment(final HttpServerRequest request) {
         try {
             String idEquipment = request.params().contains("id")
@@ -86,7 +90,8 @@ public class EquipmentController extends ControllerHelper {
 
     @Get("/equipments/catalog")
     @ApiDoc("List equipments of campaign in database")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessRight.class)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
             HashMap<String, ArrayList<String>> params = new HashMap<>();
@@ -145,7 +150,8 @@ public class EquipmentController extends ControllerHelper {
 
     @Get("/equipments/catalog/search")
     @ApiDoc("Search an equipment by keyword")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessRight.class)
     public void SearchEquipment(final HttpServerRequest request) {
         try {
             String query_word = URLDecoder.decode(request.getParam("word"), "UTF-8");
@@ -163,7 +169,8 @@ public class EquipmentController extends ControllerHelper {
 
     @Get("/equipments/catalog/filter")
     @ApiDoc("Search an equipment by keyword")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessRight.class)
     public void FilterEquipment(final HttpServerRequest request) {
         try {
             boolean emptyFilter = Boolean.parseBoolean(request.getParam("emptyFilter"));

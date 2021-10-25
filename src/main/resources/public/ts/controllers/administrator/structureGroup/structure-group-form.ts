@@ -50,6 +50,7 @@ export const structureGroupFormController = ng.controller('structureGroupFormCon
         $scope.validStructureGroupForm = (structureGroup: StructureGroup) => {
             return structureGroup.name !== undefined
                 && structureGroup.name.trim() !== ''
+                && !$scope.categories.includes(structureGroup.name)
                 && structureGroup.structures.length > 0;
         };
 

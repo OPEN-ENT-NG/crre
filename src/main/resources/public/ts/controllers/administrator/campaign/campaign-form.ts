@@ -1,6 +1,6 @@
 import {_, ng} from 'entcore';
 import {
-    Campaign,
+    Campaign, StructureGroup,
     Utils
 } from '../../../model';
 import http from "axios";
@@ -8,12 +8,13 @@ import http from "axios";
 export const campaignFormController = ng.controller('campaignFormController',
     ['$scope', ($scope) => {
         this.init = async () => {
+            $scope.othersSelected = false;
             $scope.articleFormat = [{name : "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}];
             $scope.creditFormat = [{name : "Licences", value: "licences"}, {name: "Crédits", value: "credits"},
                 {name: "Licences consommables", value: "consumable_licences"}];
             $scope.formatCheck = [];
-            $scope.allSelected = false;
+            $scope.allSelected = $scope.allProAndGenSelected = false;
             await $scope.getTypesCampaign();
             if(new RegExp('update').test(window.location.hash)) {
                 $scope.campaign.catalog = $scope.articleFormat.find(format => $scope.campaign.catalog == format.value);
@@ -44,7 +45,7 @@ export const campaignFormController = ng.controller('campaignFormController',
                     structure.selected = false;
                 }
             });
-            $scope.allSelected = false;
+            $scope.allSelected = $scope.allProAndGenSelected = false;
             Utils.safeApply($scope);
         }
 
@@ -71,19 +72,66 @@ export const campaignFormController = ng.controller('campaignFormController',
 
         };
 
-        const selectCampaignsStructureGroup = (group) => {
-            group.selected ? $scope.campaign.groups.push(group) :
-                $scope.campaign.groups = _.reject($scope.campaign.groups, (groups) => {
-                    return groups.id === group.id;
+        const managStructureGroups = (groups:StructureGroup[]) => {
+            let proOrGenSelected = false;
+            let papierNumeriqueSelected = false;
+            $scope.structureGroups.all.slice(3,5).forEach(group => {
+                if(group.selected){
+                    proOrGenSelected = true;
+                    $scope.structureGroups.all.slice(0,3).forEach(groupPapNum => {
+                        if(groupPapNum.selected){
+                            papierNumeriqueSelected = true;
+                            const groupName = group.name + " " + groupPapNum.name;
+                            groups.push(_.findWhere($scope.structureGroups.all, {name: groupName}));
+                        }
+                    });
+                    if(!papierNumeriqueSelected){
+                        groups.push(_.findWhere($scope.structureGroups.all, {name: group.name}));
+                    }
+                }
+            });
+            if(!proOrGenSelected && papierNumeriqueSelected){
+                $scope.structureGroups.all.slice(0,3).forEach(groupPapNum => {
+                    if(groupPapNum.selected){
+                        papierNumeriqueSelected = true;
+                        groups.push(_.findWhere($scope.structureGroups.all, {name: groupPapNum.name}));
+                    }
                 });
+            } else if(!proOrGenSelected && !papierNumeriqueSelected){
+                groups = $scope.structureGroups.selected;
+            }
         };
 
         $scope.selectStructures = () => {
-            if($scope.allSelected) {
-                $scope.structureGroups.selectAll();
-            } else {
-                $scope.structureGroups.deselectAll();
+            $scope.structureGroups.all.slice(0,3).forEach(group => {
+                group.selected = $scope.allSelected;
+            });
+            Utils.safeApply($scope);
+        }
+
+        $scope.changeInOthersSelected = (checking:boolean) => {
+            if(checking) {
+                $scope.structureGroups.all.slice(0, 5).forEach(group => {
+                    group.selected = false;
+                });
+                $scope.allSelected = $scope.allProAndGenSelected = false;
+                $scope.othersSelected = true;
+            }else{
+                let remainOthersSelected = false;
+                $scope.structureGroups.all.slice(11).forEach(group => {
+                    if(group.selected){
+                        remainOthersSelected = true;
+                    }
+                });
+                $scope.othersSelected = remainOthersSelected;
             }
+            Utils.safeApply($scope);
+        }
+
+        $scope.selectProAndGenStructures = () => {
+            $scope.structureGroups.all.slice(3,5).forEach(group => {
+                group.selected = $scope.allProAndGenSelected;
+            });
             Utils.safeApply($scope);
         }
 
@@ -91,8 +139,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.groups = [];
             $scope.campaign.catalog = $scope.campaign.catalog.value;
             $scope.campaign.use_credit = $scope.campaign.use_credit.value;
-            $scope.structureGroups.all.map((group) => selectCampaignsStructureGroup(group));
-            _.uniq($scope.campaign.groups);
+            managStructureGroups($scope.campaign.groups);
             await campaign.save();
             $scope.redirectTo('/campaigns');
             Utils.safeApply($scope);

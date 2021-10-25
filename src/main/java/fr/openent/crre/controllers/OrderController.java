@@ -173,7 +173,8 @@ public class OrderController extends ControllerHelper {
 
     @Get("/orders/search_filter")
     @ApiDoc("Filter order")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {

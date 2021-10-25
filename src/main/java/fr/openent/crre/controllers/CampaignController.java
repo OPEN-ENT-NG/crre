@@ -34,7 +34,7 @@ public class CampaignController extends ControllerHelper {
     @Get("/campaigns")
     @ApiDoc("List all campaigns")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessRight.class)
+    @ResourceFilter(PrescriptorRight.class)
     @Override
     public void list(final HttpServerRequest  request) {
         UserUtils.getUserInfos(eb, request, user -> {

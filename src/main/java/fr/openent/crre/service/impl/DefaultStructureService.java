@@ -59,19 +59,20 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     @Override
     public void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
-                " WHERE s.UAI IN {uais} ";
-        JsonObject params = new JsonObject().put("uais", uais);
+        String query = "MATCH (s:Structure)";
+        JsonObject params = new JsonObject();
         if(consumable_formations == null){
-            query += "RETURN s.id as id, s.UAI as uai, s.type as type";
+            query += " WHERE s.UAI IN {uais} RETURN s.id as id, s.UAI as uai, s.type as type";
+            params.put("uais", uais);
         }else{
-            query += "WITH s.id as id, s.UAI as uai, s.type as type, " +
+            query += "<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                    "WHERE s.UAI IN {uais} WITH s.id as id, s.UAI as uai, s.type as type, " +
                     "CASE WHEN u.level IN {consumable_formations} " +
                     "THEN count(u) " +
                     "ELSE 0 " +
                     "END as nbr_students " +
                     "RETURN id, uai, type, sum(nbr_students) AS nbr_students_consumables;";
-            params.put("consumable_formations", new JsonArray(consumable_formations));
+            params.put("uais", uais).put("consumable_formations", new JsonArray(consumable_formations));
         }
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
@@ -84,7 +85,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     " WHERE s.id IN {ids} ";
             JsonObject params = new JsonObject().put("ids", ids);
             if(consumable_formations == null){
-                query += "RETURN s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
+                query += "RETURN DISTINCT s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
                         "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
                         "s.zipCode  as zipCode, s.city as city, s.type as type ";
             }else{
@@ -93,7 +94,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         "THEN count(u) " +
                         "ELSE 0 " +
                         "END as nbr_students " +
-                        "RETURN s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
+                        "RETURN DISTINCT s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
                         "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
                         "s.zipCode  as zipCode, s.city as city, s.type as type, sum(nbr_students)*2 AS minimum_licences_consumables;";
                 params.put("consumable_formations", new JsonArray(consumable_formations));
@@ -326,7 +327,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
                 " INSERT INTO " + Crre.crreSchema + ".structure" +
-                " (uai, id_structure, name, public,  mixte, catalog) VALUES ";
+                " (uai, id_structure, name, public, mixte, catalog) VALUES ";
 
         for (int i = 0; i < structures.size(); i++) {
                 query += "(?, ?, ?, ?, ?, ?),";
@@ -339,6 +340,9 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         .add(structure.getString("catalog"));
         }
         query = query.substring(0, query.length()-1);
+        query += " ON CONFLICT (id_structure) DO UPDATE " +
+                "SET uai = EXCLUDED.uai, name = EXCLUDED.name, public = EXCLUDED.public, mixte = EXCLUDED.mixte, " +
+                "catalog = EXCLUDED.catalog;";
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
