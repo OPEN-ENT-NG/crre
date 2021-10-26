@@ -531,6 +531,11 @@ UPDATE crre.structure SET technical = true, general = false WHERE id_structure =
 UPDATE crre.structure SET technical = true, general = false WHERE id_structure = '203bc635-81dd-4036-9276-ecd3f6749cef';
 UPDATE crre.structure SET technical = true, general = true WHERE id_structure = 'd6132286-391f-4fd1-8979-8afe9c897693';
 
+UPDATE crre.structure SET technical = false, general = true WHERE id_structure = 'c6f3da5a-4c99-48a6-add9-559fde1a0130';
+UPDATE crre.structure SET technical = true, general = false WHERE id_structure = '92c9777c-a23b-4bc9-a635-49b396e931c2';
+UPDATE crre.structure SET technical = true, general = false WHERE id_structure = 'ccfe2169-71fe-4ff5-8b80-e09afab2acf9';
+UPDATE crre.structure SET technical = true, general = false WHERE id_structure = 'a81838c6-33d1-41dd-9b64-64085d0bdbe4';
+
 INSERT INTO crre.structure_group VALUES (4, 'Établissements professionnels', 'Regroupement des lycées professionnels');
 INSERT INTO crre.structure_group VALUES (5, 'Établissements généraux', 'Regroupement des lycées généraux');
 
