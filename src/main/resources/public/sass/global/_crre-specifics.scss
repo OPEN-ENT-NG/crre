@@ -1629,4 +1629,17 @@ body.crre {
     float: right;
   }
 
+  .button-nav-stat {
+    background: white;
+    color: black;
+    font-size: 18px;
+    padding: 15px;
+    width: 180px;
+    margin-left: 0px;
+    &.selected {
+      background: black;
+      color: white;
+    }
+  }
+
 }

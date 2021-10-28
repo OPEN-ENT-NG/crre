@@ -723,13 +723,19 @@
   "crre.stat.total.licences" : "Licences totales",
   "crre.stat.ordered.ressources" : "de ressources commandées",
   "crre.stat.ordered" : "commandes passées",
-  "crre.stat.structures" : "etablissements",
-  "crre.stat.ressources.all" : "ressources total",
+  "crre.stat.structures" : "établissements",
+  "crre.stat.STRUCTURES" : "Etablissements",
+  "crre.stat.global" : "Globales",
+  "crre.stat.ressources.all" : "ressources au total",
   "crre.stat.ressources.paper" : "ressources papier",
-  "crre.stat.ressources.numeric" : "ressources numérique",
+  "crre.stat.ressources.numeric" : "ressources numériques",
   "crre.stat.public" : "Publics",
   "crre.stat.prive" : "Privés",
+  "crre.stat.type.etab": "LG/LP",
+  "crre.stat.conso": "Conso",
+  "crre.stat.nb_order": "Nombre de commandes",
+  "crre.stat.nb_ressource": "Nombre de ressources",
   "LG" : "Général",
-  "LP": "Professionnel",
-  "crre.stat.type.etab": "LG/LP"
+  "LP": "Professionnel"
+
 }

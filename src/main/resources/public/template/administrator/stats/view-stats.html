@@ -10,48 +10,62 @@
         <h1 class="cell">
             <i18n>crre.statistics</i18n>
         </h1>
-        <div class="right-magnet twelve-mobile">
-            <button ng-click="logs.export()" class="twelve-mobile">
-                <i18n>crre.logs.csv.export</i18n>
+    </div>
+    <div class="row twelve margin-bottom-20 vertical-spacing-twice">
+        <div class="cell twelve-mobile margin-bottom-10">
+            <button ng-click="statsGlobal()" class="button-nav-stat selected">
+                <i18n><span class="no-style ng-scope">crre.stat.global</span></i18n>
+            </button>
+            <button ng-click="statsByStructures()" class="button-nav-stat">
+                <i18n><span class="no-style ng-scope">crre.stat.STRUCTURES</span></i18n>
             </button>
         </div>
-    </div>
-    <div class="twelve margin-bottom-20">
-        <multi-combo title="[[lang.translate('crre.year')]]"
-                     combo-model="years"
-                     search-on="name" order-by=""
-                     labels="comboLabels" filtered-model="filterChoice.years"
-                     max-selected="1"
-                     selection-event="getFilter()"
-                     class="inline-block four-small horizontal-spacing no-border">
-        </multi-combo>
-        <multi-combo title="[[lang.translate('public')]]"
-                     combo-model="schoolType"
-                     search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.schoolType"
-                     max-selected="2"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
-                     class="inline-block four-small horizontal-spacing no-border">
-        </multi-combo>
-        <multi-combo title="[[lang.translate('docsType')]]"
-                     combo-model="docsType"
-                     search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.docsType"
-                     max-selected="2"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
-                     class="inline-block four-small horizontal-spacing no-border">
-        </multi-combo>
-        <multi-combo title="[[lang.translate('crre.reassort')]]"
-                     combo-model="reassorts"
-                     search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.reassorts"
-                     max-selected="2"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
-                     class="inline-block four-small horizontal-spacing no-border">
-        </multi-combo>
+        <div class="cell twelve twelve-mobile" style="min-width: 1015px; margin-top: 7px;">
+            <multi-combo title="[[lang.translate('crre.year')]]"
+                         combo-model="years"
+                         search-on="name" order-by=""
+                         labels="comboLabels" filtered-model="filterChoice.years"
+                         max-selected="1"
+                         selection-event="getFilter()"
+                         class="inline-block four-small horizontal-spacing no-border">
+            </multi-combo>
+            <multi-combo title="[[lang.translate('public')]]"
+                         combo-model="schoolType"
+                         search-on="name" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.schoolType"
+                         max-selected="2"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block four-small horizontal-spacing no-border">
+            </multi-combo>
+            <multi-combo title="[[lang.translate('docsType')]]"
+                         combo-model="docsType"
+                         search-on="name" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.docsType"
+                         max-selected="2"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block four-small horizontal-spacing no-border">
+            </multi-combo>
+            <multi-combo title="[[lang.translate('crre.stat.type.etab')]]"
+                         combo-model="schoolOrientation"
+                         search-on="name" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.schoolOrientation"
+                         max-selected="2"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block four-small horizontal-spacing no-border">
+            </multi-combo>
+            <multi-combo title="[[lang.translate('crre.reassort')]]"
+                         combo-model="reassorts"
+                         search-on="name" order-by="name"
+                         labels="comboLabels" filtered-model="filterChoice.reassorts"
+                         max-selected="2"
+                         selection-event="getFilter()"
+                         deselection-event="getFilter()"
+                         class="inline-block four-small horizontal-spacing no-border">
+            </multi-combo>
+        </div>
     </div>
 
     <div class="twelve flex-cards">

@@ -87,8 +87,7 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                                     JsonArray all_ressources = allRessourceFuture.result();
 
 
-                                    if (ressources_total.size() > 0 || order_year.size() > 0 || licences.size() > 0) {
-                                        JsonObject stats = new JsonObject();
+                                    if (licences.size() > 0) {
                                         // Every 30/04, add a new line in licences mongo db with new year
                                         if (LocalDate.now().getMonthValue() == 5 && LocalDate.now().getDayOfMonth() == 1) {
                                             licences.add(licences.getJsonObject(0));
@@ -100,23 +99,27 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                                             licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + 1 + "");
                                         }
                                         double licencesPercentage = 0;
-                                        if(licences.getJsonObject(0).getInteger("initial_amount") == 0) {
+                                        if (licences.getJsonObject(0).getInteger("initial_amount") == 0) {
                                             licencesPercentage = 0;
 
                                         } else {
                                             licencesPercentage = (licences.getJsonObject(licences.size() - 1).getInteger("amount") / licences.getJsonObject(0).getInteger("initial_amount")) * 100;
                                         }
                                         licences.getJsonObject(licences.size() - 1).put("percentage", 100 - licencesPercentage);
-                                        stats.put("licences", licences);
-                                        stats.put("free_total", free_total);
-                                        stats.put("ressources_total", ressources_total);
-                                        stats.put("order_year", order_year);
-                                        stats.put("order_campaign", order_campaign);
-                                        stats.put("numeric_ressources", numeric_ressources);
-                                        stats.put("paper_ressources", paper_ressources);
-                                        stats.put("all_ressources", all_ressources);
-                                        structure.put("stats", stats);
                                     }
+
+                                        JsonArray notExist = new JsonArray().add(new JsonObject().put("exist", false));
+                                        JsonObject stats = new JsonObject();
+                                        stats.put("licences",  licences.size() > 0 ? licences : notExist);
+                                        stats.put("free_total",  free_total.size() > 0 ? free_total : notExist);
+                                        stats.put("ressources_total",  ressources_total.size() > 0 ? ressources_total : notExist);
+                                        stats.put("order_year", order_year.size() > 0 ? order_year : notExist);
+                                        stats.put("order_campaign", order_campaign);
+                                        stats.put("numeric_ressources", numeric_ressources.size() > 0 ? numeric_ressources : notExist );
+                                        stats.put("paper_ressources", paper_ressources.size() > 0 ? paper_ressources : notExist);
+                                        stats.put("all_ressources", all_ressources.size() > 0 ? all_ressources : notExist);
+                                        structure.put("stats", stats);
+
                                     statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
                                 } else {
                                     log.info("Failed to retrieve statistics for a structure");

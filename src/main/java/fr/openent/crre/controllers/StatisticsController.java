@@ -75,6 +75,9 @@ public class StatisticsController extends BaseController {
         if (request.params().contains("orientation")) {
             params.put("orientation", new ArrayList<>(request.params().getAll("orientation")));
         }
+        if (request.params().contains("query")) {
+            params.put("query", new ArrayList<>(request.params().getAll("query")));
+        }
         return params;
     }
 

@@ -13,6 +13,7 @@ import {
     Offers,
     OrdersClient,
     Statistics,
+    StatisticsStructures,
     StructureGroups,
     Structures,
     Student,
@@ -45,6 +46,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.filters = new Filters();
         $scope.student = new Student();
         $scope.stats = new Statistics();
+        $scope.statsStructure = new StatisticsStructures();
         $scope.total_licence = 0;
         $scope.loadingArray = false;
         $scope.query = {
@@ -563,5 +565,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
             Utils.safeApply($scope);
         };
+
+        $scope.statsByStructures =  async () => {
+            template.open('main-profile', 'administrator/management-main');
+            await template.open('administrator-main', 'administrator/stats/view-stats-structures');
+            Utils.safeApply($scope);
+        }
+
+        $scope.statsGlobal =  async () => {
+            template.open('main-profile', 'administrator/management-main');
+            await template.open('administrator-main', 'administrator/stats/view-stats');
+            Utils.safeApply($scope);
+        }
 
     }]);
