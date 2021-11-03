@@ -8,8 +8,11 @@ export class StatisticsStructure {
     uai: string;
     catalog: string;
     public: string;
+    city: string;
+    region: string;
     id_structure: string;
     licences: object;
+    purses: object;
     orders: number;
     ressources: number;
 }

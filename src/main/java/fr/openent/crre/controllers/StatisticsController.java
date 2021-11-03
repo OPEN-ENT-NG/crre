@@ -21,12 +21,10 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.filter.ResourceFilter;
 
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 
 public class StatisticsController extends BaseController {
@@ -74,6 +72,15 @@ public class StatisticsController extends BaseController {
         }
         if (request.params().contains("orientation")) {
             params.put("orientation", new ArrayList<>(request.params().getAll("orientation")));
+        }
+        if (request.params().contains("city")) {
+            params.put("city", new ArrayList<>(request.params().getAll("city")));
+        }
+        if (request.params().contains("region")) {
+            params.put("region", new ArrayList<>(request.params().getAll("region")));
+        }
+        if (request.params().contains("consummation")) {
+            params.put("consummation", new ArrayList<>(request.params().getAll("consummation")));
         }
         if (request.params().contains("query")) {
             params.put("query", new ArrayList<>(request.params().getAll("query")));
@@ -172,115 +179,13 @@ public class StatisticsController extends BaseController {
     @ApiDoc("Generate and send mail to library")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
-    public void exportMongoStat() {
+    public void exportMongoStat(HttpServerRequest request) {
         log.info("CRRE statistics started");
         statCron.insertStatistics(event1 -> {
             if (event1.isRight()) {
                 log.info("Update statistics launch successful");
             } else {
                 log.info("Update statistics failed");
-            }
-        });
-    }
-
-    @Get("region/orders/mongo")
-    @ApiDoc("Generate and send mail to library")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void exportMongo() {
-        List<Future> futures = new ArrayList<>();
-        structureService.getAllStructuresDetail(event -> {
-            if (event.isRight()) {
-                JsonArray structures = event.right().getValue();
-                for (int i = 0; i < structures.size(); i++) {
-                    Future<JsonObject> addStructureStatFuture = Future.future();
-                    futures.add(addStructureStatFuture);
-                    JsonObject structure = structures.getJsonObject(i);
-                    // All compute with structure object
-                    structure.put("date", LocalDate.now().toString());
-                    List<Future> futuresStat = new ArrayList<>();
-                    Future<JsonArray> licencesFuture = Future.future();
-                    Future<JsonArray> freeLicenceFuture = Future.future();
-                    Future<JsonArray> totalRessourcesFuture = Future.future();
-                    Future<JsonArray> ordersByYearFuture = Future.future();
-                    Future<JsonArray> ordersByCampaignFuture = Future.future();
-                    Future<JsonArray> numeriqueRessourceFuture = Future.future();
-                    Future<JsonArray> papierRessourceFuture = Future.future();
-                    futuresStat.add(licencesFuture);
-                    futuresStat.add(freeLicenceFuture);
-                    futuresStat.add(ordersByCampaignFuture);
-                    futuresStat.add(ordersByYearFuture);
-                    futuresStat.add(totalRessourcesFuture);
-                    futuresStat.add(numeriqueRessourceFuture);
-                    futuresStat.add(papierRessourceFuture);
-
-                    CompositeFuture.all(futuresStat).setHandler(event2 -> {
-                        if (event2.succeeded()) {
-                            JsonArray licences = licencesFuture.result();
-                            JsonArray free_total = freeLicenceFuture.result();
-                            JsonArray ressources_total = totalRessourcesFuture.result();
-                            JsonArray order_year = ordersByYearFuture.result();
-                            JsonArray order_campaign = ordersByCampaignFuture.result();
-                            JsonArray numeric_ressources = numeriqueRessourceFuture.result();
-                            JsonArray paper_ressources = papierRessourceFuture.result();
-
-                            if (free_total.size() > 0 || ressources_total.size() > 0) {
-                                JsonObject stats = new JsonObject();
-                                // Every 30/04, add a new line in licences mongo db with new year
-                                if (LocalDate.now().getMonthValue() == 5 && LocalDate.now().getDayOfMonth() == 1) {
-                                    licences.add(licences.getJsonObject(0));
-                                }
-                                // Put a n+1 year if after 30/04
-                                if (LocalDate.now().getMonthValue() < 5) {
-                                    licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + "");
-                                } else {
-                                    licences.getJsonObject(licences.size() - 1).put("year", LocalDate.now().getYear() + 1 + "");
-                                }
-                                double licencesPercentage = (licences.getJsonObject(licences.size() - 1).getInteger("amount") / licences.getJsonObject(0).getInteger("initial_amount")) * 100;
-                                licences.getJsonObject(licences.size() - 1).put("percentage", 100 - licencesPercentage);
-                                stats.put("licences", licences);
-                                stats.put("free_total", free_total);
-                                stats.put("ressources_total", ressources_total);
-                                stats.put("order_year", order_year);
-                                stats.put("order_campaign", order_campaign);
-                                stats.put("numeric_ressources", numeric_ressources);
-                                stats.put("paper_ressources", paper_ressources);
-                            }
-                            String JSON_DATA = "{ \"licences\":[ { \"amount\":5000, \"initial_amount\":10000, \"year\":\"2021\", \"percentage\":50 }, { \"amount\":2000, \"initial_amount\":10000, \"year\":\"2020\", \"percentage\":20 }, { \"amount\":3000, \"initial_amount\":10000, \"year\":\"2019\", \"percentage\":30 } ], \"free_total\":[ { \"total\":150, \"reassort\":false, \"year\":\"2021\" }, { \"total\":200, \"reassort\":false, \"year\":\"2020\" }, { \"total\":175, \"reassort\":false, \"year\":\"2019\" }, { \"total\":15, \"reassort\":true, \"year\":\"2021\" }, { \"total\":20, \"reassort\":true, \"year\":\"2020\" }, { \"total\":17, \"reassort\":true, \"year\":\"2019\" } ], \"ressources_total\":[ { \"total\":200000, \"reassort\":false, \"year\":\"2021\" }, { \"total\":250000, \"reassort\":false, \"year\":\"2020\" }, { \"total\":225000, \"reassort\":false, \"year\":\"2019\" }, { \"total\":2000, \"reassort\":true, \"year\":\"2021\" }, { \"total\":2500, \"reassort\":true, \"year\":\"2020\" }, { \"total\":2250, \"reassort\":true, \"year\":\"2019\" } ], \"order_year\":[ { \"total\":1000, \"reassort\":false, \"year\":\"2021\" }, { \"total\":1500, \"reassort\":false, \"year\":\"2020\" }, { \"total\":1250, \"reassort\":false, \"year\":\"2019\" }, { \"total\":100, \"reassort\":true, \"year\":\"2021\" }, { \"total\":150, \"reassort\":true, \"year\":\"2020\" }, { \"total\":125, \"reassort\":true, \"year\":\"2019\" } ], \"order_campaign\":[ { \"name\":\"Campagne papier\", \"id\":2, \"total\":750 }, { \"name\":\"Campagne numérique\", \"id\":1, \"total\":250 } ], \"numeric_ressources\":[ { \"total\":1500, \"reassort\":false, \"year\":\"2021\" }, { \"total\":2000, \"reassort\":false, \"year\":\"2020\" }, { \"total\":1750, \"reassort\":false, \"year\":\"2019\" }, { \"total\":150, \"reassort\":true, \"year\":\"2021\" }, { \"total\":200, \"reassort\":true, \"year\":\"2020\" }, { \"total\":175, \"reassort\":true, \"year\":\"2019\" } ], \"paper_ressources\":[ { \"total\":500, \"reassort\":false, \"year\":\"2021\" }, { \"total\":1000, \"reassort\":false, \"year\":\"2020\" }, { \"total\":750, \"reassort\":false, \"year\":\"2019\" }, { \"total\":50, \"reassort\":true, \"year\":\"2021\" }, { \"total\":100, \"reassort\":true, \"year\":\"2020\" }, { \"total\":75, \"reassort\":true, \"year\":\"2019\" } ] }";
-                            JsonObject statss = new JsonObject(JSON_DATA);
-                            structure.put("stats", statss);
-                            statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
-                        }
-                    });
-
-                    // Licences
-
-                    statisticsService.getLicences(structure.getString("id_structure"), handlerJsonArray(licencesFuture));
-
-                    // Commandes
-
-                    statisticsService.getStats("orders", structure.getString("id_structure"), handlerJsonArray(ordersByYearFuture));
-                    statisticsService.getOrdersByCampaign(structure.getString("id_structure"), handlerJsonArray(ordersByCampaignFuture));
-
-                    // Licences
-
-                    statisticsService.getStats("free", structure.getString("id_structure"), handlerJsonArray(freeLicenceFuture));
-
-                    // Finances
-
-                    statisticsService.getStats("ressources", structure.getString("id_structure"), handlerJsonArray(totalRessourcesFuture));
-
-                    // Ressources
-
-                    statisticsService.getStats("articlenumerique", structure.getString("id_structure"), handlerJsonArray(numeriqueRessourceFuture));
-                    statisticsService.getStats("articlepapier", structure.getString("id_structure"), handlerJsonArray(papierRessourceFuture));
-
-                }
-                CompositeFuture.all(futures).setHandler(event2 -> {
-                    if (event2.succeeded()) {
-                        log.info("export mongo ok");
-                    }
-                });
             }
         });
     }

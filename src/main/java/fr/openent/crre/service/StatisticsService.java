@@ -14,7 +14,7 @@ public interface StatisticsService {
 
     void getOrdersByCampaign(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
 
-    void getLicences(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
+    void getAmount(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray);
 
     void getOrdersCompute(String ressources, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject);
 

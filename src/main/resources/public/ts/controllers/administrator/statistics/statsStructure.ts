@@ -1,66 +1,32 @@
-import {ng} from 'entcore';
-import {Filter, Filters, Utils} from '../../../model';
-import http from "axios";
+import {_, ng} from 'entcore';
+import {Utils} from '../../../model';
 
 export const statsStructureController = ng.controller('statsStructureController', [
     '$scope', async ($scope) => {
-        $scope.filterChoice = {
-            schoolType: [],
-            docType: [],
-            years: []
-        };
-        $scope.docsType = [{name: 'Papier'}, {name: 'Numerique'}];
-        $scope.schoolType = [{name: 'Public'}, {name: 'Privé'}];
 
-        $scope.schoolType.forEach((item) => item.toString = () => $scope.translate(item.name));
-        $scope.docsType.forEach((item) => item.toString = () => $scope.translate(item.name));
-
-        let { data } = await http.get(`/crre/region/statistics/years`);
-        $scope.years = data;
-        $scope.years.forEach((item) => item.toString = () => $scope.translate(item.name));
-
-        $scope.filterChoiceCorrelation = {
-            keys : ["docsType","year", "schoolType"],
-            years : 'year',
-            schoolType : 'public',
-            docsType : 'catalog'
-        };
-
+        $scope.consummation = [{name: '0', order: 0}, {name: '20', order: 1}, {name: '40', order: 2}, {name: '60', order: 3},
+            {name: '80', order: 4}, {name: '100', order: 5}];
+        $scope.consummation.forEach((item) => item.toString = () => $scope.translate(item.name));
+        Utils.safeApply($scope);
 
         this.init = async () => {
-            // Init the stat for the current year
-            let date;
-            if(new Date().getMonth() > 4) {
-                date = new Date().getFullYear() + 1;
-                date = date.toString();
-            } else {
-                date = new Date().getFullYear().toString();
-            }
-            let filterYear = new Filter();
-            filterYear.name = "year";
-            filterYear.value = date;
-            $scope.filters = new Filters();
-            $scope.filters.all.push(filterYear);
+            await $scope.initFilter();
+            await $scope.initYear();
             await $scope.statsStructure.get($scope.filters);
             Utils.safeApply($scope);
-
             // Init filter as last year
             $scope.filterChoice.years.push($scope.years[0]);
+
+            $scope.cities = getUnique("city");
+            $scope.regions = getUnique("region");
+
             Utils.safeApply($scope);
+
         };
 
 
         $scope.getFilter = async () => {
-            $scope.filters.all = [];
-            for (const key of Object.keys($scope.filterChoice)) {
-                $scope.filterChoice[key].forEach(item => {
-                    let newFilter = new Filter();
-                    newFilter.name = $scope.filterChoiceCorrelation[key];
-                    newFilter.value = item.name;
-                    $scope.filters.all.push(newFilter);
-                });
-                Utils.safeApply($scope);
-            }
+            $scope.getAllFilter();
             await $scope.statsStructure.get($scope.filters, $scope.query_name);
             Utils.safeApply($scope);
         }
@@ -70,7 +36,21 @@ export const statsStructureController = ng.controller('statsStructureController'
             Utils.safeApply($scope);
         }
 
+        function getUnique(type: string) {
+            let value = $scope.statsStructure.all
+                .map(p => {
+                    p = {"name": type == "city" ? p.city : p.region};
+                    return p;
+                });
+            value = _.uniq(value, x => x.name);
+            value.forEach((item) => item.toString = () => $scope.translate(item.name));
+            return value;
+        }
+
         this.init();
         Utils.safeApply($scope);
+
     }
+
+
 ]);

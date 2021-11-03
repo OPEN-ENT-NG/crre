@@ -1,171 +1,175 @@
-<div class="log-view" ng-controller="statsController">
-    <div class="loading-bar" ng-class="{loading: loadingArrayLogs}"></div>
-    <div ng-show="loadingArrayLogs">
-        <h1>
-            <i18n>crre.loading</i18n>
-        </h1>
-    </div>
+<div ng-controller="statsController">
+    <div class="log-view" ng-controller="statsGlobalController">
+        <div class="loading-bar" ng-class="{loading: loadingArrayLogs}"></div>
+        <div ng-show="loadingArrayLogs">
+            <h1>
+                <i18n>crre.loading</i18n>
+            </h1>
+        </div>
 
-    <div ng-show="!loadingArrayLogs" class="row">
-        <h1 class="cell">
-            <i18n>crre.statistics</i18n>
-        </h1>
-    </div>
-    <div class="row twelve margin-bottom-20 vertical-spacing-twice">
-        <div class="cell twelve-mobile margin-bottom-10">
-            <button ng-click="statsGlobal()" class="button-nav-stat selected">
-                <i18n><span class="no-style ng-scope">crre.stat.global</span></i18n>
-            </button>
-            <button ng-click="statsByStructures()" class="button-nav-stat">
-                <i18n><span class="no-style ng-scope">crre.stat.STRUCTURES</span></i18n>
-            </button>
+        <div ng-show="!loadingArrayLogs" class="row">
+            <h1 class="cell">
+                <i18n>crre.statistics</i18n>
+            </h1>
         </div>
-        <div class="cell twelve twelve-mobile" style="min-width: 1015px; margin-top: 7px;">
-            <multi-combo title="[[lang.translate('crre.year')]]"
-                         combo-model="years"
-                         search-on="name" order-by=""
-                         labels="comboLabels" filtered-model="filterChoice.years"
-                         max-selected="1"
-                         selection-event="getFilter()"
-                         class="inline-block four-small horizontal-spacing no-border">
-            </multi-combo>
-            <multi-combo title="[[lang.translate('public')]]"
-                         combo-model="schoolType"
-                         search-on="name" order-by="name"
-                         labels="comboLabels" filtered-model="filterChoice.schoolType"
-                         max-selected="2"
-                         selection-event="getFilter()"
-                         deselection-event="getFilter()"
-                         class="inline-block four-small horizontal-spacing no-border">
-            </multi-combo>
-            <multi-combo title="[[lang.translate('docsType')]]"
-                         combo-model="docsType"
-                         search-on="name" order-by="name"
-                         labels="comboLabels" filtered-model="filterChoice.docsType"
-                         max-selected="2"
-                         selection-event="getFilter()"
-                         deselection-event="getFilter()"
-                         class="inline-block four-small horizontal-spacing no-border">
-            </multi-combo>
-            <multi-combo title="[[lang.translate('crre.stat.type.etab')]]"
-                         combo-model="schoolOrientation"
-                         search-on="name" order-by="name"
-                         labels="comboLabels" filtered-model="filterChoice.schoolOrientation"
-                         max-selected="2"
-                         selection-event="getFilter()"
-                         deselection-event="getFilter()"
-                         class="inline-block four-small horizontal-spacing no-border">
-            </multi-combo>
-            <multi-combo title="[[lang.translate('crre.reassort')]]"
-                         combo-model="reassorts"
-                         search-on="name" order-by="name"
-                         labels="comboLabels" filtered-model="filterChoice.reassorts"
-                         max-selected="2"
-                         selection-event="getFilter()"
-                         deselection-event="getFilter()"
-                         class="inline-block four-small horizontal-spacing no-border">
-            </multi-combo>
+        <div class="row twelve margin-bottom-20 vertical-spacing-twice">
+            <div class="cell twelve-mobile margin-bottom-10">
+                <button ng-click="statsGlobal()" class="button-nav-stat selected">
+                    <i18n><span class="no-style ng-scope">crre.stat.global</span></i18n>
+                </button>
+                <button ng-click="statsByStructures()" class="button-nav-stat">
+                    <i18n><span class="no-style ng-scope">crre.stat.STRUCTURES</span></i18n>
+                </button>
+            </div>
+            <div class="cell twelve twelve-mobile" style="min-width: 1015px; margin-top: 7px;">
+                <multi-combo title="[[lang.translate('crre.year')]]"
+                             combo-model="years"
+                             search-on="name" order-by=""
+                             labels="comboLabels" filtered-model="filterChoice.years"
+                             max-selected="1"
+                             selection-event="getFilter()"
+                             class="inline-block four-small horizontal-spacing no-border">
+                </multi-combo>
+                <multi-combo title="[[lang.translate('public')]]"
+                             combo-model="schoolType"
+                             search-on="name" order-by="name"
+                             labels="comboLabels" filtered-model="filterChoice.schoolType"
+                             max-selected="2"
+                             selection-event="getFilter()"
+                             deselection-event="getFilter()"
+                             class="inline-block four-small horizontal-spacing no-border">
+                </multi-combo>
+                <multi-combo title="[[lang.translate('docsType')]]"
+                             combo-model="docsType"
+                             search-on="name" order-by="name"
+                             labels="comboLabels" filtered-model="filterChoice.docsType"
+                             max-selected="2"
+                             selection-event="getFilter()"
+                             deselection-event="getFilter()"
+                             class="inline-block four-small horizontal-spacing no-border">
+                </multi-combo>
+                <multi-combo title="[[lang.translate('crre.stat.type.etab')]]"
+                             combo-model="schoolOrientation"
+                             search-on="name" order-by="name"
+                             labels="comboLabels" filtered-model="filterChoice.schoolOrientation"
+                             max-selected="2"
+                             selection-event="getFilter()"
+                             deselection-event="getFilter()"
+                             class="inline-block four-small horizontal-spacing no-border">
+                </multi-combo>
+                <multi-combo title="[[lang.translate('crre.reassort')]]"
+                             combo-model="reassorts"
+                             search-on="name" order-by="name"
+                             labels="comboLabels" filtered-model="filterChoice.reassorts"
+                             max-selected="2"
+                             selection-event="getFilter()"
+                             deselection-event="getFilter()"
+                             class="inline-block four-small horizontal-spacing no-border">
+                </multi-combo>
+            </div>
         </div>
-    </div>
 
-    <div class="twelve flex-cards">
-        <div class="cards">
-            <span class="bold-font-weight red-text">[[stats.licences.amount]]</span>
-            <span class="red-text small-red"><i18n>crre.stat.consumed.licences</i18n></span>
-            <span class="bold-font-weight"> / [[stats.licences.initial_amount]]</span>
-            <span><i18n>crre.stat.total.licences</i18n></span>
-        </div>
-        <div class="cards">
-            <span class="bold-font-weight">[[stats.ressources]] €</span>
-            <span><i18n>crre.stat.ordered.ressources</i18n></span>
-        </div>
-        <div class="cards">
-            <span class="bold-font-weight">[[stats.orders]]</span>
-            <span><i18n>crre.stat.ordered</i18n></span>
-        </div>
-        <div class="cards size-cards leftPadding20">
-            <div>
-                <span class="red-text bold-font-weight">[[stats.allStructures.structuresMoreOneOrder]]</span>
-                <br>
-                <span class="red-text small-red"><i18n>crre.stat.structures</i18n></span>
-                <br>
-                <span class="bold-font-weight"> / </span>
-                <span class="bold-font-weight">[[stats.allStructures.structures]]</span>
-                <br>
-                <span><i18n>crre.stat.structures</i18n></span>
+        <div class="twelve flex-cards">
+            <div class="cards">
+                <span class="bold-font-weight red-text">[[stats.licences.amount]]</span>
+                <span class="red-text small-red"><i18n>crre.stat.consumed.licences</i18n></span>
+                <span class="bold-font-weight"> / [[stats.licences.initial_amount]]</span>
+                <span><i18n>crre.stat.total.licences</i18n></span>
             </div>
-            <div>
-                <span class="bold-font-weight big-text">[[stats.allStructures.percentage]]</span>
-                <span class="bold-font-weight big-text"> % </span>
+            <div class="cards">
+                <span class="bold-font-weight big-text">[[stats.ressources]] €</span>
+                <span><i18n>crre.stat.ordered.ressources</i18n></span>
             </div>
+            <div class="cards">
+                <span class="bold-font-weight big-text">[[stats.orders]]</span>
+                <span><i18n>crre.stat.ordered</i18n></span>
+            </div>
+            <div class="cards size-cards leftPadding20">
+                <div>
+                    <span class="red-text bold-font-weight">[[stats.allStructures.structuresMoreOneOrder]]</span>
+                    <br>
+                    <span class="red-text small-red"><i18n>crre.stat.structures</i18n></span>
+                    <br>
+                    <span class="bold-font-weight"> / </span>
+                    <span class="bold-font-weight">[[stats.allStructures.structures]]</span>
+                    <br>
+                    <span><i18n>crre.stat.structures</i18n></span>
+                </div>
+                <div>
+                    <span class="bold-font-weight big-text">[[stats.allStructures.percentage]]</span>
+                    <span class="bold-font-weight big-text"> % </span>
+                </div>
 
-        </div>
-        <div ng-if="isPublic('Public')" class="cards size-cards bold-font-weight">
-            <div>
-                <span class="font20"><i18n>crre.stat.public</i18n></span>
-                <br>
-                <span class="red-text" ng-bind="getPublicTotal(stats.structuresMoreOneOrder, 'Public')"> </span>
-                <span> / </span>
-                <span ng-bind="getPublicTotal(stats.structures, 'Public')"> </span>
             </div>
-            <div>
-                <span class="big-text" ng-bind="getPublicPercentage(stats.structuresMoreOneOrder, 'Public')"></span>
-                <span class="big-text"> % </span>
+            <div ng-if="isPublic('Public')" class="cards size-cards bold-font-weight">
+                <div>
+                    <span class="font20"><i18n>crre.stat.public</i18n></span>
+                    <br>
+                    <span class="red-text" ng-bind="getPublicTotal(stats.structuresMoreOneOrder, 'Public')"> </span>
+                    <span> / </span>
+                    <span ng-bind="getPublicTotal(stats.structures, 'Public')"> </span>
+                </div>
+                <div>
+                    <span class="big-text" ng-bind="getPublicPercentage(stats.structuresMoreOneOrder, 'Public')"></span>
+                    <span class="big-text"> % </span>
+                </div>
             </div>
-        </div>
-        <div ng-if="isPublic('Public')" class="cards size-cards">
-            <div class="paper-icon-stat"></div>
-            <div>
-                <span class="bold-font-weight" ng-bind="getPublicTotal(stats.allPaperRessources, 'Public')"> </span>
-                <br>
-                <span><i18n>crre.stat.ressources.paper</i18n></span>
+            <div ng-if="isPublic('Public')" class="cards size-cards">
+                <div class="paper-icon-stat"></div>
+                <div>
+                    <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allPaperRessources, 'Public')"> </span>
+                    <br>
+                    <span><i18n>crre.stat.ressources.paper</i18n></span>
+                </div>
             </div>
-        </div>
-        <div ng-if="isPublic('Public')" class="cards size-cards">
-            <div class="laptop-icon-stat"></div>
-            <div>
-                <span class="bold-font-weight" ng-bind="getPublicTotal(stats.allNumericRessources, 'Public')"> </span>
-                <br>
-                <span><i18n>crre.stat.ressources.numeric</i18n></span>
+            <div ng-if="isPublic('Public')" class="cards size-cards">
+                <div class="laptop-icon-stat"></div>
+                <div>
+                    <span class="bold-font-weight big-text"
+                          ng-bind="getPublicTotal(stats.allNumericRessources, 'Public')"> </span>
+                    <br>
+                    <span><i18n>crre.stat.ressources.numeric</i18n></span>
+                </div>
             </div>
-        </div>
-        <div ng-if="isPublic('Public')" class="cards">
-            <span class="bold-font-weight" ng-bind="getPublicTotal(stats.allRessources, 'Public')"></span>
-            <span><i18n>crre.stat.ressources.all</i18n></span>
-        </div>
-        <div ng-if="isPublic('Privé')" class="cards size-cards bold-font-weight">
-            <div>
-                <span class="font20"><i18n>crre.stat.prive</i18n></span>
-                <br>
-                <span class="red-text" ng-bind="getPublicTotal(stats.structuresMoreOneOrder, 'Privé')"> </span>
-                <span> / </span>
-                <span ng-bind="getPublicTotal(stats.structures, 'Privé')"> </span>
+            <div ng-if="isPublic('Public')" class="cards">
+                <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allRessources, 'Public')"></span>
+                <span><i18n>crre.stat.ressources.all</i18n></span>
             </div>
-            <div>
-                <span class="big-text" ng-bind="getPublicPercentage(stats.structuresMoreOneOrder, 'Privé')"></span>
-                <span class="big-text"> % </span>
+            <div ng-if="isPublic('Privé')" class="cards size-cards bold-font-weight">
+                <div>
+                    <span class="font20"><i18n>crre.stat.prive</i18n></span>
+                    <br>
+                    <span class="red-text" ng-bind="getPublicTotal(stats.structuresMoreOneOrder, 'Privé')"> </span>
+                    <span> / </span>
+                    <span ng-bind="getPublicTotal(stats.structures, 'Privé')"> </span>
+                </div>
+                <div>
+                    <span class="big-text" ng-bind="getPublicPercentage(stats.structuresMoreOneOrder, 'Privé')"></span>
+                    <span class="big-text"> % </span>
+                </div>
             </div>
-        </div>
-        <div ng-if="isPublic('Privé')" class="cards size-cards">
-            <div class="paper-icon-stat"></div>
-            <div>
-                <span class="bold-font-weight" ng-bind="getPublicTotal(stats.allPaperRessources, 'Privé')"></span>
-                <br>
-                <span><i18n>crre.stat.ressources.paper</i18n></span>
+            <div ng-if="isPublic('Privé')" class="cards size-cards">
+                <div class="paper-icon-stat"></div>
+                <div>
+                    <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allPaperRessources, 'Privé')"></span>
+                    <br>
+                    <span><i18n>crre.stat.ressources.paper</i18n></span>
+                </div>
             </div>
-        </div>
-        <div ng-if="isPublic('Privé')" class="cards size-cards">
-            <div class="laptop-icon-stat"></div>
-            <div>
-                <span class="bold-font-weight" ng-bind="getPublicTotal(stats.allNumericRessources, 'Privé')"> </span>
-                <br>
-                <span><i18n>crre.stat.ressources.numeric</i18n></span>
-            </div>
+            <div ng-if="isPublic('Privé')" class="cards size-cards">
+                <div class="laptop-icon-stat"></div>
+                <div>
+                    <span class="bold-font-weight big-text"
+                          ng-bind="getPublicTotal(stats.allNumericRessources, 'Privé')"> </span>
+                    <br>
+                    <span><i18n>crre.stat.ressources.numeric</i18n></span>
+                </div>
 
-        </div>
-        <div ng-if="isPublic('Privé')" class="cards">
-            <span class="bold-font-weight" ng-bind="getPublicTotal(stats.allRessources, 'Privé')"></span>
-            <span><i18n>crre.stat.ressources.all</i18n></span>
+            </div>
+            <div ng-if="isPublic('Privé')" class="cards">
+                <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allRessources, 'Privé')"></span>
+                <span><i18n>crre.stat.ressources.all</i18n></span>
+            </div>
         </div>
     </div>
 </div>

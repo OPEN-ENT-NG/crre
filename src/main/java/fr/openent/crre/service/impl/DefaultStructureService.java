@@ -327,28 +327,27 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
                 " INSERT INTO " + Crre.crreSchema + ".structure" +
-                " (uai, id_structure, name, public, mixte, catalog) VALUES ";
+                " (uai, id_structure, name, public, mixte, catalog, city, region) VALUES ";
 
         for (int i = 0; i < structures.size(); i++) {
-                query += "(?, ?, ?, ?, ?, ?),";
+                query += "(?, ?, ?, ?, ?, ?, ?, ?),";
                 JsonObject structure = structures.getJsonObject(i);
                 params.add(structure.getString("uai"))
                         .add(structure.getString("id"))
                         .add(structure.getString("name"))
                         .add(structure.getString("public"))
                         .add((structure.getString("mixte").equals("Vrai")))
-                        .add(structure.getString("catalog"));
+                        .add(structure.getString("catalog"))
+                        .add(structure.getString("city"))
+                        .add(structure.getString("region"));
         }
         query = query.substring(0, query.length()-1);
-        query += " ON CONFLICT (id_structure) DO UPDATE " +
-                "SET uai = EXCLUDED.uai, name = EXCLUDED.name, public = EXCLUDED.public, mixte = EXCLUDED.mixte, " +
-                "catalog = EXCLUDED.catalog;";
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT id_structure, name, uai, public, mixte, catalog, technical, general" +
+        String query = "SELECT DISTINCT id_structure, name, uai, public, mixte, catalog, technical, general, city, region" +
                 " FROM " + Crre.crreSchema + ".structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
     }

@@ -76,10 +76,10 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     @Override
-    public void getLicences(String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
+    public void getAmount(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
         String query = "SELECT amount, initial_amount " +
-                "FROM " + Crre.crreSchema + ".licences " +
-                "WHERE id_structure = ?;";
+                "FROM " + Crre.crreSchema + "." + type +
+                " WHERE id_structure = ?;";
         Sql.getInstance().prepared(query, new JsonArray().add(id_structure), SqlResult.validResultHandler(handlerJsonArray));
     }
 
@@ -124,8 +124,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         Set<Map.Entry<String, ArrayList<String>>> set = params.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
-            if (!me.getKey().equals("year") && !me.getKey().equals("reassort") &&
-                    !me.getKey().equals("orientation") && !me.getKey().equals("query")) {
+            if (!me.getKey().equals("year") && !me.getKey().equals("reassort") && !me.getKey().equals("orientation")
+                    && !me.getKey().equals("query") && !me.getKey().equals("consummation")) {
                 JsonObject parameter = new JsonObject().put("$in", me.getValue());
                 match.put(me.getKey(), parameter);
             } else if (me.getKey().equals("orientation")) {
@@ -137,6 +137,19 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                     match.put("technical", true);
                     match.put("general", true);
                 }
+            } else if (me.getKey().equals("consummation")) {
+                JsonArray or = new JsonArray();
+                for (int i = 0; i < me.getValue().size(); i++) {
+                    or.add(new JsonObject().put("$and", Arrays.asList(
+                            new JsonObject().put("$gte",
+                                    new JsonArray().add("$stats.licences.percentage").add(Double.parseDouble(me.getValue().get(i)))
+                            ),
+                            new JsonObject().put("$lt",
+                                    new JsonArray().add("$stats.licences.percentage").add(Double.parseDouble(me.getValue().get(i)) + 20)
+                            )
+                    )));
+                }
+                match.put("$expr", new JsonObject().put("$or", or));
             }
         }
 
@@ -160,7 +173,6 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         return new JsonObject()
                 .put("$match", match);
     }
-
 
 
     private JsonObject ordersMongo(String type, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort) {
@@ -191,7 +203,6 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                 .put("_id.year", params.get("year").get(0))
                         ),
                 project));
-        JsonArray pipeline = new JsonArray();
         return new JsonObject()
                 .put("aggregate", "crre.statistics")
                 .put("allowDiskUse", true)
@@ -310,10 +321,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
 
     private JsonObject statsByStructureMongo(HashMap<String, ArrayList<String>> params) {
         String query = params.containsKey("query") ? params.get("query").get(0) : "";
-        JsonObject cond = new JsonObject();
-        cond.put("if", new JsonObject().put("$eq", new JsonArray().add("$_id.licences.exist").add(false)));
-        cond.put("then", new JsonObject().put("amount", 0).put("initial_amount", 0).put("year", params.get("year").get(0)).put("percentage", 0));
-        cond.put("else", "$_id.licences");
+        JsonObject condLicences = cond(params, "licences");
+        JsonObject condPurses = cond(params, "purses");
         return new JsonObject()
                 .put("aggregate", "crre.statistics")
                 .put("allowDiskUse", true)
@@ -327,6 +336,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                 .put("$unwind", "$stats.order_year"),
                                         new JsonObject()
                                                 .put("$unwind", "$stats.licences"),
+                                        new JsonObject()
+                                                .put("$unwind", "$stats.purses"),
                                         new JsonObject()
                                                 .put("$unwind", "$stats.all_ressources"),
                                         searchMatch(query),
@@ -373,6 +384,19 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                                                         )
                                                                                 )
 
+                                                                        ),
+                                                                        new JsonObject().put("$or",
+                                                                                Arrays.asList(
+                                                                                        new JsonObject().put("$eq",
+                                                                                                new JsonArray().add("$stats.purses.exist").add(false)
+                                                                                        ),
+                                                                                        new JsonObject().put("$and",
+                                                                                                new JsonArray().add(new JsonObject().put("$eq",
+                                                                                                        new JsonArray().add("$stats.purses.year").add(params.get("year").get(0)))
+                                                                                                )
+                                                                                        )
+                                                                                )
+
                                                                         ))
                                                                 )
                                                         )
@@ -382,9 +406,12 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                                 .put("id_structure", "$id_structure")
                                                                 .put("uai", "$uai")
                                                                 .put("name", "$name")
+                                                                .put("city", "$city")
+                                                                .put("region", "$region")
                                                                 .put("catalog", "$catalog")
                                                                 .put("public", "$public")
                                                                 .put("licences", "$stats.licences")
+                                                                .put("purses", "$stats.purses")
                                                                 .put("orders", "$stats.order_year.total")
                                                                 .put("ressources", "$stats.all_ressources.total")
                                                         )
@@ -394,9 +421,13 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                                         .put("id_structure", "$_id.id_structure")
                                                                         .put("uai", "$_id.uai")
                                                                         .put("name", "$_id.name")
+                                                                        .put("city", "$_id.city")
+                                                                        .put("region", "$_id.region")
                                                                         .put("catalog", "$_id.catalog")
                                                                         .put("public", "$_id.public")
                                                                         .put("licences", "$_id.licences")
+                                                                        .put("purses", "$_id.purses")
+
                                                                 )
                                                                 .put("orders", new JsonObject().put("$sum", "$_id.orders"))
                                                                 .put("ressources", new JsonObject().put("$sum", "$_id.ressources"))
@@ -406,15 +437,26 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                         .put("_id", 0)
                                                         .put("name", "$_id.name")
                                                         .put("uai", "$_id.uai")
+                                                        .put("city", "$_id.city")
+                                                        .put("region", "$_id.region")
                                                         .put("catalog", "$_id.catalog")
                                                         .put("public", "$_id.public")
                                                         .put("id_structure", "$_id.id_structure")
-                                                        .put("licences", new JsonObject().put("$cond", cond))
+                                                        .put("licences", new JsonObject().put("$cond", condLicences))
+                                                        .put("purses", new JsonObject().put("$cond", condPurses))
                                                         .put("orders", "$orders")
                                                         .put("ressources", "$ressources")
                                                 )
                                 )
                         ));
+    }
+
+    private JsonObject cond(HashMap<String, ArrayList<String>> params, String format) {
+        JsonObject cond = new JsonObject();
+        cond.put("if", new JsonObject().put("$eq", new JsonArray().add("$_id." + format + ".exist").add(false)));
+        cond.put("then", new JsonObject().put("amount", 0).put("initial_amount", 0).put("year", params.get("year").get(0)).put("percentage", 0));
+        cond.put("else", "$_id." + format);
+        return cond;
     }
 
     private JsonObject deleteStatsDay() {

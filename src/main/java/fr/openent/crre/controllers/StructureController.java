@@ -83,6 +83,8 @@ public class StructureController extends ControllerHelper {
                             JsonObject structure = new JsonObject();
                             structure.put("uai", values[1]);
                             structure.put("name", values[2]);
+                            structure.put("city", values[3]);
+                            structure.put("region", values[5]);
                             structure.put("public", values[6]);
                             structure.put("mixte", values[7]);
                             structure.put("catalog", values[8]);
