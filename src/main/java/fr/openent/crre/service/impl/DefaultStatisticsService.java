@@ -84,8 +84,10 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     @Override
-    public void getOrdersCompute(String type, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject) {
-        MongoDb.getInstance().command(ordersMongo(type, params, publicField, isReassort).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
+    public void getOrdersCompute(String type, HashMap<String, ArrayList<String>> params, boolean publicField,
+                                 boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        MongoDb.getInstance().command(ordersMongo(type, params, publicField, isReassort).toString(),
+                MongoDbResult.validResultHandler(handlerJsonObject));
     }
 
     @Override
@@ -94,8 +96,10 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     @Override
-    public void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder, boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject) {
-        MongoDb.getInstance().command(structuresMongo(params, MoreOneOrder, isReassort).toString(), MongoDbResult.validResultHandler(handlerJsonObject));
+    public void getStructureCompute(HashMap<String, ArrayList<String>> params, boolean MoreOneOrder,
+                                    boolean isReassort, Handler<Either<String, JsonObject>> handlerJsonObject) {
+        MongoDb.getInstance().command(structuresMongo(params, MoreOneOrder, isReassort).toString(),
+                MongoDbResult.validResultHandler(handlerJsonObject));
     }
 
     @Override
@@ -120,7 +124,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         Set<Map.Entry<String, ArrayList<String>>> set = params.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
-            if (!me.getKey().equals("year") && !me.getKey().equals("reassort") && !me.getKey().equals("orientation") && !me.getKey().equals("query")) {
+            if (!me.getKey().equals("year") && !me.getKey().equals("reassort") &&
+                    !me.getKey().equals("orientation") && !me.getKey().equals("query")) {
                 JsonObject parameter = new JsonObject().put("$in", me.getValue());
                 match.put(me.getKey(), parameter);
             } else if (me.getKey().equals("orientation")) {
@@ -135,17 +140,15 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
             }
         }
 
-        JsonObject matchRequest = new JsonObject()
+        return new JsonObject()
                 .put("$match", match);
-        return matchRequest;
     }
 
     private JsonObject filterReassort(String field, HashMap<String, ArrayList<String>> params) {
         JsonObject match = new JsonObject()
                 .put(field + ".reassort", Boolean.parseBoolean(params.get("reassort").get(0)));
-        JsonObject matchRequest = new JsonObject()
+        return new JsonObject()
                 .put("$match", match);
-        return matchRequest;
     }
 
     private JsonObject searchMatch(String query) {
@@ -154,9 +157,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                         new JsonObject().put("uai", new JsonObject().put("$regex", query).put("$options", "i")),
                         new JsonObject().put("name", new JsonObject().put("$regex", query).put("$options", "i"))
                 ));
-        JsonObject matchRequest = new JsonObject()
+        return new JsonObject()
                 .put("$match", match);
-        return matchRequest;
     }
 
 
@@ -164,7 +166,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     private JsonObject ordersMongo(String type, HashMap<String, ArrayList<String>> params, boolean publicField, boolean isReassort) {
         String field = "$stats." + type;
         JsonObject id = new JsonObject().put("year", field + ".year");
-        JsonObject project = null;
+        JsonObject project;
         if (publicField) {
             id.put("public", "$public");
             project = new JsonObject().put("$project", new JsonObject().put("_id", 0).put("total", "$total").put("public", "$_id.public"));
@@ -416,8 +418,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
     }
 
     private JsonObject deleteStatsDay() {
-        JsonObject match = new JsonObject()
+        return new JsonObject()
                 .put("date", LocalDate.now().toString());
-        return match;
     }
 }

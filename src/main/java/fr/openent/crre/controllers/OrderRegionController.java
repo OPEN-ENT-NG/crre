@@ -619,6 +619,7 @@ public class OrderRegionController extends BaseController {
                         extractedEquipmentInfo(order, equipment);
                         order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                         putStructuresNameUAI(structures, order);
+                        putEANLDE(equipment, order);
                         if (equipment.getString("type").equals("articlenumerique")) {
                             //order.put("cible", equipment.)
                             JsonArray offers = computeOffers(equipment, order);
@@ -662,6 +663,14 @@ public class OrderRegionController extends BaseController {
                 order.put("uai_structure", structure.getString("uai"));
                 order.put("name_structure", structure.getString("name"));
             }
+        }
+    }
+
+    private void putEANLDE(JsonObject equipment, JsonObject order) {
+        if (equipment.getString("type").equals("articlenumerique")) {
+            order.put("eanLDE", equipment.getJsonArray("offres").getJsonObject(0).getString("eanlibraire"));
+        }else{
+            order.put("eanLDE", equipment.getString("ean"));
         }
     }
 
@@ -715,7 +724,8 @@ public class OrderRegionController extends BaseController {
                 I18n.getInstance().translate("crre.request", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("CAMPAIGN", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("resource", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("EAN", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("EAN LDE", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.reassort", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.number.licences", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.unit.price.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -737,6 +747,7 @@ public class OrderRegionController extends BaseController {
                 (log.getString("campaign_name") != null ? log.getString("campaign_name") : "") + ";" +
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
+                (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
                 exportPriceComment(log)
                 + "\n";
