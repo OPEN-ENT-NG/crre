@@ -52,7 +52,11 @@ public interface StructureService {
 
     void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;
 
+    void updateReliquats(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;
+
     void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler);
+
+    void getAllStructuresDetailByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler);
 
     void insertStudentsInfos(JsonArray ids, Handler<Either<String, JsonObject>> eitherHandler);
 }

@@ -1,8 +1,10 @@
 package fr.openent.crre.controllers;
 
-import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
-import fr.openent.crre.security.*;
+import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.security.PrescriptorRight;
+import fr.openent.crre.security.ValidatorRight;
+import fr.openent.crre.security.updateStudentRight;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -10,9 +12,11 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpServerFileUpload;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -59,20 +63,8 @@ public class StructureController extends ControllerHelper {
                 upload.handler(buff::appendBuffer);
                 upload.endHandler(end -> {
                     try {
-                        log.info("Unzip  : " + upload.filename());
-                        ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(buff.getBytes()));
-                        ZipEntry userFileZipEntry = zipStream.getNextEntry();
-                        assert userFileZipEntry != null;
-                        log.info("Reading : " + userFileZipEntry.getName());
-                        Scanner sc = new Scanner(zipStream, "ISO-8859-1");
-                        sc.useDelimiter(";");
-                        // skip header
-                        if (sc.hasNextLine()) {
-                            sc.nextLine();
-                        } else {
-                            log.info("Empty structures file");
-                            return;
-                        }
+                        Scanner sc = getScanner(buff, upload);
+                        if (sc == null) return;
                         JsonArray uais = new JsonArray();
                         JsonArray structures = new JsonArray();
                         JsonArray finalStructures = new JsonArray();
@@ -92,18 +84,7 @@ public class StructureController extends ControllerHelper {
                         }
                         structureService.getStructureByUAI(uais, null, event -> {
                             if(event.isRight()) {
-                                log.info("success");
-                                JsonArray uaisNeo = event.right().getValue();
-                                for(int i = 0; i < structures.size(); i++) {
-                                    String uai = structures.getJsonObject(i).getString("uai");
-                                    for(int j = 0; j < uaisNeo.size(); j++) {
-                                        if(uaisNeo.getJsonObject(j).getString("uai").equals(uai)) {
-                                            structures.getJsonObject(i).put("id", uaisNeo.getJsonObject(j).getString("id"));
-                                            finalStructures.add(structures.getJsonObject(i));
-                                            break;
-                                        }
-                                    }
-                                }
+                                matchUAIStructure(structures, finalStructures, event);
                                 try {
                                     structureService.insertNewStructures(finalStructures, event2 -> {
                                       if(event2.isRight()) {
@@ -122,6 +103,92 @@ public class StructureController extends ControllerHelper {
                     }
                 });
             });
+        }
+    }
+
+    @Post("/reliquat/add")
+    @ApiDoc("Insert reliquats")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void addReliquat(HttpServerRequest request) {
+        {
+            request.setExpectMultipart(true);
+            final Buffer buff = Buffer.buffer();
+            log.info("--START addReliquats --");
+            request.uploadHandler(upload -> {
+                upload.handler(buff::appendBuffer);
+                upload.endHandler(end -> {
+                    try {
+                        Scanner sc = getScanner(buff, upload);
+                        if (sc == null) return;
+                        JsonArray uais = new JsonArray();
+                        JsonArray structures = new JsonArray();
+                        JsonArray finalStructures = new JsonArray();
+                        while (sc.hasNextLine()) {
+                            String userLine = sc.nextLine();
+                            String[] values = userLine.split(";");
+                            if(values[3].equals("Papier")) {
+                                JsonObject structure = new JsonObject();
+                                uais.add(values[1]);
+                                structure.put("uai", values[1]);
+                                structure.put("reliquat", values[9]);
+                                structures.add(structure);
+                            }
+                        }
+                        structureService.getAllStructuresDetailByUAI(uais, event -> {
+                            if(event.isRight()) {
+                                matchUAIStructure(structures, finalStructures, event);
+                                try {
+                                    structureService.updateReliquats(finalStructures, event2 -> {
+                                        if(event2.isRight()) {
+                                            renderJson(request, event2.right().getValue());
+                                        }
+                                    });
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    } catch (IOException e) {
+                        log.error("Error reading zip", e);
+                    } finally {
+                        log.info("--END addReliquats --");
+                    }
+                });
+            });
+        }
+    }
+
+    private Scanner getScanner(Buffer buff, HttpServerFileUpload upload) throws IOException {
+        log.info("Unzip  : " + upload.filename());
+        ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(buff.getBytes()));
+        ZipEntry userFileZipEntry = zipStream.getNextEntry();
+        assert userFileZipEntry != null;
+        log.info("Reading : " + userFileZipEntry.getName());
+        Scanner sc = new Scanner(zipStream, "ISO-8859-1");
+        sc.useDelimiter(";");
+        // skip header
+        if (sc.hasNextLine()) {
+            sc.nextLine();
+        } else {
+            log.info("Empty file");
+            return null;
+        }
+        return sc;
+    }
+
+    private void matchUAIStructure(JsonArray structures, JsonArray finalStructures, Either<String, JsonArray> event) {
+        log.info("success");
+        JsonArray uaisNeo = event.right().getValue();
+        for(int i = 0; i < structures.size(); i++) {
+            String uai = structures.getJsonObject(i).getString("uai");
+            for(int j = 0; j < uaisNeo.size(); j++) {
+                if(uaisNeo.getJsonObject(j).getString("uai").equals(uai)) {
+                    structures.getJsonObject(i).put("id", uaisNeo.getJsonObject(j).getString("id"));
+                    finalStructures.add(structures.getJsonObject(i));
+                    break;
+                }
+            }
         }
     }
 

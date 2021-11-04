@@ -28,14 +28,14 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     private final Neo4j neo4j;
 
-    public DefaultStructureService(String schema){
+    public DefaultStructureService(String schema) {
         super(schema, "");
         this.neo4j = Neo4j.getInstance();
     }
 
     @Override
     public void getStructures(Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL "+
+        String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL " +
                 "RETURN left(s.zipCode, 2) as department, s.id as id, s.name as name,s.city as city,s.UAI as uai, " +
                 "s.academy as academy, s.type as type_etab ";
         neo4j.execute(query, new JsonObject(), Neo4jResult.validResultHandler(handler));
@@ -44,12 +44,12 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL ";
-        JsonObject values =  new JsonObject();
-        if(type != null){
+        JsonObject values = new JsonObject();
+        if (type != null) {
             query += "AND s.contract = {type} ";
             values.put("type", type);
         }
-        if(filterStructures != null && !filterStructures.isEmpty()){
+        if (filterStructures != null && !filterStructures.isEmpty()) {
             query += "AND s.id IN {stuctureIds} ";
             values.put("stuctureIds", new JsonArray(filterStructures));
         }
@@ -61,10 +61,10 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure)";
         JsonObject params = new JsonObject();
-        if(consumable_formations == null){
+        if (consumable_formations == null) {
             query += " WHERE s.UAI IN {uais} RETURN s.id as id, s.UAI as uai, s.type as type";
             params.put("uais", uais);
-        }else{
+        } else {
             query += "<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
                     "WHERE s.UAI IN {uais} WITH s.id as id, s.UAI as uai, s.type as type, " +
                     "CASE WHEN u.level IN {consumable_formations} " +
@@ -84,11 +84,11 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
                     " WHERE s.id IN {ids} ";
             JsonObject params = new JsonObject().put("ids", ids);
-            if(consumable_formations == null){
+            if (consumable_formations == null) {
                 query += "RETURN DISTINCT s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
                         "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
                         "s.zipCode  as zipCode, s.city as city, s.type as type ";
-            }else{
+            } else {
                 query += "WITH s, " +
                         "CASE WHEN u.level IN {consumable_formations} " +
                         "THEN count(u) " +
@@ -99,22 +99,22 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         "s.zipCode  as zipCode, s.city as city, s.type as type, sum(nbr_students)*2 AS minimum_licences_consumables;";
                 params.put("consumable_formations", new JsonArray(consumable_formations));
             }
-            Neo4j.getInstance().execute(query,params,Neo4jResult.validResultHandler(handler));
-        }catch (VertxException e){
+            Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
+        } catch (VertxException e) {
             getStructureById(ids, null, handler);
         }
     }
 
     @Override
     public void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler) {
-            q = ".*" + q + ".*";
-            String query = "MATCH (s:Structure) WHERE (toLower(s.name) =~ {word} OR toLower(s.UAI) =~ {word}) return s.id as id, s.UAI as uai," +
-                    " s.name as name, s.phone as phone, s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
-                    "s.zipCode  as zipCode, s.city as city, s.type as type;";
+        q = ".*" + q + ".*";
+        String query = "MATCH (s:Structure) WHERE (toLower(s.name) =~ {word} OR toLower(s.UAI) =~ {word}) return s.id as id, s.UAI as uai," +
+                " s.name as name, s.phone as phone, s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
+                "s.zipCode  as zipCode, s.city as city, s.type as type;";
 
-            Neo4j.getInstance().execute(query,
-                    new JsonObject().put("word", q),
-                    Neo4jResult.validResultHandler(handler));
+        Neo4j.getInstance().execute(query,
+                new JsonObject().put("word", q),
+                Neo4jResult.validResultHandler(handler));
     }
 
     @Override
@@ -135,7 +135,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler) {
         String query = "INSERT INTO " + Crre.crreSchema + ".students(id_structure) VALUES ";
         JsonArray params = new JsonArray();
-        for(int i = 0; i < structures.size(); i++) {
+        for (int i = 0; i < structures.size(); i++) {
             String structure = structures.getString(i);
             query += i < structures.size() - 1 ? "(?), " : "(?)";
             params.add(structure);
@@ -156,14 +156,14 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             query += i < total.size() - 1 ? "(?, ?, ?, ?, ?), " : "(?, ?, ?, ?, ?) ";
             int total_licence;
             int total_licence_consumable = 0;
-            if(structure_total.getBoolean("pro")) {
+            if (structure_total.getBoolean("pro")) {
                 total_licence = structure_total.getInteger("Seconde") * 3 +
                         structure_total.getInteger("Premiere") * 3 + structure_total.getInteger("Terminale") * 3;
             } else {
                 total_licence = structure_total.getInteger("Seconde") * 9 +
                         structure_total.getInteger("Premiere") * 8 + structure_total.getInteger("Terminale") * 7;
             }
-            if(consumableFormationsStudents.containsKey(structure_total.getString("id_structure"))){
+            if (consumableFormationsStudents.containsKey(structure_total.getString("id_structure"))) {
                 total_licence_consumable = consumableFormationsStudents.getInteger(structure_total.getString("id_structure")) * 2;
             }
             params.add(structure_total.getString("id_structure"))
@@ -183,7 +183,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             JsonObject j = students.getJsonObject(i);
             String s = j.getString("s.id");
             Integer count = j.getInteger("count(u)");
-            if(j.getString("u.level") != null) {
+            if (j.getString("u.level") != null) {
                 switch (j.getString("u.level")) {
                     case "SECONDE GENERALE & TECHNO YC BT": {
                         query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, total_april = total_april + ?, " +
@@ -226,9 +226,9 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 }
             }
         }
-        if(query.length()>5) {
+        if (query.length() > 5) {
             Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-        }else{
+        } else {
             handler.handle(new Either.Right<>(new JsonObject()));
         }
     }
@@ -240,11 +240,11 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             JsonObject j = students.getJsonObject(i);
             String s = j.getString("s.id");
             Integer count = j.getInteger("count(u)");
-            if(j.getString("u.level") != null && consumableFormations.contains(j.getString("u.level"))) {
-                if(consumableFormationsStudentsPerStructures.containsKey(s)){
+            if (j.getString("u.level") != null && consumableFormations.contains(j.getString("u.level"))) {
+                if (consumableFormationsStudentsPerStructures.containsKey(s)) {
                     count += consumableFormationsStudentsPerStructures.getInteger(s);
                 }
-                consumableFormationsStudentsPerStructures.put(s,count);
+                consumableFormationsStudentsPerStructures.put(s, count);
             }
         }
         return consumableFormationsStudentsPerStructures;
@@ -264,7 +264,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 " SET \"Seconde\" = ?, \"Premiere\" = ?, \"Terminale\" = ? " +
                 "WHERE id_structure = ?";
         values.add(seconde).add(premiere).add(terminale).add(id_structure);
-        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler) );
+        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 
     @Override
@@ -275,7 +275,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 "FROM " + Crre.crreSchema + ".students " +
                 "WHERE id_structure = ?";
         values.add(id_structure);
-        sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler) );
+        sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -292,7 +292,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void updateAmountLicence(String idStructure, String operation, Integer licences,
                                     Handler<Either<String, JsonObject>> handler) {
         String updateQuery = "UPDATE  " + Crre.crreSchema + ".licences " +
-                "SET amount = amount " +  operation + " ?  " +
+                "SET amount = amount " + operation + " ?  " +
                 "WHERE id_structure = ? ;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -306,7 +306,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void updateAmountConsumableLicence(String idStructure, String operation, Integer licences,
                                               Handler<Either<String, JsonObject>> handler) {
         String updateQuery = "UPDATE  " + Crre.crreSchema + ".licences " +
-                "SET consumable_amount = consumable_amount " +  operation + " ?  " +
+                "SET consumable_amount = consumable_amount " + operation + " ?  " +
                 "WHERE id_structure = ? ;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -330,26 +330,50 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 " (uai, id_structure, name, public, mixte, catalog, city, region) VALUES ";
 
         for (int i = 0; i < structures.size(); i++) {
-                query += "(?, ?, ?, ?, ?, ?, ?, ?),";
-                JsonObject structure = structures.getJsonObject(i);
-                params.add(structure.getString("uai"))
-                        .add(structure.getString("id"))
-                        .add(structure.getString("name"))
-                        .add(structure.getString("public"))
-                        .add((structure.getString("mixte").equals("Vrai")))
-                        .add(structure.getString("catalog"))
-                        .add(structure.getString("city"))
-                        .add(structure.getString("region"));
+            query += "(?, ?, ?, ?, ?, ?, ?, ?),";
+            JsonObject structure = structures.getJsonObject(i);
+            params.add(structure.getString("uai"))
+                    .add(structure.getString("id"))
+                    .add(structure.getString("name"))
+                    .add(structure.getString("public"))
+                    .add((structure.getString("mixte").equals("Vrai")))
+                    .add(structure.getString("catalog"))
+                    .add(structure.getString("city"))
+                    .add(structure.getString("region"));
         }
-        query = query.substring(0, query.length()-1);
+        query = query.substring(0, query.length() - 1);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+    @Override
+    public void updateReliquats(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "";
+        for (int i = 0; i < structures.size(); i++) {
+            query += "UPDATE " + Crre.crreSchema + ".licences " +
+                    "SET amount = amount + ? " +
+                    "WHERE id_structure = ?; ";
+            JsonObject structure = structures.getJsonObject(i);
+            params.add(Integer.parseInt(structure.getString("reliquat")))
+                    .add(structure.getString("id"));
+        }
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
 
     @Override
     public void getAllStructuresDetail(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT id_structure, name, uai, public, mixte, catalog, technical, general, city, region" +
                 " FROM " + Crre.crreSchema + ".structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getAllStructuresDetailByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT DISTINCT id_structure as id, uai" +
+                " FROM " + Crre.crreSchema + ".structure" +
+                " WHERE uai IN " + Sql.listPrepared(uais);
+        sql.prepared(query, uais, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -363,14 +387,14 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 insertStudents(students, result -> {
                     if (result.isRight()) {
                         getConsumableFormation(formations -> {
-                            if(formations.isRight()) {
+                            if (formations.isRight()) {
                                 JsonArray res_consumable_formations = formations.right().getValue();
                                 List<String> consumable_formations = res_consumable_formations
                                         .stream()
-                                        .map((json) -> ((JsonObject)json).getString("label"))
+                                        .map((json) -> ((JsonObject) json).getString("label"))
                                         .collect(Collectors.toList());
                                 JsonObject consumableFormationsStudents =
-                                        getNumberStudentsConsumableFormations(students,consumable_formations);
+                                        getNumberStudentsConsumableFormations(students, consumable_formations);
                                 getTotalStructure(total_structure -> {
                                     JsonArray total = total_structure.right().getValue();
                                     insertTotalStructure(total, consumableFormationsStudents, event2 -> {
@@ -381,7 +405,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                                         }
                                     });
                                 });
-                            }else {
+                            } else {
                                 eitherHandler.handle(new Either.Left<>("Failed to get all consumables formations : " + formations.left()));
                             }
                         });
