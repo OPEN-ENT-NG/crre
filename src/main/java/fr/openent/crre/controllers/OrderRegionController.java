@@ -620,6 +620,7 @@ public class OrderRegionController extends BaseController {
                         order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                         putStructuresNameUAI(structures, order);
                         putEANLDE(equipment, order);
+                        order.put("type",equipment.getJsonArray("offres").getJsonObject(0).getString("type"));
                         if (equipment.getString("type").equals("articlenumerique")) {
                             //order.put("cible", equipment.)
                             JsonArray offers = computeOffers(equipment, order);
@@ -726,6 +727,7 @@ public class OrderRegionController extends BaseController {
                 I18n.getInstance().translate("resource", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("EAN", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("EAN LDE", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Type", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.reassort", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.number.licences", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.unit.price.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -748,6 +750,7 @@ public class OrderRegionController extends BaseController {
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
+                (log.getString("type") != null ? log.getString("type") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
                 exportPriceComment(log)
                 + "\n";
