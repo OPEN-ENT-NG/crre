@@ -4,10 +4,12 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.ValidatorRight;
-import fr.openent.crre.service.*;
+import fr.openent.crre.service.OrderRegionService;
+import fr.openent.crre.service.PurseService;
+import fr.openent.crre.service.QuoteService;
+import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.*;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
@@ -564,12 +566,12 @@ public class OrderRegionController extends BaseController {
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
                             attachment.add(new JsonObject().put("name", "orders.csv").put("content", base64File));
                             String mail = this.mail.getString("address");
-/*                            emailSender.sendMail(request, mail, "Test",
+                            emailSender.sendMail(request, mail, "Test",
                                     "Bonjour", attachment, message -> {
                                         if(!message.isRight()) {
                                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                         }
-                                    });*/
+                                    });
                             renderJson(request, response2.right().getValue());
                         }
                     });
