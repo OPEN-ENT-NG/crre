@@ -374,8 +374,8 @@ public class PurseController extends ControllerHelper {
                 if (purse.getString("id_structure").equals(structure.getString("id"))) {
                     structure.put("id_structure",purse.getString("id_structure"));
                     // we convert amount to get a number instead of a string
-                    structure.put("amount", Double.parseDouble(purse.getString("amount","0")));
-                    structure.put("initial_amount", Double.parseDouble(purse.getString("initial_amount","0")));
+                    structure.put("amount", purse.getDouble("amount",0.0));
+                    structure.put("initial_amount", purse.getDouble("initial_amount",0.0));
                     structure.put("licence_amount", purse.getInteger("licence_amount",0));
                     structure.put("licence_initial_amount", purse.getInteger("licence_initial_amount",0));
                     structure.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount",0));
