@@ -350,12 +350,22 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
         for (int i = 0; i < structures.size(); i++) {
-            query += "UPDATE " + Crre.crreSchema + ".licences " +
-                    "SET amount = amount + ? " +
-                    "WHERE id_structure = ?; ";
+            query += "INSERT INTO " + Crre.crreSchema + ".licences (id_structure, amount, initial_amount) " +
+                    "VALUES (?, ?, ?) " +
+                    "ON CONFLICT (id_structure) DO UPDATE " +
+                    "SET amount = licences.amount + ?, " +
+                    "initial_amount = (" +
+                    "  CASE " +
+                    "    WHEN licences.initial_amount = 0 THEN ? " +
+                    "    ELSE licences.initial_amount" +
+                    "  END" +
+                    "); ";
             JsonObject structure = structures.getJsonObject(i);
-            params.add(Integer.parseInt(structure.getString("reliquat")))
-                    .add(structure.getString("id"));
+            params.add(structure.getString("id"))
+                    .add(Integer.parseInt(structure.getString("reliquat")))
+                    .add(Integer.parseInt(structure.getString("reliquat")))
+                    .add(Integer.parseInt(structure.getString("reliquat")))
+                    .add(Integer.parseInt(structure.getString("reliquat")));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
