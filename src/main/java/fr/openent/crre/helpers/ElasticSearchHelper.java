@@ -36,10 +36,16 @@ public class ElasticSearchHelper {
             } else {
                 JsonArray result = new JsonArray();
                 for (Object article:ar.result()) {
-                    JsonObject acticleJson = ((JsonObject)article).getJsonObject("_source")
-                            .put("type", ((JsonObject)article).getString("_index"))
-                            .put("id", ((JsonObject)article).getString("_id"));
-                    result.add(acticleJson);
+                    JsonObject articleJson = ((JsonObject)article);
+                    JsonObject addingArticle = articleJson.getJsonObject("_source")
+                            .put("type", articleJson.getString("_index"))
+                            .put("id", articleJson.getString("_id"));
+                    if(articleJson.getString("_index").equals("articlenumerique")){
+                        addingArticle.put("typeCatalogue", articleJson.getJsonArray("offres").getJsonObject(0).getString("type"));
+                    }else{
+                        addingArticle.put("typeCatalogue", articleJson.getString("type"));
+                    }
+                    result.add(addingArticle);
                 }
                 handler.handle(new Either.Right<>(result));
             }

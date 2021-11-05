@@ -622,7 +622,7 @@ public class OrderRegionController extends BaseController {
                         order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                         putStructuresNameUAI(structures, order);
                         putEANLDE(equipment, order);
-                        order.put("type",equipment.getJsonArray("offres").getJsonObject(0).getString("type"));
+                        order.put("typeCatalogue",equipment.getString("typeCatalogue"));
                         if (equipment.getString("type").equals("articlenumerique")) {
                             //order.put("cible", equipment.)
                             JsonArray offers = computeOffers(equipment, order);
@@ -752,7 +752,7 @@ public class OrderRegionController extends BaseController {
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
-                (log.getString("type") != null ? log.getString("type") : "") + ";" +
+                (log.getString("typeCatalogue") != null ? log.getString("typeCatalogue") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
                 exportPriceComment(log)
                 + "\n";
