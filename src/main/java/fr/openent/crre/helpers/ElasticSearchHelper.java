@@ -38,10 +38,10 @@ public class ElasticSearchHelper {
                 for (Object article:ar.result()) {
                     JsonObject articleJson = ((JsonObject)article);
                     JsonObject addingArticle = articleJson.getJsonObject("_source");
-                    if(articleJson.getString("_index").equals("articlenumerique")){
+                    if(articleJson.getString("_index").equals("articlenumerique") && addingArticle.getJsonArray("offres").size() > 0){
                         addingArticle.put("typeCatalogue", addingArticle.getJsonArray("offres").getJsonObject(0).getString("type"));
                     }else{
-                        addingArticle.put("typeCatalogue", addingArticle.getString("type"));
+                        addingArticle.put("typeCatalogue", addingArticle.getString("type",""));
                     }
                     addingArticle.put("type", articleJson.getString("_index"))
                             .put("id", articleJson.getString("_id"));
