@@ -8,7 +8,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.othersSelected = false;
             $scope.articleFormat = [{name: "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}];
-            $scope.creditFormat = [{name: "Licences", value: "licences"}, {name: "Crédits", value: "credits"},
+            $scope.creditFormat = [{name: "Licences", value: "licences"}, {name: "Monétaires", value: "credits"},
                 {name: "Licences consommables", value: "consumable_licences"}];
             $scope.formatCheck = [];
             $scope.allSelected = $scope.allProAndGenSelected = false;
