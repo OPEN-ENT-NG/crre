@@ -483,8 +483,14 @@ public class OrderRegionController extends BaseController {
                 orderRegionService.updateStatus(listIdOrders, event2 -> {
                     if (event2.isRight()) {
                         renderJson(request, event2.right().getValue());
+                    } else {
+                        log.error(event2.left().getValue());
+                        badRequest(request);
                     }
                 });
+            } else {
+                log.error(event.left().getValue());
+                badRequest(request);
             }
         });
     }

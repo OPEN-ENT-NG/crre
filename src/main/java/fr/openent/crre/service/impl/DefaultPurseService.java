@@ -74,7 +74,7 @@ public class DefaultPurseService implements PurseService {
                 "licences.consumable_amount as consumable_licence_amount, " +
                 "licences.consumable_initial_amount as consumable_licence_initial_amount " +
                 "FROM " + Crre.crreSchema + ".licences " +
-                "INNER JOIN "+ Crre.crreSchema +".students ON students.id_structure = licences.id_structure " +
+                "FULL OUTER JOIN "+ Crre.crreSchema +".students ON students.id_structure = licences.id_structure " +
                 "FULL OUTER JOIN "+ Crre.crreSchema +".purse ON purse.id_structure = licences.id_structure " +
                 "WHERE purse.initial_amount IS NOT NULL OR licences.initial_amount <> 0 OR licences.consumable_initial_amount <> 0";
     }

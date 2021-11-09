@@ -380,7 +380,7 @@ public class PurseController extends ControllerHelper {
                     structure.put("licence_initial_amount", purse.getInteger("licence_initial_amount",0));
                     structure.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount",0));
                     structure.put("consumable_licence_initial_amount", purse.getInteger("consumable_licence_initial_amount",0));
-                    if (purse.getBoolean("pro")) {
+                    if (purse.getBoolean("pro",false)) {
                         structure.put("seconde", purse.getInteger("seconde",0) * 3);
                         structure.put("premiere", purse.getInteger("premiere",0) * 3);
                         structure.put("terminale", purse.getInteger("terminale",0) * 3);

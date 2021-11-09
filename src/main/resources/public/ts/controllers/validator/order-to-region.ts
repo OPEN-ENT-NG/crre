@@ -181,7 +181,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                         await equipments.getEquipments(orders);
                         for (let order of orders) {
                             let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
-                            if (equipment.type === "articlenumerique") {
+                            if (equipment && equipment.type === "articlenumerique") {
                                 order.offers = Utils.computeOffer(order, equipment);
                             }
                         }
