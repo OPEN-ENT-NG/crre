@@ -82,7 +82,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
         if(old) {
-            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status ";
+            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
+                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                    "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
+        } else {
+            query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                    "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
         }
         query = innerJoin(query);
         query += "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
@@ -104,7 +109,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "FROM  " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
         if(oldTable) {
-            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status ";
+            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
+                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                    "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
+        } else {
+            query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                    "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
         }
         query = innerJoin(query);
         query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray()) + " ; ";
@@ -116,9 +126,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     private static String innerJoin(String query) {
-        query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id " +
-                "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
+        query += "INNER JOIN  " + Crre.crreSchema + ".project AS p ON p.id = ore.id_project " +
                 "INNER JOIN  " + Crre.crreSchema + ".rel_group_structure ON (ore.id_structure = rel_group_structure.id_structure) ";
         return query;
     }

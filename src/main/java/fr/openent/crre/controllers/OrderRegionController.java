@@ -479,15 +479,19 @@ public class OrderRegionController extends BaseController {
                 for (int i = 0; i < listIdOrders.size(); i++) {
                     listIdOrders.getJsonObject(i).put("status", randomStatus());
                 }
-                // Update status in sql base
-                orderRegionService.updateStatus(listIdOrders, event2 -> {
-                    if (event2.isRight()) {
-                        renderJson(request, event2.right().getValue());
-                    } else {
-                        log.error(event2.left().getValue());
-                        badRequest(request);
-                    }
-                });
+                if (listIdOrders.size() > 0) {
+                    // Update status in sql base
+                    orderRegionService.updateStatus(listIdOrders, event2 -> {
+                        if (event2.isRight()) {
+                            renderJson(request, event2.right().getValue());
+                        } else {
+                            log.error(event2.left().getValue());
+                            badRequest(request);
+                        }
+                    });
+                } else {
+                    ok(request);
+                }
             } else {
                 log.error(event.left().getValue());
                 badRequest(request);
