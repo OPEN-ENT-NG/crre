@@ -623,8 +623,10 @@ public class OrderRegionController extends BaseController {
                         double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
                         double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
                         order.put("priceht", priceDetails.getDouble("prixht"));
-                        order.put("tva5", priceDetails.getDouble("partTVA5"));
-                        order.put("tva20", priceDetails.getDouble("partTVA20"));
+                        order.put("tva5", (priceDetails.containsKey("partTVA5")) ?
+                                priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht") : null);
+                        order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
+                                priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht") : null);
                         order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
                         order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                         order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
@@ -675,6 +677,7 @@ public class OrderRegionController extends BaseController {
             if (structure.getString("id").equals(order.getString("id_structure"))) {
                 order.put("uai_structure", structure.getString("uai"));
                 order.put("name_structure", structure.getString("name"));
+                order.put("address_structure", structure.getString("address"));
             }
         }
     }
@@ -730,19 +733,23 @@ public class OrderRegionController extends BaseController {
     }
 
     public static String getExportHeader(HttpServerRequest request) {
-        return "Id" + ";" +
+        return "ID unique" + ";" +
                 I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("UAI", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.request", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Nom étab", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("UAI de l'étab", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Adresse de livraison", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Nom commande", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("CAMPAIGN", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("resource", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("EAN", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("EAN LDE", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("EAN de la ressource", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Titre de la ressource", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Editeur", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Distributeur", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Numérique", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("id de l'offre choisie", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("Type", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.reassort", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.number.licences", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.unit.price.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("Prix HT de la ressource", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("price.equipment.20", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.unit.price.ttc", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -757,10 +764,14 @@ public class OrderRegionController extends BaseController {
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
                 (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
+                (log.getString("address_structure") != null ? log.getString("address_structure") : "") + ";" +
                 (log.getString("title") != null ? log.getString("title") : "") + ";" +
                 (log.getString("campaign_name") != null ? log.getString("campaign_name") : "") + ";" +
-                (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
+                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString("editor") != null ? log.getString("editor") : "") + ";" +
+                (log.getString("diffusor") != null ? log.getString("diffusor") : "") + ";" +
+                (log.getString("type") != null ? log.getString("type") : "") + ";" +
                 (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
                 (log.getString("typeCatalogue") != null ? log.getString("typeCatalogue") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
