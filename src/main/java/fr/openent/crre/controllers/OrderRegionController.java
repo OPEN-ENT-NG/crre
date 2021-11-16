@@ -36,15 +36,25 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
+import javax.net.ssl.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
@@ -89,7 +99,7 @@ public class OrderRegionController extends BaseController {
                         if (!orders.isEmpty()) {
                             JsonArray ordersList = orders.getJsonArray("orders");
                             String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                            orderRegionService.getLastProject(user, lastProject -> {
+                            orderRegionService.getLastProject(lastProject -> {
                                 if (lastProject.isRight()) {
                                     String last = lastProject.right().getValue().getString("title");
                                     String title = "Commande_" + date;
@@ -174,6 +184,177 @@ public class OrderRegionController extends BaseController {
                     Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
             orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, old, arrayResponseHandler(request));
         });
+    }
+
+    @Get("/add/orders/lde")
+    @ApiDoc("Insert old orders from LDE")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void addOrders(HttpServerRequest request) throws IOException {
+        int part = Integer.parseInt(request.params().get("part"));
+        // TODO à voir sur NG2 si nécessaire
+        disableSslVerification();
+
+        URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
+        URLConnection connection = hh.openConnection();
+        String redirect = connection.getHeaderField("Location");
+        if (redirect != null) {
+            connection = new URL(redirect).openConnection();
+        }
+        Scanner sc = new Scanner(new InputStreamReader(connection.getInputStream()));
+        // skip header
+        if (sc.hasNextLine()) {
+            sc.nextLine();
+        } else {
+            log.info("Empty file");
+        }
+        JsonArray ordersRegion = new JsonArray();
+        List<String> ids = new ArrayList<String>();
+        Set<String> set = new HashSet<>(ids);
+        ids.clear();
+        ids.addAll(set);
+        JsonArray uais = new JsonArray();
+        Future<JsonArray> getStructureFuture = Future.future();
+        Future<JsonArray> getEquipmentFuture = Future.future();
+        List<Future> futures = new ArrayList<>();
+
+
+
+        orderRegionService.getLastProject(lastProject -> {
+            if (lastProject.isRight()) {
+                int project_id = lastProject.right().getValue().getInteger("id");
+                int total = part * 1600;
+                while (sc.hasNextLine() && total < 1600 * part + 1600) {
+                    project_id++;
+                    total++;
+                    String userLine = sc.nextLine();
+                    String[] values = userLine.split(Pattern.quote("|"));
+                    JsonObject order = new JsonObject();
+                    try {
+                        int year = new SimpleDateFormat("dd/MM/yyyy").parse(values[17]).getYear() + 1900;
+                        order.put("owner_name", "Commande " + year);
+                        order.put("owner_id", "Commande " + year);
+                    } catch (ParseException e) {
+                        order.put("owner_name", "Commande " + new Date().getYear() + 1900);
+                        order.put("owner_id", "Commande " + new Date().getYear() + 1900);
+                        e.printStackTrace();
+                    }
+
+                    order.put("status", "SENT");
+                    order.put("name", values[0]);
+                    order.put("editor", values[1]);
+                    order.put("uai", values[11]);
+                    order.put("diffusor", values[2]);
+                    order.put("equipment_key", values[4]);
+                    order.put("amount", Integer.parseInt(values[5]));
+                    order.put("unitedPriceTTC", Double.parseDouble(values[9].replace(",", ".")));
+                    order.put("reassort", values[14].isEmpty() ? false : true);
+                    order.put("creation_date", values[17]);
+                    order.put("id_project", project_id);
+                    ordersRegion.add(order);
+                    ids.add(values[4]);
+                    uais.add(values[11]);
+                }
+
+                CompositeFuture.all(getStructureFuture, getEquipmentFuture).setHandler(event -> {
+                    if (event.succeeded()) {
+                        boolean checkEquip;
+                        boolean checkEtab;
+                        int k;
+                        int j;
+                        JsonArray equipments = getEquipmentFuture.result();
+                        JsonArray structures = getStructureFuture.result();
+                        for (int i = 0; i < ordersRegion.size(); i++) {
+                            Future<JsonObject> createProjectFuture = Future.future();
+                            futures.add(createProjectFuture);
+                            checkEquip = true;
+                            checkEtab = true;
+                            j = 0;
+                            k = 0;
+                            while (checkEquip && j < equipments.size()) {
+                                if (equipments.getJsonObject(j).getString("ean").equals(ordersRegion.getJsonObject(i).getString("equipment_key"))) {
+                                    JsonObject equipment = equipments.getJsonObject(j);
+                                    ordersRegion.getJsonObject(i).put("type", equipment.getString("type"));
+                                    if(equipment.getJsonArray("disciplines").size() > 0) {
+                                        ordersRegion.getJsonObject(i).put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                                    }
+                                    ordersRegion.getJsonObject(i).put("image", equipment.getString("urlcouverture"));
+                                    checkEquip = false;
+                                }
+                                j++;
+                            }
+                            while (checkEtab && k < structures.size()) {
+                                if (structures.getJsonObject(k).getString("uai").equals(ordersRegion.getJsonObject(i).getString("uai"))) {
+                                    JsonObject structure = structures.getJsonObject(k);
+                                    ordersRegion.getJsonObject(i).put("id_structure", structure.getString("id"));
+                                    checkEtab = false;
+                                }
+                                k++;
+                            }
+                            orderRegionService.createProject("Commandes LDE", handlerJsonObject(createProjectFuture));
+                        }
+                        CompositeFuture.all(futures).setHandler(event2 -> {
+                            if (event2.succeeded()) {
+                                try {
+                                    orderRegionService.insertOldOrders(ordersRegion, true, event1 -> {
+                                        if (event1.isRight()) {
+                                            renderJson(request, event1.right().getValue());
+                                        } else {
+                                            badRequest(request);
+                                            log.error("Insert old orders failed");
+                                        }
+                                    });
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    }
+                });
+
+                structureService.getStructureByUAI(uais, null, handlerJsonArray(getStructureFuture));
+                search_All(handlerJsonArray(getEquipmentFuture));
+            }
+        });
+    }
+
+    private void disableSslVerification() {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+
+                        public void checkClientTrusted(X509Certificate[] certs,
+                                                       String authType) {
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] certs,
+                                                       String authType) {
+                        }
+                    }};
+
+            // Install the all-trusting trust manager
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getOrders(String query, JsonArray filters, UserInfos user, Integer page, HttpServerRequest request) {

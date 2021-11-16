@@ -51,7 +51,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().prepared(queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void createProject( String title, Handler<Either<String, JsonObject>> handler) {
+    public void createProject(String title, Handler<Either<String, JsonObject>> handler) {
         JsonArray params;
 
         String queryProjectEquipment = "" +
@@ -81,7 +81,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name " + selectOld +
                 "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
-        if(old) {
+        if (old) {
             query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
                     "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
                     "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
@@ -91,11 +91,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         query = innerJoin(query);
         query += "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
-        if(filterRejectedSentOrders) {
+        if (filterRejectedSentOrders) {
             query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
         query += "GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name";
-        if(old) {
+        if (old) {
             query += ", s.name, s.id";
         }
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
@@ -108,7 +108,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id " + selectOld +
                 "FROM  " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
-        if(oldTable) {
+        if (oldTable) {
             query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
                     "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
                     "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
@@ -120,7 +120,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray()) + " ; ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for (Integer id : idsOrder) {
-            params.add( id);
+            params.add(id);
         }
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(arrayResponseHandler));
     }
@@ -143,12 +143,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         values.add(startDate);
         values.add(endDate);
 
-        if(filterRejectedSentOrders) {
+        if (filterRejectedSentOrders) {
             query.append(" AND ore.status != 'SENT' AND ore.status != 'REJECTED' ");
         }
 
-        if(!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
-                WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())){
+        if (!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
+                WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())) {
             query.append(" AND ore.id_structure = ?");
             values.add(idStructure);
         }
@@ -165,14 +165,14 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         ArrayList tempList;
         if (hashMap.containsKey(key)) {
             tempList = hashMap.get(key);
-            if(tempList == null)
+            if (tempList == null)
                 tempList = new ArrayList();
             tempList.add(value);
         } else {
             tempList = new ArrayList();
             tempList.add(value);
         }
-        hashMap.put(key,tempList);
+        hashMap.put(key, tempList);
     }
 
     public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
@@ -187,7 +187,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "WHERE ore.creation_date BETWEEN ? AND ?";
         values.add(startDate);
         values.add(endDate);
-        if(!idStructure.equals("null")) {
+        if (!idStructure.equals("null")) {
             sqlquery += " AND ore.id_structure = ?";
             values.add(idStructure);
         }
@@ -197,14 +197,14 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.add(query);
             values.add(query);
             values.add(query);
-            if(old){
+            if (old) {
                 sqlquery += " OR ore.equipment_name ~* ? ";
                 values.add(query);
             }
         }
         //condition with equipment
-        if(!equipTab.isEmpty() && !old){
-            if(!query.equals("")){
+        if (!equipTab.isEmpty() && !old) {
+            if (!query.equals("")) {
                 sqlquery += " OR ore.equipment_key IN (";
             } else {
                 sqlquery += "AND (ore.equipment_key IN (";
@@ -215,15 +215,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        if(!query.equals("") || (!equipTab.isEmpty() && !old)){
+        if (!query.equals("") || (!equipTab.isEmpty() && !old)) {
             sqlquery += ")";
         }
 
-        if(filters != null && filters.size() > 0) {
+        if (filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
                 String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
-                if(key.equals("id_structure")) {
+                if (key.equals("id_structure")) {
                     JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
                     for (int j = 0; j < uai.size(); j++) {
                         addValues(key, uai.getJsonObject(j).getString("idStructure"), hashMap);
@@ -234,11 +234,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 }
             }
             int count = 0;
-            for(Map.Entry mapentry : hashMap.entrySet()) {
+            for (Map.Entry mapentry : hashMap.entrySet()) {
                 ArrayList list = (ArrayList) mapentry.getValue();
                 String keys = mapentry.getKey().toString();
-                if(keys.equals("renew")) {
-                    if(list.size() == 2) {
+                if (keys.equals("renew")) {
+                    if (list.size() == 2) {
                         sqlquery += "ore.owner_id ~* ore.owner_id";
                     } else {
                         if (Boolean.parseBoolean(String.valueOf(list.get(0)))) {
@@ -249,18 +249,18 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     }
                 } else {
                     sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN (" : "ore." + keys + " IN (";
-                    for(int k = 0; k < list.size(); k++) {
-                        sqlquery += k+1 == list.size() ? "?)" : "?, ";
+                    for (int k = 0; k < list.size(); k++) {
+                        sqlquery += k + 1 == list.size() ? "?)" : "?, ";
                         values.add(list.get(k).toString());
                     }
                 }
 
-                if(!(count == hashMap.entrySet().size() - 1)) {
+                if (!(count == hashMap.entrySet().size() - 1)) {
                     sqlquery += " AND ";
                 } else {
                     sqlquery += ")";
                 }
-                count ++;
+                count++;
             }
         }
         sqlquery = sqlquery + " ORDER BY ore.creation_date DESC ";
@@ -273,10 +273,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler) {
+    public void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
-                "SELECT p.title, ore.creation_date " +
+                "SELECT p.title, ore.creation_date, p.id " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id ";
         query = query + " ORDER BY p.id DESC LIMIT 1";
@@ -288,25 +288,28 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
-                " (id, amount, creation_date,  owner_name, owner_id," +
+                " (amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_order_client_equipment, id_project, reassort, total_free) VALUES ";
 
         for (int i = 0; i < orderRegions.size(); i++) {
-            if(orderRegions.getJsonObject(i).containsKey("id_project")) {
-                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),";
+            if (orderRegions.getJsonObject(i).containsKey("id_project")) {
+                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
                 JsonObject order = orderRegions.getJsonObject(i);
                 String creation_date;
-                if(isRenew) {
-                    creation_date = order.getString("creation_date");
+                if (isRenew) {
+                    query += ") ,";
+                    Date date = new SimpleDateFormat("dd/MM/yyyy").parse(order.getString("creation_date"));
+                    creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
                 } else {
+                    params.add(order.getLong("id"));
+                    query += ", ?) ,";
                     Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
                     creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
                 }
 
-                params.add(order.getLong("id"))
-                        .add(order.getInteger("amount"))
+                params.add(order.getInteger("amount"))
                         .add(creation_date)
                         .add(order.getString("owner_name"))
                         .add(order.getString("owner_id"))
@@ -319,20 +322,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getInteger("total_free", null));
             }
         }
-        query = query.substring(0, query.length()-1);
+        query = query.substring(0, query.length() - 1);
         Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validUniqueResultHandler(handler));
     }
 
     private void setOrderValuesSQL(JsonArray params, JsonObject order) {
         params.add(order.getString("name"))
-                .add(order.getString("image"))
+                .add(order.getString("image", null))
                 .add(order.getDouble("unitedPriceTTC"))
-                .add(order.getString("grade"))
+                .add(order.getString("grade", null))
                 .add(order.getString("editor"))
                 .add(order.getString("diffusor"))
-                .add(order.getString("type"))
-                .add(order.getInteger("id_campaign"))
-                .add(order.getString("id_structure"))
+                .add(order.getString("type", null))
+                .add(order.getInteger("id_campaign", null))
+                .add(order.getString("id_structure", ""))
                 .add(order.getString("comment"));
     }
 
@@ -347,7 +350,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ";
 
         for (int i = 0; i < orderRegions.size(); i++) {
-            if(orderRegions.getJsonObject(i).containsKey("id_project")) {
+            if (orderRegions.getJsonObject(i).containsKey("id_project")) {
                 query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),";
                 JsonObject order = orderRegions.getJsonObject(i);
                 Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
@@ -367,28 +370,28 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getDouble("priceht"));
             }
         }
-        query = query.substring(0, query.length()-1);
+        query = query.substring(0, query.length() - 1);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
-    public void  updateOrders(List<Integer> ids, String status, String justification, final Handler<Either<String, JsonObject>> handler){
+    public void updateOrders(List<Integer> ids, String status, String justification, final Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + Crre.crreSchema + ".\"order-region-equipment\" " +
                 " SET  status = ?, cause_status = ?" +
-                " WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ; ";
+                " WHERE id in " + Sql.listPrepared(ids.toArray()) + " ; ";
 
         query += "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
                 "SET  status = ?, cause_status = ? " +
                 "WHERE id in ( SELECT ore.id_order_client_equipment FROM " + Crre.crreSchema + ".\"order-region-equipment\" ore " +
-                "WHERE id in "+ Sql.listPrepared(ids.toArray()) +" ) ; ";
+                "WHERE id in " + Sql.listPrepared(ids.toArray()) + " ) ; ";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status.toUpperCase()).add(justification);
         for (Integer id : ids) {
-            params.add( id);
+            params.add(id);
         }
         params.add(status.toUpperCase()).add(justification);
         for (Integer id : ids) {
-            params.add( id);
+            params.add(id);
         }
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -418,7 +421,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void updateStatus(JsonArray listIdOrders, Handler<Either<String, JsonObject>> handlerJsonObject) {
         String query = "";
         JsonArray params = new JsonArray();
-        for(int i = 0; i < listIdOrders.size(); i++) {
+        for (int i = 0; i < listIdOrders.size(); i++) {
             query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" SET id_status = ? WHERE id = ?;";
             params.add(listIdOrders.getJsonObject(i).getInteger("status")).add(listIdOrders.getJsonObject(i).getInteger("id"));
         }

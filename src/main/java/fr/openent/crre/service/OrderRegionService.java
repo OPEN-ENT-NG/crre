@@ -26,7 +26,7 @@ public interface OrderRegionService {
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getLastProject(UserInfos user, Handler<Either<String, JsonObject>> arrayResponseHandler);
+    void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler);
 
     void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
 

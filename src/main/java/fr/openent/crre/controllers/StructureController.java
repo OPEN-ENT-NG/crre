@@ -23,7 +23,8 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
@@ -37,7 +38,7 @@ public class StructureController extends ControllerHelper {
 
     private final DefaultStructureService structureService;
 
-    public StructureController(){
+    public StructureController() {
         super();
         this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
@@ -46,7 +47,7 @@ public class StructureController extends ControllerHelper {
     @ApiDoc("Returns all structures")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
-    public void getStructures(HttpServerRequest request){
+    public void getStructures(HttpServerRequest request) {
         structureService.getStructures(arrayResponseHandler(request));
     }
 
@@ -83,13 +84,13 @@ public class StructureController extends ControllerHelper {
                             structures.add(structure);
                         }
                         structureService.getStructureByUAI(uais, null, event -> {
-                            if(event.isRight()) {
+                            if (event.isRight()) {
                                 matchUAIStructure(structures, finalStructures, event);
                                 try {
                                     structureService.insertNewStructures(finalStructures, event2 -> {
-                                      if(event2.isRight()) {
-                                          renderJson(request, event2.right().getValue());
-                                      }
+                                        if (event2.isRight()) {
+                                            renderJson(request, event2.right().getValue());
+                                        }
                                     });
                                 } catch (ParseException e) {
                                     e.printStackTrace();
@@ -127,7 +128,7 @@ public class StructureController extends ControllerHelper {
                         while (sc.hasNextLine()) {
                             String userLine = sc.nextLine();
                             String[] values = userLine.split(";");
-                            if(values[3].equals("Papier")) {
+                            if (values[3].equals("Papier")) {
                                 JsonObject structure = new JsonObject();
                                 uais.add(values[1]);
                                 structure.put("uai", values[1]);
@@ -136,11 +137,11 @@ public class StructureController extends ControllerHelper {
                             }
                         }
                         structureService.getAllStructuresDetailByUAI(uais, event -> {
-                            if(event.isRight()) {
+                            if (event.isRight()) {
                                 matchUAIStructure(structures, finalStructures, event);
                                 try {
                                     structureService.updateReliquats(finalStructures, event2 -> {
-                                        if(event2.isRight()) {
+                                        if (event2.isRight()) {
                                             renderJson(request, event2.right().getValue());
                                         }
                                     });
@@ -180,10 +181,10 @@ public class StructureController extends ControllerHelper {
     private void matchUAIStructure(JsonArray structures, JsonArray finalStructures, Either<String, JsonArray> event) {
         log.info("success");
         JsonArray uaisNeo = event.right().getValue();
-        for(int i = 0; i < structures.size(); i++) {
+        for (int i = 0; i < structures.size(); i++) {
             String uai = structures.getJsonObject(i).getString("uai");
-            for(int j = 0; j < uaisNeo.size(); j++) {
-                if(uaisNeo.getJsonObject(j).getString("uai").equals(uai)) {
+            for (int j = 0; j < uaisNeo.size(); j++) {
+                if (uaisNeo.getJsonObject(j).getString("uai").equals(uai)) {
                     structures.getJsonObject(i).put("id", uaisNeo.getJsonObject(j).getString("id"));
                     finalStructures.add(structures.getJsonObject(i));
                     break;
@@ -197,52 +198,52 @@ public class StructureController extends ControllerHelper {
     @ApiDoc("Update student amount in structure")
     @SecuredAction(Crre.UPDATE_STUDENT_RIGHT)
     @ResourceFilter(updateStudentRight.class)
-    public void updateAmount(final HttpServerRequest  request){
-            try {
-                int seconde = Integer.parseInt(request.params().get("seconde"));
-                int premiere = Integer.parseInt(request.params().get("premiere"));
-                int terminale = Integer.parseInt(request.params().get("terminale"));
-                String id_structure = request.params().get("id_structure");
-                boolean pro = Boolean.getBoolean(request.params().get("pro"));
-                int previousTotal = Integer.parseInt(request.params().get("previousTotal"));
-                int total_licence;
+    public void updateAmount(final HttpServerRequest request) {
+        try {
+            int seconde = Integer.parseInt(request.params().get("seconde"));
+            int premiere = Integer.parseInt(request.params().get("premiere"));
+            int terminale = Integer.parseInt(request.params().get("terminale"));
+            String id_structure = request.params().get("id_structure");
+            boolean pro = Boolean.getBoolean(request.params().get("pro"));
+            int previousTotal = Integer.parseInt(request.params().get("previousTotal"));
+            int total_licence;
 
-                if(pro) {
-                    total_licence = seconde * 3 + premiere * 3 + terminale * 3;
-                } else {
-                    total_licence = seconde * 9 + premiere * 8 + terminale * 7;
-                }
-
-                int difference = total_licence - previousTotal;
-
-                Future<JsonObject> updateAmountFuture = Future.future();
-                Future<JsonObject> updateAmountLicenceFuture = Future.future();
-
-                CompositeFuture.all(updateAmountFuture, updateAmountLicenceFuture).setHandler(event -> {
-                    if(event.succeeded()) {
-                        log.info("Update amount licence success");
-                        request.response().setStatusCode(201).end();
-                    } else {
-                        log.error("Update licences amount failed");
-                    }
-                        });
-                structureService.updateAmount(id_structure, seconde, premiere, terminale, handlerJsonObject(updateAmountFuture));
-                structureService.reinitAmountLicence(id_structure, difference, handlerJsonObject(updateAmountLicenceFuture));
-            } catch (ClassCastException e) {
-                log.error("An error occurred when updating licences amount", e);
+            if (pro) {
+                total_licence = seconde * 3 + premiere * 3 + terminale * 3;
+            } else {
+                total_licence = seconde * 9 + premiere * 8 + terminale * 7;
             }
+
+            int difference = total_licence - previousTotal;
+
+            Future<JsonObject> updateAmountFuture = Future.future();
+            Future<JsonObject> updateAmountLicenceFuture = Future.future();
+
+            CompositeFuture.all(updateAmountFuture, updateAmountLicenceFuture).setHandler(event -> {
+                if (event.succeeded()) {
+                    log.info("Update amount licence success");
+                    request.response().setStatusCode(201).end();
+                } else {
+                    log.error("Update licences amount failed");
+                }
+            });
+            structureService.updateAmount(id_structure, seconde, premiere, terminale, handlerJsonObject(updateAmountFuture));
+            structureService.reinitAmountLicence(id_structure, difference, handlerJsonObject(updateAmountLicenceFuture));
+        } catch (ClassCastException e) {
+            log.error("An error occurred when updating licences amount", e);
+        }
     }
 
     @Get("/structure/amount")
     @ApiDoc("Get all students amount by structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorRight.class)
-    public void getAmount(final HttpServerRequest  request) {
-            try {
-                String id_structure = request.params().get("id_structure");
-                structureService.getAmount(id_structure, defaultResponseHandler(request));
-            } catch (ClassCastException e) {
-                log.error("An error occurred when casting basket id", e);
-            }
+    public void getAmount(final HttpServerRequest request) {
+        try {
+            String id_structure = request.params().get("id_structure");
+            structureService.getAmount(id_structure, defaultResponseHandler(request));
+        } catch (ClassCastException e) {
+            log.error("An error occurred when casting basket id", e);
+        }
     }
 }

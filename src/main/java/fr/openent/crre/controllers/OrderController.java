@@ -5,8 +5,11 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.*;
+import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.OrderService;
+import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderService;
+import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -22,7 +25,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
@@ -34,7 +36,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fr.openent.crre.helpers.ElasticSearchHelper.*;
+import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
+import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -45,18 +48,22 @@ import static java.lang.Integer.parseInt;
 public class OrderController extends ControllerHelper {
 
     private final OrderService orderService;
+    private final OrderRegionService orderRegionService;
+    private final DefaultStructureService structureService;
 
     public static final String UTF8_BOM = "\uFEFF";
 
     public OrderController() {
+        this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment");
+        this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
     @Get("/orders/mine/:idCampaign/:idStructure")
     @ApiDoc("Get my list of orders by idCampaign and idstructure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessOrderRight.class)
-    public void listMyOrdersByCampaignByStructure(final HttpServerRequest request){
+    public void listMyOrdersByCampaignByStructure(final HttpServerRequest request) {
         try {
             UserUtils.getUserInfos(eb, request, user -> {
                 Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
@@ -66,9 +73,9 @@ public class OrderController extends ControllerHelper {
                 String endDate = request.getParam("endDate");
                 Boolean old = Boolean.valueOf(request.getParam("old"));
 
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, old, orders -> {
+                orderService.listOrder(idCampaign, idStructure, user, ordersIds, startDate, endDate, old, orders -> {
                     if (orders.isRight()) {
-                        if(!old) {
+                        if (!old) {
                             List<String> idEquipments = new ArrayList<>();
                             for (Object order : orders.right().getValue()) {
                                 String idEquipment = ((JsonObject) order).getString("equipment_key");
@@ -104,8 +111,8 @@ public class OrderController extends ControllerHelper {
                     }
                 });
             });
-        }catch (ClassCastException e ){
-            log.error("An error occured when casting campaign id ",e);
+        } catch (ClassCastException e) {
+            log.error("An error occured when casting campaign id ", e);
         }
     }
 
@@ -113,7 +120,7 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("Get my list of orders by idCampaign and idstructure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessOrderRight.class)
-    public void listMyOrdersOldByCampaignByStructure(final HttpServerRequest request){
+    public void listMyOrdersOldByCampaignByStructure(final HttpServerRequest request) {
         try {
             UserUtils.getUserInfos(eb, request, user -> {
                 Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
@@ -123,7 +130,7 @@ public class OrderController extends ControllerHelper {
                 String endDate = request.getParam("endDate");
                 Boolean old = Boolean.valueOf(request.getParam("old"));
 
-                orderService.listOrder(idCampaign,idStructure, user, ordersIds, startDate, endDate, old, orders -> {
+                orderService.listOrder(idCampaign, idStructure, user, ordersIds, startDate, endDate, old, orders -> {
                     if (orders.isRight()) {
                         final JsonArray finalResult = orders.right().getValue();
                         renderJson(request, finalResult);
@@ -133,8 +140,8 @@ public class OrderController extends ControllerHelper {
                     }
                 });
             });
-        }catch (ClassCastException e ){
-            log.error("An error occured when casting campaign id ",e);
+        } catch (ClassCastException e) {
+            log.error("An error occured when casting campaign id ", e);
         }
     }
 
@@ -142,7 +149,7 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("Get the list of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
-    public void listOrders (final HttpServerRequest request){
+    public void listOrders(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
                 final String status = request.params().get("status");
@@ -160,7 +167,7 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("Get the list of users who orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
-    public void listUsers (final HttpServerRequest request){
+    public void listUsers(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
                 final String status = request.params().get("status");
@@ -190,9 +197,9 @@ public class OrderController extends ControllerHelper {
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals("id") && !key.equals("q")  && !key.equals("page") &&
+                    if (!key.equals("id") && !key.equals("q") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
-                        for(int f = 0; f < filters.size(); f ++) {
+                        for (int f = 0; f < filters.size(); f++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
                                 filters.getJsonObject(f).getJsonArray(key).add(request.params().entries().get(i).getValue());
                                 exist = true;
@@ -208,14 +215,14 @@ public class OrderController extends ControllerHelper {
                     q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
                 }
                 Integer id_campaign = null;
-                if(request.getParam("id") != null) {
+                if (request.getParam("id") != null) {
                     id_campaign = parseInt(request.getParam("id"));
                 }
                 String finalQ = q;
-                    Integer finalId_campaign = id_campaign;
-                    plainTextSearchName(finalQ, equipments -> {
-                            orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
-                    });
+                Integer finalId_campaign = id_campaign;
+                plainTextSearchName(finalQ, equipments -> {
+                    orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                });
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -226,7 +233,7 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorRight.class)
-    public void export (final HttpServerRequest request){
+    public void export(final HttpServerRequest request) {
         List<String> params = request.params().getAll("id");
         List<String> idsEquipment = request.params().getAll("equipment_key");
         List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
@@ -246,8 +253,8 @@ public class OrderController extends ControllerHelper {
                     order = orderClients.getJsonObject(i);
                     check = true;
                     j = 0;
-                    while(check && j < equipments.size()) {
-                        if(equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
+                    while (check && j < equipments.size()) {
+                        if (equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
                             orderMap = new JsonObject();
                             equipment = equipments.getJsonObject(j);
                             orderMap.put("name", equipment.getString("titre"));
@@ -274,7 +281,7 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorRight.class)
-    public void exportOld (final HttpServerRequest request){
+    public void exportOld(final HttpServerRequest request) {
         List<String> params = request.params().getAll("id");
         List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
         JsonArray orders = new JsonArray();
@@ -332,7 +339,7 @@ public class OrderController extends ControllerHelper {
         return report.toString();
     }
 
-    private static String getExportHeader (HttpServerRequest request) {
+    private static String getExportHeader(HttpServerRequest request) {
         return I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("basket", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -349,7 +356,7 @@ public class OrderController extends ControllerHelper {
                 + "\n";
     }
 
-    private static String generateExportLine (HttpServerRequest request, JsonObject log) {
+    private static String generateExportLine(HttpServerRequest request, JsonObject log) {
         return (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
@@ -374,14 +381,14 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("validate orders ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
-    public void validateOrders (final HttpServerRequest request){
+    public void validateOrders(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
                 orders -> UserUtils.getUserInfos(eb, request,
                         userInfos -> {
                             try {
                                 List<String> params = new ArrayList<>();
-                                for (Object id: orders.getJsonArray("ids") ) {
-                                    params.add( id.toString());
+                                for (Object id : orders.getJsonArray("ids")) {
+                                    params.add(id.toString());
                                 }
 
                                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
@@ -403,13 +410,13 @@ public class OrderController extends ControllerHelper {
     @ApiDoc("validate orders ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
-    public void refuseOrders (final HttpServerRequest request){
+    public void refuseOrders(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
                 orders -> {
                     try {
                         List<String> params = new ArrayList<>();
-                        for (Object id: orders.getJsonArray("ids") ) {
-                            params.add( id.toString());
+                        for (Object id : orders.getJsonArray("ids")) {
+                            params.add(id.toString());
                         }
 
                         List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
