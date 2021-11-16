@@ -135,6 +135,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 return $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0;
             }else if($scope.campaign.use_credit == 'credits'){
                 return $scope.campaign.purse_amount - $scope.displayedOrders.calculTotalPriceTTC() < 0;
+            }else if($scope.campaign.use_credit == 'none'){
+                return false;
             }
         };
 

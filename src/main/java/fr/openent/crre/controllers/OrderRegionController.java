@@ -612,26 +612,28 @@ public class OrderRegionController extends BaseController {
     }
 
     private void updatePurseLicence(List<Future> futures, JsonObject newOrder, String operation, Double price, String use_credit) {
-        Future<JsonObject> updateFuture = Future.future();
-        futures.add(updateFuture);
-        switch (use_credit) {
-            case "licences": {
-                structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
-                        newOrder.getInteger("amount"),
-                        handlerJsonObject(updateFuture));
-                break;
-            }
-            case "consumable_licences": {
-                structureService.updateAmountConsumableLicence(newOrder.getString("id_structure"), operation,
-                        newOrder.getInteger("amount"),
-                        handlerJsonObject(updateFuture));
-                break;
-            }
-            case "credits": {
-                purseService.updatePurseAmount(price,
-                        newOrder.getString("id_structure"), operation,
-                        handlerJsonObject(updateFuture));
-                break;
+        if(!use_credit.equals("none")) {
+            Future<JsonObject> updateFuture = Future.future();
+            futures.add(updateFuture);
+            switch (use_credit) {
+                case "licences": {
+                    structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
+                            newOrder.getInteger("amount"),
+                            handlerJsonObject(updateFuture));
+                    break;
+                }
+                case "consumable_licences": {
+                    structureService.updateAmountConsumableLicence(newOrder.getString("id_structure"), operation,
+                            newOrder.getInteger("amount"),
+                            handlerJsonObject(updateFuture));
+                    break;
+                }
+                case "credits": {
+                    purseService.updatePurseAmount(price,
+                            newOrder.getString("id_structure"), operation,
+                            handlerJsonObject(updateFuture));
+                    break;
+                }
             }
         }
     }

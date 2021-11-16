@@ -293,7 +293,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
-                " (amount, creation_date,  owner_name, owner_id," +
+                " (" +
+                ((isRenew) ? "" : "id,") +
+                "amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_order_client_equipment, id_project, reassort, total_free) VALUES ";
