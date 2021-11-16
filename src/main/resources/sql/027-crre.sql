@@ -583,5 +583,6 @@ INNER JOIN crre.rel_group_structure rel_group2 ON rel_group1.id_structure = rel_
 WHERE rel_group1.id_structure_group = 5 AND rel_group2.id_structure_group = 3;
 
 SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre.project', 'id')), (SELECT (count(*) + 1) FROM crre.project), FALSE);
-SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre."order-region-equipment-old"', 'id')), (SELECT (count(*) + 1) FROM crre."order-region-equipment-old"), FALSE);
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre."order-region-equipment-old"', 'id')), (SELECT max(id) FROM crre."order-region-equipment-old")+1, FALSE);
+SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre."order-region-equipment"', 'id')), (SELECT max(id) FROM crre."order-region-equipment-old")+1, FALSE);
 SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('crre.structure_group', 'id')), (SELECT (count(*) + 1) FROM crre.structure_group), FALSE);

@@ -100,7 +100,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
-
+    //TODO REFACTO ces deux fonctions!!!!
     @Override
     public void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String selectOld = oldTable ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, oce.*, s.name as status_name, s.id as status_id " : "";
@@ -117,11 +117,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
         }
         query = innerJoin(query);
-        query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray()) + " ; ";
+        query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray());
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for (Integer id : idsOrder) {
             params.add(id);
         }
+        query += " GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name, bo.id";
+        if(oldTable) {
+            query += ", s.name, s.id";
+        }
+
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
