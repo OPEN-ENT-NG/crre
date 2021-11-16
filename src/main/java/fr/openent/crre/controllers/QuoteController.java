@@ -50,9 +50,8 @@ public class QuoteController extends BaseController {
             quoteService.getQuote(id, quote -> {
                 if(quote.isRight()) {
                     JsonObject quoteResult = quote.right().getValue();
-                    String b64_attachment = quoteResult.getString("attachment");
+                    String attachment = quoteResult.getString("attachment");
                     String title = quoteResult.getString("title");
-                    String attachment = new String(Base64.getDecoder().decode(b64_attachment));
                     request.response()
                             .putHeader("Content-Type", "text/csv; charset=utf-8")
                             .putHeader("Content-Disposition", "attachment; filename=" + title + ".csv")

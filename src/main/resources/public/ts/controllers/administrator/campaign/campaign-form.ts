@@ -76,9 +76,10 @@ export const campaignFormController = ng.controller('campaignFormController',
 
         };
 
-        const managStructureGroups = (groups: StructureGroup[]) => {
+        const managStructureGroups = () => {
             let proOrGenSelected = false;
             let papierNumeriqueSelected = false;
+            let groups = [];
             $scope.structureGroups.all.slice(3, 5).forEach(group => {
                 if (group.selected) {
                     proOrGenSelected = true;
@@ -102,8 +103,9 @@ export const campaignFormController = ng.controller('campaignFormController',
                     }
                 });
             } else if (!proOrGenSelected && !papierNumeriqueSelected) {
-                groups = $scope.structureGroups.selected;
+                $scope.structureGroups.selected.forEach(group => {groups.push(group);});
             }
+            return groups;
         };
 
         $scope.selectStructures = () => {
@@ -143,7 +145,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.groups = [];
             $scope.campaign.catalog = $scope.campaign.catalog.value;
             $scope.campaign.use_credit = $scope.campaign.use_credit.value;
-            managStructureGroups($scope.campaign.groups);
+            $scope.campaign.groups = managStructureGroups();
             await campaign.save();
             $scope.redirectTo('/campaigns');
             Utils.safeApply($scope);

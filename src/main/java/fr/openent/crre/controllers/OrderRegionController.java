@@ -562,7 +562,7 @@ public class OrderRegionController extends BaseController {
     private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray structures,
                                                       JsonArray orderRegion, JsonArray ordersClient, JsonArray ordersRegion) {
         int nbEtab = structures.size();
-        String base64File = Base64.getEncoder().encodeToString(generateExport(request, orderRegion).getBytes(StandardCharsets.UTF_8));
+        String csvFile = generateExport(request, orderRegion);
         Future<JsonObject> insertOldOrdersFuture = Future.future();
         Future<JsonObject> deleteOldOrderClientFuture = Future.future();
         Future<JsonObject> deleteOldOrderRegionFuture = Future.future();
@@ -571,13 +571,14 @@ public class OrderRegionController extends BaseController {
         try {
             orderRegionService.insertOldClientOrders(orderRegion, response -> {
                 if (response.isRight()) {
-                    quoteService.insertQuote(user, nbEtab, base64File, response2 -> {
+                    quoteService.insertQuote(user, nbEtab, csvFile, response2 -> {
                         if (response2.isRight()) {
+                            String title = response2.right().getValue().getString("title");
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-                            attachment.add(new JsonObject().put("name", "orders.csv").put("content", base64File));
+                            attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
                             String mail = this.mail.getString("address");
-                            emailSender.sendMail(request, mail, "Test",
-                                    "Bonjour", attachment, message -> {
+                            emailSender.sendMail(request, mail, "Demande Libraire CRRE",
+                                    "", attachment, message -> {
                                         if(!message.isRight()) {
                                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                         }

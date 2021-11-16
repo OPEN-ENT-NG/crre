@@ -59,7 +59,7 @@ public class DefaultPurseService implements PurseService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         if(ids.size() > 0){
-            query += "WHERE purse.id IN " + Sql.listPrepared(ids.toArray());
+            query += "AND purse.id IN " + Sql.listPrepared(ids.toArray());
             for (String id : ids) {
                 params.add(Integer.parseInt(id));
             }
@@ -76,7 +76,7 @@ public class DefaultPurseService implements PurseService {
                 "FROM " + Crre.crreSchema + ".licences " +
                 "FULL OUTER JOIN "+ Crre.crreSchema +".students ON students.id_structure = licences.id_structure " +
                 "FULL OUTER JOIN "+ Crre.crreSchema +".purse ON purse.id_structure = licences.id_structure " +
-                "WHERE purse.initial_amount IS NOT NULL OR licences.initial_amount <> 0 OR licences.consumable_initial_amount <> 0";
+                "WHERE purse.initial_amount IS NOT NULL OR licences.initial_amount <> 0 OR licences.consumable_initial_amount <> 0 ";
     }
 
     @Override
@@ -86,7 +86,7 @@ public class DefaultPurseService implements PurseService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         if(idStructures != null && !idStructures.isEmpty()){
-            query += "WHERE purse.id_structure IN " + Sql.listPrepared(idStructures);
+            query += "AND purse.id_structure IN " + Sql.listPrepared(idStructures);
             for (int i = 0; i < idStructures.size(); i++) {
                 params.add(idStructures.getString(i));
             }
