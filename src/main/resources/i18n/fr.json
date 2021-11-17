@@ -709,6 +709,8 @@
   "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?",
   "articlepapier" : "Catalogue papier",
   "articlenumerique" : "Catalogue numérique",
+  "articlepapierconsommable" : "Catalogue papier consommable",
+  "articlenumeriqueconsommable" : "Catalogue numérique consommable",
   "crre.all.catalog" : "Tout le catalogue",
   "crre.all.etab" : "Tout les établissements",
   "pro" :  "LP/LPO",
@@ -734,7 +736,7 @@
   "crre.stat.public" : "Publics",
   "crre.stat.prive" : "Privés",
   "crre.stat.type.etab": "LG/LP",
-  "crre.stat.conso": "Conso",
+  "crre.stat.conso": "Taux de consommation de licences",
   "crre.stat.nb_order": "Nombre de commandes",
   "crre.stat.nb_ressource": "Nombre de ressources",
   "crre.stat.dotation": "Dotation",
@@ -748,6 +750,6 @@
   "80" : "80-99%",
   "100" : "100%",
   "LG" : "Général",
-  "LP": "Professionnel"
-
+  "LP": "Professionnel",
+  "consumables" : "Consommable"
 }

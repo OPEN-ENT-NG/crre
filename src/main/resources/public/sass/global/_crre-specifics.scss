@@ -557,7 +557,7 @@ body.crre {
     .dominos {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
+      justify-content: flex-start;
 
       .item {
         max-width: 500px;

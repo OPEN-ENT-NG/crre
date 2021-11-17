@@ -7,9 +7,16 @@ export const campaignFormController = ng.controller('campaignFormController',
         this.init = async () => {
             $scope.othersSelected = false;
             $scope.articleFormat = [{name: "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
-                {name: "Catalogue numérique", value: "articlenumerique"}];
+                {name: "Catalogue numérique", value: "articlenumerique"}, {
+                    name: "Catalogue numérique consommable",
+                    value: "articlenumeriqueconsommable"
+                },
+                {name: "Catalogue papier consommable", value: "articlepapierconsommable"}];
             $scope.creditFormat = [{name: "aucun crédit", value: "none"},
-                {name: "les Licences", value: "licences"}, {name: "les Licences consommables", value: "consumable_licences"},
+                {name: "les Licences", value: "licences"}, {
+                    name: "les Licences consommables",
+                    value: "consumable_licences"
+                },
                 {name: "les Crédits Monétaires", value: "credits"}];
             $scope.formatCheck = [];
             $scope.allSelected = $scope.allProAndGenSelected = false;
@@ -33,9 +40,7 @@ export const campaignFormController = ng.controller('campaignFormController',
 
 
         $scope.changeList = () => {
-            if ($scope.campaign_type.credit == "credits") {
-                $scope.campaign.use_credit = $scope.campaign_type.credit;
-            }
+            $scope.campaign.use_credit = $scope.creditFormat.find(format => $scope.campaign_type.credit == format.value)
             $scope.campaign.reassort = $scope.campaign_type.reassort;
             $scope.campaign.automatic_close = $scope.campaign_type.automatic_close;
             $scope.campaign.id_type = $scope.campaign_type.id_type;
@@ -104,7 +109,9 @@ export const campaignFormController = ng.controller('campaignFormController',
                     }
                 });
             } else if (!proOrGenSelected && !papierNumeriqueSelected) {
-                $scope.structureGroups.selected.forEach(group => {groups.push(group);});
+                $scope.structureGroups.selected.forEach(group => {
+                    groups.push(group);
+                });
             }
             return groups;
         };
@@ -173,12 +180,12 @@ export const campaignFormController = ng.controller('campaignFormController',
             });
 
             // If Numérique, Papier and Mixte are selected, select the all group
-            if($scope.structureGroups.all.slice(0, 3).filter(s => s.selected === true).length === 3) {
+            if ($scope.structureGroups.all.slice(0, 3).filter(s => s.selected === true).length === 3) {
                 $scope.allSelected = true;
             }
 
             // If Pro and General are selected, select the all group
-            if($scope.structureGroups.all.slice(3, 5).filter(s => s.selected === true).length === 2) {
+            if ($scope.structureGroups.all.slice(3, 5).filter(s => s.selected === true).length === 2) {
                 $scope.allProAndGenSelected = true;
             }
 

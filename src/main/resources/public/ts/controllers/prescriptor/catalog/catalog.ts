@@ -10,25 +10,37 @@ export const catalogController = ng.controller('catalogController',
             $scope.loading = true;
             if (!!$scope.campaign.catalog) {
                 $scope.filters = new Filters();
-                let newFilter = new Filter();
-                newFilter.name = "_index";
-                newFilter.value = $scope.campaign.catalog;
-                $scope.filters.all.push(newFilter);
+                let catalogFilter = new Filter();
+                catalogFilter.name = "_index";
+                // If catalog contain consommable filter
+                if (new RegExp('consommable').test($scope.campaign.catalog)) {
+                    let consommableFilter = new Filter();
+                    consommableFilter.name = "conso";
+                    consommableFilter.value = "true";
+                    $scope.filters.all.push(consommableFilter);
+                }
+                catalogFilter.value = $scope.campaign.catalog.replace("consommable", "");
+                $scope.filters.all.push(catalogFilter);
             }
+            $scope.equipments.consumables = [{name: 'true'}, {name: 'false'}];
+            $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
+
             $scope.catalog = {
                 subjects: [],
                 public: [],
                 grades: [],
                 docsType: [],
-                editors: []
+                editors: [],
+                consumables: []
             };
             $scope.correlationFilterES = {
-                keys: ["subjects", "public", "grades", "docsType", "editors"],
+                keys: ["subjects", "public", "grades", "docsType", "editors", "consumables"],
                 subjects: 'disciplines.libelle',
                 public: 'publiccible',
                 grades: 'niveaux.libelle',
                 docsType: '_index',
-                editors: 'editeur'
+                editors: 'editeur',
+                consumables : 'conso'
             };
         }
 

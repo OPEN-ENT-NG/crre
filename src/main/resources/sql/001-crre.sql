@@ -301,7 +301,7 @@ CREATE TABLE crre.order_file (
 CREATE TABLE crre.type_campaign (
     id bigint,
     name character varying,
-    credit boolean,
+    credit character varying,
     reassort boolean,
     catalog character varying,
     automatic_close boolean,
@@ -363,8 +363,10 @@ CREATE TRIGGER update_old_end_date_trigger AFTER
     UPDATE ON crre.campaign
     FOR EACH ROW EXECUTE PROCEDURE crre.update_old_end_date();
 
-INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (1, 'Type numérique', true, false, 'Catalogue numérique', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (2, 'Type papier', false, false, 'Catalogue papier', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}]');
+INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (1, 'Type numérique', 'licences', false, 'Catalogue numérique', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}]');
+INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (2, 'Type papier', 'licences', false, 'Catalogue papier', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}]');
+INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (3, 'Type papier consommable', 'consumable_licences', false, 'Catalogue papier consommable', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}]');
+INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (4, 'Type numérique consommable', 'consumable_licences', false, 'Catalogue numérique consommable', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}]');
 
 INSERT INTO crre.status(id, name) VALUES (0, 'En cours de commande');
 INSERT INTO crre.status(id, name) VALUES (1, 'Disponible');

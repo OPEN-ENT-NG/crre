@@ -119,7 +119,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
 
     private JsonObject filterMatch(HashMap<String, ArrayList<String>> params) {
         JsonObject match = new JsonObject()
-                .put("date", LocalDate.now().toString());
+                .put("date", LocalDate.now().minusDays(1).toString());
 
         Set<Map.Entry<String, ArrayList<String>>> set = params.entrySet();
 
