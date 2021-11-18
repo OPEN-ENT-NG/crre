@@ -8,20 +8,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            if (!!$scope.campaign.catalog) {
-                $scope.filters = new Filters();
-                let catalogFilter = new Filter();
-                catalogFilter.name = "_index";
-                // If catalog contain consommable filter
-                if (new RegExp('consommable').test($scope.campaign.catalog)) {
-                    let consommableFilter = new Filter();
-                    consommableFilter.name = "conso";
-                    consommableFilter.value = "true";
-                    $scope.filters.all.push(consommableFilter);
-                }
-                catalogFilter.value = $scope.campaign.catalog.replace("consommable", "");
-                $scope.filters.all.push(catalogFilter);
-            }
+            $scope.isConso = false;
             $scope.equipments.consumables = [{name: 'true'}, {name: 'false'}];
             $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
 
@@ -40,8 +27,32 @@ export const catalogController = ng.controller('catalogController',
                 grades: 'niveaux.libelle',
                 docsType: '_index',
                 editors: 'editeur',
-                consumables : 'conso'
+                consumables: 'conso'
             };
+
+            if (!!$scope.campaign.catalog && $scope.filters.all.length == 0) {
+                $scope.filters = new Filters();
+                let catalogFilter = new Filter();
+                catalogFilter.name = "_index";
+                // If catalog contain consommable filter
+                if (new RegExp('consommable').test($scope.campaign.catalog)) {
+                    $scope.isConso = true;
+                    let consommableFilter = new Filter();
+                    consommableFilter.name = "conso";
+                    consommableFilter.value = "true";
+                    $scope.filters.all.push(consommableFilter);
+                }
+                catalogFilter.value = $scope.campaign.catalog.replace("consommable", "");
+                $scope.filters.all.push(catalogFilter);
+            } else {
+                $scope.correlationFilterES.keys.forEach(key => {
+                    let arrayFilter = [];
+                    $scope.filters.all.filter(t => t.name == $scope.correlationFilterES[key]).forEach(filter => {
+                        arrayFilter.push($scope.equipments[key].find(c => c.name = filter.value));
+                    });
+                    $scope.catalog[key] = arrayFilter;
+                });
+            }
         }
 
         $scope.addFilter = async () => {
@@ -51,6 +62,14 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
+            if ($scope.isConso) {
+                let arrayConso = [];
+                arrayConso.push($scope.equipments.consumables.find(c => c.name = "true"));
+                $scope.catalog["consumables"] = arrayConso;
+            }
+            let arrayDocs = [];
+            arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.replace("consommable", "")));
+            $scope.catalog["docsType"] = arrayDocs;
             Utils.safeApply($scope);
         };
 
@@ -68,7 +87,8 @@ export const catalogController = ng.controller('catalogController',
                     $scope.filters.all.push(newFilter);
                 })
             }
-            if($scope.filters.all.length > 0) {
+            if ($scope.filters.all.length > 0) {
+                $scope.$emit('eventEmitedFilters', $scope.filters);
                 await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
                 Utils.safeApply($scope);
             } else {
@@ -77,7 +97,7 @@ export const catalogController = ng.controller('catalogController',
             }
         };
 
-        $scope.dropElement = (item,key): void => {
+        $scope.dropElement = (item, key): void => {
             $scope.catalog[key] = _.without($scope.catalog[key], item);
             $scope.getFilter();
         };

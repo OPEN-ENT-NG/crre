@@ -43,7 +43,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.displayedOrders = new OrdersClient();
         $scope.basketsOrders = new BasketsOrders();
         $scope.users = [];
-        $scope.filters = new Filters();
+        if(!!!$scope.filters) {
+            $scope.filters = new Filters();
+        }
         $scope.student = new Student();
         $scope.stats = new Statistics();
         $scope.statsStructure = new StatisticsStructures();
@@ -366,6 +368,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $rootScope.$on('eventEmitedCampaign', function (event, data) {
             $scope.campaign = data;
+        });
+
+        $rootScope.$on('eventEmitedFilters', function (event, data) {
+            $scope.filters = data;
         });
 
         $scope.openEquipmentId = (equipmentId: string) => {
