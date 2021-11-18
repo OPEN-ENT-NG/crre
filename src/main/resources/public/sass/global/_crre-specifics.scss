@@ -1600,7 +1600,7 @@ body.crre {
 
   .flex-cards {
     display: grid;
-    grid-column-gap: 4rem;
+    grid-column-gap: 2rem;
     -ms-flex-align: start;
     align-items: flex-start;
     grid-template-columns: 1fr 1fr 1fr 1fr !important;
@@ -1640,6 +1640,10 @@ body.crre {
       background: black;
       color: white;
     }
+  }
+
+  .link-stat {
+    box-shadow: 70px 0 0 -37px rgba(208,223,230,1);
   }
 
 }
