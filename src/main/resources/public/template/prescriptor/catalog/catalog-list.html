@@ -18,7 +18,8 @@
         </div>
     </div>
     <div class="cell twelve vertical-spacing">
-        <multi-combo title="[[lang.translate(key)]]"
+        <multi-combo ng-if="preFilter[key].length == 0"
+                     title="[[lang.translate(key)]]"
                      combo-model="equipments[key]"
                      search-on="name" order-by="name"
                      labels="comboLabels" filtered-model="catalog[key]"
@@ -33,7 +34,7 @@
         <div style="margin:0.5em">
             <div class="remove-margin-bottom">
                 <div ng-repeat="key in correlationFilterES.keys" class="select-blocks inline-block">
-                    <div ng-repeat="item in catalog[key]"
+                    <div ng-repeat="item in catalog[key]" ng-if="preFilter[key].length == 0"
                          ng-click="dropElement(item,key)">
                         [[item.toString()]]
                     </div>

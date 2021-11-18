@@ -8,7 +8,6 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            $scope.isConso = false;
             $scope.equipments.consumables = [{name: 'true'}, {name: 'false'}];
             $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
 
@@ -20,6 +19,15 @@ export const catalogController = ng.controller('catalogController',
                 editors: [],
                 consumables: []
             };
+
+            $scope.preFilter = {
+                subjects: [],
+                public: [],
+                grades: [],
+                docsType: [],
+                editors: [],
+                consumables: []
+            }
             $scope.correlationFilterES = {
                 keys: ["subjects", "public", "grades", "docsType", "editors", "consumables"],
                 subjects: 'disciplines.libelle',
@@ -36,7 +44,6 @@ export const catalogController = ng.controller('catalogController',
                 catalogFilter.name = "_index";
                 // If catalog contain consommable filter
                 if (new RegExp('consommable').test($scope.campaign.catalog)) {
-                    $scope.isConso = true;
                     let consommableFilter = new Filter();
                     consommableFilter.name = "conso";
                     consommableFilter.value = "true";
@@ -60,16 +67,22 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipments.all = [];
             $scope.equipments.loading = true;
+            // Add to prefilter to hide filters in front
+            new RegExp('consommable').test($scope.campaign.catalog) ? $scope.preFilter["consumables"].push(true) : null;
+            !!$scope.campaign.catalog ? $scope.preFilter["docsType"].push(true) : null;
+
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
-            if ($scope.isConso) {
+            if (new RegExp('consommable').test($scope.campaign.catalog)) {
                 let arrayConso = [];
                 arrayConso.push($scope.equipments.consumables.find(c => c.name = "true"));
                 $scope.catalog["consumables"] = arrayConso;
             }
-            let arrayDocs = [];
-            arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.replace("consommable", "")));
-            $scope.catalog["docsType"] = arrayDocs;
+            if (!!$scope.campaign.catalog) {
+                let arrayDocs = [];
+                arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.replace("consommable", "")));
+                $scope.catalog["docsType"] = arrayDocs;
+            }
             Utils.safeApply($scope);
         };
 
