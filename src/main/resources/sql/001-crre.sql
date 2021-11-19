@@ -89,7 +89,12 @@ CREATE TABLE crre.basket_order (
     total double precision,
     amount bigint,
     created date,
-    CONSTRAINT basket_order_pkey PRIMARY KEY (id)
+    CONSTRAINT basket_order_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
+        REFERENCES crre.campaign(id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+
 );
 
 CREATE TABLE crre.students
@@ -238,13 +243,8 @@ CREATE TABLE crre.order_client_equipment_old (
     reassort boolean NOT NULL DEFAULT false,
     offers json,
     PRIMARY KEY (id),
-    CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
-    REFERENCES crre.campaign (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION,
     CONSTRAINT "Check_amount_positive" CHECK (amount >= 0::numeric),
-    CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') ),
-    CONSTRAINT fk_basket_order FOREIGN KEY (id_basket) REFERENCES crre.basket_order(id)
+    CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
 );
 
 CREATE TABLE crre."order-region-equipment-old"
@@ -275,18 +275,10 @@ CREATE TABLE crre."order-region-equipment-old"
     total_free bigint,
 
     CONSTRAINT order_region_equipment_old_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_campaign_id FOREIGN KEY (id_campaign)
-        REFERENCES crre.campaign(id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
     CONSTRAINT fk_status_id FOREIGN KEY (id_status)
         REFERENCES crre.status(id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT fk_order_client_id FOREIGN KEY (id_order_client_equipment)
-        REFERENCES crre.order_client_equipment_old(id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE,
     CONSTRAINT constraint_unique_id_order_client_equipment_old UNIQUE (id_order_client_equipment),
     CONSTRAINT "Check_amount_positive" CHECK (amount::numeric >= 0::numeric) NOT VALID,
     CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
