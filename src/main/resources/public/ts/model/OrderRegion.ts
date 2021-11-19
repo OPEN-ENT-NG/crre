@@ -92,6 +92,7 @@ export class OrderRegion implements Order  {
         this.user_name = order.user_name;
         this.user_id = order.user_id;
         this.reassort = order.reassort;
+        this.use_credit = order.campaign.use_credit;
     }
 }
 
@@ -100,13 +101,13 @@ export class OrdersRegion extends Selection<OrderRegion> {
         super([]);
     }
 
-    async create(use_credit:string):Promise<any> {
+    async create():Promise<any> {
         let orders = [];
         this.forEach(order => {
             orders.push(Mix.castAs(OrderRegion, order).toJson());
         });
         try {
-            return await http.post(`/crre/region/orders/${use_credit}`, {orders: orders});
+            return await http.post(`/crre/region/orders`, {orders: orders});
         } catch (e) {
             toasts.warning('crre.order.create.err');
             throw e;

@@ -85,7 +85,7 @@ public class OrderRegionController extends BaseController {
         this.structureService = new DefaultStructureService(Crre.crreSchema);
     }
 
-    @Post("/region/orders/:useCredit")
+    @Post("/region/orders")
     @ApiDoc("Create orders for region")
     @SecuredAction(Crre.VALIDATOR_RIGHT)
     @ResourceFilter(ValidatorRight.class)
@@ -119,7 +119,6 @@ public class OrderRegionController extends BaseController {
                                                     Actions.CREATE.toString(),
                                                     idProjectRight.toString(),
                                                     new JsonObject().put("id", idProjectRight).put("title", finalTitle));
-                                            String use_credit = request.getParam("useCredit");
                                             for (int i = 0; i < ordersList.size(); i++) {
                                                 List<Future> futures = new ArrayList<>();
                                                 JsonObject newOrder = ordersList.getJsonObject(i);
@@ -127,7 +126,7 @@ public class OrderRegionController extends BaseController {
                                                 futures.add(createOrdersRegionFuture);
                                                 Double price = Double.parseDouble(newOrder.getDouble("price").toString())
                                                         * newOrder.getInteger("amount");
-                                                updatePurseLicence(futures, newOrder, "-", price, use_credit);
+                                                updatePurseLicence(futures, newOrder, "-", price, newOrder.getString("use_credit","none"));
                                                 orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
                                                         handlerJsonObject(createOrdersRegionFuture));
                                                 int finalI = i;
@@ -624,12 +623,12 @@ public class OrderRegionController extends BaseController {
                                     if (newOrder.getString("status").equals("REJECTED")) {
                                         if (status.equals("valid")) {
                                             updatePurseLicence(futures, newOrder, "-", price,
-                                                    newOrder.getString("use_credit"));
+                                                    newOrder.getString("use_credit","none"));
                                         }
                                     } else {
                                         if (status.equals("rejected")) {
                                             updatePurseLicence(futures, newOrder, "+", price,
-                                                    newOrder.getString("use_credit"));
+                                                    newOrder.getString("use_credit","none"));
                                         }
                                     }
                                 }

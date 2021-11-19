@@ -129,25 +129,15 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.remainAvailable = () => {
-            if($scope.campaign.use_credit == 'licences'){
-                return $scope.campaign.nb_licences_available - $scope.displayedOrders.calculTotalAmount() < 0;
-            }else if($scope.campaign.use_credit == 'consumable_licences'){
-                return $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0;
-            }else if($scope.campaign.use_credit == 'credits'){
-                return $scope.campaign.purse_amount - $scope.displayedOrders.calculTotalPriceTTC() < 0;
-            }else if($scope.campaign.use_credit == 'none'){
-                return false;
-            }
+                return ($scope.displayedOrders.calculTotalAmount() || $scope.displayedOrders.calculTotalPriceTTC()) &&
+                    $scope.campaign.nb_licences_available + $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0 &&
+                    ($scope.campaign.purse_amount && $scope.campaign.purse_amount - $scope.displayedOrders.calculTotalPriceTTC() < 0);
         };
 
-        function updateOrders(totalPrice: number, totalAmount: number, ordersToRemove: OrdersClient, numberOrdered : number) {
-            if($scope.campaign.use_credit == 'licences'){
-                $scope.campaign.nb_licences_available -= totalAmount;
-            }else if($scope.campaign.use_credit == 'consumable_licences'){
-                $scope.campaign.nb_licences_consumable_available -= totalAmount;
-            }else if($scope.campaign.use_credit == 'credits'){
-                $scope.campaign.purse_amount -= totalPrice;
-            }
+        function updateOrders(totalPrice: number, totalAmount: number, totalAmountConsumable: number, ordersToRemove: OrdersClient, numberOrdered : number) {
+            $scope.campaign.nb_licences_available -= totalAmount;
+            $scope.campaign.nb_licences_consumable_available -= totalAmountConsumable;
+            $scope.campaign.purse_amount -= totalPrice;
 
             $scope.campaign.nb_order_waiting -= numberOrdered;
             $scope.campaign.historic_etab_notification += numberOrdered;
@@ -162,16 +152,18 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         }
 
         function reformatOrders(order, ordersToCreate: OrdersRegion, ordersToRemove: OrdersClient, totalPrice: number,
-                                totalAmount: number) {
+                                totalAmount: number, totalAmountConsumable: number) {
             let orderRegionTemp = new OrderRegion();
             orderRegionTemp.createFromOrderClient(order);
             ordersToCreate.all.push(orderRegionTemp);
             ordersToRemove.all.push(order);
             if(order.campaign.use_credit == "credits") {
                 totalPrice += order.price * order.amount;
+            }else if(order.campaign.use_credit == "licences") {
                 totalAmount += order.amount;
+            }else if(order.campaign.use_credit == "consumable_licences") {
+                totalAmountConsumable += order.amount;
             }
-            return {totalPrice, totalAmount};
         }
 
         $scope.createOrder = async ():Promise<void> => {
@@ -179,20 +171,19 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let ordersToRemove = new OrdersClient();
             let totalPrice = 0;
             let totalAmount = 0;
+            let totalAmountConsumable = 0;
 
             const ordersToReformat =
                 ($scope.ordersClient.selectedElements.length > 0) ? $scope.ordersClient.selectedElements : $scope.ordersClient.all;
 
             ordersToReformat.forEach(order => {
-                const result = reformatOrders(order, ordersToCreate, ordersToRemove, totalPrice, totalAmount);
-                totalPrice = result.totalPrice;
-                totalAmount = result.totalAmount;
+                reformatOrders(order, ordersToCreate, ordersToRemove, totalPrice, totalAmount, totalAmountConsumable);
             });
 
-            ordersToCreate.create($scope.campaign.use_credit).then(async data =>{
+            ordersToCreate.create().then(async data =>{
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
-                    updateOrders(totalPrice, totalAmount, ordersToRemove, ordersToReformat.length);
+                    updateOrders(totalPrice, totalAmount, totalAmountConsumable, ordersToRemove, ordersToReformat.length);
                     $scope.displayedOrders.all = $scope.ordersClient.all;
                     await $scope.getAllFilters();
                     Utils.safeApply($scope);

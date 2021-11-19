@@ -255,17 +255,20 @@ export class OrdersClient extends Selection<OrderClient> {
     calculTotalAmount ():number {
         let total = 0;
         this.all.map((order) => {
-            total += order.amount;
+            if(order.campaign.use_credit == "licences" || order.campaign.use_credit == "consumable_licences"){
+                total += order.amount;
+            }
         });
         return total;
     }
 
     calculTotalPriceTTC ():number {
         let total = 0;
-        for (let i = 0; i < this.all.length; i++) {
-            let order = this.all[i];
-            total += order.price*order.amount;
-        }
+        this.all.map((order) => {
+            if(order.campaign.use_credit == "credits") {
+                total += order.price * order.amount;
+            }
+        });
         return total;
     }
 

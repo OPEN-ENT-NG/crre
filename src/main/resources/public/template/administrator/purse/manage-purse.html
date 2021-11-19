@@ -65,11 +65,11 @@
                 </td>
                 <td>
                     <div class="smallTabElem center">
-                        <span ng-bind="purse.licence_amount" ng-if="purse.licence_amount"></span>
-                        <br ng-if="purse.licence_amount && purse.amount"/>
-                        <span ng-bind="purse.amount | currency" ng-if="purse.amount"></span>
-                        <br ng-if="(purse.licence_amount || purse.amount) && purse.consumable_licence_amount"/>
-                        <span ng-bind="purse.consumable_licence_amount" ng-if="purse.consumable_licence_amount"></span>
+                        <span ng-bind="purse.licence_amount" ng-if="purse.licence_initial_amount"></span>
+                        <br ng-if="purse.licence_initial_amount && purse.initial_amount"/>
+                        <span ng-bind="purse.amount | currency" ng-if="purse.initial_amount"></span>
+                        <br ng-if="(purse.licence_initial_amount || purse.initial_amount) && purse.consumable_licence_initial_amount"/>
+                        <span ng-bind="purse.consumable_licence_amount" ng-if="purse.consumable_licence_initial_amount"></span>
                     </div>
                 </td>
                 <td>
