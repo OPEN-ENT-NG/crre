@@ -6,12 +6,16 @@ export const campaignFormController = ng.controller('campaignFormController',
     ['$scope', ($scope) => {
         this.init = async () => {
             $scope.othersSelected = false;
-            $scope.articleFormat = [{name: "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
-                {name: "Catalogue numérique", value: "articlenumerique"}, {
-                    name: "Catalogue numérique consommable",
-                    value: "articlenumeriqueconsommable"
-                },
-                {name: "Catalogue papier consommable", value: "articlepapierconsommable"}];
+            $scope.articleFormat = [
+                {name: "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
+                {name: "Catalogue numérique", value: "articlenumerique"}, {name: "Catalogue numérique consommable", value: "articlenumerique|consommable"},
+                {name: "Catalogue papier consommable", value: "articlepapier|consommable"},
+                {name: "Catalogue numérique pro", value: "articlenumerique|pro"},
+                {name: "Catalogue papier pro", value: "articlepapier|pro"},
+                {name: "Catalogue numérique lgt", value: "articlenumerique|lgt"},
+                {name: "Catalogue papier lgt", value: "articlepapier|lgt"},
+                {name: "Catalogue numérique consommable pro", value: "articlenumerique|consommable|pro"},
+                {name: "Catalogue papier consommable pro", value: "articlepapier|consommable|pro"},];
             $scope.creditFormat = [{name: "aucun crédit", value: "none"},
                 {name: "les Licences", value: "licences"}, {
                     name: "les Licences consommables",

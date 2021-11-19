@@ -709,8 +709,12 @@
   "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?",
   "articlepapier" : "Catalogue papier",
   "articlenumerique" : "Catalogue numérique",
-  "articlepapierconsommable" : "Catalogue papier consommable",
-  "articlenumeriqueconsommable" : "Catalogue numérique consommable",
+  "articlepapier|consommable" : "Catalogue papier consommable",
+  "articlenumerique|consommable" : "Catalogue numérique consommable",
+  "articlepapier|pro" : "Catalogue papier pro",
+  "articlenumerique|pro" : "Catalogue numérique pro",
+  "articlepapier|consommable|pro" : "Catalogue papier consommable pro",
+  "articlenumerique|consommable|pro" : "Catalogue numérique consommable pro",
   "crre.all.catalog" : "Tout le catalogue",
   "crre.all.etab" : "Tout les établissements",
   "pro" :  "LP/LPO",
@@ -751,5 +755,6 @@
   "100" : "100%",
   "LG" : "Général",
   "LP": "Professionnel",
-  "consumables" : "Consommable"
+  "consumables": "Consommable",
+  "pros": "LG/LP"
 }

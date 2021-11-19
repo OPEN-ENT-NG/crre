@@ -205,5 +205,8 @@ public class EquipmentController extends ControllerHelper {
         if (request.params().contains("conso")) {
             params.put("conso", new ArrayList<>(request.params().getAll("conso")));
         }
+        if (request.params().contains("pro")) {
+            params.put("pro", new ArrayList<>(request.params().getAll("pro")));
+        }
     }
 }

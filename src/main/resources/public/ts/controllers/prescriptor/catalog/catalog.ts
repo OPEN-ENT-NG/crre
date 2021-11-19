@@ -8,8 +8,10 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            $scope.equipments.consumables = [{name: 'true'}, {name: 'false'}];
+            $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Non consommable'}];
             $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
+            $scope.equipments.pros = [{name: 'Établissement général'}, {name: 'Établissement professionnel'}];
+            $scope.equipments.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
 
             $scope.catalog = {
                 subjects: [],
@@ -17,7 +19,8 @@ export const catalogController = ng.controller('catalogController',
                 grades: [],
                 docsType: [],
                 editors: [],
-                consumables: []
+                consumables: [],
+                pros: []
             };
 
             $scope.preFilter = {
@@ -26,16 +29,18 @@ export const catalogController = ng.controller('catalogController',
                 grades: [],
                 docsType: [],
                 editors: [],
-                consumables: []
+                consumables: [],
+                pros: []
             }
             $scope.correlationFilterES = {
-                keys: ["subjects", "public", "grades", "docsType", "editors", "consumables"],
+                keys: ["subjects", "public", "grades", "docsType", "editors", "consumables", "pros"],
                 subjects: 'disciplines.libelle',
                 public: 'publiccible',
                 grades: 'niveaux.libelle',
                 docsType: '_index',
                 editors: 'editeur',
-                consumables: 'conso'
+                consumables: 'conso',
+                pros: 'pro'
             };
 
             if (!!$scope.campaign.catalog && $scope.filters.all.length == 0) {
@@ -43,13 +48,19 @@ export const catalogController = ng.controller('catalogController',
                 let catalogFilter = new Filter();
                 catalogFilter.name = "_index";
                 // If catalog contain consommable filter
-                if (new RegExp('consommable').test($scope.campaign.catalog)) {
+                if ($scope.campaign.catalog.split("|").includes("consommable")) {
                     let consommableFilter = new Filter();
                     consommableFilter.name = "conso";
-                    consommableFilter.value = "true";
+                    consommableFilter.value = "Consommable";
                     $scope.filters.all.push(consommableFilter);
                 }
-                catalogFilter.value = $scope.campaign.catalog.replace("consommable", "");
+                if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
+                    let proFilter = new Filter();
+                    proFilter.name = "pro";
+                    proFilter.value = $scope.campaign.catalog.split("|").includes("pro") ? "Établissement professionnel" : "Établissement général";
+                    $scope.filters.all.push(proFilter);
+                }
+                catalogFilter.value = $scope.campaign.catalog.split("|")[0];
                 $scope.filters.all.push(catalogFilter);
             } else {
                 $scope.correlationFilterES.keys.forEach(key => {
@@ -68,20 +79,28 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.all = [];
             $scope.equipments.loading = true;
             // Add to prefilter to hide filters in front
-            new RegExp('consommable').test($scope.campaign.catalog) ? $scope.preFilter["consumables"].push(true) : null;
-            !!$scope.campaign.catalog ? $scope.preFilter["docsType"].push(true) : null;
-
+            if (!!$scope.campaign.catalog) {
+                $scope.campaign.catalog.split("|").includes("consommable") ? $scope.preFilter["consumables"].push(true) : null;
+                $scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt") ? $scope.preFilter["pros"].push(true) : null;
+                $scope.preFilter["docsType"].push(true)
+            }
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
-            if (new RegExp('consommable').test($scope.campaign.catalog)) {
-                let arrayConso = [];
-                arrayConso.push($scope.equipments.consumables.find(c => c.name = "true"));
-                $scope.catalog["consumables"] = arrayConso;
-            }
             if (!!$scope.campaign.catalog) {
                 let arrayDocs = [];
-                arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.replace("consommable", "")));
+                arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.split("|")[0]));
                 $scope.catalog["docsType"] = arrayDocs;
+                if ($scope.campaign.catalog.split("|").includes("consommable")) {
+                    let arrayConso = [];
+                    arrayConso.push($scope.equipments.consumables.find(c => c.name = "Consommable"));
+                    $scope.catalog["consumables"] = arrayConso;
+                }
+                if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
+                    let arrayPro = [];
+                    let type = $scope.campaign.catalog.split("|").includes("pro") ? "Établissement professionnel" : "Établissement général";
+                    arrayPro.push($scope.equipments.pros.find(t => t.name = type));
+                    $scope.catalog["pros"] = arrayPro;
+                }
             }
             Utils.safeApply($scope);
         };
