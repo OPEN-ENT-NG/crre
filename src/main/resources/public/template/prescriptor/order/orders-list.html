@@ -96,9 +96,9 @@
                      ng-if="order.cause_status">
                     <i class="comment-icon"></i>
                 </div>
-                <div class="smallTabElem status center ellipsis paddingleft45" ng-if="order.status !== 'IN PROGRESS' && order.status !== 'REJECTED'" tooltip="[[order.status_name]]">
-                    <div class="status-circle cell row myOrder centerCircleMobile" ng-class="getColor([[order.status_id]])"></div>
-                    <span ng-bind="order.status_name" class="zero-mobile"></span>
+                <div class="smallTabElem center ellipsis status" ng-if="order.displayStatus" tooltip="[[order.status]]" >
+                    <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile" ng-if="!order.cause_status"></div>
+                    <span ng-bind="lang.translate(order.status)" class="zero-mobile"></span>
                 </div>
             </td>
         </tr>

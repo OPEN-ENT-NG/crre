@@ -92,29 +92,16 @@
                         <div class="twelve-mobile cell" workflow-not="crre.validator">
                             <input type="button"
                                    class="button"
-                                   ng-show="campaign.nb_order && campaign.nb_order !== 0"
                                    ng-click="openOrderToMain(campaign)"
-                                   i18n-value="crre.access.demand"/>
-                            <input type="button"
-                                   class="button"
-                                   ng-show="!campaign.nb_order || campaign.nb_order_waiting == 0"
-                                   ng-click="openOrderToMain(campaign)"
-                                   ng-disabled="true"
-                                   i18n-value="crre.demand.empty"/>
-
+                                   ng-disabled="!campaign.accessible"
+                                   i18n-value="crre.validator.demand"/>
                         </div>
                         <div class="twelve-mobile cell" workflow="crre.validator">
                             <input type="button"
                                    class="button"
-                                   ng-show="campaign.nb_order_waiting && campaign.nb_order_waiting !== 0"
+                                   ng-disabled="!campaign.accessible"
                                    ng-click="openCampaignWaitingOrder(campaign)"
                                    i18n-value="crre.access.demands.waiting.toValidate"/>
-                            <input type="button"
-                                   class="button"
-                                   ng-show="!campaign.nb_order_waiting || campaign.nb_order_waiting == 0"
-                                   ng-click="openCampaignWaitingOrder(campaign)"
-                                   ng-disabled="true"
-                                   i18n-value="crre.demand.empty.waiting.toValidate"/>
 
                         </div>
                         <div class="twelve-mobile cell">
