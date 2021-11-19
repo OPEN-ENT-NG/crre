@@ -28,7 +28,7 @@
                     <span class="small-text"><i18n>crre.number.student.calcul</i18n></span>
                     <span class="black-color big-text">[[total_licence]]</span>
                 </div>
-                <div class="cell ten" ng-if="campaigns.all[0]">
+                <div class="cell ten" ng-if="campaigns.all[0] && campaigns.all[0].nb_licences_consumable_total">
                     <span class="small-text"><i18n>crre.number.student.consumables.calcul</i18n></span>
                     <span class="black-color big-text">[[campaigns.all[0].nb_licences_consumable_total]]</span>
                 </div>
