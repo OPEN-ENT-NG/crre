@@ -12,7 +12,7 @@ export const orderController = ng.controller('orderController',
             if($scope.filter.isOld !== old) {
                 $scope.filter.isOld = old;
                 $scope.startInitLoading();
-                await $scope.synchroMyBaskets(false)
+                await $scope.getOrders();
             }
         };
 

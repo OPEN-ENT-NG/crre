@@ -25,7 +25,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId, String startDate,
                           String endDate, boolean oldTable,  Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new JsonArray();
-        String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, s.name as status_name, s.id as status_id, oe.equipment_price as price " : "";
+        String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, s.name as status_name, " +
+                "s.id as status_id, oe.equipment_price as price, oe.equipment_format as type, oe.offers as offers " : "";
         String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
                 "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
                 "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " + selectOld +

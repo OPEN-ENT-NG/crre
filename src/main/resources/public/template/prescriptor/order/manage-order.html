@@ -32,7 +32,7 @@
                     <input class="twelve"
                            type="text"
                            ng-model="query_name"
-                           ng-keyup="$event.keyCode == 13 ? searchByName() : null"
+                           ng-keyup="$event.keyCode == 13 ? searchByName(true) : null"
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>

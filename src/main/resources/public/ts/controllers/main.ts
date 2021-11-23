@@ -442,6 +442,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
+        $scope.isInCampaignList = () => {
+            let isInCampaign = false;
+            if(location.hash == "#/") {
+                isInCampaign = true;
+            }
+            return isInCampaign;
+        }
+
         $scope.computeOffer = async () => {
             let amount = $scope.basket.amount;
             let gratuit = 0;

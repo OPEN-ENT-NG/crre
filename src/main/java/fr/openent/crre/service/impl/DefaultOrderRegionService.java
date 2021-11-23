@@ -76,57 +76,25 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     @Override
     public void getAllOrderRegionByProject(int idProject, boolean filterRejectedSentOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        String selectOld = old ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, s.name as status_name, s.id as status_id " : "";
-        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
-                "to_json(oce.*) AS order_parent, bo.name AS basket_name " + selectOld +
-                "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
-                "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
-        if (old) {
-            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
-                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                    "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
-        } else {
-            query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                    "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
-        }
-        query = innerJoin(query);
+        String query = selectOrderRegion(old);
         query += "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
         if (filterRejectedSentOrders) {
             query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
         }
-        query += "GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name";
-        if (old) {
-            query += ", s.name, s.id";
-        }
+        query = groupOrderRegion(old, query);
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
     }
-    //TODO REFACTO ces deux fonctions!!!!
+
     @Override
     public void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        String selectOld = oldTable ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, oce.*, s.name as status_name, s.id as status_id " : "";
-        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
-                "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id " + selectOld +
-                "FROM  " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
-                "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
-        if (oldTable) {
-            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
-                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                    "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
-        } else {
-            query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
-                    "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
-        }
-        query = innerJoin(query);
+        String query = selectOrderRegion(oldTable);
         query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray());
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for (Integer id : idsOrder) {
             params.add(id);
         }
         query += " GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name, bo.id";
-        if(oldTable) {
-            query += ", s.name, s.id";
-        }
-
+        query = groupOrderRegion(oldTable, query);
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
@@ -333,6 +301,32 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validUniqueResultHandler(handler));
     }
 
+    private String selectOrderRegion(boolean old) {
+        String selectOld = old ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, s.name as status_name, s.id as status_id " : "";
+        String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
+                "to_json(oce.*) AS order_parent, bo.name AS basket_name " + selectOld +
+                "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
+                "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
+        if (old) {
+            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
+                    "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                    "LEFT JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
+        } else {
+            query += "INNER JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
+                    "INNER JOIN  " + Crre.crreSchema + ".campaign ON ore.id_campaign = campaign.id ";
+        }
+        query = innerJoin(query);
+        return query;
+    }
+
+    private String groupOrderRegion(boolean old, String query) {
+        query += "GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name, bo.id";
+        if (old) {
+            query += ", s.name, s.id";
+        }
+        return query;
+    }
+
     private void setOrderValuesSQL(JsonArray params, JsonObject order) {
         params.add(order.getString("name"))
                 .add(order.getString("image", null))
@@ -369,6 +363,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getString("status"))
                         .add(order.getString("equipment_key"));
                 setOrderValuesSQL(params, order);
+                formatOffers(order);
                 params.add(order.getInteger("basket_id"))
                         .add(order.getBoolean("reassort"))
                         .add(order.getJsonArray("offers"))
@@ -379,6 +374,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         query = query.substring(0, query.length() - 1);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    private void formatOffers(JsonObject order) {
+        for (int i = 0; i < order.getJsonArray("offers").size(); i++) {
+            JsonObject offer = order.getJsonArray("offers").getJsonObject(i);
+            offer.put("id", "F" + order.getLong("id_order_client_equipment") + "_" + i);
+        }
     }
 
     @Override

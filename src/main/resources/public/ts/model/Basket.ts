@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {toasts} from 'entcore';
+import {moment, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, Filter, Offers, Structure, Utils} from './index';
+import {Equipment, Offers, Structure, Utils} from './index';
 
 
 export class Basket implements Selectable {
@@ -177,35 +177,10 @@ export class BasketsOrders extends Selection<BasketOrder> {
             let url = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&old=${old}&q=${text}`;
             url += `&id=${id_campaign}${pageParams}`;
             const {data} = await http.get(url);
-            this.all = Mix.castArrayAs(BasketOrder, data);
+            return this.setBaskets(data);
         } catch (err) {
             toasts.warning('crre.basket.sync.err');
             throw err;
-        }
-    }
-
-    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?:number, old?:boolean){
-        try {
-            let params = "";
-            filters.forEach(function (f, index) {
-                params += f.name + "=" + f.value;
-                if(index != filters.length - 1) {
-                    params += "&";
-                }});
-            const {startDate, endDate} = Utils.formatDate(start, end);
-            if(!Utils.format.test(word)) {
-                const pageParams = (page) ? `&page=${page}` : ``;
-                const wordParams = (word) ? `&q=${word}` : ``;
-                let url = `/crre/basketOrder/filter?startDate=${startDate}&endDate=${endDate}&old=${old}${wordParams}`;
-                url += `&id=${id_campaign}&${params}${pageParams}`;
-                let {data} = await http.get(url);
-                this.all = Mix.castArrayAs(BasketOrder, data);
-            } else {
-                toasts.warning('crre.equipment.special');
-            }
-        } catch (e) {
-            toasts.warning('crre.equipment.sync.err');
-            throw e;
         }
     }
 
@@ -216,10 +191,23 @@ export class BasketsOrders extends Selection<BasketOrder> {
             let url = `/crre/basketOrder/allMyOrders?id=${id_campaign}&old=${old}`;
             url += `&startDate=${startDate}&endDate=${endDate}${pageParams}`;
             let { data } = await http.get(url);
-            this.all = Mix.castArrayAs(BasketOrder, data);
+            return this.setBaskets(data);
         } catch (e){
             toasts.warning('crre.order.getMine.err');
             throw e;
         }
+    }
+
+    private setBaskets(data) {
+        const currencyFormatter = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'});
+        data.map(basket => {
+            basket.name_user = basket.name_user.toUpperCase();
+            basket.total = currencyFormatter.format(basket.total);
+            basket.created = moment(basket.created).format('DD-MM-YYYY').toString();
+            basket.expanded = false;
+            basket.orders = [];
+        });
+        this.all = this.all.concat(Mix.castArrayAs(BasketOrder, data));
+        return data.length > 0;
     }
 }
