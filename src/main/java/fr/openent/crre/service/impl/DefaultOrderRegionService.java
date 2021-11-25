@@ -93,7 +93,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         for (Integer id : idsOrder) {
             params.add(id);
         }
-        query += " GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name, bo.id";
         query = groupOrderRegion(oldTable, query);
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(arrayResponseHandler));
     }

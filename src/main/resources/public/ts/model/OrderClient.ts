@@ -3,7 +3,7 @@ import {Mix, Selection} from 'entcore-toolkit';
 import {
     Campaign,
     Equipment, Equipments,
-    Filter,
+    Filter, Offer,
     Offers,
     Order,
     OrderRegion,
@@ -201,13 +201,28 @@ export class OrdersClient extends Selection<OrderClient> {
         let url = `/crre/orders/mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}&old=${old}`;
         const {data} = await http.get(url);
         let newOrderClient = Mix.castArrayAs(OrderClient, data);
-        let equipments = new Equipments();
-        await equipments.getEquipments(newOrderClient);
         for (let order of newOrderClient) {
             order.price = parseFloat(order.price.toString());
-            let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
-            if (equipment.type === "articlenumerique") {
-                order.offers = Utils.computeOffer(order, equipment);
+            if(!old) {
+                let equipments = new Equipments();
+                await equipments.getEquipments(newOrderClient);
+                let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+                if (equipment.type === "articlenumerique") {
+                    order.offers = Utils.computeOffer(order, equipment);
+                }
+            } else {
+                if(order.type === "articlenumerique") {
+                    let newOffers = JSON.parse(order.offers);
+                    let offers = new Offers();
+                    for (let newOffer of newOffers) {
+                        let offer = new Offer();
+                        offer.name = newOffer.titre;
+                        offer.value = newOffer.amount;
+                        offer.id = newOffer.id;
+                        offers.all.push(offer);
+                    }
+                    order.offers = offers;
+                }
             }
         }
         this.all = newOrderClient;

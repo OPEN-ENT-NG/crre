@@ -129,8 +129,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.remainAvailable = () => {
-                return (!$scope.displayedOrders.calculTotalAmount() && !$scope.displayedOrders.calculTotalPriceTTC()) ||
-                    $scope.campaign.nb_licences_available + $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0 ||
+                return $scope.displayedOrders.all.length == 0 || $scope.campaign.nb_licences_available + $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0 ||
                     ($scope.campaign.purse_amount != undefined && $scope.campaign.purse_amount - $scope.displayedOrders.calculTotalPriceTTC() < 0);
         };
 

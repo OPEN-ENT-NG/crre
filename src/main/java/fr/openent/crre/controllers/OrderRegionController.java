@@ -881,7 +881,7 @@ public class OrderRegionController extends BaseController {
                                     orderOffer.put("creation_date", order.getString("creation_date"));
                                     orderOffer.put("id_structure", order.getString("id_structure"));
                                     orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                    orderOffer.put("id", order.getLong("id"));
+                                    orderOffer.put("id", "F" + order.getLong("id") + "_" + k);
                                     orderOffer.put("title", order.getString("title"));
                                     orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
                                     putStructuresNameUAI(structures, orderOffer);
@@ -987,7 +987,7 @@ public class OrderRegionController extends BaseController {
     }
 
     public static String generateExportLine(JsonObject log) {
-        return (log.getInteger("id") != null ? log.getInteger("id").toString() : "") + ";" +
+        return (log.containsKey("id_project") ? log.getLong("id").toString() : log.getString("id")) + ";" +
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
                 (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
