@@ -433,9 +433,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         const selectCampaignShow = (campaign?: Campaign, type?: string): void => {
             if(campaign){
+                $scope.$emit('eventEmitedCampaign', campaign);
                 $scope.campaign = campaign;
-                $scope.displayedOrders.all = $scope.ordersClient.all
-                    .filter( order => order.id_campaign === campaign.id || campaign.id === -1);
+                Utils.safeApply($scope);
                 cancelSelectCampaign(false, type);
             } else {
                 cancelSelectCampaign(true, type);
