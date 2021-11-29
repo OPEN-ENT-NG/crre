@@ -374,6 +374,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.filters = data;
         });
 
+        $rootScope.$on('eventEmitedQuery', function (event, data) {
+            $scope.query.word = data;
+        });
+
         $scope.openEquipmentId = (equipmentId: string) => {
             let url = `/equipments/catalog/equipment/${equipmentId}`;
             if($scope.campaign && $scope.campaign.id)

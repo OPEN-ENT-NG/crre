@@ -74,7 +74,9 @@ export const catalogController = ng.controller('catalogController',
         }
 
         $scope.addFilter = async () => {
-            $scope.query.word = $scope.queryWord;
+            if(!!$scope.queryWord) {
+                $scope.query.word = $scope.queryWord;
+            }
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipments.all = [];
             $scope.equipments.loading = true;
@@ -119,6 +121,7 @@ export const catalogController = ng.controller('catalogController',
                     $scope.filters.all.push(newFilter);
                 })
             }
+            $scope.$emit('eventEmitedQuery', $scope.query.word);
             if ($scope.filters.all.length > 0) {
                 $scope.$emit('eventEmitedFilters', $scope.filters);
                 await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
@@ -130,6 +133,11 @@ export const catalogController = ng.controller('catalogController',
         };
 
         $scope.dropElement = (item, key): void => {
+            $scope.filters = $scope.filters.all.filter(f => f.value != item.name);
+            if(!!$scope.filters) {
+                $scope.filters = new Filters();
+            }
+            $scope.$emit('eventEmitedFilters', $scope.filters);
             $scope.catalog[key] = _.without($scope.catalog[key], item);
             $scope.getFilter();
         };
