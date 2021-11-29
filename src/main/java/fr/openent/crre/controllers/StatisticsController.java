@@ -34,7 +34,7 @@ public class StatisticsController extends BaseController {
 
     public StatisticsController() {
         this.statisticsService = new DefaultStatisticsService(Crre.crreSchema);
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.statCron = new statistics(Vertx.vertx());
     }
 

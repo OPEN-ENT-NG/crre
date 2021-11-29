@@ -30,7 +30,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
 
     public DefaultStructureGroupService(String schema, String table){
         super(schema, table);
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
     @Override

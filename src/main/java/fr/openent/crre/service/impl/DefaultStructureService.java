@@ -7,10 +7,12 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
+import org.entcore.common.neo4j.StatementsBuilder;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -20,6 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.neo4j.Neo4jResult.validEmptyHandler;
+import static org.entcore.common.neo4j.Neo4jResult.validUniqueResultHandler;
 
 /**
  * Created by agnes.lapeyronnie on 09/01/2018.
@@ -27,9 +32,11 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 public class DefaultStructureService extends SqlCrudService implements StructureService {
 
     private final Neo4j neo4j;
+    private final EventBus eb;
 
-    public DefaultStructureService(String schema) {
+    public DefaultStructureService(String schema, EventBus eb) {
         super(schema, "");
+        this.eb = eb;
         this.neo4j = Neo4j.getInstance();
     }
 
@@ -429,5 +436,60 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         });
         insertStructures(ids, handlerJsonArray(insertStructuresFuture));
         getStudentsByStructure(ids, handlerJsonArray(getStudentsByStructureFuture));
+    }
+
+    @Override
+    public void linkRolesToGroup(String groupId, JsonArray roleIds, Handler<Either<String, JsonObject>> handler) {
+        JsonObject params = new JsonObject();
+        params.put("groupId", groupId);
+        if (groupId != null && !groupId.trim().isEmpty()) {
+            String deleteQuery =
+                    "MATCH (m:Group)-[r:AUTHORIZED]-(:Role) " +
+                            "WHERE m.id = {groupId} " +
+                            "DELETE r";
+            if (roleIds == null || roleIds.size() == 0) {
+                neo4j.execute(deleteQuery, params, validEmptyHandler(handler));
+            } else {
+                StatementsBuilder s = new StatementsBuilder().add(deleteQuery, params);
+                String createQuery =
+                        "MATCH (n:Role), (m:Group) " +
+                                "WHERE m.id = {groupId} AND n.id IN {roles} " +
+                                "CREATE UNIQUE m-[:AUTHORIZED]->n";
+                s.add(createQuery, params.copy().put("roles", roleIds));
+                neo4j.executeTransaction(s.build(), null, true, validEmptyHandler(handler));
+            }
+        } else {
+            handler.handle(new Either.Left<String, JsonObject>("invalid.arguments"));
+        }
+    }
+
+    @Override
+    public void createOrUpdateManual(JsonObject group, String structureId, String classId,
+                                     Handler<Either<String, JsonObject>> result) {
+        JsonObject action = new JsonObject()
+                .put("action", "manual-create-group")
+                .put("structureId", structureId)
+                .put("classId", classId)
+                .put("group", group);
+
+        eb.send("entcore.feeder", action, handlerToAsyncHandler(validUniqueResultHandler(0, result)));
+    }
+
+    @Override
+    public void getRole(String roleName, Handler<Either<String, JsonObject>> handler) {
+        JsonObject params = new JsonObject().put("linkName", "CRRE").put("roleName", roleName);
+        String queryRole = "MATCH (a:Application)-[]->(ac:Action)<-[]-(r:Role)" +
+                " WHERE a.name = {linkName} and r.name =~ {roleName} RETURN distinct(r.id) as id";
+        neo4j.execute(queryRole, params, Neo4jResult.validUniqueResultHandler(handler));
+    }
+
+    public void linkRoleGroup(String groupId, String roleId, Handler<Either<String, JsonObject>> handler) {
+        String queryLink = "MATCH (r:Role), (g:Group) " +
+                "WHERE r.id = {roleId} and g.id = {groupId}" +
+                "CREATE UNIQUE (g)-[:AUTHORIZED]->(r)";
+        JsonObject params = new JsonObject()
+                .put("groupId", groupId)
+                .put("roleId", roleId);
+        neo4j.execute(queryLink, params, Neo4jResult.validUniqueResultHandler(handler));
     }
 }

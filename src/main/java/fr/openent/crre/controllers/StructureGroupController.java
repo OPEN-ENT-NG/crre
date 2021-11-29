@@ -52,7 +52,7 @@ public class StructureGroupController extends ControllerHelper {
         super();
         this.structureGroupService = new DefaultStructureGroupService(Crre.crreSchema, "structure_group");
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
     @Post("/structure/group/import")

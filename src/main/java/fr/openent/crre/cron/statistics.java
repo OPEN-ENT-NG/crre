@@ -28,7 +28,7 @@ public class statistics extends ControllerHelper implements Handler<Long> {
 
     public statistics(Vertx vertx) {
         this.statisticsService = new DefaultStatisticsService(Crre.crreSchema);
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.vertx = vertx;
     }
 

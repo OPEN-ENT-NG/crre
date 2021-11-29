@@ -16,6 +16,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerFileUpload;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -26,6 +27,8 @@ import org.entcore.common.http.filter.ResourceFilter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -38,9 +41,9 @@ public class StructureController extends ControllerHelper {
 
     private final DefaultStructureService structureService;
 
-    public StructureController() {
+    public StructureController(EventBus eventBus) {
         super();
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, eventBus);
     }
 
     @Get("/structures")
@@ -50,6 +53,87 @@ public class StructureController extends ControllerHelper {
     public void getStructures(HttpServerRequest request) {
         structureService.getStructures(arrayResponseHandler(request));
     }
+
+    @Get("/groups/rights")
+    @ApiDoc("Create all manual groups")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void createGroupsRights(HttpServerRequest request) {
+        JsonArray groups = new JsonArray()
+                .add(
+                        new JsonObject().put("name", "CRRE-ADMINISTRATEUR")
+                                .put("role", "CRRE - Administrateurs"))
+                .add(
+                        new JsonObject().put("name", "CRRE-VALIDATEUR")
+                                .put("role", "CRRE - Validateur"))
+                .add(
+                        new JsonObject().put("name", "CRRE-PRESCRIPTEUR")
+                                .put("role", "CRRE - Prescripteur"));
+        structureService.getStructures(event -> {
+            if (event.isRight()) {
+                int part = 0;
+                JsonArray structures = event.right().getValue();
+                insertManualGroups(request, groups, structures, part);
+            }
+        });
+    }
+
+    private void insertManualGroups(HttpServerRequest request, JsonArray groups, JsonArray structures, int part) {
+        List<Future> futures = new ArrayList<>();
+        List<Future> futuresLink = new ArrayList<>();
+
+        int start = part * 5;
+        int end = start + 5;
+        boolean isEnd = false;
+        if (end >= structures.size()) {
+            end = structures.size();
+            isEnd = true;
+        }
+        for (int i = start; i < end; i++) {
+            for (int j = 0; j < 3; j++) {
+                Future<JsonObject> insertGroupFuture = Future.future();
+                Future<JsonObject> getRoleFuture = Future.future();
+                Future<JsonObject> linkRoleGroupFuture = Future.future();
+                futures.add(insertGroupFuture);
+                futures.add(getRoleFuture);
+                futuresLink.add(linkRoleGroupFuture);
+                String id_structure = structures.getJsonObject(i).getString("id");
+                JsonObject group = new JsonObject()
+                        .put("name", groups.getJsonObject(j).getString("name"))
+                        .put("autolinkTargetAllStructs", false)
+                        .put("autolinkTargetStructs", new JsonArray())
+                        .put("autolinkUsersFromGroups", new JsonArray())
+                        .put("groupDisplayName", groups.getJsonObject(j).getString("name"));
+                String role = groups.getJsonObject(j).getString("role");
+                structureService.createOrUpdateManual(group, id_structure, null, handlerJsonObject(insertGroupFuture));
+                structureService.getRole(role, handlerJsonObject(getRoleFuture));
+                CompositeFuture.all(futures).setHandler(event -> {
+                    if (event.succeeded()) {
+                        String groupId = insertGroupFuture.result().getString("id");
+                        String roleId = getRoleFuture.result().getString("id");
+                        structureService.linkRoleGroup(groupId, roleId, handlerJsonObject(linkRoleGroupFuture));
+                    } else {
+                        log.error("Failed to insert group and/or get roles");
+                    }
+                });
+            }
+        }
+        boolean finalIsEnd = isEnd;
+        CompositeFuture.all(futuresLink).setHandler(event -> {
+            if (event.succeeded()) {
+                log.info("ok part " + part);
+                if (finalIsEnd) {
+                    log.info("Linked all groups to roles");
+                    renderJson(request, new JsonObject().put("message", "Linked all groups to roles"), 200);
+                } else {
+                    insertManualGroups(request, groups, structures, part + 1);
+                }
+            } else {
+                log.error("ko part " + part);
+            }
+        });
+    }
+
 
     @Post("/structures/new")
     @ApiDoc("Insert new structures")

@@ -82,7 +82,7 @@ public class OrderRegionController extends BaseController {
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService("equipment");
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
     @Post("/region/orders")

@@ -47,7 +47,7 @@ public class PurseController extends ControllerHelper {
     public PurseController(Vertx vertx) {
         super();
         this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.purseService = new DefaultPurseService();
     }
 

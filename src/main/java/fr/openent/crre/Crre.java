@@ -54,7 +54,7 @@ public class Crre extends BaseServer {
         addController(new CampaignController());
         addController(new PurseController(vertx));
         addController(new StructureGroupController(vertx));
-        addController(new StructureController());
+        addController(new StructureController(getEventBus(vertx)));
         addController(new BasketController());
         addController(new OrderController());
         addController(new UserController());

@@ -56,7 +56,7 @@ public class OrderController extends ControllerHelper {
     public OrderController() {
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment");
-        this.structureService = new DefaultStructureService(Crre.crreSchema);
+        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
     @Get("/orders/mine/:idCampaign/:idStructure")

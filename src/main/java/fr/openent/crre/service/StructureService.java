@@ -59,4 +59,11 @@ public interface StructureService {
     void getAllStructuresDetailByUAI(JsonArray uais, Handler<Either<String, JsonArray>> handler);
 
     void insertStudentsInfos(JsonArray ids, Handler<Either<String, JsonObject>> eitherHandler);
+
+    void linkRolesToGroup(String groupId, JsonArray roleIds, Handler<Either<String, JsonObject>> handler);
+
+    void createOrUpdateManual(JsonObject group, String structureId, String classId,
+                              Handler<Either<String, JsonObject>> result);
+
+    void getRole(String roleName, Handler<Either<String, JsonObject>> handler);
 }
