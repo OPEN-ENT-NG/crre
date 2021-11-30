@@ -189,10 +189,10 @@ public class OrderRegionController extends BaseController {
     public void addOrders(HttpServerRequest request) throws IOException {
         // TODO à voir sur NG2 si nécessaire
         disableSslVerification();
-
+/*
         URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
         URLConnection connection;
-        if (System.getProperty("httpclient.proxyHost") != null) {
+       if (System.getProperty("httpclient.proxyHost") != null) {
             Proxy proxy = new Proxy(Proxy.Type.HTTP,
                     new InetSocketAddress(System.getProperty("httpclient.proxyHost"),
                             Integer.parseInt(System.getProperty("httpclient.proxyPort"))));
@@ -228,6 +228,12 @@ public class OrderRegionController extends BaseController {
             }else{
                 connection = new URL(redirect).openConnection();
             }
+        }*/
+        URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
+        URLConnection connection = hh.openConnection();
+        String redirect = connection.getHeaderField("Location");
+        if (redirect != null) {
+            connection = new URL(redirect).openConnection();
         }
         Scanner sc = new Scanner(new InputStreamReader(connection.getInputStream()));
         // skip header
@@ -274,12 +280,22 @@ public class OrderRegionController extends BaseController {
                 String[] values = userLine.split(Pattern.quote("|"));
                 JsonObject order = new JsonObject();
                 try {
-                    int year = new SimpleDateFormat("dd/MM/yyyy").parse(values[17]).getYear() + 1900;
-                    order.put("owner_name", "Commande " + year);
-                    order.put("owner_id", "Commande " + year);
+                    if(values[17].equals("00/00/00")) {
+                        order.put("owner_name", "Commande " + (new Date().getYear() + 1900));
+                        order.put("owner_id", "Commande " + (new Date().getYear() + 1900));
+                        order.put("creation_date", new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
+
+                    } else {
+                        int year = new SimpleDateFormat("dd/MM/yyyy").parse(values[17]).getYear() + 1900;
+                        order.put("owner_name", "Commande " + year);
+                        order.put("owner_id", "Commande " + year);
+                        order.put("creation_date", values[17]);
+                    }
+
                 } catch (ParseException e) {
-                    order.put("owner_name", "Commande " + new Date().getYear() + 1900);
-                    order.put("owner_id", "Commande " + new Date().getYear() + 1900);
+                    order.put("owner_name", "Commande " + (new Date().getYear() + 1900));
+                    order.put("owner_id", "Commande " + (new Date().getYear() + 1900));
+                    order.put("creation_date", new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
                     e.printStackTrace();
                 }
 
@@ -292,7 +308,6 @@ public class OrderRegionController extends BaseController {
                 order.put("amount", Math.abs(Integer.parseInt(values[5])));
                 order.put("unitedPriceTTC", Double.parseDouble(values[9].replace(",", ".")));
                 order.put("reassort", !values[14].isEmpty());
-                order.put("creation_date", values[17]);
                 order.put("id_project", project_id);
                 ordersRegion.add(order);
                 uais.add(values[11]);
