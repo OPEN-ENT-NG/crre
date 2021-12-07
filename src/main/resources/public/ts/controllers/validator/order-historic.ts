@@ -22,7 +22,8 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
 
         $scope.changeOld = async (old: boolean) => {
             if ($scope.filter.isOld !== old) {
-                await $scope.updateAllStatus();
+                // Comment until dev of status with LDE
+                // await $scope.updateAllStatus();
                 $scope.filter.isOld = old;
                 $scope.filter.page = 0;
                 $scope.filtersFront.all = [];
