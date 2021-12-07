@@ -284,9 +284,9 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                         new JsonObject().put("$project", new JsonObject()
                                                 .put("_id", 0)
                                                 .put("public", "$_id")
-                                                .put("total", 1))
-
-
+                                                .put("total", 1)),
+                                        new JsonObject().put("$sort", new JsonObject()
+                                                .put("public", 1))
                                 )
                         )
                 );

@@ -117,7 +117,8 @@
             <div ng-if="isPublic('Public')" class="cards size-cards link-stat">
                 <div class="paper-icon-stat"></div>
                 <div>
-                    <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allPaperRessources, 'Public')"> </span>
+                    <span class="bold-font-weight big-text"
+                          ng-bind="getPublicTotal(stats.allPaperRessources, 'Public')"> </span>
                     <br>
                     <span><i18n>crre.stat.ressources.paper</i18n></span>
                 </div>
@@ -151,7 +152,8 @@
             <div ng-if="isPublic('Privé')" class="cards size-cards link-stat">
                 <div class="paper-icon-stat"></div>
                 <div>
-                    <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allPaperRessources, 'Privé')"></span>
+                    <span class="bold-font-weight big-text"
+                          ng-bind="getPublicTotal(stats.allPaperRessources, 'Privé')"></span>
                     <br>
                     <span><i18n>crre.stat.ressources.paper</i18n></span>
                 </div>
@@ -169,6 +171,23 @@
             <div ng-if="isPublic('Privé')" class="cards">
                 <span class="bold-font-weight big-text" ng-bind="getPublicTotal(stats.allRessources, 'Privé')"></span>
                 <span><i18n>crre.stat.ressources.all</i18n></span>
+            </div>
+        </div>
+        <div class="statLabel">
+            <i18n>crre.stat.chart</i18n>
+        </div>
+        <div class="twelve statGrid">
+            <div class="statCards inline-block">
+                <div class="statTexts"><i18n>crre.stats.label.ressource</i18n></div>
+                <div id="bar-chart"></div>
+            </div>
+            <div class="statCards inline-block">
+                <div class="statTexts"><i18n>crre.stats.label.licence</i18n></div>
+                <div id="radial-chart"></div>
+            </div>
+            <div class="statCards inline-block">
+                <div class="statTexts"><i18n>crre.stats.label.structure</i18n></div>
+                <div id="donut-chart"></div>
             </div>
         </div>
     </div>

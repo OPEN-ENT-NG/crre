@@ -159,6 +159,7 @@ body.crre {
   .log-view {
     table {
       table-layout: fixed;
+
       thead td {
         padding: 8px;
         position: relative;
@@ -175,6 +176,7 @@ body.crre {
         }
       }
     }
+
     .pre-file-import {
       white-space: pre-line;
       border: solid 1px $light-grey;
@@ -645,7 +647,7 @@ body.crre {
       background-color: lightgrey !important;
       padding: 10px !important;
       border-radius: 15px !important;
-      box-shadow: rgba(0,0,0, 0.6) 0 8px 10px;
+      box-shadow: rgba(0, 0, 0, 0.6) 0 8px 10px;
       top: 46%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -1346,13 +1348,13 @@ body.crre {
     color: white;
   }
 
-  input[type="radio"]:checked + .labeltab,  {
+  input[type="radio"]:checked + .labeltab, {
     background: rgb(251, 251, 251);
     color: black;
     font-size: 18px;
   }
 
-  input[type="radio"]:checked + .labeltabOrder,  {
+  input[type="radio"]:checked + .labeltabOrder, {
     background: rgb(251, 251, 251);
     color: black;
     font-size: 18px;
@@ -1479,7 +1481,6 @@ body.crre {
   }
 
 
-
   @mixin line-clamp($lines: 1, $line-height: null) {
     overflow: hidden;
 
@@ -1585,7 +1586,7 @@ body.crre {
   .cards {
     background-color: #fff;
     box-shadow: 0 5px 5px rgba(0, 0, 0, .2);
-    margin-bottom : 25px;
+    margin-bottom: 25px;
     height: 120px;
     display: grid;
     justify-content: center;
@@ -1636,6 +1637,7 @@ body.crre {
     padding: 15px;
     width: 180px;
     margin-left: 0px;
+
     &.selected {
       background: black;
       color: white;
@@ -1643,7 +1645,34 @@ body.crre {
   }
 
   .link-stat {
-    box-shadow: 70px 0 0 -37px rgba(208,223,230,1);
+    box-shadow: 70px 0 0 -37px rgba(208, 223, 230, 1);
+  }
+
+  .statCards {
+    background-color: #fff;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
+    display: -ms-grid;
+    display: grid;
+    justify-items: center;
+  }
+
+  .statTexts {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    font-weight: bold;
+  }
+
+  .statGrid {
+    display: grid;
+    grid-column-gap: 3rem;
+    -ms-grid-columns: 1fr 1fr 1fr  !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+
+  .statLabel {
+    padding-bottom: 50px;
+    padding-top: 30px;
+    font-size: xx-large;
   }
 
 }

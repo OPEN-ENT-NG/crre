@@ -761,5 +761,9 @@
   "LG" : "Général",
   "LP": "Professionnel",
   "consumables": "Consommable",
-  "pros": "LG/LP"
+  "pros": "LG/LP",
+  "crre.stat.chart" : "Graphiques",
+  "crre.stats.label.licence" : "Taux de licences consommées",
+  "crre.stats.label.ressource" : "Part des ressources papiers, numériques",
+  "crre.stats.label.structure" : "Part des établissements ayant commandé ou non"
 }
