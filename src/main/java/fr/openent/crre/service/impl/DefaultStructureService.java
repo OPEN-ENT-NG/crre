@@ -44,9 +44,22 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void getStructures(Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL " +
                 "RETURN left(s.zipCode, 2) as department, s.id as id, s.name as name,s.city as city,s.UAI as uai, " +
-                "s.academy as academy, s.type as type_etab ";
+                "s.academy as academy, s.type as type_etab;";
         neo4j.execute(query, new JsonObject(), Neo4jResult.validResultHandler(handler));
     }
+
+    @Override
+    public void getStructuresWithoutRight(Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (ss:Structure)<-[:BELONGS*0..1]-()<-[:DEPENDS]-(g:Group) WHERE g.name =~ '.*CRRE.*' and ss.UAI is not null " +
+                "WITH collect(distinct(ss.id)) as deployedId " +
+                "MATCH (s:Structure) WHERE NOT s.id IN deployedId and s.UAI is not null " +
+                "RETURN left(s.zipCode, 2) as department, s.id as id, s.name as name, s.city as city, s.UAI as uai, " +
+                "s.academy as academy, s.type as type_etab;";
+        neo4j.execute(query, new JsonObject(), Neo4jResult.validResultHandler(handler));
+    }
+
+
+
 
     @Override
     public void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler) {

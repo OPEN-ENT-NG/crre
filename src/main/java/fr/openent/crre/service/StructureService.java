@@ -16,6 +16,8 @@ public interface StructureService {
      */
     void getStructures(Handler<Either<String,JsonArray>> handler);
 
+    void getStructuresWithoutRight(Handler<Either<String, JsonArray>> handler);
+
     void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler);
 
     void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);

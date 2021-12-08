@@ -69,10 +69,11 @@ public class StructureController extends ControllerHelper {
                 .add(
                         new JsonObject().put("name", "CRRE-PRESCRIPTEUR")
                                 .put("role", "CRRE - Prescripteur"));
-        structureService.getStructures(event -> {
+        structureService.getStructuresWithoutRight(event -> {
             if (event.isRight()) {
                 int part = 0;
                 JsonArray structures = event.right().getValue();
+                renderJson(request, new JsonObject().put("message", "Ok"), 200);
                 insertManualGroups(request, groups, structures, part);
             }
         });
