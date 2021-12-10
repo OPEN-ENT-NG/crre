@@ -181,6 +181,7 @@ public class StatisticsController extends BaseController {
     @ResourceFilter(AdministratorRight.class)
     public void exportMongoStat(HttpServerRequest request) {
         log.info("CRRE statistics started");
+        renderJson(request, new JsonObject().put("message", "Ok"), 200);
         statCron.insertStatistics(event1 -> {
             if (event1.isRight()) {
                 log.info("Update statistics launch successful");

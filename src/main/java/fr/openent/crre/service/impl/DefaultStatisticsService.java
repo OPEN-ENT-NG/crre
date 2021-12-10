@@ -5,6 +5,7 @@ import fr.openent.crre.service.StatisticsService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.mongodb.MongoDbResult;
@@ -62,7 +63,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
             params.add(type);
         }
         query += "GROUP BY year, reassort;";
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handlerJsonArray));
+        Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validResultHandler(handlerJsonArray));
     }
 
     @Override
@@ -72,15 +73,15 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                 "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = id_campaign) " +
                 "WHERE owner_id != 'renew2021-2022' AND id_structure = ? " +
                 "GROUP BY c.id, c.name;";
-        Sql.getInstance().prepared(query, new JsonArray().add(id_structure), SqlResult.validResultHandler(handlerJsonArray));
+        Sql.getInstance().prepared(query, new JsonArray().add(id_structure), new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validResultHandler(handlerJsonArray));
     }
 
     @Override
     public void getAmount(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        String query = "SELECT amount, initial_amount " +
+        String query = "SELECT (initial_amount - amount) as amount, initial_amount " +
                 "FROM " + Crre.crreSchema + "." + type +
                 " WHERE id_structure = ?;";
-        Sql.getInstance().prepared(query, new JsonArray().add(id_structure), SqlResult.validResultHandler(handlerJsonArray));
+        Sql.getInstance().prepared(query, new JsonArray().add(id_structure), new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validResultHandler(handlerJsonArray));
     }
 
     @Override
@@ -133,9 +134,6 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                     match.put("general", true);
                 } else if (me.getValue().get(0).equals("LP") && me.getValue().size() == 1) {
                     match.put("technical", true);
-                } else {
-                    match.put("technical", true);
-                    match.put("general", true);
                 }
             } else if (me.getKey().equals("consummation")) {
                 JsonArray or = new JsonArray();

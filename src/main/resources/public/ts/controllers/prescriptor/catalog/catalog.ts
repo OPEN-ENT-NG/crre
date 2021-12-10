@@ -8,7 +8,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Non consommable'}];
+            $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Manuel'}];
             $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
             $scope.equipments.pros = [{name: 'Établissement général'}, {name: 'Établissement professionnel'}];
             $scope.equipments.pros.forEach((item) => item.toString = () => $scope.translate(item.name));

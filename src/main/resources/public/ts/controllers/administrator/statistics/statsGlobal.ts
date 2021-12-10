@@ -75,7 +75,7 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
                     style: {
                         colors: [
                             "#1794a5",
-                            "#ff2565"
+                            "#f71c35"
                         ],
                         fontSize: "18px"
                     }
@@ -89,10 +89,20 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
             let options = {
                 chart: {
                     type: 'bar',
-                    height: 450,
-                    width: 500
+                    height: 350,
+                    width: 400
                 },
-                colors: ["#1794a5", "#ff2565"],
+                responsive: [
+                    {
+                        breakpoint: 1500,
+                        options: {
+                            chart: {
+                                width: 300
+                            }
+                        }
+                    }
+                ],
+                colors: ["#1794a5", "#f71c35"],
                 plotOptions: {
                     bar: {
                         columnWidth: "100%%",
@@ -137,9 +147,19 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
             let options = {
                 chart: {
                     type: 'radialBar',
-                    height: 450,
-                    width: 500
+                    height: 350,
+                    width: 400
                 },
+                responsive: [
+                    {
+                        breakpoint: 1500,
+                        options: {
+                            chart: {
+                                width: 300
+                            }
+                        }
+                    }
+                ],
                 plotOptions: {
                     radialBar: {
                         startAngle: -90,
@@ -212,10 +232,10 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
                 labels: ["Établissements ayant commandé", "Établissements sans commande"],
                 responsive: [
                     {
-                        breakpoint: 480,
+                        breakpoint: 1500,
                         options: {
                             chart: {
-                                width: 200
+                                width: 300
                             },
                             legend: {
                                 position: "bottom"
