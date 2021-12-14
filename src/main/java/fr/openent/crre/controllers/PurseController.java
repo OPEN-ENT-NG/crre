@@ -423,6 +423,8 @@ public class PurseController extends ControllerHelper {
                 I18n.getInstance().translate("crre.purse.money.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.purse.licence.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.purse.licence.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.licence.conso.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.licence.conso.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.second.class", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.premiere.class", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.terminal.class", getHost(request), I18n.acceptLanguage(request)) + "\n";
@@ -440,6 +442,8 @@ public class PurseController extends ControllerHelper {
                 (purse.getDouble("amount") != null ? purse.getDouble("amount").toString() : "") + ";" +
                 (purse.getInteger("licence_initial_amount") != null ? purse.getInteger("licence_initial_amount").toString() : "") + ";" +
                 (purse.getInteger("licence_amount") != null ? purse.getInteger("licence_amount").toString() : "") + ";" +
+                (purse.getInteger("consumable_licence_initial_amount") != null ? purse.getInteger("consumable_licence_initial_amount").toString() : "") + ";" +
+                (purse.getInteger("consumable_licence_amount") != null ? purse.getInteger("consumable_licence_amount").toString() : "") + ";" +
                 (purse.getInteger("seconde") != null ? purse.getInteger("seconde").toString() : "") + ";" +
                 (purse.getInteger("premiere") != null ? purse.getInteger("premiere").toString() : "") + ";" +
                 (purse.getInteger("terminale") != null ? purse.getInteger("terminale").toString() : "") + "\n";

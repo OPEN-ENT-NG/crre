@@ -200,7 +200,9 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                         .put("$match", new JsonObject()
                                 .put("_id.year", params.get("year").get(0))
                         ),
-                project));
+                project,
+                new JsonObject().put("$sort", new JsonObject()
+                        .put("public", 1))));
         return new JsonObject()
                 .put("aggregate", "crre.statistics")
                 .put("allowDiskUse", true)

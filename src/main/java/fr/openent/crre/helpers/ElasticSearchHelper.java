@@ -161,7 +161,7 @@ public class ElasticSearchHelper {
                 }
                 case "pro": {
                     if (me.getValue().size() == 1) {
-                        if (me.getValue().get(0).equals("Établissement professionnel")) {
+                        if (me.getValue().get(0).equals("Lycée professionnel")) {
                             pro.add(true);
                         } else {
                             pro.add(false);

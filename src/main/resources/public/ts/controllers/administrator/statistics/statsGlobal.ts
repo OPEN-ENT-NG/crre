@@ -123,22 +123,21 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
 
             // Generate chart with options and data
             if ($scope.ressourceChart) {
-                $scope.ressourceChart.updateSeries(series, true);
-                $scope.ressourceChart.updateOptions(options, true);
-            } else {
-                var newOptions = JSON.parse(JSON.stringify(options));
-                newOptions.series = series;
-                newOptions.xaxis = xaxis;
-                $scope.ressourceChart = new ApexCharts(document.querySelector('#bar-chart'), newOptions);
-                $scope.ressourceChart.render();
-
+                $scope.ressourceChart.destroy();
             }
+            var newOptions = JSON.parse(JSON.stringify(options));
+            newOptions.series = series;
+            newOptions.xaxis = xaxis;
+            $scope.ressourceChart = new ApexCharts(document.querySelector('#bar-chart'), newOptions);
+            $scope.ressourceChart.render();
+
+
         }
 
         const initLicenceChart = (): void => {
             let series = [];
             let statLicence = 0;
-            if($scope.stats.licences.initial_amount > 0) {
+            if ($scope.stats.licences.initial_amount > 0) {
                 statLicence = parseFloat(($scope.stats.licences.amount / $scope.stats.licences.initial_amount * 100).toFixed(2));
             }
             series.push(statLicence);
@@ -196,15 +195,12 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
 
             // Generate chart with options and data
             if ($scope.licenceChart) {
-                $scope.licenceChart.updateSeries(series, true);
-                $scope.licenceChart.updateOptions(options, true);
-            } else {
-                var newOptions = JSON.parse(JSON.stringify(options));
-                newOptions.series = series;
-                $scope.licenceChart = new ApexCharts(document.querySelector('#radial-chart'), newOptions);
-                $scope.licenceChart.render();
-
+                $scope.licenceChart.destroy();
             }
+            var newOptions = JSON.parse(JSON.stringify(options));
+            newOptions.series = series;
+            $scope.licenceChart = new ApexCharts(document.querySelector('#radial-chart'), newOptions);
+            $scope.licenceChart.render();
         }
 
         const initStructureChart = (): void => {
@@ -247,15 +243,12 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
 
             // Generate chart with options and data
             if ($scope.structureChart) {
-                $scope.structureChart.updateSeries(series, true);
-                $scope.structureChart.updateOptions(options, true);
-            } else {
-                var newOptions = JSON.parse(JSON.stringify(options));
-                newOptions.series = series;
-                $scope.structureChart = new ApexCharts(document.querySelector('#donut-chart'), newOptions);
-                $scope.structureChart.render();
-
+                $scope.structureChart.destroy();
             }
+            var newOptions = JSON.parse(JSON.stringify(options));
+            newOptions.series = series;
+            $scope.structureChart = new ApexCharts(document.querySelector('#donut-chart'), newOptions);
+            $scope.structureChart.render();
         }
 
         this.init();

@@ -28,7 +28,7 @@
                     <div class="small-text"><i18n class="bold-font-weight">nb_structures</i18n>[[campaign.nb_structures]]</div>
                 </div>
             </div>
-            <div class="row" workflow="crre.administrator">
+            <div ng-if="!campaign.automatic_close" class="row" workflow="crre.administrator">
                 <div class="right-magnet">
                     <span class="horizontal-spacing cell"><i18n>crre.campaign.accessibility</i18n></span>
                     <switch-toggle ng-model="campaign.accessible" ng-change="updateAccessibility(campaign)"

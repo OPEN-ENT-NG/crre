@@ -2,6 +2,8 @@ import http from 'axios';
 import {toasts} from 'entcore';
 import {Mix} from "entcore-toolkit";
 import {Filters} from "./Filter";
+declare let window: any;
+
 
 export class Statistics {
 
@@ -29,5 +31,16 @@ export class Statistics {
             toasts.warning('crre.logs.sync.err');
         }
     }
+
+    async exportCSV(filters?: Filters) {
+        let params = "";
+        if(!!filters) {
+            filters.all.forEach(function (f) {
+                params += f.name + "=" + f.value + "&";
+            });
+        }
+        window.location = `/crre/stats/exports?${params}`;
+    };
+
 
 }

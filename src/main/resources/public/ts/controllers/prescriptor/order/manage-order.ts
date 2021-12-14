@@ -48,7 +48,7 @@ export const manageOrderController = ng.controller('manageOrderController',
                 });
             });
             $scope.allOrdersListSelected = false;
-            if (order_selected.length != 0) {
+            if (order_selected.all.length != 0) {
                 order_selected.exportCSV($scope.filter.isOld);
             } else {
                 all_order.exportCSV($scope.filter.isOld);
