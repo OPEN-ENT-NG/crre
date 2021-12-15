@@ -105,11 +105,10 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                                     stats.put("paper_ressources", paper_ressources.size() > 0 ? paper_ressources : notExist);
                                     stats.put("all_ressources", all_ressources.size() > 0 ? all_ressources : notExist);
                                     structure.put("stats", stats);
-
                                     statisticsService.exportMongo(structure, handlerJsonObject(addStructureStatFuture));
                                 } else {
-                                    log.info("Failed to retrieve statistics for a structure");
-                                    eitherHandler.handle(new Either.Left<>("Failed to retrieve statistics for a structure"));
+                                    log.error("Failed to retrieve statistics for a structure");
+                                    eitherHandler.handle(new Either.Left<>("Failed to retrieve statistics for a structure : " + event2.cause().toString()));
                                 }
                             });
 
@@ -139,25 +138,25 @@ public class statistics extends ControllerHelper implements Handler<Long> {
                             statisticsService.getStats("all_ressources", structure.getString("id_structure"), handlerJsonArray(allRessourceFuture));
 
                         }
-                        CompositeFuture.all(futures).setHandler(event2 -> {
-                            if (event2.succeeded()) {
+                        CompositeFuture.all(futures).setHandler(finalEvent -> {
+                            if (finalEvent.succeeded()) {
                                 log.info("Insert structures in mongo successful");
                                 eitherHandler.handle(new Either.Right<>(new JsonObject().put("result", "Insert structures in mongo successful")));
                             } else {
-                                log.info("Failed to insert structures in mongo");
-                                eitherHandler.handle(new Either.Left<>("Failed to insert structures in mongo"));
+                                log.error("Failed to insert structures in mongo");
+                                eitherHandler.handle(new Either.Left<>("Failed to insert structures in mongo : " + finalEvent.cause().toString()));
 
                             }
                         });
                     } else {
-                        log.info("Failed to get structures detail");
-                        eitherHandler.handle(new Either.Left<>("Failed to get structures detail"));
+                        log.error("Failed to get structures detail");
+                        eitherHandler.handle(new Either.Left<>("Failed to get structures detail : " + event.left().toString()));
 
                     }
                 });
             } else {
-                log.info("Remove old stats of the day failed");
-                eitherHandler.handle(new Either.Left<>("Remove old stats of the day failed"));
+                log.error("Remove old stats of the day failed");
+                eitherHandler.handle(new Either.Left<>("Remove old stats of the day failed : " + event1.left().toString()));
             }
         });
 

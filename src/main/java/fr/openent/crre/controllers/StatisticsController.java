@@ -149,7 +149,7 @@ public class StatisticsController extends BaseController {
         renderJson(request, new JsonObject().put("message", "Ok"), 200);
         statCron.insertStatistics(event1 -> {
             if (event1.isRight()) {
-                log.info("Update statistics launch successful");
+                log.info("Update statistics successful");
             } else {
                 log.info("Update statistics failed");
             }

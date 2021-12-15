@@ -25,7 +25,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
 
     @Override
     public void exportMongo(JsonObject jsonObject, Handler<Either<String, JsonObject>> handler) {
-        MongoDb.getInstance().insert("" + Crre.crreSchema + ".statistics", jsonObject, MongoDbResult.validResultHandler(handler));
+        MongoDb.getInstance().insert("" + Crre.crreSchema + ".statistics", (new JsonArray()).add(jsonObject), null,
+                new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), MongoDbResult.validResultHandler(handler));
     }
 
     @Override
