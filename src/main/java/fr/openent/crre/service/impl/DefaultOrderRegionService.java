@@ -362,7 +362,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getString("status"))
                         .add(order.getString("equipment_key"));
                 setOrderValuesSQL(params, order);
-                formatOffers(order);
+                if(order.containsKey("offers")) {
+                    formatOffers(order);
+                }
                 params.add(order.getInteger("basket_id"))
                         .add(order.getBoolean("reassort"))
                         .add(order.getJsonArray("offers"))

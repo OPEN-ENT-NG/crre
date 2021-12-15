@@ -125,7 +125,6 @@ public class StructureController extends ControllerHelper {
                 log.info("ok part " + part);
                 if (finalIsEnd) {
                     log.info("Linked all groups to roles");
-                    renderJson(request, new JsonObject().put("message", "Linked all groups to roles"), 200);
                 } else {
                     insertManualGroups(request, groups, structures, part + 1);
                 }
