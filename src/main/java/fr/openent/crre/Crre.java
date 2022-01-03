@@ -3,6 +3,7 @@ package fr.openent.crre;
 import fr.openent.crre.controllers.*;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
+import fr.openent.crre.cron.updateStatus;
 import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
@@ -43,6 +44,9 @@ public class Crre extends BaseServer {
             );
             new CronTrigger(vertx, config.getString("timeSecondStatCron")).schedule(
                     new statistics(vertx)
+            );
+            new CronTrigger(vertx, config.getString("timeSecondStatutCron")).schedule(
+                    new updateStatus(vertx)
             );
         } catch (Exception e) {
             log.fatal("Invalid CRRE cron expression.", e);

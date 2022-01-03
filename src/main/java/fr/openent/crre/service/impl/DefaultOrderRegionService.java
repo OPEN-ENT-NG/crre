@@ -408,6 +408,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
+    public void updateOldOrders(JsonArray ordersRegion, final Handler<Either<String, JsonObject>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "";
+        for (int i = 0; i < ordersRegion.size(); i++) {
+           query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
+                    " SET id_status = ?" +
+                    " WHERE id = ?; ";
+            params.add(ordersRegion.getJsonObject(i).getString("status"));
+            params.add(ordersRegion.getJsonObject(i).getString("id"));
+        }
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
     public void deletedOrders(JsonArray orders, String table, Handler<Either<String, JsonObject>> handlerJsonObject) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" as t " +

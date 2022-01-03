@@ -34,7 +34,7 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
                 if (event1.isRight())
                     log.info("Cron launch successful");
                 else
-                    log.info("Cron synchonisation not full");
+                    log.info("Cron synchronisation not full");
             });
         }
     }

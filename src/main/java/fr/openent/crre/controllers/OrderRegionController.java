@@ -30,6 +30,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -126,7 +127,7 @@ public class OrderRegionController extends BaseController {
                                                 futures.add(createOrdersRegionFuture);
                                                 Double price = Double.parseDouble(newOrder.getDouble("price").toString())
                                                         * newOrder.getInteger("amount");
-                                                updatePurseLicence(futures, newOrder, "-", price, newOrder.getString("use_credit","none"));
+                                                updatePurseLicence(futures, newOrder, "-", price, newOrder.getString("use_credit", "none"));
                                                 orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
                                                         handlerJsonObject(createOrdersRegionFuture));
                                                 int finalI = i;
@@ -187,9 +188,29 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void addOrders(HttpServerRequest request) throws IOException {
-        // TODO à voir sur NG2 si nécessaire
+        Scanner sc = getOrderLDE();
+        orderRegionService.getLastProject(lastProject -> {
+            if (lastProject.isRight()) {
+                int part = 0;
+                search_All(getEquipmentEvent -> {
+                    if (getEquipmentEvent.isRight()) {
+                        ok(request);
+                        historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
+                                getEquipmentEvent.right().getValue(), part);
+                    } else {
+                        badRequest(request);
+                        log.error("search_All failed");
+                    }
+                });
+            } else {
+                badRequest(request);
+                log.error("getLastProject failed");
+            }
+        });
+    }
+
+    public Scanner getOrderLDE() throws IOException {
         disableSslVerification();
-/*
         URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
         URLConnection connection;
        if (System.getProperty("httpclient.proxyHost") != null) {
@@ -228,12 +249,6 @@ public class OrderRegionController extends BaseController {
             }else{
                 connection = new URL(redirect).openConnection();
             }
-        }*/
-        URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
-        URLConnection connection = hh.openConnection();
-        String redirect = connection.getHeaderField("Location");
-        if (redirect != null) {
-            connection = new URL(redirect).openConnection();
         }
         Scanner sc = new Scanner(new InputStreamReader(connection.getInputStream()));
         // skip header
@@ -242,24 +257,7 @@ public class OrderRegionController extends BaseController {
         } else {
             log.info("Empty file");
         }
-        orderRegionService.getLastProject(lastProject -> {
-            if (lastProject.isRight()) {
-                int part = 0;
-                search_All(getEquipmentEvent -> {
-                    if (getEquipmentEvent.isRight()) {
-                        ok(request);
-                        historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
-                                getEquipmentEvent.right().getValue(), part);
-                    }else{
-                        badRequest(request);
-                        log.error("search_All failed");
-                    }
-                });
-            } else {
-                badRequest(request);
-                log.error("getLastProject failed");
-            }
-        });
+        return sc;
     }
 
     private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments, int part) {
@@ -269,9 +267,9 @@ public class OrderRegionController extends BaseController {
 
         int project_id = lastProjectId;
         int total = part * 1600;
-        if(!sc.hasNextLine()){
+        if (!sc.hasNextLine()) {
             log.info("add LDE orders finished with success");
-        }else {
+        } else {
             log.info("Processing LDE orders part " + part);
             while (sc.hasNextLine() && total < 1600 * part + 1600) {
                 project_id++;
@@ -280,7 +278,7 @@ public class OrderRegionController extends BaseController {
                 String[] values = userLine.split(Pattern.quote("|"));
                 JsonObject order = new JsonObject();
                 try {
-                    if(values[17].equals("00/00/00")) {
+                    if (values[17].equals("00/00/00")) {
                         order.put("owner_name", "Commande " + (new Date().getYear() + 1900));
                         order.put("owner_id", "Commande " + (new Date().getYear() + 1900));
                         order.put("creation_date", new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
@@ -315,7 +313,7 @@ public class OrderRegionController extends BaseController {
 
             int finalProject_id = project_id;
             structureService.getStructureByUAI(uais, null, structureEvent -> {
-                if (structureEvent.isRight()){
+                if (structureEvent.isRight()) {
                     boolean checkEquip;
                     boolean checkEtab;
                     int k;
@@ -368,7 +366,7 @@ public class OrderRegionController extends BaseController {
                             }
                         }
                     });
-                }else{
+                } else {
                     badRequest(request);
                     log.error("getStructureByUAI failed");
                 }
@@ -537,7 +535,8 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, Boolean old, List<Future> futures) {
+    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, Boolean
+            old, List<Future> futures) {
         CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 List<JsonArray> resultsList = event.result().list();
@@ -560,7 +559,8 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void getSearchByIds(HttpServerRequest request, List<JsonArray> resultsList, List<String> listIdsEquipment) {
+    private void getSearchByIds(HttpServerRequest
+                                        request, List<JsonArray> resultsList, List<String> listIdsEquipment) {
         searchByIds(listIdsEquipment, equipments -> {
             if (equipments.isRight()) {
                 JsonArray finalResult = new JsonArray();
@@ -638,12 +638,12 @@ public class OrderRegionController extends BaseController {
                                     if (newOrder.getString("status").equals("REJECTED")) {
                                         if (status.equals("valid")) {
                                             updatePurseLicence(futures, newOrder, "-", price,
-                                                    newOrder.getString("use_credit","none"));
+                                                    newOrder.getString("use_credit", "none"));
                                         }
                                     } else {
                                         if (status.equals("rejected")) {
                                             updatePurseLicence(futures, newOrder, "+", price,
-                                                    newOrder.getString("use_credit","none"));
+                                                    newOrder.getString("use_credit", "none"));
                                         }
                                     }
                                 }
@@ -669,8 +669,9 @@ public class OrderRegionController extends BaseController {
 
     }
 
-    private void updatePurseLicence(List<Future> futures, JsonObject newOrder, String operation, Double price, String use_credit) {
-        if(!use_credit.equals("none")) {
+    private void updatePurseLicence(List<Future> futures, JsonObject newOrder, String operation, Double
+            price, String use_credit) {
+        if (!use_credit.equals("none")) {
             Future<JsonObject> updateFuture = Future.future();
             futures.add(updateFuture);
             switch (use_credit) {
@@ -761,7 +762,8 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void generateLogs(HttpServerRequest request, List<String> params, List<String> idsEquipment, List<String> params3,
+    private void generateLogs(HttpServerRequest
+                                      request, List<String> params, List<String> idsEquipment, List<String> params3,
                               UserInfos user, Boolean old, boolean library) {
         JsonArray idStructures = new JsonArray();
         for (String structureId : params3) {
@@ -800,7 +802,8 @@ public class OrderRegionController extends BaseController {
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
     }
 
-    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray structures,
+    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray
+            structures,
                                                       JsonArray orderRegion, JsonArray ordersClient, JsonArray ordersRegion) {
         int nbEtab = structures.size();
         String csvFile = generateExport(request, orderRegion);
@@ -818,12 +821,12 @@ public class OrderRegionController extends BaseController {
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
                             attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
                             String mail = this.mail.getString("address");
-                            emailSender.sendMail(request, mail, "Demande Libraire CRRE",
+/*                            emailSender.sendMail(request, mail, "Demande Libraire CRRE",
                                     "", attachment, message -> {
                                         if(!message.isRight()) {
                                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                         }
-                                    });
+                                    });*/
                             renderJson(request, response2.right().getValue());
                         }
                     });
@@ -841,7 +844,8 @@ public class OrderRegionController extends BaseController {
         }
     }
 
-    private void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClient, JsonArray ordersRegion) {
+    private void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray
+            ordersClient, JsonArray ordersRegion) {
         JsonObject order;
         JsonObject equipment;
         for (int i = 0; i < orderRegion.size(); i++) {
@@ -876,9 +880,8 @@ public class OrderRegionController extends BaseController {
                         order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                         putStructuresNameUAI(structures, order);
                         putEANLDE(equipment, order);
-                        order.put("typeCatalogue",equipment.getString("typeCatalogue"));
+                        getUniqueTypeCatalogue(order, equipment);
                         if (equipment.getString("type").equals("articlenumerique")) {
-                            //order.put("cible", equipment.)
                             JsonArray offers = computeOffers(equipment, order);
                             if (offers.size() > 0) {
                                 JsonArray orderOfferArray = new JsonArray();
@@ -893,6 +896,7 @@ public class OrderRegionController extends BaseController {
                                     orderOffer.put("unitedPriceTTC", 0);
                                     orderOffer.put("totalPriceHT", 0);
                                     orderOffer.put("totalPriceTTC", 0);
+                                    orderOffer.put("typeCatalogue", order.getString("typeCatalogue"));
                                     orderOffer.put("creation_date", order.getString("creation_date"));
                                     orderOffer.put("id_structure", order.getString("id_structure"));
                                     orderOffer.put("campaign_name", order.getString("campaign_name"));
@@ -913,6 +917,24 @@ public class OrderRegionController extends BaseController {
         }
     }
 
+    private void getUniqueTypeCatalogue(JsonObject order, JsonObject equipment) {
+        if (order.getString("use_credit").equals("consumable_licences")) {
+            if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
+                ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
+                order.put("typeCatalogue", "Consommable");
+            } else {
+                order.put("typeCatalogue", "ao_idf_conso");
+            }
+        } else {
+            if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
+                ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
+                order.put("typeCatalogue", "Numerique");
+            } else {
+                order.put("typeCatalogue", "ao_idf_pap");
+            }
+        }
+    }
+
     private void putStructuresNameUAI(JsonArray structures, JsonObject order) {
         for (int s = 0; s < structures.size(); s++) {
             JsonObject structure = structures.getJsonObject(s);
@@ -927,7 +949,7 @@ public class OrderRegionController extends BaseController {
     private void putEANLDE(JsonObject equipment, JsonObject order) {
         if (equipment.getString("type").equals("articlenumerique")) {
             order.put("eanLDE", equipment.getJsonArray("offres").getJsonObject(0).getString("eanlibraire"));
-        }else{
+        } else {
             order.put("eanLDE", equipment.getString("ean"));
         }
     }
