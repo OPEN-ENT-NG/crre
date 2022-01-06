@@ -39,11 +39,13 @@ export class Equipment implements Selectable {
             Mix.extend(this, data);
             reformatEquipment(this);
             if(this.type === 'articlenumerique') {
-                this.offres[0].leps.forEach(function (offre) {
-                    offre.conditions.sort(function (a, b) {
-                        return a.gratuite - b.gratuite;
+                if(this.offres.length != 0) {
+                    this.offres[0].leps.forEach(function (offre) {
+                        offre.conditions.sort(function (a, b) {
+                            return a.gratuite - b.gratuite;
+                        });
                     });
-                });
+                }
             }
         } catch (e) {
             console.error(e);
