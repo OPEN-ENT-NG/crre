@@ -877,7 +877,11 @@ public class OrderRegionController extends BaseController {
                         order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                         order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                         extractedEquipmentInfo(order, equipment);
-                        order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                        if(equipment.getJsonArray("disciplines").size() > 0) {
+                            order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                        } else {
+                            order.put("grade", "");
+                        }
                         putStructuresNameUAI(structures, order);
                         putEANLDE(equipment, order);
                         getUniqueTypeCatalogue(order, equipment);
