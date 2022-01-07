@@ -821,12 +821,12 @@ public class OrderRegionController extends BaseController {
                             JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
                             attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
                             String mail = this.mail.getString("address");
-/*                            emailSender.sendMail(request, mail, "Demande Libraire CRRE",
+                            emailSender.sendMail(request, mail, "Demande Libraire CRRE",
                                     "", attachment, message -> {
                                         if(!message.isRight()) {
                                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                         }
-                                    });*/
+                                    });
                             renderJson(request, response2.right().getValue());
                         }
                     });
