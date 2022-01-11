@@ -7,6 +7,7 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -472,7 +473,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 neo4j.executeTransaction(s.build(), null, true, validEmptyHandler(handler));
             }
         } else {
-            handler.handle(new Either.Left<String, JsonObject>("invalid.arguments"));
+            handler.handle(new Either.Left<>("invalid.arguments"));
         }
     }
 
@@ -485,7 +486,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 .put("classId", classId)
                 .put("group", group);
 
-        eb.send("entcore.feeder", action, handlerToAsyncHandler(validUniqueResultHandler(0, result)));
+        eb.send("entcore.feeder", action, new DeliveryOptions().setSendTimeout(600000L),
+                handlerToAsyncHandler(validUniqueResultHandler(0, result)));
     }
 
     @Override
