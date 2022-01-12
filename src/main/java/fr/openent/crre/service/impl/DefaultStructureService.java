@@ -500,7 +500,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     public void linkRoleGroup(String groupId, String roleId, Handler<Either<String, JsonObject>> handler) {
         String queryLink = "MATCH (r:Role), (g:Group) " +
-                "WHERE r.id = {roleId} and g.id = {groupId}" +
+                "WHERE r.id = {roleId} and g.id = {groupId} " +
                 "CREATE UNIQUE (g)-[:AUTHORIZED]->(r)";
         JsonObject params = new JsonObject()
                 .put("groupId", groupId)

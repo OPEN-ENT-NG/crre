@@ -247,6 +247,13 @@ CREATE TABLE crre.order_client_equipment_old (
     CONSTRAINT "status_values" CHECK (status IN ('WAITING', 'VALID','IN PROGRESS', 'WAITING_FOR_ACCEPTANCE', 'REJECTED', 'SENT', 'DONE') )
 );
 
+CREATE TABLE crre.status
+(
+    id bigint NOT NULL,
+    name character varying,
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE crre."order-region-equipment-old"
 (
     id bigserial NOT NULL,
@@ -312,13 +319,6 @@ CREATE TABLE crre.structure (
     catalog character varying,
     technical boolean NOT NULL DEFAULT false,
     general boolean NOT NULL DEFAULT false
-);
-
-CREATE TABLE crre.status
-(
-    id bigint NOT NULL,
-    name character varying,
-    PRIMARY KEY (id)
 );
 
 CREATE TABLE crre.consumable_formation (

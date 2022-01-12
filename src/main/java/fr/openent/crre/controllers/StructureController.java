@@ -61,11 +61,11 @@ public class StructureController extends ControllerHelper {
     public void createGroupsRights(HttpServerRequest request) {
         JsonArray groups = new JsonArray()
                 .add(
-                        new JsonObject().put("name", "CRRE-ADMINISTRATEUR")
-                                .put("role", "CRRE - Administrateurs"))
+                        new JsonObject().put("name", "CRRE-ADMIN")
+                                .put("role", "CRRE - Admin"))
                 .add(
-                        new JsonObject().put("name", "CRRE-VALIDATEUR")
-                                .put("role", "CRRE - Validateur"))
+                        new JsonObject().put("name", "CRRE-VALIDEUR")
+                                .put("role", "CRRE - Valideur"))
                 .add(
                         new JsonObject().put("name", "CRRE-PRESCRIPTEUR")
                                 .put("role", "CRRE - Prescripteur"));
@@ -74,12 +74,12 @@ public class StructureController extends ControllerHelper {
                 int part = 0;
                 JsonArray structures = event.right().getValue();
                 renderJson(request, new JsonObject().put("message", "Ok"), 200);
-                insertManualGroups(request, groups, structures, part);
+                insertManualGroups(groups, structures, part);
             }
         });
     }
 
-    private void insertManualGroups(HttpServerRequest request, JsonArray groups, JsonArray structures, int part) {
+    private void insertManualGroups(JsonArray groups, JsonArray structures, int part) {
         List<Future> futures = new ArrayList<>();
         List<Future> futuresLink = new ArrayList<>();
 
@@ -99,6 +99,7 @@ public class StructureController extends ControllerHelper {
                 futures.add(getRoleFuture);
                 futuresLink.add(linkRoleGroupFuture);
                 String id_structure = structures.getJsonObject(i).getString("id");
+                log.info("Insert manual groups and rights for CRRE for structure : " + structures.getJsonObject(i).getString("uai"));
                 JsonObject group = new JsonObject()
                         .put("name", groups.getJsonObject(j).getString("name"))
                         .put("autolinkTargetAllStructs", false)
@@ -112,9 +113,13 @@ public class StructureController extends ControllerHelper {
                     if (event.succeeded()) {
                         String groupId = insertGroupFuture.result().getString("id");
                         String roleId = getRoleFuture.result().getString("id");
-                        structureService.linkRoleGroup(groupId, roleId, handlerJsonObject(linkRoleGroupFuture));
+                        if(roleId != null && groupId != null) {
+                            structureService.linkRoleGroup(groupId, roleId, handlerJsonObject(linkRoleGroupFuture));
+                        } else {
+                            log.error("Failed to insert group and/or get roles -  groupId or roleId are null ; for id_structure : " + id_structure);
+                        }
                     } else {
-                        log.error("Failed to insert group and/or get roles");
+                        log.error("Failed to insert group and/or get roles - 1 ; for id_structure : " + id_structure, event.cause());
                     }
                 });
             }
@@ -126,7 +131,7 @@ public class StructureController extends ControllerHelper {
                 if (finalIsEnd) {
                     log.info("Linked all groups to roles");
                 } else {
-                    insertManualGroups(request, groups, structures, part + 1);
+                    insertManualGroups(groups, structures, part + 1);
                 }
             } else {
                 log.error("ko part " + part);
