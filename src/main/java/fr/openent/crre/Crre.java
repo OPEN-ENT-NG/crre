@@ -49,7 +49,7 @@ public class Crre extends BaseServer {
                     new updateStatus(vertx)
             );
         } catch (Exception e) {
-            log.fatal("Invalid CRRE cron expression.", e);
+            log.error("Invalid CRRE cron expression.", e);
         }
 
         addController(new CrreController());

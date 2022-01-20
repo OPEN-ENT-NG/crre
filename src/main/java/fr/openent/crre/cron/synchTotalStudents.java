@@ -30,6 +30,7 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
         Date today = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         if(CONFIG.getString("dateSynch").equals(formatter.format(today))) {
+            log.info("launch getStudents");
             getStudents(event1 -> {
                 if (event1.isRight())
                     log.info("Cron launch successful");
@@ -42,6 +43,7 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
     public void getStudents(final Handler<Either<String, JsonObject>> eitherHandler) {
         structureService.getAllStructure(structures -> {
             if(structures.isRight()) {
+                log.info("[getStudents] getAllStructures OK");
                 JsonArray structure_id = structures.right().getValue();
                 JsonArray ids = new JsonArray();
                 for (int i = 0; i < structure_id.size(); i++) {
