@@ -55,8 +55,39 @@ body.crre {
     margin-top: 100px;
   }
 
-  .heading-tabs {
+  .tabs.heading-tabs {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 20px!important;
     overflow-x: inherit;
+    >* {
+      text-align: initial;
+    }
+    header {
+      //tabs centered in whole space
+      width: auto;    // tabs align right
+      display: flex;
+      flex: 0;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+      margin: 0 4px;
+      padding: 10px 15px;
+      transition: color 250ms ease;
+
+      a{
+        vertical-align: middle;
+        i{
+          font-size: 15px;
+          margin-right: 5px;
+        }
+        &:hover{
+          color: $primary;
+        }
+      }
+    }
   }
 
   .mobile-navigation {
