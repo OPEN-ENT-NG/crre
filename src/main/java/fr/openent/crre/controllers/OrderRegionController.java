@@ -195,8 +195,10 @@ public class OrderRegionController extends BaseController {
                 search_All(getEquipmentEvent -> {
                     if (getEquipmentEvent.isRight()) {
                         ok(request);
+                        // Store all orders by key (uai + date) and value (id project) No duplicate
+                        HashMap<String, Integer> projetMap = new HashMap<>();
                         historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
-                                getEquipmentEvent.right().getValue(), part);
+                                getEquipmentEvent.right().getValue(), projetMap, part);
                     } else {
                         badRequest(request);
                         log.error("search_All failed");
@@ -213,21 +215,19 @@ public class OrderRegionController extends BaseController {
         disableSslVerification();
         URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
         URLConnection connection;
-       if (System.getProperty("httpclient.proxyHost") != null) {
+        if (System.getProperty("httpclient.proxyHost") != null) {
             Proxy proxy = new Proxy(Proxy.Type.HTTP,
                     new InetSocketAddress(System.getProperty("httpclient.proxyHost"),
                             Integer.parseInt(System.getProperty("httpclient.proxyPort"))));
-            Authenticator.setDefault(new Authenticator()
-            {
-                protected PasswordAuthentication getPasswordAuthentication()
-                {
+            Authenticator.setDefault(new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(
                             System.getProperty("httpclient.proxyUsername"),
                             System.getProperty("httpclient.proxyPassword").toCharArray());
                 }
             });
             connection = hh.openConnection(proxy);
-        }else{
+        } else {
             connection = hh.openConnection();
         }
         String redirect = connection.getHeaderField("Location");
@@ -236,17 +236,15 @@ public class OrderRegionController extends BaseController {
                 Proxy proxy = new Proxy(Proxy.Type.HTTP,
                         new InetSocketAddress(System.getProperty("httpclient.proxyHost"),
                                 Integer.parseInt(System.getProperty("httpclient.proxyPort"))));
-                Authenticator.setDefault(new Authenticator()
-                {
-                    protected PasswordAuthentication getPasswordAuthentication()
-                    {
+                Authenticator.setDefault(new Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(
                                 System.getProperty("httpclient.proxyUsername"),
                                 System.getProperty("httpclient.proxyPassword").toCharArray());
                     }
                 });
                 connection = new URL(redirect).openConnection(proxy);
-            }else{
+            } else {
                 connection = new URL(redirect).openConnection();
             }
         }
@@ -260,23 +258,34 @@ public class OrderRegionController extends BaseController {
         return sc;
     }
 
-    private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments, int part) {
+    private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments, HashMap<String, Integer> projetMap, int part) {
         JsonArray ordersRegion = new JsonArray();
         JsonArray uais = new JsonArray();
         List<Future> futures = new ArrayList<>();
 
-        int project_id = lastProjectId;
+
+        int project_id = lastProjectId; // Id of the last project created
+        int project_size = 0; // Size of project to create dynamically project in db
         int total = part * 1600;
         if (!sc.hasNextLine()) {
             log.info("add LDE orders finished with success");
         } else {
             log.info("Processing LDE orders part " + part);
             while (sc.hasNextLine() && total < 1600 * part + 1600) {
-                project_id++;
                 total++;
                 String userLine = sc.nextLine();
                 String[] values = userLine.split(Pattern.quote("|"));
                 JsonObject order = new JsonObject();
+                /* Current project id : get the last project id and increment it
+                or get the project id stored in projectMap if the key already exists to group all orders by uai + date */
+                int currentProject = project_id;
+                if (!projetMap.containsKey(values[11] + values[17])) {
+                    projetMap.put(values[11] + values[17], project_id);
+                    project_id++;
+                    project_size++;
+                } else {
+                    currentProject = projetMap.get(values[11] + values[17]);
+                }
                 try {
                     if (values[17].equals("00/00/00")) {
                         order.put("owner_name", "Commande " + (new Date().getYear() + 1900));
@@ -306,12 +315,14 @@ public class OrderRegionController extends BaseController {
                 order.put("amount", Math.abs(Integer.parseInt(values[5])));
                 order.put("unitedPriceTTC", Double.parseDouble(values[9].replace(",", ".")));
                 order.put("reassort", !values[14].isEmpty());
-                order.put("id_project", project_id);
+                order.put("id_project", currentProject);
+                order.put("id_statut", Integer.parseInt(values[15]));
                 ordersRegion.add(order);
                 uais.add(values[11]);
             }
 
             int finalProject_id = project_id;
+            int finalProject_size = project_size;
             structureService.getStructureByUAI(uais, null, structureEvent -> {
                 if (structureEvent.isRight()) {
                     boolean checkEquip;
@@ -321,7 +332,9 @@ public class OrderRegionController extends BaseController {
                     JsonArray structures = structureEvent.right().getValue();
                     for (int i = 0; i < ordersRegion.size(); i++) {
                         Future<JsonObject> createProjectFuture = Future.future();
-                        futures.add(createProjectFuture);
+                        if (finalProject_size > i) {
+                            futures.add(createProjectFuture);
+                        }
                         checkEquip = true;
                         checkEtab = true;
                         j = 0;
@@ -348,14 +361,16 @@ public class OrderRegionController extends BaseController {
                             }
                             k++;
                         }
-                        orderRegionService.createProject("Commandes LDE", handlerJsonObject(createProjectFuture));
+                        if (finalProject_size > i) {
+                            orderRegionService.createProject("Commandes LDE", handlerJsonObject(createProjectFuture));
+                        }
                     }
                     CompositeFuture.all(futures).setHandler(event2 -> {
                         if (event2.succeeded()) {
                             try {
                                 orderRegionService.insertOldOrders(ordersRegion, true, event1 -> {
                                     if (event1.isRight()) {
-                                        historicCommand(request, sc, finalProject_id, equipments, part + 1);
+                                        historicCommand(request, sc, finalProject_id, equipments, projetMap, part + 1);
                                     } else {
                                         badRequest(request);
                                         log.error("Insert old orders failed");
@@ -823,7 +838,7 @@ public class OrderRegionController extends BaseController {
                             String mail = this.mail.getString("address");
                             emailSender.sendMail(request, mail, "Demande Libraire CRRE",
                                     "", attachment, message -> {
-                                        if(!message.isRight()) {
+                                        if (!message.isRight()) {
                                             log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
                                         }
                                     });
@@ -877,7 +892,7 @@ public class OrderRegionController extends BaseController {
                         order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                         order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                         extractedEquipmentInfo(order, equipment);
-                        if(equipment.getJsonArray("disciplines").size() > 0) {
+                        if (equipment.getJsonArray("disciplines").size() > 0) {
                             order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
                         } else {
                             order.put("grade", "");
@@ -924,14 +939,14 @@ public class OrderRegionController extends BaseController {
     private void getUniqueTypeCatalogue(JsonObject order, JsonObject equipment) {
         if (order.getString("use_credit").equals("consumable_licences")) {
             if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
-                ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
+                    ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
                 order.put("typeCatalogue", "Consommable");
             } else {
                 order.put("typeCatalogue", "ao_idf_conso");
             }
         } else {
             if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
-                ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
+                    ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
                 order.put("typeCatalogue", "Numerique");
             } else {
                 order.put("typeCatalogue", "ao_idf_pap");

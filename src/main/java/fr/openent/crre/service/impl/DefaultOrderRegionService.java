@@ -265,11 +265,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
-                " comment, id_order_client_equipment, id_project, reassort, total_free) VALUES ";
+                " comment, id_order_client_equipment, id_project, reassort, id_statut, total_free) VALUES ";
 
         for (int i = 0; i < orderRegions.size(); i++) {
             if (orderRegions.getJsonObject(i).containsKey("id_project")) {
-                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
                 JsonObject order = orderRegions.getJsonObject(i);
                 String creation_date;
                 if (isRenew) {
@@ -293,6 +293,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 params.add(order.getInteger("id_order_client_equipment"))
                         .add(order.getLong("id_project"))
                         .add(order.getBoolean("reassort"))
+                        .add(order.getInteger("id_statut"))
                         .add(order.getInteger("total_free", null));
             }
         }
