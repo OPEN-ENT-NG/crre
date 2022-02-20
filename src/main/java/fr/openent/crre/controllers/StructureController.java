@@ -61,14 +61,11 @@ public class StructureController extends ControllerHelper {
     public void createGroupsRights(HttpServerRequest request) {
         JsonArray groups = new JsonArray()
                 .add(
-                        new JsonObject().put("name", "CRRE-ADMIN")
-                                .put("role", "CRRE - Admin"))
-                .add(
                         new JsonObject().put("name", "CRRE-VALIDEUR")
-                                .put("role", "CRRE - Valideur"))
+                                .put("role", "val"))
                 .add(
                         new JsonObject().put("name", "CRRE-PRESCRIPTEUR")
-                                .put("role", "CRRE - Prescripteur"));
+                                .put("role", "presc"));
         structureService.getStructuresWithoutRight(event -> {
             if (event.isRight()) {
                 int part = 0;
@@ -80,7 +77,10 @@ public class StructureController extends ControllerHelper {
     }
 
     private void insertManualGroups(JsonArray groups, JsonArray structures, int part) {
+        // List futures getting role and inserting group
         List<Future> futures = new ArrayList<>();
+
+        // List futures linking role and group
         List<Future> futuresLink = new ArrayList<>();
 
         int start = part * 5;
@@ -91,7 +91,7 @@ public class StructureController extends ControllerHelper {
             isEnd = true;
         }
         for (int i = start; i < end; i++) {
-            for (int j = 0; j < 3; j++) {
+            for (int j = 0; j < 2; j++) {
                 Future<JsonObject> insertGroupFuture = Future.future();
                 Future<JsonObject> getRoleFuture = Future.future();
                 Future<JsonObject> linkRoleGroupFuture = Future.future();
@@ -113,9 +113,10 @@ public class StructureController extends ControllerHelper {
                     if (event.succeeded()) {
                         String groupId = insertGroupFuture.result().getString("id");
                         String roleId = getRoleFuture.result().getString("id");
-                        if(roleId != null && groupId != null) {
+                        if (roleId != null && groupId != null) {
                             structureService.linkRoleGroup(groupId, roleId, handlerJsonObject(linkRoleGroupFuture));
                         } else {
+                            linkRoleGroupFuture.fail("Failed to insert group and/or get roles -  groupId or roleId are null ; for id_structure :" + id_structure);
                             log.error("Failed to insert group and/or get roles -  groupId or roleId are null ; for id_structure : " + id_structure);
                         }
                     } else {
@@ -125,16 +126,18 @@ public class StructureController extends ControllerHelper {
             }
         }
         boolean finalIsEnd = isEnd;
-        CompositeFuture.all(futuresLink).setHandler(event -> {
+        CompositeFuture.join(futuresLink).setHandler(event -> {
             if (event.succeeded()) {
                 log.info("ok part " + part);
-                if (finalIsEnd) {
-                    log.info("Linked all groups to roles");
-                } else {
-                    insertManualGroups(groups, structures, part + 1);
-                }
             } else {
+                insertManualGroups(groups, structures, part + 1);
                 log.error("ko part " + part);
+            }
+            // Check if final part else continue script
+            if (finalIsEnd) {
+                log.info("Linked all groups to roles");
+            } else {
+                insertManualGroups(groups, structures, part + 1);
             }
         });
     }

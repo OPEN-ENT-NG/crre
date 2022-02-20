@@ -494,7 +494,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     public void getRole(String roleName, Handler<Either<String, JsonObject>> handler) {
         JsonObject params = new JsonObject().put("linkName", "CRRE").put("roleName", roleName);
         String queryRole = "MATCH (a:Application)-[]->(ac:Action)<-[]-(r:Role)" +
-                " WHERE a.name = {linkName} and r.name =~ {roleName} RETURN distinct(r.id) as id";
+                " WHERE a.name = {linkName} and toLower(r.name) CONTAINS toLower({roleName}) RETURN distinct(r.id) as id";
         neo4j.execute(queryRole, params, Neo4jResult.validUniqueResultHandler(handler));
     }
 
