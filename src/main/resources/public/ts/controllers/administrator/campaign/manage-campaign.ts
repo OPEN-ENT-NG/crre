@@ -1,4 +1,4 @@
-import {_, ng, template} from 'entcore';
+import {_, moment, ng, template,idiom as lang} from 'entcore';
 import {Mix} from 'entcore-toolkit';
 import {
     Campaign, StructureGroup,
@@ -68,5 +68,11 @@ export const campaignsController = ng.controller('campaignsController',
                 stringToReturn += structure.name + ", ";
             });
             return stringToReturn.slice(0, -2);
+        }
+
+        $scope.formatDatesCampaign = (campaign : Campaign) => {
+            return lang.translate("from.espace") + moment(campaign.start_date).format('DD/MM/YYYY') +
+                lang.translate("to.minimize") + moment(campaign.end_date).format('DD/MM/YYYY')
+
         }
     }]);
