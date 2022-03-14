@@ -19,14 +19,31 @@
                         <i class="info-circle" style="margin-right: 10px;"></i>
                         <span class="font19"><i18n>crre.campaign.detail</i18n></span>
                     </label>
-                    <div class="small-text" ng-if="campaign.type_name" style="padding-top: 10px;"><i18n class="bold-font-weight">crre.type.campaign</i18n> : <span ng-bind="lang.translate(campaign.type_name)"></span></div>
-                    <div class="small-text"><i18n class="bold-font-weight">crre.purses</i18n> : <span ng-bind="lang.translate(campaign.use_credit)"></span></div>
-                    <div class="small-text"><i18n class="bold-font-weight">crre.reassort</i18n> : <span ng-bind="lang.translate(campaign.reassort)"></span></div>
-                    <div ng-if="!!campaign.catalog" class="small-text"><i18n class="bold-font-weight">crre.catalog</i18n> : <span ng-bind="lang.translate(campaign.catalog)"></span></div>
-                    <div ng-if="!!!campaign.catalog" class="small-text"><i18n class="bold-font-weight">crre.catalog</i18n> : <i18n>crre.all.catalog</i18n></div>
-                    <div class="small-text"><i18n class="bold-font-weight">crre.campaign.etabs</i18n> : <span ng-bind="formatStructureCampaign(campaign.groups)"></span></div>
-                    <div class="small-text"><i18n class="bold-font-weight">nb_structures</i18n>[[campaign.nb_structures]]</div>
+                    <div class="small-text" ng-if="campaign.type_name" style="padding-top: 10px;">
+                        <i18n class="bold-font-weight">crre.type.campaign</i18n> : <span ng-bind="lang.translate(campaign.type_name)"></span>
+                    </div>
+                    <div class="small-text">
+                        <i18n class="bold-font-weight">crre.purses</i18n> : <span ng-bind="lang.translate(campaign.use_credit)"></span>
+                    </div>
+                    <div class="small-text">
+                        <i18n class="bold-font-weight">crre.reassort</i18n> : <span ng-bind="lang.translate(campaign.reassort)"></span>
+                    </div>
+                    <div ng-if="!!campaign.catalog" class="small-text">
+                        <i18n class="bold-font-weight">crre.catalog</i18n> : <span ng-bind="lang.translate(campaign.catalog)"></span>
+                    </div>
+                    <div ng-if="!!!campaign.catalog" class="small-text">
+                        <i18n class="bold-font-weight">crre.catalog</i18n> : <i18n>crre.all.catalog</i18n>
+                    </div>
+                    <div class="small-text">
+                        <i18n class="bold-font-weight">crre.campaign.etabs</i18n> : <span ng-bind="formatStructureCampaign(campaign.groups)"></span>
+                    </div>
+                    <div class="small-text">
+                        <i18n class="bold-font-weight">nb_structures</i18n>[[campaign.nb_structures]]
+                    </div>
                 </div>
+            </div>
+            <div ng-if="campaign.automatic_close" class="small-text">
+                <i18n class="bold-font-weight">crre.campaign.dates</i18n> : <span ng-bind="formatDatesCampaign(campaign)"></span>
             </div>
             <div ng-if="!campaign.automatic_close" class="row" workflow="crre.administrator">
                 <div class="right-magnet">
