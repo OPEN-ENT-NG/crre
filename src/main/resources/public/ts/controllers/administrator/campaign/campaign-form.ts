@@ -10,18 +10,18 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Tous", value: null}, {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"}, {name: "Catalogue numérique consommable", value: "articlenumerique|consommable"},
                 {name: "Catalogue papier consommable", value: "articlepapier|consommable"},
-                {name: "Catalogue numérique pro", value: "articlenumerique|pro"},
-                {name: "Catalogue papier pro", value: "articlepapier|pro"},
-                {name: "Catalogue numérique lgt", value: "articlenumerique|lgt"},
-                {name: "Catalogue papier lgt", value: "articlepapier|lgt"},
-                {name: "Catalogue numérique consommable pro", value: "articlenumerique|consommable|pro"},
-                {name: "Catalogue papier consommable pro", value: "articlepapier|consommable|pro"},];
-            $scope.creditFormat = [{name: "aucun crédit", value: "none"},
-                {name: "les Licences", value: "licences"}, {
-                    name: "les Licences consommables",
-                    value: "consumable_licences"
-                },
-                {name: "les Crédits Monétaires", value: "credits"}];
+                {name: "Catalogue numérique Pro", value: "articlenumerique|pro"},
+                {name: "Catalogue papier Pro", value: "articlepapier|pro"},
+                {name: "Catalogue numérique LGT", value: "articlenumerique|lgt"},
+                {name: "Catalogue papier LGT", value: "articlepapier|lgt"},
+                {name: "Catalogue numérique consommable Pro", value: "articlenumerique|consommable|pro"},
+                {name: "Catalogue papier consommable Pro", value: "articlepapier|consommable|pro"},];
+            $scope.creditFormat = [
+                {name: "Aucun crédits", value: "none"},
+                {name: "Licences manuels", value: "licences"},
+                {name: "Licences consommables", value: "consumable_licences"},
+                {name: "Crédits monétaires", value: "credits"}
+            ];
             $scope.formatCheck = [];
             $scope.allSelected = $scope.allProAndGenSelected = false;
             await $scope.getTypesCampaign();
@@ -51,13 +51,9 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.name_type = $scope.campaign_type.name_type;
             $scope.campaign.catalog = $scope.campaign_type.catalog;
             $scope.structureGroups.all.forEach(structure => {
-                if ($scope.campaign_type.structure.find(item => {
+                structure.selected = !!$scope.campaign_type.structure.find(item => {
                     return item.libelle == structure.name
-                })) {
-                    structure.selected = true;
-                } else {
-                    structure.selected = false;
-                }
+                });
             });
             $scope.allSelected = $scope.allProAndGenSelected = false;
             Utils.safeApply($scope);
