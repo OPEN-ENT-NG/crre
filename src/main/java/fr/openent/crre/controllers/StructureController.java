@@ -72,6 +72,9 @@ public class StructureController extends ControllerHelper {
                 JsonArray structures = event.right().getValue();
                 renderJson(request, new JsonObject().put("message", "Ok"), 200);
                 insertManualGroups(groups, structures, part);
+            } else {
+                log.error("Failed to getStructuresWithoutRight : ", event.left().getValue());
+                renderError(request);
             }
         });
     }
@@ -130,7 +133,6 @@ public class StructureController extends ControllerHelper {
             if (event.succeeded()) {
                 log.info("ok part " + part);
             } else {
-                insertManualGroups(groups, structures, part + 1);
                 log.error("ko part " + part);
             }
             // Check if final part else continue script
