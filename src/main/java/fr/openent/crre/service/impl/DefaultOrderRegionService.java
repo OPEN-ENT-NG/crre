@@ -51,6 +51,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().prepared(queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
     }
 
+    @Override
     public void createProject(String title, Handler<Either<String, JsonObject>> handler) {
         JsonArray params;
 
@@ -62,7 +63,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
         params.add(title);
 
-        Sql.getInstance().prepared(queryProjectEquipment, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(queryProjectEquipment, params, new DeliveryOptions().setSendTimeout(600000L),
+                SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void getAllIdsStatus(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT id FROM " + Crre.crreSchema + ".status;";
+
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
 
@@ -265,7 +274,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
-                " comment, id_order_client_equipment, id_project, reassort, id_statut, total_free) VALUES ";
+                " comment, id_order_client_equipment, id_project, reassort, id_status, total_free) VALUES ";
 
         for (int i = 0; i < orderRegions.size(); i++) {
             if (orderRegions.getJsonObject(i).containsKey("id_project")) {
@@ -293,7 +302,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 params.add(order.getInteger("id_order_client_equipment"))
                         .add(order.getLong("id_project"))
                         .add(order.getBoolean("reassort"))
-                        .add(order.getInteger("id_statut"))
+                        .add(order.getInteger("id_status"))
                         .add(order.getInteger("total_free", null));
             }
         }

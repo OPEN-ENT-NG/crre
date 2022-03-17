@@ -54,13 +54,13 @@ public class updateStatus extends ControllerHelper implements Handler<Long> {
 
     private void updateCommand(Scanner sc, int part, final Handler<Either<String, JsonObject>> eitherHandler) {
         JsonArray ordersRegion = new JsonArray();
-        int total = part * 1600;
+        int total = part * 1000;
         if (!sc.hasNextLine()) {
             eitherHandler.handle(new Either.Right<>(new JsonObject().put("message", "update LDE status finished with success")));
             log.info("update LDE status finished with success");
         } else {
             log.info("Processing LDE status part " + part);
-            while (sc.hasNextLine() && total < 1600 * part + 1600) {
+            while (sc.hasNextLine() && total < 1000 * part + 1000) {
                 total++;
                 String userLine = sc.nextLine();
                 String[] values = userLine.split(Pattern.quote("|"));

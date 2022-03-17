@@ -16,6 +16,8 @@ public interface OrderRegionService {
 
     void createProject (String title,  Handler<Either<String, JsonObject>> handler);
 
+    void getAllIdsStatus(Handler<Either<String, JsonArray>> handler);
+
     void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);

@@ -509,7 +509,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.updateAllStatus = async () => {
-            let {data} = await http.get('/crre/region/orders/old/status');
+            await http.get('/crre/region/orders/old/status');
         };
 
         $scope.getColor = (id) => {
@@ -555,6 +555,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 case 35:
                     color = "WAITING_FOR_ACCEPTANCE";
                     break;
+                case 52:
+                    color = "WAITING_FOR_ACCEPTANCE";
+                    break;
                 case 55:
                     color = "SENT";
                     break;
@@ -566,6 +569,18 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     break;
                 case 59:
                     color = "REJECTED";
+                    break;
+                case 70:
+                    color = "SENT";
+                    break;
+                case 71:
+                    color = "SENT";
+                    break;
+                case 72:
+                    color = "SENT";
+                    break;
+                case 1000:
+                    color = "GRAY";
                     break;
             }
             return color;

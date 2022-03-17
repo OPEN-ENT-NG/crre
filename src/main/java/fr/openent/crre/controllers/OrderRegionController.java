@@ -195,18 +195,30 @@ public class OrderRegionController extends BaseController {
                 search_All(getEquipmentEvent -> {
                     if (getEquipmentEvent.isRight()) {
                         ok(request);
-                        // Store all orders by key (uai + date) and value (id project) No duplicate
-                        HashMap<String, Integer> projetMap = new HashMap<>();
-                        historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
-                                getEquipmentEvent.right().getValue(), projetMap, part);
+                        orderRegionService.getAllIdsStatus(event -> {
+                            if (event.isRight()) {
+                                JsonArray result = event.right().getValue();
+                                List<Integer> idsStatus = new ArrayList<>();
+                                for(Object id:result){
+                                    idsStatus.add(((JsonObject) id).getInteger("id"));
+                                }
+                                // Store all orders by key (uai + date) and value (id project) No duplicate
+                                HashMap<String, Integer> projetMap = new HashMap<>();
+                                historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
+                                        getEquipmentEvent.right().getValue(), projetMap,idsStatus, part);
+                            }else{
+                                badRequest(request);
+                                log.error("getAllIdsStatus failed",event.left().getValue());
+                            }
+                        });
                     } else {
                         badRequest(request);
-                        log.error("search_All failed");
+                        log.error("search_All failed",getEquipmentEvent.left().getValue());
                     }
                 });
             } else {
                 badRequest(request);
-                log.error("getLastProject failed");
+                log.error("getLastProject failed",lastProject.left().getValue());
             }
         });
     }
@@ -258,7 +270,8 @@ public class OrderRegionController extends BaseController {
         return sc;
     }
 
-    private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments, HashMap<String, Integer> projetMap, int part) {
+    private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments,
+                                 HashMap<String, Integer> projetMap, List<Integer> idsStatus, int part) {
         JsonArray ordersRegion = new JsonArray();
         JsonArray uais = new JsonArray();
         List<Future> futures = new ArrayList<>();
@@ -266,12 +279,12 @@ public class OrderRegionController extends BaseController {
 
         int project_id = lastProjectId; // Id of the last project created
         int project_size = 0; // Size of project to create dynamically project in db
-        int total = part * 1600;
+        int total = part * 1000;
         if (!sc.hasNextLine()) {
             log.info("add LDE orders finished with success");
         } else {
             log.info("Processing LDE orders part " + part);
-            while (sc.hasNextLine() && total < 1600 * part + 1600) {
+            while (sc.hasNextLine() && total < 1000 * part + 1000) {
                 total++;
                 String userLine = sc.nextLine();
                 String[] values = userLine.split(Pattern.quote("|"));
@@ -316,7 +329,11 @@ public class OrderRegionController extends BaseController {
                 order.put("unitedPriceTTC", Double.parseDouble(values[9].replace(",", ".")));
                 order.put("reassort", !values[14].isEmpty());
                 order.put("id_project", currentProject);
-                order.put("id_statut", Integer.parseInt(values[15]));
+                if(!values[21].isEmpty() && idsStatus.contains(Integer.parseInt(values[21]))){
+                    order.put("id_status", Integer.parseInt(values[21]));
+                }else{
+                    order.put("id_status", 1000);
+                }
                 ordersRegion.add(order);
                 uais.add(values[11]);
             }
@@ -370,7 +387,7 @@ public class OrderRegionController extends BaseController {
                             try {
                                 orderRegionService.insertOldOrders(ordersRegion, true, event1 -> {
                                     if (event1.isRight()) {
-                                        historicCommand(request, sc, finalProject_id, equipments, projetMap, part + 1);
+                                        historicCommand(request, sc, finalProject_id, equipments, projetMap, idsStatus, part + 1);
                                     } else {
                                         badRequest(request);
                                         log.error("Insert old orders failed");
