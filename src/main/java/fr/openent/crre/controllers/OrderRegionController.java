@@ -834,8 +834,7 @@ public class OrderRegionController extends BaseController {
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
     }
 
-    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray
-            structures,
+    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray structures,
                                                       JsonArray orderRegion, JsonArray ordersClient, JsonArray ordersRegion) {
         int nbEtab = structures.size();
         String csvFile = generateExport(request, orderRegion);
@@ -843,37 +842,55 @@ public class OrderRegionController extends BaseController {
         Future<JsonObject> deleteOldOrderClientFuture = Future.future();
         Future<JsonObject> deleteOldOrderRegionFuture = Future.future();
 
-
-        try {
-            orderRegionService.insertOldClientOrders(orderRegion, response -> {
-                if (response.isRight()) {
-                    quoteService.insertQuote(user, nbEtab, csvFile, response2 -> {
-                        if (response2.isRight()) {
-                            String title = response2.right().getValue().getString("title");
-                            JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-                            attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
-                            String mail = this.mail.getString("address");
-                            emailSender.sendMail(request, mail, "Demande Libraire CRRE",
-                                    "", attachment, message -> {
-                                        if (!message.isRight()) {
-                                            log.error("[CRRE@OrderRegionController.generateLogs] An error has occurred " + message.left());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmm");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+        String title = "DD" + simpleDateFormat.format(new Date());
+        JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
+        attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
+        String mail = this.mail.getString("address");
+        emailSender.sendMail(request, mail, "Demande Libraire CRRE",
+                "", attachment, message -> {
+                    if (!message.isRight()) {
+                        log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
+                                "An error has occurred sendMail : " + message.left());
+                        renderError(request);
+                    } else {
+                        try {
+                            orderRegionService.insertOldClientOrders(orderRegion, response -> {
+                                if (response.isRight()) {
+                                    quoteService.insertQuote(user, nbEtab, csvFile, title, response2 -> {
+                                        if (response2.isRight()) {
+                                            renderJson(request, response2.right().getValue());
+                                        } else {
+                                            log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
+                                                    "An error has occurred insertQuote : " + message.left());
+                                            renderError(request);
                                         }
                                     });
-                            renderJson(request, response2.right().getValue());
+                                    try {
+                                        orderRegionService.deletedOrders(ordersClient, "order_client_equipment",
+                                                handlerJsonObject(deleteOldOrderClientFuture));
+                                        orderRegionService.deletedOrders(ordersRegion, "order-region-equipment",
+                                                handlerJsonObject(deleteOldOrderRegionFuture));
+                                        orderRegionService.insertOldOrders(orderRegion, false,
+                                                handlerJsonObject(insertOldOrdersFuture));
+                                    } catch (ParseException e) {
+                                        e.printStackTrace();
+                                        log.error(e.getMessage());
+                                    }
+                                } else {
+                                    log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
+                                            "An error has occurred insertOldClientOrders : " + message.left());
+                                    renderError(request);
+                                }
+                            });
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            log.error(e.getMessage());
                         }
-                    });
-                    orderRegionService.deletedOrders(ordersClient, "order_client_equipment", handlerJsonObject(deleteOldOrderClientFuture));
-                    orderRegionService.deletedOrders(ordersRegion, "order-region-equipment", handlerJsonObject(deleteOldOrderRegionFuture));
-                    try {
-                        orderRegionService.insertOldOrders(orderRegion, false, handlerJsonObject(insertOldOrdersFuture));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
                     }
-                }
-            });
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+                });
+
     }
 
     private void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray

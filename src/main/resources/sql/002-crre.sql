@@ -15,3 +15,5 @@ INSERT INTO crre.status(id, name) VALUES (71, 'Mis à disposition par l''éditeu
 INSERT INTO crre.status(id, name) VALUES (72, 'Livré');
 INSERT INTO crre.status(id, name) VALUES (52, 'En cours de vérification de l''offre');
 INSERT INTO crre.status(id, name) VALUES (1000, 'Statut non reconnu');
+
+ALTER TABLE crre.quote ALTER creation_date SET DEFAULT now();

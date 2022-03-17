@@ -51,9 +51,9 @@ export const campaignsListController = ng.controller('campaignsListController',
 
         const calculateLicence = async () => {
            if($scope.student.pro) {
-               $scope.total_licence = ($scope.student.Seconde + $scope.student.Premiere + $scope.student.Terminale) * 3;
+               $scope.total_licence = ($scope.student.seconde + $scope.student.premiere + $scope.student.terminale) * 3;
            } else {
-               $scope.total_licence = $scope.student.Seconde * 9 + $scope.student.Premiere * 8 + $scope.student.Terminale * 7;
+               $scope.total_licence = $scope.student.seconde * 9 + $scope.student.premiere * 8 + $scope.student.terminale * 7;
            }
         };
 

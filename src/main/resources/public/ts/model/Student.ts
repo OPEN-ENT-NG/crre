@@ -8,9 +8,12 @@ export class Student {
     premiere: number;
     terminale: number;
     total: number;
+    total_april: number;
     pro: boolean;
 
-    constructor() {}
+    constructor() {
+        this.seconde = this.premiere = this.terminale = this.total = this.total_april = 0;
+    }
 
     async updateAmount(id_structure: string, seconde: number, premiere: number, terminale: number, pro: boolean, previousTotal: number):Promise<void>{
         try {

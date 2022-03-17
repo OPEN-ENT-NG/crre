@@ -11,7 +11,7 @@ public interface QuoteService {
 
     void getQuote(Integer id, Handler<Either<String, JsonObject>> defaultResponseHandler);
 
-    void insertQuote(UserInfos user, Integer nbEtab, String csvFile, Handler<Either<String, JsonObject>> handler);
+    void insertQuote(UserInfos user, Integer nbEtab, String csvFile, String title, Handler<Either<String, JsonObject>> handler);
 
     void search(String query, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler);
 }

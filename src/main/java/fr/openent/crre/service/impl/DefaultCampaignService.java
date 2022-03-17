@@ -107,7 +107,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     private void getCampaignsLicences(String idStructure, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT \"Seconde\", \"Premiere\", \"Terminale\", pro, l.* " +
                 "FROM " + Crre.crreSchema + ".licences l " +
-                "JOIN " + Crre.crreSchema + ".students s ON (s.id_structure = l.id_structure) "+
+                "FULL JOIN " + Crre.crreSchema + ".students s ON (s.id_structure = l.id_structure) "+
                 "WHERE l.id_structure = ?";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure), SqlResult.validResultHandler(handler));
@@ -180,6 +180,13 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 JsonObject object, campaign;
                 for (int i = 0; i < campaigns.size(); i++) {
                     campaign = campaigns.getJsonObject(i);
+                    campaign.put("nb_licences_total", 0);
+                    campaign.put("nb_licences_available", 0);
+                    campaign.put("nb_licences_consumable_total", 0);
+                    campaign.put("nb_licences_consumable_available", 0);
+                    campaign.put("nb_licences_2de", 0);
+                    campaign.put("nb_licences_1ere", 0);
+                    campaign.put("nb_licences_Tale", 0);
                     if(purses.size() > 0) {
                         object = purses.getJsonObject(0);
                         try {

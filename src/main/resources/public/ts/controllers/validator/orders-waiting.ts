@@ -129,8 +129,13 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.remainAvailable = () => {
-                return $scope.displayedOrders.all.length == 0 || $scope.campaign.nb_licences_available + $scope.campaign.nb_licences_consumable_available - $scope.displayedOrders.calculTotalAmount() < 0 ||
-                    ($scope.campaign.purse_amount != undefined && $scope.campaign.purse_amount - $scope.displayedOrders.calculTotalPriceTTC() < 0);
+            let nbLicences = $scope.campaign.nb_licences_available ? $scope.campaign.nb_licences_available : 0;
+            nbLicences += $scope.campaign.nb_licences_consumable_available ? $scope.campaign.nb_licences_consumable_available : 0
+
+            let purseAmount = $scope.campaign.purse_amount ? $scope.campaign.purse_amount : 0
+
+            return $scope.displayedOrders.all.length == 0 || nbLicences - $scope.displayedOrders.calculTotalAmount() < 0 ||
+                purseAmount - $scope.displayedOrders.calculTotalPriceTTC() < 0;
         };
 
         function updateOrders(totalPrice: number, totalAmount: number, totalAmountConsumable: number, ordersToRemove: OrdersClient, numberOrdered : number) {
@@ -232,8 +237,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.openLightboxRefuseOrder = () => {
-                template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
-                $scope.display.lightbox.refuseOrder = true;
+            template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
+            $scope.display.lightbox.refuseOrder = true;
         };
 
         $scope.exportCSV = () => {

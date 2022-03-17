@@ -44,14 +44,11 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
     }
 
     @Override
-    public void insertQuote(UserInfos user, Integer nbEtab, String csvFile, Handler<Either<String, JsonObject>> handler) {
+    public void insertQuote(UserInfos user, Integer nbEtab, String csvFile, String title, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
         String query = "INSERT INTO " + Crre.crreSchema + ".quote(title, owner_name, owner_id, nb_structures, attachment) " +
                        "VALUES (?, ?, ?, ?, ?) RETURNING title;";
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmm");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
-        String dateStr = "DD" + simpleDateFormat.format(new Date());
-        params.add(dateStr)
+        params.add(title)
               .add(user.getUsername())
               .add(user.getUserId())
               .add(nbEtab)

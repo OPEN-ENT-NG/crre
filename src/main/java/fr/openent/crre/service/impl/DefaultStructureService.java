@@ -291,7 +291,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = " SELECT \"Seconde\", \"Premiere\", \"Terminale\", \"Seconde\" + \"Premiere\" + \"Terminale\" as total, " +
+        String query = " SELECT \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, " +
+                "\"Seconde\" + \"Premiere\" + \"Terminale\" as total, " +
                 "total_april, pro " +
                 "FROM " + Crre.crreSchema + ".students " +
                 "WHERE id_structure = ?";
