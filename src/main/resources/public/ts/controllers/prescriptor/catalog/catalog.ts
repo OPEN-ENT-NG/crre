@@ -45,8 +45,6 @@ export const catalogController = ng.controller('catalogController',
 
             if (!!$scope.campaign.catalog && $scope.filters.all.length == 0) {
                 $scope.filters = new Filters();
-                let catalogFilter = new Filter();
-                catalogFilter.name = "_index";
                 // If catalog contain consommable filter
                 if ($scope.campaign.catalog.split("|").includes("consommable")) {
                     let consommableFilter = new Filter();
@@ -60,8 +58,12 @@ export const catalogController = ng.controller('catalogController',
                     proFilter.value = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général";
                     $scope.filters.all.push(proFilter);
                 }
-                catalogFilter.value = $scope.campaign.catalog.split("|")[0];
-                $scope.filters.all.push(catalogFilter);
+                if (["articlenumerique","articlepapier"].indexOf($scope.campaign.catalog.split("|")[0]) != -1) {
+                    let catalogFilter = new Filter();
+                    catalogFilter.name = "_index";
+                    catalogFilter.value = $scope.campaign.catalog.split("|")[0];
+                    $scope.filters.all.push(catalogFilter);
+                }
             } else {
                 $scope.correlationFilterES.keys.forEach(key => {
                     let arrayFilter = [];
