@@ -17,3 +17,12 @@ INSERT INTO crre.status(id, name) VALUES (52, 'En cours de vérification de l''o
 INSERT INTO crre.status(id, name) VALUES (1000, 'Statut non reconnu');
 
 ALTER TABLE crre.quote ALTER creation_date SET DEFAULT now();
+
+CREATE OR REPLACE FUNCTION crre.update_old_end_date() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE crre.campaign
+    SET accessible = false
+    WHERE end_date <  NOW() AND automatic_close = true AND accessible = true;
+    RETURN NEW ;
+END;
+$$ LANGUAGE 'plpgsql';
