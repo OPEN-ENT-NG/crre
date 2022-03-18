@@ -115,8 +115,9 @@ public class Campaign extends Model {
 
     public void setId_type(Integer id_type) { this.id_type = id_type; }
 
-    public Campaign(Integer id, String name, String description, String image, Boolean accessible, Boolean purse_enabled, Boolean priority_enabled, String priority_field,
-                    String catalog, Boolean reassort, String start_date, String end_date, Boolean automatic_close) {
+    public Campaign(Integer id, String name, String description, String image, Boolean accessible, Boolean purse_enabled,
+                    Boolean priority_enabled, String priority_field, String catalog, Boolean reassort, String start_date,
+                    String end_date, Boolean automatic_close, String use_credit, Integer id_type) {
         this.id = id;
         this.name = name;
         this.description = description;

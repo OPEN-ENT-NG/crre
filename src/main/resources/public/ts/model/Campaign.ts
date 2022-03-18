@@ -42,7 +42,7 @@ export class Campaign implements Selectable  {
         return {
             name: this.name,
             description: this.description || null,
-            accessible: this.accessible || false,
+            accessible: this.accessible || (moment(this.start_date).diff(moment()) <= 0 && moment(this.end_date).diff(moment()) >= 0),
             groups: this.groups.map((group) => {
                 return group.toJson();
             }),
