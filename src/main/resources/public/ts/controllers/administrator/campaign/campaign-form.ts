@@ -169,13 +169,13 @@ export const campaignFormController = ng.controller('campaignFormController',
                 if (new RegExp('professionnels').test(group.name)) {
                     $scope.structureGroups.all.find(s => s.name === "Établissements professionnels").selected = true;
                 }
-                if (new RegExp('Mixte').test(group.name)) {
+                if (new RegExp('Mixtes').test(group.name)) {
                     $scope.structureGroups.all.find(s => s.name === "Mixtes").selected = true;
                 }
                 if (new RegExp('Papier').test(group.name)) {
                     $scope.structureGroups.all.find(s => s.name === "Papier").selected = true;
                 }
-                if (new RegExp('Numérique').test(group.name)) {
+                if (new RegExp('Numériques').test(group.name)) {
                     $scope.structureGroups.all.find(s => s.name === "Numériques").selected = true;
                 }
             });
