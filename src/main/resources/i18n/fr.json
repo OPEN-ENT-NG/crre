@@ -210,7 +210,7 @@
   "crre.take.order.library": "Générer demande libraire",
   "crre.order.management": "Gestion des commandes",
   "crre.basket.deleted.article": "est supprimé de votre panier",
-  "crre.basket.deleted.articles": "sont supprimé de votre panier",
+  "crre.basket.deleted.articles": "sont supprimés de votre panier",
   "crre.basket.added.articles": "sont ajoutés à votre panier",
   "crre.basket.added.articles.error": "Une erreur est survenue dans l'ajout de ressource(s) dans votre panier",
   "crre.basket.added.article": "est ajouté à votre panier",

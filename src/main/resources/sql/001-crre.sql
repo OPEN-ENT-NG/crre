@@ -415,8 +415,8 @@ INSERT INTO crre.consumable_formation VALUES (28, 'PREPA.DIVERSE POST-BAC : 3EME
 INSERT INTO crre.consumable_formation VALUES (28, '3EME');
 
 INSERT INTO crre.structure_group VALUES (1, 'Papier', 'Regroupement des lycées papiers');
-INSERT INTO crre.structure_group VALUES (2, 'Numérique', 'Regroupement des lycées numériques');
-INSERT INTO crre.structure_group VALUES (3, 'Mixte', 'Regroupement des lycées mixtes');
+INSERT INTO crre.structure_group VALUES (2, 'Numériques', 'Regroupement des lycées numériques');
+INSERT INTO crre.structure_group VALUES (3, 'Mixtes', 'Regroupement des lycées mixtes');
 
 INSERT INTO crre.rel_group_structure VALUES ('1ebd15cf-dd2c-4f7a-a167-ebece5b699ba', 1);
 INSERT INTO crre.rel_group_structure VALUES ('08584019-8611-43fc-a627-1720b109f227', 1);

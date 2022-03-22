@@ -18,7 +18,7 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Catalogue papier LGT", value: "articlepapier|lgt"},
                 {name: "Catalogue consommable Pro", value: "consommable|pro"}];
             $scope.creditFormat = [
-                {name: "Aucun crédits", value: "none"},
+                {name: "Aucun crédit", value: "none"},
                 {name: "Licences manuels", value: "licences"},
                 {name: "Licences consommables", value: "consumable_licences"},
                 {name: "Crédits monétaires", value: "credits"}
@@ -170,13 +170,13 @@ export const campaignFormController = ng.controller('campaignFormController',
                     $scope.structureGroups.all.find(s => s.name === "Établissements professionnels").selected = true;
                 }
                 if (new RegExp('Mixte').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Mixte").selected = true;
+                    $scope.structureGroups.all.find(s => s.name === "Mixtes").selected = true;
                 }
                 if (new RegExp('Papier').test(group.name)) {
                     $scope.structureGroups.all.find(s => s.name === "Papier").selected = true;
                 }
                 if (new RegExp('Numérique').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Numérique").selected = true;
+                    $scope.structureGroups.all.find(s => s.name === "Numériques").selected = true;
                 }
             });
 
