@@ -154,7 +154,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     @Override
     public void insertStructures(JsonArray structures, Handler<Either<String, JsonArray>> handler) {
-        String query = "INSERT INTO " + Crre.crreSchema + ".students(id_structure) VALUES ";
+        String query = "INSERT INTO " + Crre.crreSchema + ".students (id_structure) VALUES ";
         JsonArray params = new JsonArray();
         for (int i = 0; i < structures.size(); i++) {
             String structure = structures.getString(i);
