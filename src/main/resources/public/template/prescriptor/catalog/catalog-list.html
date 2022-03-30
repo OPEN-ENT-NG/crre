@@ -5,6 +5,10 @@
             <i class="angle-double-left horizontal-spacing"></i>
             <i18n>back.to.catalog</i18n>
         </a>
+        <div ng-if="(isValidator() || isPrescriptor()) && !isAdministrator()" class="twelve font19 padding-bottom-20">
+            <span class="bold-font-weight"><i18n>CAMPAIGN</i18n> : </span>
+            <span>[[campaign.name]]</span>
+        </div>
         <div class="row twelve">
             <div class="search-bar">
                 <i class="search padding-20"></i>
@@ -58,7 +62,7 @@
                         <div class="image-container">
                             <img ng-src="[[equipment.urlcouverture]]"
                                  ng-show="equipment.urlcouverture" alt=""/>
-                            <img skin-src="/img/illustrations/pages-default.png"
+                            <img skin-src="/crre/public/img/pages-default.png"
                                  ng-show="!equipment.urlcouverture" alt=""/>
                         </div>
                         <div>
