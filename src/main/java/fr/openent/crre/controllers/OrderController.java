@@ -86,13 +86,25 @@ public class OrderController extends ControllerHelper {
                                     for (Object order : orders.right().getValue()) {
                                         JsonObject orderJson = ((JsonObject) order);
                                         String idEquipment = orderJson.getString("equipment_key");
-                                        for (Object equipment : equipments.right().getValue()) {
-                                            JsonObject equipmentJson = ((JsonObject) equipment);
-                                            if (idEquipment.equals(equipmentJson.getString("id"))) {
-                                                orderJson.put("price", getPriceTtc(equipmentJson).getDouble("priceTTC"));
-                                                orderJson.put("name", equipmentJson.getString("titre"));
-                                                orderJson.put("image", equipmentJson.getString("urlcouverture"));
+                                        JsonArray equipmentsArray = equipments.right().getValue();
+                                        if(equipmentsArray.size() > 0) {
+                                            for (int i = 0; i < equipmentsArray.size(); i++) {
+                                                JsonObject equipment = equipmentsArray.getJsonObject(i);
+                                                if (idEquipment.equals(equipment.getString("id"))) {
+                                                    orderJson.put("price", getPriceTtc(equipment).getDouble("priceTTC"));
+                                                    orderJson.put("name", equipment.getString("titre"));
+                                                    orderJson.put("image", equipment.getString("urlcouverture"));
+                                                    break;
+                                                } else if(equipmentsArray.size() - 1 == i) {
+                                                    orderJson.put("price", 0.0);
+                                                    orderJson.put("name", "Manuel introuvable dans le catalogue");
+                                                    orderJson.put("image", "/crre/public/img/pages-default.png");
+                                                }
                                             }
+                                        } else {
+                                            orderJson.put("price", 0.0);
+                                            orderJson.put("name", "Manuel introuvable dans le catalogue");
+                                            orderJson.put("image", "/crre/public/img/pages-default.png");
                                         }
                                     }
                                     final JsonArray finalResult = orders.right().getValue();

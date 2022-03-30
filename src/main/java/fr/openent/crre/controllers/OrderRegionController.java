@@ -200,26 +200,26 @@ public class OrderRegionController extends BaseController {
                             if (event.isRight()) {
                                 JsonArray result = event.right().getValue();
                                 List<Integer> idsStatus = new ArrayList<>();
-                                for(Object id:result){
+                                for (Object id : result) {
                                     idsStatus.add(((JsonObject) id).getInteger("id"));
                                 }
                                 // Store all orders by key (uai + date) and value (id project) No duplicate
                                 HashMap<String, Integer> projetMap = new HashMap<>();
                                 historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
-                                        getEquipmentEvent.right().getValue(), projetMap,idsStatus, part);
-                            }else{
+                                        getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
+                            } else {
                                 badRequest(request);
-                                log.error("getAllIdsStatus failed",event.left().getValue());
+                                log.error("getAllIdsStatus failed", event.left().getValue());
                             }
                         });
                     } else {
                         badRequest(request);
-                        log.error("search_All failed",getEquipmentEvent.left().getValue());
+                        log.error("search_All failed", getEquipmentEvent.left().getValue());
                     }
                 });
             } else {
                 badRequest(request);
-                log.error("getLastProject failed",lastProject.left().getValue());
+                log.error("getLastProject failed", lastProject.left().getValue());
             }
         });
     }
@@ -330,9 +330,9 @@ public class OrderRegionController extends BaseController {
                 order.put("unitedPriceTTC", Double.parseDouble(values[9].replace(",", ".")));
                 order.put("reassort", !values[14].isEmpty());
                 order.put("id_project", currentProject);
-                if(!values[21].isEmpty() && idsStatus.contains(Integer.parseInt(values[21]))){
+                if (!values[21].isEmpty() && idsStatus.contains(Integer.parseInt(values[21]))) {
                     order.put("id_status", Integer.parseInt(values[21]));
-                }else{
+                } else {
                     order.put("id_status", 1000);
                 }
                 ordersRegion.add(order);
@@ -606,19 +606,39 @@ public class OrderRegionController extends BaseController {
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                         orderJson.put("creation_date", creation_date);
                         String idEquipment = orderJson.getString("equipment_key");
-                        for (Object equipment : equipments.right().getValue()) {
-                            JsonObject equipmentJson = (JsonObject) equipment;
-                            if (idEquipment.equals(equipmentJson.getString("id"))) {
-                                JsonObject priceDetails = getPriceTtc(equipmentJson);
-                                double price = priceDetails.getDouble("priceTTC") * orderJson.getInteger("amount");
-                                orderJson.put("price", price);
-                                orderJson.put("name", equipmentJson.getString("titre"));
-                                orderJson.put("image", equipmentJson.getString("urlcouverture"));
-                                orderJson.put("ean", equipmentJson.getString("ean"));
-                                orderJson.put("_index", equipmentJson.getString("type"));
-                                orderJson.put("editeur", equipmentJson.getString("editeur"));
-                                orderJson.put("distributeur", equipmentJson.getString("distributeur"));
+                        JsonArray equipmentsArray = equipments.right().getValue();
+                        if (equipmentsArray.size() > 0) {
+                            for (int i = 0; i < equipmentsArray.size(); i++) {
+                                JsonObject equipment = equipmentsArray.getJsonObject(i);
+                                if (idEquipment.equals(equipment.getString("id"))) {
+                                    JsonObject priceDetails = getPriceTtc(equipment);
+                                    double price = priceDetails.getDouble("priceTTC") * orderJson.getInteger("amount");
+                                    orderJson.put("price", price);
+                                    orderJson.put("name", equipment.getString("titre"));
+                                    orderJson.put("image", equipment.getString("urlcouverture"));
+                                    orderJson.put("ean", equipment.getString("ean"));
+                                    orderJson.put("_index", equipment.getString("type"));
+                                    orderJson.put("editeur", equipment.getString("editeur"));
+                                    orderJson.put("distributeur", equipment.getString("distributeur"));
+                                    break;
+                                } else if (equipmentsArray.size() - 1 == i) {
+                                    orderJson.put("price", 0.0);
+                                    orderJson.put("name", "Manuel introuvable dans le catalogue");
+                                    orderJson.put("image", "/crre/public/img/pages-default.png");
+                                    orderJson.put("ean", idEquipment);
+                                    orderJson.put("_index", "NaN");
+                                    orderJson.put("editeur", "NaN");
+                                    orderJson.put("distributeur", "NaN");
+                                }
                             }
+                        } else {
+                            orderJson.put("price", 0.0);
+                            orderJson.put("name", "Manuel introuvable dans le catalogue");
+                            orderJson.put("image", "/crre/public/img/pages-default.png");
+                            orderJson.put("ean", idEquipment);
+                            orderJson.put("_index", "NaN");
+                            orderJson.put("editeur", "NaN");
+                            orderJson.put("distributeur", "NaN");
                         }
                     }
                 }

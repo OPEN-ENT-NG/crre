@@ -16,71 +16,70 @@ import http from 'axios';
 
 declare let window: any;
 
-export class OrderClient implements Order  {
+export class OrderClient implements Order {
 
     amount: number;
     campaign: Campaign;
     comment: string;
     creation_date: Date;
     equipment: Equipment;
-    equipment_key:number;
+    equipment_key: number;
     id?: number;
     id_structure: string;
-    inheritedClass:Order|OrderClient|OrderRegion;
-    order_parent?:any;
+    inheritedClass: Order | OrderClient | OrderRegion;
+    order_parent?: any;
     price: number;
-    selected:boolean;
+    selected: boolean;
     structure: Structure;
-    typeOrder:string;
-    total?:number;
-    action?:string;
-    cause_status?:string;
-    description:string;
+    typeOrder: string;
+    total?: number;
+    action?: string;
+    cause_status?: string;
+    description: string;
     files;
-    id_campaign:number;
-    id_order:number;
-    id_project:number;
-    id_basket:number;
-    name:string;
+    id_campaign: number;
+    id_order: number;
+    id_project: number;
+    id_basket: number;
+    name: string;
     name_structure: string;
     priceTotalTTC: number;
     structure_groups: any;
-    summary:string;
-    image:string;
-    status:string;
-    user_name:string;
-    user_id:string;
+    summary: string;
+    image: string;
+    status: string;
+    user_name: string;
+    user_id: string;
     grade: string;
     reassort: boolean;
     offers: Offers;
 
     constructor() {
-        this.typeOrder= "client";
+        this.typeOrder = "client";
     }
 
-    async updateAmount(amount: number):Promise<void>{
+    async updateAmount(amount: number): Promise<void> {
         try {
-            await http.put(`/crre/order/${this.id}/amount`,{ amount: amount });
+            await http.put(`/crre/order/${this.id}/amount`, {amount: amount});
             let equipment = new Equipment()
             await equipment.sync(this.equipment_key);
-            if(equipment.type === "articlenumerique") {
+            if (equipment.type === "articlenumerique") {
                 this.offers = Utils.computeOffer(this, equipment);
             }
-        }
-        catch (e) {
+        } catch (e) {
             toasts.warning('crre.order.getMine.err');
         }
     }
 
-    async updateReassort():Promise<void>{
+    async updateReassort(): Promise<void> {
         try {
-            await http.put(`/crre/order/${this.id}/reassort`,{ reassort: this.reassort });
-        }
-        catch (e) {
+            await http.put(`/crre/order/${this.id}/reassort`, {reassort: this.reassort});
+        } catch (e) {
             toasts.warning('crre.order.getMine.err');
         }
     }
 }
+
 export class OrdersClient extends Selection<OrderClient> {
 
     dateGeneration?: Date;
@@ -100,7 +99,7 @@ export class OrdersClient extends Selection<OrderClient> {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const {data} = await http.get(`/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}&q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
-            if(newOrderClient.length>0) {
+            if (newOrderClient.length > 0) {
                 await this.reformatOrders(newOrderClient);
                 return true;
             }
@@ -110,7 +109,7 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?: number){
+    async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?: number) {
         try {
             let params = (id_campaign) ? `&id=${id_campaign}` : ``;
             params += (page) ? `&page=${page}` : ``;
@@ -118,12 +117,12 @@ export class OrdersClient extends Selection<OrderClient> {
                 params += "&" + f.name + "=" + f.value;
             });
             const {startDate, endDate} = Utils.formatDate(start, end);
-            if(!Utils.format.test(word)) {
+            if (!Utils.format.test(word)) {
                 let url = `/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}${params}`;
                 url += (!!word) ? `&q=${word}` : ``;
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
-                if(newOrderClient.length>0) {
+                if (newOrderClient.length > 0) {
                     await this.reformatOrders(newOrderClient);
                     return true;
                 }
@@ -149,27 +148,34 @@ export class OrdersClient extends Selection<OrderClient> {
 
     private reformatOrder(equipments, order) {
         let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
-        order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-        order.price = Utils.calculatePriceTTC(equipment, 2);
-        order.name = equipment.titre;
-        order.image = equipment.urlcouverture.replace("cns-edu.org","www.cns-edu.com");
-        if (equipment.type === "articlenumerique") {
-            order.offers = Utils.computeOffer(order, equipment);
+        if (equipment != undefined) {
+            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
+            order.price = Utils.calculatePriceTTC(equipment, 2);
+            order.name = equipment.titre;
+            order.image = equipment.urlcouverture.replace("cns-edu.org", "www.cns-edu.com");
+            if (equipment.type === "articlenumerique") {
+                order.offers = Utils.computeOffer(order, equipment);
+            }
+        } else {
+            order.priceTotalTTC = 0.0;
+            order.price = 0.0;
+            order.name = "Manuel introuvable dans le catalogue";
+            order.image = "/crre/public/img/pages-default.png";
         }
     }
 
-    async sync (status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number,
-                idStructure?: string, ordersId?, page?:number, old = false):Promise<boolean> {
+    async sync(status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number,
+               idStructure?: string, ordersId?, page?: number, old = false): Promise<boolean> {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             if (idCampaign && idStructure && ordersId) {
                 return await this.getSpecificOrders(ordersId, old, idCampaign, idStructure, startDate, endDate);
             } else {
                 let pageParams = (page) ? `&page=${page}` : ``;
-                const { data } = await http.get(  `/crre/orders?startDate=${startDate}&endDate=${endDate}&status=${status}${pageParams}`);
+                const {data} = await http.get(`/crre/orders?startDate=${startDate}&endDate=${endDate}&status=${status}${pageParams}`);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
-                if(newOrderClient.length>0) {
-                    if(!old) {
+                if (newOrderClient.length > 0) {
+                    if (!old) {
                         let equipments = new Equipments();
                         await equipments.getEquipments(newOrderClient);
                         for (let order of newOrderClient) {
@@ -179,7 +185,7 @@ export class OrdersClient extends Selection<OrderClient> {
                             order.structure = (structures && structures.length > 0) ?
                                 OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                             order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
-                            order.campaign = Mix.castAs(Campaign,  JSON.parse(order.campaign.toString()));
+                            order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
                             order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
                             order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
                         }
@@ -202,26 +208,28 @@ export class OrdersClient extends Selection<OrderClient> {
         const {data} = await http.get(url);
         let newOrderClient = Mix.castArrayAs(OrderClient, data);
         for (let order of newOrderClient) {
-            order.price = parseFloat(order.price.toString());
-            if(!old) {
-                let equipments = new Equipments();
-                await equipments.getEquipments(newOrderClient);
-                let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
-                if (equipment.type === "articlenumerique") {
-                    order.offers = Utils.computeOffer(order, equipment);
-                }
-            } else {
-                if(order.type === "articlenumerique") {
-                    let newOffers = JSON.parse(order.offers);
-                    let offers = new Offers();
-                    for (let newOffer of newOffers) {
-                        let offer = new Offer();
-                        offer.name = newOffer.titre;
-                        offer.value = newOffer.amount;
-                        offer.id = newOffer.id;
-                        offers.all.push(offer);
+            if (order.price !== 0.0) {
+                order.price = parseFloat(order.price.toString());
+                if (!old) {
+                    let equipments = new Equipments();
+                    await equipments.getEquipments(newOrderClient);
+                    let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+                    if (equipment.type === "articlenumerique") {
+                        order.offers = Utils.computeOffer(order, equipment);
                     }
-                    order.offers = offers;
+                } else {
+                    if (order.type === "articlenumerique") {
+                        let newOffers = JSON.parse(order.offers);
+                        let offers = new Offers();
+                        for (let newOffer of newOffers) {
+                            let offer = new Offer();
+                            offer.name = newOffer.titre;
+                            offer.value = newOffer.amount;
+                            offer.id = newOffer.id;
+                            offers.all.push(offer);
+                        }
+                        order.offers = offers;
+                    }
                 }
             }
         }
@@ -229,12 +237,12 @@ export class OrdersClient extends Selection<OrderClient> {
         return true;
     }
 
-    async getUsers (status: string):Promise<boolean> {
-        const { data } = await http.get(  `/crre/orders/users?status=${status}`);
+    async getUsers(status: string): Promise<boolean> {
+        const {data} = await http.get(`/crre/orders/users?status=${status}`);
         return data;
     }
 
-    getEquipments (orders):Promise<any>{
+    getEquipments(orders): Promise<any> {
         let params = '';
         orders.map((order) => {
             params += `id=${order.equipment_key}&`;
@@ -243,51 +251,51 @@ export class OrdersClient extends Selection<OrderClient> {
         return http.get(`/crre/equipments?${params}`);
     }
 
-    toJson (status: string):any {
+    toJson(status: string): any {
         const ids = _.pluck(this.all, 'id');
         return {
             ids,
-            status : status,
+            status: status,
             dateGeneration: moment(this.dateGeneration).format('DD/MM/YYYY') || null,
-            userId : model.me.userId
+            userId: model.me.userId
         };
     }
 
-    async updateStatus(status: string):Promise<any> {
+    async updateStatus(status: string): Promise<any> {
         try {
             let statusURL = status;
             if (status === "IN PROGRESS") {
                 statusURL = "inprogress";
             }
             let config = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
-            return await  http.put(`/crre/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
+            return await http.put(`/crre/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
         } catch (e) {
             toasts.warning('crre.order.update.err');
             throw e;
         }
     }
 
-    calculTotalAmount ():number {
+    calculTotalAmount(): number {
         let total = 0;
         this.all.map((order) => {
-            if(order.campaign.use_credit == "licences" || order.campaign.use_credit == "consumable_licences"){
+            if (order.campaign.use_credit == "licences" || order.campaign.use_credit == "consumable_licences") {
                 total += order.amount;
             }
         });
         return total;
     }
 
-    calculTotalPriceTTC ():number {
+    calculTotalPriceTTC(): number {
         let total = 0;
         this.all.map((order) => {
-            if(order.campaign.use_credit == "credits") {
+            if (order.campaign.use_credit == "credits") {
                 total += order.price * order.amount;
             }
         });
         return total;
     }
 
-    exportCSV(old:boolean) {
+    exportCSV(old: boolean) {
         let params_id_order = Utils.formatKeyToParameter(this.all, 'id');
         let equipments_key = this.all.map((value) => value.equipment_key)
             .filter((value, index, _arr) => _arr.indexOf(value) == index);

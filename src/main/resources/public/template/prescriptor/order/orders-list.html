@@ -64,11 +64,11 @@
             </td>
             <td>
                 <div class="smallTabElem center centerInputAmount">
-                    <i class="moins" ng-if="order.status !== 'IN PROGRESS' && !filter.isOld" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
+                    <i class="moins" ng-if="(order.status !== 'IN PROGRESS' && !filter.isOld) && order.price !== 0.00" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
                     <input type="number" class="quantity-input numberWithoutArrow" step="1" min="0" ng-keypress="avoidDecimals($event)"
-                           ng-disabled="order.status === 'IN PROGRESS' || filter.isOld" ng-change="updateAmount(basket, order, order.amount)"
+                           ng-disabled="order.status === 'IN PROGRESS' || filter.isOld || order.price === 0.00" ng-change="updateAmount(basket, order, order.amount)"
                            ng-model="order.amount"/>
-                    <i class="plus_medium" ng-if="order.status !== 'IN PROGRESS' && !filter.isOld" ng-click="updateAmount(basket, order, order.amount + 1)"></i>
+                    <i class="plus_medium" ng-if="(order.status !== 'IN PROGRESS' && !filter.isOld) && order.price !== 0.00" ng-click="updateAmount(basket, order, order.amount + 1)"></i>
                 </div>
             </td>
             <td>

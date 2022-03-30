@@ -36,6 +36,7 @@ public class BasketController extends ControllerHelper {
         super();
         this.basketService = new DefaultBasketService(Crre.crreSchema, "basket");
     }
+
     @Get("/basket/:idCampaign/:idStructure")
     @ApiDoc("List baskets of a campaign and a structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -50,10 +51,10 @@ public class BasketController extends ControllerHelper {
                         ? request.params().get("idStructure")
                         : null;
                 basketService.listBasket(idCampaign, idStructure, user, baskets -> {
-                    if(baskets.isRight()) {
+                    if (baskets.isRight()) {
                         JsonArray basketsResult = new JsonArray();
                         List<String> listIdsEquipment = new ArrayList<>();
-                        for(Object bask : baskets.right().getValue()){
+                        for (Object bask : baskets.right().getValue()) {
                             JsonObject basket = (JsonObject) bask;
                             basketsResult.add(basket);
                             listIdsEquipment.add(basket.getString("id_equipment"));
@@ -63,11 +64,33 @@ public class BasketController extends ControllerHelper {
                                 for (Object bask : basketsResult) {
                                     JsonObject basket = (JsonObject) bask;
                                     String idEquipment = basket.getString("id_equipment");
-                                    for (Object equipment : equipments.right().getValue()) {
-                                        JsonObject equipmentJson = (JsonObject) equipment;
-                                        if (idEquipment.equals(equipmentJson.getString("id"))) {
-                                            basket.put("equipment",equipment);
+                                    JsonArray equipmentsArray = equipments.right().getValue();
+                                    if (equipmentsArray.size() > 0) {
+                                        for (int i = 0; i < equipmentsArray.size(); i++) {
+                                            JsonObject equipment = equipmentsArray.getJsonObject(i);
+                                            if (idEquipment.equals(equipment.getString("id"))) {
+                                                basket.put("equipment", equipment);
+                                                break;
+                                            } else if(equipmentsArray.size() - 1 == i) {
+                                                JsonObject equipmentDefault = new JsonObject();
+                                                equipmentDefault.put("urlcouverture", "/crre/public/img/pages-default.png");
+                                                equipmentDefault.put("disponibilite", new JsonArray().add(new JsonObject().put("valeur", "Non disponible à long terme")));
+                                                equipmentDefault.put("titre", "Manuel introuvable dans le catalogue");
+                                                equipmentDefault.put("ean", idEquipment);
+                                                equipmentDefault.put("inCatalog", false);
+                                                equipmentDefault.put("price", 0.0);
+                                                basket.put("equipment", equipmentDefault);
+                                            }
                                         }
+                                    } else {
+                                        JsonObject equipmentDefault = new JsonObject();
+                                        equipmentDefault.put("urlcouverture", "/crre/public/img/pages-default.png");
+                                        equipmentDefault.put("disponibilite", new JsonArray().add(new JsonObject().put("valeur", "Non disponible à long terme")));
+                                        equipmentDefault.put("titre", "Manuel introuvable dans le catalogue");
+                                        equipmentDefault.put("ean", idEquipment);
+                                        equipmentDefault.put("inCatalog", false);
+                                        equipmentDefault.put("price", 0.0);
+                                        basket.put("equipment", equipmentDefault);
                                     }
                                 }
                                 renderJson(request, basketsResult);
@@ -121,8 +144,8 @@ public class BasketController extends ControllerHelper {
                     String endDate = request.getParam("endDate");
                     Boolean old = Boolean.valueOf(request.getParam("old"));
                     plainTextSearchName(query, equipments -> basketService.search(query, user,
-                                equipments.right().getValue(), id_campaign, startDate, endDate, page, old,
-                                arrayResponseHandler(request)));
+                            equipments.right().getValue(), id_campaign, startDate, endDate, page, old,
+                            arrayResponseHandler(request)));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
@@ -134,12 +157,12 @@ public class BasketController extends ControllerHelper {
 
     @Post("/basket/campaign/:idCampaign")
     @ApiDoc("Create a basket item")
-    @SecuredAction(value =  "", type = ActionType.RESOURCE)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void create(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, pathPrefix + "basket",
-                    basket -> basketService.create(basket, user, defaultResponseHandler(request) ));
+                    basket -> basketService.create(basket, user, defaultResponseHandler(request)));
 
         });
     }
@@ -153,7 +176,7 @@ public class BasketController extends ControllerHelper {
             Integer idBasket = request.params().contains("idBasket")
                     ? parseInt(request.params().get("idBasket"))
                     : null;
-            basketService.delete( idBasket, defaultResponseHandler(request));
+            basketService.delete(idBasket, defaultResponseHandler(request));
 
         } catch (ClassCastException e) {
             log.error("An error occurred when casting basket id", e);
@@ -166,11 +189,11 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Update a basket's amount")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorRight.class)
-    public void updateAmount(final HttpServerRequest  request){
+    public void updateAmount(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
             try {
                 Integer id = parseInt(request.params().get("idBasket"));
-                Integer amount = basket.getInteger("amount") ;
+                Integer amount = basket.getInteger("amount");
                 basketService.updateAmount(id, amount, defaultResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred when casting basket id", e);
@@ -182,7 +205,7 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Update a basket's comment")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessOrderCommentRight.class)
-    public void updateComment(final HttpServerRequest request){
+    public void updateComment(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, basket -> {
             if (!basket.containsKey("comment")) {
                 badRequest(request);
@@ -202,7 +225,7 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Update a basket's reassort")
     @SecuredAction(Crre.REASSORT_RIGHT)
     @ResourceFilter(AccessOrderReassortRight.class)
-        public void updateReassort(final HttpServerRequest request){
+    public void updateReassort(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, basket -> {
             if (!basket.containsKey("reassort")) {
                 badRequest(request);
@@ -222,8 +245,8 @@ public class BasketController extends ControllerHelper {
     @ApiDoc("Create an order list from basket")
     @SecuredAction(Crre.PRESCRIPTOR_RIGHT)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
-    public void takeOrder(final HttpServerRequest  request){
-        RequestUtils.bodyToJson( request, pathPrefix + "basketToOrder", object -> {
+    public void takeOrder(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "basketToOrder", object -> {
             try {
                 final Integer idCampaign = parseInt(request.params().get("idCampaign"));
                 final String idStructure = object.getString("id_structure");
@@ -232,9 +255,9 @@ public class BasketController extends ControllerHelper {
                 JsonArray baskets = object.containsKey("baskets") ? object.getJsonArray("baskets") : new JsonArray();
                 basketService.listebasketItemForOrder(idCampaign, idStructure, baskets,
                         listBasket -> {
-                            if(listBasket.isRight() && listBasket.right().getValue().size() > 0){
+                            if (listBasket.isRight() && listBasket.right().getValue().size() > 0) {
                                 UserUtils.getUserInfos(eb, request, user ->
-                                        basketService.takeOrder(request , listBasket.right().getValue(),
+                                        basketService.takeOrder(request, listBasket.right().getValue(),
                                                 idCampaign, user, idStructure, nameStructure, baskets, nameBasket,
                                                 Logging.defaultCreateResponsesHandler(eb,
                                                         request,
@@ -242,7 +265,7 @@ public class BasketController extends ControllerHelper {
                                                         Actions.CREATE.toString(),
                                                         "id_order",
                                                         listBasket.right().getValue())));
-                            }else{
+                            } else {
                                 log.error("An error occurred when listing Baskets");
                                 badRequest(request);
                             }
