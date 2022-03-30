@@ -4,6 +4,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 public class OrderUtils {
 
@@ -11,7 +13,8 @@ public class OrderUtils {
         Double prixht, price_TTC;
         JsonArray tvas;
         JsonObject result = new JsonObject();
-        DecimalFormat df2 = new DecimalFormat("#.##");
+        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+        DecimalFormat df2 = new DecimalFormat("#.##",dfs);
 
         if(equipmentJson.getString("type").equals("articlenumerique")){
             prixht = equipmentJson.getJsonArray("offres").getJsonObject(0).getDouble("prixht");
@@ -38,7 +41,8 @@ public class OrderUtils {
     }
 
     public static void dealWithPriceTTC_HT(JsonObject orderMap, JsonObject equipment, JsonObject order, boolean old) {
-        DecimalFormat df2 = new DecimalFormat("#.##");
+        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
         if(!old) {
             JsonObject priceInfo = getPriceTtc(equipment);
             Double priceht = priceInfo.getDouble("prixht");

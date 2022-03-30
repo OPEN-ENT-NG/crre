@@ -23,9 +23,11 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.filter.ResourceFilter;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 
@@ -169,7 +171,8 @@ public class StatisticsController extends BaseController {
 
     private void computePercentageStructures(JsonArray structuresMoreOneOrderResult, JsonArray structuresResult,
                                              boolean multiplePublic) {
-        DecimalFormat df2 = new DecimalFormat("#.##");
+        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
         if (multiplePublic && structuresMoreOneOrderResult.size() > 1 && structuresResult.size() > 1) {
             // Add percentage for private
             Double percentagePrivate = structuresMoreOneOrderResult.getJsonObject(0).getDouble("total") /
@@ -194,7 +197,8 @@ public class StatisticsController extends BaseController {
 
     private JsonObject computeTotalStructures(JsonArray structuresMoreOneOrderResult, JsonArray structuresResult,
                                               boolean multiplePublic) {
-        DecimalFormat df2 = new DecimalFormat("#.##");
+        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
         JsonObject allStructuresObject = new JsonObject();
         if (structuresMoreOneOrderResult.size() > 0 || structuresResult.size() > 0) {
             //Compute total structure

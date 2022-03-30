@@ -46,6 +46,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -914,7 +915,8 @@ public class OrderRegionController extends BaseController {
                     equipment = equipments.getJsonObject(j);
                     if (equipment.getString("id").equals(order.getString("equipment_key"))) {
                         JsonObject priceDetails = getPriceTtc(equipment);
-                        DecimalFormat df2 = new DecimalFormat("#.##");
+                        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+                        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
                         double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
                         double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
                         order.put("priceht", priceDetails.getDouble("prixht"));

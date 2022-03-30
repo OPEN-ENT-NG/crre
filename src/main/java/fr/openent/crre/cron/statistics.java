@@ -13,9 +13,11 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
@@ -163,7 +165,8 @@ public class statistics extends ControllerHelper implements Handler<Long> {
     }
 
     private void formatAmount(JsonArray purses) {
-        DecimalFormat df2 = new DecimalFormat("#.##");
+        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
         if (purses.size() > 0) {
             // Every 30/04, add a new line in licences mongo db with new year
             if (LocalDate.now().getMonthValue() == 5 && LocalDate.now().getDayOfMonth() == 1) {
