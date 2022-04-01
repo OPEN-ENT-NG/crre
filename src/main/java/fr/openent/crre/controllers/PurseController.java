@@ -301,18 +301,7 @@ public class PurseController extends ControllerHelper {
                         purse = purses.getJsonObject(i);
                         ids.add(purse.getString("id_structure"));
                     }
-                    structureService.getConsumableFormation(formations -> {
-                        if(formations.isRight()) {
-                            JsonArray res_consumable_formations = formations.right().getValue();
-                            List<String> consumable_formations = res_consumable_formations
-                                    .stream()
-                                    .map((json) -> ((JsonObject)json).getString("label"))
-                                    .collect(Collectors.toList());
-                            retrieveStructuresData(ids, consumable_formations, purses, request);
-                        } else {
-                            renderErrorMessage(request, new Throwable(formations.left().getValue()));
-                        }
-                    });
+                    getPursesInformations(request, ids, purses);
                 } else {
                     badRequest(request);
                 }
@@ -321,6 +310,58 @@ public class PurseController extends ControllerHelper {
             log.error("[Crre@purses] : An error occurred when casting purses", e);
             badRequest(request);
         }
+    }
+
+    @Get("/purse/search")
+    @ApiDoc("Search in quotes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void search(HttpServerRequest request) throws UnsupportedEncodingException {
+        String query = "";
+        Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+        if (request.params().contains("q")) {
+            query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
+        }
+        structureService.searchStructureByNameUai(query, structures -> {
+            if (structures.isRight()) {
+                JsonArray structuresJson = structures.right().getValue();
+                JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
+                for (int i = 0; i < structuresJson.size(); i++) {
+                    JsonObject structure = structuresJson.getJsonObject(i);
+                    ids.add(structure.getString("id"));
+                }
+                if(ids.isEmpty()){
+                    Renders.renderJson(request, new JsonObject());
+                }else {
+                    purseService.getPursesStudentsAndLicences(page, ids, event -> {
+                        if (event.isRight()) {
+                            JsonArray purses = event.right().getValue();
+                            getPursesInformations(request, ids, purses);
+                        } else {
+                            badRequest(request);
+                        }
+                    });
+                }
+            } else {
+                log.error(structures.left().getValue());
+                badRequest(request);
+            }
+        });
+    }
+
+    private void getPursesInformations(HttpServerRequest request, JsonArray ids, JsonArray purses) {
+        structureService.getConsumableFormation(formations -> {
+            if(formations.isRight()) {
+                JsonArray res_consumable_formations = formations.right().getValue();
+                List<String> consumable_formations = res_consumable_formations
+                        .stream()
+                        .map((json) -> ((JsonObject)json).getString("label"))
+                        .collect(Collectors.toList());
+                retrieveStructuresData(ids, consumable_formations, purses, request);
+            } else {
+                renderErrorMessage(request, new Throwable(formations.left().getValue()));
+            }
+        });
     }
 
     /**
@@ -457,43 +498,5 @@ public class PurseController extends ControllerHelper {
     private static String getFileExportName(HttpServerRequest request) {
         return I18n.getInstance().translate("purse", getHost(request), I18n.acceptLanguage(request)) +
                 ".csv";
-    }
-
-    @Get("/purse/search")
-    @ApiDoc("Search in quotes")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void search(HttpServerRequest request) throws UnsupportedEncodingException {
-        String query = "";
-        Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-        if (request.params().contains("q")) {
-            query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-        }
-        structureService.searchStructureByNameUai(query, structures -> {
-            if (structures.isRight()) {
-                JsonArray structuresJson = structures.right().getValue();
-                JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                for (int i = 0; i < structuresJson.size(); i++) {
-                    JsonObject structure = structuresJson.getJsonObject(i);
-                    ids.add(structure.getString("id"));
-                }
-                if(ids.isEmpty()){
-                    Renders.renderJson(request, new JsonObject());
-                }else {
-                    purseService.getPursesStudentsAndLicences(page, ids, event -> {
-                        if (event.isRight()) {
-                            JsonArray purses = event.right().getValue();
-                            Renders.renderJson(request, prepareDataPurses(purses, structures));
-                        } else {
-                            log.error(event.left().getValue());
-                            badRequest(request);
-                        }
-                    });
-                }
-            } else {
-                log.error(structures.left().getValue());
-                badRequest(request);
-            }
-        });
     }
 }

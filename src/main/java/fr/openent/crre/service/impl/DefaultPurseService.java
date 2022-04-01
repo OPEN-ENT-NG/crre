@@ -86,8 +86,9 @@ public class DefaultPurseService implements PurseService {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         if(idStructures != null && !idStructures.isEmpty()){
-            query += "AND purse.id_structure IN " + Sql.listPrepared(idStructures);
+            query += "AND (purse.id_structure IN " + Sql.listPrepared(idStructures) + " OR licences.id_structure IN " + Sql.listPrepared(idStructures) + ") ";
             for (int i = 0; i < idStructures.size(); i++) {
+                params.add(idStructures.getString(i));
                 params.add(idStructures.getString(i));
             }
         }
