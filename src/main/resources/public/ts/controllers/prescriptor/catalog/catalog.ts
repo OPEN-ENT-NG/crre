@@ -68,7 +68,7 @@ export const catalogController = ng.controller('catalogController',
                 $scope.correlationFilterES.keys.forEach(key => {
                     let arrayFilter = [];
                     $scope.filters.all.filter(t => t.name == $scope.correlationFilterES[key]).forEach(filter => {
-                        arrayFilter.push($scope.equipments[key].find(c => c.name = filter.value));
+                        arrayFilter.push($scope.equipments[key].find(c => c.name == filter.value));
                     });
                     $scope.catalog[key] = arrayFilter;
                 });
