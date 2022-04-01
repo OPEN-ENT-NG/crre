@@ -122,12 +122,16 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     @Override
     public void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
+        String queryUpdateBasket = " UPDATE " + Crre.crreSchema + ".basket_order AS bo " +
+                " SET amount = bo.amount + (? - oe.amount) " +
+                " FROM " + Crre.crreSchema + ".order_client_equipment AS oe " +
+                " WHERE (bo.id = oe.id_basket and oe.id = ?);";
+        String queryUpdateOe = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
                 " SET amount = ? " +
                 " WHERE id = ?; ";
-        values.add(amount).add(id);
+        values.add(amount).add(id).add(amount).add(id);
 
-        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
+        sql.prepared(queryUpdateBasket + queryUpdateOe, values, SqlResult.validRowsResultHandler(handler));
     }
 
     @Override
