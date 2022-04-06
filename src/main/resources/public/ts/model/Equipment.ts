@@ -95,6 +95,7 @@ export class Equipments extends Selection<Equipment> {
     page_count: number;
     subjects: String[];
     grades: String[];
+    levels: String[];
     editors: String[];
     os: String[];
     public: String[];
@@ -106,6 +107,7 @@ export class Equipments extends Selection<Equipment> {
         super([]);
         this.subjects = [];
         this.grades = [];
+        this.levels = [];
         this.os = [];
         this.public = [];
         this.editors = [];
@@ -132,6 +134,7 @@ export class Equipments extends Selection<Equipment> {
                     let filters = data[1].filters[0];
                     setFilterValues.call(this, filters, 'subjects');
                     setFilterValues.call(this, filters, 'grades');
+                    setFilterValues.call(this, filters, 'levels');
                     setFilterValues.call(this, filters, 'os');
                     setFilterValues.call(this, filters, 'public');
                     setFilterValues.call(this, filters, 'editors');

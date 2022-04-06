@@ -17,6 +17,7 @@ export const catalogController = ng.controller('catalogController',
                 subjects: [],
                 public: [],
                 grades: [],
+                levels: [],
                 docsType: [],
                 editors: [],
                 consumables: [],
@@ -27,16 +28,18 @@ export const catalogController = ng.controller('catalogController',
                 subjects: [],
                 public: [],
                 grades: [],
+                levels: [],
                 docsType: [],
                 editors: [],
                 consumables: [],
                 pros: []
             }
             $scope.correlationFilterES = {
-                keys: ["subjects", "public", "grades", "docsType", "editors", "consumables", "pros"],
+                keys: ["subjects", "public", "grades", "levels", "docsType", "editors", "consumables", "pros"],
                 subjects: 'disciplines.libelle',
                 public: 'publiccible',
                 grades: 'niveaux.libelle',
+                levels: 'classes.libelle',
                 docsType: '_index',
                 editors: 'editeur',
                 consumables: 'conso',
@@ -60,8 +63,15 @@ export const catalogController = ng.controller('catalogController',
                 }
                 if (["articlenumerique","articlepapier"].indexOf($scope.campaign.catalog.split("|")[0]) != -1) {
                     let catalogFilter = new Filter();
+                    let catalogName = $scope.campaign.catalog.split("|")[0];
+                    if(catalogName == "articlepapier") {
+                        $scope.correlationFilterES.keys.splice($scope.correlationFilterES.keys.indexOf('levels'), 1);
+                        delete $scope.equipments.levels;
+                        delete $scope.catalog.levels;
+                        Utils.safeApply($scope);
+                    }
                     catalogFilter.name = "_index";
-                    catalogFilter.value = $scope.campaign.catalog.split("|")[0];
+                    catalogFilter.value = catalogName;
                     $scope.filters.all.push(catalogFilter);
                 }
             } else {

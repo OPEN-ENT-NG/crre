@@ -108,6 +108,7 @@ public class EquipmentController extends ControllerHelper {
             JsonArray response = new JsonArray();
             Set<String> disciplines_set = new HashSet<>();
             Set<String> niveaux_set = new HashSet<>();
+            Set<String> classes_set = new HashSet<>();
             Set<String> editeur_set = new HashSet<>();
             Set<String> public_set = new HashSet<>();
             Set<String> os_set = new HashSet<>();
@@ -119,6 +120,11 @@ public class EquipmentController extends ControllerHelper {
                 }
                 for(int j = 0; j < ressource.getJsonArray("niveaux").size(); j ++) {
                     niveaux_set.add(ressource.getJsonArray("niveaux").getJsonObject(j).getString("libelle"));
+                }
+                if(ressource.containsKey("classes")) {
+                    for(int j = 0; j < ressource.getJsonArray("classes").size(); j ++) {
+                        classes_set.add(ressource.getJsonArray("classes").getJsonObject(j).getString("libelle"));
+                    }
                 }
                 if(ressource.containsKey("technos")) {
                     for(int j = 0; j < ressource.getJsonArray("technos").size(); j ++) {
@@ -138,6 +144,7 @@ public class EquipmentController extends ControllerHelper {
             }
             filtres.add(new JsonObject().put("subjects", new JsonArray(Arrays.asList(disciplines_set.toArray())))
                     .put("grades", new JsonArray(Arrays.asList(niveaux_set.toArray())))
+                    .put("levels", new JsonArray(Arrays.asList(classes_set.toArray())))
                     .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
                     .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
                     .put("distributeurs", new JsonArray(Arrays.asList(distributeurs_set.toArray())))
@@ -192,6 +199,9 @@ public class EquipmentController extends ControllerHelper {
         }
         if (request.params().contains("niveaux.libelle")) {
             params.put("niveaux.libelle", new ArrayList<>(request.params().getAll("niveaux.libelle")));
+        }
+        if (request.params().contains("classes.libelle")) {
+            params.put("classes.libelle", new ArrayList<>(request.params().getAll("classes.libelle")));
         }
         if (request.params().contains("_index")) {
             params.put("_index", new ArrayList<>(request.params().getAll("_index")));

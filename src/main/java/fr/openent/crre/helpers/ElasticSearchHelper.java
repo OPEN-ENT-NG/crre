@@ -140,6 +140,7 @@ public class ElasticSearchHelper {
         for (Map.Entry<String, ArrayList<String>> me : set) {
             switch (me.getKey()) {
                 case "disciplines.libelle":
+                case "classes.libelle":
                 case "niveaux.libelle":
                 case "technos.technologie": {
                     JsonObject terms = new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue())));
