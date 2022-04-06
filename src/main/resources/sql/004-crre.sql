@@ -1,0 +1,1 @@
+ALTER TABLE crre.logs ALTER date SET DEFAULT now()

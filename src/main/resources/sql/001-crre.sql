@@ -9,7 +9,7 @@ CREATE TABLE crre.scripts (
 
 CREATE TABLE crre.logs (
     id bigserial NOT NULL,
-    date timestamp with time zone,
+    date timestamp with time zone DEFAULT now(),
     action character varying(30),
     context character varying(30),
     value json,
