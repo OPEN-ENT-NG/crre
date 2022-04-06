@@ -116,8 +116,8 @@
                 <td><div class="smallTabElem center breakLines">[[order.basket_name]]</div></td>
                 <td>
                     <div class="smallTabElem center">
-                        <span class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort" ng-click="updateReassort(order)"></span>
-                        <span class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort" ng-click="updateReassort(order)"></span>
+                        <span class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"></span>
+                        <span class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort"></span>
                     </div>
                 </td>
                 <td>
@@ -164,14 +164,14 @@
                 <img class="four" src="/crre/public/img/PageTableauVide.svg" />
             </div>
         </div>
-        <div class="twelve-mobile float tot-cards two" ng-if="displayedOrders.calculTotalAmount() || displayedOrders.calculTotalPriceTTC()">
+        <div class="twelve-mobile float tot-cards two" ng-if="amountTotal.licence || amountTotal.credit">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
             <div class="total-container">
-                <div ng-if="displayedOrders.calculTotalAmount()">
+                <div ng-if="amountTotal.licence">
                     <i18n>crre.consummed.licences</i18n>
-                    <h1 class="bold-font-weight" ng-bind="displayedOrders.calculTotalAmount()"></h1>
+                    <h1 class="bold-font-weight" ng-bind="amountTotal.licence"></h1>
                 </div>
-                <div class="licences" ng-if="displayedOrders.calculTotalAmount()">
+                <div class="licences" ng-if="amountTotal.licence">
                     <i18n>crre.initial.licences</i18n>
                     <div class="bold-font-weight big" ng-bind="campaign.nb_licences_total"></div>
                     <div class="small"><i18n>crre.second.class</i18n> : [[campaign.nb_licences_2de]]</div>
@@ -184,23 +184,23 @@
                         [[campaign.nb_licences_consumable_total]]
                     </div>
                 </div>
-                <div class="color-red" ng-if="displayedOrders.calculTotalAmount()">
+                <div class="color-red" ng-if="amountTotal.licence">
                     <i18n>crre.remain.licences</i18n>
                     <h1 class="bold-font-weight color-red no-margin-bottom">
-                        [[campaign.nb_licences_available + campaign.nb_licences_consumable_available - displayedOrders.calculTotalAmount()]]</h1>
+                        [[campaign.nb_licences_available + campaign.nb_licences_consumable_available - amountTotal.licence]]</h1>
                 </div>
-                <div ng-if="displayedOrders.calculTotalPriceTTC()">
+                <div ng-if="amountTotal.credit">
                     <i18n>crre.total.in.euros</i18n>
-                    <h1 class="bold-font-weight">[[displayedOrders.calculTotalPriceTTC() | currency]]</h1>
+                    <h1 class="bold-font-weight">[[amountTotal.credit | currency]]</h1>
                 </div>
-                <div class="licences"  ng-if="displayedOrders.calculTotalPriceTTC()">
+                <div class="licences"  ng-if="amountTotal.credit">
                     <i18n>crre.initial</i18n>
                     <div class="bold-font-weight big" ng-bind="campaign.initial_purse_amount | currency"></div>
                 </div>
-                <div class="color-red"  ng-if="displayedOrders.calculTotalPriceTTC()">
+                <div class="color-red"  ng-if="amountTotal.credit">
                     <i18n>crre.remained</i18n>
                     <h1 class="bold-font-weight color-red no-margin-bottom">
-                        [[campaign.purse_amount - displayedOrders.calculTotalPriceTTC() | currency]]</h1>
+                        [[campaign.purse_amount - amountTotal.credit | currency]]</h1>
                 </div>
             </div>
         </div>
