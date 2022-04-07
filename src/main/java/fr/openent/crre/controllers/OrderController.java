@@ -22,6 +22,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -39,6 +40,7 @@ import java.util.List;
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.openent.crre.utils.OrderUtils.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -87,7 +89,7 @@ public class OrderController extends ControllerHelper {
                                         JsonObject orderJson = ((JsonObject) order);
                                         String idEquipment = orderJson.getString("equipment_key");
                                         JsonArray equipmentsArray = equipments.right().getValue();
-                                        if(equipmentsArray.size() > 0) {
+                                        if (equipmentsArray.size() > 0) {
                                             for (int i = 0; i < equipmentsArray.size(); i++) {
                                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
                                                 if (idEquipment.equals(equipment.getString("id"))) {
@@ -95,7 +97,7 @@ public class OrderController extends ControllerHelper {
                                                     orderJson.put("name", equipment.getString("titre"));
                                                     orderJson.put("image", equipment.getString("urlcouverture"));
                                                     break;
-                                                } else if(equipmentsArray.size() - 1 == i) {
+                                                } else if (equipmentsArray.size() - 1 == i) {
                                                     orderJson.put("price", 0.0);
                                                     orderJson.put("name", "Manuel introuvable dans le catalogue");
                                                     orderJson.put("image", "/crre/public/img/pages-default.png");
@@ -169,6 +171,69 @@ public class OrderController extends ControllerHelper {
                 String endDate = request.getParam("endDate");
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                 orderService.listOrder(status, page, user, startDate, endDate, arrayResponseHandler(request));
+            } else {
+                badRequest(request);
+            }
+        });
+    }
+
+    @Get("/orders/amount")
+    @ApiDoc("Get the list of orders")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void listOrdersAmountLicences(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (request.params().contains("status")) {
+                final String status = request.params().get("status");
+                String startDate = request.getParam("startDate");
+                String endDate = request.getParam("endDate");
+                Promise<JsonObject> getOrderAmount = Promise.promise();
+                Promise<JsonArray> getOrderCredit = Promise.promise();
+                List<Future> promises = new ArrayList<>();
+                promises.add(getOrderAmount.future());
+                promises.add(getOrderCredit.future());
+                JsonObject result = new JsonObject();
+                CompositeFuture.all(promises).onComplete(event -> {
+                    if (event.succeeded()) {
+                        int amount = 0;
+                        if(getOrderAmount.future().result().getString("nb_licences") != null) {
+                            amount = Integer.parseInt(getOrderAmount.future().result().getString("nb_licences"));
+                        }
+                        result.put("licence", amount);
+                        JsonArray order_credit = getOrderCredit.future().result();
+                        if (order_credit.size() > 0) {
+                            List<String> idsEquipment = new ArrayList<>();
+                            for (int i = 0; i < order_credit.size(); i++) {
+                                idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
+                            }
+                            searchByIds(idsEquipment, equipments -> {
+                                if (equipments.isRight()) {
+                                    for (int i = 0; i < order_credit.size(); i++) {
+                                        idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
+                                        JsonArray equipmentsArray = equipments.right().getValue();
+                                        String idEquipment = order_credit.getJsonObject(i).getString("equipment_key");
+                                        if (equipmentsArray.size() > 0) {
+                                            double total = 0;
+                                            for (int j = 0; j < equipmentsArray.size(); j++) {
+                                                JsonObject equipment = equipmentsArray.getJsonObject(i);
+                                                if (idEquipment.equals(equipment.getString("id"))) {
+                                                    total += order_credit.getJsonObject(i).getInteger("amount") * getPriceTtc(equipment).getDouble("priceTTC");
+                                                    break;
+                                                }
+                                            }
+                                            result.put("credit", total);
+                                            renderJson(request, result);
+                                        }
+                                    }
+                                }
+                            });
+                        } else {
+                            renderJson(request, result);
+                        }
+                    }
+                });
+                orderService.listOrderAmount(status, user, startDate, endDate, handlerJsonObject(getOrderAmount));
+                orderService.listOrderCredit(status, user, startDate, endDate, handlerJsonArray(getOrderCredit));
             } else {
                 badRequest(request);
             }
@@ -317,7 +382,8 @@ public class OrderController extends ControllerHelper {
         });
     }
 
-    private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order, JsonObject equipment, boolean old) {
+    private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order, JsonObject equipment,
+                             boolean old) {
         orderMap.put("id", order.getInteger("id"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
@@ -331,15 +397,18 @@ public class OrderController extends ControllerHelper {
         orders.add(orderMap);
     }
 
-    private void getOrderEquipmentEquipment(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
+    private void getOrderEquipmentEquipment
+            (List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
         orderService.listExport(idsOrders, false, handlerJsonArray);
     }
 
-    private void getOrderEquipmentOld(List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
+    private void getOrderEquipmentOld
+            (List<Integer> idsOrders, Handler<Either<String, JsonArray>> handlerJsonArray) {
         orderService.listExport(idsOrders, true, handlerJsonArray);
     }
 
-    private void getEquipment(List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
+    private void getEquipment
+            (List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
         searchByIds(idsEquipment, handlerJsonArray);
     }
 

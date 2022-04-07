@@ -61,6 +61,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 $scope.type_campaign.push(order.campaign);
             });
             $scope.type_campaign.forEach((item) => item.toString = () => item.name);
+            await $scope.getAllAmount();
             Utils.safeApply($scope);
         };
 
@@ -119,6 +120,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         $scope.getAllFilters = async () => {
             $scope.users = await $scope.ordersClient.getUsers('WAITING');
         };
+
+        $scope.getAllAmount = async () => {
+            $scope.amountTotal = await $scope.ordersClient.calculTotal('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate);
+        }
 
         $scope.filterByDate = async () => {
             if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {

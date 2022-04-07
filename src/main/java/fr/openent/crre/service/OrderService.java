@@ -32,6 +32,10 @@ public interface OrderService {
      */
     void listOrder(String status, Integer page, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
+    void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonObject>> handler);
+
+    void listOrderCredit(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
+
     /**
      * Get the list of all users
      * @param status order status to retrieve

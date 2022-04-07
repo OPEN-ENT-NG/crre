@@ -89,6 +89,30 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
+    public void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonObject>> handler){
+        String query = "SELECT sum(oce.amount) as nb_licences " +
+        "FROM crre.order_client_equipment oce " +
+        "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
+        "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) ";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
+        query += "AND (c.use_credit = 'consumable_licences' OR c.use_credit = 'licences');";
+        sql.prepared(query, values , SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void listOrderCredit(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT oce.equipment_key, oce.amount " +
+                "FROM crre.order_client_equipment oce " +
+                "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
+                "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) ";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
+        query += "AND c.use_credit = 'credits';";
+        sql.prepared(query, values , SqlResult.validResultHandler(handler));
+    }
+
+    @Override
     public  void listUsers(String status, UserInfos user,  Handler<Either<String, JsonArray>> handler){
         String query = "SELECT DISTINCT(bo.name_user) as user_name, bo.id_user "+
                 "FROM " + Crre.crreSchema + ".basket_order bo " +

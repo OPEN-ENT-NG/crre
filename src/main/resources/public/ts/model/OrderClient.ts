@@ -275,6 +275,12 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
+    async calculTotal(status: string, start: string, end: string): Promise<any> {
+        const {startDate, endDate} = Utils.formatDate(start, end);
+        const {data} = await http.get(`/crre/orders/amount?startDate=${startDate}&endDate=${endDate}&status=${status}`);
+        return data;
+    }
+
     calculTotalAmount(): number {
         let total = 0;
         this.all.map((order) => {
