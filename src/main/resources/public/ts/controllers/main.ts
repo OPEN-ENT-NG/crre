@@ -465,7 +465,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.offers = new Offers();
             $scope.basket.equipment.offres[0].leps.forEach(function (offer) {
                 offre = new Offer();
-                offre.name = offer.licence[0].valeur;
+                if(!!!offer.licence[0].valeur) {
+                    offre.name = "Offre gratuite";
+                } else {
+                    offre.name = offer.licence[0].valeur;
+                }
                 if(offer.conditions.length > 1) {
                     if(offer.licence[0].valeur === "Elève") {
                         let stringStudent = "";
@@ -479,10 +483,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                         });
                         stringStudent.slice(0, -2);
                         $scope.offerStudent.push(stringStudent);
-                    } else{
+                    } else if (offer.licence[0].valeur === "Enseignant" || !!!offer.licence[0].valeur) {
                         let stringTeacher = "";
                         offer.conditions.forEach(function (condition) {
-                            stringTeacher += condition.gratuite + lang.translate('crre.free.licences.teacher.for') +
+                            let stringLicence = !!!offer.licence[0].valeur ? lang.translate('crre.free.licences.for') : lang.translate('crre.free.licences.teacher.for');
+                            stringTeacher += condition.gratuite + stringLicence +
                                 condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
                             if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
                                 gratuit = condition.conditionGratuite;
@@ -497,7 +502,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                         $scope.offerStudent.push(offer.conditions[0].gratuite + lang.translate('crre.free.licences.student.for') +
                             offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
                     } else {
-                        $scope.offerTeacher.push(offer.conditions[0].gratuite + lang.translate('crre.free.licences.teacher.for') +
+                        let stringLicence = !!!offer.licence[0].valeur ? lang.translate('crre.free.licences.for') : lang.translate('crre.free.licences.teacher.for');
+                        $scope.offerTeacher.push(offer.conditions[0].gratuite + stringLicence +
                             offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
                     }
                     gratuit = offer.conditions[0].conditionGratuite;

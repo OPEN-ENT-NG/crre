@@ -91,7 +91,11 @@ export class Utils {
         let offers = new Offers();
         equipment.offres[0].leps.forEach(function (offer) {
             offre = new Offer();
-            offre.name = "Manuel " + offer.licence[0].valeur;
+            if(!!!offer.licence[0].valeur) {
+                offre.name = "Offre gratuite";
+            } else {
+                offre.name = "Manuel(s) " + offer.licence[0].valeur;
+            }
             if(offer.conditions.length > 1) {
                 offer.conditions.forEach(function (condition) {
                     if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
