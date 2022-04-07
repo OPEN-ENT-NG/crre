@@ -619,6 +619,7 @@
   "to.minimize": " au ",
   "crre.resubmit": "Resoumettre",
   "crre.consummed.licences": "Licences consommées",
+  "crre.already.consummed.licences": "Licences déjà consommées",
   "crre.consummables.licences": "Licences consommables",
   "crre.initial.licences": "Licences initiales",
   "crre.initial.licences.number": "Nombre de licences initiales",
