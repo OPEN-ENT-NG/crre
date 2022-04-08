@@ -35,7 +35,7 @@ export const catalogController = ng.controller('catalogController',
                 pros: []
             }
             $scope.correlationFilterES = {
-                keys: ["subjects", "public", "grades", "levels", "docsType", "editors", "consumables", "pros"],
+                keys: ["docsType", "subjects", "grades", "levels", "editors", "consumables", "pros", "public"],
                 subjects: 'disciplines.libelle',
                 public: 'publiccible',
                 grades: 'niveaux.libelle',
