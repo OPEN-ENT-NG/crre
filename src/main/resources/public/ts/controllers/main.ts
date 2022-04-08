@@ -66,7 +66,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         route({
             main: async () => {
                 if ($scope.isAdministrator()) {
-                    $scope.redirectTo("/order/waiting");
+                    $scope.redirectTo("/order/waitingAdmin");
                 } else{
                     if ( $scope.isValidator() || $scope.isPrescriptor()) {
                         await $scope.initStructures();
@@ -179,24 +179,20 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await selectCampaign(idCampaign);
                 Utils.safeApply($scope);
             },
-            orderWaiting: async (params) => {
+            orderWaiting: async () => {
                 $scope.loading = true;
                 $scope.ordersClient.all = [];
                 Utils.safeApply($scope);
-                let idCampaign = params.idCampaign;
-                idIsInteger(idCampaign);
                 if(!$scope.current.structure)
                     await $scope.initStructures();
-                await selectCampaign(idCampaign);
+                await getInfos();
                 await initOrders('WAITING');
                 selectCampaignShow($scope.campaign, "WAITING");
             },
-            orderHistoric: async (params) => {
-                let idCampaign = params.idCampaign;
-                idIsInteger(idCampaign);
+            orderHistoric: async () => {
                 if(!$scope.current.structure)
                     await $scope.initStructures();
-                await selectCampaign(idCampaign);
+                await getInfos();
                 selectCampaignShow($scope.campaign, "HISTORIC");
                 $scope.campaign.historic_etab_notification = 0;
                 Utils.safeApply($scope);
@@ -276,6 +272,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     }
                 });
             }
+        };
+
+        const getInfos = async function () {
+            await $scope.campaigns.sync($scope.current.structure.id);
+            $scope.campaign = $scope.campaigns.all[0];
         };
 
         const removeUselessTechnos = (techno) => {
@@ -590,7 +591,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             if(initOrder) {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
             }
-            template.open('main-profile', 'prescriptor/campaign-main');
+            template.open('main-profile', 'validator/main');
             if(type == "WAITING") {
                 template.open('campaign-main', 'validator/order-waiting');
             } else {

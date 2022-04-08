@@ -22,13 +22,9 @@ export const campaignsListController = ng.controller('campaignsListController',
             }
         };
 
-        $scope.openCampaignWaitingOrder = (campaign: Campaign) => {
-            if (campaign.accessible) {
-                $scope.$emit('eventEmitedCampaign', campaign);
-                $scope.campaign = campaign;
-                $scope.redirectTo(`/order/${campaign.id}/waiting`);
-                Utils.safeApply($scope);
-            }
+        $scope.openWaitingOrder = () => {
+            $scope.redirectTo(`/order/waiting`);
+            Utils.safeApply($scope);
         };
 
         $scope.modifyNumberStudent = () => {

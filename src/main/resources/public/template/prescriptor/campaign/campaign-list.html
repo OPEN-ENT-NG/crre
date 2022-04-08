@@ -10,7 +10,12 @@
                                ng-change="initCampaign(current.structure)">
             </search-and-select>
         </h4>
-
+    </div>
+    <div class="twelve-mobile cell right-magnet" workflow="crre.validator">
+        <input type="button"
+               class="button"
+               ng-click="openWaitingOrder()"
+               i18n-value="crre.access.demands.waiting.toValidate"/>
     </div>
     <div>
         <article class="twelve cell">
@@ -95,14 +100,6 @@
                                    ng-click="openOrderToMain(campaign)"
                                    ng-disabled="!campaign.accessible"
                                    i18n-value="crre.validator.demand"/>
-                        </div>
-                        <div class="twelve-mobile cell" workflow="crre.validator">
-                            <input type="button"
-                                   class="button"
-                                   ng-disabled="!campaign.accessible"
-                                   ng-click="openCampaignWaitingOrder(campaign)"
-                                   i18n-value="crre.access.demands.waiting.toValidate"/>
-
                         </div>
                         <div class="twelve-mobile cell">
                             <input ng-show="campaign.accessible"

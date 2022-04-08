@@ -1,0 +1,47 @@
+<div ng-controller="campaignMainController" >
+    <nav class="vertical twelve-mobile mobile-navigation" side-nav>
+        <ul>
+            <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
+            <li workflow="crre.validator">
+                <a ng-click="openWaitingOrder()">
+                    <i18n>crre.request.validate</i18n>
+                    <span class="notification-bull right-magnet" ng-if="campaign.nb_order_waiting > 0">
+                        [[campaign.nb_order_waiting]]
+                    </span>
+                </a>
+            </li>
+            <li workflow="crre.validator">
+                <a ng-click="openHistoric()">
+                    <i18n>crre.structure.history</i18n>
+                    <span class="notification-bull right-magnet"
+                          ng-if="campaign.historic_etab_notification && campaign.historic_etab_notification > 0">
+                        [[campaign.historic_etab_notification]]
+                    </span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div class="twelve tabs vertical-spacing heading-tabs zero-mobile" >
+        <header class="horizontal-spacing"  ng-click="backHome()">
+            <i class="home"></i>
+        </header>
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('waiting')}"
+                 ng-click="openWaitingOrder()"
+                 workflow="crre.validator">
+            <i18n>crre.request.validate</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.nb_order_waiting > 0">
+                [[campaign.nb_order_waiting]]
+            </span>
+        </header>
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('historic')}"
+                 ng-click="openHistoric()"
+                 workflow="crre.validator">
+            <i18n>crre.structure.history</i18n>
+            <span class="notification-bull right-magnet" ng-if="campaign.historic_etab_notification && campaign.historic_etab_notification > 0">
+                [[campaign.historic_etab_notification]]
+            </span>
+        </header>
+    </div>
+    <container template="campaign-main"></container>
+    <container ng-show="!loadingArray" template="administrator-main"></container>
+</div>

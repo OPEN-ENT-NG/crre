@@ -49,10 +49,10 @@ routes.define(($routeProvider) => {
             .when('/equipments/catalog/equipment/:idEquipment/:idCampaign', {
                 action: 'adminEquipmentDetail'
             })
-            .when('/order/historic', {
+            .when('/order/historicAdmin', {
                 action: 'orderHistoricAdmin'
             })
-            .when('/order/waiting', {
+            .when('/order/waitingAdmin', {
                 action: 'orderWaitingAdmin'
             })
             .when('/campaigns', {
@@ -70,10 +70,10 @@ routes.define(($routeProvider) => {
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator) &&
     !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
-            .when('/order/:idCampaign/waiting', {
+            .when('/order/waiting', {
                 action: 'orderWaiting'
             })
-            .when('/order/:idCampaign/historic', {
+            .when('/order/historic', {
                 action: 'orderHistoric'
             });
 

@@ -3,14 +3,15 @@
         <ul>
             <li><a ng-click="backHome()"><i18n>home</i18n></a></li>
             <li><a ng-click="openCatalog(campaign.id)"><i18n>crre.catalog</i18n></a></li>
-            <li>
+            <li workflow="crre.prescriptor">
                 <a ng-click="openOrder(campaign.id)">
                     <i18n>crre.request.mine</i18n>
-                    <span class="notification-bull right-magnet" ng-if="campaign.nb_order > 0">
+                    <span class="notification-bull right-magnet" ng-if="campaign.order_notification && campaign.order_notification > 0">
+                        [[campaign.order_notification]]
                     </span>
                 </a>
             </li>
-            <li>
+            <li workflow="crre.prescriptor">
                 <a ng-click="openBasket(campaign.id)">
                     <i18n>crre.basket</i18n>
                     <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
@@ -40,22 +41,6 @@
             <i18n>crre.basket</i18n>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
                 [[campaign.nb_panier]]
-            </span>
-        </header>
-        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('waiting')}"
-                 ng-click="openWaitingOrder(campaign.id)"
-                 workflow="crre.validator">
-            <i18n>crre.request.validate</i18n>
-            <span class="notification-bull right-magnet" ng-if="campaign.nb_order_waiting > 0">
-                [[campaign.nb_order_waiting]]
-            </span>
-        </header>
-        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('historic')}"
-                 ng-click="openHistoric(campaign.id)"
-                 workflow="crre.validator">
-            <i18n>crre.structure.history</i18n>
-            <span class="notification-bull right-magnet" ng-if="campaign.historic_etab_notification && campaign.historic_etab_notification > 0">
-                [[campaign.historic_etab_notification]]
             </span>
         </header>
     </div>
