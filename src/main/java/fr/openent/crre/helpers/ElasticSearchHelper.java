@@ -243,7 +243,11 @@ public class ElasticSearchHelper {
         return new JsonObject()
                 .put("query", query)
                 .put("from", 0)
-                .put("size", PAGE_SIZE);
+                .put("size", PAGE_SIZE)
+                .put("sort", new JsonArray()
+                        .add(new JsonObject().put("_index","asc"))
+                        .add(new JsonObject().put("titre","asc"))
+                );
     }
 
 
