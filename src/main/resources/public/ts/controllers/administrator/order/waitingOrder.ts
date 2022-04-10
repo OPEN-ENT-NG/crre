@@ -109,7 +109,13 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.generateLibraryOrder = async () => {
-            let selectedOrders = $scope.projects.extractSelectedOrders();
+            let selectedOrders;
+            if($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
+                await $scope.searchProjectAndOrders(false, true)
+                selectedOrders = $scope.projects.extractAllOrders();
+            } else {
+                selectedOrders = $scope.projects.extractSelectedOrders();
+            }
             let promesses = [await selectedOrders.updateStatus('SENT'),await selectedOrders.generateLibraryOrder()];
             let responses = await Promise.all(promesses);
             let statusOK = true;
@@ -178,7 +184,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 $scope.filtersFront.all.push(newFilterFront);
             }
             if ($scope.filters.all.length > 0) {
-                await $scope.searchProjectAndOrders();
+                await $scope.searchProjectAndOrders(false, false);
             } else {
                 await $scope.searchByName($scope.query_name);
             }
@@ -205,6 +211,34 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.display.toggle = $scope.display.allOrdersSelected;
             Utils.safeApply($scope);
         };
+
+        $scope.checkSwitchAll = (): void => {
+            let testAllTrue = true;
+            $scope.projects.all.forEach(project => {
+                if (!project.selected) {
+                    testAllTrue = false;
+                } else {
+                    project.orders.forEach(order => {
+                        if(!order.selected) {
+                            testAllTrue = false;
+                        }
+                    })
+                }
+            });
+            $scope.display.allOrdersSelected = testAllTrue;
+            Utils.safeApply($scope);
+        };
+
+        $scope.exportCSVRegion = async (old: boolean, all: boolean): Promise<void> => {
+            if (all) {
+                await $scope.searchProjectAndOrders(false, true)
+                $scope.projects.exportCSV(old, true);
+            } else {
+                $scope.projects.exportCSV(old, false);
+            }
+            $scope.display.allOrdersSelected = $scope.display.toggle = false;
+            Utils.safeApply($scope);
+        }
 
         this.init();
     }

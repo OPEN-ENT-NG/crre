@@ -139,8 +139,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
 
             let purseAmount = $scope.campaign.purse_amount ? $scope.campaign.purse_amount : 0
 
-            return $scope.displayedOrders.all.length == 0 || nbLicences - $scope.displayedOrders.calculTotalAmount() < 0 ||
-                purseAmount - $scope.displayedOrders.calculTotalPriceTTC() < 0;
+            return $scope.ordersClient.all.length == 0 || nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
+                purseAmount - $scope.ordersClient.calculTotalPriceTTC() < 0;
         };
 
         function updateOrders(totalPrice: number, totalAmount: number, totalAmountConsumable: number, ordersToRemove: OrdersClient, numberOrdered : number) {
@@ -181,10 +181,14 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let totalPrice = 0;
             let totalAmount = 0;
             let totalAmountConsumable = 0;
+            let ordersToReformat;
 
-            const ordersToReformat =
-                ($scope.ordersClient.selectedElements.length > 0) ? $scope.ordersClient.selectedElements : $scope.ordersClient.all;
-
+            if($scope.allOrdersSelected) {
+                await $scope.searchByName(false, true);
+                ordersToReformat = $scope.ordersClient.all;
+            } else {
+                ordersToReformat = ($scope.ordersClient.selectedElements.length > 0) ? $scope.ordersClient.selectedElements : $scope.ordersClient.all;
+            }
             ordersToReformat.forEach(order => {
                 reformatOrders(order, ordersToCreate, ordersToRemove, totalPrice, totalAmount, totalAmountConsumable);
             });
@@ -193,7 +197,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
                     updateOrders(totalPrice, totalAmount, totalAmountConsumable, ordersToRemove, ordersToReformat.length);
-                    $scope.displayedOrders.all = $scope.ordersClient.all;
                     await $scope.getAllFilters();
                     Utils.safeApply($scope);
                     $scope.allOrdersSelected = false;
@@ -206,7 +209,18 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.switchAllOrders = () => {
-            $scope.displayedOrders.all.map((order) => order.selected = $scope.allOrdersSelected);
+            $scope.ordersClient.all.map((order) => order.selected = $scope.allOrdersSelected);
+        };
+
+        $scope.checkSwitchAll = (): void => {
+            let testAllTrue = true;
+            $scope.ordersClient.all.forEach(function (order) {
+                if (!order.selected) {
+                    testAllTrue = false;
+                }
+            });
+            $scope.allOrdersSelected = testAllTrue;
+            Utils.safeApply($scope);
         };
 
         function endLoading(newData: any) {
@@ -216,13 +230,14 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         }
 
-        $scope.searchByName =  async (noInit?:boolean) => {
+        $scope.searchByName =  async (noInit?:boolean, all?: boolean) => {
             if(!noInit){
                 $scope.loading = true;
                 $scope.filter.page = 0;
                 $scope.ordersClient = new OrdersClient();
                 Utils.safeApply($scope);
             }
+            all ? $scope.filter.page = null : 0;
             if($scope.filters.all.length == 0) {
                 if ($scope.query_name && $scope.query_name != "") {
                     const newData = await $scope.ordersClient.search($scope.query_name, null,
@@ -238,7 +253,12 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
             }
+            $scope.syncSelected();
             Utils.safeApply($scope);
+        };
+
+        $scope.syncSelected = () : void => {
+            $scope.ordersClient.all.forEach(order => order.selected = $scope.allOrdersSelected)
         };
 
         $scope.openLightboxRefuseOrder = () => {
@@ -247,12 +267,12 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.exportCSV = () => {
-            if($scope.ordersClient.selectedElements.length == 0) {
-                $scope.ordersClient.exportCSV(false);
+            let selectedOrders = new OrdersClient();
+            if($scope.ordersClient.selectedElements.length == 0 || $scope.allOrdersSelected) {
+                selectedOrders.exportCSV(false, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, "WAITING")
             } else {
-                let selectedOrders = new OrdersClient();
                 selectedOrders.all = $scope.ordersClient.selectedElements;
-                selectedOrders.exportCSV(false);
+                selectedOrders.exportCSV(false, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, "WAITING");
             }
             $scope.ordersClient.forEach(function (order) {order.selected = false;});
             $scope.allOrdersSelected = false;

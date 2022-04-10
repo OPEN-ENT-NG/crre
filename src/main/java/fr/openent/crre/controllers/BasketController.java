@@ -118,7 +118,7 @@ public class BasketController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                int id_campaign = parseInt(request.getParam("id"));
+                Integer id_campaign = request.params().contains("id") ? parseInt(request.params().get("id")) : null;
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
                 boolean old = Boolean.parseBoolean(request.getParam("old"));

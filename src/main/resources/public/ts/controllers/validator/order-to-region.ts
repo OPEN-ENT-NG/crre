@@ -23,18 +23,18 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
         $scope.filtersDate.endDate = moment()._d;
         $scope.display = {
-            toggle : false,
-            loading : true,
-            allOrdersSelected : false,
-            lightbox : {
-                waitingAdmin : false
+            toggle: false,
+            loading: true,
+            allOrdersSelected: false,
+            lightbox: {
+                waitingAdmin: false
             }
         };
         $scope.filter = {
             page: 0,
             isDate: false,
         };
-        if(!$scope.selectedType.split('/').includes('historic')) {
+        if (!$scope.selectedType.split('/').includes('historic')) {
             $scope.current = {};
             $scope.current.structure = {};
             $scope.current.structure.id = null;
@@ -48,32 +48,32 @@ export const orderRegionController = ng.controller('orderRegionController',
             Utils.safeApply($scope);
         }
 
-        $scope.onScroll = async (init?:boolean, old?:boolean): Promise<void> => {
+        $scope.onScroll = async (init?: boolean, old?: boolean): Promise<void> => {
             let projets = new Projects();
-            if(init){
+            if (init) {
                 initProjects();
-                await projets.filter_order(old,$scope.query_name, $scope.filters,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
+                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
                 Utils.safeApply($scope);
-            }else{
+            } else {
                 $scope.filter.page++;
-                await projets.filter_order(old,$scope.query_name, $scope.filters,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
+                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
                 Utils.safeApply($scope);
             }
-            if(projets.all.length > 0){
+            if (projets.all.length > 0) {
                 await $scope.synchroRegionOrders(true, projets, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
             $scope.display.loading = false;
+            $scope.syncSelected();
             Utils.safeApply($scope);
         };
 
-        $scope.searchProjectAndOrders = async (old = false) => {
+        $scope.searchProjectAndOrders = async (old = false, all: boolean) => {
             let projets = new Projects();
             initProjects();
-            await projets.filter_order(old,$scope.query_name, $scope.filters,
+            all ? $scope.filter.page = null : 0;
+            await projets.filter_order(old, $scope.query_name, $scope.filters,
                 $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
             if (projets.all.length > 0) {
                 await $scope.synchroRegionOrders(true, projets, old);
@@ -93,7 +93,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
-                await $scope.searchProjectAndOrders(old);
+                await $scope.searchProjectAndOrders(old, false);
             }
         }
 
@@ -108,13 +108,22 @@ export const orderRegionController = ng.controller('orderRegionController',
             } else {
                 $scope.filter.isDate = true;
             }
-        }
+        };
+
+        $scope.syncSelected = (): void => {
+            $scope.projects.all.forEach(project => {
+                project.selected = $scope.display.allOrdersSelected;
+                project.orders.forEach(order => {
+                    order.selected = $scope.display.allOrdersSelected;
+                });
+            })
+        };
 
         const calculateTotalRegion = (orders: OrdersRegion, roundNumber: number) => {
             let totalPrice = 0;
             orders.forEach(order => {
                 let price;
-                if(typeof order.price === 'string') {
+                if (typeof order.price === 'string') {
                     price = parseFloat(order.price);
                 } else {
                     price = order.price
@@ -137,8 +146,8 @@ export const orderRegionController = ng.controller('orderRegionController',
         const filterAll = function (order) {
             let test = true;
             let i = 0
-            while(test && $scope.filtersFront.all.length > i) {
-                if($scope.filtersFront.all[i].name === "type")
+            while (test && $scope.filtersFront.all.length > i) {
+                if ($scope.filtersFront.all[i].name === "type")
                     i++;
                 else {
                     let valuePropOrder = order[$scope.filtersFront.all[i].name];
@@ -157,7 +166,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         async function getOrdersOfProjects(isSearching: boolean, old: boolean, projects: Projects) {
             let projets = new Projects();
             if (!isSearching) {
-                await projets.get(old,$scope.filtersDate.startDate, $scope.filtersDate.endDate,
+                await projets.get(old, $scope.filtersDate.startDate, $scope.filtersDate.endDate,
                     !$scope.selectedType.split('/').includes('historic'), $scope.filter.page, $scope.current.structure.id);
             } else {
                 projets = (projects) ? projects : $scope.projects;
@@ -171,7 +180,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             return {projets, responses};
         }
 
-        async function filterAndBeautifyOrders(data, old: boolean, projets : Projects) {
+        async function filterAndBeautifyOrders(data, old: boolean, projets: Projects) {
             for (let orders of data) {
                 if (orders.length > 0) {
                     const idProject = orders[0].id_project;
@@ -225,7 +234,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         }
 
         $scope.synchroRegionOrders = async (isSearching: boolean = false, projects?: Projects, old = false, page?: number): Promise<void> => {
-            if(page == 0) {
+            if (page == 0) {
                 $scope.filter.page = page;
             }
             let {projets, responses} = await getOrdersOfProjects(isSearching, old, projects);

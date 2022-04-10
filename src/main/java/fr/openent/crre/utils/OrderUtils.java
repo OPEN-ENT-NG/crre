@@ -1,5 +1,6 @@
 package fr.openent.crre.utils;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -80,6 +81,18 @@ public class OrderUtils {
 
     public static String convertPriceString(double price) {
         return (price == 0) ? "GRATUIT" : Double.toString(price);
+    }
+
+    public static Integer formatPage(HttpServerRequest request) {
+        Integer page = 0;
+        if (request.getParam("page") == null) {
+            page = 0;
+        } else if (request.getParam("page").equals("null")) {
+            page = null;
+        } else if (request.getParam("page") != null) {
+            page = Integer.parseInt(request.getParam("page"));
+        }
+        return page;
     }
 
 }

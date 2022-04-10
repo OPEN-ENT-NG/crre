@@ -11,6 +11,7 @@ import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.QuoteService;
 import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.*;
+import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -173,7 +174,7 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void getAllProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+            Integer page = OrderUtils.formatPage(request);
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
             boolean old = Boolean.parseBoolean(request.getParam("old"));
@@ -505,10 +506,15 @@ public class OrderRegionController extends BaseController {
                 });
             }
         } else {
-            plainTextSearchName(query, equipments -> {
-                orderRegionService.search(user, equipments.right().getValue(), query, startDate,
+            if (query.equals("")) {
+                orderRegionService.search(user, new JsonArray(), query, startDate,
                         endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-            });
+            } else {
+                plainTextSearchName(query, equipments -> {
+                    orderRegionService.search(user, equipments.right().getValue(), query, startDate,
+                            endDate, idStructure, filters, page, old, arrayResponseHandler(request));
+                });
+            }
         }
     }
 
@@ -520,7 +526,7 @@ public class OrderRegionController extends BaseController {
         UserUtils.getUserInfos(eb, request, user -> {
             String query = "";
             JsonArray filters = new JsonArray();
-            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
+            Integer page = OrderUtils.formatPage(request);
             if (request.params().contains("q")) {
                 try {
                     query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
@@ -530,12 +536,13 @@ public class OrderRegionController extends BaseController {
             }
             if (request.params().contains("type") || request.params().contains("id_structure")) {
                 String finalQuery = query;
+                Integer finalPage = page;
                 structureService.getStructuresByTypeAndFilter(request.getParam("type"),
                         request.params().getAll("id_structure"), event -> {
                             if (event.isRight()) {
                                 JsonArray listeIdStructure = event.right().getValue();
                                 filters.add(new JsonObject().put("id_structure", listeIdStructure));
-                                getOrders(finalQuery, filters, user, page, request);
+                                getOrders(finalQuery, filters, user, finalPage, request);
                             } else {
                                 log.error(event.left().getValue());
                                 badRequest(request);

@@ -11,7 +11,9 @@ import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
 
-        $scope.allOrdersListSelected = false;
+        $scope.display = {
+            allOrdersListSelected: false
+        };
         $scope.show = {
             comment: false
         };
@@ -36,23 +38,22 @@ export const manageOrderController = ng.controller('manageOrderController',
 
         $scope.exportCSV = () => {
             let order_selected = new OrdersClient();
-            let all_order = new OrdersClient();
             $scope.displayedBasketsOrders.forEach(function (basket) {
                 basket.selected = false;
                 basket.orders.forEach(function (order) {
                     if (order.selected) {
                         order_selected.all.push(order);
                     }
-                    all_order.all.push(order);
                     order.selected = false;
                 });
             });
-            $scope.allOrdersListSelected = false;
-            if (order_selected.all.length != 0) {
-                order_selected.exportCSV($scope.filter.isOld);
+            if (order_selected.all.length != 0 && !$scope.display.allOrdersListSelected) {
+                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false);
             } else {
-                all_order.exportCSV($scope.filter.isOld);
+                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true);
             }
+            $scope.display.allOrdersListSelected = false;
+            Utils.safeApply($scope);
         };
 
         $scope.filterByDate = async () => {
@@ -93,11 +94,16 @@ export const manageOrderController = ng.controller('manageOrderController',
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
             $scope.loading = false;
+            $scope.syncSelected();
             Utils.safeApply($scope);
         }
 
+        $scope.syncSelected = () : void => {
+            $scope.displayedBasketsOrders.forEach(basket => basket.selected = $scope.display.allOrdersListSelected)
+        };
+
         $scope.onScroll = async (): Promise<void> => {
-            if(!$scope.isInCampaignList()) {
+            if (!$scope.isInCampaignList()) {
                 $scope.filter.page++;
                 await $scope.searchByName(false);
             }

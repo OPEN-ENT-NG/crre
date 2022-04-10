@@ -12,8 +12,8 @@
             <td class="table-selector main-selector">
                 <label class="checkbox">
                     <input type="checkbox"
-                           ng-change="switchAllOrders(allOrdersListSelected)"
-                           ng-model="allOrdersListSelected"/>
+                           ng-change="switchAllOrders(display.allOrdersListSelected)"
+                           ng-model="display.allOrdersListSelected"/>
                     <span></span>
                 </label>
             </td>
@@ -30,7 +30,7 @@
         <tr ng-click="basket.expanded=!basket.expanded" class="line">
             <td class="table-selector">
                 <label class="checkbox">
-                    <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket)"/>
+                    <input type="checkbox" ng-model="basket.selected" ng-change="switchAllOrdersBasket(basket);checkSwitchAll();"/>
                     <span></span>
                 </label>
             </td>

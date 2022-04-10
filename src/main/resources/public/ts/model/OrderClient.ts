@@ -95,9 +95,8 @@ export class OrdersClient extends Selection<OrderClient> {
         try {
             if ((text.trim() === '' || !text)) return;
             let params = (id_campaign) ? `&id=${id_campaign}` : ``;
-            params += (page) ? `&page=${page}` : ``;
             const {startDate, endDate} = Utils.formatDate(start, end);
-            const {data} = await http.get(`/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}&q=${text}${params}`);
+            const {data} = await http.get(`/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}&page=${page}&q=${text}${params}`);
             let newOrderClient = Mix.castArrayAs(OrderClient, data);
             if (newOrderClient.length > 0) {
                 await this.reformatOrders(newOrderClient);
@@ -112,13 +111,12 @@ export class OrdersClient extends Selection<OrderClient> {
     async filter_order(filters: Filter[], id_campaign: number, start: string, end: string, word?: string, page?: number) {
         try {
             let params = (id_campaign) ? `&id=${id_campaign}` : ``;
-            params += (page) ? `&page=${page}` : ``;
             filters.forEach(function (f) {
                 params += "&" + f.name + "=" + f.value;
             });
             const {startDate, endDate} = Utils.formatDate(start, end);
             if (!Utils.format.test(word)) {
-                let url = `/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}${params}`;
+                let url = `/crre/orders/search_filter?startDate=${startDate}&endDate=${endDate}&page=${page}${params}`;
                 url += (!!word) ? `&q=${word}` : ``;
                 let {data} = await http.get(url);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
@@ -171,8 +169,7 @@ export class OrdersClient extends Selection<OrderClient> {
             if (idCampaign && idStructure && ordersId) {
                 return await this.getSpecificOrders(ordersId, old, idCampaign, idStructure, startDate, endDate);
             } else {
-                let pageParams = (page) ? `&page=${page}` : ``;
-                const {data} = await http.get(`/crre/orders?startDate=${startDate}&endDate=${endDate}&status=${status}${pageParams}`);
+                const {data} = await http.get(`/crre/orders?startDate=${startDate}&endDate=${endDate}&page=${page}&status=${status}`);
                 let newOrderClient = Mix.castArrayAs(OrderClient, data);
                 if (newOrderClient.length > 0) {
                     if (!old) {
@@ -301,12 +298,15 @@ export class OrdersClient extends Selection<OrderClient> {
         return total;
     }
 
-    exportCSV(old: boolean) {
-        let params_id_order = Utils.formatKeyToParameter(this.all, 'id');
-        let equipments_key = this.all.map((value) => value.equipment_key)
-            .filter((value, index, _arr) => _arr.indexOf(value) == index);
-        let params_id_equipment = Utils.formatKeyToParameter(equipments_key.map(s => ({equipment_key: s})), "equipment_key");
+    exportCSV(old: boolean, idCampaign: string, start: string, end: string, all: boolean, statut?: string) {
+        const {startDate, endDate} = Utils.formatDate(start, end);
+        let params = ``;
+        params += `startDate=${startDate}&endDate=${endDate}&`;
+        params += !!idCampaign ? `idCampaign=${idCampaign}&` : ``;
+        params += !!statut ? `statut=${statut}&` : ``;
+        params += !all ? Utils.formatKeyToParameter(this.all, 'id') : ``;
         const oldString = (old) ? `old/` : ``;
-        window.location = `/crre/orders/${oldString}exports?${params_id_order}&${params_id_equipment}`;
+        window.location = `/crre/orders/${oldString}exports?${params}`;
     };
+    
 }

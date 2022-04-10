@@ -28,20 +28,20 @@ export class Projects extends Selection<Project> {
         super([]);
     }
 
-    async get(old = false, start: string, end: string,filterRejectedSentOrders: boolean, pageNumber: number, idStructure: string) {
+    async get(old = false, start: string, end: string, filterRejectedSentOrders: boolean, pageNumber: number, idStructure: string) {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const page: string = pageNumber ? `page=${pageNumber}&` : '';
             let url = `/crre/orderRegion/projects?${page}startDate=${startDate}&endDate=${endDate}&old=${old}&idStructure=${idStructure}`;
             url += `&filterRejectedSentOrders=${filterRejectedSentOrders}`;
-            let { data } = await http.get(url);
-            this.all =  Mix.castArrayAs(Project, data);
+            let {data} = await http.get(url);
+            this.all = Mix.castArrayAs(Project, data);
         } catch (e) {
             toasts.warning('crre.basket.sync.err');
         }
     }
 
-    async filter_order(old = false, query_name:string, filters: Filters, start: string, end: string, pageNumber: number, idStructure: string) {
+    async filter_order(old = false, query_name: string, filters: Filters, start: string, end: string, pageNumber: number, idStructure: string) {
         function prepareParams() {
             let params = "";
             const word = query_name;
@@ -57,7 +57,7 @@ export class Projects extends Selection<Project> {
         try {
             let {params, word, startDate, endDate} = prepareParams();
             if (!Utils.format.test(word)) {
-                const wordParams =  (!!word) ? `&q=${word}` : ``
+                const wordParams = (!!word) ? `&q=${word}` : ``
                 let url = `/crre/ordersRegion/projects/search_filter`;
                 url += `?startDate=${startDate}&endDate=${endDate}&old=${old}&idStructure=${idStructure}&${params}${wordParams}`;
                 const {data} = await http.get(url);
@@ -71,12 +71,27 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    exportCSV = (old = false) => {
-        let selectedOrders = this.extractSelectedOrders();
+    public exportCSV = (old = false, all?: boolean) => {
+        let selectedOrders;
+        if (all) {
+            selectedOrders = this.extractAllOrders();
+        } else {
+            selectedOrders = this.extractSelectedOrders();
+        }
         let params_id_order = Utils.formatKeyToParameter(selectedOrders.all, 'id');
         let params_id_equipment = Utils.formatKeyToParameter(selectedOrders.all, "equipment_key");
         let params_id_structure = Utils.formatKeyToParameter(selectedOrders.all, "id_structure");
         window.location = `/crre/region/orders/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}&old=${old}`;
+    }
+
+    private extractAllOrders() {
+        let allOrders = new OrdersRegion();
+        this.all.forEach(project => {
+            project.orders.forEach(order => {
+                allOrders.all.push(order);
+            });
+        });
+        return allOrders;
     }
 
     private extractSelectedOrders(select: boolean = false) {
@@ -85,9 +100,23 @@ export class Projects extends Selection<Project> {
         this.all.forEach(project => {
             project.orders.forEach(order => {
                 allOrders.all.push(order);
-                if(order.selected){selectedOrders.all.push(order);}
+                if (order.selected) {
+                    selectedOrders.all.push(order);
+                }
             });
         });
         return (selectedOrders.length == 0 && !select) ? allOrders : selectedOrders;
+    }
+
+    public hasSelectedOrders() {
+        let isSelected = false;
+        this.all.forEach(project => {
+            project.orders.forEach(order => {
+                if (order.selected) {
+                    isSelected = true;
+                }
+            });
+        });
+        return isSelected
     }
 }

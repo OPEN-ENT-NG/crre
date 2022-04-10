@@ -116,7 +116,7 @@
                 <tr>
                     <td class="table-selector">
                         <label class="checkbox">
-                            <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project)"/>
+                            <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project); checkSwitchAll()"/>
                             <span></span>
                         </label>
                     </td>
@@ -200,7 +200,7 @@
             </table>
         </div>
         <loader data-ng-show="display.loading" min-height="'250px'"></loader>
-        <infinite-scroll scrolled="onScroll()" loading-mode="true" ng-if="projects.length != 0"></infinite-scroll>
+        <infinite-scroll scrolled="onScroll()" loading-mode="true" ng-if="projects.all.length != 0"></infinite-scroll>
         <div ng-show="projects.all.length === 0 && !display.loading" class="centered">
             <div class="twelve cell centered-text" >
                 <h3><i18n>crre.info.empty.tab</i18n></h3>
@@ -215,7 +215,7 @@
                 <div class="row">
                     <button ng-click="validateOrders()"><i18n>Validate</i18n></button>
                     <button ng-click="openRefusingOrderLightbox()"><i18n>Denied</i18n></button>
-                    <button ng-click="projects.exportCSV() && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
+                    <button ng-click="exportCSVRegion(false, true) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
                     <button ng-click="generateLibraryOrder()"><i18n>crre.take.order.library</i18n></button>
                 </div>
             </div>

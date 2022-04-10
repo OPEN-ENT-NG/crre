@@ -21,7 +21,7 @@ public interface OrderService {
     void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId,
                    String startDate, String endDate, boolean oldTable,  Handler<Either<String, JsonArray>> handler);
 
-    void listExport(List<Integer> idsOrders, boolean oldTable, Handler<Either<String, JsonArray>> catalog);
+    void listExport(List<Integer> idsOrders, UserInfos user, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> catalog);
 
     /**
      * Get the list of all orders

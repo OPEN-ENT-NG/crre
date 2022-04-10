@@ -107,7 +107,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 $scope.filtersFront.all.push(newFilterFront);
             }
             if ($scope.filters.all.length > 0) {
-                await $scope.searchProjectAndOrders($scope.filter.isOld);
+                await $scope.searchProjectAndOrders($scope.filter.isOld, false);
             } else {
                 await $scope.searchByName($scope.query_name, $scope.filter.isOld);
             }
