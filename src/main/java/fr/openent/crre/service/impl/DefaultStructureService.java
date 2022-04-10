@@ -117,9 +117,10 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         "END as nbr_students " +
                         "RETURN DISTINCT s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
                         "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
-                        "s.zipCode  as zipCode, s.city as city, s.type as type, sum(nbr_students)*2 AS minimum_licences_consumables;";
+                        "s.zipCode  as zipCode, s.city as city, s.type as type, sum(nbr_students)*2 AS minimum_licences_consumables";
                 params.put("consumable_formations", new JsonArray(consumable_formations));
             }
+            query += " ORDER BY s.name;";
             Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
         } catch (VertxException e) {
             getStructureById(ids, null, handler);
