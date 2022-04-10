@@ -27,19 +27,19 @@ export class Equipment implements Selectable {
     commentaire: string;
     commandable: boolean;
 
-    constructor () {
+    constructor() {
         this._loading = false;
     }
 
-    async sync (id, idStructure?:string) {
+    async sync(id, idStructure?: string) {
         try {
             const stuctureParams = (idStructure) ? `?idStructure=${idStructure}` : ``;
             let url = `/crre/equipment/${id}${stuctureParams}`;
-            let { data } =  await http.get(url);
+            let {data} = await http.get(url);
             Mix.extend(this, data);
             reformatEquipment(this);
-            if(this.type === 'articlenumerique') {
-                if(this.offres.length != 0) {
+            if (this.type === 'articlenumerique') {
+                if (this.offres.length != 0) {
                     this.offres[0].leps.forEach(function (offre) {
                         offre.conditions.sort(function (a, b) {
                             return a.gratuite - b.gratuite;
@@ -50,8 +50,7 @@ export class Equipment implements Selectable {
         } catch (e) {
             console.error(e);
             toasts.warning('crre.equipment.sync.err');
-        }
-        finally {
+        } finally {
             this.loading = false;
         }
     }
@@ -74,9 +73,9 @@ function reformatEquipment(equipment: Equipment) {
         .replace("À paraître", "").replace("Épuisé", "").replace("Epuisé", "Épuisé").replace("En cours de réimpression", "")
         .replace("Non disponible provisoirement", "").replace("En cours d'impression", "");
     if (commentaire) {
-        if(commentaire == lang.translate(equipment.status)) {
+        if (commentaire == lang.translate(equipment.status)) {
             equipment.commentaire = null;
-        }else{
+        } else {
             equipment.commentaire = commentaire;
         }
     } else {
@@ -85,7 +84,7 @@ function reformatEquipment(equipment: Equipment) {
     if (equipment.disciplines.length != 0) {
         equipment.discipline = equipment.disciplines[0].libelle;
     }
-    equipment.urlcouverture = equipment.urlcouverture.replace("cns-edu.org","www.cns-edu.com");
+    equipment.urlcouverture = equipment.urlcouverture.replace("cns-edu.org", "www.cns-edu.com");
 }
 
 export class Equipments extends Selection<Equipment> {
@@ -117,20 +116,26 @@ export class Equipments extends Selection<Equipment> {
         this.filterFulfilled = false;
     }
 
-    async syncEquip (data: any) {
-
+    async syncEquip(data: any) {
         function setFilterValues(filters, group) {
             this[group] = filters[group].map(v => ({name: v}));
-            if(group === 'public'){
+            if (group === 'public') {
                 this[group].forEach((item) => item.toString = () => lang.translate(item.name));
-            }else {
+            } else if (group === 'subjects') {
+                this[group].forEach((item) => item.toString = () => lang.translate(item.name));
+                this[group].forEach((item) => item.nameFormat = item.name.replace("É", "E"));
+            } else if (group === 'editors') {
+                this[group].forEach((item) => item.toString = () => lang.translate(item.name));
+                this[group].forEach((item) => item.nameFormat = item.name.replace("L’é", "e"));
+
+            } else {
                 this[group].forEach((item) => item.toString = () => item.name);
             }
         }
 
-        if(data.length > 0 ) {
-            if(data[0].hasOwnProperty("ressources")) {
-                if(!this.filterFulfilled) {
+        if (data.length > 0) {
+            if (data[0].hasOwnProperty("ressources")) {
+                if (!this.filterFulfilled) {
                     let filters = data[1].filters[0];
                     setFilterValues.call(this, filters, 'subjects');
                     setFilterValues.call(this, filters, 'grades');
@@ -154,7 +159,7 @@ export class Equipments extends Selection<Equipment> {
         }
     }
 
-    async getEquipments(orders) :Promise <any> {
+    async getEquipments(orders): Promise<any> {
         let params = '';
         orders.map((order) => {
             params += `id=${order.equipment_key}&`;
@@ -164,18 +169,18 @@ export class Equipments extends Selection<Equipment> {
         this.all = Mix.castArrayAs(Equipment, data);
     }
 
-    async getFilterEquipments(queryword?: string, filters?: Filters){
+    async getFilterEquipments(queryword?: string, filters?: Filters) {
         try {
             let uri: string;
             let params = "";
-            if(filters) {
+            if (filters) {
                 params = "&";
                 filters.all.forEach(function (f) {
                     params += f.name + "=" + f.value + "&";
                 });
             }
-            if(!Utils.format.test(queryword)) {
-                if(!!queryword) {
+            if (!Utils.format.test(queryword)) {
+                if (!!queryword) {
                     uri = (`/crre/equipments/catalog/search?word=${queryword}${params}`);
                 } else {
                     uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);

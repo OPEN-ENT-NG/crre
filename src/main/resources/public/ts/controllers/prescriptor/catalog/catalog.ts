@@ -154,6 +154,14 @@ export const catalogController = ng.controller('catalogController',
             $scope.getFilter();
         };
 
+        $scope.getSortName = (key): string => {
+            let sortName = "name";
+            if(key == "editors" || key == "subjects") {
+                sortName = "nameFormat"
+            }
+            return sortName;
+        }
+
         this.init();
         $scope.addFilter();
     }]);

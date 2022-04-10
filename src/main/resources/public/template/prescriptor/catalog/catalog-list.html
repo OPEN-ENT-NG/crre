@@ -25,7 +25,7 @@
         <multi-combo ng-if="preFilter[key].length == 0"
                      title="[[lang.translate(key)]]"
                      combo-model="equipments[key]"
-                     search-on="name" order-by="name"
+                     search-on="name" order-by="[[getSortName(key)]]"
                      labels="comboLabels" filtered-model="catalog[key]"
                      selection-event="getFilter()"
                      deselection-event="getFilter()"
