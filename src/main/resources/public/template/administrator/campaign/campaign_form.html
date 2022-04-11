@@ -95,7 +95,7 @@
                                    ng-disabled="othersSelected">
                             <span><i18n>crre.campaign.groups.etab.all</i18n></span>
                         </label>
-                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(0,3) track by $index">
+                        <label class="checkbox" ng-repeat="group in structureFormat.slice(0,3) track by $index">
                             <input type="checkbox" ng-model="group.selected" ng-disabled="othersSelected">
                             <span>[[group.name]]</span>
                         </label>
@@ -109,14 +109,14 @@
                 </h4>
                 <table class="twelve">
                     <div class="campaignCheckbox">
-                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(3,5) track by $index ">
-                            <input type="checkbox" ng-model="group.selected" ng-disabled="othersSelected">
-                            <span>[[group.name]]</span>
-                        </label>
                         <label class = "checkbox">
                             <input type="checkbox" ng-model="allProAndGenSelected" ng-change="selectProAndGenStructures()"
                                    ng-disabled="othersSelected">
-                            <span><i18n>crre.all</i18n></span>
+                            <span><i18n>crre.female.all</i18n></span>
+                        </label>
+                        <label class="checkbox" ng-repeat="group in structureFormat.slice(3,6) track by $index ">
+                            <input type="checkbox" ng-model="group.selected" ng-disabled="othersSelected">
+                            <span><i18n>[[lang.translate(group.name)]]</i18n></span>
                         </label>
                     </div>
                 </table>

@@ -163,7 +163,7 @@
   "crre.campaign.groups.choices": "Choix des regroupements d'établissements",
   "crre.campaign.groups.etab": "Établissements papier, numériques, mixtes",
   "crre.campaign.groups.etab.all": "Tous les regroupements",
-  "crre.campaign.groups.pro": "Établissements LG/LGT, LP/LPO",
+  "crre.campaign.groups.pro": "Voies",
   "crre.campaign.groups.others": "Autres regroupements d'établissements",
   "crre.campaign.options": "Options",
   "crre.campaign.type.choose": "Activer les crédits",
@@ -663,6 +663,7 @@
   "crre.all.diffusors": "Tout diffuseur",
   "crre.all.states": "Tout état",
   "crre.all": "Tous",
+  "crre.female.all": "Toutes",
   "crre.justificate.denied.order": "Justification refus de commande",
   "crre.new": "Nouveau",
   "NEW": "Nouveau",
@@ -796,5 +797,8 @@
   "crre.stat.licences.conso" : "Licences consommées",
   "crre.stat.licences.total": "Licences totales",
   "crre.stat.ressources": "Nombre de ressources commandées",
-  "crre.stat.orders": "Nombre de commandes"
+  "crre.stat.orders": "Nombre de commandes",
+  "Établissements professionnels": "Professionnelles",
+  "Établissements généraux": "Générales et technologiques",
+  "Établissements polyvalents": "Polyvalentes"
 }
