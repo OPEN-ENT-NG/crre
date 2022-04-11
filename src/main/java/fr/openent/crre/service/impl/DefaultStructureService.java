@@ -340,9 +340,24 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void getAllStructure(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT id_structure FROM " + Crre.crreSchema + ".rel_group_structure";
+    public void getAllStructureNumerique(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT DISTINCT rgs.id_structure " +
+                "FROM " + Crre.crreSchema + ".rel_group_structure rgs " +
+                "LEFT JOIN " + Crre.crreSchema + ".structure s ON (rgs.id_structure = s.id_structure) " +
+                "WHERE s.catalog = 'Numerique' OR s.mixte = true;";
         sql.raw(query, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getAllStructureByIds(List<String> ids, Handler<Either<String, JsonArray>> handler) {
+        JsonArray params = new JsonArray();
+        String query = "SELECT id_structure, s.catalog, s.mixte " +
+                "FROM " + Crre.crreSchema + ".structure s " +
+                "WHERE s.id_structure IN " + Sql.listPrepared(ids.toArray());
+        for (String id : ids) {
+            params.add(id);
+        }
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override

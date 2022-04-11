@@ -17,7 +17,7 @@
                ng-click="openWaitingOrder()"
                i18n-value="crre.access.demands.waiting.toValidate"/>
     </div>
-    <div>
+    <div ng-if="current.structure.catalog != 'Papier'">
         <article class="twelve cell">
             <h1 class="cell ten">Nombre d'élèves</h1>
             <div ng-init="getStudent()">
