@@ -28,6 +28,7 @@ export const orderRefuseController = ng.controller('orderRefuseController',
                 Utils.safeApply($scope);
                 $scope.allOrdersSelected = false;
                 $scope.onScroll(true);
+                await $scope.getAllAmount();
             } else {
                 toasts.warning('crre.order.refused.error');
             }

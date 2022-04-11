@@ -173,7 +173,9 @@
                 </div>
                 <div class="licences" ng-if="amountTotal.licence && campaign.nb_licences_total">
                     <i18n>crre.initial.licences</i18n>
-                    <div class="bold-font-weight big" ng-if="campaign.nb_licences_total" ng-bind="campaign.nb_licences_total"></div>
+                    <div class="bold-font-weight big" ng-if="campaign.nb_licences_total || campaign.nb_licences_consumable_total">
+                        [[campaign.nb_licences_total + campaign.nb_licences_consumable_total]]
+                    </div>
                     <div class="small" ng-if="campaign.nb_licences_2de"><i18n>crre.second.class</i18n> : [[campaign.nb_licences_2de]]</div>
                     <div class="small" ng-if="campaign.nb_licences_1ere"><i18n>crre.premiere.class</i18n> : [[campaign.nb_licences_1ere]]</div>
                     <div class="small" ng-if="campaign.nb_licences_Tale"><i18n>crre.terminal.class</i18n> : [[campaign.nb_licences_Tale]]</div>
@@ -186,9 +188,13 @@
                         [[campaign.nb_licences_consumable_total]]
                     </div>
                 </div>
-                <div ng-if="campaign.nb_licences_total - campaign.nb_licences_available - campaign.nb_licences_consumable_available !== 0">
+                <div ng-if="campaign.nb_licences_total - campaign.nb_licences_available +
+                        campaign.nb_licences_consumable_total - campaign.nb_licences_consumable_available !== 0">
                     <i18n>crre.already.consummed.licences</i18n>
-                    <h1 class="bold-font-weight">[[campaign.nb_licences_total - campaign.nb_licences_available - campaign.nb_licences_consumable_available]]</h1>
+                    <h1 class="bold-font-weight">
+                        [[campaign.nb_licences_total - campaign.nb_licences_available +
+                        campaign.nb_licences_consumable_total - campaign.nb_licences_consumable_available]]
+                    </h1>
                 </div>
                 <div class="color-red"
                      ng-if="campaign.nb_licences_available || campaign.nb_licences_consumable_available || amountTotal.licence">

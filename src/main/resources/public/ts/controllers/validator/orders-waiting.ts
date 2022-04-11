@@ -160,19 +160,21 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             });
         }
 
-        function reformatOrders(order, ordersToCreate: OrdersRegion, ordersToRemove: OrdersClient, totalPrice: number,
-                                totalAmount: number, totalAmountConsumable: number) {
-            let orderRegionTemp = new OrderRegion();
-            orderRegionTemp.createFromOrderClient(order);
-            ordersToCreate.all.push(orderRegionTemp);
-            ordersToRemove.all.push(order);
-            if(order.campaign.use_credit == "credits") {
-                totalPrice += order.price * order.amount;
-            }else if(order.campaign.use_credit == "licences") {
-                totalAmount += order.amount;
-            }else if(order.campaign.use_credit == "consumable_licences") {
-                totalAmountConsumable += order.amount;
-            }
+        function reformatOrders(ordersToReformat, ordersToCreate: OrdersRegion, ordersToRemove: OrdersClient, totalPrice: number, totalAmount: number, totalAmountConsumable: number) {
+            ordersToReformat.forEach(order => {
+                let orderRegionTemp = new OrderRegion();
+                orderRegionTemp.createFromOrderClient(order);
+                ordersToCreate.all.push(orderRegionTemp);
+                ordersToRemove.all.push(order);
+                if (order.campaign.use_credit == "credits") {
+                    totalPrice += order.price * order.amount;
+                } else if (order.campaign.use_credit == "licences") {
+                    totalAmount += order.amount;
+                } else if (order.campaign.use_credit == "consumable_licences") {
+                    totalAmountConsumable += order.amount;
+                }
+            });
+            return {totalPrice, totalAmount, totalAmountConsumable};
         }
 
         $scope.createOrder = async ():Promise<void> => {
@@ -189,9 +191,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             } else {
                 ordersToReformat = ($scope.ordersClient.selectedElements.length > 0) ? $scope.ordersClient.selectedElements : $scope.ordersClient.all;
             }
-            ordersToReformat.forEach(order => {
-                reformatOrders(order, ordersToCreate, ordersToRemove, totalPrice, totalAmount, totalAmountConsumable);
-            });
+            const __ret = reformatOrders(ordersToReformat, ordersToCreate, ordersToRemove, totalPrice, totalAmount, totalAmountConsumable);
+            totalPrice = __ret.totalPrice;
+            totalAmount = __ret.totalAmount;
+            totalAmountConsumable = __ret.totalAmountConsumable;
 
             ordersToCreate.create().then(async data =>{
                 if (data.status === 201) {
@@ -201,6 +204,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     Utils.safeApply($scope);
                     $scope.allOrdersSelected = false;
                     $scope.onScroll(true);
+                    await $scope.getAllAmount();
                 }
                 else {
                     toasts.warning('crre.admin.order.create.err');
