@@ -93,7 +93,11 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         String query = "SELECT sum(oce.amount) as nb_licences " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
-                "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) ";
+                "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
+                "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
+                "AND rel_group_campaign.id_structure_group = structure_group.id) ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query = filterWaitingOrder(status, user, query, startDate, endDate, values);
         query += "AND (c.use_credit = 'consumable_licences' OR c.use_credit = 'licences');";
@@ -105,7 +109,11 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         String query = "SELECT oce.equipment_key, oce.amount " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
-                "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) ";
+                "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
+                "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
+                "AND rel_group_campaign.id_structure_group = structure_group.id) ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query = filterWaitingOrder(status, user, query, startDate, endDate, values);
         query += "AND c.use_credit = 'credits';";
