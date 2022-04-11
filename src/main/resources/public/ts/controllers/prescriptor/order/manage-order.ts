@@ -81,7 +81,7 @@ export const manageOrderController = ng.controller('manageOrderController',
             if (init) {
                 $scope.startInitLoading();
             }
-            let newData: boolean;
+            let newData;
             if (!!$scope.query_name) {
                 newData = await $scope.basketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
                     $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld);
@@ -89,8 +89,8 @@ export const manageOrderController = ng.controller('manageOrderController',
                 newData = await $scope.basketsOrders.getMyOrders($scope.filter.page,
                     $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld);
             }
-            if(newData) {
-                await $scope.synchroMyBaskets();
+            if(newData.length > 0) {
+                await $scope.synchroMyBaskets(newData);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
             $scope.loading = false;
@@ -109,17 +109,15 @@ export const manageOrderController = ng.controller('manageOrderController',
             }
         };
 
-        $scope.synchroMyBaskets = async (): Promise<void> => {
-            if ($scope.basketsOrders.all.length != 0) {
-                let ordersId = [];
-                $scope.basketsOrders.forEach((order) => {
-                    ordersId.push(order.id);
-                });
-                $scope.newOrders = new OrdersClient();
-                await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [],
-                    $routeParams.idCampaign, $scope.current.structure.id, ordersId, null, $scope.filter.isOld);
-                formatDisplayedBasketOrders();
-            }
+        $scope.synchroMyBaskets = async (newData:BasketsOrders): Promise<void> => {
+            let ordersId = [];
+            newData.forEach((order) => {
+                ordersId.push(order.id);
+            });
+            $scope.newOrders = new OrdersClient();
+            await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [],
+                $routeParams.idCampaign, $scope.current.structure.id, ordersId, null, $scope.filter.isOld);
+            formatDisplayedBasketOrders();
             Utils.safeApply($scope);
         };
 
@@ -142,8 +140,8 @@ export const manageOrderController = ng.controller('manageOrderController',
         $scope.getOrders = async (): Promise<void> => {
             let newData = await $scope.basketsOrders.getMyOrders($scope.filter.page,
                 $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld);
-            if(newData) {
-                await $scope.synchroMyBaskets();
+            if(newData.length > 0) {
+                await $scope.synchroMyBaskets(newData);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
             $scope.loading = false;

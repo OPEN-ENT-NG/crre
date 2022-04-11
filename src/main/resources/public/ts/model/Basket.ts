@@ -208,6 +208,6 @@ export class BasketsOrders extends Selection<BasketOrder> {
             basket.orders = [];
         });
         this.all = this.all.concat(Mix.castArrayAs(BasketOrder, data));
-        return data.length > 0;
+        return data;
     }
 }
