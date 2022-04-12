@@ -877,7 +877,7 @@ public class OrderRegionController extends BaseController {
         attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
-                "", attachment, message -> {
+                "Demande Libraire CRRE : " + title + ".csv", attachment, message -> {
                     if (!message.isRight()) {
                         log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
                                 "An error has occurred sendMail : " + message.left());
