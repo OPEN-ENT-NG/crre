@@ -56,10 +56,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
         $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
             "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
-        $scope.categories = ["Papier", "Numériques", "Mixtes","Établissements professionnels","Établissements généraux",
-            "Établissements professionnels Papier","Établissements généraux Papier",
-            "Établissements professionnels Numérique","Établissements généraux Numérique",
-            "Établissements professionnels Mixte","Établissements généraux Mixte"];
+        $scope.categories = ["Établissements professionnels papier", "Établissements généraux papier", "Établissements polyvalents papier",
+            "Établissements professionnels numériques","Établissements généraux numériques", "Établissements polyvalents numériques",
+            "Établissements professionnels mixtes","Établissements généraux mixtes", "Établissements polyvalents mixtes"];
         $scope.selectedType = $location.path();
         $scope.comboLabels = COMBO_LABELS;
 

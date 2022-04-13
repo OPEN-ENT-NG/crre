@@ -21,6 +21,14 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Licences consommables", value: "consumable_licences"},
                 {name: "Crédits monétaires", value: "credits"}
             ];
+            $scope.structureFormat = [
+                {name: "Papier"},
+                {name: "Numériques"},
+                {name: "Mixtes"},
+                {name: "Établissements professionnels"},
+                {name: "Établissements généraux"},
+                {name: "Établissements polyvalents"}
+            ]
             $scope.formatCheck = [];
             $scope.allSelected = $scope.allProAndGenSelected = false;
             await $scope.getTypesCampaign();
@@ -49,7 +57,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.id_type = $scope.campaign_type.id_type;
             $scope.campaign.name_type = $scope.campaign_type.name_type;
             $scope.campaign.catalog = $scope.campaign_type.catalog;
-            $scope.structureGroups.all.forEach(structure => {
+            $scope.structureFormat.forEach(structure => {
                 structure.selected = !!$scope.campaign_type.structure.find(item => {
                     return item.libelle == structure.name
                 });
@@ -76,22 +84,22 @@ export const campaignFormController = ng.controller('campaignFormController',
         $scope.validCampaignForm = (campaign: Campaign) => {
             return campaign.name !== undefined
                 && campaign.name.trim() !== ''
-                && _.findWhere($scope.structureGroups.all, {selected: true}) !== undefined
+                && _.findWhere($scope.structureFormat, {selected: true}) !== undefined
                 && $scope.campaign.catalog !== undefined;
 
         };
 
-        const managStructureGroups = () => {
+        $scope.managStructureGroups = () => {
             let proOrGenSelected = false;
             let papierNumeriqueSelected = false;
             let groups = [];
-            $scope.structureGroups.all.slice(3, 5).forEach(group => {
+            $scope.structureFormat.slice(3, 6).forEach(group => {
                 if (group.selected) {
                     proOrGenSelected = true;
-                    $scope.structureGroups.all.slice(0, 3).forEach(groupPapNum => {
+                    $scope.structureFormat.slice(0, 3).forEach(groupPapNum => {
                         if (groupPapNum.selected) {
                             papierNumeriqueSelected = true;
-                            const groupName = group.name + " " + groupPapNum.name;
+                            const groupName = group.name + " " + groupPapNum.name.toLowerCase();
                             groups.push(_.findWhere($scope.structureGroups.all, {name: groupName}));
                         }
                     });
@@ -101,7 +109,7 @@ export const campaignFormController = ng.controller('campaignFormController',
                 }
             });
             if (!proOrGenSelected && papierNumeriqueSelected) {
-                $scope.structureGroups.all.slice(0, 3).forEach(groupPapNum => {
+                $scope.structureFormat.slice(0, 3).forEach(groupPapNum => {
                     if (groupPapNum.selected) {
                         papierNumeriqueSelected = true;
                         groups.push(_.findWhere($scope.structureGroups.all, {name: groupPapNum.name}));
@@ -116,7 +124,7 @@ export const campaignFormController = ng.controller('campaignFormController',
         };
 
         $scope.selectStructures = () => {
-            $scope.structureGroups.all.slice(0, 3).forEach(group => {
+            $scope.structureFormat.slice(0, 3).forEach(group => {
                 group.selected = $scope.allSelected;
             });
             Utils.safeApply($scope);
@@ -124,14 +132,14 @@ export const campaignFormController = ng.controller('campaignFormController',
 
         $scope.changeInOthersSelected = (checking: boolean) => {
             if (checking) {
-                $scope.structureGroups.all.slice(0, 5).forEach(group => {
+                $scope.structureFormat.slice(0, 6).forEach(group => {
                     group.selected = false;
                 });
                 $scope.allSelected = $scope.allProAndGenSelected = false;
                 $scope.othersSelected = true;
             } else {
                 let remainOthersSelected = false;
-                $scope.structureGroups.all.slice(11).forEach(group => {
+                $scope.structureFormat.slice(11).forEach(group => {
                     if (group.selected) {
                         remainOthersSelected = true;
                     }
@@ -142,7 +150,7 @@ export const campaignFormController = ng.controller('campaignFormController',
         }
 
         $scope.selectProAndGenStructures = () => {
-            $scope.structureGroups.all.slice(3, 5).forEach(group => {
+            $scope.structureFormat.slice(3, 6).forEach(group => {
                 group.selected = $scope.allProAndGenSelected;
             });
             Utils.safeApply($scope);
@@ -152,7 +160,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.campaign.groups = [];
             $scope.campaign.catalog = $scope.campaign.catalog.value;
             $scope.campaign.use_credit = $scope.campaign.use_credit.value;
-            $scope.campaign.groups = managStructureGroups();
+            $scope.campaign.groups = $scope.managStructureGroups();
             await campaign.save();
             $scope.redirectTo('/campaigns');
             Utils.safeApply($scope);
@@ -162,29 +170,32 @@ export const campaignFormController = ng.controller('campaignFormController',
         function formatStructureGroups(groups: StructureGroup[]) {
             groups.forEach(group => {
                 if (new RegExp('généraux').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Établissements généraux").selected = true;
+                    $scope.structureFormat.find(s => s.name === "Établissements généraux").selected = true;
                 }
                 if (new RegExp('professionnels').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Établissements professionnels").selected = true;
+                    $scope.structureFormat.find(s => s.name === "Établissements professionnels").selected = true;
                 }
-                if (new RegExp('Mixtes').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Mixtes").selected = true;
+                if (new RegExp('polyvalents').test(group.name)) {
+                    $scope.structureFormat.find(s => s.name === "Établissements polyvalents").selected = true;
                 }
-                if (new RegExp('Papier').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Papier").selected = true;
+                if (new RegExp('mixtes').test(group.name)) {
+                    $scope.structureFormat.find(s => s.name === "Mixtes").selected = true;
                 }
-                if (new RegExp('Numériques').test(group.name)) {
-                    $scope.structureGroups.all.find(s => s.name === "Numériques").selected = true;
+                if (new RegExp('papier').test(group.name)) {
+                    $scope.structureFormat.find(s => s.name === "Papier").selected = true;
+                }
+                if (new RegExp('numériques').test(group.name)) {
+                    $scope.structureFormat.find(s => s.name === "Numériques").selected = true;
                 }
             });
 
             // If Numérique, Papier and Mixte are selected, select the all group
-            if ($scope.structureGroups.all.slice(0, 3).filter(s => s.selected === true).length === 3) {
+            if ($scope.structureFormat.slice(0, 3).filter(s => s.selected === true).length === 3) {
                 $scope.allSelected = true;
             }
 
             // If Pro and General are selected, select the all group
-            if ($scope.structureGroups.all.slice(3, 5).filter(s => s.selected === true).length === 2) {
+            if ($scope.structureFormat.slice(3, 6).filter(s => s.selected === true).length === 3) {
                 $scope.allProAndGenSelected = true;
             }
 
