@@ -102,7 +102,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             }
             if($scope.filters.all.length > 0) {
                 const newData = await $scope.ordersClient.filter_order($scope.filters.all, null,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.query_name);
+                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
             } else {
                 if (!!$scope.query_name) {
