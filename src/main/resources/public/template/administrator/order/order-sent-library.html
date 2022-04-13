@@ -15,14 +15,6 @@
         <table class="twelve">
             <thead>
             <tr>
-                <td class="table-selector main-selector">
-                    <label class="checkbox">
-                        <input type="checkbox"
-                               ng-change="switchAll()"
-                               ng-model="allSelected"/>
-                        <span></span>
-                    </label>
-                </td>
                 <td><div class="smallTabElem center"><i18n>crre.date</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.order.number</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.order.user</i18n></div></td>
@@ -32,12 +24,6 @@
             </thead>
             <tbody>
             <tr ng-repeat="quote in quotes.all">
-                <td class="table-selector">
-                    <label class="checkbox">
-                        <input type="checkbox" ng-model="quote.selected" ng-change="switchAllOrdersOfProject(quote)"/>
-                        <span></span>
-                    </label>
-                </td>
                 <td><div class="smallTabElem center">[[quote.creation_date]]</div></td>
                 <td><div class="smallTabElem center">[[quote.title]]</div></td>
                 <td><div class="smallTabElem center">[[quote.owner_name]]</div></td>
