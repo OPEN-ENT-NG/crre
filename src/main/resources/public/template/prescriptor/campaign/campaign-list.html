@@ -11,11 +11,13 @@
             </search-and-select>
         </h4>
     </div>
-    <div class="twelve-mobile cell right-magnet" workflow="crre.validator">
-        <input type="button"
-               class="button"
-               ng-click="openWaitingOrder()"
-               i18n-value="crre.access.demands.waiting.toValidate"/>
+    <div class="row">
+        <div class="twelve-mobile cell right-magnet" workflow="crre.validator">
+            <input type="button"
+                   class="button"
+                   ng-click="openWaitingOrder()"
+                   i18n-value="crre.access.demands.waiting.toValidate"/>
+        </div>
     </div>
     <div ng-if="current.structure.catalog != 'Papier'">
         <article class="twelve cell">
