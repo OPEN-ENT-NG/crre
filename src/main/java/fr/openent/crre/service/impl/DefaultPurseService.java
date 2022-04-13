@@ -64,11 +64,14 @@ public class DefaultPurseService implements PurseService {
                 params.add(id);
             }
         }
+
+        query+= " ORDER BY name ";
+
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     private String getQueryPursesAndLicences() {
-        return "SELECT DISTINCT COALESCE(licences.id_structure, purse.id_structure, students.id_structure) AS id_structure, " +
+        return "SELECT DISTINCT COALESCE(licences.id_structure, purse.id_structure, students.id_structure) AS id_structure, structure.name, " +
                 "purse.amount, purse.initial_amount, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
                 "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
                 "licences.consumable_amount as consumable_licence_amount, " +
@@ -76,6 +79,9 @@ public class DefaultPurseService implements PurseService {
                 "FROM " + Crre.crreSchema + ".licences " +
                 "FULL OUTER JOIN "+ Crre.crreSchema +".students ON students.id_structure = licences.id_structure " +
                 "FULL OUTER JOIN "+ Crre.crreSchema +".purse ON purse.id_structure = licences.id_structure " +
+                "JOIN " + Crre.crreSchema + ".structure ON structure.id_structure = licences.id_structure " +
+                    "OR structure.id_structure = purse.id_structure " +
+                    "OR structure.id_structure = students.id_structure " +
                 "WHERE (purse.initial_amount IS NOT NULL OR licences.initial_amount <> 0 OR licences.consumable_initial_amount <> 0) ";
     }
 
@@ -92,6 +98,8 @@ public class DefaultPurseService implements PurseService {
                 params.add(idStructures.getString(i));
             }
         }
+
+        query+= " ORDER BY name ";
 
         if (page != null) {
             query+= " OFFSET ? LIMIT ? ";
