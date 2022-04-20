@@ -461,4 +461,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
+
+    @Override
+    public void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject) {
+        String query = "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".project', 'id')), (SELECT (count(*) + 1) FROM " + Crre.crreSchema + ".project), FALSE);" +
+                "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".\"order-region-equipment-old\"', 'id')), (SELECT max(id) FROM " + Crre.crreSchema + ".\"order-region-equipment-old\") + 1, FALSE);" +
+                "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".\"order-region-equipment\"', 'id')), (SELECT max(id) FROM " + Crre.crreSchema + ".\"order-region-equipment-old\")+1, FALSE);" +
+                "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".structure_group', 'id')), (SELECT (count(*) + 1) FROM " + Crre.crreSchema + ".structure_group), FALSE);";
+        Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handlerJsonObject));
+    }
 }

@@ -283,7 +283,13 @@ public class OrderRegionController extends BaseController {
         int project_size = 0; // Size of project to create dynamically project in db
         int total = part * 1000;
         if (!sc.hasNextLine()) {
-            log.info("add LDE orders finished with success");
+            orderRegionService.setIdOrderRegion(event -> {
+                if (event.isRight()) {
+                    log.info("add LDE orders finished with success");
+                } else {
+                    log.info("[LDE Historic] Error : Unable to set correct id to order region equipment table : " + event.left().getValue());
+                }
+            });
         } else {
             log.info("Processing LDE orders part " + part);
             while (sc.hasNextLine() && total < 1000 * part + 1000) {
