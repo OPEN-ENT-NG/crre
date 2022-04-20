@@ -1,24 +1,102 @@
 <div>
-    <h1><i18n>crre.modify.number.student</i18n></h1>
+    <h1>
+        <i18n>crre.modify.number.student</i18n>
+    </h1>
     <form class="vertical-spacing">
-        <div class="flex-spacebetween">
-            <div>
-                <label>Secondes : </label>
-                <input class="three" type="number" ng-model="seconde" ng-init="seconde = student.Seconde"/>
+        <div ng-if="student.general">
+            <h3>
+                <i18n>crre.gen</i18n>
+            </h3>
+            <div class="flex-container">
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.seconde</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.seconde"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.premiere</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.premiere"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.terminale</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.terminale"/>
+                </div>
             </div>
-            <div>
-                <label>Premières : </label>
-                <input class="three" type="number" ng-model="premiere" ng-init="premiere = student.Premiere"/>
+        </div>
+        <div ng-if="student.pro">
+            <h3>
+                <i18n>crre.pro</i18n>
+            </h3>
+            <div class="flex-container">
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.seconde</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.secondepro"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.premiere</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.premierepro"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.terminale</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.terminalepro"/>
+                </div>
             </div>
-            <div>
-                <label>Terminales : </label>
-                <input class="three" type="number" ng-model="terminale" ng-init="terminale = student.Terminale"/>
+            <h3>
+                <i18n>CAP</i18n>
+            </h3>
+            <div class="flex-container">
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.first.year</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.cap1"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.second.year</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.cap2"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.third.year</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.cap3"/>
+                </div>
+            </div>
+            <h3>
+                <i18n>BMA</i18n>
+            </h3>
+            <div class="flex-container">
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.first.year</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.bma1"/>
+                </div>
+                <div class="four">
+                    <label>
+                        <i18n>crre.class.second.year</i18n>
+                    </label>
+                    <input class="three" type="number" min="0" ng-model="student.bma2"/>
+                </div>
             </div>
         </div>
     </form>
-
     <div class="row vertical-spacing">
-        <input type="submit" class="button right-magnet " ng-click="updateNumberStudent(seconde, premiere, terminale)" i18n-value="modify"/>
-        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelUpdateNumberStudent()" i18n-value="cancel"/>
+        <input type="submit" class="button right-magnet " ng-click="updateNumberStudent(student)" i18n-value="modify"/>
+        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelUpdateNumberStudent()"
+               i18n-value="cancel"/>
     </div>
 </div>

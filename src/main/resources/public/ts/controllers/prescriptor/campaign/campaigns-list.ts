@@ -1,5 +1,5 @@
 import {ng, template} from 'entcore';
-import {Campaign, Utils} from '../../../model';
+import {Campaign, Student, Utils} from '../../../model';
 
 export const campaignsListController = ng.controller('campaignsListController',
     ['$scope', ($scope) => {
@@ -46,15 +46,13 @@ export const campaignsListController = ng.controller('campaignsListController',
         };
 
         const calculateLicence = async () => {
-           if($scope.student.pro) {
-               $scope.total_licence = ($scope.student.seconde + $scope.student.premiere + $scope.student.terminale) * 3;
-           } else {
-               $scope.total_licence = $scope.student.seconde * 9 + $scope.student.premiere * 8 + $scope.student.terminale * 7;
-           }
+               $scope.total_licence = (($scope.student.secondepro + $scope.student.premierepro + $scope.student.terminalepro +
+                       $scope.student.cap1 + $scope.student.cap2 + $scope.student.cap3 + $scope.student.bma1 + $scope.student.bma2) * 3) +
+                   $scope.student.seconde * 9 + $scope.student.premiere * 8 + $scope.student.terminale * 7;
         };
 
-        $scope.updateNumberStudent = async (seconde: number, premiere: number, terminale: number) => {
-            await $scope.student.updateAmount($scope.current.structure.id, seconde, premiere, terminale, $scope.student.pro, $scope.total_licence);
+        $scope.updateNumberStudent = async (student: Student) => {
+            await $scope.student.updateAmount($scope.current.structure.id, student, $scope.total_licence);
             await $scope.student.getAmount($scope.current.structure.id);
             await calculateLicence();
             $scope.display.lightbox.modifyNumberStudent = false;

@@ -105,7 +105,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsLicences(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT \"Seconde\", \"Premiere\", \"Terminale\", pro, l.* " +
+        String query = "SELECT seconde, premiere, terminale, secondepro, premierepro, terminalepro, cap1, cap2, cap3, " +
+                "bma1, bma2, pro, l.* " +
                 "FROM " + Crre.crreSchema + ".licences l " +
                 "FULL JOIN " + Crre.crreSchema + ".students s ON (s.id_structure = l.id_structure) "+
                 "WHERE l.id_structure = ?";
@@ -187,6 +188,14 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                     campaign.put("nb_licences_2de", 0);
                     campaign.put("nb_licences_1ere", 0);
                     campaign.put("nb_licences_Tale", 0);
+                    campaign.put("nb_licences_2depro", 0);
+                    campaign.put("nb_licences_1erepro", 0);
+                    campaign.put("nb_licences_Talepro", 0);
+                    campaign.put("nb_licences_cap1", 0);
+                    campaign.put("nb_licences_cap2", 0);
+                    campaign.put("nb_licences_cap3", 0);
+                    campaign.put("nb_licences_bma1", 0);
+                    campaign.put("nb_licences_bma2", 0);
                     if(purses.size() > 0) {
                         object = purses.getJsonObject(0);
                         try {
@@ -211,18 +220,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 for (int i = 0; i < licences.size(); i++) {
                     object = licences.getJsonObject(i);
                     try {
-                        int nb_seconde;
-                        int nb_premiere;
-                        int nb_terminale;
-                        if(object.getBoolean("pro")) {
-                             nb_seconde = object.getInteger("Seconde",0) * 3;
-                             nb_premiere = object.getInteger("Premiere",0) * 3;
-                             nb_terminale = object.getInteger("Terminale",0) * 3;
-                        } else {
-                             nb_seconde = object.getInteger("Seconde",0) * 9;
-                             nb_premiere = object.getInteger("Premiere",0) * 8;
-                             nb_terminale = object.getInteger("Terminale",0) * 7;
-                        }
 
                         int nb_total = object.getInteger("initial_amount",0);
                         int nb_total_available = object.getInteger("amount",0);
@@ -234,9 +231,17 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                             campaign.put("nb_licences_available", nb_total_available);
                             campaign.put("nb_licences_consumable_total", nb_total_consumable);
                             campaign.put("nb_licences_consumable_available", nb_total_available_consumable);
-                            campaign.put("nb_licences_2de", nb_seconde);
-                            campaign.put("nb_licences_1ere", nb_premiere);
-                            campaign.put("nb_licences_Tale", nb_terminale);
+                            campaign.put("nb_licences_2de", object.getInteger("seconde",0) * 9);
+                            campaign.put("nb_licences_1ere", object.getInteger("premiere",0) * 8);
+                            campaign.put("nb_licences_Tale", object.getInteger("terminale",0) * 7);
+                            campaign.put("nb_licences_2depro", object.getInteger("secondepro",0) * 3);
+                            campaign.put("nb_licences_1erepro", object.getInteger("premierepro",0) * 3);
+                            campaign.put("nb_licences_Talepro", object.getInteger("terminalepro",0) * 3);
+                            campaign.put("nb_licences_cap1", object.getInteger("cap1",0) * 3);
+                            campaign.put("nb_licences_cap2", object.getInteger("cap2",0) * 3);
+                            campaign.put("nb_licences_cap3", object.getInteger("cap3",0) * 3);
+                            campaign.put("nb_licences_bma1", object.getInteger("bma1",0) * 3);
+                            campaign.put("nb_licences_bma2", object.getInteger("bma2",0) * 3);
                         }
                     } catch (NullPointerException e){
                         LOGGER.info("A licence is present on this structure but the structure is not linked to the campaign");

@@ -179,8 +179,18 @@
                     <div class="small" ng-if="campaign.nb_licences_2de"><i18n>crre.second.class</i18n> : [[campaign.nb_licences_2de]]</div>
                     <div class="small" ng-if="campaign.nb_licences_1ere"><i18n>crre.premiere.class</i18n> : [[campaign.nb_licences_1ere]]</div>
                     <div class="small" ng-if="campaign.nb_licences_Tale"><i18n>crre.terminal.class</i18n> : [[campaign.nb_licences_Tale]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_2depro"><i18n>crre.second.pro.class</i18n> : [[campaign.nb_licences_2depro]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_1erepro"><i18n>crre.premiere.pro.class</i18n> : [[campaign.nb_licences_1erepro]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_Talepro"><i18n>crre.terminal.pro.class</i18n> : [[campaign.nb_licences_Talepro]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_cap1"><i18n>crre.first.cap.class</i18n> : [[campaign.nb_licences_cap1]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_cap2"><i18n>crre.second.cap.class</i18n> : [[campaign.nb_licences_cap2]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_cap3"><i18n>crre.third.cap.class</i18n> : [[campaign.nb_licences_cap3]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_bma1"><i18n>crre.first.bma.class</i18n> : [[campaign.nb_licences_bma1]]</div>
+                    <div class="small" ng-if="campaign.nb_licences_bma2"><i18n>crre.second.bma.class</i18n> : [[campaign.nb_licences_bma2]]</div>
                     <div class="small"
-                         ng-if="campaign.nb_licences_total - campaign.nb_licences_2de - campaign.nb_licences_1ere - campaign.nb_licences_Tale !== 0">
+                         ng-if="campaign.nb_licences_total - campaign.nb_licences_2de - campaign.nb_licences_1ere - campaign.nb_licences_Tale - campaign.nb_licences_2depro
+                          - campaign.nb_licences_1erepro - campaign.nb_licences_Talepro - campaign.nb_licences_cap1 - campaign.nb_licences_cap2 - campaign.nb_licences_cap3 -
+                          campaign.nb_licences_bma1 - campaign.nb_licences_bma2 !== 0">
                         <i18n>crre.licences.supp</i18n> :
                         [[campaign.nb_licences_total - campaign.nb_licences_2de - campaign.nb_licences_1ere - campaign.nb_licences_Tale]]
                     </div>

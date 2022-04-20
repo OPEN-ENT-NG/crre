@@ -43,12 +43,15 @@ public class ElasticSearchHelper {
                     JsonObject addingArticle = articleJson.getJsonObject("_source");
                     String typeNumeric = "";
                     String typePapier = "";
+                    String type = "";
                     if (articleJson.getString("_index").equals("articlenumerique") && addingArticle.getJsonArray("offres").size() > 0) {
-                        addingArticle.put("typeCatalogue", addingArticle.getJsonArray("offres").getJsonObject(0).getString("type"));
-                        typeNumeric = addingArticle.getJsonArray("offres").getJsonObject(0).getString("type", "");
+                        type = addingArticle.getJsonArray("offres").getJsonObject(0).getString("type") == null ? "" : addingArticle.getJsonArray("offres").getJsonObject(0).getString("type");
+                        addingArticle.put("typeCatalogue", type);
+                        typeNumeric = type;
                     } else {
-                        addingArticle.put("typeCatalogue", addingArticle.getString("type", ""));
-                        typePapier = addingArticle.getString("type", "");
+                        type = addingArticle.getString("type", "") == null ? "" : addingArticle.getString("type", "");
+                        addingArticle.put("typeCatalogue", type);
+                        typePapier = type;
                     }
                     addingArticle.put("type", articleJson.getString("_index"))
                             .put("id", articleJson.getString("_id"));
@@ -57,7 +60,7 @@ public class ElasticSearchHelper {
                     boolean proNumeric = false;
                     if (addingArticle.getJsonArray("niveaux").size() > 0) {
                         for (int i = 0; i < addingArticle.getJsonArray("niveaux").size(); i++) {
-                            String niveau = addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle");
+                            String niveau = addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle") == null ? "" : addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle");
                             if (niveau.equals("Lycée pro.")) {
                                 proNumeric = true;
                             }

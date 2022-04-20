@@ -34,9 +34,9 @@ public interface StructureService {
 
     void getTotalStructure(Handler<Either<String, JsonArray>> handler);
 
-    void getAllStructureByIds(List<String> ids, Handler<Either<String, JsonArray>> handler);
+    void getAllStructure(Handler<Either<String, JsonArray>> handler);
 
-    void getAllStructureNumerique(Handler<Either<String, JsonArray>> handler);
+    void getAllStructureByIds(List<String> ids, Handler<Either<String, JsonArray>> handler);
 
     void insertTotalStructure(JsonArray total, JsonObject consumableFormationsStudents, Handler<Either<String, JsonObject>> handler);
 
@@ -44,7 +44,7 @@ public interface StructureService {
 
     void insertStudents(JsonArray students, Handler<Either<String, JsonObject>> defaultResponseHandler);
 
-    void updateAmount(String id_structure, Integer seconde, Integer premiere, Integer terminale, Handler<Either<String, JsonObject>> handler);
+    void updateAmount(String id_structure, JsonObject students, Handler<Either<String, JsonObject>> handler);
 
     void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler);
 

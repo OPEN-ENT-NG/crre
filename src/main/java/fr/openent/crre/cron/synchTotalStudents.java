@@ -41,7 +41,7 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
     }
 
     public void getStudents(final Handler<Either<String, JsonObject>> eitherHandler) {
-        structureService.getAllStructureNumerique(structures -> {
+        structureService.getAllStructure(structures -> {
             if(structures.isRight()) {
                 log.info("[getStudents] getAllStructures OK");
                 JsonArray structure_id = structures.right().getValue();

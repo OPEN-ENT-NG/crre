@@ -35,6 +35,22 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     private final Neo4j neo4j;
     private final EventBus eb;
 
+    private static final String SECONDE = "seconde";
+    private static final String PREMIERE = "premiere";
+    private static final String TERMINALE = "terminale";
+    private static final String SECONDEPRO = "secondepro";
+    private static final String PREMIEREPRO = "premierepro";
+    private static final String TERMINALEPRO = "terminalepro";
+    private static final String BMA1 = "bma1";
+    private static final String BMA2 = "bma2";
+    private static final String CAP1 = "cap1";
+    private static final String CAP2 = "cap2";
+    private static final String CAP3 = "cap3";
+    private static final String PRO = "pro";
+    private static final String GENERAL = "general";
+    private static final String ID_STRUCTURE = "id_structure";
+    private static final String RELIQUAT = "reliquat";
+
     public DefaultStructureService(String schema, EventBus eb) {
         super(schema, "");
         this.eb = eb;
@@ -58,8 +74,6 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 "s.academy as academy, s.type as type_etab;";
         neo4j.execute(query, new JsonObject(), Neo4jResult.validResultHandler(handler));
     }
-
-
 
 
     @Override
@@ -176,19 +190,31 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         for (int i = 0; i < total.size(); i++) {
             JsonObject structure_total = total.getJsonObject(i);
             query += i < total.size() - 1 ? "(?, ?, ?, ?, ?), " : "(?, ?, ?, ?, ?) ";
-            int total_licence;
+            int total_licence = 0;
             int total_licence_consumable = 0;
-            if (structure_total.getBoolean("pro")) {
-                total_licence = structure_total.getInteger("Seconde") * 3 +
-                        structure_total.getInteger("Premiere") * 3 + structure_total.getInteger("Terminale") * 3;
-            } else {
-                total_licence = structure_total.getInteger("Seconde") * 9 +
-                        structure_total.getInteger("Premiere") * 8 + structure_total.getInteger("Terminale") * 7;
+            // Calcul tout type de licence si les étudiants sont pro et général
+            if (structure_total.getBoolean(PRO) && structure_total.getBoolean(GENERAL)) {
+                total_licence = structure_total.getInteger(SECONDE) * 9 +
+                        structure_total.getInteger(PREMIERE) * 8 + structure_total.getInteger(TERMINALE) * 7 +
+                        ((structure_total.getInteger(SECONDEPRO) + structure_total.getInteger(PREMIEREPRO) +
+                                structure_total.getInteger(TERMINALEPRO) + structure_total.getInteger(CAP1) +
+                                structure_total.getInteger(CAP2) + structure_total.getInteger(CAP3) +
+                                structure_total.getInteger(BMA1) + structure_total.getInteger(BMA2)) * 3);
+                // Calcul les licences si les étudiants sont general
+            } else if (!structure_total.getBoolean(PRO) && structure_total.getBoolean(GENERAL)) {
+                total_licence = structure_total.getInteger(SECONDE) * 9 +
+                        structure_total.getInteger(PREMIERE) * 8 + structure_total.getInteger(TERMINALE) * 7;
+                // Calcul les licences si les étudiants sont pro
+            } else if (structure_total.getBoolean(PRO) && structure_total.getBoolean(GENERAL)) {
+                total_licence = (structure_total.getInteger(SECONDEPRO) +
+                        structure_total.getInteger(PREMIEREPRO) + structure_total.getInteger(TERMINALEPRO) +
+                        structure_total.getInteger(CAP1) + structure_total.getInteger(CAP2) + structure_total.getInteger(CAP3) +
+                        structure_total.getInteger(BMA1) + structure_total.getInteger(BMA2)) * 3;
             }
-            if (consumableFormationsStudents.containsKey(structure_total.getString("id_structure"))) {
-                total_licence_consumable = consumableFormationsStudents.getInteger(structure_total.getString("id_structure")) * 2;
+            if (consumableFormationsStudents.containsKey(structure_total.getString(ID_STRUCTURE))) {
+                total_licence_consumable = consumableFormationsStudents.getInteger(structure_total.getString(ID_STRUCTURE)) * 2;
             }
-            params.add(structure_total.getString("id_structure"))
+            params.add(structure_total.getString(ID_STRUCTURE))
                     .add(total_licence).add(total_licence).add(total_licence_consumable).add(total_licence_consumable);
         }
         query += "ON CONFLICT (id_structure) DO UPDATE " +
@@ -208,38 +234,71 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             if (j.getString("u.level") != null) {
                 switch (j.getString("u.level")) {
                     case "SECONDE GENERALE & TECHNO YC BT": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, total_april = total_april + ?, " +
-                                "\"pro\" = false WHERE id_structure = ?; ";
+                        query += "UPDATE " + Crre.crreSchema + ".students SET seconde = ?, total_april = total_april + ?, " +
+                                "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
                     case "PREMIERE GENERALE & TECHNO YC BT": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, total_april = total_april + ?, " +
-                                "\"pro\" = false WHERE id_structure = ?; ";
+                        query += "UPDATE " + Crre.crreSchema + ".students SET premiere = ?, total_april = total_april + ?, " +
+                                "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
                     case "TERMINALE GENERALE & TECHNO YC BT": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, total_april = total_april + ?, " +
-                                "\"pro\" = false WHERE id_structure = ?; ";
+                        query += "UPDATE " + Crre.crreSchema + ".students SET terminale = ?, total_april = total_april + ?, " +
+                                "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
                     case "BAC PRO 3 ANS : 2NDE PRO (OU 1ERE ANNEE)": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Seconde\" = ?, total_april = total_april + ?, " +
-                                "\"pro\" = true WHERE id_structure = ?; ";
+                        query += "UPDATE " + Crre.crreSchema + ".students SET secondepro = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
                     case "BAC PRO 3 ANS : 1ERE PRO (OU 2EME ANNEE)": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Premiere\" = ?, total_april = total_april + ?, " +
-                                "\"pro\" = true WHERE id_structure = ?; ";
+                        query += "UPDATE " + Crre.crreSchema + ".students SET premierepro = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
                     case "BAC PRO 3 ANS : TERM PRO (OU 3EME ANNEE)": {
-                        query += "UPDATE " + Crre.crreSchema + ".students SET \"Terminale\" = ?, total_april = total_april + ?, " +
-                                "\"pro\" = true WHERE id_structure = ?; ";
+                        query += "UPDATE " + Crre.crreSchema + ".students SET terminalepro = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "CAP EN 2 ANS : 1ERE ANNEE":
+                    case "CAP EN 1 AN":
+                    case "CAP EN 3 ANS : 1ERE ANNEE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET cap1 = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "CAP EN 2 ANS : 2EME ANNEE":
+                    case "CAP EN 3 ANS : 2EME ANNEE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET cap2 = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "CAP EN 3 ANS : 3EME ANNEE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET cap3 = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "BMA EN 2 ANS : 1ERE ANNEE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET bma1 = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "BMA EN 2 ANS : 2EME ANNEE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET bma2 = ?, total_april = total_april + ?, " +
+                                "pro = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
@@ -274,27 +333,36 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     @Override
     public void getTotalStructure(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT \"Premiere\", \"Terminale\", \"Seconde\", id_structure, pro" +
-                " FROM " + Crre.crreSchema + ".students";
+        String query = "SELECT distinct(s.id_structure), premiere, terminale, seconde, premierepro, terminalepro, secondepro," +
+                "cap1, cap2, cap3, bma1, bma2, s.pro, s.general" +
+                " FROM " + Crre.crreSchema + ".students s" +
+                " LEFT JOIN " + Crre.crreSchema + ".structure st ON (s.id_structure = st.id_structure)" +
+                " WHERE st.catalog = 'Numerique' OR (st.mixte AND pro)";
         sql.raw(query, SqlResult.validResultHandler(handler));
     }
 
     @Override
-    public void updateAmount(String id_structure, Integer seconde, Integer premiere, Integer terminale, Handler<Either<String, JsonObject>> handler) {
+    public void updateAmount(String id_structure, JsonObject students, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".students " +
-                " SET \"Seconde\" = ?, \"Premiere\" = ?, \"Terminale\" = ? " +
+                " SET seconde = ?, premiere = ?, terminale = ?, " +
+                " secondepro = ?, premierepro = ?, terminalepro = ?, " +
+                " bma1 = ?, bma2 = ?, cap1 = ?, cap2 = ?, cap3 = ?" +
                 "WHERE id_structure = ?";
-        values.add(seconde).add(premiere).add(terminale).add(id_structure);
+        values.add(students.getInteger(SECONDE)).add(students.getInteger(PREMIERE)).add(students.getInteger(TERMINALE))
+                .add(students.getInteger(SECONDEPRO)).add(students.getInteger(PREMIEREPRO)).add(students.getInteger(TERMINALEPRO))
+                .add(students.getInteger(BMA1)).add(students.getInteger(BMA2)).add(students.getInteger(CAP1))
+                .add(students.getInteger(CAP2)).add(students.getInteger(CAP3)).add(id_structure);
+
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 
     @Override
     public void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = " SELECT \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, " +
-                "\"Seconde\" + \"Premiere\" + \"Terminale\" as total, " +
-                "total_april, pro " +
+        String query = "SELECT seconde, premiere, terminale, premierepro, terminalepro, secondepro, cap1, cap2, cap3, bma1, bma2, " +
+                "seconde + premiere + terminale + premierepro + terminalepro + secondepro + cap1 + cap2 + cap3 + bma1 + bma2 as total, " +
+                "total_april, pro, general " +
                 "FROM " + Crre.crreSchema + ".students " +
                 "WHERE id_structure = ?";
         values.add(id_structure);
@@ -340,11 +408,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void getAllStructureNumerique(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT DISTINCT rgs.id_structure " +
-                "FROM " + Crre.crreSchema + ".rel_group_structure rgs " +
-                "LEFT JOIN " + Crre.crreSchema + ".structure s ON (rgs.id_structure = s.id_structure) " +
-                "WHERE s.catalog = 'Numerique' OR s.mixte = true;";
+    public void getAllStructure(Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT DISTINCT id_structure FROM " + Crre.crreSchema + ".structure";
         sql.raw(query, SqlResult.validResultHandler(handler));
     }
 
@@ -400,10 +465,10 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     "); ";
             JsonObject structure = structures.getJsonObject(i);
             params.add(structure.getString("id"))
-                    .add(Integer.parseInt(structure.getString("reliquat")))
-                    .add(Integer.parseInt(structure.getString("reliquat")))
-                    .add(Integer.parseInt(structure.getString("reliquat")))
-                    .add(Integer.parseInt(structure.getString("reliquat")));
+                    .add(Integer.parseInt(structure.getString(RELIQUAT)))
+                    .add(Integer.parseInt(structure.getString(RELIQUAT)))
+                    .add(Integer.parseInt(structure.getString(RELIQUAT)))
+                    .add(Integer.parseInt(structure.getString(RELIQUAT)));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }

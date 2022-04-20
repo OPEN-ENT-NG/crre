@@ -165,7 +165,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "WHERE ore.creation_date BETWEEN ? AND ?";
+                "WHERE ore.creation_date BETWEEN ? AND ? ";
         values.add(startDate);
         values.add(endDate);
         if (!idStructure.equals("null")) {
@@ -372,7 +372,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getString("status"))
                         .add(order.getString("equipment_key"));
                 setOrderValuesSQL(params, order);
-                if(order.containsKey("offers")) {
+                if (order.containsKey("offers")) {
                     formatOffers(order);
                 }
                 params.add(order.getInteger("basket_id"))
@@ -422,7 +422,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonArray params = new JsonArray();
         String query = "";
         for (int i = 0; i < ordersRegion.size(); i++) {
-           query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
+            query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
                     " SET id_status = ?" +
                     " WHERE id = ?; ";
             params.add(ordersRegion.getJsonObject(i).getString("status"));

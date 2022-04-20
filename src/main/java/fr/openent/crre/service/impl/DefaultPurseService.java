@@ -72,7 +72,7 @@ public class DefaultPurseService implements PurseService {
 
     private String getQueryPursesAndLicences() {
         return "SELECT DISTINCT COALESCE(licences.id_structure, purse.id_structure, students.id_structure) AS id_structure, structure.name, " +
-                "purse.amount, purse.initial_amount, \"Seconde\" as seconde, \"Premiere\" as premiere, \"Terminale\" as terminale, pro, " +
+                "purse.amount, purse.initial_amount, seconde, premiere, terminale, pro, " +
                 "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
                 "licences.consumable_amount as consumable_licence_amount, " +
                 "licences.consumable_initial_amount as consumable_licence_initial_amount " +
@@ -186,12 +186,12 @@ public class DefaultPurseService implements PurseService {
 
     private JsonObject getImportStatementStudent(String structureId, String second, String premiere, String terminale, boolean pro) {
 
-        String statement = "INSERT INTO " + Crre.crreSchema + ".students (id_structure, \"Seconde\", \"Premiere\", \"Terminale\", pro) " +
+        String statement = "INSERT INTO " + Crre.crreSchema + ".students (id_structure, seconde, premiere, terminale, pro) " +
                 "VALUES (?,?,?,?,?) " +
                 "ON CONFLICT (id_structure) DO UPDATE " +
-                "SET \"Seconde\" = ?, " +
-                "\"Premiere\" = ?, " +
-                "\"Terminale\" = ?, " +
+                "SET seconde = ?, " +
+                "premiere = ?, " +
+                "terminale = ?, " +
                 "pro = ? " +
                 "WHERE students.id_structure = ? ;";
         JsonArray params =  new fr.wseduc.webutils.collections.JsonArray();

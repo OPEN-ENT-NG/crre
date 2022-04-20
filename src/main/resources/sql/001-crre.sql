@@ -99,11 +99,20 @@ CREATE TABLE crre.basket_order (
 
 CREATE TABLE crre.students
 (
-    "id_structure" character varying(50),
-    "Seconde" bigint DEFAULT 0,
-    "Premiere" bigint DEFAULT 0,
-    "Terminale" bigint DEFAULT 0,
-    "pro" boolean DEFAULT false,
+    id_structure character varying(50),
+    seconde bigint DEFAULT 0,
+    premiere bigint DEFAULT 0,
+    terminale bigint DEFAULT 0,
+    secondepro bigint DEFAULT 0,
+    premierepro bigint DEFAULT 0,
+    terminalepro bigint DEFAULT 0,
+    cap1 bigint DEFAULT 0,
+    cap2 bigint DEFAULT 0,
+    cap3 bigint DEFAULT 0,
+    bma1 bigint DEFAULT 0,
+    bma2 bigint DEFAULT 0,
+    pro boolean DEFAULT false,
+    general boolean DEFAULT false,
     total_april bigint DEFAULT 0,
     PRIMARY KEY (id_structure),
     CONSTRAINT structure_unique UNIQUE (id_structure)
@@ -355,16 +364,13 @@ CREATE TRIGGER update_old_end_date_trigger AFTER
     UPDATE ON crre.campaign
     FOR EACH ROW EXECUTE PROCEDURE crre.update_old_end_date();
 
-INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (1, 'Type numérique', 'licences', false, 'Catalogue numérique', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure) VALUES (2, 'Type papier', 'licences', false, 'Catalogue papier', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (3, 'Type papier consommable', 'consumable_licences', false, 'Catalogue papier consommable', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (4, 'Type numérique consommable', 'consumable_licences', false, 'Catalogue numérique consommable', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (5, 'Type Pro papier', 'licences', false, 'Catalogue papier Pro', false, '[{"libelle":"Papier"},  {"libelle": "Établissements professionnels"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (6, 'Type Pro numérique', 'licences', false, 'Catalogue numérique Pro', false, '[{"libelle":"Numérique"}, {"libelle": "Établissements professionnels"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (7, 'Type LGT papier', 'licences', false, 'Catalogue papier LGT', false, '[{"libelle":"Papier"},  {"libelle": "Établissements généraux"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (8, 'Type LGT numérique', 'licences', false, 'Catalogue numérique LGT', false, '[{"libelle":"Numérique"}, {"libelle": "Établissements généraux"}, {"libelle":"Mixte"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (9, 'Type Pro papier consommable', 'consumable_licences', false, 'Catalogue papier consommable Pro', false, '[{"libelle":"Papier"}, {"libelle":"Mixte"}, {"libelle": "Établissements professionnels"}]');
-INSERT INTO crre.type_campaign(	id, name, credit, reassort, catalog, automatic_close, structure) VALUES (10, 'Type Pro numérique consommable', 'consumable_licences', false, 'Catalogue numérique consommable Pro', false, '[{"libelle":"Numérique"}, {"libelle":"Mixte"}, {"libelle": "Établissements professionnels"}]');
+INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure)
+VALUES (1, 'Type numérique', 'licences', false, 'Catalogue numérique', false, '[{"libelle":"Numériques"}, {"libelle":"Mixtes"}]'),
+       (2, 'Type papier', 'licences', false, 'Catalogue papier', false, '[{"libelle":"Papier"}, {"libelle":"Mixtes"}]'),
+       (3, 'Type Pro numérique', 'licences', false, 'Catalogue numérique Pro', false, '[{"libelle":"Numériques"}, {"libelle": "Établissements professionnels"}, {"libelle":"Mixtes"}, {"libelle":"Établissements polyvalents"}]'),
+       (4, 'Type LGT papier', 'licences', false, 'Catalogue papier LGT', false, '[{"libelle":"Papier"}, {"libelle": "Établissements généraux"}, {"libelle":"Mixtes"}, {"libelle":"Établissements polyvalents"}]'),
+       (5, 'Type LGT numérique', 'licences', false, 'Catalogue numérique LGT', false, '[{"libelle":"Numériques"}, {"libelle": "Établissements généraux"}, {"libelle":"Mixtes"}, {"libelle":"Établissements polyvalents"}]'),
+       (6, 'Type consommable pro numérique et papier', 'consumable_licences', false, 'Catalogue consommable Pro', false, '[{"libelle":"Numériques"}, {"libelle":"Mixtes"}, {"libelle": "Établissements professionnels"}, {"libelle":"Établissements polyvalents"}]');
 
 INSERT INTO crre.status(id, name) VALUES (0, 'En cours de commande');
 INSERT INTO crre.status(id, name) VALUES (1, 'Disponible');

@@ -13,6 +13,7 @@ import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
@@ -40,6 +41,21 @@ import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultRes
 public class StructureController extends ControllerHelper {
 
     private final DefaultStructureService structureService;
+
+    private static final String SECONDE = "seconde";
+    private static final String PREMIERE = "premiere";
+    private static final String TERMINALE = "terminale";
+    private static final String SECONDEPRO = "secondepro";
+    private static final String PREMIEREPRO = "premierepro";
+    private static final String TERMINALEPRO = "terminalepro";
+    private static final String BMA1 = "bma1";
+    private static final String BMA2 = "bma2";
+    private static final String CAP1 = "cap1";
+    private static final String CAP2 = "cap2";
+    private static final String CAP3 = "cap3";
+    private static final String ID_STRUCTURE = "id_structure";
+    private static final String UAI = "uai";
+    private static final String ID = "id";
 
     public StructureController(EventBus eventBus) {
         super();
@@ -101,8 +117,8 @@ public class StructureController extends ControllerHelper {
                 futures.add(insertGroupFuture);
                 futures.add(getRoleFuture);
                 futuresLink.add(linkRoleGroupFuture);
-                String id_structure = structures.getJsonObject(i).getString("id");
-                log.info("Insert manual groups and rights for CRRE for structure : " + structures.getJsonObject(i).getString("uai"));
+                String id_structure = structures.getJsonObject(i).getString(ID);
+                log.info("Insert manual groups and rights for CRRE for structure : " + structures.getJsonObject(i).getString(UAI));
                 JsonObject group = new JsonObject()
                         .put("name", groups.getJsonObject(j).getString("name"))
                         .put("autolinkTargetAllStructs", false)
@@ -114,8 +130,8 @@ public class StructureController extends ControllerHelper {
                 structureService.getRole(role, handlerJsonObject(getRoleFuture));
                 CompositeFuture.all(futures).setHandler(event -> {
                     if (event.succeeded()) {
-                        String groupId = insertGroupFuture.result().getString("id");
-                        String roleId = getRoleFuture.result().getString("id");
+                        String groupId = insertGroupFuture.result().getString(ID);
+                        String roleId = getRoleFuture.result().getString(ID);
                         if (roleId != null && groupId != null) {
                             structureService.linkRoleGroup(groupId, roleId, handlerJsonObject(linkRoleGroupFuture));
                         } else {
@@ -144,6 +160,27 @@ public class StructureController extends ControllerHelper {
         });
     }
 
+    @Get("/structures/students")
+    @ApiDoc("Insert new students")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AdministratorRight.class)
+    public void insertStudents(HttpServerRequest request) {
+        structureService.getAllStructure(structures -> {
+            if(structures.isRight()) {
+                log.info("[getStudents] getAllStructures OK");
+                JsonArray structure_id = structures.right().getValue();
+                JsonArray ids = new JsonArray();
+                for (int i = 0; i < structure_id.size(); i++) {
+                    ids.add(structure_id.getJsonObject(i).getString(ID_STRUCTURE));
+                }
+                structureService.insertStudentsInfos(ids, defaultResponseHandler(request));
+            } else {
+                log.error("Failed to get all structures",structures.left());
+                renderJson(request, new JsonObject().put("message", "error"));
+            }
+        });
+    }
+
 
     @Post("/structures/new")
     @ApiDoc("Insert new structures")
@@ -168,7 +205,7 @@ public class StructureController extends ControllerHelper {
                             String[] values = userLine.split(";");
                             uais.add(values[1]);
                             JsonObject structure = new JsonObject();
-                            structure.put("uai", values[1]);
+                            structure.put(UAI, values[1]);
                             structure.put("name", values[2]);
                             structure.put("city", values[3]);
                             structure.put("region", values[5]);
@@ -225,7 +262,7 @@ public class StructureController extends ControllerHelper {
                             if (values[3].equals("Papier")) {
                                 JsonObject structure = new JsonObject();
                                 uais.add(values[1]);
-                                structure.put("uai", values[1]);
+                                structure.put(UAI, values[1]);
                                 structure.put("reliquat", values[9]);
                                 structures.add(structure);
                             }
@@ -276,10 +313,10 @@ public class StructureController extends ControllerHelper {
         log.info("success");
         JsonArray uaisNeo = event.right().getValue();
         for (int i = 0; i < structures.size(); i++) {
-            String uai = structures.getJsonObject(i).getString("uai");
+            String uai = structures.getJsonObject(i).getString(UAI);
             for (int j = 0; j < uaisNeo.size(); j++) {
-                if (uaisNeo.getJsonObject(j).getString("uai").equals(uai)) {
-                    structures.getJsonObject(i).put("id", uaisNeo.getJsonObject(j).getString("id"));
+                if (uaisNeo.getJsonObject(j).getString(UAI).equals(uai)) {
+                    structures.getJsonObject(i).put(ID, uaisNeo.getJsonObject(j).getString(ID));
                     finalStructures.add(structures.getJsonObject(i));
                     break;
                 }
@@ -293,39 +330,34 @@ public class StructureController extends ControllerHelper {
     @SecuredAction(Crre.UPDATE_STUDENT_RIGHT)
     @ResourceFilter(updateStudentRight.class)
     public void updateAmount(final HttpServerRequest request) {
-        try {
-            int seconde = Integer.parseInt(request.params().get("seconde"));
-            int premiere = Integer.parseInt(request.params().get("premiere"));
-            int terminale = Integer.parseInt(request.params().get("terminale"));
-            String id_structure = request.params().get("id_structure");
-            boolean pro = Boolean.getBoolean(request.params().get("pro"));
-            int previousTotal = Integer.parseInt(request.params().get("previousTotal"));
-            int total_licence;
+        RequestUtils.bodyToJson(request, students -> {
+            try {
+                String id_structure = request.params().get(ID_STRUCTURE);
+                int previousTotal = Integer.parseInt(request.params().get("previousTotal"));
+                int total_licence = students.getInteger(SECONDE) * 9 + students.getInteger(PREMIERE) * 8 + students.getInteger(TERMINALE) * 7 +
+                        ((students.getInteger(SECONDEPRO) + students.getInteger(PREMIEREPRO)  + students.getInteger(TERMINALEPRO) +
+                        students.getInteger(CAP1) + students.getInteger(CAP2)  + students.getInteger(CAP3) +
+                        students.getInteger(BMA1) + students.getInteger(BMA2))  * 3);
 
-            if (pro) {
-                total_licence = seconde * 3 + premiere * 3 + terminale * 3;
-            } else {
-                total_licence = seconde * 9 + premiere * 8 + terminale * 7;
+                int difference = total_licence - previousTotal;
+
+                Future<JsonObject> updateAmountFuture = Future.future();
+                Future<JsonObject> updateAmountLicenceFuture = Future.future();
+
+                CompositeFuture.all(updateAmountFuture, updateAmountLicenceFuture).setHandler(event -> {
+                    if (event.succeeded()) {
+                        log.info("Update amount licence success");
+                        request.response().setStatusCode(201).end();
+                    } else {
+                        log.error("Update licences amount failed");
+                    }
+                });
+                structureService.updateAmount(id_structure, students, handlerJsonObject(updateAmountFuture));
+                structureService.reinitAmountLicence(id_structure, difference, handlerJsonObject(updateAmountLicenceFuture));
+            } catch (ClassCastException e) {
+                log.error("An error occurred when updating licences amount", e);
             }
-
-            int difference = total_licence - previousTotal;
-
-            Future<JsonObject> updateAmountFuture = Future.future();
-            Future<JsonObject> updateAmountLicenceFuture = Future.future();
-
-            CompositeFuture.all(updateAmountFuture, updateAmountLicenceFuture).setHandler(event -> {
-                if (event.succeeded()) {
-                    log.info("Update amount licence success");
-                    request.response().setStatusCode(201).end();
-                } else {
-                    log.error("Update licences amount failed");
-                }
-            });
-            structureService.updateAmount(id_structure, seconde, premiere, terminale, handlerJsonObject(updateAmountFuture));
-            structureService.reinitAmountLicence(id_structure, difference, handlerJsonObject(updateAmountLicenceFuture));
-        } catch (ClassCastException e) {
-            log.error("An error occurred when updating licences amount", e);
-        }
+        });
     }
 
     @Get("/structure/amount")
@@ -334,7 +366,7 @@ public class StructureController extends ControllerHelper {
     @ResourceFilter(PrescriptorRight.class)
     public void getAmount(final HttpServerRequest request) {
         try {
-            String id_structure = request.params().get("id_structure");
+            String id_structure = request.params().get(ID_STRUCTURE);
             structureService.getAmount(id_structure, defaultResponseHandler(request));
         } catch (ClassCastException e) {
             log.error("An error occurred when casting basket id", e);
