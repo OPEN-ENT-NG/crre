@@ -883,7 +883,7 @@ public class OrderRegionController extends BaseController {
         attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
-                "Demande Libraire CRRE : " + title + ".csv", attachment, message -> {
+                csvFile, attachment, message -> {
                     if (!message.isRight()) {
                         log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
                                 "An error has occurred sendMail : " + message.left());
@@ -1076,7 +1076,7 @@ public class OrderRegionController extends BaseController {
         return offers;
     }
 
-    private static String generateExport(HttpServerRequest request, JsonArray logs) {
+    private  String generateExport(HttpServerRequest request, JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
             report.append(generateExportLine(logs.getJsonObject(i)));
@@ -1084,7 +1084,7 @@ public class OrderRegionController extends BaseController {
         return report.toString();
     }
 
-    public static String getExportHeader(HttpServerRequest request) {
+    public  String getExportHeader(HttpServerRequest request) {
         return "ID unique" + ";" +
                 I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("Nom étab", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -1111,7 +1111,7 @@ public class OrderRegionController extends BaseController {
                 + "\n";
     }
 
-    public static String generateExportLine(JsonObject log) {
+    public  String generateExportLine(JsonObject log) {
         return (log.containsKey("id_project") ? log.getLong("id").toString() : log.getString("id")) + ";" +
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
