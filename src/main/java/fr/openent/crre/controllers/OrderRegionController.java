@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -880,7 +881,9 @@ public class OrderRegionController extends BaseController {
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         String title = "DD" + simpleDateFormat.format(new Date());
         JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-        attachment.add(new JsonObject().put("name", title + ".csv").put("content", csvFile));
+        attachment.add(new JsonObject()
+                .put("name", title + ".csv")
+                .put("content", Base64.getEncoder().encodeToString(csvFile.getBytes(StandardCharsets.UTF_8))));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
                 csvFile, attachment, message -> {
