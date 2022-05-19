@@ -103,7 +103,7 @@ export class Utils {
                         gratuite = condition.gratuite;
                     }
                 });
-            } else {
+            } else if(offer.conditions.length == 1) {
                 gratuit = offer.conditions[0].conditionGratuite;
                 gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
             }

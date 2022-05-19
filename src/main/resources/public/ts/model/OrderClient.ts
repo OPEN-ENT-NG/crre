@@ -183,7 +183,7 @@ export class OrdersClient extends Selection<OrderClient> {
                                 OrderUtils.initStructure(order.id_structure, structures) : new Structure();
                             order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
                             order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
-                            order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order) as number).toString()) * order.amount;
+                            order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order.equipment) as number).toString()) * order.amount;
                             order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
                         }
                     }

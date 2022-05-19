@@ -17,17 +17,6 @@ export const basketController = ng.controller('basketController',
             return hasSelected;
         };
 
-        /**
-         * Calculate the price of an equipment
-         * @param {Equipment} equipment
-         * @param {number} roundNumber [number of digits after the decimal point]
-         * @returns {number}
-         */
-        const calculatePriceOfEquipment = (equipment: any, roundNumber?: number) => {
-            let price = parseFloat(String(Utils.calculatePriceTTC(equipment, roundNumber)));
-            return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price) : price;
-        };
-
         $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber?: number) => {
             let totalPrice = 0;
             baskets.all.map((basket) => {
@@ -56,13 +45,13 @@ export const basketController = ng.controller('basketController',
         };
 
         $scope.calculatePriceOfBasket = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
-            let equipmentPrice = parseFloat(String(calculatePriceOfEquipment(basket.equipment, roundNumber)));
+            let equipmentPrice = parseFloat(String($scope.calculatePriceOfEquipment(basket.equipment, roundNumber)));
             equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * basket.amount;
             return (!isNaN(equipmentPrice)) ? (roundNumber ? equipmentPrice.toFixed(roundNumber) : equipmentPrice) : '';
         };
 
         $scope.priceDisplay = (basket: Basket) => {
-            let equipmentPrice = parseFloat(String(calculatePriceOfEquipment(basket.equipment, 2)));
+            let equipmentPrice = parseFloat(String($scope.calculatePriceOfEquipment(basket.equipment, 2)));
             return (!isNaN(equipmentPrice)) ? (2 ? equipmentPrice.toFixed(2) : equipmentPrice ) : '';
         };
 

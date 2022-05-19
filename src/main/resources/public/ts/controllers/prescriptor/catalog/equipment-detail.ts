@@ -78,9 +78,8 @@ export const equipmentController = ng.controller('equipmentController',
             }
         };
 
-        $scope.isOffer = () =>  {
+        $scope.isOffer = () => {
             return $scope.offerTeacher.length + $scope.offerStudent.length > 0;
         }
-
 
     }]);

@@ -67,8 +67,8 @@ export class OrderUtils {
         return  structure ? structure.uai + '-' + structure.name : '' ;
     }
 
-    static calculatePriceTTC( roundNumber?: number, order?:Order|OrderClient|OrderRegion):number|any {
-        let price = parseFloat(Utils.calculatePriceTTC(order.equipment,roundNumber).toString());
+    static calculatePriceTTC( roundNumber?: number, equipment?:Equipment):number|any {
+        let price = parseFloat(Utils.calculatePriceTTC(equipment,roundNumber).toString());
         return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price ) : price ;
     }
 }

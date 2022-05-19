@@ -80,7 +80,7 @@ public class PurseController extends ControllerHelper {
                     new ByteArrayInputStream(content.getBytes())),
                     ';', '"', 1);
             String[] values;
-            JsonArray uais = new fr.wseduc.webutils.collections.JsonArray();
+            JsonArray uais = new JsonArray();
             JsonObject amounts = new JsonObject();
             JsonObject licences = new JsonObject();
             JsonObject consumable_licences = new JsonObject();
@@ -88,12 +88,13 @@ public class PurseController extends ControllerHelper {
             JsonObject premieres = new JsonObject();
             JsonObject terminales = new JsonObject();
             while ((values = csv.readNext()) != null) {
-                amounts.put(values[0], values[1]);
-                licences.put(values[0], values[2]);
-                consumable_licences.put(values[0], values[3]);
-                seconds.put(values[0], values[4]);
-                premieres.put(values[0], values[5]);
-                terminales.put(values[0], values[6]);
+                String uai = values[0];
+                computeAmount(uai, amounts, values[1], values[2]);
+                addValueToJson(uai, licences, values[3]);
+                addValueToJson(uai, consumable_licences, values[4]);
+                addValueToJson(uai, seconds, values[5]);
+                addValueToJson(uai, premieres, values[6]);
+                addValueToJson(uai, terminales, values[7]);
                 uais.add(values[0]);
             }
             if (uais.size() > 0) {
@@ -107,6 +108,30 @@ public class PurseController extends ControllerHelper {
         }
     }
 
+    private void computeAmount(String uai, JsonObject amounts, String newAmount, String addAmount) {
+        JsonObject amount = new JsonObject().put("isOverrideAmount", true);
+        if(newAmount.isEmpty() && addAmount.isEmpty()) {
+            amount.put("value", -1);
+        } else if(!newAmount.isEmpty() && !addAmount.isEmpty()) {
+            amount.put("value", Double.parseDouble(newAmount) + Double.parseDouble(addAmount));
+        } else if(!newAmount.isEmpty() && addAmount.isEmpty()) {
+            amount.put("value", Double.parseDouble(newAmount));
+        } else if(newAmount.isEmpty() && !addAmount.isEmpty()) {
+            amount.put("value", Double.parseDouble(addAmount));
+            amount.put("isOverrideAmount", false);
+        }
+        amounts.put(uai, amount);
+    }
+    
+
+    private void addValueToJson(String uai, JsonObject object, String value) {
+        if(value.isEmpty()) {
+            object.put(uai, 0);
+        } else {
+            object.put(uai, Integer.parseInt(value));
+        }
+    }
+
     /**
      * Match structure UAI with its Neo4j id.
      *
@@ -115,7 +140,10 @@ public class PurseController extends ControllerHelper {
      * @param uais    UAIs list
      * @param amount  Object containing UAI as key and purse amount as value
      */
-    private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais,
+    private void
+
+
+    matchUAIID(final HttpServerRequest request, final String path, JsonArray uais,
                             final JsonObject amount, final JsonObject licence, final JsonObject consumable_licence,
                             final JsonObject seconds, final JsonObject premieres, final JsonObject terminales, final String contentFile) {
         structureService.getConsumableFormation(formations -> {
@@ -133,13 +161,13 @@ public class PurseController extends ControllerHelper {
                         boolean invalidDatas = false;
                         for (int i = 0; i < structures.size(); i++) {
                             structure = structures.getJsonObject(i);
-                            boolean professionnal_structure = structure.getString("type").equals("LYCEE PROFESSIONNEL");
+                            boolean professionnal_structure = structure.containsKey("type") && structure.getString("type") != null && structure.getString("type").equals("LYCEE PROFESSIONNEL");
                             try {
-                                int licences = Integer.parseInt(licence.getString(structure.getString("uai")));
-                                int consumable_licences =  Integer.parseInt(consumable_licence.getString(structure.getString("uai")));
-                                int seconde = Integer.parseInt(seconds.getString(structure.getString("uai")));
-                                int premiere = Integer.parseInt(premieres.getString(structure.getString("uai")));
-                                int terminale = Integer.parseInt(terminales.getString(structure.getString("uai")));
+                                int licences = licence.getInteger(structure.getString("uai"));
+                                int consumable_licences =  consumable_licence.getInteger(structure.getString("uai"));
+                                int seconde = seconds.getInteger(structure.getString("uai"));
+                                int premiere = premieres.getInteger(structure.getString("uai"));
+                                int terminale = terminales.getInteger(structure.getString("uai"));
 
                                 int minimumLicences;
                                 if(professionnal_structure){
@@ -148,25 +176,25 @@ public class PurseController extends ControllerHelper {
                                     minimumLicences = seconde * 9 + premiere * 8 + terminale * 7;
                                 }
                                 if(licences < minimumLicences){
-                                    licence.put(structure.getString("uai"), Integer.toString(minimumLicences));
+                                    licence.put(structure.getString("uai"), minimumLicences);
                                 }
 
                                 int minimumConsumableLicences;
                                 minimumConsumableLicences = structure.getInteger("nbr_students_consumables") * 2;
                                 if(consumable_licences < minimumConsumableLicences){
-                                    consumable_licence.put(structure.getString("uai"), Integer.toString(minimumConsumableLicences));
+                                    consumable_licence.put(structure.getString("uai"), minimumConsumableLicences);
                                 }
 
                             } catch (NumberFormatException e){
                                 invalidDatas = true;
                             }
                             statementsValues.put(structure.getString("id"), new JsonObject()
-                                    .put("amount",amount.getString(structure.getString("uai")))
-                                    .put("licence",licence.getString(structure.getString("uai")))
-                                    .put("consumable_licence",consumable_licence.getString(structure.getString("uai")))
-                                    .put("second",seconds.getString(structure.getString("uai")))
-                                    .put("premiere",premieres.getString(structure.getString("uai")))
-                                    .put("terminale",terminales.getString(structure.getString("uai")))
+                                    .put("amount",amount.getJsonObject(structure.getString("uai")))
+                                    .put("licence",licence.getInteger(structure.getString("uai")))
+                                    .put("consumable_licence",consumable_licence.getInteger(structure.getString("uai")))
+                                    .put("second",seconds.getInteger(structure.getString("uai")))
+                                    .put("premiere",premieres.getInteger(structure.getString("uai")))
+                                    .put("terminale",terminales.getInteger(structure.getString("uai")))
                                     .put("pro",professionnal_structure)
                             );
                         }

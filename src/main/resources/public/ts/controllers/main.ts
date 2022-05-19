@@ -592,6 +592,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return color;
         };
 
+        /**
+         * Calculate the price of an equipment
+         * @param {Equipment} equipment
+         * @param {number} roundNumber [number of digits after the decimal point]
+         * @returns {number}
+         */
+        $scope.calculatePriceOfEquipment = (equipment: any, roundNumber?: number) => {
+            let price = parseFloat(String(Utils.calculatePriceTTC(equipment, roundNumber)));
+            return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price) : price;
+        };
+
         const cancelSelectCampaign = (initOrder: boolean, type:string):void => {
             if(initOrder) {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
