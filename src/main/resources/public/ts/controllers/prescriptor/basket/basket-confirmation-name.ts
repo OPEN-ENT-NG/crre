@@ -23,7 +23,11 @@ export const basketConfirmationNameController = ng.controller('basketConfirmatio
             $scope.campaign.order_notification += 1;
             $scope.campaign.nb_order_waiting += nbr_equipment;
             $scope.campaign.nb_panier = 0;
-            $scope.campaign.purse_amount = data.amount;
+            if($scope.campaign.use_credit == "credits"){
+                $scope.campaign.purse_amount = data.amount;
+            }else if($scope.campaign.use_credit == "consumable_credits") {
+                $scope.campaign.consumable_purse_amount = data.amount;
+            }
             let message = lang.translate('crre.confirm.order.message1') +
                 "<strong>" + totalPriceOrder + " " + idiom.translate('money.symbol') + "</strong>" +
                 lang.translate('crre.confirm.order.message2');

@@ -89,7 +89,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonObject>> handler) {
+    public void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Boolean consumable,
+                                Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT sum(oce.amount) as nb_licences " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
@@ -100,13 +101,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "AND rel_group_campaign.id_structure_group = structure_group.id) ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query = filterWaitingOrder(status, user, query, startDate, endDate, values);
-        query += "AND (c.use_credit = 'consumable_licences' OR c.use_credit = 'licences');";
+        query += "AND c.use_credit = '" + (consumable ? "consumable_" : "") + "licences';";
         sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void listOrderCredit(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT oce.equipment_key, oce.amount " +
+        String query = "SELECT oce.equipment_key, oce.amount, c.use_credit " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
                 "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
@@ -116,7 +117,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "AND rel_group_campaign.id_structure_group = structure_group.id) ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query = filterWaitingOrder(status, user, query, startDate, endDate, values);
-        query += "AND c.use_credit = 'credits';";
+        query += "AND (c.use_credit = 'credits' OR c.use_credit = 'consumable_credits');";
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 

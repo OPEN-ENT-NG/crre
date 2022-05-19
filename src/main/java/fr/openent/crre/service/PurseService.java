@@ -43,6 +43,6 @@ public interface PurseService {
      * @param operation "+" or "-"
      * @param handler
      */
-    void updatePurseAmount(Double price, String idStructure, String operation, Handler<Either<String, JsonObject>> handler);
+    void updatePurseAmount(Double price, String idStructure, String operation, Boolean consumable, Handler<Either<String, JsonObject>> handler);
 
 }

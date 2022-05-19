@@ -3,11 +3,14 @@
 	"type": "object",
 	"additionalProperties": false,
 	"properties": {
+	    "id_structure": {
+			"type": "string"
+		},
 		"initial_amount": {
 			"type": "number"
 		},
-	    "id_structure": {
-			"type": "string"
+		"consumable_initial_amount": {
+			"type": "number"
 		},
 		"licence_initial_amount": {
 			"type": "number"

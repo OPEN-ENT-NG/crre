@@ -58,8 +58,17 @@
             <label><i18n>crre.rest</i18n> : </label>
             <span ng-bind="purse.amount + (purse.initial_amount - purses.selected[0].initial_amount) | currency"></span>
         </div>
-        <div ng-show = "isNegativePurse" class="warning" >
-            <label><i18n>crre.error.purse.negative</i18n></label>
+        <h2 class="bold-font-weight black-color"><i18n>crre.purse.money.consumable</i18n></h2>
+        <div class="quantity">
+            <label><i18n>purse</i18n> : </label>
+            <i class="moins" ng-click="purse.consumable_initial_amount = purse.consumable_initial_amount - 1;"></i>
+            <input class="five numberWithoutArrow" type="number" ng-model="purse.consumable_initial_amount"
+                   min="[[purses.selected[0].consumable_initial_amount - purses.selected[0].consumable_amount]]" step="any"/>
+            <i class="plus" ng-click="purse.consumable_initial_amount = purse.consumable_initial_amount + 1;"></i>
+        </div>
+        <div class="vertical-spacing">
+            <label><i18n>crre.rest</i18n> : </label>
+            <span ng-bind="purse.consumable_amount + (purse.consumable_initial_amount - purses.selected[0].consumable_initial_amount) | currency"></span>
         </div>
         <div class="row vertical-spacing">
             <input type="submit" class="button right-magnet" i18n-value="Validate"

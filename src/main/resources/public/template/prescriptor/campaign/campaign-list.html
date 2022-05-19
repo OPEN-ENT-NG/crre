@@ -68,6 +68,12 @@
                                 <i18n>crre.remainder</i18n> : <span ng-bind="campaign.purse_amount | currency"></span>
                             </em>
                         </p>
+                        <p class="small-text-align" ng-if="campaign.use_credit == 'consumable_credits'">
+                            <em class="small-text">
+                                <i18n>crre.campaign.amount.init</i18n> : <span ng-bind="campaign.consumable_initial_purse_amount | currency"></span>
+                                <i18n>crre.remainder</i18n> : <span ng-bind="campaign.consumable_purse_amount | currency"></span>
+                            </em>
+                        </p>
                         <p class="small-text-align" ng-if="campaign.use_credit == 'licences'">
                             <em class="small-text">
                                 <i18n>crre.Licences</i18n> : <span ng-bind="campaign.nb_licences_total"></span>

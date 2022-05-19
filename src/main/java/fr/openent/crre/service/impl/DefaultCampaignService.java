@@ -97,7 +97,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsPurses(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT amount, initial_amount, id_structure " +
+        String query = "SELECT amount, initial_amount, consumable_amount, consumable_initial_amount, id_structure " +
                 "FROM " + Crre.crreSchema + ".purse " +
                 "WHERE id_structure = ?";
 
@@ -201,6 +201,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         try {
                             campaign.put("purse_amount", object.getDouble("amount", 0.0));
                             campaign.put("initial_purse_amount", object.getDouble("initial_amount", 0.0));
+                            campaign.put("consumable_purse_amount", object.getDouble("consumable_amount", 0.0));
+                            campaign.put("consumable_initial_purse_amount", object.getDouble("consumable_initial_amount", 0.0));
                         } catch (NullPointerException e) {
                             //LOGGER.warn("A purse is present on this structure but the structure is not linked to the campaign");
                         }

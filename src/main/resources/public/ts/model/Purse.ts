@@ -9,6 +9,8 @@ export class Purse implements Selectable {
     id_structure: string;
     amount: number;
     initial_amount: number;
+    consumable_amount: number;
+    consumable_initial_amount: number;
     selected: boolean;
     seconde: number;
     premiere: number;
@@ -38,6 +40,7 @@ export class Purse implements Selectable {
         return {
             id_structure: this.id_structure,
             initial_amount: this.initial_amount,
+            consumable_initial_amount: this.consumable_initial_amount,
             licence_initial_amount: this.licence_initial_amount,
             consumable_licence_initial_amount: this.consumable_licence_initial_amount
         };

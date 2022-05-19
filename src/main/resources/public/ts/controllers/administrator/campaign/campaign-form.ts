@@ -19,7 +19,8 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Aucun crédit", value: "none"},
                 {name: "Licences manuels", value: "licences"},
                 {name: "Licences consommables", value: "consumable_licences"},
-                {name: "Crédits monétaires", value: "credits"}
+                {name: "Crédits monétaires", value: "credits"},
+                {name: "Crédits monétaires consommables", value: "consumable_credits"}
             ];
             $scope.structureFormat = [
                 {name: "Papier"},

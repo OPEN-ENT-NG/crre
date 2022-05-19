@@ -12,6 +12,9 @@ export class Campaign implements Selectable  {
     groups: StructureGroup[];
     selected: boolean;
     purse_amount?: number;
+    consumable_purse_amount?: number;
+    initial_purse_amount?: number;
+    consumable_initial_purse_amount?: number;
     nb_structures: number;
     nb_panier?: number;
     purse_enabled: boolean;

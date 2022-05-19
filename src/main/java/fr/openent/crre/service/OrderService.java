@@ -32,7 +32,8 @@ public interface OrderService {
      */
     void listOrder(String status, Integer page, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
-    void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonObject>> handler);
+    void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Boolean consumable,
+                         Handler<Either<String, JsonObject>> handler);
 
     void listOrderCredit(String status, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 

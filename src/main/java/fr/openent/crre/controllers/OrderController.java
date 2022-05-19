@@ -193,9 +193,11 @@ public class OrderController extends ControllerHelper {
                 String endDate = request.getParam("endDate");
                 Promise<JsonObject> getOrderAmount = Promise.promise();
                 Promise<JsonArray> getOrderCredit = Promise.promise();
+                Promise<JsonObject> getOrderAmountConsumable = Promise.promise();
                 List<Future> promises = new ArrayList<>();
                 promises.add(getOrderAmount.future());
                 promises.add(getOrderCredit.future());
+                promises.add(getOrderAmountConsumable.future());
                 JsonObject result = new JsonObject();
                 CompositeFuture.all(promises).onComplete(event -> {
                     if (event.succeeded()) {
@@ -204,6 +206,11 @@ public class OrderController extends ControllerHelper {
                             amount = Integer.parseInt(getOrderAmount.future().result().getString("nb_licences"));
                         }
                         result.put("licence", amount);
+                        amount = 0;
+                        if (getOrderAmountConsumable.future().result().getString("nb_licences") != null) {
+                            amount = Integer.parseInt(getOrderAmountConsumable.future().result().getString("nb_licences"));
+                        }
+                        result.put("consumable_licence", amount);
                         JsonArray order_credit = getOrderCredit.future().result();
                         if (order_credit.size() > 0) {
                             List<String> idsEquipment = new ArrayList<>();
@@ -216,16 +223,24 @@ public class OrderController extends ControllerHelper {
                                         idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
                                         JsonArray equipmentsArray = equipments.right().getValue();
                                         String idEquipment = order_credit.getJsonObject(i).getString("equipment_key");
+                                        String credit = order_credit.getJsonObject(i).getString("use_credit");
                                         if (equipmentsArray.size() > 0) {
                                             double total = 0;
+                                            double total_consumable = 0;
                                             for (int j = 0; j < equipmentsArray.size(); j++) {
                                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
                                                 if (idEquipment.equals(equipment.getString("id"))) {
-                                                    total += order_credit.getJsonObject(i).getInteger("amount") * getPriceTtc(equipment).getDouble("priceTTC");
+                                                    double totalPriceEquipment = order_credit.getJsonObject(i).getInteger("amount") *
+                                                            getPriceTtc(equipment).getDouble("priceTTC");
+                                                    if (credit.equals("credits"))
+                                                        total += totalPriceEquipment;
+                                                    else
+                                                        total_consumable += totalPriceEquipment;
                                                     break;
                                                 }
                                             }
                                             result.put("credit", total);
+                                            result.put("consumable_credit", total_consumable);
                                             renderJson(request, result);
                                         }
                                     }
@@ -236,7 +251,8 @@ public class OrderController extends ControllerHelper {
                         }
                     }
                 });
-                orderService.listOrderAmount(status, user, startDate, endDate, handlerJsonObject(getOrderAmount));
+                orderService.listOrderAmount(status, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
+                orderService.listOrderAmount(status, user, startDate, endDate, true, handlerJsonObject(getOrderAmountConsumable));
                 orderService.listOrderCredit(status, user, startDate, endDate, handlerJsonArray(getOrderCredit));
             } else {
                 badRequest(request);

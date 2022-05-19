@@ -82,6 +82,7 @@ public class PurseController extends ControllerHelper {
             String[] values;
             JsonArray uais = new JsonArray();
             JsonObject amounts = new JsonObject();
+            JsonObject consumable_amounts = new JsonObject();
             JsonObject licences = new JsonObject();
             JsonObject consumable_licences = new JsonObject();
             JsonObject seconds = new JsonObject();
@@ -90,15 +91,17 @@ public class PurseController extends ControllerHelper {
             while ((values = csv.readNext()) != null) {
                 String uai = values[0];
                 computeAmount(uai, amounts, values[1], values[2]);
-                addValueToJson(uai, licences, values[3]);
-                addValueToJson(uai, consumable_licences, values[4]);
-                addValueToJson(uai, seconds, values[5]);
-                addValueToJson(uai, premieres, values[6]);
-                addValueToJson(uai, terminales, values[7]);
-                uais.add(values[0]);
+                computeAmount(uai, amounts, values[3], values[4]);
+                addValueToJson(uai, licences, values[5]);
+                addValueToJson(uai, consumable_licences, values[6]);
+                addValueToJson(uai, seconds, values[7]);
+                addValueToJson(uai, premieres, values[8]);
+                addValueToJson(uai, terminales, values[9]);
+                uais.add(uai);
             }
             if (uais.size() > 0) {
-                matchUAIID(request, path, uais, amounts, licences, consumable_licences, seconds, premieres, terminales, content.toString());
+                matchUAIID(request, path, uais, amounts, consumable_amounts, licences, consumable_licences,
+                        seconds, premieres, terminales, content.toString());
             } else {
                 returnErrorMessage(request, new Throwable("missing.uai"), path);
             }
@@ -122,7 +125,7 @@ public class PurseController extends ControllerHelper {
         }
         amounts.put(uai, amount);
     }
-    
+
 
     private void addValueToJson(String uai, JsonObject object, String value) {
         if(value.isEmpty()) {
@@ -144,8 +147,10 @@ public class PurseController extends ControllerHelper {
 
 
     matchUAIID(final HttpServerRequest request, final String path, JsonArray uais,
-                            final JsonObject amount, final JsonObject licence, final JsonObject consumable_licence,
-                            final JsonObject seconds, final JsonObject premieres, final JsonObject terminales, final String contentFile) {
+                            final JsonObject amount, final JsonObject consumable_amount,
+                            final JsonObject licence, final JsonObject consumable_licence,
+                            final JsonObject seconds, final JsonObject premieres, final JsonObject terminales,
+                            final String contentFile) {
         structureService.getConsumableFormation(formations -> {
             if(formations.isRight()) {
                 JsonArray res_consumable_formations = formations.right().getValue();
@@ -161,7 +166,8 @@ public class PurseController extends ControllerHelper {
                         boolean invalidDatas = false;
                         for (int i = 0; i < structures.size(); i++) {
                             structure = structures.getJsonObject(i);
-                            boolean professionnal_structure = structure.containsKey("type") && structure.getString("type") != null && structure.getString("type").equals("LYCEE PROFESSIONNEL");
+                            boolean professionnal_structure = structure.containsKey("type") &&
+                                    structure.getString("type") != null && structure.getString("type").equals("LYCEE PROFESSIONNEL");
                             try {
                                 int licences = licence.getInteger(structure.getString("uai"));
                                 int consumable_licences =  consumable_licence.getInteger(structure.getString("uai"));
@@ -190,6 +196,7 @@ public class PurseController extends ControllerHelper {
                             }
                             statementsValues.put(structure.getString("id"), new JsonObject()
                                     .put("amount",amount.getJsonObject(structure.getString("uai")))
+                                    .put("consumable_amount",consumable_amount.getJsonObject(structure.getString("uai")))
                                     .put("licence",licence.getInteger(structure.getString("uai")))
                                     .put("consumable_licence",consumable_licence.getInteger(structure.getString("uai")))
                                     .put("second",seconds.getInteger(structure.getString("uai")))
@@ -445,6 +452,8 @@ public class PurseController extends ControllerHelper {
                     // we convert amount to get a number instead of a string
                     structure.put("amount", purse.getDouble("amount",0.0));
                     structure.put("initial_amount", purse.getDouble("initial_amount",0.0));
+                    structure.put("consumable_amount", purse.getDouble("consumable_amount",0.0));
+                    structure.put("consumable_initial_amount", purse.getDouble("consumable_initial_amount",0.0));
                     structure.put("licence_amount", purse.getInteger("licence_amount",0));
                     structure.put("licence_initial_amount", purse.getInteger("licence_initial_amount",0));
                     structure.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount",0));

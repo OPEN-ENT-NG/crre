@@ -288,10 +288,12 @@ export class OrdersClient extends Selection<OrderClient> {
         return total;
     }
 
-    calculTotalPriceTTC(): number {
+    calculTotalPriceTTC(consumable: boolean): number {
         let total = 0;
         this.all.map((order) => {
-            if (order.campaign.use_credit == "credits") {
+            if (!consumable && order.campaign.use_credit == "credits") {
+                total += order.price * order.amount;
+            } else if (consumable && order.campaign.use_credit == "consumable_credits") {
                 total += order.price * order.amount;
             }
         });

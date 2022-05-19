@@ -756,7 +756,13 @@ public class OrderRegionController extends BaseController {
                 }
                 case "credits": {
                     purseService.updatePurseAmount(price,
-                            newOrder.getString("id_structure"), operation,
+                            newOrder.getString("id_structure"), operation, false,
+                            handlerJsonObject(updateFuture));
+                    break;
+                }
+                case "consumable_credits": {
+                    purseService.updatePurseAmount(price,
+                            newOrder.getString("id_structure"), operation, true,
                             handlerJsonObject(updateFuture));
                     break;
                 }

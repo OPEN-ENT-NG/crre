@@ -1437,23 +1437,6 @@ INSERT INTO crre.rel_group_structure (id_structure, id_structure_group) VALUES (
 INSERT INTO crre.rel_group_structure (id_structure, id_structure_group) VALUES ('cd425227-5dc2-4d8f-a2c6-19632b8078b0', 4);
 INSERT INTO crre.rel_group_structure (id_structure, id_structure_group) VALUES ('e07e26d1-a11a-49df-9609-3b1737e488d8', 4);
 
-ALTER TABLE crre.students
-    RENAME COLUMN "Seconde" TO seconde;
-ALTER TABLE crre.students
-    RENAME COLUMN "Premiere" TO premiere;
-ALTER TABLE crre.students
-    RENAME COLUMN "Terminale" TO terminale;
-ALTER TABLE crre.students
-    ADD COLUMN general boolean default false,
-    ADD COLUMN secondepro bigint default 0,
-    ADD COLUMN premierepro bigint default 0,
-    ADD COLUMN terminalepro bigint default 0,
-    ADD COLUMN cap1 bigint default 0,
-    ADD COLUMN cap2 bigint default 0,
-    ADD COLUMN cap3 bigint default 0,
-    ADD COLUMN bma1 bigint default 0,
-    ADD COLUMN bma2 bigint default 0;
-
 TRUNCATE TABLE crre.type_campaign;
 INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure)
 VALUES (1, 'Type numérique', 'licences', false, 'Catalogue numérique', false, '[{"libelle":"Numériques"}, {"libelle":"Mixtes"}]'),
