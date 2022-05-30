@@ -38,11 +38,11 @@ public class DefaultPurseService implements PurseService {
                 }
                 if(values.getInteger("licence") != -1) {
                     statements.add(getImportStatementAmount(field,
-                            values.getInteger("licence"), "licences", false, true));
+                            values.getInteger("licence"), "licences", false, true,false));
                 }
                if(values.getInteger("consumable_licence") != -1) {
                    statements.add(getImportStatementAmount(field,
-                           values.getInteger("consumable_licence"), "licences", true, true));
+                           values.getInteger("consumable_licence"), "licences", true, true,false));
                }
             }
         }
@@ -50,16 +50,7 @@ public class DefaultPurseService implements PurseService {
             handler.handle(new Either.Left<>
                     ("crre.invalid.data.to.insert"));
         } else if (statements.size() > 0) {
-            Sql.getInstance().transaction(statements, message -> {
-                if (message.body().containsKey("status") &&
-                        "ok".equals(message.body().getString("status"))) {
-                    handler.handle(new Either.Right<>(
-                            new JsonObject().put("status", "ok")));
-                } else {
-                    handler.handle(new Either.Left<>
-                            ("crre.statements.error"));
-                }
-            });
+            handleSQLStatements(handler, statements);
         } else {
             handler.handle(new Either.Left<>
                     ("crre.statements.empty"));
@@ -127,46 +118,48 @@ public class DefaultPurseService implements PurseService {
 
     @Override
     public void update(String id_structure, JsonObject purse, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + Crre.crreSchema + ".purse " +
-                "SET initial_amount = ?, amount = amount + ( ? - initial_amount) " +
-                "WHERE id_structure = ? ;" +
-                "UPDATE " + Crre.crreSchema + ".purse " +
-                "SET consumable_initial_amount = ?, consumable_amount = consumable_amount + ( ? - consumable_initial_amount) " +
-                "WHERE id_structure = ? ;" +
-                "UPDATE " + Crre.crreSchema + ".licences " +
-                "SET initial_amount = ?, amount = amount + ( ? - initial_amount) " +
-                "WHERE id_structure = ? ;" +
-                "UPDATE " + Crre.crreSchema + ".licences " +
-                "SET consumable_initial_amount = ?, consumable_amount = consumable_amount + ( ? - consumable_initial_amount) " +
-                "WHERE id_structure = ? ;";
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(purse.getDouble("initial_amount")).add(purse.getDouble("initial_amount")).add(id_structure)
-                .add(purse.getDouble("consumable_initial_amount")).add(purse.getDouble("consumable_initial_amount")).add(id_structure)
-                .add(purse.getInteger("licence_initial_amount")).add(purse.getInteger("licence_initial_amount")).add(id_structure)
-                .add(purse.getInteger("consumable_licence_initial_amount")).add(purse.getInteger("consumable_licence_initial_amount")).add(id_structure);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+        statements.add(getImportStatementAmount(id_structure, purse.getDouble("initial_amount"), "purse",
+                false, false,true));
+        statements.add(getImportStatementAmount(id_structure, purse.getDouble("consumable_initial_amount"), "purse",
+                true, false,true));
+        statements.add(getImportStatementAmount(id_structure, purse.getInteger("licence_initial_amount"), "licences",
+                false, false, true));
+        statements.add(getImportStatementAmount(id_structure, purse.getInteger("consumable_licence_initial_amount"), "licences",
+                true, false,true));
+        handleSQLStatements(handler, statements);
     }
 
-    private JsonObject getImportStatementAmount(String structureId, double amount, String table, Boolean consumable, Boolean isOverrideAmount) {
+    private void handleSQLStatements(Handler<Either<String, JsonObject>> handler, JsonArray statements) {
+        Sql.getInstance().transaction(statements, message -> {
+            if (message.body().containsKey("status") &&
+                    "ok".equals(message.body().getString("status"))) {
+                handler.handle(new Either.Right<>(
+                        new JsonObject().put("status", "ok")));
+            } else {
+                handler.handle(new Either.Left<>
+                        ("crre.statements.error"));
+            }
+        });
+    }
+
+    private JsonObject getImportStatementAmount(String structureId, double amount, String table, Boolean consumable,
+                                                Boolean isOverrideAmount, Boolean update) {
         String statement = "INSERT INTO " + Crre.crreSchema + "." + table + " (id_structure, ";
             if (consumable) {
                 statement += "consumable_amount, consumable_initial_amount) " +
                         "VALUES (?,?,?) " +
                         "ON CONFLICT (id_structure) DO UPDATE " +
-                        "SET consumable_initial_amount = ?, " +
-                        "consumable_amount = (" +
-                        "  CASE " +
-                        "    WHEN " + table + ".consumable_amount IS NOT NULL THEN " + table + ".consumable_initial_amount - " + table + ".consumable_amount + ? " +
-                        "    ELSE ?" +
-                        "  END" +
-                        ") " +
+                        "SET consumable_amount = " + table + ".consumable_amount + ( ? - " + table + ".consumable_initial_amount), " +
+                        "consumable_initial_amount = ? " +
                         "WHERE " + table + ".id_structure = ? ;";
             } else {
                 statement += "amount, initial_amount) " +
                         "VALUES (?,?,?) " +
                         "ON CONFLICT (id_structure) DO UPDATE ";
-                if(!isOverrideAmount) {
+                if (update){
+                    statement += "SET amount = " + table + ".amount + ( ? - " + table + ".initial_amount), initial_amount = ? ";
+                } else if(!isOverrideAmount) {
                     statement += "SET initial_amount = " + table + ".initial_amount + ?, " +
                             "amount = " + table + ".amount + ? ";
                 } else {
@@ -180,7 +173,6 @@ public class DefaultPurseService implements PurseService {
                 params.add(structureId);
                 if (table.equals("licences")) {
                     params.add((int) amount)
-                            .add((int)amount)
                             .add((int)amount)
                             .add((int)amount)
                             .add((int)amount);

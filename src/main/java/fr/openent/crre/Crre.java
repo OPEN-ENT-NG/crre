@@ -15,7 +15,7 @@ public class Crre extends BaseServer {
     public static String crreSchema;
     public static Integer iterationWorker;
     public static JsonObject CONFIG;
-    public static Storage STORAGE;
+    public static Storage storage;
     public static final String ADMINISTRATOR_RIGHT = "crre.administrator";
     public static final String VALIDATOR_RIGHT = "crre.validator";
     public static final String PRESCRIPTOR_RIGHT = "crre.prescriptor";
@@ -35,7 +35,7 @@ public class Crre extends BaseServer {
             log.info("no iteration worker in config");
             iterationWorker = 10 ;
         }
-        STORAGE = new StorageFactory(vertx, config).getStorage();
+        storage = new StorageFactory(vertx, config).getStorage();
         JsonObject mail = config.getJsonObject("mail", new JsonObject());
 
         try {
@@ -56,8 +56,8 @@ public class Crre extends BaseServer {
         addController(new EquipmentController());
         addController(new LogController());
         addController(new CampaignController());
-        addController(new PurseController(vertx));
-        addController(new StructureGroupController(vertx));
+        addController(new PurseController(storage));
+        addController(new StructureGroupController(storage));
         addController(new StructureController(getEventBus(vertx)));
         addController(new BasketController());
         addController(new OrderController());

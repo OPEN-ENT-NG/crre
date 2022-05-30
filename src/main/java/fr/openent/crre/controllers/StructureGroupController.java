@@ -2,11 +2,9 @@ package fr.openent.crre.controllers;
 
 import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
-import fr.openent.crre.helpers.ImportCSVHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.service.StructureService;
@@ -18,17 +16,15 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -44,15 +40,15 @@ import static org.entcore.common.utils.FileUtils.deleteImportPath;
  */
 public class StructureGroupController extends ControllerHelper {
 
-    private final ImportCSVHelper importCSVHelper;
     private final StructureGroupService structureGroupService;
     private final StructureService structureService;
+    private final Storage storage;
 
-    public StructureGroupController(Vertx vertx) {
+    public StructureGroupController(Storage storage) {
         super();
         this.structureGroupService = new DefaultStructureGroupService(Crre.crreSchema, "structure_group");
-        this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
         this.structureService = new DefaultStructureService(Crre.crreSchema, null);
+        this.storage = storage;
     }
 
     @Post("/structure/group/import")
@@ -60,15 +56,14 @@ public class StructureGroupController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void groupStructure(final HttpServerRequest request) {
-        final String importId = UUID.randomUUID().toString();
-        final String path = config.getString("import-folder", "/tmp") + File.separator + importId;
-        importCSVHelper.getParsedCSV(request, path, false, event -> {
-            if (event.isRight()) {
-                Buffer content = event.right().getValue();
-                parseCsv(request, path, content);
-            } else {
+        storage.writeUploadFile(request, entries -> {
+            if (!"ok".equals(entries.getString("status"))) {
                 renderError(request);
+                return;
             }
+            String fileId = entries.getString("_id");
+            String filename = entries.getJsonObject("metadata").getString("filename");
+            parseCsv(request, fileId, filename);
         });
     }
 
@@ -76,30 +71,31 @@ public class StructureGroupController extends ControllerHelper {
      * Parse CSV file
      *
      * @param request Http request
-     * @param path    Directory path
+     * @param filename name of the file to import
      */
-    private void parseCsv(final HttpServerRequest request, final String path, Buffer content) {
-        try {
-            CSVReader csv = new CSVReader(new InputStreamReader(
-                    new ByteArrayInputStream(content.getBytes())),
-                    ';', '"', 1);
-            String[] values;
-            JsonArray uais = new fr.wseduc.webutils.collections.JsonArray();
-            ;
+    private void parseCsv(final HttpServerRequest request, final String fileId, String filename) {
+        storage.readFile(fileId,event -> {
+            try {
+                CSVReader csv = new CSVReader(new InputStreamReader(
+                        new ByteArrayInputStream(event.getBytes())),
+                        ';', '"', 1);
+                String[] values;
+                JsonArray uais = new fr.wseduc.webutils.collections.JsonArray();
+                ;
 
-            while ((values = csv.readNext()) != null) {
-                uais.add(values[0]);
+                while ((values = csv.readNext()) != null) {
+                    uais.add(values[0]);
+                }
+                if (uais.size() > 0) {
+                    matchUAIID(request, filename, uais);
+                } else {
+                    returnErrorMessage(request, new Throwable("missing.uai"), filename);
+                }
+            } catch (IOException e) {
+                log.error("[Crre@CSVImport]: csv exception", e);
+                returnErrorMessage(request, e.getCause(), filename);
             }
-            if (uais.size() > 0) {
-                matchUAIID(request, path, uais);
-            } else {
-                returnErrorMessage(request, new Throwable("missing.uai"), path);
-            }
-        } catch (IOException e) {
-            log.error("[Crre@CSVImport]: csv exception", e);
-            returnErrorMessage(request, e.getCause(), path);
-            deleteImportPath(vertx, path);
-        }
+        });
     }
 
     /**

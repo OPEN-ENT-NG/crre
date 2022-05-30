@@ -2,7 +2,6 @@ package fr.openent.crre.controllers;
 
 import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
-import fr.openent.crre.helpers.ImportCSVHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -21,18 +20,19 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
@@ -40,15 +40,15 @@ import static org.entcore.common.utils.FileUtils.deleteImportPath;
 public class PurseController extends ControllerHelper {
 
 
-    private final ImportCSVHelper importCSVHelper;
     private final StructureService structureService;
     private final PurseService purseService;
+    private final Storage storage;
 
-    public PurseController(Vertx vertx) {
+    public PurseController(Storage storage) {
         super();
-        this.importCSVHelper = new ImportCSVHelper(vertx, this.eb);
         this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.purseService = new DefaultPurseService();
+        this.storage = storage;
     }
 
     @Post("/purses/import")
@@ -56,15 +56,14 @@ public class PurseController extends ControllerHelper {
     @SecuredAction(Crre.ADMINISTRATOR_RIGHT)
     @ResourceFilter(AdministratorRight.class)
     public void purse(final HttpServerRequest request) {
-        final String importId = UUID.randomUUID().toString();
-        final String path = config.getString("import-folder", "/tmp") + File.separator + importId;
-        importCSVHelper.getParsedCSV(request, path, event -> {
-            if (event.isRight()) {
-                Buffer content = event.right().getValue();
-                parseCsv(request, path, content);
-            } else {
+        storage.writeUploadFile(request, entries -> {
+            if (!"ok".equals(entries.getString("status"))) {
                 renderError(request);
+                return;
             }
+            String fileId = entries.getString("_id");
+            String filename = entries.getJsonObject("metadata").getString("filename");
+            parseCsv(request, fileId, filename);
         });
     }
 
@@ -72,43 +71,45 @@ public class PurseController extends ControllerHelper {
      * Parse CSV file
      *
      * @param request Http request
-     * @param path    Directory path
+     * @param filename    name of the file to import
      */
-    private void parseCsv(final HttpServerRequest request, final String path, Buffer content) {
-        try {
-            CSVReader csv = new CSVReader(new InputStreamReader(
-                    new ByteArrayInputStream(content.getBytes())),
-                    ';', '"', 1);
-            String[] values;
-            JsonArray uais = new JsonArray();
-            JsonObject amounts = new JsonObject();
-            JsonObject consumable_amounts = new JsonObject();
-            JsonObject licences = new JsonObject();
-            JsonObject consumable_licences = new JsonObject();
-            JsonObject seconds = new JsonObject();
-            JsonObject premieres = new JsonObject();
-            JsonObject terminales = new JsonObject();
-            while ((values = csv.readNext()) != null) {
-                String uai = values[0];
-                computeAmount(uai, amounts, values[1], values[2]);
-                computeAmount(uai, amounts, values[3], values[4]);
-                addValueToJson(uai, licences, values[5]);
-                addValueToJson(uai, consumable_licences, values[6]);
-                addValueToJson(uai, seconds, values[7]);
-                addValueToJson(uai, premieres, values[8]);
-                addValueToJson(uai, terminales, values[9]);
-                uais.add(uai);
+    private void parseCsv(final HttpServerRequest request, final String fileId, String filename) {
+        storage.readFile(fileId,event -> {
+            try {
+                CSVReader csv = new CSVReader(new InputStreamReader(
+                        new ByteArrayInputStream(event.getBytes())),
+                        ';', '"', 1);
+                String[] values;
+                JsonArray uais = new JsonArray();
+                JsonObject amounts = new JsonObject();
+                JsonObject consumable_amounts = new JsonObject();
+                JsonObject licences = new JsonObject();
+                JsonObject consumable_licences = new JsonObject();
+                JsonObject seconds = new JsonObject();
+                JsonObject premieres = new JsonObject();
+                JsonObject terminales = new JsonObject();
+                while ((values = csv.readNext()) != null) {
+                    String uai = values[0];
+                    computeAmount(uai, amounts, values[1], values[2]);
+                    computeAmount(uai, consumable_amounts, values[3], values[4]);
+                    addValueToJson(uai, licences, values[5]);
+                    addValueToJson(uai, consumable_licences, values[6]);
+                    addValueToJson(uai, seconds, values[7]);
+                    addValueToJson(uai, premieres, values[8]);
+                    addValueToJson(uai, terminales, values[9]);
+                    uais.add(uai);
+                }
+                if (uais.size() > 0) {
+                    matchUAIID(request, filename, uais, amounts, consumable_amounts, licences, consumable_licences,
+                            seconds, premieres, terminales, event.toString());
+                } else {
+                    returnErrorMessage(request, new Throwable("missing.uai"), filename);
+                }
+            } catch (IOException e) {
+                log.error("[Crre@CSVImport]: csv exception", e);
+                returnErrorMessage(request, e.getCause(), filename);
             }
-            if (uais.size() > 0) {
-                matchUAIID(request, path, uais, amounts, consumable_amounts, licences, consumable_licences,
-                        seconds, premieres, terminales, content.toString());
-            } else {
-                returnErrorMessage(request, new Throwable("missing.uai"), path);
-            }
-        } catch (IOException e) {
-            log.error("[Crre@CSVImport]: csv exception", e);
-            returnErrorMessage(request, e.getCause(), path);
-        }
+        });
     }
 
     private void computeAmount(String uai, JsonObject amounts, String newAmount, String addAmount) {
