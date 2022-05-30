@@ -761,7 +761,7 @@
   "crre.catalog.access" : "Choix du catalogue :",
   "crre.catalog.type" : "Type de catalogue",
   "crre.tag.reassort.auto" : "Toutes les références commandées dans cette campagne seront automatiquement taguées réassort",
-  "crre.total.licences" : "Total en licences",
+  "crre.total.licences" : "Quantité totale",
   "crre.total.credits" : "Total en €",
   "crre.stat.consumed.licences" : "Licences consommées",
   "crre.stat.total.licences" : "Licences totales",
