@@ -158,6 +158,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     }
                 });
             });
+            Utils.safeApply($scope);
         }
 
         function reformatOrders(ordersToReformat, ordersToCreate: OrdersRegion, ordersToRemove: OrdersClient,

@@ -158,10 +158,10 @@
         </div>
         <div class="twelve-mobile float tot-cards two">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
-            <div class="total-container">
-                <div ng-if="amountTotal.licence">
+            <div class="total-container" ng-if="campaign.nb_licences_consumable_total || campaign.nb_licences_total">
+                <div>
                     <i18n>crre.consummed.licences</i18n>
-                    <h1 class="bold-font-weight" ng-bind="amountTotal.licence"></h1>
+                    <h1 class="bold-font-weight" ng-bind="amountTotal.licence + amountTotal.consumable_licence"></h1>
                 </div>
                 <div class="licences" ng-if="amountTotal.licence && campaign.nb_licences_total">
                     <i18n>crre.initial.licences</i18n>
@@ -190,41 +190,38 @@
                         [[campaign.nb_licences_consumable_total]]
                     </div>
                 </div>
-                <div ng-if="campaign.nb_licences_total - campaign.nb_licences_available +
-                        campaign.nb_licences_consumable_total - campaign.nb_licences_consumable_available !== 0">
-                    <i18n>crre.already.consummed.licences</i18n>
-                    <h1 class="bold-font-weight">
-                        [[campaign.nb_licences_total - campaign.nb_licences_available +
-                        campaign.nb_licences_consumable_total - campaign.nb_licences_consumable_available]]
-                    </h1>
-                </div>
-                <div class="color-red"
-                     ng-if="campaign.nb_licences_available || campaign.nb_licences_consumable_available || amountTotal.licence">
+                <div class="color-red">
                     <i18n>crre.remain.licences</i18n>
                     <h1 class="bold-font-weight color-red no-margin-bottom">
-                        [[campaign.nb_licences_available + campaign.nb_licences_consumable_available - amountTotal.licence]]</h1>
+                        [[campaign.nb_licences_available + campaign.nb_licences_consumable_available - amountTotal.licence - amountTotal.consumable_licence]]</h1>
                 </div>
-                <div ng-if="amountTotal.credit">
+            </div>
+            <br ng-if="(campaign.nb_licences_consumable_total || campaign.nb_licences_total) &&
+            (campaign.initial_purse_amount || campaign.consumable_initial_purse_amount)"/>
+            <div class="total-container" ng-if="campaign.initial_purse_amount || campaign.consumable_initial_purse_amount">
+                <div>
                     <i18n>crre.total.in.euros</i18n>
-                    <h1 class="bold-font-weight">[[amountTotal.credit | currency]]</h1>
+                    <h1 class="bold-font-weight">[[amountTotal.credit + amountTotal.consumable_credit | currency]]</h1>
                 </div>
-                <div class="licences"  ng-if="amountTotal.credit">
+                <div class="licences"  ng-if="campaign.initial_purse_amount">
                     <i18n>crre.initial</i18n>
-                    <div class="bold-font-weight big" ng-bind="campaign.initial_purse_amount | currency"></div>
+                    <div ng-bind="campaign.initial_purse_amount | currency"></div>
                 </div>
-                <div class="color-red"  ng-if="amountTotal.credit">
+                <div class="licences"  ng-if="campaign.consumable_initial_purse_amount">
+                    <i18n>crre.initial.consumable</i18n>
+                    <div ng-bind="campaign.consumable_initial_purse_amount | currency"></div>
+                </div>
+                <div class="color-red">
                     <i18n>crre.remained</i18n>
                     <h1 class="bold-font-weight color-red no-margin-bottom">
-                        [[campaign.purse_amount - amountTotal.credit | currency]]</h1>
+                        [[campaign.purse_amount - amountTotal.credit | currency]]
+                    </h1>
                 </div>
-                <div class="licences"  ng-if="amountTotal.consumable_credit">
-                    <i18n>crre.initial</i18n>
-                    <div class="bold-font-weight big" ng-bind="campaign.consumable_initial_purse_amount | currency"></div>
-                </div>
-                <div class="color-red"  ng-if="amountTotal.consumable_credit">
-                    <i18n>crre.remained</i18n>
+                <div class="color-red">
+                    <i18n>crre.remained.consumable</i18n>
                     <h1 class="bold-font-weight color-red no-margin-bottom">
-                        [[campaign.consumable_purse_amount - amountTotal.consumable_credit | currency]]</h1>
+                        [[campaign.consumable_purse_amount - amountTotal.consumable_credit | currency]]
+                    </h1>
                 </div>
             </div>
         </div>
