@@ -10,7 +10,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.loading = true;
             $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Manuel'}];
             $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
-            $scope.equipments.pros = [{name: 'Lycée général'}, {name: 'Lycée professionnel'}];
+            $scope.equipments.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}];
             $scope.equipments.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
 
             $scope.catalog = {
@@ -58,7 +58,7 @@ export const catalogController = ng.controller('catalogController',
                 if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
                     let proFilter = new Filter();
                     proFilter.name = "pro";
-                    proFilter.value = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général";
+                    proFilter.value = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
                     $scope.filters.all.push(proFilter);
                 }
                 if (["articlenumerique","articlepapier"].indexOf($scope.campaign.catalog.split("|")[0]) != -1) {
@@ -111,7 +111,7 @@ export const catalogController = ng.controller('catalogController',
                 }
                 if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
                     let arrayPro = [];
-                    let type = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général";
+                    let type = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
                     arrayPro.push($scope.equipments.pros.find(t => t.name = type));
                     $scope.catalog["pros"] = arrayPro;
                 }
