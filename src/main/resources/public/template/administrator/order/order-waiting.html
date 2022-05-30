@@ -105,7 +105,7 @@
                 </tr>
                 </thead>
                 <tbody ng-repeat="project in projects.all">
-                <tr>
+                <tr ng-click="project.expanded = !project.expanded">
                     <td class="table-selector">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project); checkSwitchAll();"/>
@@ -131,7 +131,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr ng-repeat-start="order in project.orders" class="subline">
+                <tr ng-repeat-start="order in project.orders" ng-if="project.expanded" class="subline">
                     <td class="table-selector">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project); checkSwitchAll();"/>
@@ -176,7 +176,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr class="subline" ng-repeat="offer in order.offers.all" ng-if="order.offers.all.length > 0" ng-repeat-end>
+                <tr class="subline" ng-repeat="offer in order.offers.all" ng-if="project.expanded && order.offers.all.length > 0" ng-repeat-end>
                     <td></td>
                     <td></td>
                     <td><span class="arrowOffer">[[offer.name]]</span></td>

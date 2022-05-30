@@ -228,6 +228,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                         project.uai = structure.uai;
                         project.structure_name = structure.name;
                     }
+                    project.expanded = true;
                     projectWithOrders.all.push(project);
                 }
             }
