@@ -32,13 +32,11 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         this.init = async () => {
             $scope.filterChoice = {
                 users : [],
-                reassorts : [],
                 type_campaign: []
             }
             $scope.filterChoiceCorrelation = {
-                keys : ["users", "reassorts", "type_campaign"],
+                keys : ["users", "type_campaign"],
                 users : 'id_user',
-                reassorts : 'reassort',
                 type_campaign : 'id_campaign'
             }
             $scope.users = [];
@@ -47,9 +45,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.filtersDate = [];
             $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
             $scope.filtersDate.endDate = moment()._d;
-
-            $scope.reassorts = [{name: 'true'}, {name: 'false'}];
-            $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
 
             $scope.filters = new Filters();
             await $scope.getAllFilters();

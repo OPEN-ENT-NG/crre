@@ -30,7 +30,6 @@ export const manageOrderController = ng.controller('manageOrderController',
         $scope.loading = true;
 
         this.init = async () => {
-            $scope.reassorts = [{reassort: "true"}, {reassort: "false"}];
             $scope.filters = new Filters();
             $scope.basketsOrders = new BasketsOrders();
             await $scope.getOrders();

@@ -21,14 +21,13 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 id_structure : [],
             };
             $scope.filterChoiceCorrelation = {
-                keys : ["docType","reassort","licence","campaigns", "schoolType", "editors", "distributeurs", "states", "id_structure"],
+                keys : ["docType","licence","campaigns", "schoolType", "editors", "distributeurs", "states", "id_structure"],
                 states : 'status',
                 distributeurs : 'distributeur',
                 editors : 'editeur',
                 schoolType : 'type',
                 campaigns : 'id_campaign',
                 docType : '_index',
-                reassort : 'reassort',
                 licence : 'licence',
                 id_structure : "id_structure"
             };
@@ -55,9 +54,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             newFilterFront.name = "status";
             newFilterFront.value = ["WAITING", "IN PROGRESS", "VALID", "DONE"];
             $scope.filtersFront.all.push(newFilterFront);
-
-            $scope.reassorts = [{name: 'true'}, {name: 'false'}];
-            $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
 
             $scope.schoolType = [{name: 'PU'},{name:'PR'}];
             $scope.schoolType.forEach((item) => item.toString = () => $scope.translate(item.name));
@@ -174,8 +170,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                         value = item.id;
                     } else if(key === "states"){
                         value = item.status;
-                    } else if(key === "reassort"){
-                        value = item.name == 'true';
                     }
                     newFilter.value = value;
                     newFilterFront.value.push(value);
