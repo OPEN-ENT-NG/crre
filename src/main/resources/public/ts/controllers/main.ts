@@ -496,7 +496,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                         stringTeacher.slice(0, -2);
                         $scope.offerTeacher.push(stringTeacher);
                     }
-                } else {
+                } else if(offer.conditions && offer.conditions[0]) {
                     if(offer.licence[0].valeur === "Elève") {
                         $scope.offerStudent.push(offer.conditions[0].gratuite + lang.translate('crre.free.licences.student.for') +
                             offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
