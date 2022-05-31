@@ -61,10 +61,10 @@ export const catalogController = ng.controller('catalogController',
                     proFilter.value = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
                     $scope.filters.all.push(proFilter);
                 }
-                if (["articlenumerique","articlepapier"].indexOf($scope.campaign.catalog.split("|")[0]) != -1) {
+                if (["articlenumerique", "articlepapier"].indexOf($scope.campaign.catalog.split("|")[0]) != -1) {
                     let catalogFilter = new Filter();
                     let catalogName = $scope.campaign.catalog.split("|")[0];
-                    if(catalogName == "articlepapier") {
+                    if (catalogName == "articlepapier") {
                         $scope.correlationFilterES.keys.splice($scope.correlationFilterES.keys.indexOf('levels'), 1);
                         delete $scope.equipments.levels;
                         delete $scope.catalog.levels;
@@ -101,9 +101,11 @@ export const catalogController = ng.controller('catalogController',
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
             if (!!$scope.campaign.catalog) {
-                let arrayDocs = [];
-                arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.split("|")[0]));
-                $scope.catalog["docsType"] = arrayDocs;
+                if (!$scope.campaign.catalog.split("|").includes("consommable")) {
+                    let arrayDocs = [];
+                    arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.split("|")[0]));
+                    $scope.catalog["docsType"] = arrayDocs;
+                }
                 if ($scope.campaign.catalog.split("|").includes("consommable")) {
                     let arrayConso = [];
                     arrayConso.push($scope.equipments.consumables.find(c => c.name = "Consommable"));
@@ -156,7 +158,7 @@ export const catalogController = ng.controller('catalogController',
 
         $scope.getSortName = (key): string => {
             let sortName = "name";
-            if(key == "editors" || key == "subjects") {
+            if (key == "editors" || key == "subjects") {
                 sortName = "nameFormat"
             }
             return sortName;
