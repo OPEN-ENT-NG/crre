@@ -1,5 +1,5 @@
 import {ng, template} from 'entcore';
-import {Campaign, Student, Utils} from '../../../model';
+import {Campaign, Filter, Student, Utils} from '../../../model';
 
 export const campaignsListController = ng.controller('campaignsListController',
     ['$scope', ($scope) => {
@@ -8,6 +8,9 @@ export const campaignsListController = ng.controller('campaignsListController',
             if (campaign.accessible) {
                 $scope.$emit('eventEmitedCampaign', campaign);
                 $scope.campaign = campaign;
+                // Reset campaign without filter
+                $scope.query.word = '';
+                $scope.filters.all = [];
                 $scope.redirectTo(`/equipments/catalog/${campaign.id}`);
                 Utils.safeApply($scope);
             }
