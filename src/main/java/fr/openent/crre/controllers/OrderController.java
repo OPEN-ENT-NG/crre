@@ -219,18 +219,18 @@ public class OrderController extends ControllerHelper {
                             }
                             searchByIds(idsEquipment, equipments -> {
                                 if (equipments.isRight()) {
+                                    JsonArray equipmentsArray = equipments.right().getValue();
+                                    double total = 0;
+                                    double total_consumable = 0;
                                     for (int i = 0; i < order_credit.size(); i++) {
-                                        idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
-                                        JsonArray equipmentsArray = equipments.right().getValue();
-                                        String idEquipment = order_credit.getJsonObject(i).getString("equipment_key");
-                                        String credit = order_credit.getJsonObject(i).getString("use_credit");
+                                        JsonObject order = order_credit.getJsonObject(i);
+                                        String idEquipment = order.getString("equipment_key");
+                                        String credit = order.getString("use_credit");
                                         if (equipmentsArray.size() > 0) {
-                                            double total = 0;
-                                            double total_consumable = 0;
                                             for (int j = 0; j < equipmentsArray.size(); j++) {
-                                                JsonObject equipment = equipmentsArray.getJsonObject(i);
+                                                JsonObject equipment = equipmentsArray.getJsonObject(j);
                                                 if (idEquipment.equals(equipment.getString("id"))) {
-                                                    double totalPriceEquipment = order_credit.getJsonObject(i).getInteger("amount") *
+                                                    double totalPriceEquipment = order.getInteger("amount") *
                                                             getPriceTtc(equipment).getDouble("priceTTC");
                                                     if (credit.equals("credits"))
                                                         total += totalPriceEquipment;
@@ -239,11 +239,11 @@ public class OrderController extends ControllerHelper {
                                                     break;
                                                 }
                                             }
-                                            result.put("credit", total);
-                                            result.put("consumable_credit", total_consumable);
-                                            renderJson(request, result);
                                         }
                                     }
+                                    result.put("credit", total);
+                                    result.put("consumable_credit", total_consumable);
+                                    renderJson(request, result);
                                 }
                             });
                         } else {
