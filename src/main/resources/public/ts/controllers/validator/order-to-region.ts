@@ -174,7 +174,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             let promesses = [await new OrdersRegion().getOrdersFromProjects(projets,
                 !isSearching && !$scope.selectedType.split('/').includes('historic'), old)];
             if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
-                promesses.push($scope.structures.sync());
+                promesses.push($scope.structures.sync($scope.structuresInRegroupement));
             }
             const responses = await Promise.all(promesses);
             return {projets, responses};

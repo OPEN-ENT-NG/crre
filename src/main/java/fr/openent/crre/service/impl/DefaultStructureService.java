@@ -59,10 +59,11 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
     @Override
     public void getStructures(Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL " +
-                "RETURN left(s.zipCode, 2) as department, s.id as id, s.name as name,s.city as city,s.UAI as uai, " +
-                "s.academy as academy, s.type as type_etab;";
-        neo4j.execute(query, new JsonObject(), Neo4jResult.validResultHandler(handler));
+        String query = "SELECT DISTINCT structure.id_structure AS id, name, city, uai, " +
+                "CASE WHEN rel_group_structure.id_structure is null THEN false ELSE true END as inRegroupment " +
+                "FROM " + Crre.crreSchema + ".structure " +
+                "LEFT OUTER JOIN " + Crre.crreSchema + ".rel_group_structure ON rel_group_structure.id_structure = structure.id_structure";
+        sql.raw(query, SqlResult.validResultHandler(handler));
     }
 
     @Override
