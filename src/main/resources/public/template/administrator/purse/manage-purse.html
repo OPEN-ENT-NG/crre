@@ -40,7 +40,7 @@
             purse.licence_initial_amount || purse.consumable_licence_initial_amount">
                 <td class="table-selector">
                     <label class="checkbox">
-                        <input type="checkbox" ng-model="purse.selected"/>
+                        <input type="checkbox" ng-model="purse.selected" ng-change="checkSwitchAll()"/>
                         <span></span>
                     </label>
                 </td>
@@ -109,7 +109,7 @@
                 <button ng-click="openEditPurseForm(purses.selected[0])" ng-show="purses.selected.length === 1">
                     <i18n>modify</i18n>
                 </button>
-                <button ng-click="purses.exportPurses()">
+                <button ng-click="purses.exportPurses(allPurseSelected)">
                     <i18n>crre.campaign.purse.export</i18n>
                 </button>
             </div>

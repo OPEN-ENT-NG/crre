@@ -76,9 +76,13 @@ export class Purses extends Selection<Purse> {
         return response;
     }
 
-    exportPurses() {
-        let params_id_purses = Utils.formatKeyToParameter(this.selected, 'id');
-        window.location = `/crre/purses/export?${params_id_purses}`;
+    exportPurses(all? : boolean) {
+        if(!!all) {
+            window.location = `/crre/purses/export`;
+        } else {
+            let params_id_purses = Utils.formatKeyToParameter(this.selected, 'id');
+            window.location = `/crre/purses/export?${params_id_purses}`;
+        }
     };
 }
 

@@ -39,6 +39,7 @@ export const purseController = ng.controller('PurseController',
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             }
             $scope.loading = false;
+            $scope.syncSelected();
             Utils.safeApply($scope);
         }
 
@@ -69,6 +70,21 @@ export const purseController = ng.controller('PurseController',
         $scope.switchAll = () => {
             $scope.purses.forEach(purse => {purse.selected = $scope.allPurseSelected;});
             Utils.safeApply($scope);
-        }
+        };
+
+        $scope.checkSwitchAll = (): void => {
+            let testAllTrue = true;
+            $scope.purses.forEach(purse => {
+                if (!purse.selected) {
+                    testAllTrue = false;
+                }
+            });
+            $scope.allPurseSelected = testAllTrue;
+            Utils.safeApply($scope);
+        };
+
+        $scope.syncSelected = () : void => {
+            $scope.purses.forEach(purse => purse.selected = $scope.allPurseSelected)
+        };
 
     }]);
