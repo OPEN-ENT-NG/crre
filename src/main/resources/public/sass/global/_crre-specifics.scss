@@ -1511,6 +1511,14 @@ body.crre {
     -webkit-box-orient: vertical;
   }
 
+  .basketTruncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
   .arrowOffer {
     vertical-align: super;
     margin-left: 7%;
