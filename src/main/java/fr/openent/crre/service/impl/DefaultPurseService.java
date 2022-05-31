@@ -80,9 +80,9 @@ public class DefaultPurseService implements PurseService {
                 "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
                 "licences.consumable_amount as consumable_licence_amount, " +
                 "licences.consumable_initial_amount as consumable_licence_initial_amount " +
-                "FROM " + Crre.crreSchema + ".licences " +
-                "FULL OUTER JOIN " + Crre.crreSchema + ".students ON students.id_structure = licences.id_structure " +
-                "FULL OUTER JOIN " + Crre.crreSchema + ".purse ON purse.id_structure = licences.id_structure " +
+                "FROM " + Crre.crreSchema + ".purse " +
+                "FULL OUTER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
+                "FULL OUTER JOIN " + Crre.crreSchema + ".licences ON purse.id_structure = licences.id_structure " +
                 "JOIN " + Crre.crreSchema + ".structure ON structure.id_structure = licences.id_structure " +
                 "OR structure.id_structure = purse.id_structure " +
                 "OR structure.id_structure = students.id_structure " +
@@ -108,7 +108,7 @@ public class DefaultPurseService implements PurseService {
 
         if (page != null) {
             query += " OFFSET ? LIMIT ? ";
-            Integer PAGE_SIZE = 15;
+            Integer PAGE_SIZE = 30;
             params.add(PAGE_SIZE * page);
             params.add(PAGE_SIZE);
         }
