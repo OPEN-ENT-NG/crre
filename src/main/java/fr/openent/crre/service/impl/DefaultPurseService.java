@@ -149,10 +149,17 @@ public class DefaultPurseService implements PurseService {
             if (consumable) {
                 statement += "consumable_amount, consumable_initial_amount) " +
                         "VALUES (?,?,?) " +
-                        "ON CONFLICT (id_structure) DO UPDATE " +
-                        "SET consumable_amount = " + table + ".consumable_amount + ( ? - " + table + ".consumable_initial_amount), " +
-                        "consumable_initial_amount = ? " +
-                        "WHERE " + table + ".id_structure = ? ;";
+                        "ON CONFLICT (id_structure) DO UPDATE ";
+                if (update){
+                    statement += "SET consumable_amount = " + table + ".consumable_amount + ( ? - " + table + ".consumable_initial_amount), " +
+                            "consumable_initial_amount = ? ";
+                } else if(!isOverrideAmount) {
+                    statement += "SET consumable_initial_amount = " + table + ".consumable_initial_amount + ?, " +
+                            "consumable_amount = " + table + ".consumable_amount + ? ";
+                } else {
+                    statement += "SET consumable_initial_amount = ?, " +
+                            "consumable_amount = ? ";
+                }
             } else {
                 statement += "amount, initial_amount) " +
                         "VALUES (?,?,?) " +
@@ -166,9 +173,9 @@ public class DefaultPurseService implements PurseService {
                     statement += "SET initial_amount = ?, " +
                             "amount = ? ";
                 }
-                statement += "WHERE " + table + ".id_structure = ? ;";
             }
-            JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        statement += "WHERE " + table + ".id_structure = ? ;";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
             try {
                 params.add(structureId);
                 if (table.equals("licences")) {
