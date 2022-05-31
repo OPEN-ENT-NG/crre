@@ -63,6 +63,7 @@ export class Basket implements Selectable {
 
     async updateComment(){
         try{
+            this.comment.replace(/\n|\r|\R|;/g, ".");
             http.put(`/crre/basket/${this.id}/comment`, { comment: this.comment });
         }catch (e){
             toasts.warning('crre.basket.update.err');
