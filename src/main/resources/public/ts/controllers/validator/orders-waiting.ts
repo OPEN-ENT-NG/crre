@@ -110,6 +110,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     endLoading(newData);
                 }
             }
+            await $scope.getAllAmount();
+            Utils.safeApply($scope);
         };
 
         $scope.getAllFilters = async () => {
@@ -117,7 +119,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.getAllAmount = async () => {
-            $scope.amountTotal = await $scope.ordersClient.calculTotal('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate);
+            $scope.amountTotal = await $scope.ordersClient.calculTotal('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filters.all);
         }
 
         $scope.filterByDate = async () => {
@@ -302,7 +304,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             await orderClient.updateReassort();
             Utils.safeApply($scope);
         };
-
         // @ts-ignore
         this.init();
     }]);

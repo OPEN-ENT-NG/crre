@@ -191,6 +191,26 @@ public class OrderController extends ControllerHelper {
                 final String status = request.params().get("status");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
+                // Récupération de tout les filtres
+                JsonArray filters = new JsonArray();
+                boolean exist;
+                int length = request.params().entries().size();
+                for (int i = 0; i < length; i++) {
+                    String key = request.params().entries().get(i).getKey();
+                    exist = false;
+                    if (!key.equals("id") && !key.equals("q") && !key.equals("page") &&
+                            !key.equals("startDate") && !key.equals("endDate")) {
+                        for (int f = 0; f < filters.size(); f++) {
+                            if (filters.getJsonObject(f).containsKey(key)) {
+                                filters.getJsonObject(f).getJsonArray(key).add(request.params().entries().get(i).getValue());
+                                exist = true;
+                            }
+                        }
+                        if (!exist) {
+                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), new JsonArray().add(request.params().entries().get(i).getValue())));
+                        }
+                    }
+                }
                 Promise<JsonObject> getOrderAmount = Promise.promise();
                 Promise<JsonArray> getOrderCredit = Promise.promise();
                 Promise<JsonObject> getOrderAmountConsumable = Promise.promise();
@@ -214,9 +234,12 @@ public class OrderController extends ControllerHelper {
                         JsonArray order_credit = getOrderCredit.future().result();
                         if (order_credit.size() > 0) {
                             List<String> idsEquipment = new ArrayList<>();
+                            int total_amount = 0;
                             for (int i = 0; i < order_credit.size(); i++) {
+                                total_amount += order_credit.getJsonObject(i).getInteger("amount");
                                 idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
                             }
+                            int finalTotal_amount = total_amount;
                             searchByIds(idsEquipment, equipments -> {
                                 if (equipments.isRight()) {
                                     JsonArray equipmentsArray = equipments.right().getValue();
@@ -243,6 +266,7 @@ public class OrderController extends ControllerHelper {
                                     }
                                     result.put("credit", total);
                                     result.put("consumable_credit", total_consumable);
+                                    result.put("total", finalTotal_amount);
                                     renderJson(request, result);
                                 }
                             });
@@ -253,7 +277,7 @@ public class OrderController extends ControllerHelper {
                 });
                 orderService.listOrderAmount(status, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
                 orderService.listOrderAmount(status, user, startDate, endDate, true, handlerJsonObject(getOrderAmountConsumable));
-                orderService.listOrderCredit(status, user, startDate, endDate, handlerJsonArray(getOrderCredit));
+                orderService.listOrderCredit(status, user, startDate, endDate, filters, handlerJsonArray(getOrderCredit));
             } else {
                 badRequest(request);
             }

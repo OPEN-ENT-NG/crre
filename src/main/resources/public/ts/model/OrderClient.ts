@@ -139,6 +139,7 @@ export class OrdersClient extends Selection<OrderClient> {
         await equipments.getEquipments(newOrderClient);
         for (let order of newOrderClient) {
             this.reformatOrder(equipments, order);
+            order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
             order.creation_date = moment(order.creation_date).format('L');
         }
         this.all = this.all.concat(newOrderClient);
@@ -272,9 +273,13 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async calculTotal(status: string, start: string, end: string): Promise<any> {
+    async calculTotal(status: string, start: string, end: string, filters: Filter[]): Promise<any> {
         const {startDate, endDate} = Utils.formatDate(start, end);
-        const {data} = await http.get(`/crre/orders/amount?startDate=${startDate}&endDate=${endDate}&status=${status}`);
+        let params = '';
+        filters.forEach(function (f) {
+            params += "&" + f.name + "=" + f.value;
+        });
+        const {data} = await http.get(`/crre/orders/amount?startDate=${startDate}&endDate=${endDate}&status=${status}${params}`);
         return data;
     }
 
