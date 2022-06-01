@@ -133,7 +133,10 @@
                             </div>
                         </div>
                         <div class="boxF">
-                            <div></div>
+                            <div>
+                                <span class="bold15"><i18n>crre.total.price.ttc</i18n></span>
+                                <span class="size17" ng-bind="calculatePriceOfEquipment(basket.equipment, 2) * basket.amount"></span>
+                                <span class="size17"><i18n>money.symbol</i18n></span></div>
                             <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
                                 <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
                                        ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />
@@ -174,7 +177,11 @@
                             </div>
                         </div>
                         <div class="boxF">
-                            <div></div>
+                            <div>
+                                <span class="bold15"><i18n>crre.total.price.ttc</i18n></span>
+                                <span class="size17" ng-bind="calculatePriceOfEquipment(basket.equipment, 2) * basket.amount"></span>
+                                <span class="size17"><i18n>money.symbol</i18n></span></div>
+                            </div>
                             <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
                                 <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
                                        ng-click="chooseCampaign()" i18n-value="crre.add.to.basket" />

@@ -140,6 +140,7 @@
   "crre.unit.price.ht": "Prix unitaire HT",
   "crre.unit.price.ttc": "Prix unitaire TTC",
   "crre.unit.price": "Prix unitaire",
+  "crre.total.price.ttc": "Prix total TTC",
   "crre.amount": "Qte",
   "crre.quantity": "Quantité",
   "crre.required": "Obligatoire",
