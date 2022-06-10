@@ -906,7 +906,7 @@ public class OrderRegionController extends BaseController {
                                             renderJson(request, response2.right().getValue());
                                         } else {
                                             log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
-                                                    "An error has occurred insertQuote : " + message.left());
+                                                    "An error has occurred insertQuote : " + "");
                                             renderError(request);
                                         }
                                     });
@@ -923,7 +923,7 @@ public class OrderRegionController extends BaseController {
                                     }
                                 } else {
                                     log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
-                                            "An error has occurred insertOldClientOrders : " + message.left());
+                                            "An error has occurred insertOldClientOrders : " + "");
                                     renderError(request);
                                 }
                             });
@@ -1052,34 +1052,36 @@ public class OrderRegionController extends BaseController {
     }
 
     private static JsonArray computeOffers(JsonObject equipment, JsonObject order) {
-        JsonArray leps = equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps");
-        Long amount = order.getLong("amount");
-        int gratuit = 0;
-        int gratuite = 0;
         JsonArray offers = new JsonArray();
-        for (int i = 0; i < leps.size(); i++) {
-            JsonObject offer = leps.getJsonObject(i);
-            JsonArray conditions = offer.getJsonArray("conditions");
-            JsonObject offerObject = new JsonObject().put("titre", "Manuel " +
-                    offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
-            if (conditions.size() > 1) {
-                for (int j = 0; j < conditions.size(); j++) {
-                    int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
-                    if (amount >= condition && gratuit < condition) {
-                        gratuit = condition;
-                        gratuite = conditions.getJsonObject(j).getInteger("gratuite");
+        if(equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps").size() > 0) {
+            JsonArray leps = equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps");
+            Long amount = order.getLong("amount");
+            int gratuit = 0;
+            int gratuite = 0;
+            for (int i = 0; i < leps.size(); i++) {
+                JsonObject offer = leps.getJsonObject(i);
+                JsonArray conditions = offer.getJsonArray("conditions");
+                JsonObject offerObject = new JsonObject().put("titre", "Manuel " +
+                        offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
+                if (conditions.size() > 1) {
+                    for (int j = 0; j < conditions.size(); j++) {
+                        int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
+                        if (amount >= condition && gratuit < condition) {
+                            gratuit = condition;
+                            gratuite = conditions.getJsonObject(j).getInteger("gratuite");
+                        }
                     }
+                } else if (offer.getJsonArray("conditions").size() == 1) {
+                    gratuit = offer.getJsonArray("conditions").getJsonObject(0).getInteger("conditionGratuite");
+                    gratuite = (int) (offer.getJsonArray("conditions").getJsonObject(0).getInteger("gratuite") * Math.floor(amount / gratuit));
                 }
-            } else {
-                gratuit = offer.getJsonArray("conditions").getJsonObject(0).getInteger("conditionGratuite");
-                gratuite = (int) (offer.getJsonArray("conditions").getJsonObject(0).getInteger("gratuite") * Math.floor(amount / gratuit));
-            }
-            offerObject.put("value", gratuite);
-            offerObject.put("ean", offer.getString("ean"));
-            offerObject.put("name", offer.getString("titre"));
-            offerObject.put("comment", equipment.getString("ean"));
-            if (gratuite > 0) {
-                offers.add(offerObject);
+                offerObject.put("value", gratuite);
+                offerObject.put("ean", offer.getString("ean"));
+                offerObject.put("name", offer.getString("titre"));
+                offerObject.put("comment", equipment.getString("ean"));
+                if (gratuite > 0) {
+                    offers.add(offerObject);
+                }
             }
         }
         return offers;
