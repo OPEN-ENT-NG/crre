@@ -38,11 +38,6 @@
                         <select ng-model="campaign.use_credit" ng-options="credit.name for credit in creditFormat">
                         </select>
                     </div>
-                    <label class="checkbox margin-top-14">
-                        <input type="checkbox" ng-model="campaign.reassort"/>
-                        <span><i18n>crre.campaign.reassort</i18n></span>
-                        <i class="info-circle campaignTooltip" tooltip="crre.tag.reassort.auto"></i>
-                    </label>
                 </div>
                 <div class="margin-top-14">
                     <span><i18n>crre.catalog.access</i18n></span>
@@ -131,7 +126,7 @@
                 </h4>
                 <table class="twelve">
                     <div class="campaignCheckbox">
-                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(11) track by $index ">
+                        <label class="checkbox" ng-repeat="group in structureGroups.all.slice(9) track by $index ">
                             <input type="checkbox" ng-model="group.selected" ng-change="changeInOthersSelected(group.selected)">
                             <span>[[group.name]]</span>
                         </label>

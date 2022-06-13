@@ -83,7 +83,6 @@
                 <td><div class="tabElem center"><i18n>Ressource</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Owner</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.basket</i18n></div></td>
-                <td><div class="smallTabElem center"><i18n>crre.reassort</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
                 <td><div class="smallTabElem">  </div></td>
@@ -106,12 +105,6 @@
                 </td>
                 <td><div class="smallTabElem center breakLines">[[order.user_name]]</div></td>
                 <td><div class="smallTabElem center breakLines ellipsis" tooltip="[[order.basket_name]]">[[order.basket_name]]</div></td>
-                <td>
-                    <div class="smallTabElem center">
-                        <span class="check-circle-crre" ng-if="order.reassort" tooltip="crre.reassort"></span>
-                        <span class="close-circle" ng-if="!order.reassort" tooltip="crre.not.reassort"></span>
-                    </div>
-                </td>
                 <td>
                     <div class="smallTabElem center centerInputAmount">
                         <i class="moins" ng-if="order.status !== 'IN PROGRESS' && order.price !== 0.00" ng-click="updateAmount(order, order.amount - 1)"></i>
@@ -140,9 +133,9 @@
                 <td><span class="arrowOffer">[[offer.name]]</span></td>
                 <td></td>
                 <td></td>
-                <td></td>
                 <td class="center">[[offer.value]]</td>
-                <td class="center">[[lang.translate('crre.FREE')]]</td><td></td>
+                <td class="center">[[lang.translate('crre.FREE')]]</td>
+                <td></td>
             </tr>
             </tbody>
         </table>
