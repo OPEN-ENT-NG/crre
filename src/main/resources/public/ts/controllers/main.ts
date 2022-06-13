@@ -452,7 +452,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 isInCampaign = true;
             }
             return isInCampaign;
-        }
+        };
+
+        $scope.calculatePriceOfBasket = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
+            let equipmentPrice = parseFloat(String($scope.calculatePriceOfEquipment(basket.equipment, roundNumber)));
+            equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * basket.amount;
+            return (!isNaN(equipmentPrice)) ? (roundNumber ? equipmentPrice.toFixed(roundNumber) : equipmentPrice) : '';
+        };
 
         $scope.computeOffer = async () => {
             let amount = $scope.basket.amount;
