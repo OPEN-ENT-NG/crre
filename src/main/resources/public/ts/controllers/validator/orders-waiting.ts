@@ -295,6 +295,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             if(amount.toString() != 'undefined') {
                 orderClient.amount = amount;
                 await orderClient.updateAmount(amount);
+                await $scope.getAllAmount();
                 Utils.safeApply($scope);
             }
         };
