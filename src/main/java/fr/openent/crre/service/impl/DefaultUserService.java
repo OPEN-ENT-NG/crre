@@ -12,7 +12,7 @@ public class DefaultUserService implements UserService {
     @Override
     public void getStructures(String userId, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (a:Action {displayName:'crre.access'})<-[AUTHORIZE]-(:Role)" +
-                "<-[AUTHORIZED]-(g:Group:ManualGroup)-[:DEPENDS]->(s:Structure), " +
+                "<-[AUTHORIZED]-(g:Group)-[:DEPENDS]->(s:Structure), " +
                 "(u:User {id:{userId}})-[:IN]->(g) return DISTINCT s.id as id, s.name as name, s.UAI as UAI, s.type";
         JsonObject params = new JsonObject()
                 .put("userId", userId);
