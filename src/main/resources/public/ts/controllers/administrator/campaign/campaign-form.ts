@@ -85,7 +85,7 @@ export const campaignFormController = ng.controller('campaignFormController',
         $scope.validCampaignForm = (campaign: Campaign) => {
             return campaign.name !== undefined
                 && campaign.name.trim() !== ''
-                && _.findWhere($scope.structureFormat, {selected: true}) !== undefined
+                && ((_.findWhere($scope.structureGroups.all, {selected: true}) !== undefined) || (_.findWhere($scope.structureFormat, {selected: true})))
                 && $scope.campaign.catalog !== undefined;
 
         };
@@ -105,19 +105,23 @@ export const campaignFormController = ng.controller('campaignFormController',
                         }
                     });
                     if (!papierNumeriqueSelected) {
-                        groups.push(_.findWhere($scope.structureGroups.all, {name: group.name}));
+                        $scope.structureGroups.all
+                            .filter(groupStructure => new RegExp(group.name.split(" ")[1]).test(groupStructure.name))
+                            .forEach(groupStructure => groups.push(groupStructure));
                     }
                 }
             });
-            if (!proOrGenSelected && papierNumeriqueSelected) {
+            if (!proOrGenSelected && _.findWhere($scope.structureFormat.all, {selected: true}) !== undefined) {
                 $scope.structureFormat.slice(0, 3).forEach(groupPapNum => {
                     if (groupPapNum.selected) {
                         papierNumeriqueSelected = true;
-                        groups.push(_.findWhere($scope.structureGroups.all, {name: groupPapNum.name}));
+                        $scope.structureGroups.all
+                            .filter(group => new RegExp(groupPapNum.name.toLowerCase()).test(group.name))
+                            .forEach(group => groups.push(group));
                     }
                 });
             } else if (!proOrGenSelected && !papierNumeriqueSelected) {
-                $scope.structureGroups.selected.forEach(group => {
+                _.filter($scope.structureGroups.all, {selected: true}).forEach(group => {
                     groups.push(group);
                 });
             }
