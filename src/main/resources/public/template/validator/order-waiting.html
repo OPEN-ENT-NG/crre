@@ -158,6 +158,7 @@
         </div>
         <div class="twelve-mobile float tot-cards two">
             <h2 class="bold-font-weight center"><i18n>total.request</i18n></h2>
+<!--
             <div class="total-container" ng-if="campaign.nb_licences_consumable_total || campaign.nb_licences_total">
                 <div class="licences" ng-if="amountTotal.licence && campaign.nb_licences_total">
                     <i18n>crre.initial.licences</i18n>
@@ -191,6 +192,7 @@
                         [[campaign.nb_licences_available + campaign.nb_licences_consumable_available - amountTotal.licence - amountTotal.consumable_licence]]</h1>
                 </div>
             </div>
+-->
             <br ng-if="(campaign.nb_licences_consumable_total || campaign.nb_licences_total) &&
             (campaign.initial_purse_amount || campaign.consumable_initial_purse_amount)"/>
             <div class="total-container" ng-if="campaign.initial_purse_amount || campaign.consumable_initial_purse_amount">

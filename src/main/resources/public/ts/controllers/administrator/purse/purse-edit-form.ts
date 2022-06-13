@@ -30,8 +30,6 @@ export const purseEditFormController = ng.controller('purseEditFormController',
 
         $scope.checkPurse = () => {
             return ($scope.purses.selected[0].initial_amount && !$scope.purse.initial_amount) ||
-                ($scope.purses.selected[0].consumable_initial_amount && !$scope.purse.consumable_initial_amount) ||
-                ($scope.purses.selected[0].licence_initial_amount && !$scope.purse.licence_initial_amount) ||
-                ($scope.purses.selected[0].consumable_licence_initial_amount && !$scope.purse.consumable_licence_initial_amount);
+                ($scope.purses.selected[0].consumable_initial_amount && !$scope.purse.consumable_initial_amount);
         }
     }]);
