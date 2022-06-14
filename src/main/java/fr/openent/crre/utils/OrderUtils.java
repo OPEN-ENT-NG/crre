@@ -51,9 +51,9 @@ public class OrderUtils {
             double priceHT = priceht * orderMap.getInteger("amount");
             double priceTTC = price * orderMap.getInteger("amount");
             orderMap.put("priceht", priceht);
-            orderMap.put("tva5", priceInfo.getDouble("partTVA5"));
-            orderMap.put("tva20", priceInfo.getDouble("partTVA20"));
-            orderMap.put("unitedPriceTTC", price);
+            orderMap.put("tva5", priceInfo.getDouble("partTVA5") != null ? Double.parseDouble(df2.format(priceInfo.getDouble("partTVA5"))) : null);
+            orderMap.put("tva20",  priceInfo.getDouble("partTVA20") != null ? Double.parseDouble(df2.format(priceInfo.getDouble("partTVA20"))) : null);
+            orderMap.put("unitedPriceTTC", Double.parseDouble(df2.format(price)));
             orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
             orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
         } else {
@@ -62,9 +62,11 @@ public class OrderUtils {
             double priceTTC = price * orderMap.getInteger("amount");
             double priceHT = priceht * orderMap.getInteger("amount");
             orderMap.put("priceht", priceht);
-            orderMap.put("tva5", order.getDouble("equipment_tva5"));
-            orderMap.put("tva20", order.getDouble("equipment_tva20"));
-            orderMap.put("unitedPriceTTC", price);
+            orderMap.put("tva5", order.getDouble("equipment_tva5") != null ? Double.parseDouble(df2.format(order.getDouble("equipment_tva5"))) : null);
+            orderMap.put("tva20",  order.getDouble("equipment_tva20") != null ? Double.parseDouble(df2.format(order.getDouble("equipment_tva20"))) : null);
+            orderMap.put("tva5", Double.parseDouble(df2.format(order.getDouble("equipment_tva5"))));
+            orderMap.put("tva20", Double.parseDouble(df2.format(order.getDouble("equipment_tva20"))));
+            orderMap.put("unitedPriceTTC", Double.parseDouble(df2.format(price)));
             orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
             orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
         }
