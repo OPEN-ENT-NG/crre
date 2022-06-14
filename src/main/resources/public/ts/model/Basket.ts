@@ -147,7 +147,7 @@ export class Baskets extends Selection<Basket> {
 
             return await http.post(`/crre/baskets/to/orders/${idCampaign}`, data);
         } catch (e) {
-            toasts.warning('crre.order.create.err');
+            toasts.warning('crre.basket.create.err');
         }
     }
 }
@@ -194,7 +194,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             let { data } = await http.get(url);
             return this.setBaskets(data);
         } catch (e){
-            toasts.warning('crre.order.getMine.err');
+            toasts.warning('crre.order.getMine.error');
             throw e;
         }
     }

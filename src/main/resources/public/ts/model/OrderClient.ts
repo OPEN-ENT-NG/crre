@@ -67,7 +67,7 @@ export class OrderClient implements Order {
                 this.offers = Utils.computeOffer(this, equipment);
             }
         } catch (e) {
-            toasts.warning('crre.order.getMine.err');
+            toasts.warning('crre.order.update.error');
         }
     }
 
