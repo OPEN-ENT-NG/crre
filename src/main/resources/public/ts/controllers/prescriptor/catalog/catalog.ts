@@ -49,29 +49,37 @@ export const catalogController = ng.controller('catalogController',
             if (!!$scope.campaign.catalog && $scope.filters.all.length == 0) {
                 $scope.filters = new Filters();
                 // If catalog contain consommable filter
+                let consommableFilter = new Filter();
+                consommableFilter.name = "conso";
                 if ($scope.campaign.catalog.split("|").includes("consommable")) {
-                    let consommableFilter = new Filter();
-                    consommableFilter.name = "conso";
                     consommableFilter.value = "Consommable";
-                    $scope.filters.all.push(consommableFilter);
+                } else if ($scope.campaign.catalog.split("|").includes("nonconsommable")) {
+                    consommableFilter.value = "Non_Consommable";
                 }
+                $scope.filters.all.push(consommableFilter);
+
+                // If catalog contain pro/lgt filter
                 if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
                     let proFilter = new Filter();
                     proFilter.name = "pro";
                     proFilter.value = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
                     $scope.filters.all.push(proFilter);
                 }
-                if (["articlenumerique", "articlepapier"].indexOf($scope.campaign.catalog.split("|")[0]) != -1) {
+
+                // If catalog contain numeric/paper filter
+                if ($scope.campaign.catalog.split("|").includes("articlenumerique")) {
                     let catalogFilter = new Filter();
-                    let catalogName = $scope.campaign.catalog.split("|")[0];
-                    if (catalogName == "articlepapier") {
-                        $scope.correlationFilterES.keys.splice($scope.correlationFilterES.keys.indexOf('levels'), 1);
-                        delete $scope.equipments.levels;
-                        delete $scope.catalog.levels;
-                        Utils.safeApply($scope);
-                    }
                     catalogFilter.name = "_index";
-                    catalogFilter.value = catalogName;
+                    catalogFilter.value = "articlenumerique";
+                    $scope.filters.all.push(catalogFilter);
+                } else if ($scope.campaign.catalog.split("|").includes("articlepapier")) {
+                    let catalogFilter = new Filter();
+                    $scope.correlationFilterES.keys.splice($scope.correlationFilterES.keys.indexOf('levels'), 1);
+                    delete $scope.equipments.levels;
+                    delete $scope.catalog.levels;
+                    Utils.safeApply($scope);
+                    catalogFilter.name = "_index";
+                    catalogFilter.value = "articlepapier";
                     $scope.filters.all.push(catalogFilter);
                 }
             } else {
@@ -94,9 +102,8 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.loading = true;
             // Add to prefilter to hide filters in front
             if (!!$scope.campaign.catalog) {
-                $scope.campaign.catalog.split("|").includes("consommable") ? $scope.preFilter["consumables"].push(true) : null;
+                $scope.campaign.catalog.split("|").includes("consommable") ? $scope.preFilter["consumables"].push(true) : $scope.preFilter["docsType"].push(true);
                 $scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt") ? $scope.preFilter["pros"].push(true) : null;
-                $scope.preFilter["docsType"].push(true)
             }
             Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);

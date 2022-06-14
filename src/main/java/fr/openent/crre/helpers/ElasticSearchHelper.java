@@ -68,7 +68,9 @@ public class ElasticSearchHelper {
                     }
                     proNumeric = isPro == proNumeric;
                     boolean proPapier = isPro == Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
-                    if ((articleJson.getString("_index").equals("articlenumerique") && (conso.size() <= 0 || consoNumeric) && (pro.size() <= 0 || proNumeric)) ||
+                    // Uncomment if type "Numerique" only exist in LDE catalog
+                    /*&& (conso.size() <= 0 || consoNumeric)*/
+                    if ((articleJson.getString("_index").equals("articlenumerique") && (pro.size() <= 0 || proNumeric)) ||
                             (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier)) || conso.size() != 1 && pro.size() != 1) {
                         result.add(addingArticle);
                     }
@@ -157,7 +159,7 @@ public class ElasticSearchHelper {
                     if (me.getValue().size() == 1) {
                         if (me.getValue().get(0).equals("Consommable")) {
                             conso.add(true);
-                        } else {
+                        } else if(me.getValue().get(0).equals("Non_Consommable")) {
                             conso.add(false);
                         }
                     }
