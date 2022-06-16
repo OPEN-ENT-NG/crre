@@ -386,7 +386,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     @Override
     public void getCampaignTypes(Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT id as id_type, name as name_type, credit, reassort, catalog, automatic_close, structure " +
-                "FROM " + Crre.crreSchema + ".type_campaign ";
+                "FROM " + Crre.crreSchema + ".type_campaign " +
+                "ORDER BY name ASC";
         Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
     }
 
