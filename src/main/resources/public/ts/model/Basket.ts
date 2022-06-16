@@ -22,7 +22,7 @@ export class Basket implements Selectable {
         this.id_campaign = id_campaign;
         this.id_structure = id_structure;
         if(equipment.type === "articlenumerique") {
-            this.amount = equipment.offres[0].quantiteminimaleachat;
+            this.amount = equipment.offres.length > 0 ? equipment.offres[0].quantiteminimaleachat : 0;
             this.offers = Utils.computeOffer(this, equipment);
         } else {
             this.amount = 1;
