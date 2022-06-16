@@ -106,9 +106,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrderCredit(String status, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler) {
+    public void getTotalAmountOrder(String status, UserInfos user, String startDate, String endDate, JsonArray filters,
+                                    Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT oce.equipment_key, oce.amount, c.use_credit " +
+        String query = "SELECT oce.id, oce.amount " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
                 "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
@@ -139,6 +140,22 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 }
             }
         }
+        query += "AND (c.use_credit = 'credits' OR c.use_credit = 'consumable_credits');";
+        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void listOrderCredit(String status, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "SELECT oce.equipment_key, oce.amount, c.use_credit, oce.id " +
+                "FROM crre.order_client_equipment oce " +
+                "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
+                "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
+                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
+                "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
+                "AND rel_group_campaign.id_structure_group = structure_group.id) ";
+        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
         query += "AND (c.use_credit = 'credits' OR c.use_credit = 'consumable_credits');";
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }

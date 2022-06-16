@@ -182,7 +182,7 @@ public class OrderController extends ControllerHelper {
 
 
     @Get("/orders/amount")
-    @ApiDoc("Get the list of orders")
+    @ApiDoc("Get the total amount of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void listOrdersAmountLicences(final HttpServerRequest request) {
@@ -214,10 +214,12 @@ public class OrderController extends ControllerHelper {
                 Promise<JsonObject> getOrderAmount = Promise.promise();
                 Promise<JsonArray> getOrderCredit = Promise.promise();
                 Promise<JsonObject> getOrderAmountConsumable = Promise.promise();
+                Promise<JsonArray> getTotalAmount = Promise.promise();
                 List<Future> promises = new ArrayList<>();
                 promises.add(getOrderAmount.future());
                 promises.add(getOrderCredit.future());
                 promises.add(getOrderAmountConsumable.future());
+                promises.add(getTotalAmount.future());
                 JsonObject result = new JsonObject();
                 CompositeFuture.all(promises).onComplete(event -> {
                     if (event.succeeded()) {
@@ -231,23 +233,30 @@ public class OrderController extends ControllerHelper {
                             amount = Integer.parseInt(getOrderAmountConsumable.future().result().getString("nb_licences"));
                         }
                         result.put("consumable_licence", amount);
+                        JsonArray totalAmount = getTotalAmount.future().result();
                         JsonArray order_credit = getOrderCredit.future().result();
                         if (order_credit.size() > 0) {
                             List<String> idsEquipment = new ArrayList<>();
+                            List<Long> idsOrderFiltered = new ArrayList<>();
                             int total_amount = 0;
                             for (int i = 0; i < order_credit.size(); i++) {
-                                total_amount += order_credit.getJsonObject(i).getInteger("amount");
                                 idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
+                            }
+                            for (int i = 0; i < totalAmount.size(); i++) {
+                                idsOrderFiltered.add(totalAmount.getJsonObject(i).getLong("id"));
+                                total_amount += totalAmount.getJsonObject(i).getLong("amount");
                             }
                             int finalTotal_amount = total_amount;
                             searchByIds(idsEquipment, equipments -> {
                                 if (equipments.isRight()) {
                                     JsonArray equipmentsArray = equipments.right().getValue();
                                     double total = 0;
+                                    double totalFiltered = 0;
                                     double total_consumable = 0;
                                     for (int i = 0; i < order_credit.size(); i++) {
                                         JsonObject order = order_credit.getJsonObject(i);
                                         String idEquipment = order.getString("equipment_key");
+                                        Long idOrder = order.getLong("id");
                                         String credit = order.getString("use_credit");
                                         if (equipmentsArray.size() > 0) {
                                             for (int j = 0; j < equipmentsArray.size(); j++) {
@@ -255,6 +264,9 @@ public class OrderController extends ControllerHelper {
                                                 if (idEquipment.equals(equipment.getString("id"))) {
                                                     double totalPriceEquipment = order.getInteger("amount") *
                                                             getPriceTtc(equipment).getDouble("priceTTC");
+                                                    if((credit.equals("credits") || credit.equals("consumable_credits")) && idsOrderFiltered.contains(idOrder)) {
+                                                        totalFiltered += totalPriceEquipment;
+                                                    }
                                                     if (credit.equals("credits"))
                                                         total += totalPriceEquipment;
                                                     else
@@ -267,6 +279,7 @@ public class OrderController extends ControllerHelper {
                                     result.put("credit", total);
                                     result.put("consumable_credit", total_consumable);
                                     result.put("total", finalTotal_amount);
+                                    result.put("total_filtered", totalFiltered);
                                     renderJson(request, result);
                                 }
                             });
@@ -277,6 +290,7 @@ public class OrderController extends ControllerHelper {
                 });
                 orderService.listOrderAmount(status, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
                 orderService.listOrderAmount(status, user, startDate, endDate, true, handlerJsonObject(getOrderAmountConsumable));
+                orderService.getTotalAmountOrder(status, user, startDate, endDate, filters, handlerJsonArray(getTotalAmount));
                 orderService.listOrderCredit(status, user, startDate, endDate, filters, handlerJsonArray(getOrderCredit));
             } else {
                 badRequest(request);

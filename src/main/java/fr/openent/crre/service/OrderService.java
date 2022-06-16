@@ -35,7 +35,9 @@ public interface OrderService {
     void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Boolean consumable,
                          Handler<Either<String, JsonObject>> handler);
 
-    void listOrderCredit(String status, UserInfos user, String startDate, String endDate, JsonArray idCampaign, Handler<Either<String, JsonArray>> handler);
+    void listOrderCredit(String status, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler);
+
+    void getTotalAmountOrder(String status, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Get the list of all users
