@@ -198,21 +198,24 @@
                     <h1 class="bold-font-weight-24">[[amountTotal.credit + amountTotal.consumable_credit | currency]]</h1>
                 </div>
                 <div class="licences" ng-if="campaign.initial_purse_amount" style="margin: 10px 0 5px 0;">
-                    <i18n>crre.initial</i18n>
+                    <span><i18n>crre.initial</i18n></span>
+                    <br>
                     <span ng-bind="campaign.initial_purse_amount | currency"></span>
                 </div>
                 <div class="color-red" ng-if="campaign.initial_purse_amount">
-                    <i18n>crre.remained</i18n>
+                    <span><i18n>crre.remained</i18n></span>
+                    <br>
                     <h1 class="bold-font-weight-24 color-red no-margin-bottom">
                         [[campaign.purse_amount - amountTotal.credit | currency]]
                     </h1>
                 </div>
                 <div class="licences" ng-if="campaign.consumable_initial_purse_amount" style="margin: 10px 0 5px 0;">
-                    <i18n>crre.initial.consumable</i18n>
+                    <span><i18n>crre.initial.consumable</i18n></span>
+                    <br>
                     <span ng-bind="campaign.consumable_initial_purse_amount | currency"></span>
                 </div>
                 <div class="color-red" ng-if="campaign.consumable_initial_purse_amount">
-                    <i18n>crre.remained.consumable</i18n>
+                    <span><i18n>crre.remained.consumable</i18n></span>
                     <h1 class="bold-font-weight-24 color-red no-margin-bottom">
                         [[campaign.consumable_purse_amount - amountTotal.consumable_credit | currency]]
                     </h1>
