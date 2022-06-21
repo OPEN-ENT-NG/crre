@@ -70,11 +70,11 @@ public class StructureGroupController extends ControllerHelper {
     /**
      * Parse CSV file
      *
-     * @param request Http request
+     * @param request  Http request
      * @param filename name of the file to import
      */
     private void parseCsv(final HttpServerRequest request, final String fileId, String filename) {
-        storage.readFile(fileId,event -> {
+        storage.readFile(fileId, event -> {
             try {
                 CSVReader csv = new CSVReader(new InputStreamReader(
                         new ByteArrayInputStream(event.getBytes())),
@@ -108,40 +108,33 @@ public class StructureGroupController extends ControllerHelper {
     private void matchUAIID(final HttpServerRequest request, final String path, JsonArray uais) {
         structureService.getStructureByUAI(uais, null, uaisEvent -> {
             if (uaisEvent.isRight()) {
-                vertx.fileSystem().readDir(path, event -> {
-                    if (event.succeeded()) {
-                        String regexp = "([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(.csv)$";
-                        Pattern r = Pattern.compile(regexp);
-                        Matcher m = r.matcher(event.result().get(0));
-                        String name = m.find() ? m.group(0).replace(".csv", "") : UUID.randomUUID().toString();
-                        deleteImportPath(vertx, path);
 
-                        JsonArray data = uaisEvent.right().getValue();
-                        JsonArray ids = new JsonArray();
-                        JsonObject o;
-                        String id;
-                        for (int i = 0; i < data.size(); i++) {
-                            o = data.getJsonObject(i);
-                            id = o.getString("id");
-                            ids.add(id);
-                        }
-                        JsonObject object = new JsonObject();
-                        object.put("structures", ids);
-                        object.put("name", name);
-                        object.put("description", "");
+                JsonArray data = uaisEvent.right().getValue();
+                JsonArray ids = new JsonArray();
+                JsonObject o;
+                String id;
+                String regexp = "([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(.csv)$";
+                Pattern r = Pattern.compile(regexp);
+                Matcher m = r.matcher(path);
+                String name = m.find() ? m.group(0).replace(".csv", "") : UUID.randomUUID().toString();
+                for (int i = 0; i < data.size(); i++) {
+                    o = data.getJsonObject(i);
+                    id = o.getString("id");
+                    ids.add(id);
+                }
+                JsonObject object = new JsonObject();
+                object.put("structures", ids);
+                object.put("name", name);
+                object.put("description", "");
 
-                        structureGroupService.create(object, event1 -> {
-                            if (event1.isRight()) {
-                                Renders.renderJson(request, new JsonObject());
-                                UserUtils.getUserInfos(eb, request,
-                                        user -> Logging.add(Contexts.STRUCTUREGROUP.toString(),
+                structureGroupService.create(object, event1 -> {
+                    if (event1.isRight()) {
+                        Renders.renderJson(request, new JsonObject());
+                        UserUtils.getUserInfos(eb, request,
+                                user -> Logging.add(Contexts.STRUCTUREGROUP.toString(),
                                         Actions.IMPORT.toString(), m.group(0), object, user));
-                            } else {
-                                returnErrorMessage(request, new Throwable(event1.left().getValue()), path);
-                            }
-                        });
                     } else {
-                        returnErrorMessage(request, event.cause(), path);
+                        returnErrorMessage(request, new Throwable(event1.left().getValue()), path);
                     }
                 });
             } else {
@@ -190,11 +183,11 @@ public class StructureGroupController extends ControllerHelper {
     public void create(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "structureGroup",
                 structureGroup -> structureGroupService.create(structureGroup, Logging.defaultResponseHandler(eb,
-                request,
-                Contexts.STRUCTUREGROUP.toString(),
-                Actions.CREATE.toString(),
-                null,
-                structureGroup)));
+                        request,
+                        Contexts.STRUCTUREGROUP.toString(),
+                        Actions.CREATE.toString(),
+                        null,
+                        structureGroup)));
     }
 
     @Put("/structure/group/:id")
