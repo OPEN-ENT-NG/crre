@@ -58,20 +58,25 @@ public class ElasticSearchHelper {
                     boolean consoNumeric = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typeNumeric).find();
                     boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     boolean proNumeric = false;
+                    boolean lgtNumeric = false;
                     if (addingArticle.getJsonArray("niveaux").size() > 0) {
                         for (int i = 0; i < addingArticle.getJsonArray("niveaux").size(); i++) {
                             String niveau = addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle") == null ? "" : addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle");
                             if (niveau.equals("Lycée pro.")) {
                                 proNumeric = true;
+                            } else {
+                                lgtNumeric = true;
                             }
                         }
                     }
-                    proNumeric = isPro == proNumeric;
-                    boolean proPapier = isPro == Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
+                    proNumeric = isPro && proNumeric;
+                    lgtNumeric = !isPro && lgtNumeric;
+                    boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
+                    boolean lgtPapier = !isPro && Pattern.compile(".*pap", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     // Uncomment if type "Numerique" only exist in LDE catalog
                     /*&& (conso.size() <= 0 || consoNumeric)*/
-                    if ((articleJson.getString("_index").equals("articlenumerique") && (pro.size() <= 0 || proNumeric)) ||
-                            (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier)) || conso.size() != 1 && pro.size() != 1) {
+                    if ((articleJson.getString("_index").equals("articlenumerique") && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
+                            (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier)) || conso.size() != 1 && pro.size() != 1) {
                         result.add(addingArticle);
                     }
                 }
