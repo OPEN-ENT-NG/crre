@@ -72,6 +72,9 @@ public class ElasticSearchHelper {
                     proNumeric = isPro && proNumeric;
                     lgtNumeric = !isPro && lgtNumeric;
                     boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
+                    if(isConso && isPro) {
+                        proPapier = true;
+                    }
                     boolean lgtPapier = !isPro && Pattern.compile(".*pap", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     // Uncomment if type "Numerique" only exist in LDE catalog
                     /*&& (conso.size() <= 0 || consoNumeric)*/
