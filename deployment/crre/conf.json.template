@@ -23,7 +23,9 @@
          "elasticsearch": true,
          "elasticsearchConfig" : {
             "server-uri": "${elasticServerURI}",
-            "index": "${elasticCRREIndexName}"
+            "index": "${elasticCRREIndexName}",
+            "username": "${elasticSearchUsername}",
+            "password": "${elasticSearchPassword}"
             },
          "timeSecondSynchCron": "${timeSecondSynchCron}",
          "timeSecondStatCron": "${timeSecondStatCron}",
