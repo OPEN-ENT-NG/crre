@@ -96,17 +96,17 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 });
             }
             if($scope.filters.all.length > 0) {
-                const newData = await $scope.ordersClient.filter_order($scope.filters.all, null,
+                const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.current.structure.id,
                     $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
             } else {
                 if (!!$scope.query_name) {
-                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.filtersDate.startDate,
+                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.current.structure.id, $scope.filtersDate.startDate,
                         $scope.filtersDate.endDate, $scope.filter.page );
                     endLoading(newData);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $scope.structures.all, null, null, null, $scope.filter.page);
+                        $scope.filtersDate.endDate, $scope.structures.all, null, $scope.current.structure.id, null, $scope.filter.page);
                     endLoading(newData);
                 }
             }
@@ -115,11 +115,11 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.getAllFilters = async () => {
-            $scope.users = await $scope.ordersClient.getUsers('WAITING');
+            $scope.users = await $scope.ordersClient.getUsers('WAITING', $scope.current.structure.id);
         };
 
         $scope.getAllAmount = async () => {
-            $scope.amountTotal = await $scope.ordersClient.calculTotal('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filters.all);
+            $scope.amountTotal = await $scope.ordersClient.calculTotal('WAITING', $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filters.all);
         }
 
         $scope.filterByDate = async () => {
@@ -253,16 +253,16 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             all ? $scope.filter.page = null : 0;
             if($scope.filters.all.length == 0) {
                 if ($scope.query_name && $scope.query_name != "") {
-                    const newData = await $scope.ordersClient.search($scope.query_name, null,
+                    const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.current.structure.id,
                         $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page);
                     endLoading(newData);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate,
-                        $scope.structures.all, null, null, null, $scope.filter.page);
+                        $scope.structures.all, null, $scope.current.structure.id, null, $scope.filter.page);
                     endLoading(newData);
                 }
             }else{
-                const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.filtersDate.startDate,
+                const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.current.structure.id, $scope.filtersDate.startDate,
                     $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
             }
@@ -282,10 +282,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         $scope.exportCSV = () => {
             let selectedOrders = new OrdersClient();
             if($scope.ordersClient.selectedElements.length == 0 || $scope.allOrdersSelected) {
-                selectedOrders.exportCSV(false, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, "WAITING")
+                selectedOrders.exportCSV(false, null, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, "WAITING")
             } else {
                 selectedOrders.all = $scope.ordersClient.selectedElements;
-                selectedOrders.exportCSV(false, null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, "WAITING");
+                selectedOrders.exportCSV(false, null, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, "WAITING");
             }
             $scope.ordersClient.forEach(function (order) {order.selected = false;});
             $scope.allOrdersSelected = false;

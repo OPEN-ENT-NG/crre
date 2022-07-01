@@ -166,19 +166,17 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void listOrders(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("status")) {
-                final String status = request.params().get("status");
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                Integer page = OrderUtils.formatPage(request);
-                orderService.listOrder(status, page, user, startDate, endDate, arrayResponseHandler(request));
-            } else {
-                badRequest(request);
-            }
-        });
+        if (request.params().contains("status")) {
+            final String status = request.params().get("status");
+            String idStructure = request.getParam("idStructure");
+            String startDate = request.getParam("startDate");
+            String endDate = request.getParam("endDate");
+            Integer page = OrderUtils.formatPage(request);
+            orderService.listOrder(status, idStructure, page, startDate, endDate, arrayResponseHandler(request));
+        } else {
+            badRequest(request);
+        }
     }
-
 
 
     @Get("/orders/amount")
@@ -189,6 +187,7 @@ public class OrderController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
                 final String status = request.params().get("status");
+                String idStructure = request.getParam("idStructure");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
                 // Récupération de tout les filtres
@@ -198,7 +197,7 @@ public class OrderController extends ControllerHelper {
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals("id") && !key.equals("q") && !key.equals("page") &&
+                    if (!key.equals("id") && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
                         for (int f = 0; f < filters.size(); f++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
@@ -264,7 +263,7 @@ public class OrderController extends ControllerHelper {
                                                 if (idEquipment.equals(equipment.getString("id"))) {
                                                     double totalPriceEquipment = order.getInteger("amount") *
                                                             getPriceTtc(equipment).getDouble("priceTTC");
-                                                    if((credit.equals("credits") || credit.equals("consumable_credits")) && idsOrderFiltered.contains(idOrder)) {
+                                                    if ((credit.equals("credits") || credit.equals("consumable_credits")) && idsOrderFiltered.contains(idOrder)) {
                                                         totalFiltered += totalPriceEquipment;
                                                     }
                                                     if (credit.equals("credits"))
@@ -288,10 +287,10 @@ public class OrderController extends ControllerHelper {
                         }
                     }
                 });
-                orderService.listOrderAmount(status, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
-                orderService.listOrderAmount(status, user, startDate, endDate, true, handlerJsonObject(getOrderAmountConsumable));
-                orderService.getTotalAmountOrder(status, user, startDate, endDate, filters, handlerJsonArray(getTotalAmount));
-                orderService.listOrderCredit(status, user, startDate, endDate, filters, handlerJsonArray(getOrderCredit));
+                orderService.listOrderAmount(status, idStructure, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
+                orderService.listOrderAmount(status, idStructure, user, startDate, endDate, true, handlerJsonObject(getOrderAmountConsumable));
+                orderService.getTotalAmountOrder(status, idStructure, user, startDate, endDate, filters, handlerJsonArray(getTotalAmount));
+                orderService.listOrderCredit(status, idStructure, user, startDate, endDate, filters, handlerJsonArray(getOrderCredit));
             } else {
                 badRequest(request);
             }
@@ -306,7 +305,8 @@ public class OrderController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
                 final String status = request.params().get("status");
-                orderService.listUsers(status, user, arrayResponseHandler(request));
+                final String idStructure = request.params().get("idStructure");
+                orderService.listUsers(status, idStructure, user, arrayResponseHandler(request));
             } else {
                 badRequest(request);
             }
@@ -324,6 +324,7 @@ public class OrderController extends ControllerHelper {
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
+                String idStructure = request.getParam("idStructure");
 
                 // Récupération de tout les filtres
                 JsonArray filters = new JsonArray();
@@ -332,7 +333,7 @@ public class OrderController extends ControllerHelper {
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals("id") && !key.equals("q") && !key.equals("page") &&
+                    if (!key.equals("id") && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
                         for (int f = 0; f < filters.size(); f++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
@@ -357,7 +358,7 @@ public class OrderController extends ControllerHelper {
                 Integer finalId_campaign = id_campaign;
                 Integer finalPage = page;
                 plainTextSearchName(finalQ, equipments -> {
-                    orderService.search(finalQ, filters, user, equipments.right().getValue(), finalId_campaign, startDate, endDate, finalPage, arrayResponseHandler(request));
+                    orderService.search(finalQ, filters, idStructure, equipments.right().getValue(), finalId_campaign, startDate, endDate, finalPage, arrayResponseHandler(request));
                 });
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -374,11 +375,12 @@ public class OrderController extends ControllerHelper {
                 userInfos -> {
                     List<String> params = request.params().getAll("id");
                     String idCampaign = request.params().contains("idCampaign") ? request.params().get("idCampaign") : null;
+                    String idStructure = request.params().contains("idStructure") ? request.params().get("idStructure") : null;
                     String statut = request.params().contains("statut") ? request.params().get("statut") : null;
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
                     List<Integer> idsOrders = params == null ? new ArrayList<>() : SqlQueryUtils.getIntegerIds(params);
-                    getOrderEquipment(idsOrders, userInfos, idCampaign, statut, startDate, endDate, event -> {
+                    getOrderEquipment(idsOrders, userInfos, idStructure, idCampaign, statut, startDate, endDate, event -> {
                         if (event.isRight()) {
                             JsonArray orderClients = event.right().getValue();
                             List<String> idsEquipment = new ArrayList<>();
@@ -427,10 +429,11 @@ public class OrderController extends ControllerHelper {
                 userInfos -> {
                     List<String> params = request.params().getAll("id");
                     String idCampaign = request.params().contains("idCampaign") ? request.params().get("idCampaign") : null;
+                    String idStructure = request.params().contains("idStructure") ? request.params().get("idStructure") : null;
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
                     List<Integer> idsOrders = params == null ? new ArrayList<>() : SqlQueryUtils.getIntegerIds(params);
-                    getOrderEquipmentOld(idsOrders, userInfos, idCampaign, startDate, endDate, event -> {
+                    getOrderEquipmentOld(idsOrders, userInfos, idStructure, idCampaign, startDate, endDate, event -> {
                         if (event.isRight()) {
                             JsonArray orders = new JsonArray();
                             JsonArray orderClients = event.right().getValue();
@@ -468,13 +471,13 @@ public class OrderController extends ControllerHelper {
     }
 
     private void getOrderEquipment
-            (List<Integer> idsOrders, UserInfos user, String idCampaign, String statut, String startDate, String endDate, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        orderService.listExport(idsOrders, user, idCampaign, statut, startDate, endDate, false, handlerJsonArray);
+            (List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        orderService.listExport(idsOrders, user, idStructure, idCampaign, statut, startDate, endDate, false, handlerJsonArray);
     }
 
     private void getOrderEquipmentOld
-            (List<Integer> idsOrders, UserInfos user, String idCampaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        orderService.listExport(idsOrders, user, idCampaign, null, startDate, endDate, true, handlerJsonArray);
+            (List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handlerJsonArray) {
+        orderService.listExport(idsOrders, user, idStructure, idCampaign, null, startDate, endDate, true, handlerJsonArray);
     }
 
     private void getEquipment

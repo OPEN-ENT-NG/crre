@@ -45,7 +45,9 @@ public class UserController extends ControllerHelper {
                 userService.getStructures(user.getUserId(), structuresResult -> {
                     if(structuresResult.isRight()) {
                         JsonArray structures = structuresResult.right().getValue();
-                        List<String> idStructures = new ArrayList<>();
+                        renderJson(request, structures);
+/* Uncomment if we need to have info (papier, num, mixte) of a structure
+List<String> idStructures = new ArrayList<>();
                         for(int i = 0; i < structures.size(); i++) {
                             idStructures.add(structures.getJsonObject(i).getString("id"));
                         }
@@ -73,7 +75,7 @@ public class UserController extends ControllerHelper {
                                 JsonObject error = (new JsonObject()).put("[Crre@getStructures] Unable to retrieve structures details :", structuresInfos.left().getValue());
                                 Renders.renderJson(request, error, 400);
                             }
-                        });
+                        });*/
                     } else {
                         JsonObject error = (new JsonObject()).put("[Crre@getStructures] Unable to retrieve structures infos :", structuresResult.left().getValue());
                         Renders.renderJson(request, error, 400);

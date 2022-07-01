@@ -61,7 +61,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrder(String status, Integer page, UserInfos user, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+    public void listOrder(String status, String idStructure, Integer page, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  " +
                 "array_to_json(array_agg( distinct structure_group.name)) as structure_groups, " +
                 "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " +
@@ -76,7 +76,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oce.id = ore.id_order_client_equipment ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
+        query = filterWaitingOrder(status, idStructure, query, startDate, endDate, values);
 
         query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status) " +
                 "ORDER BY oce.creation_date DESC ";
@@ -89,7 +89,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrderAmount(String status, UserInfos user, String startDate, String endDate, Boolean consumable,
+    public void listOrderAmount(String status, String idStructure, UserInfos user, String startDate, String endDate, Boolean consumable,
                                 Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT sum(oce.amount) as nb_licences " +
@@ -100,13 +100,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) ";
-        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
+        query = filterWaitingOrder(status, idStructure, query, startDate, endDate, values);
         query += "AND c.use_credit = '" + (consumable ? "consumable_" : "") + "licences';";
         sql.prepared(query, values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
-    public void getTotalAmountOrder(String status, UserInfos user, String startDate, String endDate, JsonArray filters,
+    public void getTotalAmountOrder(String status, String idStructure, UserInfos user, String startDate, String endDate, JsonArray filters,
                                     Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT oce.id, oce.amount " +
@@ -117,7 +117,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) ";
-        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
+        query = filterWaitingOrder(status, idStructure, query, startDate, endDate, values);
         if (filters != null && filters.size() > 0) {
             query += " AND ( ";
             for (int i = 0; i < filters.size(); i++) {
@@ -145,7 +145,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrderCredit(String status, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler) {
+    public void listOrderCredit(String status, String idStructure, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT oce.equipment_key, oce.amount, c.use_credit, oce.id " +
                 "FROM crre.order_client_equipment oce " +
@@ -155,35 +155,29 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) ";
-        query = filterWaitingOrder(status, user, query, startDate, endDate, values);
+        query = filterWaitingOrder(status, idStructure, query, startDate, endDate, values);
         query += "AND (c.use_credit = 'credits' OR c.use_credit = 'consumable_credits');";
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     @Override
-    public void listUsers(String status, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+    public void listUsers(String status, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT(bo.name_user) as user_name, bo.id_user " +
                 "FROM " + Crre.crreSchema + ".basket_order bo " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment oce ON bo.id = oce.id_basket ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query = filterWaitingOrder(status, user, query, null, null, values);
+        query = filterWaitingOrder(status, idStructure, query, null, null, values);
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
-    private String filterWaitingOrder(String status, UserInfos user, String query, String startDate, String endDate, JsonArray values) {
+    private String filterWaitingOrder(String status, String idStructure, String query, String startDate, String endDate, JsonArray values) {
         query += "WHERE ";
         if (startDate != null || endDate != null) {
             query += "oce.creation_date BETWEEN ? AND ? AND ";
             values.add(startDate).add(endDate);
         }
-        query += "oce.id_structure IN ( ";
-        StringBuilder queryBuilder = new StringBuilder(query);
-        for (String idStruct : user.getStructures()) {
-            queryBuilder.append("?,");
-            values.add(idStruct);
-        }
-        query = queryBuilder.toString();
-        query = query.substring(0, query.length() - 1) + ") ";
+        query += "oce.id_structure = ? ";
+        values.add(idStructure);
         if (!status.contains("ALL")) {
             query += " AND oce.status = ? ";
             values.add(status);
@@ -231,7 +225,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listExport(List<Integer> idsOrders, UserInfos user, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
+    public void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         String query = "SELECT oce.*, bo.name as basket_name " +
@@ -242,7 +236,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) ";
         if (statut != null) {
-            query = filterWaitingOrder("WAITING", user, query, startDate, endDate, values);
+            query = filterWaitingOrder("WAITING", idStructure, query, startDate, endDate, values);
         } else {
             query += "WHERE oce.id_campaign = ? AND oce.user_id = ? AND oce.creation_date BETWEEN ? AND ? ";
             values.add(idCampaign).add(user.getUserId()).add(startDate).add(endDate);
@@ -300,7 +294,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     }
 
-    public void search(String query, JsonArray filters, UserInfos user, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
+    public void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id, tc.name as type_name, to_json(c.* ) campaign " +
@@ -317,12 +311,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
         sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
 
-        sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
-        }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+        sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure = ? ";
+        values.add(idStructure);
 
         if (filters != null && filters.size() > 0) {
             sqlquery += " AND ( ";

@@ -47,9 +47,9 @@ export const manageOrderController = ng.controller('manageOrderController',
                 });
             });
             if (order_selected.all.length != 0 && !$scope.display.allOrdersListSelected) {
-                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false);
+                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false);
             } else {
-                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true);
+                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true);
             }
             $scope.display.allOrdersListSelected = false;
             Utils.safeApply($scope);

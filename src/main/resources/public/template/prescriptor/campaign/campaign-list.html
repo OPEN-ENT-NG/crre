@@ -1,7 +1,10 @@
 <div class="twelve-mobile ten centered row" ng-controller="campaignsListController">
     <div class="row aligned" ng-if="structures.all.length > 1">
-        <h4 class="right-magnet"><i18n>multi-structures.choice</i18n> :
-            <search-and-select class="cell right-magnet horizontal-margin"
+        <div>
+            <h4><i18n>multi-structures.choice</i18n> : </h4>
+        </div>
+        <div>
+            <search-and-select class="cell horizontal-margin"
                                param1="UAI"
                                param2="name"
                                options="structures.all"
@@ -9,7 +12,7 @@
                                search-on="name" order-by="name"
                                ng-change="initCampaign(current.structure)">
             </search-and-select>
-        </h4>
+        </div>
     </div>
     <div class="row">
         <div class="twelve-mobile cell right-magnet" workflow="crre.validator">
