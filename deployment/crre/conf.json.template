@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~crre~1.0-SNAPSHOT",
+      "name": "fr.openent~crre~1.0.13",
       "config": {
         "main" : "fr.openent.crre.Crre",
         "port" : 8150,
@@ -23,9 +23,7 @@
          "elasticsearch": true,
          "elasticsearchConfig" : {
             "server-uri": "${elasticServerURI}",
-            "index": "${elasticCRREIndexName}",
-            "username": "${elasticSearchUsername}",
-            "password": "${elasticSearchPassword}"
+            "index": "${elasticCRREIndexName}"
             },
          "timeSecondSynchCron": "${timeSecondSynchCron}",
          "timeSecondStatCron": "${timeSecondStatCron}",
