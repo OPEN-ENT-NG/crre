@@ -33,7 +33,6 @@
                 </div>
             </div>
             <div class="twelve-small padding-20 cell right-magnet twelve-mobile"
-                 ng-if="!isAdministrator()" workflow="crre.prescriptor"
                  ng-style="{height: offers.all.length > 1 ? '480px' : '330px'}">
                 <div ng-if="basket.equipment.type === 'articlenumerique' && basket.equipment.offres[0].adoptant === true"
                      id="box">
@@ -86,12 +85,12 @@
                             </div>
                             <div class="boxF">
                                 <div></div>
-                                <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                                <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor" ng-if="basket.id_campaign == undefined && !isAdministrator()">
                                     <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
                                            ng-click="chooseCampaign()" i18n-value="crre.add.to.basket"/>
                                 </div>
-                                <div class="row vertical-spacing centerColumn"
-                                     ng-if="!(basket.id_campaign == undefined)">
+                                <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor"
+                                     ng-if="!(basket.id_campaign == undefined) && !isAdministrator()">
                                     <input type="button"
                                            ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                            ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
@@ -165,11 +164,11 @@
                                 <span class="size17"
                                       ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
-                            <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                            <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor" ng-if="basket.id_campaign == undefined && !isAdministrator()">
                                 <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
                                        ng-click="chooseCampaign()" i18n-value="crre.add.to.basket"/>
                             </div>
-                            <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                            <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor" ng-if="!(basket.id_campaign == undefined) && !isAdministrator()">
                                 <input type="button"
                                        ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                        ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
@@ -214,11 +213,11 @@
                                       ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
                         </div>
-                        <div class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                        <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
                             <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
                                    ng-click="chooseCampaign()" i18n-value="crre.add.to.basket"/>
                         </div>
-                        <div class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                        <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
                             <input type="button"
                                    ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                    ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
