@@ -25,6 +25,13 @@ repositories {
   maven {
     url "https://oss.sonatype.org/content/repositories/snapshots/"
   }
+  maven {
+    url 'https://nexus-pic2.support-ent.fr/repository/maven-releases/'
+    credentials {
+      username "${odeUsername}"
+      password "${odePassword}"
+    }
+  }
 }
 
 configurations {
