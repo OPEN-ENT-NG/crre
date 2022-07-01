@@ -40,7 +40,7 @@ export class Utils {
     static calculatePriceTTC (equipment, roundNumber?: number) {
         let prixht,price_TTC: number;
         let tvas;
-        if(!equipment || equipment.disponibilite[0].valeur != 'DISPONIBLE'){
+        if(!equipment || equipment.disponibilite[0].valeur != 'DISPONIBLE' && equipment.disponibilite[0].valeur !== 'PRECOMMANDE'){
             return 0;
         }else {
             if (equipment.type == 'articlenumerique') {
