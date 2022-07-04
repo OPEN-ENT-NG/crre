@@ -117,20 +117,22 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
     }
 
-    public void listebasketItemForOrder(Integer idCampaign, String idStructure, JsonArray baskets,
+    public void listebasketItemForOrder(Integer idCampaign, String idStructure, String idUser, JsonArray baskets,
                                         Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String basketFilter = baskets.size() > 0 ? "AND basket.id IN " + Sql.listPrepared(baskets.getList()) : "";
-        String query = "SELECT  basket.id id_basket,basket.amount, " +
+        String query = "SELECT basket.id id_basket,basket.amount, " +
                 "basket.comment, basket.processing_date, basket.id_campaign, basket.id_structure, basket.reassort, basket.id_equipment, " +
                 "nextval('" + Crre.crreSchema + ".order_client_equipment_id_seq' ) as id_order, " +
                 "campaign.purse_enabled " +
                 "FROM  " + Crre.crreSchema + ".basket_equipment basket " +
                 "INNER JOIN " + Crre.crreSchema + ".campaign ON (basket.id_campaign = campaign.id) " +
-                "WHERE basket.id_campaign = ? " +
+                "WHERE basket.id_campaign = ? AND basket.owner_id = ?" +
                 "AND basket.id_structure = ? " + basketFilter +
                 "GROUP BY (basket.id, basket.amount, basket.processing_date,basket.id_campaign, basket.id_structure, campaign.purse_enabled);";
-        values.add(idCampaign).add(idStructure);
+        values.add(idCampaign)
+                .add(idUser)
+                .add(idStructure);
 
         if (baskets.size() > 0) {
             for (int i = 0; i < baskets.size(); i++) {
@@ -226,7 +228,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     basket = baskets.getJsonObject(i);
                     statements.add(getInsertEquipmentOrderStatement(basket, user.getUserId(), id_basket));
                 }
-                statements.add(getDeletionBasketsEquipmentStatments(idCampaign, idStructure, baskets_objects, purse_enabled, user));
+                statements.add(getDeletionBasketsEquipmentStatments(idCampaign, idStructure, user.getUserId(), baskets_objects, purse_enabled, user));
                 sql.transaction(statements, event -> {
                     JsonObject results = event.body().getJsonArray("results")
                             .getJsonObject(event.body().getJsonArray("results").size()-1);
@@ -362,12 +364,12 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         return params;
     }
 
-    private static JsonObject getDeletionBasketsEquipmentStatments(Integer idCampaign, String idStructure, JsonArray baskets,
+    private static JsonObject getDeletionBasketsEquipmentStatments(Integer idCampaign, String idStructure, String idUser, JsonArray baskets,
                                                                    Boolean purse_enabled, UserInfos user) {
         String basketFilter = baskets.size() > 0 ? "AND basket_equipment.id IN " + Sql.listPrepared(baskets.getList()) : "";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(idCampaign).add(idStructure);
+                .add(idCampaign).add(idStructure).add(idUser);
         for (int i = 0; i < baskets.size(); i++) {
             params.add(baskets.getInteger(i));
         }
@@ -377,7 +379,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         params.add(idCampaign).add(idStructure);
         params.add(user.getUserId());
         String queryEquipmentOrder = " DELETE FROM " + Crre.crreSchema + ".basket_equipment " +
-                " WHERE id_campaign = ? AND id_structure = ? " + basketFilter + " RETURNING " +
+                " WHERE id_campaign = ? AND id_structure = ? AND owner_id = ? " + basketFilter + " RETURNING " +
                 getReturningQueryOfTakeOrder(purse_enabled);
         return new JsonObject()
                 .put("statement", queryEquipmentOrder)

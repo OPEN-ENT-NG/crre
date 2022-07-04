@@ -86,7 +86,7 @@ public interface BasketService {
      * @param baskets basket list to retrieve
      * @param handler function handler returning data
      */
-    void listebasketItemForOrder(Integer idCampaign, String idStructure, JsonArray baskets, Handler<Either<String, JsonArray>> handler);
+    void listebasketItemForOrder(Integer idCampaign, String idStructure, String idUser, JsonArray baskets, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Search basket from a query (name, user_name or article)

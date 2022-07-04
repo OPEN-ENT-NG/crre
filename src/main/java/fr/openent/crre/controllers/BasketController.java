@@ -253,10 +253,10 @@ public class BasketController extends ControllerHelper {
                 final String nameStructure = object.getString("structure_name");
                 final String nameBasket = object.getString("basket_name");
                 JsonArray baskets = object.containsKey("baskets") ? object.getJsonArray("baskets") : new JsonArray();
-                basketService.listebasketItemForOrder(idCampaign, idStructure, baskets,
+                UserUtils.getUserInfos(eb, request, user ->
+                        basketService.listebasketItemForOrder(idCampaign, idStructure, user.getUserId(), baskets,
                         listBasket -> {
                             if (listBasket.isRight() && listBasket.right().getValue().size() > 0) {
-                                UserUtils.getUserInfos(eb, request, user ->
                                         basketService.takeOrder(request, listBasket.right().getValue(),
                                                 idCampaign, user, idStructure, nameStructure, baskets, nameBasket,
                                                 Logging.defaultCreateResponsesHandler(eb,
@@ -264,12 +264,12 @@ public class BasketController extends ControllerHelper {
                                                         Contexts.ORDER.toString(),
                                                         Actions.CREATE.toString(),
                                                         "id_order",
-                                                        listBasket.right().getValue())));
+                                                        listBasket.right().getValue()));
                             } else {
                                 log.error("An error occurred when listing Baskets");
                                 badRequest(request);
                             }
-                        });
+                        }));
 
             } catch (ClassCastException e) {
                 log.error("An error occurred when casting Basket information", e);
