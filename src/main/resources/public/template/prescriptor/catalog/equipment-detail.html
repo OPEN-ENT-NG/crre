@@ -213,11 +213,11 @@
                                       ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
                         </div>
-                        <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined">
+                        <div workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined && !isAdministrator()">
                             <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
                                    ng-click="chooseCampaign()" i18n-value="crre.add.to.basket"/>
                         </div>
-                        <div ng-if="!isAdministrator()" workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined)">
+                        <div workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined) && !isAdministrator()">
                             <input type="button"
                                    ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                    ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
