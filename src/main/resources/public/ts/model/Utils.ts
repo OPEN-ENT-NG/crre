@@ -37,10 +37,16 @@ export class Utils {
         return params.slice(0, -1);
     }
 
+    static isAvailable(equipment) : boolean {
+        let status_article = ["DISPONIBLE", "PRECOMMANDE", "A_PARAITRE", "EN_COURS_DE_REIMPRESSION"]
+        return status_article.some(s => s === equipment.disponibilite[0].valeur);
+    }
+
     static calculatePriceTTC (equipment, roundNumber?: number) {
         let prixht,price_TTC: number;
         let tvas;
-        if(!equipment || equipment.disponibilite[0].valeur != 'DISPONIBLE' && equipment.disponibilite[0].valeur !== 'PRECOMMANDE'){
+
+        if(!equipment || !this.isAvailable){
             return 0;
         }else {
             if (equipment.type == 'articlenumerique') {

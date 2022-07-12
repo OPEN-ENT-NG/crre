@@ -20,7 +20,8 @@ export const basketController = ng.controller('basketController',
         $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber?: number) => {
             let totalPrice = 0;
             baskets.all.map((basket) => {
-                if (basket.equipment.disponibilite[0].valeur !== 'DISPONIBLE' && basket.equipment.disponibilite[0].valeur !== 'PRECOMMANDE') return false;
+                if (!Utils.isAvailable(basket.equipment))
+                    return false;
                 if (!hasOneSelected(baskets) || basket.selected) {
                     let basketItemPrice = $scope.calculatePriceOfBasket(basket,2);
                     totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;

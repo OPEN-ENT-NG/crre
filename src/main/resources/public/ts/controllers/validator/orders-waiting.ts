@@ -15,11 +15,11 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.allOrdersSelected = false;
         $scope.show = {
-            comment:false
+            comment: false
         };
         $scope.projects = [];
         $scope.sort = {
-            order : {
+            order: {
                 type: 'created',
                 reverse: false
             }
@@ -31,13 +31,13 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         // @ts-ignore
         this.init = async () => {
             $scope.filterChoice = {
-                users : [],
+                users: [],
                 type_campaign: []
             }
             $scope.filterChoiceCorrelation = {
-                keys : ["users", "type_campaign"],
-                users : 'id_user',
-                type_campaign : 'id_campaign'
+                keys: ["users", "type_campaign"],
+                users: 'id_user',
+                type_campaign: 'id_campaign'
             }
             $scope.users = [];
             $scope.type_campaign = [];
@@ -60,15 +60,15 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         };
 
-        $scope.dropElement = (item,key): void => {
+        $scope.dropElement = (item, key): void => {
             $scope.filterChoice[key] = _.without($scope.filterChoice[key], item);
             $scope.getFilter();
         };
 
-        $scope.onScroll = async (init?:boolean): Promise<void> => {
-            if(init){
+        $scope.onScroll = async (init?: boolean): Promise<void> => {
+            if (init) {
                 await $scope.searchByName(false)
-            }else{
+            } else {
                 $scope.filter.page++;
                 await $scope.searchByName(true);
             }
@@ -85,24 +85,24 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     let newFilter = new Filter();
                     newFilter.name = $scope.filterChoiceCorrelation[key];
                     let value = item.name;
-                    if(key === "users"){
+                    if (key === "users") {
                         value = item.id_user;
                     }
-                    if(key === "type_campaign"){
+                    if (key === "type_campaign") {
                         value = item.id;
                     }
                     newFilter.value = value;
                     $scope.filters.all.push(newFilter);
                 });
             }
-            if($scope.filters.all.length > 0) {
+            if ($scope.filters.all.length > 0) {
                 const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.current.structure.id,
                     $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
             } else {
                 if (!!$scope.query_name) {
                     const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.current.structure.id, $scope.filtersDate.startDate,
-                        $scope.filtersDate.endDate, $scope.filter.page );
+                        $scope.filtersDate.endDate, $scope.filter.page);
                     endLoading(newData);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate,
@@ -143,13 +143,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 purseAmountConsumable - $scope.ordersClient.calculTotalPriceTTC(true) < 0;
         };
 
-        function updateOrders(totalPrice: number, totalPriceConsumable: number, totalAmount: number, totalAmountConsumable: number,
-                              ordersToRemove: OrdersClient, numberOrdered : number) {
-            $scope.campaign.nb_licences_available -= totalAmount;
-            $scope.campaign.nb_licences_consumable_available -= totalAmountConsumable;
-            $scope.campaign.purse_amount -= totalPrice;
-            $scope.campaign.consumable_purse_amount -= totalPriceConsumable;
-
+        $scope.updateOrders = async (totalPrice: number, totalPriceConsumable: number, totalAmount: number, totalAmountConsumable: number,
+                                     ordersToRemove: OrdersClient, numberOrdered: number) => {
             $scope.campaign.nb_order_waiting -= numberOrdered;
             $scope.campaign.historic_etab_notification += numberOrdered;
 
@@ -183,7 +178,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             return {totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable};
         }
 
-        $scope.createOrder = async ():Promise<void> => {
+        $scope.createOrder = async (): Promise<void> => {
             let ordersToCreate = new OrdersRegion();
             let ordersToRemove = new OrdersClient();
             let totalPrice = 0;
@@ -192,11 +187,16 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let totalAmountConsumable = 0;
             let ordersToReformat;
 
-            if($scope.allOrdersSelected) {
+            if ($scope.allOrdersSelected) {
                 await $scope.searchByName(false, true);
                 ordersToReformat = $scope.ordersClient.all;
             } else {
-                ordersToReformat = ($scope.ordersClient.selectedElements.length > 0) ? $scope.ordersClient.selectedElements : $scope.ordersClient.all;
+                if ($scope.ordersClient.selectedElements.length > 0) {
+                    ordersToReformat = $scope.ordersClient.selectedElements;
+                } else {
+                    await $scope.searchByName(false, true);
+                    ordersToReformat = $scope.ordersClient.all;
+                }
             }
             const __ret = reformatOrders(ordersToReformat, ordersToCreate, ordersToRemove,
                 totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable);
@@ -205,17 +205,16 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             totalAmount = __ret.totalAmount;
             totalAmountConsumable = __ret.totalAmountConsumable;
 
-            ordersToCreate.create().then(async data =>{
+            ordersToCreate.create().then(async data => {
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
-                    updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable, ordersToRemove, ordersToReformat.length);
+                    await $scope.updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable, ordersToRemove, ordersToReformat.length);
                     await $scope.getAllFilters();
-                    Utils.safeApply($scope);
                     $scope.allOrdersSelected = false;
                     $scope.onScroll(true);
                     await $scope.getAllAmount();
-                }
-                else {
+                    Utils.safeApply($scope);
+                } else {
                     toasts.warning('crre.admin.order.create.err');
                 }
             })
@@ -243,15 +242,15 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         }
 
-        $scope.searchByName =  async (noInit?:boolean, all?: boolean) => {
-            if(!noInit){
+        $scope.searchByName = async (noInit?: boolean, all?: boolean) => {
+            if (!noInit) {
                 $scope.loading = true;
                 $scope.filter.page = 0;
                 $scope.ordersClient = new OrdersClient();
                 Utils.safeApply($scope);
             }
             all ? $scope.filter.page = null : 0;
-            if($scope.filters.all.length == 0) {
+            if ($scope.filters.all.length == 0) {
                 if ($scope.query_name && $scope.query_name != "") {
                     const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.current.structure.id,
                         $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page);
@@ -261,7 +260,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                         $scope.structures.all, null, $scope.current.structure.id, null, $scope.filter.page);
                     endLoading(newData);
                 }
-            }else{
+            } else {
                 const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.current.structure.id, $scope.filtersDate.startDate,
                     $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
                 endLoading(newData);
@@ -270,7 +269,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         };
 
-        $scope.syncSelected = () : void => {
+        $scope.syncSelected = (): void => {
             $scope.ordersClient.all.forEach(order => order.selected = $scope.allOrdersSelected)
         };
 
@@ -281,18 +280,20 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
 
         $scope.exportCSV = () => {
             let selectedOrders = new OrdersClient();
-            if($scope.ordersClient.selectedElements.length == 0 || $scope.allOrdersSelected) {
+            if ($scope.ordersClient.selectedElements.length == 0 || $scope.allOrdersSelected) {
                 selectedOrders.exportCSV(false, null, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, "WAITING")
             } else {
                 selectedOrders.all = $scope.ordersClient.selectedElements;
                 selectedOrders.exportCSV(false, null, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, "WAITING");
             }
-            $scope.ordersClient.forEach(function (order) {order.selected = false;});
+            $scope.ordersClient.forEach(function (order) {
+                order.selected = false;
+            });
             $scope.allOrdersSelected = false;
         }
 
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
-            if(amount.toString() != 'undefined') {
+            if (amount.toString() != 'undefined') {
                 orderClient.amount = amount;
                 await orderClient.updateAmount(amount);
                 await $scope.getAllAmount();
