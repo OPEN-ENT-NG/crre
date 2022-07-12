@@ -64,7 +64,7 @@ public class ElasticSearchHelper {
                             String niveau = addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle") == null ? "" : addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle");
                             if (niveau.equals("Lycée pro.")) {
                                 proNumeric = true;
-                            } else {
+                            } else if(niveau.equals("Lycée général") || niveau.equals("Lycée techno.")) {
                                 lgtNumeric = true;
                             }
                         }

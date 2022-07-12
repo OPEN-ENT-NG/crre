@@ -10,9 +10,9 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Tous", value: null},
                 {name: "Catalogue papier", value: "articlepapier"},
                 {name: "Catalogue numérique", value: "articlenumerique"},
-                {name: "Catalogue numérique Pro", value: "articlenumerique|pro|nonconsommable"},
+                {name: "Catalogue numérique Pro", value: "articlenumerique|pro"},
                 {name: "Catalogue papier Pro", value: "articlepapier|pro|nonconsommable"},
-                {name: "Catalogue numérique LGT", value: "articlenumerique|lgt|nonconsommable"},
+                {name: "Catalogue numérique LGT", value: "articlenumerique|lgt"},
                 {name: "Catalogue papier LGT", value: "articlepapier|lgt|nonconsommable"},
                 {name: "Catalogue consommable Pro", value: "consommable|pro"}];
             $scope.creditFormat = [
