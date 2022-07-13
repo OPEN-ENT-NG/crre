@@ -130,28 +130,29 @@ public class OrderRegionController extends BaseController {
                                                 futures.add(createOrdersRegionFuture);
                                                 Double price = Double.parseDouble(newOrder.getDouble("price").toString())
                                                         * newOrder.getInteger("amount");
-                                                updatePurseLicence(futures, newOrder, "-", price, newOrder.getString("use_credit", "none"));
-                                                orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
-                                                        handlerJsonObject(createOrdersRegionFuture));
                                                 int finalI = i;
-                                                CompositeFuture.all(futures).setHandler(event -> {
-                                                    if (event.succeeded()) {
-                                                        Number idReturning = createOrdersRegionFuture.result().getInteger("id");
-                                                        Logging.insert(eb,
-                                                                request,
-                                                                Contexts.ORDERREGION.toString(),
-                                                                Actions.CREATE.toString(),
-                                                                idReturning.toString(),
-                                                                new JsonObject().put("order region", newOrder));
-                                                        if (finalI == ordersList.size() - 1) {
-                                                            request.response().setStatusCode(201).end();
-                                                        }
-                                                    } else {
-                                                        LOGGER.error("An error when you want get id after create order region ",
-                                                                event.cause());
-                                                        request.response().setStatusCode(400).end();
-                                                    }
-                                                });
+                                                orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
+                                                        event -> {
+                                                            if (event.isRight()) {
+                                                                Number idReturning = event.right().getValue().getInteger("id");
+                                                                Logging.insert(eb,
+                                                                        request,
+                                                                        Contexts.ORDERREGION.toString(),
+                                                                        Actions.CREATE.toString(),
+                                                                        idReturning.toString(),
+                                                                        new JsonObject().put("order region", newOrder));
+                                                                updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
+                                                                        .onSuccess(log::info)
+                                                                        .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
+                                                                if (finalI == ordersList.size() - 1) {
+                                                                    request.response().setStatusCode(201).end();
+                                                                }
+                                                            } else {
+                                                                LOGGER.error("An error when you want get id after create order region ",
+                                                                        event.left().getValue());
+                                                                request.response().setStatusCode(400).end();
+                                                            }
+                                                        });
                                             }
                                         } else {
                                             LOGGER.error("An error when you want get id after create project " + idProject.left());
@@ -698,49 +699,49 @@ public class OrderRegionController extends BaseController {
                                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
                                 String justification = orders.getString("justification");
                                 JsonArray ordersList = orders.getJsonArray("orders");
-                                List<Future> futures = new ArrayList<>();
                                 for (int i = 0; i < ordersList.size(); i++) {
                                     JsonObject newOrder = ordersList.getJsonObject(i);
                                     Double price = Double.parseDouble(newOrder.getDouble("price").toString());
-                                    if (newOrder.getString("status").equals("REJECTED")) {
-                                        if (status.equals("valid")) {
-                                            updatePurseLicence(futures, newOrder, "-", price,
-                                                    newOrder.getString("use_credit", "none"));
+                                    orderRegionService.updateOrders(ids, status, justification, event -> {
+                                        if (event.isRight()) {
+                                            if (newOrder.getString("status").equals("REJECTED")) {
+                                                if (status.equals("valid")) {
+                                                    updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
+                                                            .onSuccess(log::info)
+                                                            .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
+                                                }
+                                            } else {
+                                                if (status.equals("rejected")) {
+                                                    updatePurseLicence(newOrder, "+", price, newOrder.getString("use_credit", "none"))
+                                                            .onSuccess(log::info)
+                                                            .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
+                                                }
+                                            }
+                                            Logging.defaultResponsesHandler(eb,
+                                                    request,
+                                                    Contexts.ORDERREGION.toString(),
+                                                    Actions.UPDATE.toString(),
+                                                    params,
+                                                    null);
+                                            request.response().setStatusCode(200).end();
+                                        } else {
+                                            LOGGER.error("An error when you want get id after create order region ",
+                                                    event.left().getValue());
+                                            request.response().setStatusCode(400).end();
                                         }
-                                    } else {
-                                        if (status.equals("rejected")) {
-                                            updatePurseLicence(futures, newOrder, "+", price,
-                                                    newOrder.getString("use_credit", "none"));
-                                        }
-                                    }
+                                    });
                                 }
-                                CompositeFuture.all(futures).setHandler(event -> {
-                                    if (event.succeeded()) {
-                                        orderRegionService.updateOrders(ids, status, justification,
-                                                Logging.defaultResponsesHandler(eb,
-                                                        request,
-                                                        Contexts.ORDERREGION.toString(),
-                                                        Actions.UPDATE.toString(),
-                                                        params,
-                                                        null));
-                                    } else {
-                                        LOGGER.error("An error when you want get id after create order region ",
-                                                event.cause());
-                                        request.response().setStatusCode(400).end();
-                                    }
-                                });
                             } catch (ClassCastException e) {
                                 log.error("An error occurred when casting order id", e);
                             }
                         }));
-
     }
 
-    private void updatePurseLicence(List<Future> futures, JsonObject newOrder, String operation, Double
+
+    private Future<JsonObject> updatePurseLicence(JsonObject newOrder, String operation, Double
             price, String use_credit) {
+        Future<JsonObject> updateFuture = Future.future();
         if (!use_credit.equals("none")) {
-            Future<JsonObject> updateFuture = Future.future();
-            futures.add(updateFuture);
             switch (use_credit) {
                 case "licences": {
                     structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
@@ -767,7 +768,11 @@ public class OrderRegionController extends BaseController {
                     break;
                 }
             }
+        } else {
+            updateFuture = Future.succeededFuture();
         }
+        return updateFuture;
+
     }
 
     @Get("region/orders/exports")
@@ -875,7 +880,8 @@ public class OrderRegionController extends BaseController {
         searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
     }
 
-    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray structures,
+    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray
+            structures,
                                                       JsonArray orderRegion, JsonArray ordersClient, JsonArray ordersRegion) {
         int nbEtab = structures.size();
         String csvFile = generateExport(request, orderRegion);
@@ -1053,7 +1059,7 @@ public class OrderRegionController extends BaseController {
 
     private static JsonArray computeOffers(JsonObject equipment, JsonObject order) {
         JsonArray offers = new JsonArray();
-        if(equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps").size() > 0) {
+        if (equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps").size() > 0) {
             JsonArray leps = equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps");
             Long amount = order.getLong("amount");
             int gratuit = 0;
@@ -1087,7 +1093,7 @@ public class OrderRegionController extends BaseController {
         return offers;
     }
 
-    private  String generateExport(HttpServerRequest request, JsonArray logs) {
+    private String generateExport(HttpServerRequest request, JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
             report.append(generateExportLine(logs.getJsonObject(i)));
@@ -1095,7 +1101,7 @@ public class OrderRegionController extends BaseController {
         return report.toString();
     }
 
-    public  String getExportHeader(HttpServerRequest request) {
+    public String getExportHeader(HttpServerRequest request) {
         return "ID unique" + ";" +
                 I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("Nom étab", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -1122,7 +1128,7 @@ public class OrderRegionController extends BaseController {
                 + "\n";
     }
 
-    public  String generateExportLine(JsonObject log) {
+    public String generateExportLine(JsonObject log) {
         return (log.containsKey("id_project") ? log.getLong("id").toString() : log.getString("id")) + ";" +
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +

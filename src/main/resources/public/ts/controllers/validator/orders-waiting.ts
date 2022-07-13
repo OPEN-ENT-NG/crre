@@ -132,21 +132,36 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
 
         $scope.remainAvailable = () => {
             let nbLicences = $scope.campaign.nb_licences_available ? $scope.campaign.nb_licences_available : 0;
-            nbLicences += $scope.campaign.nb_licences_consumable_available ? $scope.campaign.nb_licences_consumable_available : 0
+            nbLicences += $scope.campaign.nb_licences_consumable_available ? $scope.campaign.nb_licences_consumable_available : 0;
 
-            let purseAmount = $scope.campaign.purse_amount ? $scope.campaign.purse_amount : 0
-            let purseAmountConsumable = $scope.campaign.consumable_purse_amount ? $scope.campaign.consumable_purse_amount : 0
+            let purseAmount = $scope.campaign.purse_amount ? $scope.campaign.purse_amount : 0;
+            let purseAmountConsumable = $scope.campaign.consumable_purse_amount ? $scope.campaign.consumable_purse_amount : 0;
 
-            return $scope.ordersClient.all.length == 0 ||
+            let isAvailable: boolean;
+
+            if($scope.ordersClient.selectedElements.length > 0) {
+                isAvailable = $scope.ordersClient.all.length == 0 ||
+                    nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
+                    purseAmount - $scope.ordersClient.selectedElements.calculTotalPriceTTC(false) < 0 ||
+                    purseAmountConsumable - $scope.ordersClient.selectedElements.calculTotalPriceTTC(true) < 0;
+            } else {
+                isAvailable = $scope.ordersClient.all.length == 0 ||
                 nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
-                purseAmount - $scope.ordersClient.calculTotalPriceTTC(false) < 0 ||
-                purseAmountConsumable - $scope.ordersClient.calculTotalPriceTTC(true) < 0;
+                purseAmount - $scope.amountTotal.credit < 0 ||
+                purseAmountConsumable - $scope.amountTotal.consumable_credit < 0;
+            }
+
+            return isAvailable;
         };
 
         $scope.updateOrders = async (totalPrice: number, totalPriceConsumable: number, totalAmount: number, totalAmountConsumable: number,
                                      ordersToRemove: OrdersClient, numberOrdered: number) => {
             $scope.campaign.nb_order_waiting -= numberOrdered;
             $scope.campaign.historic_etab_notification += numberOrdered;
+            $scope.campaign.nb_licences_available -= totalAmount;
+            $scope.campaign.nb_licences_consumable_available -= totalAmountConsumable;
+            $scope.campaign.purse_amount -= totalPrice;
+            $scope.campaign.consumable_purse_amount -= totalPriceConsumable;
 
             ordersToRemove.all.forEach(order => {
                 $scope.ordersClient.all.forEach((orderClient, i) => {
