@@ -72,17 +72,27 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    public exportCSV = (old = false, all?: boolean) => {
+    public exportCSV = async (old = false, all?: boolean) => {
         let selectedOrders;
         if (all) {
             selectedOrders = this.extractAllOrders();
         } else {
             selectedOrders = this.extractSelectedOrders();
         }
-        let params_id_order = Utils.formatKeyToParameter(selectedOrders.all, 'id');
-        let params_id_equipment = Utils.formatKeyToParameter(selectedOrders.all, "equipment_key");
-        let params_id_structure = Utils.formatKeyToParameter(selectedOrders.all, "id_structure");
-        window.location = `/crre/region/orders/exports?${params_id_order}&${params_id_equipment}&${params_id_structure}&old=${old}`;
+        let params_id_equipment = new Set();
+        let params_id_structure = new Set();
+        let params_id_order = selectedOrders.all.map(order => order.id);
+        selectedOrders.all.forEach(order => params_id_equipment.add(order.equipment_key));
+        selectedOrders.all.forEach(order => params_id_structure.add(order.id_structure));
+
+        let data = {
+            idsStructures: params_id_structure,
+            idsEquipments: params_id_equipment,
+            idsOrders: params_id_order,
+            old: old
+        };
+        toasts.confirm('crre.export.order.region.success');
+        await http.post(`/crre/region/orders/exports`, data);
     }
 
     private extractAllOrders() {

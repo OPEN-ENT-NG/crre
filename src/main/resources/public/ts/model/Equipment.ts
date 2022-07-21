@@ -161,9 +161,18 @@ export class Equipments extends Selection<Equipment> {
 
     async getEquipments(orders): Promise<any> {
         let params = '';
+        let idsEquipments = [];
         orders.map((order) => {
-            params += `id=${order.equipment_key}&`;
+            if(idsEquipments.indexOf(order.equipment_key) === -1) {
+                idsEquipments.push(order.equipment_key);
+            }
         });
+
+        idsEquipments.map((id) => {
+            params += `id=${id}&`;
+        });
+
+
         params = params.slice(0, -1);
         let {data} = await http.get(`/crre/equipments?${params}`);
         this.all = Mix.castArrayAs(Equipment, data);

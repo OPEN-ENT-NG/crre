@@ -4,6 +4,7 @@
   "crre.order.user": "Demandeur",
   "crre.order.refused": "Commande(s) refusée(s)",
   "crre.order.refused.succes": "Commande(s) refusée(s) avec succès",
+  "crre.export.order.region.success": "Commandes régions en cours d'exportation, vous les retrouverez dans votre espace personnel.",
   "crre.order.refused.error": "Une erreur est survenue lors du refus d'une commande",
   "crre.order.update.error": "Une erreur est survenue lors de la mis à jour d'une commande",
   "crre.order.getMine.error": "Une erreur est survenue lors de la récupération des commandes",

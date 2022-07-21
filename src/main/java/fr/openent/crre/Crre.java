@@ -4,7 +4,9 @@ import fr.openent.crre.controllers.*;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.cron.updateStatus;
+import fr.openent.crre.service.impl.ExportWorker;
 import fr.wseduc.cron.CronTrigger;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
@@ -65,6 +67,7 @@ public class Crre extends BaseServer {
         addController(new OrderRegionController(vertx, config, mail));
         addController(new StatisticsController());
         addController(new QuoteController());
+        vertx.deployVerticle(ExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         CONFIG = config;
     }
 }

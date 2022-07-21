@@ -181,13 +181,14 @@ public class DefaultPurseService implements PurseService {
                 if (table.equals("licences")) {
                     params.add((int) amount)
                             .add((int)amount)
-                            .add((int)amount)
                             .add((int)amount);
                 } else {
                     params.add(amount)
                             .add(amount)
-                            .add(amount)
                             .add(amount);
+                }
+                if(isOverrideAmount) {
+                    params.add(amount);
                 }
                 params.add(structureId);
 

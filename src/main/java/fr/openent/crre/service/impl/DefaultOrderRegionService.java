@@ -5,18 +5,32 @@ import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.ArrayUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
+
+import static fr.openent.crre.controllers.LogController.UTF8_BOM;
+import static fr.openent.crre.controllers.OrderController.exportPriceComment;
+import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
+import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
+import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
@@ -470,4 +484,212 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".structure_group', 'id')), (SELECT (count(*) + 1) FROM " + Crre.crreSchema + ".structure_group), FALSE);";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
+
+    public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray
+            ordersClient, JsonArray ordersRegion) {
+        JsonObject order;
+        JsonObject equipment;
+        for (int i = 0; i < orderRegion.size(); i++) {
+            order = orderRegion.getJsonObject(i);
+            // Skip offers
+            if (!order.containsKey("totalPriceTTC")) {
+                if (order.containsKey("owner_name")) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                    order.put("creation_date", creation_date);
+                }
+                ordersRegion.add(order.getLong("id"));
+                ordersClient.add(order.getLong("id_order_client_equipment"));
+
+                for (int j = 0; j < equipments.size(); j++) {
+                    equipment = equipments.getJsonObject(j);
+                    if (equipment.getString("id").equals(order.getString("equipment_key"))) {
+                        JsonObject priceDetails = getPriceTtc(equipment);
+                        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+                        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
+                        double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
+                        double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
+                        order.put("priceht", priceDetails.getDouble("prixht"));
+                        order.put("tva5", (priceDetails.containsKey("partTVA5")) ?
+                                priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht") : null);
+                        order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
+                                priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht") : null);
+                        order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
+                        order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                        order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+                        extractedEquipmentInfo(order, equipment);
+                        if (equipment.getJsonArray("disciplines").size() > 0) {
+                            order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                        } else {
+                            order.put("grade", "");
+                        }
+                        putStructuresNameUAI(structures, order);
+                        putEANLDE(equipment, order);
+                        getUniqueTypeCatalogue(order, equipment);
+                        if (equipment.getString("type").equals("articlenumerique")) {
+                            JsonArray offers = computeOffers(equipment, order);
+                            if (offers.size() > 0) {
+                                JsonArray orderOfferArray = new JsonArray();
+                                int freeAmount = 0;
+                                for (int k = 0; k < offers.size(); k++) {
+                                    JsonObject orderOffer = new JsonObject();
+                                    orderOffer.put("name", offers.getJsonObject(k).getString("name"));
+                                    orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
+                                    orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
+                                    freeAmount += offers.getJsonObject(k).getLong("value");
+                                    orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
+                                    orderOffer.put("unitedPriceTTC", 0);
+                                    orderOffer.put("totalPriceHT", 0);
+                                    orderOffer.put("totalPriceTTC", 0);
+                                    orderOffer.put("typeCatalogue", order.getString("typeCatalogue"));
+                                    orderOffer.put("creation_date", order.getString("creation_date"));
+                                    orderOffer.put("id_structure", order.getString("id_structure"));
+                                    orderOffer.put("campaign_name", order.getString("campaign_name"));
+                                    orderOffer.put("id", "F" + order.getLong("id") + "_" + k);
+                                    orderOffer.put("title", order.getString("title"));
+                                    orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
+                                    putStructuresNameUAI(structures, orderOffer);
+                                    orderOfferArray.add(orderOffer);
+                                    orderRegion.add(orderOffer);
+                                }
+                                order.put("total_free", freeAmount);
+                                order.put("offers", orderOfferArray);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void getUniqueTypeCatalogue(JsonObject order, JsonObject equipment) {
+        if (order.getString("use_credit").equals("consumable_licences")) {
+            if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
+                    ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
+                order.put("typeCatalogue", "Consommable");
+            } else {
+                order.put("typeCatalogue", "ao_idf_conso");
+            }
+        } else {
+            if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
+                    ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
+                order.put("typeCatalogue", "Numerique");
+            } else {
+                order.put("typeCatalogue", "ao_idf_pap");
+            }
+        }
+    }
+
+    private void putStructuresNameUAI(JsonArray structures, JsonObject order) {
+        for (int s = 0; s < structures.size(); s++) {
+            JsonObject structure = structures.getJsonObject(s);
+            if (structure.getString("id").equals(order.getString("id_structure"))) {
+                order.put("uai_structure", structure.getString("uai"));
+                order.put("name_structure", structure.getString("name"));
+                order.put("address_structure", structure.getString("address"));
+            }
+        }
+    }
+
+    private void putEANLDE(JsonObject equipment, JsonObject order) {
+        if (equipment.getString("type").equals("articlenumerique")) {
+            order.put("eanLDE", equipment.getJsonArray("offres").getJsonObject(0).getString("eanlibraire"));
+        } else {
+            order.put("eanLDE", equipment.getString("ean"));
+        }
+    }
+
+    private static JsonArray computeOffers(JsonObject equipment, JsonObject order) {
+        JsonArray offers = new JsonArray();
+        if (equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps").size() > 0) {
+            JsonArray leps = equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps");
+            Long amount = order.getLong("amount");
+            int gratuit = 0;
+            int gratuite = 0;
+            for (int i = 0; i < leps.size(); i++) {
+                JsonObject offer = leps.getJsonObject(i);
+                JsonArray conditions = offer.getJsonArray("conditions");
+                JsonObject offerObject = new JsonObject().put("titre", "Manuel " +
+                        offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
+                if (conditions.size() > 1) {
+                    for (int j = 0; j < conditions.size(); j++) {
+                        int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
+                        if (amount >= condition && gratuit < condition) {
+                            gratuit = condition;
+                            gratuite = conditions.getJsonObject(j).getInteger("gratuite");
+                        }
+                    }
+                } else if (offer.getJsonArray("conditions").size() == 1) {
+                    gratuit = offer.getJsonArray("conditions").getJsonObject(0).getInteger("conditionGratuite");
+                    gratuite = (int) (offer.getJsonArray("conditions").getJsonObject(0).getInteger("gratuite") * Math.floor(amount / gratuit));
+                }
+                offerObject.put("value", gratuite);
+                offerObject.put("ean", offer.getString("ean"));
+                offerObject.put("name", offer.getString("titre"));
+                offerObject.put("comment", equipment.getString("ean"));
+                if (gratuite > 0) {
+                    offers.add(offerObject);
+                }
+            }
+        }
+        return offers;
+    }
+
+    public String generateExport(JsonArray logs) {
+        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader());
+        for (int i = 0; i < logs.size(); i++) {
+            report.append(generateExportLine(logs.getJsonObject(i)));
+        }
+        return report.toString();
+    }
+
+    private String getExportHeader() {
+        return "ID unique" + ";" +
+                "Date;" +
+                "Nom étab;" +
+                "UAI de l'étab;" +
+                "Adresse de livraison;" +
+                "Nom commande;" +
+                "Campagne;" +
+                "EAN de la ressource;" +
+                "Titre de la ressource;" +
+                "Editeur;" +
+                "Distributeur;" +
+                "Numérique;" +
+                "Id de l'offre choisie;" +
+                "Type;" +
+                "Reassort;" +
+                "Quantité;" +
+                "Prix HT de la ressource;" +
+                "Part prix 5,5%;" +
+                "Part prix 20%;" +
+                "Prix unitaire TTC;" +
+                "Montant total HT;" +
+                "Prix total TTC;" +
+                "Commentaire" +
+                "\n";
+    }
+
+    private String generateExportLine(JsonObject log) {
+        return (log.containsKey("id_project") ? log.getLong("id").toString() : log.getString("id")) + ";" +
+                (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
+                (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
+                (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
+                (log.getString("address_structure") != null ? log.getString("address_structure") : "") + ";" +
+                (log.getString("title") != null ? log.getString("title") : "") + ";" +
+                (log.getString("campaign_name") != null ? log.getString("campaign_name") : "") + ";" +
+                (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
+                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString("editor") != null ? log.getString("editor") : "") + ";" +
+                (log.getString("diffusor") != null ? log.getString("diffusor") : "") + ";" +
+                (log.getString("type") != null ? log.getString("type") : "") + ";" +
+                (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
+                (log.getString("typeCatalogue") != null ? log.getString("typeCatalogue") : "") + ";" +
+                (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
+                exportPriceComment(log)
+                + "\n";
+    }
+
+
 }
