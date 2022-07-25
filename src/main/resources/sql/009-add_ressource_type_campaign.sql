@@ -1,0 +1,2 @@
+INSERT INTO crre.type_campaign (id, name, credit, reassort, catalog, automatic_close, structure)
+VALUES (8, 'Type Ressource numérique', 'credits', false, 'Catalogue numérique Ressource', false, '[{"libelle":"Numériques"}]');

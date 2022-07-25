@@ -14,6 +14,7 @@ export const campaignFormController = ng.controller('campaignFormController',
                 {name: "Catalogue papier Pro", value: "articlepapier|pro|nonconsommable"},
                 {name: "Catalogue numérique LGT", value: "articlenumerique|lgt"},
                 {name: "Catalogue papier LGT", value: "articlepapier|lgt|nonconsommable"},
+                {name: "Catalogue numérique Ressource", value: "articlenumerique|ressource"},
                 {name: "Catalogue consommable Pro", value: "consommable|pro"}];
             $scope.creditFormat = [
                 {name: "Aucun crédit", value: "none"},

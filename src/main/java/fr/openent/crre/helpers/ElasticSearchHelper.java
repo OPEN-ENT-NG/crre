@@ -26,11 +26,11 @@ public class ElasticSearchHelper {
         return String.format(REGEXP_FORMAT, query.toLowerCase());
     }
 
-    private static void search(JsonObject query, JsonArray pro, JsonArray conso, Handler<Either<String, JsonArray>> handler) {
-        ESHandler(query, pro, conso, handler);
+    private static void search(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource, Handler<Either<String, JsonArray>> handler) {
+        ESHandler(query, pro, conso, ressource, handler);
     }
 
-    private static void ESHandler(JsonObject query, JsonArray pro, JsonArray conso, Handler<Either<String, JsonArray>> handler) {
+    private static void ESHandler(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource, Handler<Either<String, JsonArray>> handler) {
         executeEsSearch(query, ar -> {
             if (ar.failed()) {
                 handler.handle(new Either.Left<>(ar.cause().toString()));
@@ -38,6 +38,8 @@ public class ElasticSearchHelper {
                 JsonArray result = new JsonArray();
                 boolean isConso = conso.size() > 0 ? conso.getBoolean(0) : false;
                 boolean isPro = pro.size() > 0 ? pro.getBoolean(0) : false;
+                boolean isRessource = ressource.size() > 0 ? ressource.getBoolean(0) : false;
+
                 for (Object article : ar.result()) {
                     JsonObject articleJson = ((JsonObject) article);
                     JsonObject addingArticle = articleJson.getJsonObject("_source");
@@ -55,7 +57,10 @@ public class ElasticSearchHelper {
                     }
                     addingArticle.put("type", articleJson.getString("_index"))
                             .put("id", articleJson.getString("_id"));
-                    boolean consoNumeric = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typeNumeric).find();
+                    List<String> typesNumeric = Arrays.asList(typeNumeric.split(Pattern.quote("|")));
+                    boolean ressourceNumeric = isRessource == typesNumeric.contains("Ressource");;
+                    boolean consoNumeric = isConso == typesNumeric.contains("Consommable");
+                    boolean manuelNumeric = !isConso == typesNumeric.contains("Numerique");
                     boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     boolean proNumeric = false;
                     boolean lgtNumeric = false;
@@ -64,7 +69,7 @@ public class ElasticSearchHelper {
                             String niveau = addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle") == null ? "" : addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle");
                             if (niveau.equals("Lycée pro.")) {
                                 proNumeric = true;
-                            } else if(niveau.equals("Lycée général") || niveau.equals("Lycée techno.")) {
+                            } else if (niveau.equals("Lycée général") || niveau.equals("Lycée techno.")) {
                                 lgtNumeric = true;
                             }
                         }
@@ -72,14 +77,15 @@ public class ElasticSearchHelper {
                     proNumeric = isPro && proNumeric;
                     lgtNumeric = !isPro && lgtNumeric;
                     boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
-                    if(isConso && isPro) {
+                    if (isConso && isPro) {
                         proPapier = true;
                     }
                     boolean lgtPapier = !isPro && Pattern.compile(".*pap", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     // Uncomment if type "Numerique" only exist in LDE catalog
                     /*&& (conso.size() <= 0 || consoNumeric)*/
-                    if ((articleJson.getString("_index").equals("articlenumerique") && (conso.size() <= 0 || consoNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
-                            (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier)) || conso.size() != 1 && pro.size() != 1) {
+                    if ((articleJson.getString("_index").equals("articlenumerique") && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
+                            (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
+                            || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {
                         result.add(addingArticle);
                     }
                 }
@@ -94,7 +100,7 @@ public class ElasticSearchHelper {
                 .put("size", PAGE_SIZE)
                 .put("query", new JsonObject().put("match_all", new JsonObject()));
 
-        ESHandler(query, new JsonArray(), new JsonArray(), handler);
+        ESHandler(query, new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
 
@@ -119,7 +125,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put("bool", bool);
 
-        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), handler);
+        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
     public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
@@ -136,18 +142,20 @@ public class ElasticSearchHelper {
         JsonArray query = new JsonArray();
         JsonArray conso = new JsonArray();
         JsonArray pro = new JsonArray();
+        JsonArray ressource = new JsonArray();
 
-        prepareFilterES(result, term, query, conso, pro);
+
+        prepareFilterES(result, term, query, conso, pro, ressource);
 
         filter.put("filter", term.addAll(query));
 
         JsonObject queryObject = new JsonObject()
                 .put("bool", filter);
 
-        search(esQueryObject(queryObject), pro, conso, handler);
+        search(esQueryObject(queryObject), pro, conso, ressource, handler);
     }
 
-    private static void prepareFilterES(HashMap<String, ArrayList<String>> result, JsonArray term, JsonArray query, JsonArray conso, JsonArray pro) {
+    private static void prepareFilterES(HashMap<String, ArrayList<String>> result, JsonArray term, JsonArray query, JsonArray conso, JsonArray pro, JsonArray ressource) {
         Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
@@ -167,8 +175,11 @@ public class ElasticSearchHelper {
                     if (me.getValue().size() == 1) {
                         if (me.getValue().get(0).equals("Consommable")) {
                             conso.add(true);
-                        } else if(me.getValue().get(0).equals("Non_Consommable")) {
+                        } else if (me.getValue().get(0).equals("Ressource")) {
+                            ressource.add(true);
+                        } else if (me.getValue().get(0).equals("Manuel")) {
                             conso.add(false);
+                            ressource.add(false);
                         }
                     }
                     break;
@@ -183,6 +194,16 @@ public class ElasticSearchHelper {
                     }
                     break;
                 }
+/*                case "ressource": {
+                    if (me.getValue().size() == 1) {
+                        if (me.getValue().get(0).equals("Ressource")) {
+                            ressource.add(true);
+                        } else {
+                            ressource.add(false);
+                        }
+                    }
+                    break;
+                }*/
                 default: {
                     term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
                     break;
@@ -196,7 +217,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject();
         JsonObject match = new JsonObject().put("_id", id);
         queryObject.put("match", match);
-        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), handler);
+        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
     public static void searchByIds(List<String> ids, Handler<Either<String, JsonArray>> handler) {
@@ -204,7 +225,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject();
         JsonObject terms = new JsonObject().put("_id", new JsonArray(ids));
         queryObject.put("terms", terms);
-        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), handler);
+        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
 
@@ -216,6 +237,7 @@ public class ElasticSearchHelper {
         JsonArray j = new JsonArray();
         JsonArray conso = new JsonArray();
         JsonArray pro = new JsonArray();
+        JsonArray ressource = new JsonArray();
 
 
         for (String field : PLAIN_TEXT_FIELDS) {
@@ -223,7 +245,7 @@ public class ElasticSearchHelper {
             should.add(regexp);
         }
 
-        prepareFilterES(result, term, j, conso, pro);
+        prepareFilterES(result, term, j, conso, pro, ressource);
         request.put("filter", term.addAll(j))
                 .put("minimum_should_match", 1)
                 .put("should", should);
@@ -231,7 +253,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put("bool", request);
 
-        search(esQueryObject(queryObject), pro, conso, handler);
+        search(esQueryObject(queryObject), pro, conso, ressource, handler);
     }
 
     private static void executeEsSearch(JsonObject query, Handler<AsyncResult<JsonArray>> handler) {
@@ -258,8 +280,8 @@ public class ElasticSearchHelper {
                 .put("from", 0)
                 .put("size", PAGE_SIZE)
                 .put("sort", new JsonArray()
-                        .add(new JsonObject().put("_index","asc"))
-                        .add(new JsonObject().put("titre","asc"))
+                        .add(new JsonObject().put("_index", "asc"))
+                        .add(new JsonObject().put("titre", "asc"))
                 );
     }
 

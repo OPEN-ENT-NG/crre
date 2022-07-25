@@ -8,7 +8,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Manuel'}];
+            $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Manuel'}, {name: 'Ressource'}];
             $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
             $scope.equipments.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}];
             $scope.equipments.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
@@ -21,7 +21,7 @@ export const catalogController = ng.controller('catalogController',
                 docsType: [],
                 editors: [],
                 consumables: [],
-                pros: []
+                pros: [],
             };
 
             $scope.preFilter = {
@@ -32,7 +32,7 @@ export const catalogController = ng.controller('catalogController',
                 docsType: [],
                 editors: [],
                 consumables: [],
-                pros: []
+                pros: [],
             }
             $scope.correlationFilterES = {
                 keys: ["docsType", "subjects", "grades", "levels", "editors", "consumables", "pros", "public"],
@@ -43,7 +43,7 @@ export const catalogController = ng.controller('catalogController',
                 docsType: '_index',
                 editors: 'editeur',
                 consumables: 'conso',
-                pros: 'pro'
+                pros: 'pro',
             };
 
             if (!!$scope.campaign.catalog && $scope.filters.all.length == 0) {
@@ -54,7 +54,9 @@ export const catalogController = ng.controller('catalogController',
                 if ($scope.campaign.catalog.split("|").includes("consommable")) {
                     consommableFilter.value = "Consommable";
                 } else if ($scope.campaign.catalog.split("|").includes("nonconsommable")) {
-                    consommableFilter.value = "Non_Consommable";
+                    consommableFilter.value = "Manuel";
+                } else if ($scope.campaign.catalog.split("|").includes("ressource")) {
+                    consommableFilter.value = "Ressource";
                 }
                 $scope.filters.all.push(consommableFilter);
 
@@ -102,7 +104,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.loading = true;
             // Add to prefilter to hide filters in front
             if (!!$scope.campaign.catalog) {
-                $scope.campaign.catalog.split("|").includes("consommable") ? $scope.preFilter["consumables"].push(true) : $scope.preFilter["docsType"].push(true);
+                $scope.campaign.catalog.split("|").includes("consommable") || $scope.campaign.catalog.split("|").includes("ressource") ? $scope.preFilter["consumables"].push(true) : $scope.preFilter["docsType"].push(true);
                 $scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt") ? $scope.preFilter["pros"].push(true) : null;
             }
             Utils.safeApply($scope);

@@ -747,6 +747,7 @@
   "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?",
   "articlepapier" : "Catalogue papier",
   "articlenumerique" : "Catalogue numérique",
+  "articlenumerique|ressource" : "Catalogue numérique Ressource",
   "articlepapier|lgt|nonconsommable" : "Catalogue papier LGT",
   "articlenumerique|lgt" : "Catalogue numérique LGT",
   "articlepapier|pro|nonconsommable" : "Catalogue papier Pro",
