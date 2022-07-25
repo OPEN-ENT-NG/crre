@@ -198,7 +198,7 @@
                 <div class="row">
                     <button ng-click="validateOrders()"><i18n>Validate</i18n></button>
                     <button ng-click="openRefusingOrderLightbox()"><i18n>Denied</i18n></button>
-                    <button ng-click="exportCSVRegion(false, true) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
+                    <button ng-click="exportCSVRegion(false, display.allOrdersSelected) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
                     <button ng-click="generateLibraryOrder()"><i18n>crre.take.order.library</i18n></button>
                 </div>
             </div>

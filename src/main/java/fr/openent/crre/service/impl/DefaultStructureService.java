@@ -157,7 +157,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler) {
         String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
-                "where s.id IN {ids} RETURN distinct u.level, count(u), s.id;";
+                "where s.id IN {ids} RETURN distinct u.sector, count(u), s.id;";
         neo4j.execute(query, new JsonObject().put("ids", structureIds), Neo4jResult.validResultHandler(handler));
     }
 
@@ -232,22 +232,40 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             JsonObject j = students.getJsonObject(i);
             String s = j.getString("s.id");
             Integer count = j.getInteger("count(u)");
-            if (j.getString("u.level") != null) {
-                switch (j.getString("u.level")) {
-                    case "SECONDE GENERALE & TECHNO YC BT": {
+            if (j.getString("u.sector") != null) {
+                switch (j.getString("u.sector")) {
+                    case "SECONDE GENERALE": {
                         query += "UPDATE " + Crre.crreSchema + ".students SET seconde = ?, total_april = total_april + ?, " +
                                 "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
-                    case "PREMIERE GENERALE & TECHNO YC BT": {
+                    case "1ERE GENERALE": {
                         query += "UPDATE " + Crre.crreSchema + ".students SET premiere = ?, total_april = total_april + ?, " +
                                 "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
                     }
-                    case "TERMINALE GENERALE & TECHNO YC BT": {
+                    case "TERMINALE GENERALE": {
                         query += "UPDATE " + Crre.crreSchema + ".students SET terminale = ?, total_april = total_april + ?, " +
+                                "general = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "SECONDE TECHNOLOGIQUE SPECIFIQUE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET secondetechno = ?, total_april = total_april + ?, " +
+                                "general = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "1ERE  TECHNOLOGIQUE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET premieretechno = ?, total_april = total_april + ?, " +
+                                "general = true WHERE id_structure = ?; ";
+                        params.add(count).add(count).add(s);
+                        break;
+                    }
+                    case "TERMINALE TECHNOLOGIQUE": {
+                        query += "UPDATE " + Crre.crreSchema + ".students SET terminaletechno = ?, total_april = total_april + ?, " +
                                 "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
                         break;
@@ -361,8 +379,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT seconde, premiere, terminale, premierepro, terminalepro, secondepro, cap1, cap2, cap3, bma1, bma2, " +
-                "seconde + premiere + terminale + premierepro + terminalepro + secondepro + cap1 + cap2 + cap3 + bma1 + bma2 as total, " +
+        String query = "SELECT seconde, premiere, terminale, premierepro, terminalepro, secondepro, secondetechno, premieretechno, terminaletechno, cap1, cap2, cap3, bma1, bma2, " +
+                "seconde + premiere + terminale + secondetechno + premieretechno + terminaletechno + premierepro + terminalepro + secondepro + cap1 + cap2 + cap3 + bma1 + bma2 as total, " +
                 "total_april, pro, general " +
                 "FROM " + Crre.crreSchema + ".students " +
                 "WHERE id_structure = ?";

@@ -327,9 +327,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     private String selectOrderRegion(boolean old) {
         String selectOld = old ? ", ore.equipment_image as image, ore.equipment_name as name, ore.equipment_price as price, oce.offers as offers, s.name as status_name, s.id as status_id " : "";
         String query = "SELECT ore.*, to_json(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
-                "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id " + selectOld +
+                "to_json(oce.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, " +
+                "st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2 " + selectOld +
                 "FROM  " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore " +
-                "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id ";
+                "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oce ON ore.id_order_client_equipment = oce.id " +
+                "LEFT JOIN " + Crre.crreSchema + ".students st on (oce.id_structure = st.id_structure) ";
         if (old) {
             query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status " +
                     "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON bo.id = oce.id_basket " +
@@ -343,7 +345,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     private String groupOrderRegion(boolean old, String query) {
-        query += "GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name, bo.id";
+        query += "GROUP BY ore.id, campaign.name, campaign.use_credit, campaign.*, p.title, oce.id, bo.name, bo.id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, " +
+                "st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2";
         if (old) {
             query += ", s.name, s.id";
         }

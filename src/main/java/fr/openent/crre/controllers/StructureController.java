@@ -45,6 +45,12 @@ public class StructureController extends ControllerHelper {
     private static final String SECONDE = "seconde";
     private static final String PREMIERE = "premiere";
     private static final String TERMINALE = "terminale";
+
+    private static final String SECONDETECHNO = "secondetechno";
+
+    private static final String PREMIERETECHNO = "premieretechno";
+
+    private static final String TERMINALETECHNO = "terminaletechno";
     private static final String SECONDEPRO = "secondepro";
     private static final String PREMIEREPRO = "premierepro";
     private static final String TERMINALEPRO = "terminalepro";
@@ -173,7 +179,7 @@ public class StructureController extends ControllerHelper {
                 for (int i = 0; i < structure_id.size(); i++) {
                     ids.add(structure_id.getJsonObject(i).getString(ID_STRUCTURE));
                 }
-                structureService.insertStudentsInfos(ids, defaultResponseHandler(request));
+                structureService.   insertStudentsInfos(ids, defaultResponseHandler(request));
             } else {
                 log.error("Failed to get all structures",structures.left());
                 renderJson(request, new JsonObject().put("message", "error"));

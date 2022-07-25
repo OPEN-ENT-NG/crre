@@ -105,7 +105,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsLicences(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT seconde, premiere, terminale, secondepro, premierepro, terminalepro, cap1, cap2, cap3, " +
+        String query = "SELECT seconde, premiere, terminale, secondetechno, premieretechno, terminaletechno, secondepro, premierepro, terminalepro, cap1, cap2, cap3, " +
                 "bma1, bma2, pro, l.* " +
                 "FROM " + Crre.crreSchema + ".licences l " +
                 "FULL JOIN " + Crre.crreSchema + ".students s ON (s.id_structure = l.id_structure) "+
