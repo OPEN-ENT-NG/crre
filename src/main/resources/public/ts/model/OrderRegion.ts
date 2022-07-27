@@ -141,10 +141,18 @@ export class OrdersRegion extends Selection<OrderRegion> {
 
     async generateLibraryOrder():Promise<any> {
         try {
-            let params_id_order = Utils.formatKeyToParameter(this.all, 'id');
-            let params_id_equipment = Utils.formatKeyToParameter(this.all, "equipment_key");
-            let params_id_structure = Utils.formatKeyToParameter(this.all, "id_structure");
-            return await  http.post(`/crre/region/orders/library?${params_id_order}&${params_id_equipment}&${params_id_structure}`);
+            let params_id_equipment = new Set();
+            let params_id_structure = new Set();
+            let params_id_order = this.all.map(order => order.id);
+            this.all.forEach(order => params_id_equipment.add(order.equipment_key));
+            this.all.forEach(order => params_id_structure.add(order.id_structure));
+
+            let data = {
+                idsStructures: params_id_structure,
+                idsEquipments: params_id_equipment,
+                idsOrders: params_id_order,
+            };
+            return await  http.post(`/crre/region/orders/library`, data);
         } catch (e) {
             toasts.warning('crre.order.update.error');
             throw e;

@@ -4,11 +4,10 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
+import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.ArrayUtils;
@@ -28,9 +27,9 @@ import java.util.regex.Pattern;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
+import static fr.openent.crre.controllers.OrderController.exportStudents;
 import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
-import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
@@ -659,7 +658,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "Titre de la ressource;" +
                 "Editeur;" +
                 "Distributeur;" +
-                "Numérique;" +
+                "Numerique;" +
                 "Id de l'offre choisie;" +
                 "Type;" +
                 "Reassort;" +
@@ -670,7 +669,21 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "Prix unitaire TTC;" +
                 "Montant total HT;" +
                 "Prix total TTC;" +
-                "Commentaire" +
+                "Commentaire;" +
+                "2nde Generale;" +
+                "1ere Generale;" +
+                "Terminale Generale;" +
+                "2nde Technologique;" +
+                "1ere Technologique;" +
+                "Terminale Technologique;" +
+                "2nde Professionnelle;" +
+                "1ere Professionnelle;" +
+                "Terminale Professionnelle;" +
+                "BMA 1ere annee;" +
+                "BMA 2nde annee;" +
+                "CAP 1ere annee;" +
+                "CAP 2eme annee;" +
+                "CAP 3eme annee" +
                 "\n";
     }
 
@@ -690,8 +703,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
                 (log.getString("typeCatalogue") != null ? log.getString("typeCatalogue") : "") + ";" +
                 (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
-                exportPriceComment(log)
-                + "\n";
+                exportPriceComment(log) +
+                exportStudents(log) +
+                "\n";
     }
 
 

@@ -19,7 +19,6 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
@@ -32,7 +31,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -48,8 +46,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -58,12 +54,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static fr.openent.crre.controllers.LogController.UTF8_BOM;
-import static fr.openent.crre.controllers.OrderController.exportPriceComment;
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
-import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -701,11 +694,12 @@ public class OrderRegionController extends BaseController {
                                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
                                 String justification = orders.getString("justification");
                                 JsonArray ordersList = orders.getJsonArray("orders");
-                                for (int i = 0; i < ordersList.size(); i++) {
-                                    JsonObject newOrder = ordersList.getJsonObject(i);
-                                    Double price = Double.parseDouble(newOrder.getDouble("price").toString());
-                                    orderRegionService.updateOrders(ids, status, justification, event -> {
-                                        if (event.isRight()) {
+                                orderRegionService.updateOrders(ids, status, justification, event -> {
+                                    if (event.isRight()) {
+                                        for (int i = 0; i < ordersList.size(); i++) {
+                                            JsonObject newOrder = ordersList.getJsonObject(i);
+                                            Double price = Double.parseDouble(newOrder.getDouble("price").toString());
+
                                             if (newOrder.getString("status").equals("REJECTED")) {
                                                 if (status.equals("valid")) {
                                                     updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
@@ -719,20 +713,14 @@ public class OrderRegionController extends BaseController {
                                                             .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
                                                 }
                                             }
-                                            Logging.defaultResponsesHandler(eb,
-                                                    request,
-                                                    Contexts.ORDERREGION.toString(),
-                                                    Actions.UPDATE.toString(),
-                                                    params,
-                                                    null);
-                                            request.response().setStatusCode(200).end();
-                                        } else {
-                                            LOGGER.error("An error when you want get id after create order region ",
-                                                    event.left().getValue());
-                                            request.response().setStatusCode(400).end();
                                         }
-                                    });
-                                }
+                                        request.response().setStatusCode(200).end();
+                                    } else {
+                                        LOGGER.error("An error when you want get id after create order region ",
+                                                event.left().getValue());
+                                        request.response().setStatusCode(400).end();
+                                    }
+                                });
                             } catch (ClassCastException e) {
                                 log.error("An error occurred when casting order id", e);
                             }
@@ -858,22 +846,23 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void exportLibrary(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            List<String> idsOrders = request.params().getAll("id");
-            List<String> idsEquipments = request.params().getAll("equipment_key");
-            List<String> idsStructures = request.params().getAll("id_structure");
-            generateLogs(request, idsOrders, idsEquipments, idsStructures, user, true, true);
+        RequestUtils.bodyToJson(request, orderRegions -> {
+            UserUtils.getUserInfos(eb, request, user -> {
+                List<Integer> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
+                List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
+                List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
+                generateLogs(request, idsOrders, idsEquipments, idsStructures, user, true, true);
+            });
         });
     }
 
     private void generateLogs(HttpServerRequest
-                                      request, List<String> params, List<String> idsEquipment, List<String> structuresList,
+                                      request, List<Integer> idsOrders, List<String> idsEquipments, List<String> idsStructures,
                               UserInfos user, Boolean old, boolean library) {
         JsonArray idStructures = new JsonArray();
-        for (String structureId : structuresList) {
+        for (String structureId : idsStructures) {
             idStructures.add(structureId);
         }
-        List<Integer> idsOrders = SqlQueryUtils.getIntegerIds(params);
         Future<JsonArray> structureFuture = Future.future();
         Future<JsonArray> orderRegionFuture = Future.future();
         Future<JsonArray> equipmentsFuture = Future.future();
@@ -903,7 +892,7 @@ public class OrderRegionController extends BaseController {
             orderRegionService.getOrdersRegionById(idsOrders, old, handlerJsonArray(orderRegionFuture));
         }
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
-        searchByIds(idsEquipment, handlerJsonArray(equipmentsFuture));
+        searchByIds(idsEquipments, handlerJsonArray(equipmentsFuture));
     }
 
     private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray
@@ -965,6 +954,5 @@ public class OrderRegionController extends BaseController {
                         }
                     }
                 });
-
     }
 }

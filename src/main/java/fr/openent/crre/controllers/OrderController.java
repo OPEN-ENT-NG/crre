@@ -528,7 +528,24 @@ public class OrderController extends ControllerHelper {
                 (log.getDouble("unitedPriceTTC") != null ? convertPriceString(log.getDouble("unitedPriceTTC")) : "") + ";" +
                 (log.getDouble("totalPriceHT") != null ? convertPriceString(log.getDouble("totalPriceHT")) : "") + ";" +
                 (log.getDouble("totalPriceTTC") != null ? convertPriceString(log.getDouble("totalPriceTTC")) : "") + ";" +
-                (log.getString("comment") != null ? log.getString("comment") : "");
+                (log.getString("comment") != null ? log.getString("comment") : "") + ";";
+    }
+
+    public static String exportStudents(JsonObject log) {
+        return (log.getInteger("seconde") != null ? log.getInteger("seconde").toString() : "") + ";" +
+                (log.getInteger("premiere") != null ? log.getInteger("premiere").toString() : "") + ";" +
+                (log.getInteger("terminale") != null ? log.getInteger("terminale").toString() : "") + ";" +
+                (log.getInteger("secondetechno") != null ? log.getInteger("secondetechno").toString() : "") + ";" +
+                (log.getInteger("premieretechno") != null ? log.getInteger("premieretechno").toString() : "") + ";" +
+                (log.getInteger("terminaletechno") != null ? log.getInteger("terminaletechno").toString() : "") + ";" +
+                (log.getInteger("secondepro") != null ? log.getInteger("secondepro").toString() : "") + ";" +
+                (log.getInteger("premierepro") != null ? log.getInteger("premierepro").toString() : "") + ";" +
+                (log.getInteger("terminalepro") != null ? log.getInteger("terminalepro").toString() : "") + ";" +
+                (log.getInteger("bma1") != null ? log.getInteger("bma1").toString() : "") + ";" +
+                (log.getInteger("bma2") != null ? log.getInteger("bma2").toString() : "") + ";" +
+                (log.getInteger("cap1") != null ? log.getInteger("cap1").toString() : "") + ";" +
+                (log.getInteger("cap2") != null ? log.getInteger("cap2").toString() : "") + ";" +
+                (log.getInteger("cap3") != null ? log.getInteger("cap3").toString() : "");
     }
 
     @Put("/orders/valid")

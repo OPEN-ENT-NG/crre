@@ -240,7 +240,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                         params.add(count).add(count).add(s);
                         break;
                     }
-                    case "1ERE GENERALE": {
+                    case "1ERE  GENERALE": {
                         query += "UPDATE " + Crre.crreSchema + ".students SET premiere = ?, total_april = total_april + ?, " +
                                 "general = true WHERE id_structure = ?; ";
                         params.add(count).add(count).add(s);
