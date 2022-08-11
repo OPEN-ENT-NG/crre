@@ -142,7 +142,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
     private void getCampaignsInfo(String idStructure, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT campaign.*, count(DISTINCT rel_group_structure.id_structure) as nb_structures, " +
-                "tc.name as type_name, jsonb(distinct array_to_json(array_agg(distinct groupe))) as groups " +
+                "tc.name as type_name, jsonb(array_to_json(array_agg(distinct groupe))) as groups " +
                 "FROM " + Crre.crreSchema + ".campaign " +
                 "LEFT JOIN " +
                     "(SELECT rel_group_campaign.id_campaign, structure_group.* as tags " +
