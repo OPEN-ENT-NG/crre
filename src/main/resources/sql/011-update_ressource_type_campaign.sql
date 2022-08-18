@@ -1,0 +1,1 @@
+UPDATE crre.type_campaign SET name = 'Type Ressources numériques', catalog = 'Catalogue numérique Ressources' where id = 8
