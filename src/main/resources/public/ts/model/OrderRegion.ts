@@ -160,11 +160,11 @@ export class OrdersRegion extends Selection<OrderRegion> {
     }
 
     async getOrdersFromProjects(projets: Projects, filterRejectedSentOrders : boolean, old: boolean):Promise<any> {
-        let params = '';
-        projets.all.map((project) => {
-            params += `project_id=${project.id}&`;
-        });
-        params = params.slice(0, -1);
-        return http.get(`/crre/ordersRegion/orders?${params}&filterRejectedSentOrders=${filterRejectedSentOrders}&old=${old}`);
+        let params_id_project = projets.all.map(project => project.id);
+
+        let data = {
+            idsProjects: params_id_project
+        };
+        return http.post(`/crre/ordersRegion/orders?filterRejectedSentOrders=${filterRejectedSentOrders}&old=${old}`, data);
     }
 }

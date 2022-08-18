@@ -557,24 +557,24 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    @Get("/ordersRegion/orders")
+    @Post("/ordersRegion/orders")
     @ApiDoc("get all orders of each project")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void getOrdersByProjects(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
-                    && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            Boolean old = Boolean.valueOf(request.getParam("old"));
-            List<String> projectIds = request.params().getAll("project_id");
-            List<Future> futures = new ArrayList<>();
-            for (String id : projectIds) {
-                Future<JsonArray> projectIdFuture = Future.future();
-                futures.add(projectIdFuture);
-                int idProject = Integer.parseInt(id);
-                orderRegionService.getAllOrderRegionByProject(idProject, filterRejectedSentOrders, old, handlerJsonArray(projectIdFuture));
-            }
-            getCompositeFutureAllOrderRegionByProject(request, old, futures);
+        RequestUtils.bodyToJson(request, orderRegions -> {
+            UserUtils.getUserInfos(eb, request, user -> {
+                boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
+                        && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
+                Boolean old = Boolean.valueOf(request.getParam("old"));
+                List<Integer> idsProjects = orderRegions.getJsonArray("idsProjects").getList();                List<Future> futures = new ArrayList<>();
+                for (int id : idsProjects) {
+                    Future<JsonArray> projectIdFuture = Future.future();
+                    futures.add(projectIdFuture);
+                    orderRegionService.getAllOrderRegionByProject(id, filterRejectedSentOrders, old, handlerJsonArray(projectIdFuture));
+                }
+                getCompositeFutureAllOrderRegionByProject(request, old, futures);
+            });
         });
     }
 
