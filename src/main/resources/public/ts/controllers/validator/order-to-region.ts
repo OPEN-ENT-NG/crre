@@ -60,7 +60,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 Utils.safeApply($scope);
             }
             if (projets.all.length > 0) {
-                await $scope.synchroRegionOrders(true, projets, old);
+                await $scope.synchroRegionOrders(true, false, projets, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
@@ -69,14 +69,14 @@ export const orderRegionController = ng.controller('orderRegionController',
             Utils.safeApply($scope);
         };
 
-        $scope.searchProjectAndOrders = async (old = false, all: boolean) => {
+        $scope.searchProjectAndOrders = async (old = false, all: boolean, onlyId:boolean) => {
             let projets = new Projects();
             initProjects();
             all ? $scope.filter.page = null : 0;
             await projets.filter_order(old, $scope.query_name, $scope.filters,
                 $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
             if (projets.all.length > 0) {
-                await $scope.synchroRegionOrders(true, projets, old);
+                await $scope.synchroRegionOrders(true, onlyId, projets, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
@@ -89,11 +89,11 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.query_name = name;
             if ($scope.filters.all.length == 0 && !name) {
                 initProjects();
-                await $scope.synchroRegionOrders(false, null, old);
+                await $scope.synchroRegionOrders(false, false,null, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
-                await $scope.searchProjectAndOrders(old, false);
+                await $scope.searchProjectAndOrders(old, false, false);
             }
         }
 
@@ -180,18 +180,20 @@ export const orderRegionController = ng.controller('orderRegionController',
             return {projets, responses};
         }
 
-        async function filterAndBeautifyOrders(data, old: boolean, projets: Projects) {
+        async function filterAndBeautifyOrders(data, old: boolean, projets: Projects, onlyId: boolean) {
             for (let orders of data) {
                 if (orders.length > 0) {
                     const idProject = orders[0].id_project;
                     if (!old) {
                         orders = orders.filter(filterAll);
-                        let equipments = new Equipments();
-                        await equipments.getEquipments(orders);
-                        for (let order of orders) {
-                            let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
-                            if (equipment && equipment.type === "articlenumerique") {
-                                order.offers = Utils.computeOffer(order, equipment);
+                        if (!onlyId) {
+                            let equipments = new Equipments();
+                            await equipments.getEquipments(orders);
+                            for (let order of orders) {
+                                let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+                                if (equipment && equipment.type === "articlenumerique") {
+                                    order.offers = Utils.computeOffer(order, equipment);
+                                }
                             }
                         }
                     } else {
@@ -234,14 +236,15 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.synchroRegionOrders = async (isSearching: boolean = false, projects?: Projects, old = false, page?: number): Promise<void> => {
+        $scope.synchroRegionOrders = async (isSearching: boolean = false, onlyId: boolean = false, projects?: Projects,
+                                            old = false, page?: number): Promise<void> => {
             if (page == 0) {
                 $scope.filter.page = page;
             }
             let {projets, responses} = await getOrdersOfProjects(isSearching, old, projects);
             if (responses[0]) {
                 const data = responses[0].data;
-                await filterAndBeautifyOrders(data, old, projets);
+                await filterAndBeautifyOrders(data, old, projets, onlyId);
                 let projectWithOrders = new Projects();
                 beautifyProjectsFromOrders(projets, projectWithOrders);
                 if ((!isSearching || projects)) {

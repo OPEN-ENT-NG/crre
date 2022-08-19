@@ -111,7 +111,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         $scope.generateLibraryOrder = async () => {
             let selectedOrders;
             if ($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
-                await $scope.searchProjectAndOrders(false, true)
+                await $scope.searchProjectAndOrders(false, true, true)
                 selectedOrders = $scope.projects.extractAllOrders();
             } else {
                 selectedOrders = $scope.projects.extractSelectedOrders();
@@ -181,7 +181,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 $scope.filtersFront.all.push(newFilterFront);
             }
             if ($scope.filters.all.length > 0) {
-                await $scope.searchProjectAndOrders(false, false);
+                await $scope.searchProjectAndOrders(false, false, false);
             } else {
                 await $scope.searchByName($scope.query_name);
             }
@@ -228,7 +228,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
 
         $scope.exportCSVRegion = async (old: boolean, all: boolean): Promise<void> => {
             if (all) {
-                await $scope.searchProjectAndOrders(false, true)
+                await $scope.searchProjectAndOrders(old, true, true)
                 $scope.projects.exportCSV(old, true);
             } else {
                 $scope.projects.exportCSV(old, false);

@@ -31,7 +31,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 $scope.display.loading = true;
                 $scope.projects.all = [];
                 Utils.safeApply($scope);
-                await $scope.synchroRegionOrders(null, null, $scope.filter.isOld, $scope.filter.page);
+                await $scope.synchroRegionOrders(null,false, null, $scope.filter.isOld, $scope.filter.page);
             }
         };
 
@@ -107,7 +107,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 $scope.filtersFront.all.push(newFilterFront);
             }
             if ($scope.filters.all.length > 0) {
-                await $scope.searchProjectAndOrders($scope.filter.isOld, false);
+                await $scope.searchProjectAndOrders($scope.filter.isOld, false, false);
             } else {
                 await $scope.searchByName($scope.query_name, $scope.filter.isOld);
             }
