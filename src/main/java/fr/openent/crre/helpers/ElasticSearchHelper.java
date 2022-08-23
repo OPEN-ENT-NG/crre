@@ -1,12 +1,12 @@
 package fr.openent.crre.helpers;
 
+import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.elasticsearch.ElasticSearch;
 
 import java.util.*;
 import java.util.regex.Pattern;

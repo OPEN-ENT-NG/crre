@@ -4,6 +4,7 @@ import fr.openent.crre.controllers.*;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.cron.updateStatus;
+import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
 import fr.openent.crre.service.impl.ExportWorker;
 import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.DeploymentOptions;
@@ -52,6 +53,12 @@ public class Crre extends BaseServer {
             );
         } catch (Exception e) {
             log.error("Invalid CRRE cron expression.", e);
+        }
+
+        if (this.config.getBoolean("elasticsearch", false)) {
+            if (this.config.getJsonObject("elasticsearchConfig") != null) {
+                ElasticSearch.getInstance().init(this.vertx, this.config.getJsonObject("elasticsearchConfig"));
+            }
         }
 
         addController(new CrreController());
