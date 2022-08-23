@@ -566,20 +566,32 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     private void getUniqueTypeCatalogue(JsonObject order, JsonObject equipment) {
-        if (order.getString("use_credit").equals("consumable_licences")) {
-            if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
-                    ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
-                order.put("typeCatalogue", "Consommable");
+        if(equipment.getString("typeCatalogue").contains("|")) {
+            if (order.getString("use_credit").contains("consumable")) {
+                if(equipment.getString("type").equals("articlepapier")){
+                    order.put("typeCatalogue", "AO_IDF_CONSO");
+                } else {
+                    order.put("typeCatalogue", "Consommable");
+                }
             } else {
-                order.put("typeCatalogue", "ao_idf_conso");
+                if(equipment.getString("type").equals("articlepapier")){
+                    JsonObject campaign = order.getJsonObject("campaign", new JsonObject());
+                    String catalog = campaign.getString("catalog", "");
+                    if(catalog.contains("pro") || !equipment.getString("typeCatalogue").contains("AO_IDF_PAP")){
+                        order.put("typeCatalogue", "AO_IDF_PAP_PRO");
+                    } else {
+                        order.put("typeCatalogue", "AO_IDF_PAP");
+                    }
+                } else {
+                    if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Ressource")) {
+                        order.put("typeCatalogue", "Ressource");
+                    } else {
+                        order.put("typeCatalogue", "Numerique");
+                    }
+                }
             }
         } else {
-            if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Numerique") ||
-                    ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Consommable")) {
-                order.put("typeCatalogue", "Numerique");
-            } else {
-                order.put("typeCatalogue", "ao_idf_pap");
-            }
+            order.put("typeCatalogue", equipment.getString("typeCatalogue"));
         }
     }
 

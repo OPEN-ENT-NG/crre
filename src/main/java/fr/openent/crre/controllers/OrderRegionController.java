@@ -851,14 +851,13 @@ public class OrderRegionController extends BaseController {
                 List<Integer> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
                 List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
                 List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
-                generateLogs(request, idsOrders, idsEquipments, idsStructures, user, true, true);
+                generateLogs(request, idsOrders, idsEquipments, idsStructures, user);
             });
         });
     }
 
-    private void generateLogs(HttpServerRequest
-                                      request, List<Integer> idsOrders, List<String> idsEquipments, List<String> idsStructures,
-                              UserInfos user, Boolean old, boolean library) {
+    private void generateLogs(HttpServerRequest request, List<Integer> idsOrders, List<String> idsEquipments,
+                              List<String> idsStructures, UserInfos user) {
         JsonArray idStructures = new JsonArray();
         for (String structureId : idsStructures) {
             idStructures.add(structureId);
@@ -874,23 +873,11 @@ public class OrderRegionController extends BaseController {
                 JsonArray equipments = equipmentsFuture.result();
                 JsonArray ordersClient = new JsonArray(), ordersRegion = new JsonArray();
                 orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClient, ordersRegion);
-                if (library) {
-                    sendMailLibraryAndRemoveWaitingAdmin(request, user, structures, orderRegion, ordersClient, ordersRegion);
-                } else {
-                    //Export CSV
-                    request.response()
-                            .putHeader("Content-Type", "text/csv; charset=utf-8")
-                            .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                            .end(orderRegionService.generateExport(orderRegion));
-                }
+                sendMailLibraryAndRemoveWaitingAdmin(request, user, structures, orderRegion, ordersClient, ordersRegion);
 
             }
         });
-        if (library) {
-            orderRegionService.getOrdersRegionById(idsOrders, false, handlerJsonArray(orderRegionFuture));
-        } else {
-            orderRegionService.getOrdersRegionById(idsOrders, old, handlerJsonArray(orderRegionFuture));
-        }
+        orderRegionService.getOrdersRegionById(idsOrders, false, handlerJsonArray(orderRegionFuture));
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
         searchByIds(idsEquipments, handlerJsonArray(equipmentsFuture));
     }
