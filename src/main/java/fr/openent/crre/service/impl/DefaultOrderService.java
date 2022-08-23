@@ -109,7 +109,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void getTotalAmountOrder(String status, String idStructure, UserInfos user, String startDate, String endDate, JsonArray filters,
                                     Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT oce.id, oce.amount " +
+        String query = "SELECT DISTINCT oce.id, oce.amount " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
                 "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
@@ -147,7 +147,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     @Override
     public void listOrderCredit(String status, String idStructure, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT oce.equipment_key, oce.amount, c.use_credit, oce.id " +
+        String query = "SELECT DISTINCT oce.equipment_key, oce.amount, c.use_credit, oce.id " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
                 "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
