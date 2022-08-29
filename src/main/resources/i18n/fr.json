@@ -5,6 +5,7 @@
   "crre.order.refused": "Commande(s) refusée(s)",
   "crre.order.refused.succes": "Commande(s) refusée(s) avec succès",
   "crre.export.order.region.success": "Commande Région en cours d'exportation, vous les trouverez dans votre espace documentaire",
+  "crre.order.error.purse": "Une erreur est survenue lors de la mise à jour des crédits des établissements : Il est possible qu'un des établissements ne dispose pas de fond suffisant pour répondre à votre requête",
   "crre.order.refused.error": "Une erreur est survenue lors du refus d'une commande",
   "crre.order.update.error": "Une erreur est survenue lors de la mis à jour d'une commande",
   "crre.order.getMine.error": "Une erreur est survenue lors de la récupération des commandes",

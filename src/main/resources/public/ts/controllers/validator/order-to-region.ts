@@ -5,7 +5,7 @@ import {
     FiltersFront,
     Offer,
     Offers,
-    OrdersRegion,
+    OrdersRegion, Project,
     Projects,
     StructureGroups,
     Structures,
@@ -171,10 +171,29 @@ export const orderRegionController = ng.controller('orderRegionController',
             } else {
                 projets = (projects) ? projects : $scope.projects;
             }
-            let promesses = [await new OrdersRegion().getOrdersFromProjects(projets,
-                !isSearching && !$scope.selectedType.split('/').includes('historic'), old)];
+            let promesses = [];
+            let projetsSplit = new Projects();
+            projets.forEach(projet => {
+                if (projet.count > 500) {
+                    if(projetsSplit.all.length > 0){
+                        promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
+                            !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
+                        projetsSplit = new Projects();
+                    }
+                    projetsSplit.push(projet);
+                    promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
+                        !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
+                    projetsSplit = new Projects();
+                } else {
+                    projetsSplit.push(projet);
+                }
+            });
+            if(projetsSplit.all.length > 0){
+                promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
+                    !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
+            }
             if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
-                promesses.push($scope.structures.sync($scope.structuresInRegroupement));
+                $scope.structures.sync($scope.structuresInRegroupement);
             }
             const responses = await Promise.all(promesses);
             return {projets, responses};
@@ -230,7 +249,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                         project.uai = structure.uai;
                         project.structure_name = structure.name;
                     }
-                    project.expanded = true;
+                    project.expanded = project.orders.length <= 500;
                     projectWithOrders.all.push(project);
                 }
             }
@@ -243,7 +262,10 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
             let {projets, responses} = await getOrdersOfProjects(isSearching, old, projects);
             if (responses[0]) {
-                const data = responses[0].data;
+                let data = [];
+                responses.forEach(response => {
+                    data = data.concat(response.data);
+                });
                 await filterAndBeautifyOrders(data, old, projets, onlyId);
                 let projectWithOrders = new Projects();
                 beautifyProjectsFromOrders(projets, projectWithOrders);
@@ -252,6 +274,10 @@ export const orderRegionController = ng.controller('orderRegionController',
                 } else {
                     $scope.projects = projectWithOrders;
                 }
+                $scope.display.loading = false;
+                Utils.safeApply($scope);
+            } else {
+                $scope.projects.all = [];
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
             }

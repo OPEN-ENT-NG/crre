@@ -104,21 +104,21 @@
                 </tr>
                 </thead>
                 <tbody ng-repeat="project in projects.all">
-                <tr ng-click="project.expanded = !project.expanded">
+                <tr>
                     <td class="table-selector">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="project.selected" ng-change="switchAllOrdersOfProject(project); checkSwitchAll();"/>
                             <span></span>
                         </label>
                     </td>
-                    <td><div class="smallTabElem center">[[project.creation_date]]</div></td>
-                    <td><div class="TabElem ellipsis center">[[project.structure_name]]</div></td>
-                    <td><div class="smallTabElem center">[[project.uai]]</div></td>
-                    <td><div class="smallTabElem ellipsis center">[[project.title]]</div></td>
-                    <td><div class="smallTabElem ellipsis center" tooltip="[[project.campaign_name]]">[[project.campaign_name]]</div></td>
-                    <td><div class="smallTabElem center">[[project.amount]]</div></td>
-                    <td><div class="smallTabElem center">[[project.total]]</div></td>
-                    <td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.creation_date]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="TabElem ellipsis center">[[project.structure_name]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.uai]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem ellipsis center">[[project.title]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem ellipsis center" tooltip="[[project.campaign_name]]">[[project.campaign_name]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.amount]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.total]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded">
                         <div class="smallTabElem status center ellipsis" ng-if="project.status == 'IN PROGRESS'" tooltip="crre.new">
                             <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
                             <span class="zero-mobile"><i18n>crre.new</i18n></span>

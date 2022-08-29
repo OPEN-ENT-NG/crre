@@ -14,6 +14,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -50,7 +51,7 @@ public class QuoteController extends BaseController {
             quoteService.getQuote(id, quote -> {
                 if(quote.isRight()) {
                     JsonObject quoteResult = quote.right().getValue();
-                    String attachment = quoteResult.getString("attachment");
+                    String attachment = new String(Base64.getDecoder().decode(quoteResult.getString("attachment")), StandardCharsets.UTF_8);
                     String title = quoteResult.getString("title");
                     request.response()
                             .putHeader("Content-Type", "text/csv; charset=utf-8")

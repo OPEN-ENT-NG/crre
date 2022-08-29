@@ -150,6 +150,21 @@ export class Baskets extends Selection<Basket> {
             toasts.warning('crre.basket.create.err');
         }
     }
+
+    async create () {
+        let baskets = [];
+        this.all.map((basket: Basket) => {
+            let basketToCreate = {
+                amount: basket.amount,
+                processing_date : basket.processing_date,
+                equipment : basket.equipment.ean,
+                id_campaign : basket.id_campaign,
+                id_structure : basket.id_structure,
+            };
+            baskets.push(basketToCreate);
+        });
+        return http.post(`/crre/baskets/campaign`, baskets);
+    }
 }
 
 export class BasketOrder implements Selectable {

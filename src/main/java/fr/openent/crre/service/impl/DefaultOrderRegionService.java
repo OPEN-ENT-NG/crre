@@ -4,7 +4,6 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
-import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -30,6 +29,7 @@ import static fr.openent.crre.controllers.OrderController.exportPriceComment;
 import static fr.openent.crre.controllers.OrderController.exportStudents;
 import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
+import static java.lang.Math.min;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
@@ -130,7 +130,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                String idStructure, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
-                "SELECT DISTINCT (p.*), ore.creation_date " +
+                "SELECT DISTINCT (p.*), ore.creation_date, count(ore.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
                 "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ");
@@ -146,7 +146,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             query.append(" AND ore.id_structure = ?");
             values.add(idStructure);
         }
-        query.append(" ORDER BY ore.creation_date DESC ");
+        query.append(" GROUP BY p.id, ore.creation_date ORDER BY ore.creation_date DESC ");
         if (page != null) {
             query.append("OFFSET ? LIMIT ? ");
             values.add(PAGE_SIZE * page);
@@ -173,7 +173,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                        Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date " +
+        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date, count(ore.*) " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
@@ -257,7 +257,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 count++;
             }
         }
-        sqlquery = sqlquery + " ORDER BY ore.creation_date DESC ";
+        sqlquery = sqlquery + " GROUP BY p.id, ore.creation_date ORDER BY ore.creation_date DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);
@@ -278,29 +278,30 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handler) throws ParseException {
+    public void recursiveInsertOldOrders(JsonArray orderRegions, boolean isRenew, int e,
+                                         Handler<Either<String, JsonObject>> handler) throws ParseException {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "" +
+        StringBuilder query = new StringBuilder("" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
                 " (" +
                 ((isRenew) ? "" : "id,") +
                 "amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
-                " comment, id_order_client_equipment, id_project, reassort, id_status, total_free) VALUES ";
+                " comment, id_order_client_equipment, id_project, reassort, id_status, total_free) VALUES ");
 
-        for (int i = 0; i < orderRegions.size(); i++) {
+        for (int i = e * 500; i < min((e +1) * 500, orderRegions.size()); i++) {
             if (orderRegions.getJsonObject(i).containsKey("id_project")) {
-                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+                query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
                 JsonObject order = orderRegions.getJsonObject(i);
                 String creation_date;
                 if (isRenew) {
-                    query += ") ,";
+                    query.append(") ,");
                     Date date = new SimpleDateFormat("dd/MM/yyyy").parse(order.getString("creation_date"));
                     creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
                 } else {
                     params.add(order.getLong("id"));
-                    query += ", ?) ,";
+                    query.append(", ?) ,");
                     Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
                     creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
                 }
@@ -309,7 +310,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(creation_date)
                         .add(order.getString("owner_name"))
                         .add(order.getString("owner_id"))
-                        .add(order.getString("status"))
+                        .add((!isRenew) ? "SENT" : order.getString("status"))
                         .add(order.getString("equipment_key"));
                 setOrderValuesSQL(params, order);
                 params.add(order.getInteger("id_order_client_equipment"))
@@ -319,8 +320,33 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getInteger("total_free", null));
             }
         }
-        query = query.substring(0, query.length() - 1);
-        Sql.getInstance().prepared(query, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validUniqueResultHandler(handler));
+        query = new StringBuilder(query.substring(0, query.length() - 1));
+        if(params.size() > 0) {
+            launchSQL(params, query, sql -> {
+                if (sql.isRight()) {
+                    nextIterationOrdersRegion(orderRegions, isRenew, e, handler);
+                } else {
+                    handler.handle(new Either.Left<>("[CRRE@DefaultOrderRegionService.recursiveInsertOldOrders] " +
+                            "An error has occurred : " + sql.left().getValue()));
+                }
+            });
+        } else {
+            nextIterationOrdersRegion(orderRegions, isRenew, e, handler);
+        }
+    }
+
+    private void nextIterationOrdersRegion(JsonArray orderRegions, boolean isRenew, int e, Handler<Either<String, JsonObject>> handler) {
+        if ((e + 1) * 500 >= orderRegions.size()) {
+            handler.handle(new Either.Right<>(new JsonObject()));
+        } else {
+            try {
+                recursiveInsertOldOrders(orderRegions, isRenew, e + 1, handler);
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+                handler.handle(new Either.Left<>(ex.getMessage()));
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     private String selectOrderRegion(boolean old) {
@@ -364,20 +390,19 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getString("id_structure", ""))
                 .add(order.getString("comment"));
     }
-
     @Override
-    public void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException {
+    public void recursiveInsertOldClientOrders(JsonArray orderRegions, int e,
+                                               Handler<Either<String, JsonObject>> handler) throws ParseException {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "" +
+        StringBuilder query = new StringBuilder("" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order_client_equipment_old\"" +
                 " (id, amount, creation_date, user_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
-                " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ";
-
-        for (int i = 0; i < orderRegions.size(); i++) {
+                " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ");
+        for (int i = e * 500; i < min((e +1) * 500, orderRegions.size()); i++) {
             if (orderRegions.getJsonObject(i).containsKey("id_project")) {
-                query += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),";
+                query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
                 JsonObject order = orderRegions.getJsonObject(i);
                 Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
                 String creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
@@ -385,7 +410,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getInteger("amount"))
                         .add(creation_date)
                         .add(order.getString("owner_id"))
-                        .add(order.getString("status"))
+                        .add("SENT")
                         .add(order.getString("equipment_key"));
                 setOrderValuesSQL(params, order);
                 if (order.containsKey("offers")) {
@@ -399,8 +424,38 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getDouble("priceht"));
             }
         }
-        query = query.substring(0, query.length() - 1);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        query = new StringBuilder(query.substring(0, query.length() - 1));
+        if(params.size() > 0) {
+            launchSQL(params, query, sql -> {
+                if (sql.isRight()) {
+                    nextIterationOrders(orderRegions, e, handler);
+                } else {
+                    handler.handle(new Either.Left<>("[CRRE@DefaultOrderRegionService.recursiveinsertOldClientOrders] " +
+                            "An error has occurred : " + sql.left().getValue()));
+                }
+            });
+        } else {
+            nextIterationOrders(orderRegions, e, handler);
+        }
+    }
+
+    private void nextIterationOrders(JsonArray orderRegions, int e, Handler<Either<String, JsonObject>> handler) {
+        if ((e + 1) * 500 >= orderRegions.size()) {
+            handler.handle(new Either.Right<>(new JsonObject()));
+        } else {
+            try {
+                recursiveInsertOldClientOrders(orderRegions, e + 1, handler);
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+                handler.handle(new Either.Left<>(ex.getMessage()));
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    private static void launchSQL(JsonArray params, StringBuilder query, Handler<Either<String, JsonObject>> handler) {
+        Sql.getInstance().prepared(query.toString(), params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     private void formatOffers(JsonObject order) {
@@ -448,16 +503,27 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void deletedOrders(JsonArray orders, String table, Handler<Either<String, JsonObject>> handlerJsonObject) {
+    public void deletedOrdersRecursive(JsonArray orders, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" as t " +
-                "WHERE t.id IN ( ";
-        for (int i = 0; i < orders.size(); i++) {
-            query += "?,";
+        StringBuilder query = new StringBuilder("DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" as t " +
+                "WHERE t.id IN ( ");
+        for (int i = e * 25000; i < min((e +1) * 25000, orders.size()); i++) {
+            query.append("?,");
             params.add(orders.getLong(i));
         }
-        query = query.substring(0, query.length() - 1) + ")";
-        sql.prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
+        query = new StringBuilder(query.substring(0, query.length() - 1) + ")");
+        launchSQL(params, query, sql -> {
+            if (sql.isRight()) {
+                if ((e + 1) * 25000 >= orders.size()) {
+                    handlerJsonObject.handle(new Either.Right<>(new JsonObject()));
+                } else {
+                    deletedOrdersRecursive(orders, table, e + 1, handlerJsonObject);
+                }
+            } else {
+                handlerJsonObject.handle(new Either.Left<>("[CRRE@DefaultOrderRegionService.deletedOrdersRecursive] " +
+                        "An error has occurred : " + sql.left().getValue()));
+            }
+        });
     }
 
     @Override
@@ -488,7 +554,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray
-            ordersClient, JsonArray ordersRegion) {
+            ordersClientId, JsonArray ordersRegionId) {
         JsonObject order;
         JsonObject equipment;
         for (int i = 0; i < orderRegion.size(); i++) {
@@ -501,8 +567,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                     order.put("creation_date", creation_date);
                 }
-                ordersRegion.add(order.getLong("id"));
-                ordersClient.add(order.getLong("id_order_client_equipment"));
+                ordersRegionId.add(order.getLong("id"));
+                ordersClientId.add(order.getLong("id_order_client_equipment"));
 
                 for (int j = 0; j < equipments.size(); j++) {
                     equipment = equipments.getJsonObject(j);
@@ -518,6 +584,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
                                 priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht") : null);
                         order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
+                        order.put("price", priceDetails.getDouble("priceTTC"));
                         order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                         order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                         extractedEquipmentInfo(order, equipment);
@@ -650,12 +717,19 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return offers;
     }
 
-    public String generateExport(JsonArray logs) {
+    public JsonObject generateExport(JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader());
+        HashSet<String> structures = new HashSet<>();
         for (int i = 0; i < logs.size(); i++) {
-            report.append(generateExportLine(logs.getJsonObject(i)));
+            JsonObject log = logs.getJsonObject(i);
+            report.append(generateExportLine(log));
+            if(log.getString("uai_structure") != null && !log.getString("uai_structure").isEmpty()){
+                structures.add(log.getString("uai_structure"));
+            }
         }
-        return report.toString();
+        return new JsonObject()
+                .put("csvFile", report.toString())
+                .put("nbEtab",structures.size());
     }
 
     private String getExportHeader() {

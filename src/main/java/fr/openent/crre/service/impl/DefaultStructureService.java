@@ -409,7 +409,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 .add(licences)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -423,7 +424,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 .add(licences)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override

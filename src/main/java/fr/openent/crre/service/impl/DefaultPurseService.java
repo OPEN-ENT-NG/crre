@@ -4,6 +4,7 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.service.PurseService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
@@ -245,6 +246,7 @@ public class DefaultPurseService implements PurseService {
                 .add(Math.round(price * cons) / cons)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 }
