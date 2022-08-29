@@ -4,7 +4,10 @@
   "description": "ENT Core application to create CRRE",
   "main": "gulpfile.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "coverage": "./node_modules/.bin/jest --config jest.config.js --coverage",
+    "test": "npm run coverage",
+    "coverage:dev": "./node_modules/.bin/jest --config jest.config.js --coverage --watch --verbose false",
+    "test:dev": "npm run coverage:dev"
   },
   "repository": {
     "type": "git",
@@ -39,6 +42,13 @@
   "devDependencies": {
     "@types/angular": "^1.6.55",
     "@types/jest": "^22.2.0",
-    "@types/jquery": "^2.0.34"
+    "@types/jquery": "^2.0.34",
+    "@types/core-js": "0.9.42",
+    "natives": "^1.1.6",
+    "axios-mock-adapter": "^1.19.0",
+    "gulp-append-prepend": "^1.0.9",
+    "jest": "^24.7.1",
+    "jest-environment-node": "^23.0.0",
+    "ts-jest": "^22.4.2"
   }
 }
