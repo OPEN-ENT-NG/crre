@@ -5,9 +5,7 @@ import fr.openent.crre.cron.statistics;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.PrescriptorRight;
 import fr.openent.crre.service.StatisticsService;
-import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.DefaultStatisticsService;
-import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -24,23 +22,18 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 
 public class StatisticsController extends BaseController {
     private final StatisticsService statisticsService;
-    private final StructureService structureService;
     private final statistics statCron;
     public static final String UTF8_BOM = "\uFEFF";
 
 
     public StatisticsController() {
         this.statisticsService = new DefaultStatisticsService(Crre.crreSchema);
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.statCron = new statistics(Vertx.vertx());
     }
 
@@ -319,8 +312,7 @@ public class StatisticsController extends BaseController {
                 .mergeIn(new JsonObject().put("structuresMoreOneOrder", structuresMoreOneOrderResult))
                 .mergeIn(new JsonObject().put("structures", structuresResult))
                 .mergeIn(allStructures);
-        JsonArray stats = new JsonArray().add(concatStats);
-        return stats;
+        return new JsonArray().add(concatStats);
     }
 
     private JsonObject formatStats(JsonObject stats) {
@@ -349,7 +341,7 @@ public class StatisticsController extends BaseController {
                 total = stats.getJsonArray(key).getJsonObject(0).getInteger("total");
             }
         } else if(stats.getJsonArray(key).size() == 2){
-            total = stats.getJsonArray(key).getJsonObject(publique == "Privé" ? 0 : 1).getInteger("total");
+            total = stats.getJsonArray(key).getJsonObject(Objects.equals(publique, "Privé") ? 0 : 1).getInteger("total");
         }
         return total;
     }
