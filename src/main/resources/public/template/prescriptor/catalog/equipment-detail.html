@@ -96,7 +96,7 @@
                                            ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
                                 </div>
                             </div>
-                            <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'"
+                            <div class="warning right-magnet" ng-show="equipment.status !== 'Disponible'"
                                  style="width: fit-content;">
                                 <div><strong>Statut : </strong>
                                     <span> [[lang.translate(basket.equipment.status)]] </span></div>
@@ -174,7 +174,7 @@
                                        ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
                             </div>
                         </div>
-                        <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'"
+                        <div class="warning right-magnet" ng-show="equipment.status !== 'Disponible'"
                              style="width: fit-content;">
                             <div><strong>Statut : </strong> <span> [[lang.translate(basket.equipment.status)]] </span>
                             </div>
@@ -222,7 +222,7 @@
                                    ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
                                    ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
                         </div>
-                        <div class="warning right-magnet" ng-show="equipment.status !== 'DISPONIBLE'"
+                        <div class="warning right-magnet" ng-show="equipment.status !== 'Disponible'"
                              style="width: fit-content;">
                             <div><strong>Statut : </strong> <span> [[lang.translate(basket.equipment.status)]] </span></div>
                             <div ng-if="basket.equipment.commentaire">

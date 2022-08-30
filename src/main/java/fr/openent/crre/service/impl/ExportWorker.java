@@ -4,7 +4,6 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.StorageService;
 import fr.openent.crre.service.StructureService;
-import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -24,28 +23,28 @@ import org.vertx.java.busmods.BusModBase;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
+import static java.lang.Math.min;
 
 
 public class ExportWorker extends BusModBase implements Handler<Message<JsonObject>> {
-    private Storage storage;
     public static final String ORDER_REGION = "saveOrderRegion";
     private OrderRegionService orderRegionService;
     private StructureService structureService;
     private StorageService storageService;
     private WorkspaceHelper workspaceHelper;
     private static final Logger log = LoggerFactory.getLogger(ExportWorker.class);
-    private JsonObject paramsEB = new JsonObject();
 
     @Override
     public void start() {
         super.start();
         String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
         Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
-        this.storage = new StorageFactory(vertx).getStorage();
+        Storage storage = new StorageFactory(vertx).getStorage();
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.storageService = new DefaultStorageService(storage);
@@ -57,8 +56,8 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
     public void handle(Message<JsonObject> message) {
         message.reply(new JsonObject().put("status", "ok"));
         log.info(String.format("[Crre@%s] ExportWorker called ", this.getClass().getSimpleName()));
-        this.paramsEB = message.body();
-        processExport(this.paramsEB);
+        JsonObject paramsEB = message.body();
+        processExport(paramsEB);
     }
 
 
@@ -103,43 +102,24 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
             idStructures.add((String) structureId);
         }
         List<Integer> listOrders = idsOrders.getList();
+        List<Future> futures = new ArrayList<>();
         Future<JsonArray> structureFuture = Future.future();
-        Future<JsonArray> orderRegionFuture = Future.future();
         Future<JsonArray> equipmentsFuture = Future.future();
+        futures.add(structureFuture);
+        futures.add(equipmentsFuture);
 
-        CompositeFuture.all(structureFuture, orderRegionFuture, equipmentsFuture).setHandler(event -> {
+        getOrderRecursively(old, 0, listOrders, futures);
+
+        CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 JsonArray structures = structureFuture.result();
-                JsonArray orderRegion = orderRegionFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonArray ordersClient = new JsonArray(), ordersRegion = new JsonArray();
-                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClient, ordersRegion);
-                String csvFile = orderRegionService.generateExport(orderRegion);
-                String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
-                JsonObject body = new JsonObject()
-                        .put("name", "CRRE_Export_" + day + ".csv")
-                        .put("format", "csv");
-                final Buffer buff = Buffer.buffer();
-                buff.appendString(csvFile);
-                storageService.add(body, buff, null, addFileEvent -> {
-                    if (addFileEvent.isRight()) {
-                        JsonObject storageEntries = addFileEvent.right().getValue();
-                        String application = config.getString("app-name");
-                        UserUtils.getUserInfos(eb, idUser, user -> {
-                            workspaceHelper.addDocument(storageEntries, user, body.getString("name"), application, false, null, createEvent -> {
-                                if (createEvent.succeeded()) {
-                                    log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
-                                    exportHandler.handle(new Either.Right<>(true));
-                                } else {
-                                    log.error("[Crre@processOrderRegion] Failed to create a workspace document : " +
-                                            createEvent.cause().getMessage());
-                                }
-                            });
-                        });
-                    } else {
-                        log.error("[Crre@createFile] Failed to create a new entry in the storage");
-                    }
-                });
+                JsonArray ordersClientId = new JsonArray(), orderRegion = new JsonArray(), ordersRegionId = new JsonArray();
+                for (int i = 2; i < futures.size(); i++) {
+                    orderRegion.addAll((JsonArray) futures.get(i).result());
+                }
+                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId, ordersRegionId);
+                writeCSVFile(exportHandler, idUser, orderRegion, 0);
             } else {
                 log.error("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage(), event.cause());
                 exportHandler.handle(new Either.Left<>("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage()));
@@ -148,8 +128,54 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
 
         });
 
-        orderRegionService.getOrdersRegionById(listOrders, old, handlerJsonArray(orderRegionFuture));
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
         searchByIds(idsEquipments.getList(), handlerJsonArray(equipmentsFuture));
+    }
+
+    private void writeCSVFile(Handler<Either<String, Boolean>> exportHandler, String idUser, JsonArray orderRegion, int e) {
+        JsonArray orderRegionSplit = new JsonArray();
+        for(int i = e * 100000; i < min((e +1) * 100000, orderRegion.size()); i ++){
+            orderRegionSplit.add(orderRegion.getJsonObject(i));
+        }
+        JsonObject data = orderRegionService.generateExport(orderRegionSplit);
+        String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
+        JsonObject body = new JsonObject()
+                .put("name", "CRRE_Export_" + day + "_" + e + ".csv")
+                .put("format", "csv");
+        final Buffer buff = Buffer.buffer();
+        buff.appendString(data.getString("csvFile"));
+        storageService.add(body, buff, null, addFileEvent -> {
+            if (addFileEvent.isRight()) {
+                JsonObject storageEntries = addFileEvent.right().getValue();
+                String application = config.getString("app-name");
+                UserUtils.getUserInfos(eb, idUser, user -> {
+                    workspaceHelper.addDocument(storageEntries, user, body.getString("name"), application, false, null, createEvent -> {
+                        if (createEvent.succeeded()) {
+                            if ((e + 1) * 100000 < orderRegion.size()) {
+                                writeCSVFile(exportHandler, idUser, orderRegion, e + 1);
+                            } else {
+                                log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
+                                exportHandler.handle(new Either.Right<>(true));
+                            }
+                        } else {
+                            log.error("[Crre@processOrderRegion] Failed to create a workspace document : " +
+                                    createEvent.cause().getMessage());
+                        }
+                    });
+                });
+            } else {
+                log.error("[Crre@createFile] Failed to create a new entry in the storage");
+            }
+        });
+    }
+
+    private void getOrderRecursively(boolean old, int e, List<Integer> listOrders, List<Future> futures) {
+        Future<JsonArray> orderRegionFuture = Future.future();
+        futures.add(orderRegionFuture);
+        List<Integer> subList = listOrders.subList(e * 5000, min((e +1) * 5000, listOrders.size()));
+        orderRegionService.getOrdersRegionById(subList, old, handlerJsonArray(orderRegionFuture));
+        if ((e + 1) * 5000 < listOrders.size()) {
+            getOrderRecursively(old, e + 1, listOrders, futures);
+        }
     }
 }

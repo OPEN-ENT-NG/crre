@@ -1,7 +1,7 @@
 import {idiom as lang, ng, toasts} from 'entcore';
 import {
     Utils,
-    Basket, Equipment, FilterFront, Filter,
+    Basket, Equipment, FilterFront, Filter, Baskets,
 } from "../../model";
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
@@ -36,57 +36,37 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
         };
 
         $scope.reSubmit = async () => {
-            let statusOK = true;
             let totalAmount = 0;
-            let promesses = []
-
-            function prepareAndCreateOrder() {
-                $scope.projects.all.forEach(project => {
-                    project.orders.forEach(async order => {
-                        if (order.selected) {
-                            let equipment = new Equipment();
-                            equipment.ean = order.equipment_key;
-                            let basket = new Basket(equipment, $scope.campaign.id, $scope.current.structure.id);
-                            basket.amount = order.amount;
-                            totalAmount += order.amount;
-                            promesses.push(basket.create());
-                        }
-                    });
-                });
-            }
-
-            prepareAndCreateOrder();
-            let responses = await Promise.all(promesses);
-
-            function notify() {
-                if (statusOK) {
-                    let messageForMany = totalAmount + ' ' + lang.translate('articles') + ' ' +
-                        lang.translate('crre.basket.added.articles');
-                    toasts.confirm(messageForMany);
-                } else {
-                    toasts.warning('crre.basket.added.articles.error')
-                }
-            }
-
-            function newElementTab() {
-                for (let i = 0; i < responses.length; i++) {
-                    if (responses[i].status === 200) {
-                        if ($scope.campaign.nb_panier)
-                            $scope.campaign.nb_panier += 1;
-                        else
-                            $scope.campaign.nb_panier = 1;
-                    } else {
-                        statusOK = false;
+            let baskets = new Baskets();
+            $scope.projects.all.forEach(project => {
+                project.orders.forEach(async order => {
+                    if (order.selected) {
+                        let equipment = new Equipment();
+                        equipment.ean = order.equipment_key;
+                        let basket = new Basket(equipment, $scope.campaign.id, $scope.current.structure.id);
+                        basket.amount = order.amount;
+                        totalAmount += order.amount;
+                        baskets.push(basket);
                     }
-                }
-            }
+                });
+            });
 
-            if (responses[0].status) {
-                newElementTab();
-                notify();
-                uncheckAll();
-                Utils.safeApply($scope);
-            }
+            baskets.create()
+                .then(res => {
+                    if(res.status === 200){
+                        if ($scope.campaign.nb_panier)
+                            $scope.campaign.nb_panier += baskets.length;
+                        else
+                            $scope.campaign.nb_panier = baskets.length;
+                        let messageForMany = totalAmount + ' ' + lang.translate('articles') + ' ' +
+                            lang.translate('crre.basket.added.articles');
+                        toasts.confirm(messageForMany);
+                        uncheckAll();
+                        Utils.safeApply($scope);
+                    } else {
+                        toasts.warning('crre.basket.added.articles.error');
+                    }
+                })
         };
 
         $scope.getFilter = async () => {

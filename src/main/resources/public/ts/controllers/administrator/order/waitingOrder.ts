@@ -80,6 +80,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.validateOrders = async () => {
+            $scope.display.loading = true;
             let selectedOrders = new OrdersRegion();
             $scope.projects.all.forEach(project => {
                 project.orders.forEach(async order => {
@@ -88,9 +89,11 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     }
                 });
             });
+            const projectsToShow = $scope.projects;
+            $scope.projects = [];
             let {status} = await selectedOrders.updateStatus('VALID');
             if (status == 200) {
-                $scope.projects.all.forEach(project => {
+                projectsToShow.all.forEach(project => {
                     project.orders.forEach(async order => {
                         if (order.selected) {
                             order.status = "VALID";
@@ -101,10 +104,19 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     Utils.setStatus(project, project.orders[0]);
                 });
                 toasts.confirm('crre.order.validated');
+                $scope.projects = projectsToShow;
                 $scope.display.toggle = false;
+                $scope.display.loading = false;
                 Utils.safeApply($scope);
             } else {
-                toasts.warning('crre.order.validated.error');
+                $scope.projects = projectsToShow;
+                $scope.display.loading = false;
+                Utils.safeApply($scope);
+                if (status == 401){
+                    toasts.warning('crre.order.error.purse');
+                } else {
+                    toasts.warning('crre.order.validated.error');
+                }
             }
         };
 
@@ -116,38 +128,24 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             } else {
                 selectedOrders = $scope.projects.extractSelectedOrders();
             }
-
+            $scope.projects.all = [];
+            $scope.display.loading = true;
+            Utils.safeApply($scope);
             await selectedOrders.generateLibraryOrder().then(async data => {
                 if (data.status == 200) {
-                    await selectedOrders.updateStatus('SENT').then(async responses => {
-                        if (responses.status == 200) {
-                            let selectedOrders = $scope.projects.extractSelectedOrders(true);
-                            if (selectedOrders.length == 0) {
-                                $scope.projects.all = [];
-                            } else {
-                                for (let i = $scope.projects.all.length - 1; i >= 0; i--) {
-                                    let project = $scope.projects.all[i];
-                                    for (let j = project.orders.length - 1; j >= 0; j--) {
-                                        if (project.orders[j].selected) {
-                                            project.orders.splice(j, 1);
-                                        }
-                                    }
-                                    if (project.orders.length == 0) {
-                                        $scope.projects.all.splice(i, 1);
-                                    } else {
-                                        Utils.setStatus(project, project.orders[0]);
-                                    }
-                                }
-                            }
-                            toasts.confirm('crre.order.region.library.create.message');
-                            $scope.display.toggle = false;
-                            Utils.safeApply($scope);
-                            $scope.display.allOrdersSelected = false;
-                            $scope.onScroll(true);
-                        } else {
-                            toasts.warning('crre.order.region.library.create.err');
-                        }
-                    });
+                    toasts.confirm('crre.order.region.library.create.message');
+                    $scope.display.toggle = false;
+                    Utils.safeApply($scope);
+                    $scope.display.allOrdersSelected = false;
+                    $scope.onScroll(true);
+                } else {
+                    if (data.status == 401){
+                        toasts.warning('crre.order.error.purse');
+                    } else {
+                        toasts.warning('crre.order.region.library.create.err');
+                    }
+                    $scope.display.allOrdersSelected = false;
+                    $scope.onScroll(true);
                 }
             });
 
@@ -227,13 +225,13 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.exportCSVRegion = async (old: boolean, all: boolean): Promise<void> => {
+            $scope.display.allOrdersSelected = $scope.display.toggle = false;
             if (all) {
                 await $scope.searchProjectAndOrders(old, true, true)
                 $scope.projects.exportCSV(old, true);
             } else {
                 $scope.projects.exportCSV(old, false);
             }
-            $scope.display.allOrdersSelected = $scope.display.toggle = false;
             Utils.safeApply($scope);
         }
 

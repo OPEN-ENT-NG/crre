@@ -101,8 +101,10 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             query += " WHERE s.UAI IN {uais} RETURN s.id as id, s.UAI as uai, s.type as type";
             params.put("uais", uais);
         } else {
-            query += "<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
-                    "WHERE s.UAI IN {uais} WITH s.id as id, s.UAI as uai, s.type as type, " +
+            query += " WHERE s.UAI IN {uais} " +
+                    "OPTIONAL MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                    "WHERE s.UAI IN {uais} " +
+                    "WITH s.id as id, s.UAI as uai, s.type as type, " +
                     "CASE WHEN u.level IN {consumable_formations} " +
                     "THEN count(u) " +
                     "ELSE 0 " +
@@ -117,7 +119,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
         try {
-            String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
+            String query = "MATCH (s:Structure) WHERE s.id IN {ids} ";
+            query += "OPTIONAL MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
                     " WHERE s.id IN {ids} ";
             JsonObject params = new JsonObject().put("ids", ids);
             if (consumable_formations == null) {
@@ -138,7 +141,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             query += " ORDER BY s.name;";
             Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
         } catch (VertxException e) {
-            getStructureById(ids, null, handler);
+            getStructureById(ids, consumable_formations, handler);
         }
     }
 
@@ -153,11 +156,11 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 new JsonObject().put("word", q),
                 Neo4jResult.validResultHandler(handler));
     }
-
     @Override
     public void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler) {
-        String query = "MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
-                "where s.id IN {ids} RETURN distinct u.sector, count(u), s.id;";
+        String query = "MATCH (s:Structure) WHERE s.id IN {ids} ";
+        query += "OPTIONAL MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) " +
+                "where s.id IN {ids} RETURN DISTINCT u.sector, count(u), s.id;";
         neo4j.execute(query, new JsonObject().put("ids", structureIds), Neo4jResult.validResultHandler(handler));
     }
 
@@ -231,7 +234,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         for (int i = 0; i < students.size(); i++) {
             JsonObject j = students.getJsonObject(i);
             String s = j.getString("s.id");
-            Integer count = j.getInteger("count(u)");
+            Integer count = j.getInteger("count(u)") != null ? j.getInteger("count(u)",0) : 0;
             if (j.getString("u.sector") != null) {
                 switch (j.getString("u.sector")) {
                     case "SECONDE GENERALE": {
@@ -339,8 +342,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
         for (int i = 0; i < students.size(); i++) {
             JsonObject j = students.getJsonObject(i);
             String s = j.getString("s.id");
-            Integer count = j.getInteger("count(u)");
-            if (j.getString("u.level") != null && consumableFormations.contains(j.getString("u.level"))) {
+            Integer count = j.getInteger("count(u)") != null ? j.getInteger("count(u)", 0) : 0;
+            if (j.getString("u.sector") != null && consumableFormations.contains(j.getString("u.sector"))) {
                 if (consumableFormationsStudentsPerStructures.containsKey(s)) {
                     count += consumableFormationsStudentsPerStructures.getInteger(s);
                 }
@@ -379,8 +382,10 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     @Override
     public void getAmount(String id_structure, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT seconde, premiere, terminale, premierepro, terminalepro, secondepro, secondetechno, premieretechno, terminaletechno, cap1, cap2, cap3, bma1, bma2, " +
-                "seconde + premiere + terminale + secondetechno + premieretechno + terminaletechno + premierepro + terminalepro + secondepro + cap1 + cap2 + cap3 + bma1 + bma2 as total, " +
+        String query = "SELECT seconde, premiere, terminale, premierepro, terminalepro, secondepro, secondetechno, " +
+                "premieretechno, terminaletechno, cap1, cap2, cap3, bma1, bma2, " +
+                "seconde + premiere + terminale + secondetechno + premieretechno + terminaletechno + premierepro + " +
+                "terminalepro + secondepro + cap1 + cap2 + cap3 + bma1 + bma2 as total, " +
                 "total_april, pro, general " +
                 "FROM " + Crre.crreSchema + ".students " +
                 "WHERE id_structure = ?";
@@ -389,7 +394,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void reinitAmountLicence(String id_structure, Integer difference, Handler<Either<String, JsonObject>> defaultResponseHandler) {
+    public void reinitAmountLicence(String id_structure, Integer difference,
+                                    Handler<Either<String, JsonObject>> defaultResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".licences " +
                 "SET initial_amount = initial_amount + ?, amount = amount + ? " +
@@ -409,7 +415,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 .add(licences)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -423,7 +430,8 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                 .add(licences)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override

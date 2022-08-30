@@ -1,12 +1,12 @@
 package fr.openent.crre.helpers;
 
+import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.elasticsearch.ElasticSearch;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -155,7 +155,8 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), pro, conso, ressource, handler);
     }
 
-    private static void prepareFilterES(HashMap<String, ArrayList<String>> result, JsonArray term, JsonArray query, JsonArray conso, JsonArray pro, JsonArray ressource) {
+    private static void prepareFilterES(HashMap<String, ArrayList<String>> result, JsonArray term, JsonArray query,
+                                        JsonArray conso, JsonArray pro, JsonArray ressource) {
         Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
 
         for (Map.Entry<String, ArrayList<String>> me : set) {
@@ -173,24 +174,24 @@ public class ElasticSearchHelper {
                 }
                 case "conso": {
                     if (me.getValue().size() == 1) {
-                        if (me.getValue().get(0).equals("Consommable")) {
-                            conso.add(true);
-                        } else if (me.getValue().get(0).equals("Ressource")) {
-                            ressource.add(true);
-                        } else if (me.getValue().get(0).equals("Manuel")) {
-                            conso.add(false);
-                            ressource.add(false);
+                        switch (me.getValue().get(0)) {
+                            case "Consommable":
+                                conso.add(true);
+                                break;
+                            case "Ressource":
+                                ressource.add(true);
+                                break;
+                            case "Manuel":
+                                conso.add(false);
+                                ressource.add(false);
+                                break;
                         }
                     }
                     break;
                 }
                 case "pro": {
                     if (me.getValue().size() == 1) {
-                        if (me.getValue().get(0).equals("Lycée professionnel")) {
-                            pro.add(true);
-                        } else {
-                            pro.add(false);
-                        }
+                        pro.add(me.getValue().get(0).equals("Lycée professionnel"));
                     }
                     break;
                 }

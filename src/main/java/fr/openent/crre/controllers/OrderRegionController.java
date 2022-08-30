@@ -19,11 +19,13 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServerRequest;
@@ -60,6 +62,7 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static java.lang.Math.min;
 
 public class OrderRegionController extends BaseController {
 
@@ -119,10 +122,7 @@ public class OrderRegionController extends BaseController {
                                                     idProjectRight.toString(),
                                                     new JsonObject().put("id", idProjectRight).put("title", finalTitle));
                                             for (int i = 0; i < ordersList.size(); i++) {
-                                                List<Future> futures = new ArrayList<>();
                                                 JsonObject newOrder = ordersList.getJsonObject(i);
-                                                Future<JsonObject> createOrdersRegionFuture = Future.future();
-                                                futures.add(createOrdersRegionFuture);
                                                 Double price = Double.parseDouble(newOrder.getDouble("price").toString())
                                                         * newOrder.getInteger("amount");
                                                 int finalI = i;
@@ -390,7 +390,7 @@ public class OrderRegionController extends BaseController {
                     CompositeFuture.all(futures).setHandler(event2 -> {
                         if (event2.succeeded()) {
                             try {
-                                orderRegionService.insertOldOrders(ordersRegion, true, event1 -> {
+                                orderRegionService.recursiveInsertOldOrders(ordersRegion, true, 0, event1 -> {
                                     if (event1.isRight()) {
                                         historicCommand(request, sc, finalProject_id, equipments, projetMap, idsStatus, part + 1);
                                     } else {
@@ -567,7 +567,8 @@ public class OrderRegionController extends BaseController {
                 boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
                         && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
                 Boolean old = Boolean.valueOf(request.getParam("old"));
-                List<Integer> idsProjects = orderRegions.getJsonArray("idsProjects").getList();                List<Future> futures = new ArrayList<>();
+                List<Integer> idsProjects = orderRegions.getJsonArray("idsProjects").getList();
+                List<Future> futures = new ArrayList<>();
                 for (int id : idsProjects) {
                     Future<JsonArray> projectIdFuture = Future.future();
                     futures.add(projectIdFuture);
@@ -578,19 +579,18 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, Boolean
-            old, List<Future> futures) {
+    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, Boolean old, List<Future> futures) {
         CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 List<JsonArray> resultsList = event.result().list();
                 if (!old) {
-                    List<String> listIdsEquipment = new ArrayList<>();
+                    HashSet<String> listIdsEquipment = new HashSet<>();
                     for (JsonArray orders : resultsList) {
                         for (Object order : orders) {
                             listIdsEquipment.add(((JsonObject) order).getString("equipment_key"));
                         }
                     }
-                    getSearchByIds(request, resultsList, listIdsEquipment);
+                    getSearchByIds(request, resultsList, new ArrayList<>(listIdsEquipment));
                 } else {
                     getSearchByIdsOld(request, resultsList);
                 }
@@ -606,9 +606,13 @@ public class OrderRegionController extends BaseController {
                                         request, List<JsonArray> resultsList, List<String> listIdsEquipment) {
         searchByIds(listIdsEquipment, equipments -> {
             if (equipments.isRight()) {
-                JsonArray finalResult = new JsonArray();
+                JsonArray equipmentsArray = equipments.right().getValue();
+                for (int i = 0; i < equipmentsArray.size(); i++) {
+                    JsonObject equipment = equipmentsArray.getJsonObject(i);
+                    JsonObject priceDetails = getPriceTtc(equipment);
+                    equipment.put("priceDetails",priceDetails);
+                }
                 for (JsonArray orders : resultsList) {
-                    finalResult.add(orders);
                     for (Object order : orders) {
                         JsonObject orderJson = (JsonObject) order;
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
@@ -616,12 +620,11 @@ public class OrderRegionController extends BaseController {
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                         orderJson.put("creation_date", creation_date);
                         String idEquipment = orderJson.getString("equipment_key");
-                        JsonArray equipmentsArray = equipments.right().getValue();
                         if (equipmentsArray.size() > 0) {
                             for (int i = 0; i < equipmentsArray.size(); i++) {
                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
                                 if (idEquipment.equals(equipment.getString("id"))) {
-                                    JsonObject priceDetails = getPriceTtc(equipment);
+                                    JsonObject priceDetails = equipment.getJsonObject("priceDetails");
                                     double price = priceDetails.getDouble("priceTTC") * orderJson.getInteger("amount");
                                     orderJson.put("price", price);
                                     orderJson.put("name", equipment.getString("titre"));
@@ -632,32 +635,30 @@ public class OrderRegionController extends BaseController {
                                     orderJson.put("distributeur", equipment.getString("distributeur"));
                                     break;
                                 } else if (equipmentsArray.size() - 1 == i) {
-                                    orderJson.put("price", 0.0);
-                                    orderJson.put("name", "Manuel introuvable dans le catalogue");
-                                    orderJson.put("image", "/crre/public/img/pages-default.png");
-                                    orderJson.put("ean", idEquipment);
-                                    orderJson.put("_index", "NaN");
-                                    orderJson.put("editeur", "NaN");
-                                    orderJson.put("distributeur", "NaN");
+                                    equipmentNotFound(orderJson, idEquipment);
                                 }
                             }
                         } else {
-                            orderJson.put("price", 0.0);
-                            orderJson.put("name", "Manuel introuvable dans le catalogue");
-                            orderJson.put("image", "/crre/public/img/pages-default.png");
-                            orderJson.put("ean", idEquipment);
-                            orderJson.put("_index", "NaN");
-                            orderJson.put("editeur", "NaN");
-                            orderJson.put("distributeur", "NaN");
+                            equipmentNotFound(orderJson, idEquipment);
                         }
                     }
                 }
-                renderJson(request, finalResult);
+                renderJson(request, new JsonArray(resultsList));
             } else {
                 log.error(equipments.left());
                 badRequest(request);
             }
         });
+    }
+
+    private void equipmentNotFound(JsonObject orderJson, String idEquipment) {
+        orderJson.put("price", 0.0);
+        orderJson.put("name", "Manuel introuvable dans le catalogue");
+        orderJson.put("image", "/crre/public/img/pages-default.png");
+        orderJson.put("ean", idEquipment);
+        orderJson.put("_index", "NaN");
+        orderJson.put("editeur", "NaN");
+        orderJson.put("distributeur", "NaN");
     }
 
     private void getSearchByIdsOld(HttpServerRequest request, List<JsonArray> resultsList) {
@@ -694,31 +695,11 @@ public class OrderRegionController extends BaseController {
                                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
                                 String justification = orders.getString("justification");
                                 JsonArray ordersList = orders.getJsonArray("orders");
-                                orderRegionService.updateOrders(ids, status, justification, event -> {
-                                    if (event.isRight()) {
-                                        for (int i = 0; i < ordersList.size(); i++) {
-                                            JsonObject newOrder = ordersList.getJsonObject(i);
-                                            Double price = Double.parseDouble(newOrder.getDouble("price").toString());
-
-                                            if (newOrder.getString("status").equals("REJECTED")) {
-                                                if (status.equals("valid")) {
-                                                    updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
-                                                            .onSuccess(log::info)
-                                                            .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
-                                                }
-                                            } else {
-                                                if (status.equals("rejected")) {
-                                                    updatePurseLicence(newOrder, "+", price, newOrder.getString("use_credit", "none"))
-                                                            .onSuccess(log::info)
-                                                            .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
-                                                }
-                                            }
-                                        }
-                                        request.response().setStatusCode(200).end();
+                                updatePurseLicence(status, ordersList, 0, purse -> {
+                                    if(purse.isRight()){
+                                        updateStatusRecursive(request, status, ids, justification, 0);
                                     } else {
-                                        LOGGER.error("An error when you want get id after create order region ",
-                                                event.left().getValue());
-                                        request.response().setStatusCode(400).end();
+                                        unauthorized(request);
                                     }
                                 });
                             } catch (ClassCastException e) {
@@ -727,9 +708,106 @@ public class OrderRegionController extends BaseController {
                         }));
     }
 
+    private void updateStatusRecursive(HttpServerRequest request, String status, List<Integer> ids, String justification, int e) {
+        List<Integer> idsSplit = ids.subList(e * 25000, min( (e + 1) * 25000, ids.size() ) );
+        orderRegionService.updateOrders(idsSplit, status, justification, event -> {
+            if (event.isRight()) {
+                if ( (e + 1) * 25000 < ids.size() ) {
+                    updateStatusRecursive(request, status, ids, justification, e + 1);
+                } else {
+                    request.response().setStatusCode(200).end();
+                }
+            } else {
+                LOGGER.error("An error when you want get id after create order region ",
+                        event.left().getValue());
+                request.response().setStatusCode(400).end();
+            }
+        });
+    }
 
-    private Future<JsonObject> updatePurseLicence(JsonObject newOrder, String operation, Double
-            price, String use_credit) {
+    private void updatePurseLicence(String status, JsonArray ordersList, int i, Handler<Either<String, JsonObject>> handler) {
+        JsonObject order = ordersList.getJsonObject(i);
+        Double price = order.getDouble("price", (double) 0);
+
+        if (order.getString("status").equals("REJECTED")) {
+            if (status.equals("valid")) {
+                updatePurseLicence(order, "-", price, order.getString("use_credit", "none"))
+                        .onSuccess(res -> {
+                            if (i + 1 < ordersList.size()){
+                                updatePurseLicence(status, ordersList, i + 1, handler);
+                            } else {
+                                handler.handle(new Either.Right<>(new JsonObject()));
+                            }
+                        })
+                        .onFailure(err -> {
+                            LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
+                            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
+                        });
+            }
+        } else if (status.equals("rejected")) {
+                updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
+                        .onSuccess(res -> {
+                            if (i + 1 < ordersList.size()){
+                                updatePurseLicence(status, ordersList, i + 1, handler);
+                            } else {
+                                handler.handle(new Either.Right<>(new JsonObject()));
+                            }
+                        })
+                        .onFailure(err -> {
+                            LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
+                            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
+                        });
+        } else if (i + 1 < ordersList.size()){
+            updatePurseLicence(status, ordersList, i + 1, handler);
+        } else {
+            handler.handle(new Either.Right<>(new JsonObject()));
+        }
+    }
+
+    private void updatePurseLicenceRoolback(String status, JsonArray ordersList, int i, Handler<Either<String, JsonObject>> handler) {
+        JsonObject order = ordersList.getJsonObject(i);
+        Double price = Double.parseDouble(order.getDouble("price").toString());
+
+        if (order.getString("status").equals("REJECTED")) {
+            if (status.equals("valid")) {
+                updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
+                        .onSuccess(res -> {
+                            if (i - 1 >= 0){
+                                updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
+                            } else {
+                                LOGGER.info("[CRRE] OrderRegionController@updatePurseLicenceRoolback : roolback purse is success");
+                                handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback"));
+                            }
+                        })
+                        .onFailure(err -> {
+                            LOGGER.error("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause(), err.getCause());
+                            handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause()));
+                        });
+            }
+        } else if (status.equals("rejected")) {
+            updatePurseLicence(order, "-", price, order.getString("use_credit", "none"))
+                    .onSuccess(res -> {
+                        if (i - 1 >= 0){
+                            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
+                        } else {
+                            LOGGER.info("[CRRE] OrderRegionController@updatePurseLicenceRoolback : roolback purse is success");
+                            handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback"));
+                        }
+                    })
+                    .onFailure(err -> {
+                        LOGGER.error("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause(), err.getCause());
+                        handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause()));
+                    });
+        } else if (i - 1 >= 0){
+            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
+        } else {
+            LOGGER.info("[CRRE] OrderRegionController@updatePurseLicenceRoolback : roolback purse is success");
+            handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback"));
+        }
+    }
+
+
+    private Future<JsonObject> updatePurseLicence(JsonObject newOrder, String operation, Double price, String use_credit) {
         Future<JsonObject> updateFuture = Future.future();
         if (!use_credit.equals("none")) {
             switch (use_credit) {
@@ -770,24 +848,25 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void export(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, orderRegions -> {
-            UserUtils.getUserInfos(eb, request, user -> {
-                List<String> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
-                List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
-                List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
-                Boolean old = orderRegions.getBoolean("old");
-                JsonObject params = new JsonObject()
-                        .put("idsOrders", idsOrders)
-                        .put("idsEquipments", idsEquipments)
-                        .put("idsStructures", idsStructures)
-                        .put("idUser", user.getUserId())
-                        .put("old", old);
-                JsonObject exportParams = new JsonObject()
-                        .put("params", params)
-                        .put("action", "saveOrderRegion");
-                launchWorker(exportParams);
-            });
-        });
+        RequestUtils.bodyToJson(request, orderRegions ->
+                UserUtils.getUserInfos(eb, request, user -> {
+                    List<String> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
+                    List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
+                    List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
+                    Boolean old = orderRegions.getBoolean("old");
+                    JsonObject params = new JsonObject()
+                            .put("idsOrders", idsOrders)
+                            .put("idsEquipments", idsEquipments)
+                            .put("idsStructures", idsStructures)
+                            .put("idUser", user.getUserId())
+                            .put("old", old);
+                    JsonObject exportParams = new JsonObject()
+                            .put("params", params)
+                            .put("action", "saveOrderRegion");
+                    launchWorker(exportParams);
+                    ok(request);
+                })
+        );
     }
 
     private void launchWorker(JsonObject params) {
@@ -851,108 +930,171 @@ public class OrderRegionController extends BaseController {
                 List<Integer> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
                 List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
                 List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
-                generateLogs(request, idsOrders, idsEquipments, idsStructures, user, true, true);
+                generateLogs(request, idsOrders, idsEquipments, idsStructures, user);
             });
         });
     }
 
-    private void generateLogs(HttpServerRequest
-                                      request, List<Integer> idsOrders, List<String> idsEquipments, List<String> idsStructures,
-                              UserInfos user, Boolean old, boolean library) {
+    private void generateLogs(HttpServerRequest request, List<Integer> idsOrders, List<String> idsEquipments,
+                              List<String> idsStructures, UserInfos user) {
         JsonArray idStructures = new JsonArray();
         for (String structureId : idsStructures) {
             idStructures.add(structureId);
         }
-        Future<JsonArray> structureFuture = Future.future();
-        Future<JsonArray> orderRegionFuture = Future.future();
-        Future<JsonArray> equipmentsFuture = Future.future();
 
-        CompositeFuture.all(structureFuture, orderRegionFuture, equipmentsFuture).setHandler(event -> {
+        List<Future> futures = new ArrayList<>();
+        Future<JsonArray> structureFuture = Future.future();
+        Future<JsonArray> equipmentsFuture = Future.future();
+        futures.add(structureFuture);
+        futures.add(equipmentsFuture);
+
+        getOrdersRecursively(0, idsOrders, futures);
+
+        CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 JsonArray structures = structureFuture.result();
-                JsonArray orderRegion = orderRegionFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonArray ordersClient = new JsonArray(), ordersRegion = new JsonArray();
-                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClient, ordersRegion);
-                if (library) {
-                    sendMailLibraryAndRemoveWaitingAdmin(request, user, structures, orderRegion, ordersClient, ordersRegion);
-                } else {
-                    //Export CSV
-                    request.response()
-                            .putHeader("Content-Type", "text/csv; charset=utf-8")
-                            .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                            .end(orderRegionService.generateExport(orderRegion));
+                JsonArray ordersRegionId = new JsonArray(), ordersClientId = new JsonArray(), orderRegion = new JsonArray();
+                for (int i = 2; i < futures.size(); i++) {
+                    orderRegion.addAll((JsonArray) futures.get(i).result());
                 }
-
+                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId, ordersRegionId);
+                JsonArray orderRegionClean = new JsonArray();
+                for (int i = 0; i < orderRegion.size() ; i++){
+                    JsonObject order = orderRegion.getJsonObject(i);
+                    if (order.getString("status","").equals("REJECTED") && order.getDouble("price") != null &&
+                            !order.getDouble("price", 0.0).equals(0.0)) {
+                        orderRegionClean.add(order);
+                    }
+                }
+                if (orderRegionClean.size() > 0) {
+                    updatePurseLicence("valid", orderRegionClean, 0, purse -> {
+                        if (purse.isRight()) {
+                            sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId, ordersRegionId);
+                        } else {
+                            unauthorized(request);
+                        }
+                    });
+                } else {
+                    sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId, ordersRegionId);
+                }
             }
         });
-        if (library) {
-            orderRegionService.getOrdersRegionById(idsOrders, false, handlerJsonArray(orderRegionFuture));
-        } else {
-            orderRegionService.getOrdersRegionById(idsOrders, old, handlerJsonArray(orderRegionFuture));
-        }
+
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
         searchByIds(idsEquipments, handlerJsonArray(equipmentsFuture));
     }
 
-    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, JsonArray
-            structures,
-                                                      JsonArray orderRegion, JsonArray ordersClient, JsonArray ordersRegion) {
-        int nbEtab = structures.size();
-        String csvFile = orderRegionService.generateExport(orderRegion);
-        Future<JsonObject> insertOldOrdersFuture = Future.future();
-        Future<JsonObject> deleteOldOrderClientFuture = Future.future();
-        Future<JsonObject> deleteOldOrderRegionFuture = Future.future();
+    private void getOrdersRecursively(int e, List<Integer> listOrders, List<Future> futures) {
+        Future<JsonArray> orderRegionFuture = Future.future();
+        futures.add(orderRegionFuture);
+        List<Integer> subList = listOrders.subList(e * 5000, min((e +1) * 5000, listOrders.size()) );
+        orderRegionService.getOrdersRegionById(subList, false, handlerJsonArray(orderRegionFuture));
+        if ((e + 1) * 5000 < listOrders.size()) {
+            getOrdersRecursively(e + 1, listOrders, futures);
+        }
+    }
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmm");
-        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
-        String title = "DD" + simpleDateFormat.format(new Date());
+    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
+                                                      JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
         JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
-        attachment.add(new JsonObject()
-                .put("name", title + ".csv")
-                .put("content", Base64.getEncoder().encodeToString(csvFile.getBytes(StandardCharsets.UTF_8))));
+
+        int e = 0;
+        while (e * 100000 < orderRegion.size()) {
+            JsonArray orderRegionSplit = new JsonArray();
+            for(int i = e * 100000; i < min((e +1) * 100000, orderRegion.size()); i ++){
+                orderRegionSplit.add(orderRegion.getJsonObject(i));
+            }
+            JsonObject data = orderRegionService.generateExport(orderRegionSplit);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmmss");
+            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
+            String title = "DD" + simpleDateFormat.format(new Date());
+            attachment.add(new JsonObject()
+                    .put("name", title + ".csv")
+                    .put("content", Base64.getEncoder().encodeToString(data.getString("csvFile").getBytes(StandardCharsets.UTF_8)))
+                    .put("nbEtab", data.getInteger("nbEtab")));
+            e++;
+        }
+        sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, 0);
+    }
+
+    private void sendMails(HttpServerRequest request, UserInfos user, JsonArray orderRegion, JsonArray ordersClientId,
+                           JsonArray ordersRegionId, JsonArray attachment, int e) {
+        JsonArray singleAttachment = new JsonArray().add(attachment.getJsonObject(e));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
-                csvFile, attachment, message -> {
+                "Demande Libraire CRRE ; csv : " + attachment.getJsonObject(e).getString("name"), singleAttachment, message -> {
                     if (!message.isRight()) {
-                        log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
+                        log.error("[CRRE@OrderRegionController.sendMails] " +
                                 "An error has occurred sendMail : " + message.left());
                         renderError(request);
                     } else {
-                        try {
-                            orderRegionService.insertOldClientOrders(orderRegion, response -> {
-                                if (response.isRight()) {
-                                    quoteService.insertQuote(user, nbEtab, csvFile, title, response2 -> {
-                                        if (response2.isRight()) {
-                                            renderJson(request, response2.right().getValue());
-                                        } else {
-                                            log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
-                                                    "An error has occurred insertQuote : " + "");
-                                            renderError(request);
-                                        }
-                                    });
-                                    try {
-                                        orderRegionService.deletedOrders(ordersClient, "order_client_equipment",
-                                                handlerJsonObject(deleteOldOrderClientFuture));
-                                        orderRegionService.deletedOrders(ordersRegion, "order-region-equipment",
-                                                handlerJsonObject(deleteOldOrderRegionFuture));
-                                        orderRegionService.insertOldOrders(orderRegion, false,
-                                                handlerJsonObject(insertOldOrdersFuture));
-                                    } catch (ParseException e) {
-                                        e.printStackTrace();
-                                        log.error(e.getMessage());
-                                    }
-                                } else {
-                                    log.error("[CRRE@OrderRegionController.sendMailLibraryAndRemoveWaitingAdmin] " +
-                                            "An error has occurred insertOldClientOrders : " + "");
-                                    renderError(request);
-                                }
-                            });
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                            log.error(e.getMessage());
+                        if (e + 1 < attachment.size()){
+                            sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, e +1);
+                        } else {
+                            insertQuote(request, user, attachment, 0, orderRegion, ordersClientId, ordersRegionId);
                         }
                     }
                 });
+    }
+
+    private void insertQuote(HttpServerRequest request, UserInfos user, JsonArray attachment, int e,
+                             JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
+        JsonObject singleAttachment = attachment.getJsonObject(e);
+        Integer nbEtab = singleAttachment.getInteger("nbEtab");
+        String csvFileBase64 = singleAttachment.getString("content");
+        String title = singleAttachment.getString("name");
+        quoteService.insertQuote(user, nbEtab, csvFileBase64, title, response2 -> {
+            if (response2.isRight()) {
+                if (e + 1 < attachment.size()){
+                    insertQuote(request, user, attachment, e +1, orderRegion, ordersClientId, ordersRegionId);
+                } else {
+                    insertAndDeleteOrders(request, orderRegion, ordersClientId, ordersRegionId);
+                }
+            } else {
+                log.error("[CRRE@OrderRegionController.insertQuote] " +
+                        "An error has occurred insertQuote : " + response2.left().getValue());
+                renderError(request);
+            }
+        });
+    }
+
+    private void insertAndDeleteOrders(HttpServerRequest request, JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
+        try {
+            orderRegionService.recursiveInsertOldClientOrders(orderRegion, 0, response -> {
+                if (response.isRight()) {
+                    try {
+                        Future<JsonObject> insertOldOrdersFuture = Future.future();
+                        Future<JsonObject> deleteOrderClientFuture = Future.future();
+                        Future<JsonObject> deleteOrderRegionFuture = Future.future();
+                        orderRegionService.deletedOrdersRecursive(ordersClientId, "order_client_equipment", 0,
+                                handlerJsonObject(deleteOrderClientFuture));
+                        orderRegionService.deletedOrdersRecursive(ordersRegionId, "order-region-equipment", 0,
+                                handlerJsonObject(deleteOrderRegionFuture));
+                        orderRegionService.recursiveInsertOldOrders(orderRegion, false, 0,
+                                handlerJsonObject(insertOldOrdersFuture));
+                        CompositeFuture.all(insertOldOrdersFuture, deleteOrderClientFuture, deleteOrderRegionFuture).setHandler(event -> {
+                            if (event.succeeded()) {
+                                ok(request);
+                                log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
+                                        "Orders Deleted and insert in old table was successfull");
+                            } else {
+                                log.error("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
+                                        "An error has occurred in CompositeFuture : " + event.cause().getMessage());
+                            }
+                        });
+                    } catch (ParseException err) {
+                        err.printStackTrace();
+                        log.error(err.getMessage());
+                    }
+                } else {
+                    log.error("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
+                            "An error has occurred insertOldClientOrders : " + response.left().getValue());
+                }
+            });
+        } catch (ParseException err) {
+            err.printStackTrace();
+            log.error(err.getMessage());
+        }
     }
 }

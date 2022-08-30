@@ -30,16 +30,15 @@ public interface OrderRegionService {
 
     void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler);
 
-    void insertOldOrders(JsonArray orderRegions, boolean isRenew, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
+    void recursiveInsertOldOrders(JsonArray orderRegions, boolean isRenew, int e, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
 
-    void insertOldClientOrders(JsonArray orderRegions, Handler<Either<String, JsonObject>> handler) throws ParseException;
+    void recursiveInsertOldClientOrders(JsonArray orderRegions, int e, Handler<Either<String, JsonObject>> handler) throws ParseException;
 
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 
-
     void updateOldOrders(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handler);
 
-    void deletedOrders(JsonArray ordersClient, String table, Handler<Either<String, JsonObject>> handlerJsonObject);
+    void deletedOrdersRecursive(JsonArray ordersClient, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject);
 
     void getStatusByOrderId(Handler<Either<String, JsonArray>> arrayResponseHandler);
 
@@ -49,5 +48,5 @@ public interface OrderRegionService {
 
     void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClient, JsonArray ordersRegion);
 
-    String generateExport(JsonArray orderRegion);
+    JsonObject generateExport(JsonArray orderRegion);
 }

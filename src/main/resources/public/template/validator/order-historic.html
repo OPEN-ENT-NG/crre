@@ -80,21 +80,21 @@
                             <span></span>
                         </label>
                     </td>
-                    <td><div class="smallTabElem center">[[project.creation_date]]</div></td>
-                    <td><div class="tabElem">[[project.title]]</div></td>
-                    <td><div class="smallTabElem"></div></td>
-                    <td><div class="smallTabElem"></div></td>
-                    <td><div class="smallTabElem center">[[project.amount]]</div></td>
-                    <td><div class="smallTabElem center">[[project.total]]</div></td>
-                    <td><div class="smallTabElem"></div></td>
-                    <td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.creation_date]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="tabElem">[[project.title]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem"></div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem"></div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.amount]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.total]]</div></td>
+                    <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem"></div></td>
+                    <td ng-click="project.expanded = !project.expanded">
                         <div class="smallTabElem center ellipsis status" tooltip="[[project.status]]">
                             <div class="[[project.status]] status-circle  cell row myOrder centerCircleMobile"></div>
                             <span ng-bind="lang.translate(project.status)" class="zero-mobile"></span>
                         </div>
                     </td>
                 </tr>
-                <tr ng-repeat-start="order in project.orders" class="subline">
+                <tr ng-repeat-start="order in project.orders" class="subline" ng-if="project.expanded">
                     <td class="table-selector">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project)">
@@ -132,7 +132,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr class="subline" ng-repeat="offer in order.offers.all" ng-if="order.offers.all.length > 0" ng-repeat-end>
+                <tr class="subline" ng-repeat="offer in order.offers.all" ng-if="project.expanded && order.offers.all.length > 0" ng-repeat-end>
                     <td></td>
                     <td></td>
                     <td><span class="arrowOffer">[[offer.name]]</span></td>
@@ -140,7 +140,6 @@
                     <td></td>
                     <td class="center">[[offer.value]]</td>
                     <td class="center">[[lang.translate('crre.FREE')]]</td>
-                    <td></td>
                     <td></td>
                     <td></td>
                 </tr>

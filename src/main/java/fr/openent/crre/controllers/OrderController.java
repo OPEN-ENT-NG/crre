@@ -528,7 +528,8 @@ public class OrderController extends ControllerHelper {
                 (log.getDouble("unitedPriceTTC") != null ? convertPriceString(log.getDouble("unitedPriceTTC")) : "") + ";" +
                 (log.getDouble("totalPriceHT") != null ? convertPriceString(log.getDouble("totalPriceHT")) : "") + ";" +
                 (log.getDouble("totalPriceTTC") != null ? convertPriceString(log.getDouble("totalPriceTTC")) : "") + ";" +
-                (log.getString("comment") != null ? log.getString("comment") : "") + ";";
+                (log.getString("comment") != null ?
+                        log.getString("comment").replaceAll("\n","").replaceAll("\r","") : "") + ";";
     }
 
     public static String exportStudents(JsonObject log) {

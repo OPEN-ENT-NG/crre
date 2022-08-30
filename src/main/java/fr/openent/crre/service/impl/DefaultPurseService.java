@@ -4,6 +4,7 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.service.PurseService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
@@ -40,10 +41,10 @@ public class DefaultPurseService implements PurseService {
                     statements.add(getImportStatementAmount(field,
                             values.getInteger("licence"), "licences", false, true,false));
                 }
-               if(values.getInteger("consumable_licence") != -1) {
-                   statements.add(getImportStatementAmount(field,
-                           values.getInteger("consumable_licence"), "licences", true, true,false));
-               }
+                if(values.getInteger("consumable_licence") != -1) {
+                    statements.add(getImportStatementAmount(field,
+                            values.getInteger("consumable_licence"), "licences", true, true,false));
+                }
             }
         }
         if (invalidDatas) {
@@ -146,59 +147,58 @@ public class DefaultPurseService implements PurseService {
     private JsonObject getImportStatementAmount(String structureId, double amount, String table, Boolean consumable,
                                                 Boolean isOverrideAmount, Boolean update) {
         String statement = "INSERT INTO " + Crre.crreSchema + "." + table + " (id_structure, ";
-            if (consumable) {
-                statement += "consumable_amount, consumable_initial_amount) " +
-                        "VALUES (?,?,?) " +
-                        "ON CONFLICT (id_structure) DO UPDATE ";
-                if (update){
-                    statement += "SET consumable_amount = " + table + ".consumable_amount + ( ? - " + table + ".consumable_initial_amount), " +
-                            "consumable_initial_amount = ? ";
-                } else if(!isOverrideAmount) {
-                    statement += "SET consumable_initial_amount = " + table + ".consumable_initial_amount + ?, " +
-                            "consumable_amount = " + table + ".consumable_amount + ? ";
-                } else {
-                    statement += "SET consumable_initial_amount = ?, " +
-                            "consumable_amount = ? ";
-                }
+        if (consumable) {
+            statement += "consumable_amount, consumable_initial_amount) " +
+                    "VALUES (?,?,?) " +
+                    "ON CONFLICT (id_structure) DO UPDATE ";
+            if (update){
+                statement += "SET consumable_amount = " + table + ".consumable_amount + ( ? - " + table + ".consumable_initial_amount), " +
+                        "consumable_initial_amount = ? ";
+            } else if(!isOverrideAmount) {
+                statement += "SET consumable_initial_amount = " + table + ".consumable_initial_amount + ?, " +
+                        "consumable_amount = " + table + ".consumable_amount + ? ";
             } else {
-                statement += "amount, initial_amount) " +
-                        "VALUES (?,?,?) " +
-                        "ON CONFLICT (id_structure) DO UPDATE ";
-                if (update){
-                    statement += "SET amount = " + table + ".amount + ( ? - " + table + ".initial_amount), initial_amount = ? ";
-                } else if(!isOverrideAmount) {
-                    statement += "SET initial_amount = " + table + ".initial_amount + ?, " +
-                            "amount = " + table + ".amount + ? ";
-                } else {
-                    statement += "SET initial_amount = ?, " +
-                            "amount = ? ";
-                }
+                statement += "SET consumable_initial_amount = ?, " +
+                        "consumable_amount = ? ";
             }
+        } else {
+            statement += "amount, initial_amount) " +
+                    "VALUES (?,?,?) " +
+                    "ON CONFLICT (id_structure) DO UPDATE ";
+            if (update){
+                statement += "SET amount = " + table + ".amount + ( ? - " + table + ".initial_amount), initial_amount = ? ";
+            } else if(!isOverrideAmount) {
+                statement += "SET initial_amount = " + table + ".initial_amount + ?, " +
+                        "amount = " + table + ".amount + ? ";
+            } else {
+                statement += "SET initial_amount = ?, " +
+                        "amount = ? ";
+            }
+        }
         statement += "WHERE " + table + ".id_structure = ? ;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-            try {
-                params.add(structureId);
-                if (table.equals("licences")) {
-                    params.add((int) amount)
-                            .add((int)amount)
-                            .add((int)amount);
-                } else {
-                    params.add(amount)
-                            .add(amount)
-                            .add(amount);
-                }
-                if(isOverrideAmount) {
-                    params.add(amount);
-                }
-                params.add(structureId);
-
-            } catch (NumberFormatException e) {
-                invalidDatas = true;
+        try {
+            params.add(structureId);
+            if (table.equals("licences")) {
+                params.add((int)amount)
+                        .add((int)amount)
+                        .add((int)amount)
+                        .add((int)amount);
+            } else {
+                params.add(amount)
+                        .add(amount)
+                        .add(amount)
+                        .add(amount);
             }
-            return new JsonObject()
-                    .put("statement", statement)
-                    .put("values", params)
-                    .put("action", "prepared");
+            params.add(structureId);
+
+        } catch (NumberFormatException e) {
+            invalidDatas = true;
+        }
+        return new JsonObject()
+                .put("statement", statement)
+                .put("values", params)
+                .put("action", "prepared");
     }
 
     private JsonObject getImportStatementStudent(String structureId, int second, int premiere, int terminale, boolean pro) {
@@ -246,6 +246,7 @@ public class DefaultPurseService implements PurseService {
                 .add(Math.round(price * cons) / cons)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 }

@@ -179,7 +179,7 @@ public class StructureController extends ControllerHelper {
                 for (int i = 0; i < structure_id.size(); i++) {
                     ids.add(structure_id.getJsonObject(i).getString(ID_STRUCTURE));
                 }
-                structureService.   insertStudentsInfos(ids, defaultResponseHandler(request));
+                structureService.insertStudentsInfos(ids, defaultResponseHandler(request));
             } else {
                 log.error("Failed to get all structures",structures.left());
                 renderJson(request, new JsonObject().put("message", "error"));

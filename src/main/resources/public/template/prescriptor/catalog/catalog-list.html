@@ -49,11 +49,11 @@
     <div class="cell catalog-list twelve">
         <div class="dominos item_hover_accent_list">
             <div class="item six-mobile"
-                 ng-class="{disabled: equipment.status!== 'DISPONIBLE', 'list-item': display.equipment}"
+                 ng-class="{disabled: equipment.status!== 'Disponible', 'list-item': display.equipment}"
                  ng-repeat="equipment in equipments.all | limitTo:nbItemsDisplay track by $index"
                  ng-click="openEquipmentId(equipment.id)">
-                <article class="domino"  ng-class="{ disabled: equipment.status !== 'DISPONIBLE' }">
-                    <span ng-show="equipment.status !== 'DISPONIBLE'" tooltip="[[equipment.commentaire]]">
+                <article class="domino"  ng-class="{ disabled: equipment.status !== 'Disponible' }">
+                    <span ng-show="equipment.status !== 'Disponible'" tooltip="[[equipment.commentaire]]">
                         <i18n>[[lang.translate(equipment.status)]]</i18n>
                     </span>
                     <div class="top" ng-class="{ item: display.equipment }">

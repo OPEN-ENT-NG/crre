@@ -9,11 +9,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import static fr.openent.crre.Crre.CONFIG;
-
 public class synchTotalStudents extends ControllerHelper implements Handler<Long> {
 
     private final DefaultStructureService structureService;
@@ -26,24 +21,19 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
 
     @Override
     public void handle(Long event) {
-        log.info("CRRE cron started");
-        Date today = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        if(CONFIG.getString("dateSynch").equals(formatter.format(today))) {
-            log.info("launch getStudents");
-            getStudents(event1 -> {
-                if (event1.isRight())
-                    log.info("Cron launch successful");
-                else
-                    log.info("Cron synchronisation not full");
-            });
-        }
+        log.info("[CRRE] cron synchTotalStudents started");
+        getStudents(event1 -> {
+            if (event1.isRight())
+                log.info("[CRRE] Cron synchTotalStudents finish with success");
+            else
+                log.info("[CRRE] Cron synchTotalStudents not full");
+        });
     }
 
     public void getStudents(final Handler<Either<String, JsonObject>> eitherHandler) {
         structureService.getAllStructure(structures -> {
             if(structures.isRight()) {
-                log.info("[getStudents] getAllStructures OK");
+                log.info("[CRRE][getStudents] getStudents@getAllStructures OK");
                 JsonArray structure_id = structures.right().getValue();
                 JsonArray ids = new JsonArray();
                 for (int i = 0; i < structure_id.size(); i++) {
@@ -52,15 +42,15 @@ public class synchTotalStudents extends ControllerHelper implements Handler<Long
                 structureService.insertStudentsInfos(ids, event -> {
                     if (event.isRight()) {
                         eitherHandler.handle(new Either.Right<>(event.right().getValue()));
-                        log.info("Insert students total success");
+                        log.info("[CRRE] getStudents@insertStudentsInfos Insert students total success");
                     } else {
-                        log.error("Failed to insert students : ", event.left());
-                        eitherHandler.handle(new Either.Left<>("Failed to insert students : " + event.left()));
+                        log.error("[CRRE] getStudents@insertStudentsInfos Failed to insert students : ", event.left());
+                        eitherHandler.handle(new Either.Left<>("[CRRE] getStudents@insertStudentsInfos Failed to insert students : " + event.left()));
                     }
                 });
             } else {
-                log.error("Failed to get all structures",structures.left());
-                eitherHandler.handle(new Either.Left<>("Failed to get all structures"));
+                log.error("[CRRE] getStudents@insertStudentsInfos Failed to get all structures",structures.left());
+                eitherHandler.handle(new Either.Left<>("[CRRE] getStudents@insertStudentsInfos Failed to get all structures"));
             }
         });
     }
