@@ -38,7 +38,8 @@ export class Utils {
     }
 
     static isAvailable(equipment) : boolean {
-        let status_article = ["DISPONIBLE", "PRECOMMANDE", "A_PARAITRE", "EN_COURS_DE_REIMPRESSION"]
+        let status_article = ["Disponible", "Précommande", "À paraître", "En cours de réimpression", "En cours d'impression",
+        "Disponible jusqu'à épuisement des stocks", "À reparaître"]
         return status_article.some(s => s === equipment.disponibilite[0].valeur);
     }
 

@@ -33,7 +33,9 @@ export const basketController = ng.controller('basketController',
         $scope.calculateQuantity = (baskets: Baskets,numberOfEquipments:boolean) => {
             let quantity = 0;
             baskets.all.map((basket) => {
-                if (['DISPONIBLE','PRECOMMANDE','A_PARAITRE'].indexOf(basket.equipment.disponibilite[0].valeur) === -1) return false;
+                let status_article = ["Disponible", "Précommande", "À paraître", "En cours de réimpression", "En cours d'impression",
+                    "Disponible jusqu'à épuisement des stocks", "À reparaître"];
+                if (status_article.indexOf(basket.equipment.disponibilite[0].valeur) === -1) return false;
                 if (!hasOneSelected(baskets) || basket.selected) {
                     if(numberOfEquipments){
                         quantity ++;
