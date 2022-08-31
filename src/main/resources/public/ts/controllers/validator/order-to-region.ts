@@ -184,6 +184,11 @@ export const orderRegionController = ng.controller('orderRegionController',
                     promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
                         !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
                     projetsSplit = new Projects();
+                } else if (projetsSplit.all.length > 100) {
+                    promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
+                        !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
+                    projetsSplit = new Projects();
+                    projetsSplit.push(projet);
                 } else {
                     projetsSplit.push(projet);
                 }
