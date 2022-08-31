@@ -27,7 +27,6 @@
             },
          "timeSecondSynchCron": "${timeSecondSynchCron}",
          "timeSecondStatCron": "${timeSecondStatCron}",
-         "timeSecondStatutCron": "${timeSecondStatutCron}",
-         "dateSynch" : "${dateSynch}"
+         "timeSecondStatutCron": "${timeSecondStatutCron}"
       }
     }
