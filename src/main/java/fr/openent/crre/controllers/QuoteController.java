@@ -40,30 +40,34 @@ public class QuoteController extends BaseController {
     }
 
     @Get("/quote/csv/:id")
-    @ApiDoc("generate csv attachment ")
+    @ApiDoc("generate csv attachment")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void getCSVQuote(HttpServerRequest request) {
-        Integer id = request.params().contains("id")
-                ? parseInt(request.params().get("id"))
-                : null;
+        Integer id = request.params().contains("id") ? parseInt(request.params().get("id")) : null;
         if(id != null){
             quoteService.getQuote(id, quote -> {
                 if(quote.isRight()) {
                     JsonObject quoteResult = quote.right().getValue();
-                    String attachment = new String(Base64.getDecoder().decode(quoteResult.getString("attachment")), StandardCharsets.UTF_8);
+                    String attachment;
+                    try {
+                        attachment = new String(Base64.getDecoder().decode(quoteResult.getString("attachment","")),
+                                StandardCharsets.UTF_8);
+                    } catch (IllegalArgumentException e) {
+                        attachment = quoteResult.getString("attachment","");
+                    }
                     String title = quoteResult.getString("title");
                     request.response()
                             .putHeader("Content-Type", "text/csv; charset=utf-8")
                             .putHeader("Content-Disposition", "attachment; filename=" + title + ".csv")
                             .end(attachment);
                 }else{
-                    log.error("An error occured during SQL Quote request",quote.left());
+                    log.error("[CRRE] QuoteController@getCSVQuote An error occured during SQL Quote request : " + quote.left());
                     renderError(request);
                 }
             });
-        }else{
-            log.error("Unable to get the id of the quote");
+        } else {
+            log.error("[CRRE] QuoteController@getCSVQuote Unable to get the id of the quote");
             renderError(request);
         }
   }

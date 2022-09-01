@@ -1043,7 +1043,7 @@ public class OrderRegionController extends BaseController {
         JsonObject singleAttachment = attachment.getJsonObject(e);
         Integer nbEtab = singleAttachment.getInteger("nbEtab");
         String csvFileBase64 = singleAttachment.getString("content");
-        String title = singleAttachment.getString("name");
+        String title = singleAttachment.getString("name").replace(".csv","");
         quoteService.insertQuote(user, nbEtab, csvFileBase64, title, response2 -> {
             if (response2.isRight()) {
                 if (e + 1 < attachment.size()){
