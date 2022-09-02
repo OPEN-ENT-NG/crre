@@ -228,7 +228,7 @@ export class Equipments extends Selection<Equipment> {
 
 export class Offer {
     name: string;
-    value: string;
+    value: number;
     id?: string;
     amount?: string;
     statut?: string;

@@ -14,7 +14,7 @@ public final class SqlQueryUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(SqlQueryUtils.class);
 
     private SqlQueryUtils() {
-        throw new IllegalAccessError("Utility class");
+        throw new IllegalAccessError("SqlQueryUtils Utility class");
     }
 
     public static List<Integer> getIntegerIds (List<String> params) {
