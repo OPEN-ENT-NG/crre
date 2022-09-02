@@ -257,17 +257,29 @@
                     </strong></td>
                     <td>[[basket.equipment.dateparution]]</td>
                 </tr>
-                <tr ng-if="!!basket.equipment.discipline">
-                    <td class="one"><strong>
-                        <i18n>crre.equipment.field</i18n>
-                    </strong></td>
-                    <td>[[basket.equipment.discipline]]</td>
+                <tr ng-if="!!basket.equipment.disciplines && basket.equipment.disciplines.length > 0">
+                    <td class="one">
+                        <strong>
+                            <i18n>crre.equipment.field</i18n>
+                        </strong>
+                    </td>
+                    <td ng-bind="formatMultiple(basket.equipment.disciplines)"></td>
                 </tr>
-                <tr>
-                    <td class="one"><strong>
-                        <i18n>crre.equipment.level</i18n>
-                    </strong></td>
-                    <td ng-bind="formatGrade(basket.equipment.niveaux)"></td>
+                <tr ng-if="!!basket.equipment.niveaux && basket.equipment.niveaux.length > 0">
+                    <td class="one">
+                        <strong>
+                            <i18n>crre.equipment.level</i18n>
+                        </strong>
+                    </td>
+                    <td ng-bind="formatMultiple(basket.equipment.niveaux)"></td>
+                </tr>
+                <tr ng-if="!!basket.equipment.classes && basket.equipment.classes.length > 0">
+                    <td class="one">
+                        <strong>
+                            <i18n>crre.equipment.class</i18n>
+                        </strong>
+                    </td>
+                    <td ng-bind="formatMultiple(basket.equipment.classes)"></td>
                 </tr>
                 <tr>
                     <td class="one"><strong>

@@ -100,6 +100,7 @@
   "crre.date": "Date",
   "crre.equipment.field": "Discipline",
   "crre.equipment.level": "Niveau",
+  "crre.equipment.class": "Classe",
   "crre.equipment.ean": "EAN",
   "crre.equipment.duration": "Durée",
   "crre.equipment.end.availability": "Fin de disponibilité",

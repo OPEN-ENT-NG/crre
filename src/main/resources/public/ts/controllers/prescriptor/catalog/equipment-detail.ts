@@ -33,15 +33,15 @@ export const equipmentController = ng.controller('equipmentController',
             Utils.safeApply($scope);
         };
 
-        $scope.formatGrade = (grades: any[]) => {
-            let grade_string = "";
-            grades.forEach(function(grade, index) {
-               grade_string += grade.libelle;
-               if(grades.length - 1 != index) {
-                   grade_string += ", ";
+        $scope.formatMultiple = (array: any[]) => {
+            let return_string = "";
+            array.forEach(function(item, index) {
+                return_string += item.libelle;
+               if(array.length - 1 != index) {
+                   return_string += ", ";
                }
             });
-            return grade_string;
+            return return_string;
         };
 
         $scope.addBasketItem = async (basket: Basket, campaign?: Campaign, id_structure?: string) => {
