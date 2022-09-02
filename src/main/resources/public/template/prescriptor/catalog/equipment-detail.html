@@ -281,6 +281,14 @@
                     </td>
                     <td ng-bind="formatMultiple(basket.equipment.classes)"></td>
                 </tr>
+                <tr ng-if="!!basket.equipment.ark">
+                    <td class="one">
+                        <strong>
+                            Ark
+                        </strong>
+                    </td>
+                    <td>[[basket.equipment.ark]]</td>
+                </tr>
                 <tr>
                     <td class="one"><strong>
                         <i18n>crre.equipment.ean</i18n>
