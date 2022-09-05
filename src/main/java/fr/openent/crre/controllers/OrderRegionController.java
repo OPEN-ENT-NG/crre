@@ -587,7 +587,9 @@ public class OrderRegionController extends BaseController {
                     HashSet<String> listIdsEquipment = new HashSet<>();
                     for (JsonArray orders : resultsList) {
                         for (Object order : orders) {
-                            listIdsEquipment.add(((JsonObject) order).getString("equipment_key"));
+                            if(((JsonObject) order).getString("equipment_key") != null) {
+                                listIdsEquipment.add(((JsonObject) order).getString("equipment_key", ""));
+                            }
                         }
                     }
                     getSearchByIds(request, resultsList, new ArrayList<>(listIdsEquipment));
@@ -610,29 +612,35 @@ public class OrderRegionController extends BaseController {
                 for (int i = 0; i < equipmentsArray.size(); i++) {
                     JsonObject equipment = equipmentsArray.getJsonObject(i);
                     JsonObject priceDetails = getPriceTtc(equipment);
-                    equipment.put("priceDetails",priceDetails);
+                    equipment.put("priceDetails", priceDetails);
                 }
                 for (JsonArray orders : resultsList) {
                     for (Object order : orders) {
                         JsonObject orderJson = (JsonObject) order;
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
-                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                        String creation_date = "";
+                        if (orderJson.getString("creation_date") != null) {
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                            ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date",""), formatter);
+                            creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                        }
                         orderJson.put("creation_date", creation_date);
-                        String idEquipment = orderJson.getString("equipment_key");
-                        if (equipmentsArray.size() > 0) {
+                        String idEquipment = orderJson.getString("equipment_key","");
+                        if (equipmentsArray.size() > 0 && idEquipment != null) {
                             for (int i = 0; i < equipmentsArray.size(); i++) {
                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
                                 if (idEquipment.equals(equipment.getString("id"))) {
                                     JsonObject priceDetails = equipment.getJsonObject("priceDetails");
-                                    double price = priceDetails.getDouble("priceTTC") * orderJson.getInteger("amount");
+                                    double price = 0.0;
+                                    if (priceDetails.getDouble("priceTTC") != null && orderJson.getInteger("amount") != null) {
+                                        price = priceDetails.getDouble("priceTTC",0.0) * orderJson.getInteger("amount", 0);
+                                    }
                                     orderJson.put("price", price);
                                     orderJson.put("name", equipment.getString("titre"));
-                                    orderJson.put("image", equipment.getString("urlcouverture"));
-                                    orderJson.put("ean", equipment.getString("ean"));
-                                    orderJson.put("_index", equipment.getString("type"));
-                                    orderJson.put("editeur", equipment.getString("editeur"));
-                                    orderJson.put("distributeur", equipment.getString("distributeur"));
+                                    orderJson.put("image", equipment.getString("urlcouverture", "/crre/public/img/pages-default.png"));
+                                    orderJson.put("ean", equipment.getString("ean", idEquipment));
+                                    orderJson.put("_index", equipment.getString("type","NaN"));
+                                    orderJson.put("editeur", equipment.getString("editeur","NaN"));
+                                    orderJson.put("distributeur", equipment.getString("distributeur","NaN"));
                                     break;
                                 } else if (equipmentsArray.size() - 1 == i) {
                                     equipmentNotFound(orderJson, idEquipment);
@@ -667,11 +675,17 @@ public class OrderRegionController extends BaseController {
             finalResult.add(orders);
             for (Object order : orders) {
                 JsonObject orderJson = (JsonObject) order;
-                double price = Double.parseDouble(orderJson.getString("equipment_price")) * orderJson.getInteger("amount");
+                double price = 0.0;
+                if (orderJson.getString("equipment_price") != null && orderJson.getInteger("amount") != null) {
+                    price = Double.parseDouble(orderJson.getString("equipment_price")) * orderJson.getInteger("amount", 0);
+                }
                 orderJson.put("price", price);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date"), formatter);
-                String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                String creation_date = "";
+                if (orderJson.getString("creation_date") != null) {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date", ""), formatter);
+                    creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                }
                 orderJson.put("creation_date", creation_date);
             }
         }
