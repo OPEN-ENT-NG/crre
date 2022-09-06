@@ -130,8 +130,13 @@ public class ElasticSearchHelper {
 
     public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
-        JsonObject regexp = regexpField("titre", query);
-        should.add(regexp);
+        JsonObject regexTitre = regexpField("titre", query);
+        JsonObject regexEAN = regexpField("ean", query);
+        JsonObject regexArk = regexpField("ark", query);
+        JsonObject regexAuthor = regexpField("auteur", query);
+        JsonObject regexDistributor = regexpField("distributeur", query);
+        JsonObject regexEditor = regexpField("editeur", query);
+        should.add(regexTitre).add(regexEAN).add(regexArk).add(regexAuthor).add(regexDistributor).add(regexEditor);
 
         regexSearchBool(handler, should);
     }

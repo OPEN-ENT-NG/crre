@@ -179,6 +179,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
+                "LEFT JOIN " + Crre.crreSchema + ".structure AS s ON ore.id_structure = s.id_structure " +
                 "WHERE ore.creation_date BETWEEN ? AND ? ";
         values.add(startDate);
         values.add(endDate);
@@ -188,10 +189,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         //condition with query
         if (!query.equals("")) {
-            sqlquery += "AND (lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? ";
-            values.add(query);
-            values.add(query);
-            values.add(query);
+            sqlquery += "AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR " +
+                    "lower(s.public) ~* ? OR lower(s.catalog) ~* ? OR " +
+                    "lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? ";
+            values.add(query).add(query).add(query).add(query).add(query).add(query).add(query).add(query).add(query);
             if (old) {
                 sqlquery += " OR ore.equipment_name ~* ? ";
                 values.add(query);
