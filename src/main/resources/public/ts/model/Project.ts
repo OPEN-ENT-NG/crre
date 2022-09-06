@@ -91,8 +91,21 @@ export class Projects extends Selection<Project> {
             idsOrders: params_id_order,
             old: old
         };
-        toasts.confirm('crre.export.order.region.success');
-        await http.post(`/crre/region/orders/exports`, data);
+        const response = await http.post(`/crre/region/orders/exports`, data);
+        if(response.status == 200) {
+            if (params_id_order.length > 1000) {
+                toasts.confirm('crre.export.order.region.success');
+            } else {
+                let blob = new Blob([response.data], {type: ' type: "text/csv;charset=UTF-8"'});
+                let link = document.createElement('a');
+                link.href = (window as any).URL.createObjectURL(blob);
+                link.download = "orders.csv"
+                document.body.appendChild(link);
+                link.click();
+            }
+        } else {
+           toasts.warning('crre.export.order.region.error')
+        }
     }
 
     private extractAllOrders() {

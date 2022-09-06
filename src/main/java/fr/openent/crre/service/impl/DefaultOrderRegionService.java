@@ -580,13 +580,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         DecimalFormat df2 = new DecimalFormat("#.##", dfs);
                         double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
                         double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
-                        order.put("priceht", priceDetails.getDouble("prixht"));
+                        order.put("priceht", Double.parseDouble(df2.format(priceDetails.getDouble("prixht"))));
                         order.put("tva5", (priceDetails.containsKey("partTVA5")) ?
-                                priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht") : null);
+                                Double.parseDouble(df2.format(priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht"))) : null);
                         order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
-                                priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht") : null);
-                        order.put("unitedPriceTTC", priceDetails.getDouble("priceTTC"));
-                        order.put("price", priceDetails.getDouble("priceTTC"));
+                                Double.parseDouble(df2.format(priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht"))) : null);
+                        order.put("unitedPriceTTC", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
+                        order.put("price", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
                         order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
                         order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
                         extractedEquipmentInfo(order, equipment);

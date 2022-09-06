@@ -989,18 +989,32 @@ public class OrderRegionController extends BaseController {
                     JsonObject exportParams = new JsonObject()
                             .put("params", params)
                             .put("action", "saveOrderRegion");
-                    launchWorker(exportParams);
-                    ok(request);
+                    if (idsOrders.size() > 1000) {
+                        launchWorker(exportParams,null);
+                        ok(request);
+                    } else {
+                        launchWorker(exportParams, request);
+                    }
                 })
         );
     }
 
-    private void launchWorker(JsonObject params) {
-        eb.send(ExportWorker.class.getSimpleName(), params, new DeliveryOptions().setSendTimeout(1000 * 1000L), handlerToAsyncHandler(eventExport -> {
+    private void launchWorker(JsonObject params, HttpServerRequest request) {
+        eb.send(ExportWorker.class.getSimpleName(), params, new DeliveryOptions().setSendTimeout(1000 * 1000L),
+                handlerToAsyncHandler(eventExport -> {
                     if (eventExport.body().getString("status").equals("ok")) {
-                        log.info("Ok calling worker " + eventExport.body().toString());
+                        if (request != null) {
+                            //Export CSV
+                            request.response()
+                                    .putHeader("Content-Type", "text/csv; charset=utf-8")
+                                    .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                                    .end(eventExport.body().getJsonObject("data").getString("csvFile"));
+                        }
                     } else {
                         log.error("Ko calling worker " + eventExport.body().toString());
+                        if (request != null) {
+                            renderError(request);
+                        }
                     }
                 }
         ));

@@ -10,6 +10,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -54,18 +55,18 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
 
     @Override
     public void handle(Message<JsonObject> message) {
-        message.reply(new JsonObject().put("status", "ok"));
         log.info(String.format("[Crre@%s] ExportWorker called ", this.getClass().getSimpleName()));
         JsonObject paramsEB = message.body();
-        processExport(paramsEB);
+        processExport(paramsEB, message);
     }
 
 
-    private void processExport(JsonObject params) {
-        Handler<Either<String, Boolean>> exportHandler = event -> {
+    private void processExport(JsonObject params, Message<JsonObject> message) {
+        Handler<Either<String, JsonObject>> exportHandler = event -> {
             log.info(String.format("[Crre@%s] exportHandler", this.getClass().getSimpleName()));
             if (event.isRight()) {
                 log.info("[Crre@ExportWorker] Export finish");
+                message.reply(new JsonObject().put("status", "ok").put("data",event.right().getValue()));
             } else {
                 log.error(event.left().getValue());
             }
@@ -74,7 +75,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
     }
 
 
-    private void chooseExport(JsonObject body, Handler<Either<String, Boolean>> exportHandler) {
+    private void chooseExport(JsonObject body, Handler<Either<String, JsonObject>> exportHandler) {
         final String action = body.getString("action", "");
         JsonObject params = body.getJsonObject("params");
         log.info("[Crre@ExportWorker::chooseExport ] " + this.getClass().toString() + "  Export Type : " + action);
@@ -89,7 +90,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
     }
 
 
-    private void processOrderRegion(JsonObject params, Handler<Either<String, Boolean>> exportHandler) {
+    private void processOrderRegion(JsonObject params, Handler<Either<String, JsonObject>> exportHandler) {
         log.info("[Crre@ExportWorker::processOrderRegion ] Process orders");
         JsonArray idsOrders = params.getJsonArray("idsOrders");
         JsonArray idsEquipments = params.getJsonArray("idsEquipments");
@@ -119,7 +120,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
                     orderRegion.addAll((JsonArray) futures.get(i).result());
                 }
                 orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId, ordersRegionId);
-                writeCSVFile(exportHandler, idUser, orderRegion, 0);
+                writeCSVFile(exportHandler, idUser, orderRegion, listOrders.size(), 0);
             } else {
                 log.error("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage(), event.cause());
                 exportHandler.handle(new Either.Left<>("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage()));
@@ -132,7 +133,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         searchByIds(idsEquipments.getList(), handlerJsonArray(equipmentsFuture));
     }
 
-    private void writeCSVFile(Handler<Either<String, Boolean>> exportHandler, String idUser, JsonArray orderRegion, int e) {
+    private void writeCSVFile(Handler<Either<String, JsonObject>> exportHandler, String idUser, JsonArray orderRegion, int ordersSize, int e) {
         JsonArray orderRegionSplit = new JsonArray();
         for(int i = e * 100000; i < min((e +1) * 100000, orderRegion.size()); i ++){
             orderRegionSplit.add(orderRegion.getJsonObject(i));
@@ -142,31 +143,36 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         JsonObject body = new JsonObject()
                 .put("name", "CRRE_Export_" + day + "_" + e + ".csv")
                 .put("format", "csv");
-        final Buffer buff = Buffer.buffer();
-        buff.appendString(data.getString("csvFile"));
-        storageService.add(body, buff, null, addFileEvent -> {
-            if (addFileEvent.isRight()) {
-                JsonObject storageEntries = addFileEvent.right().getValue();
-                String application = config.getString("app-name");
-                UserUtils.getUserInfos(eb, idUser, user -> {
-                    workspaceHelper.addDocument(storageEntries, user, body.getString("name"), application, false, null, createEvent -> {
-                        if (createEvent.succeeded()) {
-                            if ((e + 1) * 100000 < orderRegion.size()) {
-                                writeCSVFile(exportHandler, idUser, orderRegion, e + 1);
+        if (ordersSize < 1000) {
+            log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
+            exportHandler.handle(new Either.Right<>(data));
+        } else {
+            final Buffer buff = Buffer.buffer();
+            buff.appendString(data.getString("csvFile"));
+            storageService.add(body, buff, null, addFileEvent -> {
+                if (addFileEvent.isRight()) {
+                    JsonObject storageEntries = addFileEvent.right().getValue();
+                    String application = config.getString("app-name");
+                    UserUtils.getUserInfos(eb, idUser, user -> {
+                        workspaceHelper.addDocument(storageEntries, user, body.getString("name"), application, false, null, createEvent -> {
+                            if (createEvent.succeeded()) {
+                                if ((e + 1) * 100000 < orderRegion.size()) {
+                                    writeCSVFile(exportHandler, idUser, orderRegion, 100000, e + 1);
+                                } else {
+                                    log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
+                                    exportHandler.handle(new Either.Right<>(new JsonObject()));
+                                }
                             } else {
-                                log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
-                                exportHandler.handle(new Either.Right<>(true));
+                                log.error("[Crre@processOrderRegion] Failed to create a workspace document : " +
+                                        createEvent.cause().getMessage());
                             }
-                        } else {
-                            log.error("[Crre@processOrderRegion] Failed to create a workspace document : " +
-                                    createEvent.cause().getMessage());
-                        }
+                        });
                     });
-                });
-            } else {
-                log.error("[Crre@createFile] Failed to create a new entry in the storage");
-            }
-        });
+                } else {
+                    log.error("[Crre@createFile] Failed to create a new entry in the storage");
+                }
+            });
+        }
     }
 
     private void getOrderRecursively(boolean old, int e, List<Integer> listOrders, List<Future> futures) {
