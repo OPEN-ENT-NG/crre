@@ -5,11 +5,8 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.*;
-import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.OrderService;
-import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.openent.crre.service.impl.DefaultOrderService;
-import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
@@ -37,6 +34,7 @@ import java.net.URLDecoder;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
@@ -52,15 +50,11 @@ import static java.lang.Integer.parseInt;
 public class OrderController extends ControllerHelper {
 
     private final OrderService orderService;
-    private final OrderRegionService orderRegionService;
-    private final DefaultStructureService structureService;
 
     public static final String UTF8_BOM = "\uFEFF";
 
     public OrderController() {
-        this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment");
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
     @Get("/orders/mine/:idCampaign/:idStructure")
@@ -75,7 +69,7 @@ public class OrderController extends ControllerHelper {
                 List<String> ordersIds = request.params().getAll("order_id");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
-                Boolean old = Boolean.valueOf(request.getParam("old"));
+                boolean old = Boolean.parseBoolean(request.getParam("old"));
 
                 orderService.listOrder(idCampaign, idStructure, user, ordersIds, startDate, endDate, old, orders -> {
                     if (orders.isRight()) {
@@ -235,8 +229,8 @@ public class OrderController extends ControllerHelper {
                         JsonArray totalAmount = getTotalAmount.future().result();
                         JsonArray order_credit = getOrderCredit.future().result();
                         if (order_credit.size() > 0) {
-                            List<String> idsEquipment = new ArrayList<>();
-                            List<Long> idsOrderFiltered = new ArrayList<>();
+                            HashSet<String> idsEquipment = new HashSet<>();
+                            HashSet<Long> idsOrderFiltered = new HashSet<>();
                             int total_amount = 0;
                             for (int i = 0; i < order_credit.size(); i++) {
                                 idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
@@ -246,7 +240,7 @@ public class OrderController extends ControllerHelper {
                                 total_amount += totalAmount.getJsonObject(i).getLong("amount");
                             }
                             int finalTotal_amount = total_amount;
-                            searchByIds(idsEquipment, equipments -> {
+                            searchByIds(new ArrayList<>(idsEquipment), equipments -> {
                                 if (equipments.isRight()) {
                                     JsonArray equipmentsArray = equipments.right().getValue();
                                     double total = 0;
@@ -280,11 +274,17 @@ public class OrderController extends ControllerHelper {
                                     result.put("total", finalTotal_amount);
                                     result.put("total_filtered", totalFiltered);
                                     renderJson(request, result);
+                                } else {
+                                    log.error("[CRRE] OrderController@listOrdersAmount searchByIds failed : " + equipments.left().getValue());
+                                    badRequest(request);
                                 }
                             });
                         } else {
                             renderJson(request, result);
                         }
+                    } else {
+                        log.error("[CRRE] OrderController@listOrdersAmount CompositeFuture.all failed : " + event.cause().getMessage());
+                        badRequest(request);
                     }
                 });
                 orderService.listOrderAmount(status, idStructure, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
@@ -383,11 +383,11 @@ public class OrderController extends ControllerHelper {
                     getOrderEquipment(idsOrders, userInfos, idStructure, idCampaign, statut, startDate, endDate, event -> {
                         if (event.isRight()) {
                             JsonArray orderClients = event.right().getValue();
-                            List<String> idsEquipment = new ArrayList<>();
+                            HashSet<String> idsEquipment = new HashSet<>();
                             for (int j = 0; j < orderClients.size(); j++) {
                                 idsEquipment.add(orderClients.getJsonObject(j).getString("equipment_key"));
                             }
-                            getEquipment(idsEquipment, event1 -> {
+                            getEquipment(new ArrayList<>(idsEquipment), event1 -> {
                                 JsonObject orderMap;
                                 JsonArray equipments = event1.right().getValue();
                                 JsonArray orders = new JsonArray();

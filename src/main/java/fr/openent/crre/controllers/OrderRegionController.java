@@ -23,10 +23,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -54,6 +51,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
@@ -88,80 +86,194 @@ public class OrderRegionController extends BaseController {
     }
 
     @Post("/region/orders")
-    @ApiDoc("Create orders for region")
+    @ApiDoc("Create orders for region when we don't know the id of the project")
     @SecuredAction(Crre.VALIDATOR_RIGHT)
     @ResourceFilter(ValidatorRight.class)
     public void createAdminOrder(final HttpServerRequest request) {
         try {
             UserUtils.getUserInfos(eb, request, user ->
-                    RequestUtils.bodyToJson(request, orders -> {
-                        if (!orders.isEmpty()) {
-                            JsonArray ordersList = orders.getJsonArray("orders");
-                            String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                            orderRegionService.getLastProject(lastProject -> {
-                                if (lastProject.isRight()) {
-                                    String last = lastProject.right().getValue().getString("title");
-                                    String title = "Commande_" + date;
-                                    if (last != null) {
-                                        if (title.equals(last.substring(0, last.length() - 2))) {
-                                            title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
-                                        } else {
-                                            title += "_1";
-                                        }
-                                    } else {
-                                        title += "_1";
-                                    }
-                                    String finalTitle = title;
-                                    orderRegionService.createProject(title, idProject -> {
-                                        if (idProject.isRight()) {
-                                            Integer idProjectRight = idProject.right().getValue().getInteger("id");
-                                            Logging.insert(eb,
-                                                    request,
-                                                    null,
-                                                    Actions.CREATE.toString(),
-                                                    idProjectRight.toString(),
-                                                    new JsonObject().put("id", idProjectRight).put("title", finalTitle));
-                                            for (int i = 0; i < ordersList.size(); i++) {
-                                                JsonObject newOrder = ordersList.getJsonObject(i);
-                                                Double price = Double.parseDouble(newOrder.getDouble("price").toString())
-                                                        * newOrder.getInteger("amount");
-                                                int finalI = i;
-                                                orderRegionService.createOrdersRegion(newOrder, user, idProjectRight,
-                                                        event -> {
-                                                            if (event.isRight()) {
-                                                                Number idReturning = event.right().getValue().getInteger("id");
-                                                                Logging.insert(eb,
-                                                                        request,
-                                                                        Contexts.ORDERREGION.toString(),
-                                                                        Actions.CREATE.toString(),
-                                                                        idReturning.toString(),
-                                                                        new JsonObject().put("order region", newOrder));
-                                                                updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
-                                                                        .onSuccess(log::info)
-                                                                        .onFailure(err -> LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(), err.getCause()));
-                                                                if (finalI == ordersList.size() - 1) {
-                                                                    request.response().setStatusCode(201).end();
-                                                                }
-                                                            } else {
-                                                                LOGGER.error("An error when you want get id after create order region ",
-                                                                        event.left().getValue());
-                                                                request.response().setStatusCode(400).end();
-                                                            }
-                                                        });
-                                            }
-                                        } else {
-                                            LOGGER.error("An error when you want get id after create project " + idProject.left());
-                                            request.response().setStatusCode(400).end();
-                                        }
-                                    });
-                                }
-                            });
+                RequestUtils.bodyToJson(request, orders -> {
+                    if (!orders.isEmpty()) {
+                        JsonArray ordersList = orders.getJsonArray("orders");
+                        HashSet<String> idsEquipment = new HashSet<>();
+                        for (int i = 0; i < ordersList.size(); i++) {
+                            idsEquipment.add(ordersList.getJsonObject(i).getString("equipment_key"));
                         }
-                    }));
-
+                        Promise<Void> equipmentsFuture = Promise.promise();
+                        Promise<Integer> projectIdFuture = Promise.promise();
+                        List<Future> promises = new ArrayList<>();
+                        promises.add(equipmentsFuture.future());
+                        promises.add(projectIdFuture.future());
+                        CompositeFuture.all(promises).onComplete(event -> {
+                                    if (event.succeeded()) {
+                                        Integer idProject = projectIdFuture.future().result();
+                                        createOrdersRegion(request, user, ordersList, idProject);
+                                    } else {
+                                        LOGGER.error("[CRRE] OrderRegionController@createAdminOrder An error in compositeFuture :  " +
+                                                event.cause().getMessage());
+                                        request.response().setStatusCode(400).end();
+                                    }
+                                });
+                        getLastProject(request, projectIdFuture);
+                        searchByIds(new ArrayList<>(idsEquipment), equipments -> {
+                            if (equipments.isRight()) {
+                                setPriceToOrder(ordersList, equipments);
+                                equipmentsFuture.complete();
+                            } else {
+                                log.error("[CRRE] OrderRegionController@createAdminOrder searchByIds failed : " +
+                                        equipments.left().getValue());
+                                equipmentsFuture.fail("[CRRE] OrderRegionController@createAdminOrder searchByIds failed : " +
+                                        equipments.left().getValue());
+                            }
+                        });
+                    } else {
+                        noContent(request);
+                    }
+                })
+            );
         } catch (Exception e) {
             LOGGER.error("An error when you want create order region and project", e);
             request.response().setStatusCode(400).end();
+        }
+    }
+
+    private void getLastProject(HttpServerRequest request, Promise<Integer> projectIdFuture) {
+        orderRegionService.getLastProject(lastProject -> {
+            if (lastProject.isRight()) {
+                String last = lastProject.right().getValue().getString("title");
+                String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                String title = "Commande_" + date;
+                if (last != null) {
+                    if (title.equals(last.substring(0, last.length() - 2))) {
+                        title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
+                    } else {
+                        title += "_1";
+                    }
+                } else {
+                    title += "_1";
+                }
+                createProject(request, title, projectIdFuture);
+            } else {
+                LOGGER.error("[CRRE] OrderRegionController@getLastProject An error when you want get last project " +
+                        lastProject.left());
+                projectIdFuture.fail("[CRRE] OrderRegionController@getLastProject An error when you want get last project " +
+                        lastProject.left());
+            }
+        });
+    }
+
+    private void createProject(HttpServerRequest request, String title, Promise<Integer> projectIdFuture) {
+        orderRegionService.createProject(title, idProject -> {
+            if (idProject.isRight()) {
+                Integer idProjectRight = idProject.right().getValue().getInteger("id");
+                Logging.insert(eb,
+                        request,
+                        null,
+                        Actions.CREATE.toString(),
+                        idProjectRight.toString(),
+                        new JsonObject().put("id", idProjectRight).put("title", title));
+                projectIdFuture.complete(idProjectRight);
+            } else {
+                LOGGER.error("[CRRE] OrderRegionController@createProject An error when you want create project " +
+                        idProject.left());
+                projectIdFuture.fail("[CRRE] OrderRegionController@createProject An error when you want create project " +
+                        idProject.left());
+            }
+        });
+    }
+
+    private void createOrdersRegion(HttpServerRequest request, UserInfos user, JsonArray ordersList, Integer idProjectRight) {
+        AtomicBoolean stillHaveCredit = new AtomicBoolean(true);
+        for (int i = 0; i < ordersList.size(); i++) {
+            if(stillHaveCredit.get()) {
+                JsonObject newOrder = ordersList.getJsonObject(i);
+                Double price = newOrder.getDouble("price") * newOrder.getInteger("amount");
+                int finalI = i;
+                updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
+                        .onSuccess(res -> orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, event -> {
+                                    if (event.isRight()) {
+                                        Number idReturning = event.right().getValue().getInteger("id");
+                                        Logging.insert(eb,
+                                                request,
+                                                Contexts.ORDERREGION.toString(),
+                                                Actions.CREATE.toString(),
+                                                idReturning.toString(),
+                                                new JsonObject().put("order region", newOrder));
+                                        if (finalI == ordersList.size() - 1) {
+                                            renderJson(request,new JsonObject().put("idProject",idProjectRight),201);
+                                        }
+                                    } else {
+                                        LOGGER.error("An error when you want get id after create order region ",
+                                                event.left().getValue());
+                                        request.response().setStatusCode(400).end();
+                                        stillHaveCredit.set(false);
+                                    }
+                                }))
+                        .onFailure(err -> {
+                            LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(),
+                                    err.getCause());
+                            request.response().setStatusCode(400).end();
+                            stillHaveCredit.set(false);
+                        });
+            }
+        }
+    }
+
+    @Post("/region/orders/:id")
+    @ApiDoc("Create orders for region when we know the id of the project")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ValidatorRight.class)
+    public void createAdminOrderWithIdProject(final HttpServerRequest request) {
+        try {
+            UserUtils.getUserInfos(eb, request, user ->
+                    RequestUtils.bodyToJson(request, orders -> {
+                        Integer idProject = request.getParam("id") != null ?
+                                Integer.parseInt(request.getParam("id")) : null;
+                        if (!orders.isEmpty() || idProject == null) {
+                            JsonArray ordersList = orders.getJsonArray("orders");
+                            HashSet<String> idsEquipment = new HashSet<>();
+                            for (int i = 0; i < ordersList.size(); i++) {
+                                idsEquipment.add(ordersList.getJsonObject(i).getString("equipment_key"));
+                            }
+                            searchByIds(new ArrayList<>(idsEquipment), equipments -> {
+                                if (equipments.isRight()) {
+                                    setPriceToOrder(ordersList, equipments);
+                                    createOrdersRegion(request, user, ordersList, idProject);
+                                } else {
+                                    log.error("[CRRE] OrderRegionController@createAdminOrderWithIdProject searchByIds failed : " +
+                                            equipments.left().getValue());
+                                    badRequest(request);
+                                }
+                            });
+                        } else {
+                            noContent(request);
+                        }
+                    })
+            );
+        } catch (Exception e) {
+            LOGGER.error("An error when you want create order region and project", e);
+            request.response().setStatusCode(400).end();
+        }
+    }
+
+    private static void setPriceToOrder(JsonArray ordersList, Either<String, JsonArray> equipments) {
+        JsonArray equipmentsArray = equipments.right().getValue();
+        for (int j = 0; j < equipmentsArray.size(); j++) {
+            JsonObject equipment = equipmentsArray.getJsonObject(j);
+            double priceTTC = getPriceTtc(equipment).getDouble("priceTTC");
+            equipment.put("price",priceTTC);
+        }
+        for (int i = 0; i < ordersList.size(); i++) {
+            JsonObject order = ordersList.getJsonObject(i);
+            String idEquipment = order.getString("equipment_key");
+            if (equipmentsArray.size() > 0) {
+                for (int j = 0; j < equipmentsArray.size(); j++) {
+                    JsonObject equipment = equipmentsArray.getJsonObject(j);
+                    if (idEquipment.equals(equipment.getString("id"))) {
+                        order.put("price",equipment.getDouble("price"));
+                    }
+                }
+            }
         }
     }
 
@@ -759,18 +871,18 @@ public class OrderRegionController extends BaseController {
                         });
             }
         } else if (status.equals("rejected")) {
-                updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
-                        .onSuccess(res -> {
-                            if (i + 1 < ordersList.size()){
-                                updatePurseLicence(status, ordersList, i + 1, handler);
-                            } else {
-                                handler.handle(new Either.Right<>(new JsonObject()));
-                            }
-                        })
-                        .onFailure(err -> {
-                            LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
-                            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
-                        });
+            updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
+                    .onSuccess(res -> {
+                        if (i + 1 < ordersList.size()){
+                            updatePurseLicence(status, ordersList, i + 1, handler);
+                        } else {
+                            handler.handle(new Either.Right<>(new JsonObject()));
+                        }
+                    })
+                    .onFailure(err -> {
+                        LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
+                        updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
+                    });
         } else if (i + 1 < ordersList.size()){
             updatePurseLicence(status, ordersList, i + 1, handler);
         } else {

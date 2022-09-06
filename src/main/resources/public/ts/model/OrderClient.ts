@@ -44,7 +44,6 @@ export class OrderClient implements Order {
     name: string;
     name_structure: string;
     priceTotalTTC: number;
-    structure_groups: any;
     summary: string;
     image: string;
     status: string;
@@ -164,16 +163,16 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     async sync(status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number,
-               idStructure?: string, ordersId?, page?: number, old = false): Promise<boolean> {
+               idStructure?: string, ordersId?, page?: number, old = false, ordersToRemove?: OrdersClient): Promise<boolean> {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             if (idCampaign && idStructure && ordersId) {
                 return await this.getSpecificOrders(ordersId, old, idCampaign, idStructure, startDate, endDate);
             } else {
                 const {data} = await http.get(`/crre/orders?idStructure=${idStructure}&startDate=${startDate}&endDate=${endDate}&page=${page}&status=${status}`);
-                let newOrderClient = Mix.castArrayAs(OrderClient, data);
-                if (newOrderClient.length > 0) {
-                    if (!old) {
+                if (!ordersToRemove) {
+                    let newOrderClient = Mix.castArrayAs(OrderClient, data);
+                    if (!old && newOrderClient.length > 0) {
                         let equipments = new Equipments();
                         await equipments.getEquipments(newOrderClient);
                         for (let order of newOrderClient) {
@@ -182,15 +181,16 @@ export class OrdersClient extends Selection<OrderClient> {
                                 OrderUtils.initNameStructure(order.id_structure, structures) : '';
                             order.structure = (structures && structures.length > 0) ?
                                 OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                            order.structure_groups = Utils.parsePostgreSQLJson(order.structure_groups);
                             order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
                             order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order.equipment) as number).toString()) * order.amount;
                             order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
                         }
                     }
                     this.all = this.all.concat(newOrderClient);
-                    return true;
+                } else {
+                    ordersToRemove.all = data;
                 }
+                return true;
             }
         } catch (e) {
             toasts.warning('crre.order.sync.err');

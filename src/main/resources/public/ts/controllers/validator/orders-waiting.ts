@@ -6,9 +6,10 @@ import {
     OrdersRegion,
     Utils,
     Filter,
-    Filters
+    Filters, Campaign
 } from '../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
+import {Mix} from "entcore-toolkit";
 
 export const waitingValidatorOrderController = ng.controller('waitingValidatorOrderController',
     ['$scope', ($scope,) => {
@@ -30,6 +31,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         $scope.displayedBasketsOrders = [];
         // @ts-ignore
         this.init = async () => {
+            $scope.loading = true;
+            Utils.safeApply($scope);
             $scope.filterChoice = {
                 users: [],
                 type_campaign: []
@@ -57,6 +60,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             });
             $scope.type_campaign.forEach((item) => item.toString = () => item.name);
             await $scope.getAllAmount();
+            $scope.allOrdersSelected = false;
+            $scope.loading = false;
             Utils.safeApply($scope);
         };
 
@@ -137,14 +142,14 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let purseAmount = $scope.campaign.purse_amount ? $scope.campaign.purse_amount : 0;
             let purseAmountConsumable = $scope.campaign.consumable_purse_amount ? $scope.campaign.consumable_purse_amount : 0;
 
-            let isAvailable: boolean;
+            let isAvailable: boolean = false;
 
-            if($scope.ordersClient.selectedElements.length > 0) {
+            if($scope.ordersClient && $scope.ordersClient.selectedElements && $scope.ordersClient.selectedElements.length > 0) {
                 isAvailable = $scope.ordersClient.all.length == 0 ||
                     nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
                     purseAmount - $scope.ordersClient.selectedElements.calculTotalPriceTTC(false) < 0 ||
                     purseAmountConsumable - $scope.ordersClient.selectedElements.calculTotalPriceTTC(true) < 0;
-            } else {
+            } else if($scope.amountTotal && $scope.ordersClient) {
                 isAvailable = $scope.ordersClient.all.length == 0 ||
                 nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
                 purseAmount - $scope.amountTotal.credit < 0 ||
@@ -194,6 +199,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         }
 
         $scope.createOrder = async (): Promise<void> => {
+            $scope.loading = true;
             let ordersToCreate = new OrdersRegion();
             let ordersToRemove = new OrdersClient();
             let totalPrice = 0;
@@ -202,33 +208,43 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let totalAmountConsumable = 0;
             let ordersToReformat;
 
-            if ($scope.allOrdersSelected) {
-                await $scope.searchByName(false, true);
-                ordersToReformat = $scope.ordersClient.all;
+            if ($scope.allOrdersSelected || $scope.ordersClient.selectedElements.length === 0) {
+                await $scope.searchByName(true, ordersToRemove);
+                ordersToRemove.forEach(order => {
+                    order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
+                    const orderRegion = new OrderRegion();
+                    orderRegion.createFromOrderClient(order);
+                    ordersToCreate.all.push(orderRegion);
+                })
             } else {
-                if ($scope.ordersClient.selectedElements.length > 0) {
-                    ordersToReformat = $scope.ordersClient.selectedElements;
-                } else {
-                    await $scope.searchByName(false, true);
-                    ordersToReformat = $scope.ordersClient.all;
-                }
+                ordersToReformat = $scope.ordersClient.selectedElements;
+                const __ret = reformatOrders(ordersToReformat, ordersToCreate, ordersToRemove,
+                    totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable);
+                totalPrice = __ret.totalPrice;
+                totalPriceConsumable = __ret.totalPriceConsumable
+                totalAmount = __ret.totalAmount;
+                totalAmountConsumable = __ret.totalAmountConsumable;
             }
-            const __ret = reformatOrders(ordersToReformat, ordersToCreate, ordersToRemove,
-                totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable);
-            totalPrice = __ret.totalPrice;
-            totalPriceConsumable = __ret.totalPriceConsumable
-            totalAmount = __ret.totalAmount;
-            totalAmountConsumable = __ret.totalAmountConsumable;
-
             ordersToCreate.create().then(async data => {
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
-                    await $scope.updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable, ordersToRemove, ordersToReformat.length);
-                    await $scope.getAllFilters();
-                    $scope.allOrdersSelected = false;
-                    $scope.onScroll(true);
-                    await $scope.getAllAmount();
-                    Utils.safeApply($scope);
+                    if ($scope.allOrdersSelected || $scope.ordersClient.selectedElements.length === 0) {
+                        $scope.loading = true;
+                        $scope.ordersClient.all = [];
+                        Utils.safeApply($scope);
+                        if(!$scope.current.structure) await $scope.initStructures();
+                        await $scope.getInfos();
+                        await $scope.initOrders('WAITING');
+                        this.init();
+                    } else {
+                        await $scope.updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable,
+                            ordersToRemove, ordersToReformat.length);
+                        await $scope.getAllFilters();
+                        $scope.allOrdersSelected = false;
+                        $scope.onScroll(true);
+                        await $scope.getAllAmount();
+                        Utils.safeApply($scope);
+                    }
                 } else {
                     toasts.warning('crre.admin.order.create.err');
                 }
@@ -250,35 +266,36 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         };
 
-        function endLoading(newData: any) {
+        function endLoading(newData: any, all?) {
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-            $scope.loading = false;
+            if(!all)
+                $scope.loading = false;
             Utils.safeApply($scope);
         }
 
-        $scope.searchByName = async (noInit?: boolean, all?: boolean) => {
+        $scope.searchByName = async (noInit?: boolean, ordersToRemove?: OrderClient) => {
             if (!noInit) {
                 $scope.loading = true;
                 $scope.filter.page = 0;
                 $scope.ordersClient = new OrdersClient();
                 Utils.safeApply($scope);
             }
-            all ? $scope.filter.page = null : 0;
+            ordersToRemove ? $scope.filter.page = null : 0;
             if ($scope.filters.all.length == 0) {
                 if ($scope.query_name && $scope.query_name != "") {
                     const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.current.structure.id,
                         $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page);
-                    endLoading(newData);
+                    endLoading(newData, false);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate,
-                        $scope.structures.all, null, $scope.current.structure.id, null, $scope.filter.page);
-                    endLoading(newData);
+                        $scope.structures.all, null, $scope.current.structure.id, null, $scope.filter.page, null, ordersToRemove);
+                    endLoading(newData, ordersToRemove);
                 }
             } else {
                 const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.current.structure.id, $scope.filtersDate.startDate,
                     $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
-                endLoading(newData);
+                endLoading(newData, false);
             }
             $scope.syncSelected();
             Utils.safeApply($scope);

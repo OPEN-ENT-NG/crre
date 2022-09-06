@@ -184,14 +184,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
                 if(!$scope.current.structure)
                     await $scope.initStructures();
-                await getInfos();
-                await initOrders('WAITING');
+                await $scope.getInfos();
+                await $scope.initOrders('WAITING');
                 selectCampaignShow($scope.campaign, "WAITING");
             },
             orderHistoric: async () => {
                 if(!$scope.current.structure)
                     await $scope.initStructures();
-                await getInfos();
+                await $scope.getInfos();
                 selectCampaignShow($scope.campaign, "HISTORIC");
                 $scope.campaign.historic_etab_notification = 0;
                 Utils.safeApply($scope);
@@ -273,7 +273,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-        const getInfos = async function () {
+        $scope.getInfos = async function () {
             await $scope.campaigns.sync($scope.current.structure.id);
             $scope.campaign = $scope.campaigns.all[0];
         };
@@ -422,7 +422,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             $scope.loading = false;
         };
 
-        const initOrders = async (status: string) => {
+        $scope.initOrders = async (status: string) => {
             $scope.loadingArray = true;
             await initOrderStructures();
             await syncOrders(status);

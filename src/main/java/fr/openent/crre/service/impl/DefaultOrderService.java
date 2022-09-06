@@ -27,11 +27,10 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         JsonArray values = new JsonArray();
         String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, s.name as status_name, " +
                 "s.id as status_id, oe.equipment_price as price, oe.equipment_format as type, oe.offers as offers " : "";
-        String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
+        String query = "SELECT DISTINCT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
                 "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
-                "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " + selectOld +
+                "ore.status as region_status " + selectOld +
                 "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oe " : ".order_client_equipment  oe ") +
-                "LEFT JOIN " + Crre.crreSchema + ".order_file ON oe.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ((oldTable) ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_order_client_equipment = oe.id " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id ";
 
@@ -62,9 +61,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public void listOrder(String status, String idStructure, Integer page, String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT oce.* , bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign,  " +
-                "array_to_json(array_agg( distinct structure_group.name)) as structure_groups, " +
-                "array_to_json(array_agg(DISTINCT order_file.*)) as files, ore.status as region_status " +
+        String query = "SELECT oce.*, bo.name as basket_name, bo.name_user as user_name, to_json(campaign.* ) campaign, ore.status as region_status " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oce " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo " +
                 "ON bo.id = oce.id_basket " +
@@ -73,7 +70,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
                 "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
                 "AND rel_group_campaign.id_structure_group = structure_group.id) " +
-                "LEFT JOIN " + Crre.crreSchema + ".order_file ON oce.id = order_file.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" ore ON oce.id = ore.id_order_client_equipment ";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query = filterWaitingOrder(status, idStructure, query, startDate, endDate, values);
@@ -92,7 +88,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listOrderAmount(String status, String idStructure, UserInfos user, String startDate, String endDate, Boolean consumable,
                                 Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT sum(oce.amount) as nb_licences " +
+        String query = "SELECT DISTINCT sum(oce.amount) as nb_licences " +
                 "FROM crre.order_client_equipment oce " +
                 "LEFT JOIN crre.campaign c on (oce.id_campaign = c.id) " +
                 "LEFT JOIN crre.basket_order bo on (oce.id_basket = bo.id) " +
@@ -228,7 +224,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT oce.*, bo.name as basket_name " +
+        String query = "SELECT DISTINCT oce.*, bo.name as basket_name " +
                 "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oce " : ".order_client_equipment  oce ") +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oce.id_basket) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
@@ -297,7 +293,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, oe.id as id, tc.name as type_name, to_json(c.* ) campaign " +
+        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, " +
+                "oe.id as id, tc.name as type_name, to_json(c.* ) campaign " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = oe.id_campaign) " +

@@ -17,7 +17,6 @@ export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
         $scope.filters = new Filters();
         $scope.filtersFront = new FiltersFront();
-        $scope.structure_groups = new StructureGroups();
         $scope.structures = new Structures();
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-1, 'years')._d;

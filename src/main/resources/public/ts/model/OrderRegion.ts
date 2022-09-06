@@ -5,7 +5,7 @@ import {
     Order,
     Structure,
     OrderClient,
-    Equipment, Utils, Projects
+    Equipment, Projects
 } from "./index";
 import {Mix, Selection} from "entcore-toolkit";
 
@@ -32,7 +32,6 @@ export class OrderRegion implements Order  {
     name:string;
     name_structure: string;
     order_client: OrderClient;
-    structure_groups: any;
     summary:string;
     image:string;
     status:string;
@@ -80,7 +79,6 @@ export class OrderRegion implements Order  {
         this.creation_date = order.creation_date;
         this.status = order.status;
         this.campaign = order.campaign;
-        this.structure_groups = order.structure_groups;
         this.name_structure = order.name_structure;
         this.id_campaign = order.id_campaign;
         this.id_structure = order.id_structure;
@@ -103,11 +101,35 @@ export class OrdersRegion extends Selection<OrderRegion> {
 
     async create():Promise<any> {
         let orders = [];
-        this.forEach(order => {
-            orders.push(Mix.castAs(OrderRegion, order).toJson());
-        });
+        let singleOrders = [];
+        for(let i = 0; i < Math.min(10000, this.all.length); i++){
+            let order = this.all[i];
+            if(singleOrders.indexOf(order.id_orderClient) == -1) {
+                orders.push(order.toJson());
+                singleOrders.push(order.id_orderClient)
+            }
+        }
         try {
-            return await http.post(`/crre/region/orders`, {orders: orders});
+            let data = await http.post(`/crre/region/orders`, {orders: orders});
+            if(this.all.length > 10000 && data.status === 201){
+                const idProject = data.data.idProject;
+                let e = 1
+                while ( e * 10000 < this.all.length) {
+                    orders = [];
+                    for(let i = e * 10000; i < Math.min((e + 1) * 10000, this.all.length); i++){
+                        let order = this.all[i];
+                        if(singleOrders.indexOf(order.id_orderClient) == -1) {
+                            orders.push(order.toJson());
+                            singleOrders.push(order.id_orderClient)
+                        }
+                    }
+                    data = await http.post(`/crre/region/orders/${idProject}`, {orders: orders});
+                    e++;
+                }
+                return data;
+            } else {
+                return data;
+            }
         } catch (e) {
             toasts.warning('crre.order.create.err');
             throw e;

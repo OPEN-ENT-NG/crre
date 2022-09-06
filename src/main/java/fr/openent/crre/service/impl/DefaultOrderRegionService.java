@@ -43,7 +43,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public void createOrdersRegion(JsonObject order, UserInfos user, Number id_project, Handler<Either<String, JsonObject>> handler) {
         String queryOrderRegionEquipment = "" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment\" ";
-        queryOrderRegionEquipment += " ( amount, creation_date,  owner_name, owner_id," +
+        queryOrderRegionEquipment += " (amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, id_campaign, id_structure," +
                 " comment, id_order_client_equipment, id_project, reassort) " +
                 "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
@@ -58,10 +58,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getInteger("id_campaign"))
                 .add(order.getString("id_structure"))
                 .add(order.getString("comment"))
-                .add(order.getInteger("id_order_client_equipment"))
+                .add(order.getLong("id_order_client_equipment"))
                 .add(id_project)
                 .add(order.getBoolean("reassort"));
-        Sql.getInstance().prepared(queryOrderRegionEquipment, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(queryOrderRegionEquipment, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
