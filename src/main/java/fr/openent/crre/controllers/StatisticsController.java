@@ -3,7 +3,6 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.Crre;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.security.PrescriptorRight;
 import fr.openent.crre.service.StatisticsService;
 import fr.openent.crre.service.impl.DefaultStatisticsService;
 import fr.wseduc.rs.ApiDoc;
@@ -219,7 +218,7 @@ public class StatisticsController extends BaseController {
     @Get("/stats/exports")
     @ApiDoc("Export stats as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void exportStat(final HttpServerRequest request) {
         HashMap<String, ArrayList<String>> params = getParams(request);
         boolean isReassort = false;

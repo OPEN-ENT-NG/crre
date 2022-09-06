@@ -82,12 +82,12 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event, idBasket)));
     }
 
-    public void updateAmount(Integer idBasket, Integer amount, Handler<Either<String, JsonObject>> handler ) {
+    public void updateAmount(UserInfos user, Integer idBasket, Integer amount, Handler<Either<String, JsonObject>> handler ) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".basket_equipment " +
                 " SET  amount = ? " +
-                " WHERE id = ?; ";
-        values.add(amount).add(idBasket);
+                " WHERE id = ? AND id_user = ?; ";
+        values.add(amount).add(idBasket).add(user.getUserId());
 
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler) );
     }

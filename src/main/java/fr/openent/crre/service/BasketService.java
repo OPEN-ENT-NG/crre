@@ -45,7 +45,7 @@ public interface BasketService {
      * @param amount the new amount
      * @param handler function handler returning data
      */
-     void updateAmount(Integer idBasket, Integer amount, Handler<Either<String, JsonObject>> handler );
+     void updateAmount(UserInfos user, Integer idBasket, Integer amount, Handler<Either<String, JsonObject>> handler );
 
     /**
      * Update a basket's comment

@@ -538,10 +538,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             Utils.safeApply($scope);
         };
 
-        $scope.updateAllStatus = async () => {
-            await http.get('/crre/region/orders/old/status');
-        };
-
         $scope.getColor = (id) => {
             let color = "";
             switch (id)

@@ -116,12 +116,12 @@ public class BasketController extends ControllerHelper {
     @Get("/basketOrder/allMyOrders")
     @ApiDoc("Get all my baskets orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void getMyBasketOrders(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
                 Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                Integer id_campaign = request.params().contains("id") ? parseInt(request.params().get("id")) : null;
+                Integer id_campaign = request.params().contains("idCampaign") ? parseInt(request.params().get("idCampaign")) : null;
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
                 boolean old = Boolean.parseBoolean(request.getParam("old"));
@@ -135,14 +135,14 @@ public class BasketController extends ControllerHelper {
     @Get("/basketOrder/search")
     @ApiDoc("Search order through name")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("q") && !request.params().get("q").trim().isEmpty()) {
                 try {
                     Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
                     String query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-                    int id_campaign = parseInt(request.getParam("id"));
+                    int id_campaign = parseInt(request.getParam("idCampaign"));
                     String startDate = request.getParam("startDate");
                     String endDate = request.getParam("endDate");
                     Boolean old = Boolean.valueOf(request.getParam("old"));
@@ -216,15 +216,15 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorRight.class)
     public void updateAmount(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
+        UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
             try {
                 Integer id = parseInt(request.params().get("idBasket"));
                 Integer amount = basket.getInteger("amount");
-                basketService.updateAmount(id, amount, defaultResponseHandler(request));
+                basketService.updateAmount(user, id, amount, defaultResponseHandler(request));
             } catch (ClassCastException e) {
                 log.error("An error occurred when casting basket id", e);
             }
-        });
+        }));
     }
 
     @Put("/basket/:idBasket/comment")

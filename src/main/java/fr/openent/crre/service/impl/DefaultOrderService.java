@@ -52,8 +52,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             }
         }
         query += " GROUP BY ( oe.id, campaign.priority_enabled, ore.status" + ((oldTable) ? ", s.name, s.id) " : ") ") +
-                "ORDER BY CASE WHEN campaign.priority_enabled = false " +
-                "THEN oe.creation_date END ASC";
+                "ORDER BY oe.creation_date ASC";
 
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
 

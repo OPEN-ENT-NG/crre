@@ -5,6 +5,7 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.security.ValidatorAndStructureRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.PurseService;
@@ -280,7 +281,7 @@ public class OrderRegionController extends BaseController {
     @Get("/orderRegion/projects")
     @ApiDoc("get all projects ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(ValidatorAndStructureRight.class)
     public void getAllProjects(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             Integer page = OrderUtils.formatPage(request);
@@ -636,7 +637,7 @@ public class OrderRegionController extends BaseController {
     @Get("/ordersRegion/projects/search_filter")
     @ApiDoc("get all projects search and filter")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(ValidatorAndStructureRight.class)
     public void getProjectsDateSearch(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             String query = "";
@@ -651,13 +652,12 @@ public class OrderRegionController extends BaseController {
             }
             if (request.params().contains("type") || request.params().contains("id_structure")) {
                 String finalQuery = query;
-                Integer finalPage = page;
                 structureService.getStructuresByTypeAndFilter(request.getParam("type"),
                         request.params().getAll("id_structure"), event -> {
                             if (event.isRight()) {
                                 JsonArray listeIdStructure = event.right().getValue();
                                 filters.add(new JsonObject().put("id_structure", listeIdStructure));
-                                getOrders(finalQuery, filters, user, finalPage, request);
+                                getOrders(finalQuery, filters, user, page, request);
                             } else {
                                 log.error(event.left().getValue());
                                 badRequest(request);
@@ -1018,46 +1018,6 @@ public class OrderRegionController extends BaseController {
                     }
                 }
         ));
-    }
-
-    @Get("region/orders/old/status")
-    @ApiDoc("Update status of orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void updateStatusOrders(final HttpServerRequest request) {
-        // LDE function that returns status widh order id
-        orderRegionService.getStatusByOrderId(event -> {
-            if (event.isRight()) {
-                JsonArray listIdOrders = event.right().getValue();
-                for (int i = 0; i < listIdOrders.size(); i++) {
-                    listIdOrders.getJsonObject(i).put("status", randomStatus());
-                }
-                if (listIdOrders.size() > 0) {
-                    // Update status in sql base
-                    orderRegionService.updateStatus(listIdOrders, event2 -> {
-                        if (event2.isRight()) {
-                            renderJson(request, event2.right().getValue());
-                        } else {
-                            log.error(event2.left().getValue());
-                            badRequest(request);
-                        }
-                    });
-                } else {
-                    ok(request);
-                }
-            } else {
-                log.error(event.left().getValue());
-                badRequest(request);
-            }
-        });
-    }
-
-    int randomStatus() {
-        int[] tab = {1, 2, 3, 4, 6, 7, 9, 10, 14, 15, 20, 35, 55, 57, 58, 59};
-        Random rn = new Random();
-        int range = 15 + 1;
-        int randomNum = rn.nextInt(range);
-        return tab[randomNum];
     }
 
     @Post("region/orders/library")

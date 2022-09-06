@@ -34,7 +34,7 @@ public class CampaignController extends ControllerHelper {
     @Get("/campaigns")
     @ApiDoc("List all campaigns")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(PrescriptorAndStructureRight.class)
     @Override
     public void list(final HttpServerRequest  request) {
         UserUtils.getUserInfos(eb, request, user -> {
@@ -144,7 +144,7 @@ public class CampaignController extends ControllerHelper {
     @Get("/campaigns/types")
     @ApiDoc("Get all types of campaign in database")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(AdministratorRight.class)
     public void campaignTypes(HttpServerRequest request) {
         try {
             campaignService.getCampaignTypes(arrayResponseHandler(request));

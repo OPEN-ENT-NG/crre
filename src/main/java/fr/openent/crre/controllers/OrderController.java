@@ -158,7 +158,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders")
     @ApiDoc("Get the list of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(ValidatorAndStructureRight.class)
     public void listOrders(final HttpServerRequest request) {
         if (request.params().contains("status")) {
             final String status = request.params().get("status");
@@ -176,7 +176,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders/amount")
     @ApiDoc("Get the total amount of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(ValidatorAndStructureRight.class)
     public void listOrdersAmountLicences(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
@@ -300,7 +300,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders/users")
     @ApiDoc("Get the list of users who orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(ValidatorAndStructureRight.class)
     public void listUsers(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains("status")) {
@@ -316,7 +316,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders/search_filter")
     @ApiDoc("Filter order")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
+    @ResourceFilter(ValidatorAndStructureRight.class)
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
@@ -369,7 +369,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders/exports")
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(PrescriptorAndStructureRight.class)
     public void export(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,
                 userInfos -> {
@@ -423,7 +423,7 @@ public class OrderController extends ControllerHelper {
     @Get("/orders/old/exports")
     @ApiDoc("Export list of custumer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(PrescriptorAndStructureRight.class)
     public void exportOld(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,
                 userInfos -> {

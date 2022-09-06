@@ -112,8 +112,10 @@ export class Baskets extends Selection<Basket> {
             let { data } = await http.get(`/crre/basket/${idCampaign}/${idStructure}`);
             this.all = Mix.castArrayAs(Basket, data);
             this.all.map((basket) => {
-                basket.reassort = reassort;
-                basket.updateReassort();
+                if (reassort != undefined) {
+                    basket.reassort = reassort;
+                    basket.updateReassort();
+                }
                 basket.equipment = Mix.castAs(Equipment, basket.equipment);
                 if(basket.equipment.type === "articlenumerique") {
                     basket.offers = Utils.computeOffer(basket, basket.equipment);
@@ -191,7 +193,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const pageParams = (page) ? `&page=${page}` : ``;
             let url = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&old=${old}&q=${text}`;
-            url += `&id=${id_campaign}${pageParams}`;
+            url += `&idCampaign=${id_campaign}${pageParams}`;
             const {data} = await http.get(url);
             return this.setBaskets(data);
         } catch (err) {
@@ -204,7 +206,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const pageParams = (page) ? `&page=${page}` : ``;
-            let url = `/crre/basketOrder/allMyOrders?id=${id_campaign}&old=${old}`;
+            let url = `/crre/basketOrder/allMyOrders?idCampaign=${id_campaign}&old=${old}`;
             url += `&startDate=${startDate}&endDate=${endDate}${pageParams}`;
             let { data } = await http.get(url);
             return this.setBaskets(data);

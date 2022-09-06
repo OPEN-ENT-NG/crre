@@ -193,6 +193,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 return true;
             }
         } catch (e) {
+            console.warn(e)
             toasts.warning('crre.order.sync.err');
         }
     }
@@ -216,7 +217,7 @@ export class OrdersClient extends Selection<OrderClient> {
                         order.offers = Utils.computeOffer(order, equipment);
                     }
                 } else {
-                    if (order.type === "articlenumerique") {
+                    if (order.type === "articlenumerique" && order.offers) {
                         let newOffers = JSON.parse(order.offers);
                         let offers = new Offers();
                         for (let newOffer of newOffers) {

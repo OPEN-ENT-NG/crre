@@ -1,10 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
-import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.security.PrescriptorRight;
-import fr.openent.crre.security.ValidatorRight;
-import fr.openent.crre.security.updateStudentRight;
+import fr.openent.crre.security.*;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -369,10 +366,10 @@ public class StructureController extends ControllerHelper {
     @Get("/structure/amount")
     @ApiDoc("Get all students amount by structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorRight.class)
+    @ResourceFilter(PrescriptorAndStructureRight.class)
     public void getAmount(final HttpServerRequest request) {
         try {
-            String id_structure = request.params().get(ID_STRUCTURE);
+            String id_structure = request.params().get("idStructure");
             structureService.getAmount(id_structure, defaultResponseHandler(request));
         } catch (ClassCastException e) {
             log.error("An error occurred when casting basket id", e);

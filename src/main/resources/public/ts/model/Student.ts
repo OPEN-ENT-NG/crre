@@ -37,7 +37,7 @@ export class Student {
 
     async getAmount(id_structure: string):Promise<void>{
         try {
-            let {data} = await http.get(`/crre/structure/amount?id_structure=${id_structure}`);
+            let {data} = await http.get(`/crre/structure/amount?idStructure=${id_structure}`);
             Mix.extend(this, Mix.castAs(Student, data));
         }
         catch (e) {

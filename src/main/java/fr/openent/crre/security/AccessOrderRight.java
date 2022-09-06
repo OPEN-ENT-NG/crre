@@ -18,7 +18,9 @@ public class AccessOrderRight implements ResourcesProvider {
             handler.handle(true);
         } else {
             String idStructure = request.params().get("idStructure");
-            handler.handle(user.getStructures().contains(idStructure));
+            String idCampaign = request.params().get("idCampaign");
+            handler.handle(WorkflowActionUtils.hasRight(user, WorkflowActions.PRESCRIPTOR_RIGHT.toString()) &&
+                    idStructure != null && !idStructure.equals("null") && idCampaign != null && !idCampaign.equals("null"));
         }
     }
 }
