@@ -69,6 +69,7 @@ function reformatEquipment(equipment: Equipment) {
     equipment.id = equipment.ean;
     equipment.status = equipment.disponibilite[0].valeur;
     equipment.commandable = equipment.disponibilite[0].commandable;
+    equipment.description = equipment.description.replace(/\n/g, "<br>");
     let commentaire = equipment.disponibilite[0].commentaire
         .replace("À paraître", "").replace("Épuisé", "").replace("Epuisé", "Épuisé").replace("En cours de réimpression", "")
         .replace("Non disponible provisoirement", "").replace("En cours d'impression", "");
