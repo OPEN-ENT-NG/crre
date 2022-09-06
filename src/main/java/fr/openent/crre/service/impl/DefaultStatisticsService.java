@@ -79,7 +79,8 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
 
     @Override
     public void getAmount(String type, String id_structure, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        String query = "SELECT (initial_amount - amount) as amount, initial_amount " +
+        String query = "SELECT ROUND((initial_amount - amount)::numeric,2)::double precision as amount, " +
+                "ROUND(initial_amount::numeric,2)::double precision AS initial_amount " +
                 "FROM " + Crre.crreSchema + "." + type +
                 " WHERE id_structure = ?;";
         Sql.getInstance().prepared(query, new JsonArray().add(id_structure), new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validResultHandler(handlerJsonArray));

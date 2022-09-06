@@ -10,7 +10,10 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
+import java.util.Locale;
 
 public class DefaultPurseService implements PurseService {
     private Boolean invalidDatas = false;
@@ -77,7 +80,9 @@ public class DefaultPurseService implements PurseService {
 
     private String getQueryPursesAndLicences() {
         return "SELECT DISTINCT COALESCE(licences.id_structure, purse.id_structure, students.id_structure) AS id_structure, structure.name, " +
-                "purse.amount, purse.initial_amount, purse.consumable_amount, purse.consumable_initial_amount, seconde, premiere, terminale, pro, " +
+            "ROUND(purse.amount::numeric,2)::double precision AS amount, ROUND(purse.initial_amount::numeric,2)::double precision AS initial_amount, " +
+                "ROUND(purse.consumable_amount::numeric,2)::double precision AS consumable_amount, ROUND(purse.consumable_initial_amount::numeric,2)::double precision AS consumable_initial_amount, " +
+                "seconde, premiere, terminale, pro, " +
                 "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
                 "licences.consumable_amount as consumable_licence_amount, " +
                 "licences.consumable_initial_amount as consumable_licence_initial_amount " +
@@ -185,10 +190,13 @@ public class DefaultPurseService implements PurseService {
                         .add((int)amount)
                         .add((int)amount);
             } else {
-                params.add(amount)
-                        .add(amount)
-                        .add(amount)
-                        .add(amount);
+                DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+                DecimalFormat df2 = new DecimalFormat("#.##", dfs);
+                double amountToInsert = Double.parseDouble(df2.format(amount));
+                params.add(amountToInsert)
+                        .add(amountToInsert)
+                        .add(amountToInsert)
+                        .add(amountToInsert);
             }
             params.add(structureId);
 
@@ -238,8 +246,8 @@ public class DefaultPurseService implements PurseService {
                                   Handler<Either<String, JsonObject>> handler) {
         final double cons = 100.0;
         String updateQuery = "UPDATE  " + Crre.crreSchema + ".purse " +
-                "SET " + (consumable ? "consumable_" : "") + "amount = " +
-                (consumable ? "consumable_" : "") + "amount " + operation + " ?  " +
+                "SET " + (consumable ? "consumable_" : "") + "amount = ROUND((" +
+                (consumable ? "consumable_" : "") + "amount " + operation + " ? )::numeric ,2)::double precision " +
                 "WHERE id_structure = ? ;";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()

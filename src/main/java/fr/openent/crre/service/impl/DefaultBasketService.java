@@ -389,7 +389,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
 
     private static String getReturningQueryOfTakeOrder(Boolean purse_enabled) {
         if (purse_enabled) {
-            return "( SELECT row_to_json(row(p.amount, count(o.id ) )) " +
+            return "( SELECT row_to_json(row(ROUND(p.amount::numeric,2)::double precision, count(o.id ) )) " +
                     " FROM " + Crre.crreSchema + ".purse p, " + Crre.crreSchema + ".order_client_equipment o " +
                     " where p.id_structure = ? " +
                     " AND  o.id_campaign = ? " +

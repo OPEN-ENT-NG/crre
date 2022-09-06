@@ -89,7 +89,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsPurses(Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT SUM(amount) as purse " +
+        String query = "SELECT ROUND(SUM(amount)::numeric,2)::double precision as purse " +
                 "FROM " + Crre.crreSchema + ".purse " +
                 "GROUP BY id_structure;";
 
@@ -97,7 +97,9 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getCampaignsPurses(String idStructure, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT amount, initial_amount, consumable_amount, consumable_initial_amount, id_structure " +
+        String query = "SELECT ROUND(amount::numeric,2)::double precision AS amount, ROUND(initial_amount::numeric,2)::double precision AS initial_amount, " +
+                "ROUND(consumable_amount::numeric,2)::double precision AS consumable_amount, ROUND(consumable_initial_amount::numeric,2)::double precision AS consumable_initial_amount, " +
+                "id_structure " +
                 "FROM " + Crre.crreSchema + ".purse " +
                 "WHERE id_structure = ?";
 
