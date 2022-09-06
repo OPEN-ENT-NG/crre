@@ -27,7 +27,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         JsonArray values = new JsonArray();
         String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, s.name as status_name, " +
                 "s.id as status_id, oe.equipment_price as price, oe.equipment_format as type, oe.offers as offers " : "";
-        String query = "SELECT DISTINCT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
+        String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
                 "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
                 "ore.status as region_status " + selectOld +
                 "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oe " : ".order_client_equipment  oe ") +

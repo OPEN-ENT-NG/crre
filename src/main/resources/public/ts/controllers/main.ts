@@ -68,6 +68,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     $scope.redirectTo("/order/waitingAdmin");
                 } else{
                     if ( $scope.isValidator() || $scope.isPrescriptor()) {
+                        $scope.selectedType = $location.path();
                         await $scope.initStructures();
                         await $scope.initCampaign($scope.current.structure);
                         await template.open('main-profile', 'prescriptor/campaign/campaign-list');
@@ -78,6 +79,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             viewLogs: async () => {
+                $scope.selectedType = $location.path();
                 $scope.loadingArray = true;
                 $scope.logs.reset();
                 template.open('main-profile', 'administrator/management-main');
@@ -87,11 +89,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             viewStats: async () => {
+                $scope.selectedType = $location.path();
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/stats/view-stats');
                 Utils.safeApply($scope);
             },
             manageCampaigns: async () => {
+                $scope.selectedType = $location.path();
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/campaign/campaign_container');
                 await template.open('campaigns-main', 'administrator/campaign/manage-campaign');
@@ -99,6 +103,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             createOrUpdateCampaigns: async () => {
+                $scope.selectedType = $location.path();
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/campaigns');
                 }
@@ -107,11 +112,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             managePurse: async () => {
+                $scope.selectedType = $location.path();
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/purse/manage-purse');
                 Utils.safeApply($scope);
             },
             manageStructureGroups: async () => {
+                $scope.selectedType = $location.path();
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/structureGroup/structureGroup-container');
                 await $scope.structureGroups.sync();
@@ -120,6 +127,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             createStructureGroup: async () => {
+                $scope.selectedType = $location.path();
                 if (template.isEmpty('administrator-main')) {
                     $scope.redirectTo('/structureGroups');
                 }
@@ -128,6 +136,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showCatalog: async (params) => {
+                $scope.selectedType = $location.path();
                 await setCampaign(params);
                 await template.open('main-profile', 'prescriptor/campaign-main');
                 await template.open('campaign-main', 'prescriptor/catalog/catalog-list');
@@ -135,12 +144,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showAdminCatalog: async () => {
+                $scope.selectedType = $location.path();
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'prescriptor/catalog/catalog-list');
                 await selectCatalog();
                 Utils.safeApply($scope);
             },
             equipmentDetail: async (params) => {
+                $scope.selectedType = $location.path();
                 await setCampaign(params);
                 await template.open('main-profile', 'prescriptor/campaign-main');
                 await template.open('campaign-main', 'prescriptor/catalog/equipment-detail');
@@ -148,12 +159,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             adminEquipmentDetail: async (params) => {
+                $scope.selectedType = $location.path();
                 await selectEquipment(params);
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'prescriptor/catalog/equipment-detail');
                 Utils.safeApply($scope);
             },
             campaignOrder: async (params) => {
+                $scope.selectedType = $location.path();
                 let idCampaign = params.idCampaign;
                 idIsInteger(idCampaign);
                 if(!$scope.current.structure)
@@ -166,6 +179,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             campaignBasket: async (params) => {
+                $scope.selectedType = $location.path();
                 await template.open('main-profile', 'prescriptor/campaign-main');
                 await template.open('campaign-main', 'prescriptor/basket/manage-basket');
                 let idCampaign = params.idCampaign;
@@ -179,6 +193,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             orderWaiting: async () => {
+                $scope.selectedType = $location.path();
                 $scope.loading = true;
                 $scope.ordersClient.all = [];
                 Utils.safeApply($scope);
@@ -189,6 +204,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 selectCampaignShow($scope.campaign, "WAITING");
             },
             orderHistoric: async () => {
+                $scope.selectedType = $location.path();
                 if(!$scope.current.structure)
                     await $scope.initStructures();
                 await $scope.getInfos();
@@ -197,12 +213,14 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             orderWaitingAdmin: async () => {
+                $scope.selectedType = $location.path();
                 $scope.displayedOrders.all = $scope.ordersClient.all;
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/order/order-waiting');
                 Utils.safeApply($scope);
             },
             orderHistoricAdmin: async () => {
+                $scope.selectedType = $location.path();
                 $scope.displayedOrders.all = $scope.ordersClient.all;
                 template.open('main-profile', 'administrator/management-main');
                 await template.open('administrator-main', 'administrator/order/order-sent-library');
