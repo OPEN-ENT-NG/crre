@@ -64,10 +64,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         route({
             main: async () => {
+                $scope.equipments.filterFulfilled = false;
                 if ($scope.isAdministrator()) {
                     $scope.redirectTo("/order/waitingAdmin");
                 } else{
-                    if ( $scope.isValidator() || $scope.isPrescriptor()) {
+                    if ($scope.isValidator() || $scope.isPrescriptor()) {
                         $scope.selectedType = $location.path();
                         await $scope.initStructures();
                         await $scope.initCampaign($scope.current.structure);

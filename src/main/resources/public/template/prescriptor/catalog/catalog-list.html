@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="cell twelve vertical-spacing">
-        <multi-combo ng-if="preFilter[key].length == 0"
+        <multi-combo ng-if="preFilter[key].length == 0 && equipments[key].length > 0"
                      title="[[lang.translate(key)]]"
                      combo-model="equipments[key]"
                      search-on="name" order-by="[[getSortName(key)]]"
