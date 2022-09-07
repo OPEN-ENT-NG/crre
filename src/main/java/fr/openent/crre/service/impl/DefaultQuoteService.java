@@ -60,7 +60,8 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
     @Override
     public void search(String query, Integer page, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT * " +
+        String sqlquery = "SELECT id, title, owner_name, owner_id, nb_structures, quotation, " +
+                "creation_date at time zone 'europe/paris' as creation_date " +
                 "FROM  " + Crre.crreSchema + ".quote q " +
                 "WHERE lower(q.title) ~* ? OR lower(q.owner_name) ~* ? ";
 
