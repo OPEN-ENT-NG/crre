@@ -1,12 +1,10 @@
 <div ng-controller="equipmentController" class="catalog">
     <div class="twelve equipment-detail">
-        <div class="margin-top-20 margin-bottom-20">
-            <a ng-show="display.equipment" ng-href="[[goBackUrl]]">
-                <i class="back nav-arrow horizontal-spacing"></i>
-                <strong>
-                    <i18n>back.to.catalog</i18n>
-                </strong>
-            </a>
+        <div class="margin-top-20 margin-bottom-20" ng-if="display.equipment" ng-click="goBack()" style="cursor: pointer">
+            <i class="back nav-arrow horizontal-spacing"></i>
+            <strong>
+                <i18n>back</i18n>
+            </strong>
         </div>
         <div class="warning center bold" ng-if="basket.equipment.structure_already_payed && !isAdministrator()">
             <span><i18n>crre.structure.already.payed.ressource</i18n></span>

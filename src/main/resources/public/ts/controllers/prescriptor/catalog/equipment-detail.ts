@@ -11,12 +11,8 @@ export const equipmentController = ng.controller('equipmentController',
             return $scope.basket.amount > 0;
         };
 
-        if($scope.isAdministrator()){
-            $scope.goBackUrl = "crre#/equipments/catalog";
-        }else if($scope.hasAccess() && !$scope.isValidator() && !$scope.isPrescriptor()){
-            $scope.goBackUrl = "crre#/equipments/catalog/0";
-        }else{
-            $scope.goBackUrl = "crre#/equipments/catalog/" + $scope.campaign.id;
+        $scope.goBack = () => {
+            history.back();
         }
 
         $scope.chooseCampaign = async () => {

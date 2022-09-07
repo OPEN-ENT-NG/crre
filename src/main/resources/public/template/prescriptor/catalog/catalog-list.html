@@ -1,10 +1,5 @@
 <div ng-controller="catalogController" class="catalog" bottom-scroll="nbItemsDisplay = nbItemsDisplay + pageSize">
     <div class="cell twelve horizontal-spacing search-pagination vertical-spacing-twice">
-        <a ng-show="display.equipment" class="zero block-mobile"
-           href="#/equipments/catalog">
-            <i class="angle-double-left horizontal-spacing"></i>
-            <i18n>back.to.catalog</i18n>
-        </a>
         <div ng-if="(isValidator() || isPrescriptor()) && !isAdministrator()" class="twelve font19 padding-bottom-20">
             <span class="bold-font-weight"><i18n>CAMPAIGN</i18n> : </span>
             <span>[[campaign.name]]</span>
