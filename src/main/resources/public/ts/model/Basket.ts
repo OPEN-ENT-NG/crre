@@ -17,16 +17,18 @@ export class Basket implements Selectable {
     reassort:boolean;
     offers: Offers;
 
-    constructor (equipment: Equipment , id_campaign?: number, id_structure?: string ) {
-        this.equipment = Mix.castAs(Equipment, equipment) ;
+    constructor (equipment?: Equipment , id_campaign?: number, id_structure?: string ) {
+        if(equipment) {
+            this.equipment = Mix.castAs(Equipment, equipment);
+            if(equipment.type === "articlenumerique") {
+                this.amount = equipment.offres.length > 0 ? equipment.offres[0].quantiteminimaleachat : 0;
+                this.offers = Utils.computeOffer(this, equipment);
+            } else {
+                this.amount = 1;
+            }
+        }
         this.id_campaign = id_campaign;
         this.id_structure = id_structure;
-        if(equipment.type === "articlenumerique") {
-            this.amount = equipment.offres.length > 0 ? equipment.offres[0].quantiteminimaleachat : 0;
-            this.offers = Utils.computeOffer(this, equipment);
-        } else {
-            this.amount = 1;
-        }
     }
 
     toJson () {
@@ -126,7 +128,7 @@ export class Baskets extends Selection<Basket> {
         }
     }
 
-    async takeOrder(idCampaign: number, Structure: Structure, basket_name: string) {
+    async takeOrder(idCampaign: string, Structure: Structure, basket_name: string) {
         try {
             let baskets = [];
             let newlistBaskets = new Selection<Basket>([]);

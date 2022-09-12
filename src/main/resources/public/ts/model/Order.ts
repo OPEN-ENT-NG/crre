@@ -68,7 +68,7 @@ export class OrderUtils {
     }
 
     static calculatePriceTTC( roundNumber?: number, equipment?:Equipment):number|any {
-        let price = parseFloat(Utils.calculatePriceTTC(equipment,roundNumber).toString());
+        let price = Utils.calculatePriceTTC(equipment,roundNumber);
         return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price ) : price ;
     }
 }

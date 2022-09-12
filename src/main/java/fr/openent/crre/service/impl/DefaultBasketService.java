@@ -64,7 +64,8 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
                     final Number id = event.right().getValue().getInteger("id");
                     JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
                             .add(getBasketEquipmentCreationStatement(id, basket, user));
-                    sql.transaction(statements, event1 -> handler.handle(SqlQueryUtils.getTransactionHandler(event1, id)));
+                    sql.transaction(statements, event1 ->
+                            handler.handle(SqlQueryUtils.getTransactionHandler(event1, id, basket.getInteger("id_campaign"))));
                 } catch (ClassCastException e) {
                     LOGGER.error("An error occurred when casting tags ids", e);
                     handler.handle(new Either.Left<>(""));

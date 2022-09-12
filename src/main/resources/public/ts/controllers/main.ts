@@ -473,12 +473,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return isInCampaign;
         };
 
-        $scope.calculatePriceOfBasket = (basket: Basket, roundNumber?: number, toDisplay?: boolean) => {
-            let equipmentPrice = parseFloat(String($scope.calculatePriceOfEquipment(basket.equipment, roundNumber)));
-            equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * basket.amount;
-            return (!isNaN(equipmentPrice)) ? (roundNumber ? equipmentPrice.toFixed(roundNumber) : equipmentPrice) : '';
-        };
-
         $scope.computeOffer = async () => {
             let amount = $scope.basket.amount;
             let gratuit = 0;
@@ -611,17 +605,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     break;
             }
             return color;
-        };
-
-        /**
-         * Calculate the price of an equipment
-         * @param {Equipment} equipment
-         * @param {number} roundNumber [number of digits after the decimal point]
-         * @returns {number}
-         */
-        $scope.calculatePriceOfEquipment = (equipment: any, roundNumber?: number) => {
-            let price = parseFloat(String(Utils.calculatePriceTTC(equipment, roundNumber)));
-            return (!isNaN(price)) ? (roundNumber ? price.toFixed(roundNumber) : price) : price;
         };
 
         const cancelSelectCampaign = (initOrder: boolean, type:string):void => {

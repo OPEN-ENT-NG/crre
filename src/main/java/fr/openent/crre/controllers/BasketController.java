@@ -184,7 +184,11 @@ public class BasketController extends ControllerHelper {
             }
             CompositeFuture.all(futures).setHandler(event -> {
                 if (event.succeeded()) {
-                    ok(request);
+                    JsonArray result = new JsonArray();
+                    for (Object f : futures) {
+                        result.add(((Future<JsonObject>) f).result());
+                    }
+                    renderJson(request, result);
                 } else {
                     log.error("[CRRE@BasketController@createBaskets] error in future baskets : " + event.cause());
                     badRequest(request);

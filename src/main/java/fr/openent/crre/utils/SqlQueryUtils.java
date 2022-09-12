@@ -45,4 +45,19 @@ public final class SqlQueryUtils {
         }
         return either;
     }
+
+    public static Either<String, JsonObject> getTransactionHandler(Message<JsonObject> event, Number id, Number idCampaign) {
+        Either<String, JsonObject> either;
+        JsonObject result = event.body();
+        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+            JsonObject returns = new JsonObject()
+                    .put("id", id)
+                    .put("idCampaign", idCampaign);
+            either = new Either.Right<>(returns);
+        } else {
+            LOGGER.error("An error occurred when launching transaction");
+            either = new Either.Left<>("");
+        }
+        return either;
+    }
 }

@@ -46,7 +46,7 @@
                                 <div>
                                     <span class="bold15"><i18n>crre.unit.price.ttc</i18n></span>
                                     <span class="size17"
-                                          ng-bind="calculatePriceOfEquipment(basket.equipment, 2)"></span>
+                                          ng-bind="Utils.calculatePriceOfEquipment(basket.equipment, 2)"></span>
                                     <span class="size17"><i18n>money.symbol</i18n></span>
                                 </div>
                                 <div class="centerColumnInput">
@@ -121,7 +121,7 @@
                             </div>
                             <div>
                                 <span class="bold15"><i18n>crre.unit.price.ttc</i18n> </span>
-                                <span class="size17" ng-bind="calculatePriceOfEquipment(basket.equipment, 2)"></span>
+                                <span class="size17" ng-bind="Utils.calculatePriceOfEquipment(basket.equipment, 2)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span>
                             </div>
                             <div class="centerColumnInput">
@@ -160,7 +160,7 @@
                             <div>
                                 <span class="bold15"><i18n>crre.total.price.ttc</i18n></span>
                                 <span class="size17"
-                                      ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
+                                      ng-bind="Utils.calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
                             <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor" ng-if="basket.id_campaign == undefined && !isAdministrator()">
                                 <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
@@ -208,7 +208,7 @@
                             <div>
                                 <span class="bold15"><i18n>crre.total.price.ttc</i18n></span>
                                 <span class="size17"
-                                      ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
+                                      ng-bind="Utils.calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
                         </div>
                         <div workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined && !isAdministrator()">

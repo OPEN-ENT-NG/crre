@@ -1,8 +1,9 @@
 import {idiom as lang, ng, toasts} from 'entcore';
 import {
     Utils,
-    Basket, Equipment, FilterFront, Filter, Baskets,
+    Basket, Equipment, FilterFront, Filter, Baskets, Campaign,
 } from "../../model";
+import {Mix} from "entcore-toolkit";
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
     ['$scope', async ($scope) => {
@@ -33,38 +34,69 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             }
         };
 
+        async function createOrderClient(basketsPerCampaign: {}, totalAmount: number) {
+            const current_date = Utils.getCurrentDate();
+
+            let promesses = [];
+            for (const idCampaign of Object.keys(basketsPerCampaign)) {
+                const baskets: Baskets = basketsPerCampaign[idCampaign];
+                const panier: string = lang.translate('crre.basket.resubmit') + current_date;
+                promesses.push(baskets.takeOrder(idCampaign.toString(), $scope.current.structure, panier));
+            }
+
+            const responses = await Promise.all(promesses);
+
+            if (responses.filter(r => r.status === 200).length === promesses.length) {
+                if ($scope.campaign.nb_panier)
+                    $scope.campaign.nb_panier += promesses.length;
+                else
+                    $scope.campaign.nb_panier = promesses.length;
+                let messageForMany = totalAmount + ' ' + lang.translate('articles') + ' ' +
+                    lang.translate('crre.basket.added.articles');
+                toasts.confirm(messageForMany);
+                uncheckAll();
+                Utils.safeApply($scope);
+            } else {
+                toasts.warning('crre.basket.added.articles.error');
+            }
+        }
+
         $scope.reSubmit = async () => {
             let totalAmount = 0;
             let baskets = new Baskets();
+            let idCampaign = undefined;
             $scope.projects.all.forEach(project => {
                 project.orders.forEach(async order => {
                     if (order.selected) {
+                        const campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
                         let equipment = new Equipment();
                         equipment.ean = order.equipment_key;
-                        let basket = new Basket(equipment, $scope.campaign.id, $scope.current.structure.id);
+                        let basket = new Basket(equipment, campaign.id, $scope.current.structure.id);
                         basket.amount = order.amount;
+                        basket.selected = true;
                         totalAmount += order.amount;
                         baskets.push(basket);
                     }
                 });
             });
 
-            baskets.create()
-                .then(res => {
-                    if(res.status === 200){
-                        if ($scope.campaign.nb_panier)
-                            $scope.campaign.nb_panier += baskets.length;
-                        else
-                            $scope.campaign.nb_panier = baskets.length;
-                        let messageForMany = totalAmount + ' ' + lang.translate('articles') + ' ' +
-                            lang.translate('crre.basket.added.articles');
-                        toasts.confirm(messageForMany);
-                        uncheckAll();
-                        Utils.safeApply($scope);
-                    } else {
-                        toasts.warning('crre.basket.added.articles.error');
-                    }
+            const response = await baskets.create();
+
+            let basketsPerCampaign = {};
+
+            if (response.status === 200) {
+                response.data.forEach(basketReturn => {
+                    let basket = new Basket();
+                    basket.id = basketReturn.id;
+                    basket.selected = true;
+                    idCampaign = basketReturn.idCampaign;
+                    basketsPerCampaign[idCampaign] == undefined ? basketsPerCampaign[idCampaign] = new Baskets() : null;
+                    basketsPerCampaign[idCampaign].push(basket);
                 })
+                await createOrderClient(basketsPerCampaign, totalAmount);
+            } else {
+                toasts.warning('crre.basket.added.articles.error');
+            }
         };
 
         $scope.getFilter = async () => {

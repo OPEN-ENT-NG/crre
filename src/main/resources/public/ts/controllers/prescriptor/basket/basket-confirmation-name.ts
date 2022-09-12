@@ -5,11 +5,11 @@ export const basketConfirmationNameController = ng.controller('basketConfirmatio
     ['$scope', '$routeParams', ($scope, $routeParams) => {
 
         $scope.takeClientOrder = async (basket_name: string) => {
-            let totalPriceOrder = $scope.calculatePriceOfEquipments($scope.baskets_test, 2);
+            let totalPriceOrder : string = Utils.calculatePriceOfEquipments($scope.baskets_test, 2);
             totalPriceOrder = parseFloat(totalPriceOrder).toLocaleString(undefined,
                 {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            let nbrEquipment = $scope.calculateQuantity($scope.baskets_test,true);
-            let {status, data} = await $scope.baskets_test.takeOrder(parseInt($routeParams.idCampaign),
+            let nbrEquipment : number = $scope.calculateQuantity($scope.baskets_test,true);
+            let {status, data} = await $scope.baskets_test.takeOrder($routeParams.idCampaign,
                 $scope.current.structure, basket_name);
             if(status === 200) {
                 confirmOrder(data, nbrEquipment, totalPriceOrder)
@@ -18,7 +18,7 @@ export const basketConfirmationNameController = ng.controller('basketConfirmatio
             }
         };
 
-        const confirmOrder = (data, nbr_equipment, totalPriceOrder) => {
+        const confirmOrder = (data, nbr_equipment : number, totalPriceOrder : string) => {
             $scope.campaign.nb_order += 1;
             $scope.campaign.order_notification += 1;
             $scope.campaign.nb_order_waiting += nbr_equipment;

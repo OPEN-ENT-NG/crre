@@ -1,5 +1,6 @@
 import {Offer, Offers} from "./Equipment";
 import {moment} from "entcore";
+import {Basket, Baskets} from "./Basket";
 
 export class Utils {
 
@@ -46,7 +47,7 @@ export class Utils {
     static isAvailable(equipment) : boolean {
         try {
             let status_article = ["Disponible", "Précommande", "À paraître", "En cours de réimpression", "En cours d'impression",
-                "Disponible jusqu'à épuisement des stocks", "À reparaître"]
+                "Disponible jusqu'à épuisement des stocks", "À reparaître"];
             return equipment.disponibilite && equipment.disponibilite.length > 0 &&
                 equipment.disponibilite[0].valeur && status_article.some(s => s === equipment.disponibilite[0].valeur);
         } catch (e) {
@@ -55,7 +56,7 @@ export class Utils {
         }
     }
 
-    static calculatePriceTTC (equipment, roundNumber?: number) {
+    static calculatePriceTTC (equipment, roundNumber?: number) : number {
         try {
             let prixHT = 0, price_TTC: number;
             let TVAs;
@@ -87,6 +88,42 @@ export class Utils {
             return 0;
         }
     }
+
+    static calculatePriceOfEquipments (baskets: Baskets, roundNumber?: number) : string {
+        let totalPrice : number = 0;
+        baskets.all.forEach((basket : Basket) => {
+            if (Utils.isAvailable(basket.equipment) && (!this.hasOneSelected(baskets) || basket.selected)) {
+                let basketItemPrice : string = this.calculatePriceOfBasket(basket,2);
+                totalPrice += !isNaN(parseFloat(basketItemPrice)) ? parseFloat(basketItemPrice) : 0;
+            }
+        });
+        return (!isNaN(totalPrice)) ? (roundNumber ? totalPrice.toFixed(roundNumber) : totalPrice.toString() ) : '0';
+    }
+
+    static calculatePriceOfBasket (basket: Basket, roundNumber?: number, toDisplay?: boolean) : string {
+        let equipmentPrice : number = parseFloat(Utils.calculatePriceOfEquipment(basket.equipment, roundNumber));
+        equipmentPrice = basket.amount === 0 && toDisplay ? equipmentPrice : equipmentPrice * basket.amount;
+        return (!isNaN(equipmentPrice)) ? (roundNumber ? equipmentPrice.toFixed(roundNumber) : equipmentPrice.toString()) : '0';
+    };
+
+    /**
+     * Calculate the price of an equipment
+     * @param {Equipment} equipment
+     * @param {number} roundNumber [number of digits after the decimal point]
+     * @returns {number}
+     */
+    static calculatePriceOfEquipment (equipment: any, roundNumber?: number) : string {
+        let price = Utils.calculatePriceTTC(equipment, roundNumber);
+        return (!isNaN(price) && roundNumber) ? price.toFixed(roundNumber) : price.toString();
+    };
+
+    static hasOneSelected (baskets: Baskets) : boolean {
+        let hasSelected = false;
+        baskets.all.map((basket : Basket) => {
+            if (basket.selected) { hasSelected = true; }
+        });
+        return hasSelected;
+    };
 
     static setStatus(project, firstOrder) {
         try {
@@ -160,6 +197,17 @@ export class Utils {
             return new Offers();
         }
     };
+
+    static  getCurrentDate() : string {
+        const MyDate : Date = new Date();
+        let MyDateString : string = '';
+
+        MyDateString = ('0' + MyDate.getDate()).slice(-2) + '/'
+            + ('0' + (MyDate.getMonth()+1)).slice(-2) + '/'
+            + MyDate.getFullYear();
+
+        return MyDateString;
+    }
 
     static formatDate(start: string, end: string) {
         let startDate = "", endDate = "";

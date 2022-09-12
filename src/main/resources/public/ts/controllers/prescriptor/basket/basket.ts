@@ -9,34 +9,10 @@ export const basketController = ng.controller('basketController',
             },
         };
 
-        const hasOneSelected = (baskets: Baskets) => {
-            let hasSelected = false;
-            baskets.all.map((basket) => {
-                if (basket.selected) { hasSelected = true; }
-            });
-            return hasSelected;
-        };
-
-        $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber?: number) => {
-            let totalPrice = 0;
-            baskets.all.map((basket) => {
-                if (!Utils.isAvailable(basket.equipment))
-                    return false;
-                if (!hasOneSelected(baskets) || basket.selected) {
-                    let basketItemPrice = $scope.calculatePriceOfBasket(basket,2);
-                    totalPrice += !isNaN(basketItemPrice) ? parseFloat(basketItemPrice) : 0;
-                }
-            });
-            return (!isNaN(totalPrice)) ? (roundNumber ? totalPrice.toFixed(roundNumber) : totalPrice ) : '';
-        };
-
-        $scope.calculateQuantity = (baskets: Baskets,numberOfEquipments:boolean) => {
+        $scope.calculateQuantity = (baskets : Baskets, numberOfEquipments : boolean) : number => {
             let quantity = 0;
             baskets.all.map((basket) => {
-                let status_article = ["Disponible", "Précommande", "À paraître", "En cours de réimpression", "En cours d'impression",
-                    "Disponible jusqu'à épuisement des stocks", "À reparaître"];
-                if (status_article.indexOf(basket.equipment.disponibilite[0].valeur) === -1) return false;
-                if (!hasOneSelected(baskets) || basket.selected) {
+                if (Utils.isAvailable(basket.equipment) && (!Utils.hasOneSelected(baskets) || basket.selected)) {
                     if(numberOfEquipments){
                         quantity ++;
                     }else {
@@ -47,9 +23,9 @@ export const basketController = ng.controller('basketController',
             return quantity;
         };
 
-        $scope.priceDisplay = (basket: Basket) => {
-            let equipmentPrice = parseFloat(String($scope.calculatePriceOfEquipment(basket.equipment, 2)));
-            return (!isNaN(equipmentPrice)) ? (2 ? equipmentPrice.toFixed(2) : equipmentPrice ) : '';
+        $scope.priceDisplay = (basket: Basket) : string => {
+            let equipmentPrice : number = parseFloat(Utils.calculatePriceOfEquipment(basket.equipment, 2));
+            return (!isNaN(equipmentPrice)) ? (2 ? equipmentPrice.toFixed(2) : equipmentPrice.toString() ) : '0';
         };
 
         $scope.deleteBasket = async (basket: Basket) => {
