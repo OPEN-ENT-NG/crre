@@ -836,19 +836,28 @@ public class OrderRegionController extends BaseController {
 
     private void updateStatusRecursive(HttpServerRequest request, String status, List<Integer> ids, String justification, int e) {
         List<Integer> idsSplit = ids.subList(e * 25000, min( (e + 1) * 25000, ids.size() ) );
-        orderRegionService.updateOrders(idsSplit, status, justification, event -> {
-            if (event.isRight()) {
-                if ( (e + 1) * 25000 < ids.size() ) {
+        if ((e + 1) * 25000 < ids.size() ) {
+            orderRegionService.updateOrders(idsSplit, status, justification, event -> {
+                if (event.isRight()) {
                     updateStatusRecursive(request, status, ids, justification, e + 1);
                 } else {
-                    request.response().setStatusCode(200).end();
+                    LOGGER.error("An error when you want get id after create order region ",
+                            event.left().getValue());
+                    request.response().setStatusCode(400).end();
                 }
-            } else {
-                LOGGER.error("An error when you want get id after create order region ",
-                        event.left().getValue());
-                request.response().setStatusCode(400).end();
+            });
+        } else {
+            List<String> stringIds = new ArrayList<>();
+            for (Object id : ids) {
+                stringIds.add(id.toString());
             }
-        });
+            orderRegionService.updateOrders(idsSplit, status, justification, Logging.defaultResponsesHandler(eb,
+                    request,
+                    Contexts.ORDERREGION.toString(),
+                    Actions.UPDATE.toString(),
+                    stringIds,
+                    new JsonObject().put("status",status)));
+        }
     }
 
     private void updatePurseLicence(String status, JsonArray ordersList, int i, Handler<Either<String, JsonObject>> handler) {
