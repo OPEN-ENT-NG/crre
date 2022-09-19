@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.PurseService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -138,10 +139,10 @@ public class DefaultPurseService implements PurseService {
 
     private void handleSQLStatements(Handler<Either<String, JsonObject>> handler, JsonArray statements) {
         Sql.getInstance().transaction(statements, message -> {
-            if (message.body().containsKey("status") &&
-                    "ok".equals(message.body().getString("status"))) {
+            if (message.body().containsKey(Field.STATUS) &&
+                    Field.OK.equals(message.body().getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(
-                        new JsonObject().put("status", "ok")));
+                        new JsonObject().put(Field.STATUS, Field.OK)));
             } else {
                 handler.handle(new Either.Left<>
                         ("crre.statements.error"));

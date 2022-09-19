@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
@@ -244,7 +245,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         }
                     }
                 } else {
-                    sqlquery += !(keys.equals("reassort") || keys.equals("status")) ? "b." + keys + " IN (" : "ore." + keys + " IN (";
+                    sqlquery += !(keys.equals("reassort") || keys.equals(Field.STATUS)) ? "b." + keys + " IN (" : "ore." + keys + " IN (";
                     for (int k = 0; k < list.size(); k++) {
                         sqlquery += k + 1 == list.size() ? "?)" : "?, ";
                         values.add(list.get(k).toString());
@@ -312,7 +313,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(creation_date)
                         .add(order.getString("owner_name"))
                         .add(order.getString("owner_id"))
-                        .add((!isRenew) ? "SENT" : order.getString("status"))
+                        .add((!isRenew) ? "SENT" : order.getString(Field.STATUS))
                         .add(order.getString("equipment_key"));
                 setOrderValuesSQL(params, order);
                 params.add(order.getInteger("id_order_client_equipment"))
@@ -498,7 +499,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
                     " SET id_status = ?" +
                     " WHERE id = ?; ";
-            params.add(ordersRegion.getJsonObject(i).getString("status"));
+            params.add(ordersRegion.getJsonObject(i).getString(Field.STATUS));
             params.add(ordersRegion.getJsonObject(i).getString("id"));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -541,7 +542,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonArray params = new JsonArray();
         for (int i = 0; i < listIdOrders.size(); i++) {
             query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" SET id_status = ? WHERE id = ?;";
-            params.add(listIdOrders.getJsonObject(i).getInteger("status")).add(listIdOrders.getJsonObject(i).getInteger("id"));
+            params.add(listIdOrders.getJsonObject(i).getInteger(Field.STATUS)).add(listIdOrders.getJsonObject(i).getInteger("id"));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }

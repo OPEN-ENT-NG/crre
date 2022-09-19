@@ -285,7 +285,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             if ($scope.filters.all.length == 0) {
                 if ($scope.query_name && $scope.query_name != "") {
                     const newData = await $scope.ordersClient.search($scope.query_name, null, $scope.current.structure.id,
-                        $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page);
+                        $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, ordersToRemove);
                     endLoading(newData, false);
                 } else {
                     const newData = await $scope.ordersClient.sync('WAITING', $scope.filtersDate.startDate, $scope.filtersDate.endDate,
@@ -294,7 +294,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 }
             } else {
                 const newData = await $scope.ordersClient.filter_order($scope.filters.all, null, $scope.current.structure.id, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page);
+                    $scope.filtersDate.endDate, $scope.query_name, $scope.filter.page, ordersToRemove);
                 endLoading(newData, false);
             }
             $scope.syncSelected();

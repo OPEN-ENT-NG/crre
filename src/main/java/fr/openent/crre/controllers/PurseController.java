@@ -2,6 +2,7 @@ package fr.openent.crre.controllers;
 
 import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -57,7 +58,7 @@ public class PurseController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     public void purse(final HttpServerRequest request) {
         storage.writeUploadFile(request, entries -> {
-            if (!"ok".equals(entries.getString("status"))) {
+            if (!Field.OK.equals(entries.getString(Field.STATUS))) {
                 renderError(request);
                 return;
             }

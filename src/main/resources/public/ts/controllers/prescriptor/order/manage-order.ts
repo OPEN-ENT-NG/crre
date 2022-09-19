@@ -1,8 +1,8 @@
 import {moment, ng, toasts} from 'entcore';
 import {
-    BasketsOrders,
-    Filters,
-    OrderClient,
+    Basket, BasketOrder, Baskets,
+    BasketsOrders, Equipment,
+    Filters, OrderClient,
     OrdersClient,
     Utils
 } from '../../../model';
@@ -12,7 +12,8 @@ export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
 
         $scope.display = {
-            allOrdersListSelected: false
+            allOrdersListSelected: false,
+            toggle: false
         };
         $scope.show = {
             comment: false
@@ -35,11 +36,11 @@ export const manageOrderController = ng.controller('manageOrderController',
             await $scope.getOrders();
         };
 
-        $scope.exportCSV = () => {
-            let order_selected = new OrdersClient();
-            $scope.displayedBasketsOrders.forEach(function (basket) {
+        $scope.exportCSV = () : void => {
+            let order_selected : OrdersClient = new OrdersClient();
+            $scope.displayedBasketsOrders.forEach(function (basket : BasketOrder) {
                 basket.selected = false;
-                basket.orders.forEach(function (order) {
+                basket.orders.all.forEach(function (order : OrderClient) {
                     if (order.selected) {
                         order_selected.all.push(order);
                     }
@@ -55,7 +56,7 @@ export const manageOrderController = ng.controller('manageOrderController',
             Utils.safeApply($scope);
         };
 
-        $scope.filterByDate = async () => {
+        $scope.filterByDate = async () : Promise<void> => {
             if ($scope.filter.isDate) {
                 if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
                     await $scope.searchByName(true);
@@ -68,7 +69,7 @@ export const manageOrderController = ng.controller('manageOrderController',
             }
         };
 
-        $scope.startInitLoading = () => {
+        $scope.startInitLoading = () : void => {
             $scope.loading = true;
             $scope.filter.page = 0;
             $scope.displayedBasketsOrders = [];
@@ -76,11 +77,11 @@ export const manageOrderController = ng.controller('manageOrderController',
             Utils.safeApply($scope);
         }
 
-        $scope.searchByName = async (init: boolean = false) => {
+        $scope.searchByName = async (init: boolean = false) : Promise<void> => {
             if (init) {
                 $scope.startInitLoading();
             }
-            let newData;
+            let newData : BasketsOrders;
             if (!!$scope.query_name) {
                 newData = await $scope.basketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
                     $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld);
@@ -98,7 +99,7 @@ export const manageOrderController = ng.controller('manageOrderController',
         }
 
         $scope.syncSelected = () : void => {
-            $scope.displayedBasketsOrders.forEach(basket => basket.selected = $scope.display.allOrdersListSelected)
+            $scope.displayedBasketsOrders.forEach((basket: Basket) => basket.selected = $scope.display.allOrdersListSelected)
         };
 
         $scope.onScroll = async (): Promise<void> => {
@@ -108,8 +109,8 @@ export const manageOrderController = ng.controller('manageOrderController',
             }
         };
 
-        $scope.synchroMyBaskets = async (newData:BasketsOrders): Promise<void> => {
-            let ordersId = [];
+        $scope.synchroMyBaskets = async (newData : BasketsOrders) : Promise<void> => {
+            let ordersId : Array<number> = [];
             newData.forEach((order) => {
                 ordersId.push(order.id);
             });
@@ -122,22 +123,22 @@ export const manageOrderController = ng.controller('manageOrderController',
 
         const formatDisplayedBasketOrders = (): void => {
             $scope.displayedBasketsOrders = [];
-            $scope.basketsOrders.forEach(function (basketOrder) {
-                let displayedBasket = basketOrder;
-                $scope.newOrders.arr.forEach(function (order) {
+            $scope.basketsOrders.forEach(function (basketOrder : BasketOrder) {
+                let displayedBasket : BasketOrder = basketOrder;
+                $scope.newOrders.arr.forEach(function (order : OrderClient) {
                     if (order.id_basket === basketOrder.id) {
                         displayedBasket.orders.push(order);
                     }
                 });
-                if (displayedBasket.orders.length > 0) {
-                    Utils.setStatus(displayedBasket, displayedBasket.orders[0]);
+                if (displayedBasket.orders.all.length > 0) {
+                    Utils.setStatus(displayedBasket, displayedBasket.orders.all);
                 }
                 $scope.displayedBasketsOrders.push(displayedBasket);
             });
         };
 
         $scope.getOrders = async (): Promise<void> => {
-            let newData = await $scope.basketsOrders.getMyOrders($scope.filter.page,
+            let newData : BasketsOrders = await $scope.basketsOrders.getMyOrders($scope.filter.page,
                 $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld);
             if(newData.length > 0) {
                 await $scope.synchroMyBaskets(newData);
@@ -146,6 +147,78 @@ export const manageOrderController = ng.controller('manageOrderController',
             $scope.loading = false;
             Utils.safeApply($scope);
         }
+
+        $scope.displayToggle = () : void => {
+            $scope.display.toggle = checkOnlyRejected();
+            Utils.safeApply($scope);
+        };
+
+        const checkOnlyRejected = () : boolean => {
+            let displayToggle : boolean = false;
+            for(const basket of $scope.displayedBasketsOrders) {
+                const selectedOrders : OrdersClient = basket.orders.all.filter((order : OrderClient) => order.selected);
+                if (selectedOrders.length > 0) {
+                    const statusNoRejected : OrdersClient = basket.orders.all.filter((order: OrderClient) => order.selected && order.status != 'REJECTED');
+                    if (statusNoRejected.length > 0) {
+                        break;
+                    } else {
+                        displayToggle = true;
+                    }
+                }
+            }
+            return displayToggle;
+        }
+
+        $scope.reSubmit = async () : Promise<void> => {
+            try {
+                let totalAmount : number = 0;
+                let baskets : Baskets = new Baskets();
+                let ordersToResubmit : OrdersClient = new OrdersClient();
+                $scope.displayedBasketsOrders.forEach((basket: BasketOrder) => {
+                    basket.orders.all.forEach(async (order: OrderClient) => {
+                        if (order.selected) {
+                            let equipment : Equipment = new Equipment();
+                            equipment.ean = order.equipment_key.toString();
+                            let basket : Basket = new Basket(equipment, order.id_campaign, $scope.current.structure.id);
+                            basket.amount = order.amount;
+                            basket.selected = true;
+                            totalAmount += order.amount;
+                            baskets.push(basket);
+                            ordersToResubmit.push(order);
+                        }
+                    });
+                });
+
+                await ordersToResubmit.resubmitOrderClient(baskets, totalAmount, $scope.current.structure);
+
+                let {status} = await ordersToResubmit.updateStatus('RESUBMIT');
+                if (status != 200) {
+                        toasts.warning('crre.order.update.err');
+                }
+
+                $scope.campaign.nb_order += 1;
+                $scope.campaign.order_notification += 1;
+                $scope.campaign.nb_order_waiting += baskets.all.length;
+                uncheckAll();
+                $scope.startInitLoading();
+                await $scope.getOrders();
+            } catch (e) {
+                console.warn(e);
+                toasts.warning('crre.order.sync.err');
+            }
+        };
+
+        const uncheckAll = () => {
+            $scope.displayedBasketsOrders.forEach((basket : BasketOrder) => {
+                basket.selected = false;
+                basket.orders.all.forEach(async (order : OrderClient) => {
+                    order.selected = false;
+                });
+            });
+            $scope.display.toggle = false;
+            Utils.safeApply($scope);
+        };
+
         this.init();
     }])
 ;

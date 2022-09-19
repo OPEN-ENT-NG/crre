@@ -1,5 +1,6 @@
 package fr.openent.crre.utils;
 
+import fr.openent.crre.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -35,7 +36,7 @@ public final class SqlQueryUtils {
     public static Either<String, JsonObject> getTransactionHandler(Message<JsonObject> event, Number id) {
         Either<String, JsonObject> either;
         JsonObject result = event.body();
-        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+        if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
                     .put("id", id);
             either = new Either.Right<>(returns);
@@ -49,7 +50,7 @@ public final class SqlQueryUtils {
     public static Either<String, JsonObject> getTransactionHandler(Message<JsonObject> event, Number id, Number idCampaign) {
         Either<String, JsonObject> either;
         JsonObject result = event.body();
-        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+        if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
                     .put("id", id)
                     .put("idCampaign", idCampaign);

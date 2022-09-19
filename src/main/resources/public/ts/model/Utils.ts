@@ -1,6 +1,9 @@
-import {Offer, Offers} from "./Equipment";
-import {moment} from "entcore";
-import {Basket, Baskets} from "./Basket";
+import {Equipment, Offer, Offers} from "./Equipment";
+import {moment, idiom as lang} from "entcore";
+import {Basket, BasketOrder, Baskets} from "./Basket";
+import {OrderClient, OrdersClient} from "./OrderClient";
+import {OrderRegion, OrdersRegion} from "./OrderRegion";
+import {Project} from "./Project";
 
 export class Utils {
 
@@ -18,7 +21,7 @@ export class Utils {
         }
     }
 
-    static safeApply ($scope: any) {
+    static safeApply ($scope: any) : void {
         if($scope && $scope.$root) {
             let phase = $scope.$root.$$phase;
             if (phase !== '$apply' && phase !== '$digest') {
@@ -30,7 +33,7 @@ export class Utils {
     static formatKeyToParameter (values: any[], key: string): string {
         try {
             let params: string = '';
-            let array = []
+            let array: Array<any> = []
             values.map((value) => {
                 if(array.indexOf(value[key]) == -1) {
                     params += value.hasOwnProperty(key) ? `${key}=${value[key]}&` : '';
@@ -44,22 +47,22 @@ export class Utils {
         }
     }
 
-    static isAvailable(equipment) : boolean {
+    static isAvailable(equipment: Equipment) : boolean {
         try {
-            let status_article = ["Disponible", "Précommande", "À paraître", "En cours de réimpression", "En cours d'impression",
+            let status_article : Array<string> = ["Disponible", "Précommande", "À paraître", "En cours de réimpression", "En cours d'impression",
                 "Disponible jusqu'à épuisement des stocks", "À reparaître"];
             return equipment.disponibilite && equipment.disponibilite.length > 0 &&
-                equipment.disponibilite[0].valeur && status_article.some(s => s === equipment.disponibilite[0].valeur);
+                equipment.disponibilite[0].valeur && status_article.some((s: string) => s === equipment.disponibilite[0].valeur);
         } catch (e) {
             console.error("Error CRRE@isAvailable : " + e);
             return false;
         }
     }
 
-    static calculatePriceTTC (equipment, roundNumber?: number) : number {
+    static calculatePriceTTC (equipment: Equipment, roundNumber?: number) : number {
         try {
-            let prixHT = 0, price_TTC: number;
-            let TVAs;
+            let prixHT: number = 0, price_TTC: number;
+            let TVAs: any;
 
             if (!equipment || !this.isAvailable(equipment)) {
                 return 0;
@@ -112,41 +115,47 @@ export class Utils {
      * @param {number} roundNumber [number of digits after the decimal point]
      * @returns {number}
      */
-    static calculatePriceOfEquipment (equipment: any, roundNumber?: number) : string {
-        let price = Utils.calculatePriceTTC(equipment, roundNumber);
+    static calculatePriceOfEquipment (equipment: Equipment, roundNumber?: number) : string {
+        let price : number = Utils.calculatePriceTTC(equipment, roundNumber);
         return (!isNaN(price) && roundNumber) ? price.toFixed(roundNumber) : price.toString();
     };
 
     static hasOneSelected (baskets: Baskets) : boolean {
-        let hasSelected = false;
+        let hasSelected : boolean = false;
         baskets.all.map((basket : Basket) => {
             if (basket.selected) { hasSelected = true; }
         });
         return hasSelected;
     };
 
-    static setStatus(project, firstOrder) {
+    static setStatus(project : Project | BasketOrder, orders : OrdersRegion | Array<OrderClient>) : void {
         try {
-            if (project && firstOrder && firstOrder.status) {
-                project.status = firstOrder.status;
-                let partiallyRefused = false;
-                let partiallyValidated = false;
-                if (project.orders && project.orders.length > 1) {
-                    for (const order of project.orders) {
-                        if (project.status != order.status)
+            if (project && orders.length > 0 && orders[0].status) {
+                project.status = orders[0].status;
+                let partiallyRefused : boolean = false;
+                let partiallyValidated : boolean = false;
+                let partiallyResubmit : boolean = false;
+                if (orders.length > 1) {
+                    for (const order of orders as Array<OrderRegion | OrderClient>) {
+                        if (project.status != order.status) {
                             if (order.status == 'VALID' || project.status == 'VALID')
                                 partiallyValidated = true;
                             else if (order.status == 'REJECTED' || project.status == 'REJECTED')
                                 partiallyRefused = true;
+                            else if (order.status == 'RESUBMIT' || project.status == 'RESUBMIT')
+                                partiallyResubmit = true;
+                        }
                     }
-                    if (partiallyRefused || partiallyValidated) {
-                        for (const order of project.orders) {
+                    if (partiallyRefused || partiallyValidated || partiallyResubmit) {
+                        for (const order of orders as Array<OrderRegion | OrderClient>) {
                             order.displayStatus = true;
                         }
                         if (partiallyRefused && !partiallyValidated)
                             project.status = "PARTIALLYREJECTED"
-                        else
+                        else if (partiallyValidated)
                             project.status = "PARTIALLYVALIDED"
+                        else if (partiallyResubmit)
+                            project.status = "PARTIALLYRESUBMIT"
                     }
                 }
             }
@@ -155,34 +164,57 @@ export class Utils {
         }
     }
 
-    static computeOffer = (order, equipment): Offers => {
+    static computeOffer = (order : OrderRegion | OrderClient | Basket, equipment : Equipment,
+                           offerStudent? : Array<string>, offerTeacher? : Array<string>) : Offers => {
         try {
-            let gratuit = 0;
-            let gratuite = 0;
-            let offers = new Offers();
+            let gratuit : number = 0;
+            let gratuite : number = 0;
+            let offers : Offers = new Offers();
+            if(!offerStudent || !offerTeacher){
+                offerStudent = offerTeacher = [];
+            }
             if (order.amount != undefined && equipment.offres && equipment.offres[0] && equipment.offres[0].leps &&
                 equipment.offres[0].leps.length > 0) {
-                let amount = order.amount;
+                let amount : number = order.amount;
                 equipment.offres[0].leps.forEach(function (offer) {
                     let offre = new Offer();
                     if (offer.licence && offer.licence[0] && offer.licence[0].valeur != undefined) {
-                        offre.name = "Manuel(s) " + offer.licence[0].valeur;
+                        offre.name = offer.licence[0].valeur;
                     } else {
                         offre.name = "Offre gratuite";
                     }
+                    let stringLicence : string = offre.name === "Offre gratuite" ?
+                        lang.translate('crre.free.licences.for') : lang.translate('crre.free.licences.teacher.for');
                     if (offer.conditions) {
                         if (offer.conditions.length > 1) {
+                            let conditionString : string = "";
                             offer.conditions.forEach(function (condition) {
+                                if(offre.name === "Elève"){
+                                    conditionString += condition.gratuite + lang.translate('crre.free.licences.student.for') +
+                                        condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
+                                } else {
+                                    conditionString += condition.gratuite + stringLicence +
+                                        condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
+                                }
                                 if (condition.conditionGratuite != undefined && condition.gratuite != undefined &&
                                     amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
                                     gratuit = condition.conditionGratuite;
                                     gratuite = condition.gratuite;
                                 }
                             });
+                            conditionString.slice(0, -2);
+                            offre.name === "Elève" ? offerStudent.push(conditionString) : offerStudent.push(conditionString);
                         } else if (offer.conditions.length == 1 &&
                             offer.conditions[0].conditionGratuite && offer.conditions[0].gratuite != undefined) {
                             gratuit = offer.conditions[0].conditionGratuite;
-                            gratuite = offer.conditions[0].gratuite * Math.floor(amount / gratuit);
+                            const oneGratuite : number = offer.conditions[0].gratuite
+                            gratuite = oneGratuite * Math.floor(amount / gratuit);
+                            if(offre.name === "Elève") {
+                                offerStudent.push(oneGratuite + lang.translate('crre.free.licences.student.for') +
+                                    gratuit + lang.translate('crre.licences.buy'));
+                            } else {
+                                offerTeacher.push(oneGratuite + stringLicence + gratuit + lang.translate('crre.licences.buy'));
+                            }
                         }
                     }
                     offre.value = gratuite;
@@ -200,7 +232,7 @@ export class Utils {
 
     static  getCurrentDate() : string {
         const MyDate : Date = new Date();
-        let MyDateString : string = '';
+        let MyDateString : string;
 
         MyDateString = ('0' + MyDate.getDate()).slice(-2) + '/'
             + ('0' + (MyDate.getMonth()+1)).slice(-2) + '/'
@@ -209,8 +241,8 @@ export class Utils {
         return MyDateString;
     }
 
-    static formatDate(start: string, end: string) {
-        let startDate = "", endDate = "";
+    static formatDate(start: string, end: string) : {startDate : string, endDate : string} {
+        let startDate : string = "", endDate : string = "";
         try {
             startDate = moment(start).format('YYYY-MM-DD').toString();
             endDate = moment(end).format('YYYY-MM-DD').toString();

@@ -1,5 +1,6 @@
 package fr.openent.crre.test;
 
+import fr.openent.crre.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -24,7 +25,7 @@ public class SimpleTest {
         Async async = ctx.async();
         asyncManagement(true, res -> {
             ctx.assertTrue(res.isRight());
-            ctx.assertEquals("ok", res.right().getValue());
+            ctx.assertEquals(Field.OK, res.right().getValue());
             async.complete();
         });
     }

@@ -233,6 +233,7 @@ export class Offer {
     id?: string;
     amount?: string;
     statut?: string;
+    titre: string;
 }
 
 export class Offers {

@@ -61,6 +61,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             "Établissements professionnels mixtes","Établissements généraux mixtes", "Établissements polyvalents mixtes"];
         $scope.selectedType = $location.path();
         $scope.comboLabels = COMBO_LABELS;
+        $scope.offerStudent = [];
+        $scope.offerTeacher = [];
+        $scope.offers = new Offers();
 
         route({
             main: async () => {
@@ -234,7 +237,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.checkParentSwitch = (basket, checker) : void => {
             if (checker) {
                 let testAllTrue = true;
-                basket.orders.forEach(function (order) {
+                basket.orders.all.forEach(function (order) {
                     if (!order.selected) {
                         testAllTrue = false;
                     }
@@ -274,7 +277,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             }
             if($scope.basket.equipment.type === 'articlenumerique') {
-                await $scope.computeOffer();
+                $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
+                    $scope.offerStudent, $scope.offerTeacher);
                 await computeTechnos();
             }
             window.scrollTo(0, 0);
@@ -471,66 +475,6 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 isInCampaign = true;
             }
             return isInCampaign;
-        };
-
-        $scope.computeOffer = async () => {
-            let amount = $scope.basket.amount;
-            let gratuit = 0;
-            let gratuite = 0;
-            let offre = null;
-            $scope.offerStudent = [];
-            $scope.offerTeacher = [];
-            $scope.offers = new Offers();
-            $scope.basket.equipment.offres[0].leps.forEach(function (offer) {
-                offre = new Offer();
-                if(!!!offer.licence[0].valeur) {
-                    offre.name = "Offre gratuite";
-                } else {
-                    offre.name = offer.licence[0].valeur;
-                }
-                if(offer.conditions.length > 1) {
-                    if(offer.licence[0].valeur === "Elève") {
-                        let stringStudent = "";
-                        offer.conditions.forEach(function (condition) {
-                            stringStudent += condition.gratuite + lang.translate('crre.free.licences.student.for') +
-                                condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
-                            if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
-                                gratuit = condition.conditionGratuite;
-                                gratuite = condition.gratuite;
-                            }
-                        });
-                        stringStudent.slice(0, -2);
-                        $scope.offerStudent.push(stringStudent);
-                    } else if (offer.licence[0].valeur === "Enseignant" || !!!offer.licence[0].valeur) {
-                        let stringTeacher = "";
-                        offer.conditions.forEach(function (condition) {
-                            let stringLicence = !!!offer.licence[0].valeur ? lang.translate('crre.free.licences.for') : lang.translate('crre.free.licences.teacher.for');
-                            stringTeacher += condition.gratuite + stringLicence +
-                                condition.conditionGratuite + lang.translate('crre.licences.buy') + ", ";
-                            if(amount >= condition.conditionGratuite && gratuit < condition.conditionGratuite) {
-                                gratuit = condition.conditionGratuite;
-                                gratuite = condition.gratuite;
-                            }
-                        });
-                        stringTeacher.slice(0, -2);
-                        $scope.offerTeacher.push(stringTeacher);
-                    }
-                } else if(offer.conditions && offer.conditions[0]) {
-                    if(offer.licence[0].valeur === "Elève") {
-                        $scope.offerStudent.push(offer.conditions[0].gratuite + lang.translate('crre.free.licences.student.for') +
-                            offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
-                    } else {
-                        let stringLicence = !!!offer.licence[0].valeur ? lang.translate('crre.free.licences.for') : lang.translate('crre.free.licences.teacher.for');
-                        $scope.offerTeacher.push(offer.conditions[0].gratuite + stringLicence +
-                            offer.conditions[0].conditionGratuite + lang.translate('crre.licences.buy'));
-                    }
-                    gratuit = offer.conditions[0].conditionGratuite;
-                    gratuite = offer.conditions[0].gratuite * Math.floor(amount/gratuit);
-                }
-                offre.value = gratuite;
-                $scope.offers.all.push(offre);
-            });
-            Utils.safeApply($scope);
         };
 
         $scope.getColor = (id) => {

@@ -1,10 +1,12 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.OrderRegionService;
@@ -437,7 +439,7 @@ public class OrderRegionController extends BaseController {
                     e.printStackTrace();
                 }
 
-                order.put("status", "SENT");
+                order.put(Field.STATUS, "SENT");
                 order.put("name", values[0]);
                 order.put("editor", values[1]);
                 order.put("uai", values[11]);
@@ -807,13 +809,13 @@ public class OrderRegionController extends BaseController {
     @Put("/region/orders/:status")
     @ApiDoc("update region orders with status")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void validateOrders(final HttpServerRequest request) {
+    @ResourceFilter(UpdateStatusRight.class)
+    public void updateStatusOrders(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
                 orders -> UserUtils.getUserInfos(eb, request,
                         userInfos -> {
                             try {
-                                String status = request.getParam("status");
+                                String status = request.getParam(Field.STATUS);
                                 List<String> params = new ArrayList<>();
                                 for (Object id : orders.getJsonArray("ids")) {
                                     params.add(id.toString());
@@ -864,7 +866,7 @@ public class OrderRegionController extends BaseController {
         JsonObject order = ordersList.getJsonObject(i);
         Double price = order.getDouble("price", (double) 0);
 
-        if (order.getString("status").equals("REJECTED")) {
+        if (order.getString(Field.STATUS).equals("REJECTED")) {
             if (status.equals("valid")) {
                 updatePurseLicence(order, "-", price, order.getString("use_credit", "none"))
                         .onSuccess(res -> {
@@ -878,8 +880,12 @@ public class OrderRegionController extends BaseController {
                             LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
                             updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
                         });
+            } else if (i + 1 < ordersList.size()){
+                updatePurseLicence(status, ordersList, i + 1, handler);
+            } else {
+                handler.handle(new Either.Right<>(new JsonObject()));
             }
-        } else if (status.equals("rejected")) {
+        } else if (status.equals(Field.rejected)) {
             updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
                     .onSuccess(res -> {
                         if (i + 1 < ordersList.size()){
@@ -903,7 +909,7 @@ public class OrderRegionController extends BaseController {
         JsonObject order = ordersList.getJsonObject(i);
         Double price = Double.parseDouble(order.getDouble("price").toString());
 
-        if (order.getString("status").equals("REJECTED")) {
+        if (order.getString(Field.STATUS).equals("REJECTED")) {
             if (status.equals("valid")) {
                 updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
                         .onSuccess(res -> {
@@ -919,7 +925,7 @@ public class OrderRegionController extends BaseController {
                             handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause()));
                         });
             }
-        } else if (status.equals("rejected")) {
+        } else if (status.equals(Field.rejected)) {
             updatePurseLicence(order, "-", price, order.getString("use_credit", "none"))
                     .onSuccess(res -> {
                         if (i - 1 >= 0){
@@ -1011,7 +1017,7 @@ public class OrderRegionController extends BaseController {
     private void launchWorker(JsonObject params, HttpServerRequest request) {
         eb.send(ExportWorker.class.getSimpleName(), params, new DeliveryOptions().setSendTimeout(1000 * 1000L),
                 handlerToAsyncHandler(eventExport -> {
-                    if (eventExport.body().getString("status").equals("ok")) {
+                    if (eventExport.body().getString(Field.STATUS).equals(Field.OK)) {
                         if (request != null) {
                             //Export CSV
                             request.response()
@@ -1071,7 +1077,7 @@ public class OrderRegionController extends BaseController {
                 JsonArray orderRegionClean = new JsonArray();
                 for (int i = 0; i < orderRegion.size() ; i++){
                     JsonObject order = orderRegion.getJsonObject(i);
-                    if (order.getString("status","").equals("REJECTED") && order.getDouble("price") != null &&
+                    if (order.getString(Field.STATUS,"").equals("REJECTED") && order.getDouble("price") != null &&
                             !order.getDouble("price", 0.0).equals(0.0)) {
                         orderRegionClean.add(order);
                     }

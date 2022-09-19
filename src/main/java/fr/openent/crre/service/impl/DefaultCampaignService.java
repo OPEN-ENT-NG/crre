@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.model.Campaign;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
@@ -495,7 +496,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     private static Either<String, JsonObject> getTransactionHandler(Message<JsonObject> event, Number id) {
         Either<String, JsonObject> either;
         JsonObject result = event.body();
-        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+        if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
                     .put("id", id);
             either = new Either.Right<>(returns);

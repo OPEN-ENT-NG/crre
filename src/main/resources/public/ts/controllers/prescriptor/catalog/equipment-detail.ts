@@ -1,5 +1,5 @@
 import {ng, template} from 'entcore';
-import {Basket, Campaign, Utils} from '../../../model';
+import {Basket, Campaign, Equipment, Utils} from '../../../model';
 
 export const equipmentController = ng.controller('equipmentController',
     ['$scope', '$routeParams', '$anchorScroll', ($scope, $routeParams, $anchorScroll) => {
@@ -13,7 +13,19 @@ export const equipmentController = ng.controller('equipmentController',
 
         $scope.goBack = () => {
             history.back();
-        }
+        };
+
+        $scope.calculatePriceOfBasket = (basket : Basket , roundNumber : number, toDisplay? : boolean) : string => {
+            return Utils.calculatePriceOfBasket(basket , roundNumber, toDisplay);
+        };
+
+        $scope.calculatePriceOfEquipment = (equipment : Equipment , roundNumber : number) : string => {
+            return Utils.calculatePriceOfEquipment(equipment , roundNumber);
+        };
+
+        $scope.computeOffer = () : void => {
+            $scope.offers = Utils.computeOffer($scope.basket, $scope.basket.equipment, $scope.offerStudent, $scope.offerTeacher);
+        };
 
         $scope.chooseCampaign = async () => {
             await $scope.initStructures();
@@ -62,7 +74,8 @@ export const equipmentController = ng.controller('equipmentController',
         $scope.amountIncrease = async () => {
             $scope.basket.amount += 1;
             if ($scope.basket.equipment.type === 'articlenumerique') {
-                await $scope.computeOffer();
+                $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
+                    $scope.offerStudent, $scope.offerTeacher);
             }
         };
 
@@ -70,7 +83,8 @@ export const equipmentController = ng.controller('equipmentController',
             if ($scope.basket.amount)
                 $scope.basket.amount -= 1;
             if ($scope.basket.equipment.type === 'articlenumerique') {
-                await $scope.computeOffer();
+                $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
+                    $scope.offerStudent, $scope.offerTeacher);
             }
         };
 

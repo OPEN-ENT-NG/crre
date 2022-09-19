@@ -1,6 +1,7 @@
 package fr.openent.crre.logging;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
@@ -62,14 +63,14 @@ public final class Logging {
                             item == null ? event.right().getValue().getInteger("id").toString() : item, object, user);
                     Sql.getInstance().prepared(statement.getString("statement"), statement.getJsonArray("values"),
                             response -> {
-                        if (!"ok".equals(response.body().getString("status"))) {
+                        if (!Field.OK.equals(response.body().getString(Field.STATUS))) {
                             log(context, action);
                         }
                     });
                 });
             } else {
                 JsonObject error = new JsonObject()
-                        .put("error", event.left().getValue());
+                        .put(Field.ERROR, event.left().getValue());
                 Renders.renderJson(request, error, BAD_REQUEST_STATUS);
             }
         };
@@ -86,14 +87,14 @@ public final class Logging {
                         statements.add(add(context, action, item, object, user));
                     }
                     Sql.getInstance().transaction(statements, response -> {
-                        if (!"ok".equals(response.body().getString("status"))) {
+                        if (!Field.OK.equals(response.body().getString(Field.STATUS))) {
                             log(context, action);
                         }
                     });
                 });
             } else {
                 JsonObject error = new JsonObject()
-                        .put("error", event.left().getValue());
+                        .put(Field.ERROR, event.left().getValue());
                 Renders.renderJson(request, error, BAD_REQUEST_STATUS);
             }
         };
@@ -114,14 +115,14 @@ public final class Logging {
                                 object.getInteger(item).toString(), object, user));
                     }
                     Sql.getInstance().transaction(statements, response -> {
-                        if (!"ok".equals(response.body().getString("status"))) {
+                        if (!Field.OK.equals(response.body().getString(Field.STATUS))) {
                             log(context, action);
                         }
                     });
                 });
             } else {
                 JsonObject error = new JsonObject()
-                        .put("error", event.left().getValue());
+                        .put(Field.ERROR, event.left().getValue());
                 Renders.renderJson(request, error, BAD_REQUEST_STATUS);
             }
         };
@@ -140,7 +141,7 @@ public final class Logging {
             query += ")";
             JsonArray params = addParams(context, action, item, object, user);
             Sql.getInstance().prepared(query, params, response -> {
-                if (!"ok".equals(response.body().getString("status"))) {
+                if (!Field.OK.equals(response.body().getString(Field.STATUS))) {
                     log(context, action);
                 }
             });

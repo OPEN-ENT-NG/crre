@@ -19,14 +19,14 @@ export const orderController = ng.controller('orderController',
         $scope.switchAllOrders = (allOrdersListSelected: boolean) => {
             $scope.displayedBasketsOrders.map((basket) => {
                 basket.selected = allOrdersListSelected;
-                basket.orders.forEach(function (order) {
+                basket.orders.all.forEach(function (order) {
                     order.selected = allOrdersListSelected;
                 });
             });
         };
 
         $scope.switchAllOrdersBasket = (basket) => {
-            basket.orders.map((order) => order.selected = basket.selected);
+            basket.orders.all.map((order) => order.selected = basket.selected);
         };
 
         $scope.checkSwitchAll = (): void => {
@@ -42,8 +42,8 @@ export const orderController = ng.controller('orderController',
 
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
             if (amount.toString() != 'undefined') {
-                basketOrder.amount = orderClient.amount = amount;
-                await orderClient.updateAmount(amount);
+                orderClient.amount = amount;
+                (orderClient.status !== 'REJECTED') ? await orderClient.updateAmount(amount) : null;
                 Utils.safeApply($scope);
             }
         };

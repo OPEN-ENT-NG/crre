@@ -1,5 +1,6 @@
 package fr.openent.crre.service.impl;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.StorageService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -37,7 +38,7 @@ public class DefaultStorageService implements StorageService {
         }
 
         storage.writeBuffer(UUID.randomUUID().toString(), buff, contentType, body.getString("name"), file -> {
-            if ("ok".equals(file.getString("status"))) {
+            if (Field.OK.equals(file.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(file));
             }
             else {
@@ -49,7 +50,7 @@ public class DefaultStorageService implements StorageService {
     @Override
     public void remove(String storageId, Handler<Either<String, JsonObject>> handler) {
         storage.removeFile(storageId, removeEvent -> {
-            if ("ok".equals(removeEvent.getString("status"))) {
+            if (Field.OK.equals(removeEvent.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(removeEvent));
             }
             else {

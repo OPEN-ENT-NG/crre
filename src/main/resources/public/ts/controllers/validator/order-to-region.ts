@@ -4,7 +4,7 @@ import {
     Filters,
     FiltersFront,
     Offer,
-    Offers,
+    Offers, OrderRegion,
     OrdersRegion, Project,
     Projects,
     StructureGroups,
@@ -244,9 +244,9 @@ export const orderRegionController = ng.controller('orderRegionController',
                 if (project.orders && project.orders.length > 0) {
                     project.total = currencyFormatter.format(Number(calculateTotalRegion(project.orders, 2)));
                     project.amount = calculateAmountRegion(project.orders);
-                    const firstOrder = project.orders[0];
-                    project.creation_date = firstOrder.creation_date;
-                    Utils.setStatus(project, firstOrder);
+                    const firstOrder : OrderRegion = project.orders[0];
+                    project.creation_date = firstOrder.creation_date.toString();
+                    Utils.setStatus(project, project.orders);
                     project.campaign_name = firstOrder.campaign_name;
                     const structure = $scope.structures.all.find(structure => firstOrder.id_structure == structure.id);
                     if (structure) {

@@ -19,6 +19,7 @@ export class Project implements Selectable {
     uai: string;
     structure_name: string;
     expanded: boolean;
+    status: string;
 
     constructor() {
     }

@@ -248,31 +248,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void rejectOrders(List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                " SET status = 'REJECTED' " +
-                " WHERE id in " + Sql.listPrepared(ids.toArray()) + " ; ";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        for (Integer id : ids) {
-            params.add(id);
-        }
-        sql.prepared(query, params, SqlResult.validRowsResultHandler(handler));
-    }
-
-    @Override
-    public void validateOrders(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                " SET  status = VALID " +
-                " WHERE id in " + Sql.listPrepared(ids.toArray()) + " ; ";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        for (Integer id : ids) {
-            params.add(id);
-        }
-        sql.prepared(query, params, SqlResult.validRowsResultHandler(handler));
-    }
-
-    @Override
-    public void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler) {
+    public void updateStatus(JsonArray ids, String status, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
                 "SET  " +
@@ -280,13 +256,15 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 "WHERE id IN " +
                 Sql.listPrepared(ids.getList()) +
                 " RETURNING id";
-
-        values.add("IN PROGRESS");
+        if (status.equals("inprogress")) {
+            values.add("IN PROGRESS");
+        } else {
+            values.add(status.toUpperCase());
+        }
         for (int i = 0; i < ids.size(); i++) {
             values.add(ids.getInteger(i));
         }
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
-
     }
 
     public void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,

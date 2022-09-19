@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -160,8 +161,8 @@ public class OrderController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorAndStructureRight.class)
     public void listOrders(final HttpServerRequest request) {
-        if (request.params().contains("status")) {
-            final String status = request.params().get("status");
+        if (request.params().contains(Field.STATUS)) {
+            final String status = request.params().get(Field.STATUS);
             String idStructure = request.getParam("idStructure");
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
@@ -179,8 +180,8 @@ public class OrderController extends ControllerHelper {
     @ResourceFilter(ValidatorAndStructureRight.class)
     public void listOrdersAmountLicences(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("status")) {
-                final String status = request.params().get("status");
+            if (request.params().contains(Field.STATUS)) {
+                final String status = request.params().get(Field.STATUS);
                 String idStructure = request.getParam("idStructure");
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
@@ -303,8 +304,8 @@ public class OrderController extends ControllerHelper {
     @ResourceFilter(ValidatorAndStructureRight.class)
     public void listUsers(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("status")) {
-                final String status = request.params().get("status");
+            if (request.params().contains(Field.STATUS)) {
+                final String status = request.params().get(Field.STATUS);
                 final String idStructure = request.params().get("idStructure");
                 orderService.listUsers(status, idStructure, user, arrayResponseHandler(request));
             } else {
@@ -462,7 +463,7 @@ public class OrderController extends ControllerHelper {
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
         orderMap.put("creation_date", creation_date);
-        orderMap.put("status", order.getString("status"));
+        orderMap.put(Field.STATUS, order.getString(Field.STATUS));
         orderMap.put("basket_name", order.getString("basket_name"));
         orderMap.put("comment", order.getString("comment"));
         orderMap.put("amount", order.getInteger("amount"));
@@ -506,7 +507,7 @@ public class OrderController extends ControllerHelper {
                 I18n.getInstance().translate("crre.amountHT", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.amountTTC", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("csv.comment", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("status", getHost(request), I18n.acceptLanguage(request))
+                I18n.getInstance().translate(Field.STATUS, getHost(request), I18n.acceptLanguage(request))
                 + "\n";
     }
 
@@ -516,7 +517,7 @@ public class OrderController extends ControllerHelper {
                 (log.getString("name") != null ? log.getString("name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 exportPriceComment(log) + ";" +
-                (log.getString("status") != null ? I18n.getInstance().translate(log.getString("status"), getHost(request), I18n.acceptLanguage(request)) : "")
+                (log.getString(Field.STATUS) != null ? I18n.getInstance().translate(log.getString(Field.STATUS), getHost(request), I18n.acceptLanguage(request)) : "")
                 + "\n";
     }
 
@@ -549,71 +550,28 @@ public class OrderController extends ControllerHelper {
                 (log.getInteger("cap3") != null ? log.getInteger("cap3").toString() : "");
     }
 
-    @Put("/orders/valid")
-    @ApiDoc("validate orders ")
+    @Put("/orders/:status")
+    @ApiDoc("update status orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void validateOrders(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
-                orders -> UserUtils.getUserInfos(eb, request,
-                        userInfos -> {
-                            try {
-                                List<String> params = new ArrayList<>();
-                                for (Object id : orders.getJsonArray("ids")) {
-                                    params.add(id.toString());
-                                }
-
-                                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                                orderService.validateOrders(ids,
-                                        Logging.defaultResponsesHandler(eb,
-                                                request,
-                                                Contexts.ORDER.toString(),
-                                                Actions.UPDATE.toString(),
-                                                params,
-                                                null));
-                            } catch (ClassCastException e) {
-                                log.error("An error occurred when casting order id", e);
-                            }
-                        }));
-
-    }
-
-    @Put("/orders/refused")
-    @ApiDoc("validate orders ")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorRight.class)
-    public void refuseOrders(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
-                orders -> {
-                    try {
-                        List<String> params = new ArrayList<>();
-                        for (Object id : orders.getJsonArray("ids")) {
-                            params.add(id.toString());
-                        }
-
-                        List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                        orderService.rejectOrders(ids,
-                                Logging.defaultResponsesHandler(eb,
-                                        request,
-                                        Contexts.ORDER.toString(),
-                                        Actions.UPDATE.toString(),
-                                        params,
-                                        null));
-
-                    } catch (ClassCastException e) {
-                        log.error("An error occurred when casting order id", e);
-                    }
-                });
-    }
-
-    @Put("/orders/inprogress")
-    @ApiDoc("send orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AdministratorRight.class)
-    public void setOrdersInProgress(final HttpServerRequest request) {
+    @ResourceFilter(UpdateStatusRight.class)
+    public void updateStatus(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
             final JsonArray ids = orders.getJsonArray("ids");
-            orderService.setInProgress(ids, defaultResponseHandler(request));
+            List<String> stringIds = new ArrayList<>();
+            for (Object id : ids) {
+                stringIds.add(id.toString());
+            }
+            String status = request.params().get(Field.STATUS);
+            if (status != null) {
+                orderService.updateStatus(ids, status, Logging.defaultResponsesHandler(eb,
+                        request,
+                        Contexts.ORDER.toString(),
+                        Actions.UPDATE.toString(),
+                        stringIds,
+                        new JsonObject().put(Field.STATUS,status)));
+            } else {
+                noContent(request);
+            }
         });
     }
 

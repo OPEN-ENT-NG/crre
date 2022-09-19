@@ -48,22 +48,13 @@ public interface OrderService {
      */
     void listUsers(String status, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
-    void rejectOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
-
-    /**
-     * Valid order
-     * @param ids order's ids
-     * @param handler the Handler
-     */
-   void validateOrders(List<Integer> ids, Handler<Either<String, JsonObject>> handler);
-
     void updateAmount(Integer id, Integer amount, Handler<Either<String, JsonObject>> handler);
 
     void updateReassort(Integer id, Boolean reassort, Handler<Either<String, JsonObject>> handler);
 
     void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> eitherHandler);
 
-    void setInProgress(JsonArray ids, Handler<Either<String, JsonObject>> handler);
+    void updateStatus(JsonArray ids, String status, Handler<Either<String, JsonObject>> handler);
 
     void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);

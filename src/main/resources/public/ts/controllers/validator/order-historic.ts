@@ -1,7 +1,17 @@
-import {idiom as lang, ng, toasts} from 'entcore';
+import {ng, toasts} from 'entcore';
 import {
     Utils,
-    Basket, Equipment, FilterFront, Filter, Baskets, Campaign,
+    Basket,
+    Equipment,
+    FilterFront,
+    Filter,
+    Baskets,
+    Campaign,
+    OrdersClient,
+    OrdersRegion,
+    Project,
+    OrderRegion,
+    OrderClient, Projects,
 } from "../../model";
 import {Mix} from "entcore-toolkit";
 
@@ -18,10 +28,10 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             renew: 'renew'
         };
         $scope.renews = [{name: 'true'}, {name: 'false'}];
-        $scope.renews.forEach((item) => item.toString = () => $scope.translate(item.name));
+        $scope.renews.forEach((item : {name : string}) => item.toString = () => $scope.translate(item.name));
 
 
-        $scope.changeOld = async (old: boolean) => {
+        $scope.changeOld = async (old: boolean) : Promise<void> => {
             if ($scope.filter.isOld !== old) {
                 $scope.filter.isOld = old;
                 $scope.filter.page = 0;
@@ -34,80 +44,58 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             }
         };
 
-        async function createOrderClient(basketsPerCampaign: {}, totalAmount: number) {
-            const current_date = Utils.getCurrentDate();
-
-            let promesses = [];
-            for (const idCampaign of Object.keys(basketsPerCampaign)) {
-                const baskets: Baskets = basketsPerCampaign[idCampaign];
-                const panier: string = lang.translate('crre.basket.resubmit') + current_date;
-                promesses.push(baskets.takeOrder(idCampaign.toString(), $scope.current.structure, panier));
-            }
-
-            const responses = await Promise.all(promesses);
-
-            if (responses.filter(r => r.status === 200).length === promesses.length) {
-                if ($scope.campaign.nb_panier)
-                    $scope.campaign.nb_panier += promesses.length;
-                else
-                    $scope.campaign.nb_panier = promesses.length;
-                let messageForMany = totalAmount + ' ' + lang.translate('articles') + ' ' +
-                    lang.translate('crre.basket.added.articles');
-                toasts.confirm(messageForMany);
-                uncheckAll();
-                Utils.safeApply($scope);
-            } else {
-                toasts.warning('crre.basket.added.articles.error');
-            }
-        }
-
-        $scope.reSubmit = async () => {
-            let totalAmount = 0;
-            let baskets = new Baskets();
-            let idCampaign = undefined;
-            $scope.projects.all.forEach(project => {
-                project.orders.forEach(async order => {
+        $scope.reSubmit = async () : Promise<void> => {
+            let totalAmount : number = 0;
+            let baskets : Baskets = new Baskets();
+            let ordersRegionToResubmit : OrdersRegion = new OrdersRegion();
+            $scope.projects.all.forEach((project : Project) => {
+                project.orders.forEach(async (order : OrderRegion) => {
                     if (order.selected) {
-                        const campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
-                        let equipment = new Equipment();
-                        equipment.ean = order.equipment_key;
-                        let basket = new Basket(equipment, campaign.id, $scope.current.structure.id);
+                        const campaign : Campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
+                        let equipment : Equipment = new Equipment();
+                        equipment.ean = order.equipment_key.toString();
+                        let basket : Basket = new Basket(equipment, campaign.id, $scope.current.structure.id);
                         basket.amount = order.amount;
                         basket.selected = true;
                         totalAmount += order.amount;
                         baskets.push(basket);
+                        ordersRegionToResubmit.push(order);
                     }
                 });
             });
 
-            const response = await baskets.create();
+            await new OrdersClient().resubmitOrderClient(baskets, totalAmount, $scope.current.structure);
 
-            let basketsPerCampaign = {};
-
-            if (response.status === 200) {
-                response.data.forEach(basketReturn => {
-                    let basket = new Basket();
-                    basket.id = basketReturn.id;
-                    basket.selected = true;
-                    idCampaign = basketReturn.idCampaign;
-                    basketsPerCampaign[idCampaign] == undefined ? basketsPerCampaign[idCampaign] = new Baskets() : null;
-                    basketsPerCampaign[idCampaign].push(basket);
-                })
-                await createOrderClient(basketsPerCampaign, totalAmount);
-            } else {
-                toasts.warning('crre.basket.added.articles.error');
+            let {status} = await ordersRegionToResubmit.updateStatus('RESUBMIT');
+            if (status != 200) {
+                toasts.warning('crre.order.update.err');
             }
+
+            $scope.projects.all.forEach((project : Project) => {
+                project.orders.forEach(async (order : OrderClient) => {
+                    if (order.selected) {
+                        order.status = 'RESUBMIT';
+                    }
+                });
+                Utils.setStatus(project, project.orders);
+
+            });
+
+            $scope.campaign.nb_order += 1;
+            $scope.campaign.order_notification += 1;
+            $scope.campaign.nb_order_waiting += baskets.all.length;
+            uncheckAll();
         };
 
-        $scope.getFilter = async () => {
+        $scope.getFilter = async () : Promise<void> => {
             $scope.filters.all = [];
             $scope.filtersFront.all = [];
             for (const key of Object.keys($scope.filterChoice)) {
-                let newFilterFront = new FilterFront();
+                let newFilterFront : FilterFront = new FilterFront();
                 newFilterFront.name = $scope.filterChoiceCorrelation[key];
                 newFilterFront.value = [];
                 $scope.filterChoice[key].forEach(item => {
-                    let newFilter = new Filter();
+                    let newFilter : Filter = new Filter();
                     newFilter.name = $scope.filterChoiceCorrelation[key];
                     let value = item.name;
                     newFilter.value = value;
@@ -123,10 +111,10 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             }
         };
 
-        const uncheckAll = () => {
-            $scope.projects.all.forEach(project => {
+        const uncheckAll = () : void => {
+            $scope.projects.all.forEach((project : Project) => {
                 project.selected = false;
-                project.orders.forEach(async order => {
+                project.orders.forEach(async (order : OrderClient) => {
                     order.selected = false;
                 });
             });

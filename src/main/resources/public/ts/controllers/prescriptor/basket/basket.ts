@@ -9,6 +9,14 @@ export const basketController = ng.controller('basketController',
             },
         };
 
+        $scope.calculatePriceOfEquipments = (baskets :  Baskets, roundNumber : number) : string => {
+            return Utils.calculatePriceOfEquipments(baskets,roundNumber);
+        };
+
+        $scope.calculatePriceOfBasket = (basket : Basket , roundNumber : number, toDisplay? : boolean) : string => {
+            return Utils.calculatePriceOfBasket(basket , roundNumber, toDisplay);
+        };
+
         $scope.calculateQuantity = (baskets : Baskets, numberOfEquipments : boolean) : number => {
             let quantity = 0;
             baskets.all.map((basket) => {

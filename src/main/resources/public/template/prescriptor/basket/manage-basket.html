@@ -6,7 +6,7 @@
                 <span ng-bind="calculateQuantity(baskets,false)"></span>
             </h3>
             <br/>
-            <h3 class="cell horizontal-margin horizontal-spacing ng-binding margin-bottom-10 no-margin-top">
+            <h3 class="cell horizontal-margin ng-binding margin-bottom-10 no-margin-top">
                 <span class="black-color"><i18n>crre.total.credits</i18n> : </span>
                 <span ng-bind="calculatePriceOfEquipments(baskets,2) | currency"></span>
             </h3>
@@ -76,7 +76,7 @@
                             </div>
                             <div class="centerColumnInput">
                                 <span class="black-color font20"
-                                      ng-bind="Utils.calculatePriceOfBasket(basket , 2, true) | currency"></span>
+                                      ng-bind="calculatePriceOfBasket(basket , 2, true) | currency"></span>
                             </div>
                         </div>
                     </div>

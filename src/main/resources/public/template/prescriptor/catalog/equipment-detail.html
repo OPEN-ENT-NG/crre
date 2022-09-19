@@ -46,14 +46,15 @@
                                 <div>
                                     <span class="bold15"><i18n>crre.unit.price.ttc</i18n></span>
                                     <span class="size17"
-                                          ng-bind="Utils.calculatePriceOfEquipment(basket.equipment, 2)"></span>
+                                          ng-bind="calculatePriceOfEquipment(basket.equipment, 2)"></span>
                                     <span class="size17"><i18n>money.symbol</i18n></span>
                                 </div>
                                 <div class="centerColumnInput">
                                     <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
                                     <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
                                            class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
-                                           ng-change="computeOffer()" ng-model="basket.amount"/>
+                                           ng-change="computeOffer()"
+                                           ng-model="basket.amount"/>
                                     <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                                 </div>
                                 <div ng-if="isOffer()">
@@ -121,14 +122,15 @@
                             </div>
                             <div>
                                 <span class="bold15"><i18n>crre.unit.price.ttc</i18n> </span>
-                                <span class="size17" ng-bind="Utils.calculatePriceOfEquipment(basket.equipment, 2)"></span>
+                                <span class="size17" ng-bind="calculatePriceOfEquipment(basket.equipment, 2)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span>
                             </div>
                             <div class="centerColumnInput">
                                 <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
                                 <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
                                        class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
-                                       ng-change="computeOffer()" ng-model="basket.amount"/>
+                                       ng-change="computeOffer()"
+                                       ng-model="basket.amount"/>
                                 <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
                             <div ng-if="isOffer()">
@@ -160,7 +162,7 @@
                             <div>
                                 <span class="bold15"><i18n>crre.total.price.ttc</i18n></span>
                                 <span class="size17"
-                                      ng-bind="Utils.calculatePriceOfBasket(basket, 2, true)"></span>
+                                      ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
                             <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor" ng-if="basket.id_campaign == undefined && !isAdministrator()">
                                 <input type="button" ng-disabled="!validArticle() || !basket.equipment.commandable"
@@ -200,7 +202,8 @@
                                 <i class="moins verticalAlignMiddle" ng-click="amountDecrease()"></i>
                                 <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
                                        class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
-                                       ng-change="computeOffer()" ng-model="basket.amount"/>
+                                       ng-change="computeOffer()"
+                                       ng-model="basket.amount"/>
                                 <i class="plus verticalAlignMiddle" ng-click="amountIncrease()"></i>
                             </div>
                         </div>
@@ -208,7 +211,7 @@
                             <div>
                                 <span class="bold15"><i18n>crre.total.price.ttc</i18n></span>
                                 <span class="size17"
-                                      ng-bind="Utils.calculatePriceOfBasket(basket, 2, true)"></span>
+                                      ng-bind="calculatePriceOfBasket(basket, 2, true)"></span>
                                 <span class="size17"><i18n>money.symbol</i18n></span></div>
                         </div>
                         <div workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="basket.id_campaign == undefined && !isAdministrator()">

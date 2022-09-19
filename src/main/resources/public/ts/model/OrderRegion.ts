@@ -41,6 +41,9 @@ export class OrderRegion implements Order  {
     reassort: boolean;
     priceTotalTTC ?: number;
     use_credit: string;
+    displayStatus: boolean;
+    cause_status: string;
+    campaign_name: string;
 
     constructor() {
         this.typeOrder = "region";

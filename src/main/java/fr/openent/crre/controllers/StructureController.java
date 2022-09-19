@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
@@ -179,7 +180,7 @@ public class StructureController extends ControllerHelper {
                 structureService.insertStudentsInfos(ids, defaultResponseHandler(request));
             } else {
                 log.error("Failed to get all structures",structures.left());
-                renderJson(request, new JsonObject().put("message", "error"));
+                renderJson(request, new JsonObject().put("message", Field.ERROR));
             }
         });
     }

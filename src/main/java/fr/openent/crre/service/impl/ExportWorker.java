@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.StorageService;
 import fr.openent.crre.service.StructureService;
@@ -66,7 +67,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
             log.info(String.format("[Crre@%s] exportHandler", this.getClass().getSimpleName()));
             if (event.isRight()) {
                 log.info("[Crre@ExportWorker] Export finish");
-                message.reply(new JsonObject().put("status", "ok").put("data",event.right().getValue()));
+                message.reply(new JsonObject().put(Field.STATUS, Field.OK).put("data",event.right().getValue()));
             } else {
                 log.error(event.left().getValue());
             }

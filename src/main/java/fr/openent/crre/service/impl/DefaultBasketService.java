@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.BasketService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
@@ -87,7 +88,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = " UPDATE " + Crre.crreSchema + ".basket_equipment " +
                 " SET  amount = ? " +
-                " WHERE id = ? AND id_user = ?; ";
+                " WHERE id = ? AND owner_id = ?; ";
         values.add(amount).add(idBasket).add(user.getUserId());
 
         sql.prepared(query, values, SqlResult.validRowsResultHandler(handler) );
@@ -415,7 +416,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
     private static void getTransactionHandler(Message<JsonObject> event, JsonObject basicBDObject,
                                               Handler<Either<String, JsonObject>> handler) {
         JsonObject result = event.body();
-        if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+        if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
                     .put("nb_order", basicBDObject.getInteger(basicBDObject.containsKey("f2") ? "f2" : "f1"));
             if (basicBDObject.containsKey("f2")) {

@@ -3,7 +3,7 @@ import {
     OrdersRegion,
     Utils,
     Filter,
-    FilterFront,
+    FilterFront, Projects, Project, OrderClient, OrderRegion,
 } from "../../../model";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
@@ -79,29 +79,29 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         };
 
-        $scope.validateOrders = async () => {
+        $scope.validateOrders = async () : Promise<void> => {
             $scope.display.loading = true;
-            let selectedOrders = new OrdersRegion();
-            $scope.projects.all.forEach(project => {
-                project.orders.forEach(async order => {
+            let selectedOrders : OrdersRegion = new OrdersRegion();
+            $scope.projects.all.forEach((project: Project) => {
+                project.orders.forEach(async (order: OrderRegion) => {
                     if (order.selected) {
                         selectedOrders.all.push(order);
                     }
                 });
             });
-            const projectsToShow = $scope.projects;
-            $scope.projects = [];
+            const projectsToShow : Projects = $scope.projects;
+            $scope.projects = new Projects();
             let {status} = await selectedOrders.updateStatus('VALID');
             if (status == 200) {
-                projectsToShow.all.forEach(project => {
-                    project.orders.forEach(async order => {
+                projectsToShow.all.forEach((project: Project) => {
+                    project.orders.forEach(async (order: OrderRegion) => {
                         if (order.selected) {
                             order.status = "VALID";
                         }
                         order.selected = false;
                     });
                     project.selected = false;
-                    Utils.setStatus(project, project.orders[0]);
+                    Utils.setStatus(project, project.orders);
                 });
                 toasts.confirm('crre.order.validated');
                 $scope.projects = projectsToShow;

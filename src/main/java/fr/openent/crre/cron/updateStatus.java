@@ -1,6 +1,7 @@
 package fr.openent.crre.cron;
 
 import fr.openent.crre.controllers.OrderRegionController;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -65,7 +66,7 @@ public class updateStatus extends ControllerHelper implements Handler<Long> {
                 String userLine = sc.nextLine();
                 String[] values = userLine.split(Pattern.quote("|"));
                 JsonObject order = new JsonObject();
-                order.put("status", values[21]);
+                order.put(Field.STATUS, values[21]);
                 order.put("id", values[22]);
                 if (!values[22].equals("0")) {
                     ordersRegion.add(order);

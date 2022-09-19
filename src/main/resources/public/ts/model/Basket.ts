@@ -1,7 +1,7 @@
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {moment, toasts} from 'entcore';
 import http from 'axios';
-import {Equipment, Offers, Structure, Utils} from './index';
+import {Equipment, Offers, OrdersClient, Structure, Utils} from './index';
 
 
 export class Basket implements Selectable {
@@ -182,6 +182,8 @@ export class BasketOrder implements Selectable {
     amount: number;
     created: string| Date;
     selected: boolean;
+    orders: OrdersClient;
+    status: string;
 }
 
 export class BasketsOrders extends Selection<BasketOrder> {
@@ -225,7 +227,7 @@ export class BasketsOrders extends Selection<BasketOrder> {
             basket.total = currencyFormatter.format(basket.total);
             basket.created = moment(basket.created).format('DD-MM-YYYY').toString();
             basket.expanded = false;
-            basket.orders = [];
+            basket.orders = new OrdersClient();
         });
         this.all = this.all.concat(Mix.castArrayAs(BasketOrder, data));
         return data;

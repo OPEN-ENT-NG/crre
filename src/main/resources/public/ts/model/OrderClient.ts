@@ -1,6 +1,8 @@
-import {_, model, moment, toasts} from 'entcore';
+import {_, model, moment, toasts, idiom as lang} from 'entcore';
 import {Mix, Selection} from 'entcore-toolkit';
 import {
+    Basket,
+    Baskets,
     Campaign,
     Equipment, Equipments,
     Filter, Offer,
@@ -12,7 +14,7 @@ import {
     Structures,
     Utils
 } from './index';
-import http from 'axios';
+import http, {AxiosPromise, AxiosResponse} from 'axios';
 
 declare let window: any;
 
@@ -52,15 +54,17 @@ export class OrderClient implements Order {
     grade: string;
     reassort: boolean;
     offers: Offers;
+    type: string;
+    displayStatus: boolean;
 
     constructor() {
         this.typeOrder = "client";
     }
 
-    async updateAmount(amount: number): Promise<void> {
+    async updateAmount(amount : number): Promise<void> {
         try {
             await http.put(`/crre/order/${this.id}/amount`, {amount: amount});
-            let equipment = new Equipment()
+            let equipment : Equipment = new Equipment()
             await equipment.sync(this.equipment_key);
             if (equipment.type === "articlenumerique") {
                 this.offers = Utils.computeOffer(this, equipment);
@@ -90,16 +94,20 @@ export class OrdersClient extends Selection<OrderClient> {
         this.filters = [];
     }
 
-    async search(text: String, id_campaign: number, id_structure: string, start: string, end: string, page?: number) {
+    async search(text: String, id_campaign: number, id_structure: string, start: string, end: string,
+                 page?: number, ordersToRemove?: OrdersClient) {
         try {
             if ((text.trim() === '' || !text)) return;
             let params = (id_campaign) ? `&id=${id_campaign}` : ``;
             const {startDate, endDate} = Utils.formatDate(start, end);
             const {data} = await http.get(`/crre/orders/search_filter?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&page=${page}&q=${text}${params}`);
-            let newOrderClient = Mix.castArrayAs(OrderClient, data);
-            if (newOrderClient.length > 0) {
+            let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
+            if (newOrderClient.length > 0 && !ordersToRemove) {
                 await this.reformatOrders(newOrderClient);
                 return true;
+            } else {
+                ordersToRemove.all = newOrderClient;
+                return true
             }
         } catch (err) {
             toasts.warning('crre.basket.sync.err');
@@ -107,7 +115,8 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async filter_order(filters: Filter[], id_campaign: number, id_structure: string, start: string, end: string, word?: string, page?: number) {
+    async filter_order(filters: Filter[], id_campaign: number, id_structure: string, start: string, end: string,
+                       word?: string, page?: number, ordersToRemove?: OrdersClient) {
         try {
             let params = (id_campaign) ? `&id=${id_campaign}` : ``;
             filters.forEach(function (f) {
@@ -118,10 +127,13 @@ export class OrdersClient extends Selection<OrderClient> {
                 let url = `/crre/orders/search_filter?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&page=${page}${params}`;
                 url += (!!word) ? `&q=${word}` : ``;
                 let {data} = await http.get(url);
-                let newOrderClient = Mix.castArrayAs(OrderClient, data);
-                if (newOrderClient.length > 0) {
+                let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
+                if (newOrderClient.length > 0 && !ordersToRemove) {
                     await this.reformatOrders(newOrderClient);
                     return true;
+                } else {
+                    ordersToRemove.all = newOrderClient;
+                    return true
                 }
             } else {
                 toasts.warning('crre.equipment.special');
@@ -133,8 +145,8 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    private async reformatOrders(newOrderClient: any[]) {
-        let equipments = new Equipments();
+    private async reformatOrders(newOrderClient: Array<OrderClient>) : Promise<void> {
+        let equipments : Equipments = new Equipments();
         await equipments.getEquipments(newOrderClient);
         for (let order of newOrderClient) {
             this.reformatOrder(equipments, order);
@@ -144,8 +156,8 @@ export class OrdersClient extends Selection<OrderClient> {
         this.all = this.all.concat(newOrderClient);
     }
 
-    private reformatOrder(equipments, order) {
-        let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+    private reformatOrder(equipments : Equipments, order : OrderClient) {
+        let equipment : Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
         if (equipment != undefined) {
             order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
             order.price = Utils.calculatePriceTTC(equipment, 2);
@@ -171,9 +183,9 @@ export class OrdersClient extends Selection<OrderClient> {
             } else {
                 const {data} = await http.get(`/crre/orders?idStructure=${idStructure}&startDate=${startDate}&endDate=${endDate}&page=${page}&status=${status}`);
                 if (!ordersToRemove) {
-                    let newOrderClient = Mix.castArrayAs(OrderClient, data);
+                    let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
                     if (!old && newOrderClient.length > 0) {
-                        let equipments = new Equipments();
+                        let equipments : Equipments = new Equipments();
                         await equipments.getEquipments(newOrderClient);
                         for (let order of newOrderClient) {
                             this.reformatOrder(equipments, order);
@@ -198,32 +210,32 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    private async getSpecificOrders(ordersId, old: boolean, idCampaign: number, idStructure: string, startDate, endDate) {
-        let params = '?';
+    private async getSpecificOrders(ordersId, old: boolean, idCampaign: number, idStructure: string, startDate, endDate) : Promise<boolean> {
+        let params : string = '?';
         ordersId.map((order) => {
             params += `order_id=${order}&`;
         });
-        let url = `/crre/orders/mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}&old=${old}`;
+        let url : string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}&old=${old}`;
         const {data} = await http.get(url);
-        let newOrderClient = Mix.castArrayAs(OrderClient, data);
+        let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
         for (let order of newOrderClient) {
             if (order.price !== 0.0) {
                 order.price = parseFloat(order.price.toString());
                 if (!old) {
-                    let equipments = new Equipments();
+                    let equipments : Equipments = new Equipments();
                     await equipments.getEquipments(newOrderClient);
-                    let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+                    let equipment : Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
                     if (equipment.type === "articlenumerique") {
                         order.offers = Utils.computeOffer(order, equipment);
                     }
                 } else {
                     if (order.type === "articlenumerique" && order.offers) {
-                        let newOffers = JSON.parse(order.offers);
-                        let offers = new Offers();
+                        let newOffers : Array<Offer> = Mix.castArrayAs(Offer, JSON.parse(order.offers.toString()));
+                        let offers : Offers = new Offers();
                         for (let newOffer of newOffers) {
-                            let offer = new Offer();
+                            let offer : Offer = new Offer();
                             offer.name = newOffer.titre;
-                            offer.value = newOffer.amount;
+                            offer.value = parseInt(newOffer.amount);
                             offer.id = newOffer.id;
                             offers.all.push(offer);
                         }
@@ -241,8 +253,8 @@ export class OrdersClient extends Selection<OrderClient> {
         return data;
     }
 
-    getEquipments(orders): Promise<any> {
-        let params = '';
+    getEquipments(orders): AxiosPromise {
+        let params : string = '';
         orders.map((order) => {
             params += `id=${order.equipment_key}&`;
         });
@@ -250,8 +262,8 @@ export class OrdersClient extends Selection<OrderClient> {
         return http.get(`/crre/equipments?${params}`);
     }
 
-    toJson(status: string): any {
-        const ids = _.pluck(this.all, 'id');
+    toJson(status: string): {} {
+        const ids : Array<number> = _.pluck(this.all, 'id');
         return {
             ids,
             status: status,
@@ -260,13 +272,13 @@ export class OrdersClient extends Selection<OrderClient> {
         };
     }
 
-    async updateStatus(status: string): Promise<any> {
+    async updateStatus(status: string): Promise<AxiosResponse> {
         try {
-            let statusURL = status;
+            let statusURL : string = status;
             if (status === "IN PROGRESS") {
                 statusURL = "inprogress";
             }
-            let config = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
+            let config : {} = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
             return await http.put(`/crre/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
         } catch (e) {
             toasts.warning('crre.order.update.err');
@@ -274,9 +286,9 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async calculTotal(status: string, id_structure: string, start: string, end: string, filters: Filter[]): Promise<any> {
+    async calculTotal(status: string, id_structure: string, start: string, end: string, filters: Filter[]): Promise<AxiosResponse> {
         const {startDate, endDate} = Utils.formatDate(start, end);
-        let params = '';
+        let params : string = '';
         filters.forEach(function (f) {
             params += "&" + f.name + "=" + f.value;
         });
@@ -285,8 +297,8 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     calculTotalAmount(): number {
-        let total = 0;
-        this.all.map((order) => {
+        let total : number = 0;
+        this.all.map((order : OrderClient) => {
             if (order.campaign.use_credit == "licences" || order.campaign.use_credit == "consumable_licences") {
                 total += order.amount;
             }
@@ -295,8 +307,8 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     calculTotalPriceTTC(consumable: boolean): number {
-        let total = 0;
-        this.all.map((order) => {
+        let total : number = 0;
+        this.all.map((order : OrderClient) => {
             if (!consumable && order.campaign.use_credit == "credits") {
                 total += order.price * order.amount;
             } else if (consumable && order.campaign.use_credit == "consumable_credits") {
@@ -306,16 +318,54 @@ export class OrdersClient extends Selection<OrderClient> {
         return total;
     }
 
-    exportCSV(old: boolean, idCampaign: string, idStructure: string, start: string, end: string, all: boolean, statut?: string) {
+    exportCSV(old: boolean, idCampaign: string, idStructure: string, start: string, end: string, all: boolean, statut?: string) : void {
         const {startDate, endDate} = Utils.formatDate(start, end);
-        let params = ``;
+        let params : string = ``;
         params += `startDate=${startDate}&endDate=${endDate}&`;
         params += !!idCampaign ? `idCampaign=${idCampaign}&` : ``;
         params += !!idStructure ? `idStructure=${idStructure}&` : ``;
         params += !!statut ? `statut=${statut}&` : ``;
         params += !all ? Utils.formatKeyToParameter(this.all, 'id') : ``;
-        const oldString = (old) ? `old/` : ``;
+        const oldString : string = (old) ? `old/` : ``;
         window.location = `/crre/orders/${oldString}exports?${params}`;
+    };
+
+    async resubmitOrderClient(baskets : Baskets, totalAmount: number, structure: Structure) : Promise<void> {
+        const response : AxiosResponse = await baskets.create();
+
+        let basketsPerCampaign : {} = {};
+
+        if (response.status === 200) {
+            response.data.forEach(basketReturn => {
+                let basket : Basket = new Basket();
+                basket.id = basketReturn.id;
+                basket.selected = true;
+                const idCampaign : number = basketReturn.idCampaign;
+                basketsPerCampaign[idCampaign] == undefined ? basketsPerCampaign[idCampaign] = new Baskets() : null;
+                basketsPerCampaign[idCampaign].push(basket);
+            })
+
+            const current_date : string = Utils.getCurrentDate();
+
+            let promesses : Array<Promise<AxiosResponse>> = [];
+            for (const idCampaign of Object.keys(basketsPerCampaign)) {
+                const baskets : Baskets = basketsPerCampaign[idCampaign];
+                const panier : string = lang.translate('crre.basket.resubmit') + current_date;
+                promesses.push(baskets.takeOrder(idCampaign.toString(), structure, panier));
+            }
+
+            const responses : AxiosResponse[] = await Promise.all(promesses);
+
+            if (responses.filter((r : AxiosResponse) => r.status === 200).length === promesses.length) {
+                let messageForMany : string = totalAmount + ' ' + lang.translate('articles') +
+                    lang.translate('crre.confirm.orders.message');
+                toasts.confirm(messageForMany);
+            } else {
+                toasts.warning('crre.basket.added.articles.error');
+            }
+        } else {
+            toasts.warning('crre.basket.added.articles.error');
+        }
     };
     
 }

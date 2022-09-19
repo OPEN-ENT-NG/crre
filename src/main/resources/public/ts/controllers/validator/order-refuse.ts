@@ -12,7 +12,7 @@ export const orderRefuseController = ng.controller('orderRefuseController',
             template.close('refuseOrder.lightbox');
             let ordersToRefuse  = new OrdersClient();
             ordersToRefuse.all = $scope.ordersClient.selected;
-            let {status} = await ordersToRefuse.updateStatus('REFUSED');
+            let {status} = await ordersToRefuse.updateStatus('REJECTED');
             if(status == 200){
                 $scope.campaign.nb_order_waiting = $scope.campaign.nb_order_waiting - $scope.ordersClient.selected.length;
                 ordersToRefuse.all.forEach(order =>{
