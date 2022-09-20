@@ -150,7 +150,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.equipments.loading = true;
             Utils.safeApply($scope);
             $scope.filters = new Filters();
-            initFilters();
+            if (!!$scope.campaign.catalog && $scope.filters.all.length == 0) initFilters();
             for (const key of Object.keys($scope.catalog)) {
                 $scope.catalog[key].forEach(item => {
                     let newFilter = new Filter();
