@@ -1,4 +1,5 @@
 import { Behaviours } from 'entcore';
+import {SnipletScrollService} from "./services/sniplet-scroll-service";
 
 Behaviours.register('crre', {
     rights: {
@@ -11,5 +12,6 @@ Behaviours.register('crre', {
             updateStudent: 'fr.openent.crre.controllers.StructureController|updateAmount'
         },
         resource: {}
-    }
+    },
+    SnipletScrollService: new SnipletScrollService,
 });

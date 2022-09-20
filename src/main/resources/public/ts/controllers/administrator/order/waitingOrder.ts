@@ -74,8 +74,23 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         }
 
+        $scope.openConfirmGenerateLibraryLightbox = async () : Promise<void> => {
+            if ($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
+                $scope.projects.all = [];
+                $scope.display.loading = true;
+                await $scope.searchProjectAndOrders(false, true, true)
+            }
+            template.open('lightbox.waitingAdmin', 'administrator/order/confirm-generate-library');
+            $scope.display.lightbox.waitingAdmin = true;
+            Utils.safeApply($scope);
+        }
+
         $scope.closeWaitingAdminLightbox = () => {
             $scope.display.lightbox.waitingAdmin = false;
+            if ($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
+                $scope.display.allOrdersSelected = false;
+                $scope.onScroll(true);
+            }
             Utils.safeApply($scope);
         };
 
@@ -89,7 +104,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     }
                 });
             });
-            const projectsToShow : Projects = $scope.projects;
+            let projectsToShow : Projects = $scope.projects;
             $scope.projects = new Projects();
             let {status} = await selectedOrders.updateStatus('VALID');
             if (status == 200) {
@@ -118,37 +133,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     toasts.warning('crre.order.validated.error');
                 }
             }
-        };
-
-        $scope.generateLibraryOrder = async () => {
-            let selectedOrders;
-            if ($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
-                await $scope.searchProjectAndOrders(false, true, true)
-                selectedOrders = $scope.projects.extractAllOrders();
-            } else {
-                selectedOrders = $scope.projects.extractSelectedOrders();
-            }
-            $scope.projects.all = [];
-            $scope.display.loading = true;
-            Utils.safeApply($scope);
-            await selectedOrders.generateLibraryOrder().then(async data => {
-                if (data.status == 200) {
-                    toasts.confirm('crre.order.region.library.create.message');
-                    $scope.display.toggle = false;
-                    Utils.safeApply($scope);
-                    $scope.display.allOrdersSelected = false;
-                    $scope.onScroll(true);
-                } else {
-                    if (data.status == 401){
-                        toasts.warning('crre.order.error.purse');
-                    } else {
-                        toasts.warning('crre.order.region.library.create.err');
-                    }
-                    $scope.display.allOrdersSelected = false;
-                    $scope.onScroll(true);
-                }
-            });
-
         };
 
         $scope.dropElement = (item, key): void => {
@@ -188,11 +172,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         $scope.openRefusingOrderLightbox = () => {
             template.open('lightbox.waitingAdmin', 'administrator/order/refuse-order');
             $scope.display.lightbox.waitingAdmin = true;
-            Utils.safeApply($scope);
-        };
-
-        $scope.closeWaitingAdminLightbox = () => {
-            $scope.display.lightbox.waitingAdmin = false;
             Utils.safeApply($scope);
         };
 

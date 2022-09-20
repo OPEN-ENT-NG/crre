@@ -36,7 +36,7 @@
                            i18n-placeholder="search.filter.order"/>
                 </div>
             </div>
-            <div class="cell seven twelve-mobile" style="min-width: 1015px; margin-top: 7px;">
+            <div class="cell four twelve-mobile" style="min-width: 800px; margin-top: 7px;">
                 <multi-combo title="[[lang.translate('docsType')]]"
                              combo-model="equipments.docsType"
                              search-on="name" order-by="name"
@@ -60,10 +60,10 @@
                              selection-event="getFilter()"
                              deselection-event="getFilter()"
                              max-selected="10"
-                             class="inline-block horizontal-spacing no-border five">
+                             class="inline-block horizontal-spacing no-border six">
                 </multi-combo>
             </div>
-            <div class="cell one margin-top-14 twelve-mobile right-magnet" ng-click="openFiltersLightbox()">
+            <div class="cell one margin-top-14 twelve-mobile" ng-click="openFiltersLightbox()">
                 <span class="color-red" style="text-decoration: underline;"><i18n>crre.more.filters</i18n></span>
             </div>
             <div class="cell six twelve-mobile" ng-if="filters.all.length > 0">
@@ -77,7 +77,7 @@
                 </div>
             </div>
             <div class="cell twelve-mobile right-magnet">
-                <button ng-click="generateLibraryOrder()" class="right-magnet"><i18n>crre.take.order.library</i18n></button>
+                <button ng-click="openConfirmGenerateLibraryLightbox()" class="right-magnet"><i18n>crre.take.order.library</i18n></button>
             </div>
         </div>
 
@@ -199,7 +199,7 @@
                     <button ng-click="validateOrders()"><i18n>Validate</i18n></button>
                     <button ng-click="openRefusingOrderLightbox()"><i18n>Denied</i18n></button>
                     <button ng-click="exportCSVRegion(false, display.allOrdersSelected) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
-                    <button ng-click="generateLibraryOrder()"><i18n>crre.take.order.library</i18n></button>
+                    <button ng-click="openConfirmGenerateLibraryLightbox()"><i18n>crre.take.order.library</i18n></button>
                 </div>
             </div>
         </section>

@@ -109,7 +109,7 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    private extractAllOrders() {
+    extractAllOrders() {
         let allOrders = new OrdersRegion();
         this.all.forEach(project => {
             project.orders.forEach(order => {
@@ -119,7 +119,7 @@ export class Projects extends Selection<Project> {
         return allOrders;
     }
 
-    private extractSelectedOrders(select: boolean = false) {
+    extractSelectedOrders(select: boolean = false) {
         let selectedOrders = new OrdersRegion();
         let allOrders = new OrdersRegion();
         this.all.forEach(project => {

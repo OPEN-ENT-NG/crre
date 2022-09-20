@@ -1,0 +1,16 @@
+<div>
+    <div class="row">
+        <h1><i18n>crre.confirm.generate.library.title</i18n></h1>
+        <div class="warning" ng-if="vm.checkRejectedOrder()">
+            <i18n>crre.generate.refused.to.library</i18n>
+        </div>
+        <div>
+            <i18n>crre.confirm.generate.library</i18n>
+        </div>
+    </div>
+
+    <div class="row">
+        <input type="submit" class="button right-magnet " ng-click="vm.generateLibraryOrder()" i18n-value="Validate"/>
+        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="vm.closeWaitingAdminLightbox()" i18n-value="cancel"/>
+    </div>
+</div>

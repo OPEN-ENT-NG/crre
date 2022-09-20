@@ -1,12 +1,12 @@
 import {ng, template, toasts} from 'entcore';
 import {
-    OrderClient, OrderRegion,
-    OrdersRegion, Project,
+    OrderRegion,
+    OrdersRegion, Project, Projects,
     Utils,
 } from "../../../model";
 
 export const refuseOrderRegionController = ng.controller('refuseOrderRegionController',
-    ['$scope', ($scope) => {
+    ['$scope', '$timeout', ($scope, $timeout) => {
         $scope.confirmRefuseOrder= async (justification:string) : Promise<void> =>{
             $scope.display.loading = true;
             let selectedOrders : OrdersRegion = new OrdersRegion();
@@ -18,12 +18,12 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
             $scope.display.toggle = false;
             $scope.display.lightbox.waitingAdmin = false;
             template.close('lightbox.waitingAdmin');
-            const projectsToShow : Array<Project> = $scope.projects.all;
-            $scope.projects.all = [];
+            let projectsToShow : Projects = $scope.projects;
+            $scope.projects = new Projects();
             Utils.safeApply($scope);
             let {status} = await selectedOrders.updateStatus('REJECTED', justification);
             if(status == 200){
-                projectsToShow.forEach((project: Project) => {
+                projectsToShow.all.forEach((project: Project) => {
                     project.orders.forEach( async (order: OrderRegion) => {
                         if(order.selected) {
                            order.status = "REJECTED";
@@ -34,12 +34,14 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
                     project.selected = false;
                     Utils.setStatus(project, project.orders);
                 });
-                $scope.projects.all = projectsToShow;
-                $scope.display.loading = false;
                 toasts.confirm('crre.order.refused');
-                Utils.safeApply($scope);
+                $scope.projects = projectsToShow;
+                $scope.display.loading = false;
+                $timeout(function() {
+                    Utils.safeApply($scope);
+                }, 500)
             } else {
-                $scope.projects.all = projectsToShow;
+                $scope.projects = projectsToShow;
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
                 if (status == 401){

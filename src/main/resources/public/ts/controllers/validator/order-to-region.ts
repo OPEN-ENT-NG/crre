@@ -1,17 +1,16 @@
-import {moment, ng, toasts} from 'entcore';
+import {Behaviours, moment, ng, toasts} from 'entcore';
 import {
     Equipments,
     Filters,
     FiltersFront,
     Offer,
     Offers, OrderRegion,
-    OrdersRegion, Project,
-    Projects,
-    StructureGroups,
+    OrdersRegion, Projects,
     Structures,
     Utils
 } from "../../model";
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
+import {Subscription} from "rxjs";
 
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
@@ -46,6 +45,12 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.display.loading = true;
             Utils.safeApply($scope);
         }
+
+        new Subscription().add(Behaviours.applicationsBehaviours['crre'].SnipletScrollService
+            .getScrollSubject()
+            .subscribe((init: boolean) => {
+                $scope.onScroll(init);
+            }));
 
         $scope.onScroll = async (init?: boolean, old?: boolean): Promise<void> => {
             let projets = new Projects();
