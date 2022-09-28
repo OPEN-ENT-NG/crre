@@ -80,7 +80,7 @@ public class ElasticSearchHelper {
                     if (isConso && isPro) {
                         proPapier = true;
                     }
-                    boolean lgtPapier = !isPro && Pattern.compile(".*pap", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
+                    boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     // Uncomment if type "Numerique" only exist in LDE catalog
                     /*&& (conso.size() <= 0 || consoNumeric)*/
                     if ((articleJson.getString("_index").equals("articlenumerique") && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
