@@ -281,7 +281,7 @@ public class OrderRegionController extends BaseController {
     }
 
     @Get("/orderRegion/projects")
-    @ApiDoc("get all projects ")
+    @ApiDoc("Get all projects")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorAndStructureRight.class)
     public void getAllProjects(HttpServerRequest request) {
@@ -637,7 +637,7 @@ public class OrderRegionController extends BaseController {
     }
 
     @Get("/ordersRegion/projects/search_filter")
-    @ApiDoc("get all projects search and filter")
+    @ApiDoc("Get all projects search and filter")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorAndStructureRight.class)
     public void getProjectsDateSearch(HttpServerRequest request) {
@@ -672,7 +672,7 @@ public class OrderRegionController extends BaseController {
     }
 
     @Post("/ordersRegion/orders")
-    @ApiDoc("get all orders of each project")
+    @ApiDoc("Get all orders of each project")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void getOrdersByProjects(HttpServerRequest request) {
@@ -807,7 +807,7 @@ public class OrderRegionController extends BaseController {
     }
 
     @Put("/region/orders/:status")
-    @ApiDoc("update region orders with status")
+    @ApiDoc("Update region orders with status")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(UpdateStatusRight.class)
     public void updateStatusOrders(final HttpServerRequest request) {

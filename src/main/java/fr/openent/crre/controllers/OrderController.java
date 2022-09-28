@@ -127,35 +127,6 @@ public class OrderController extends ControllerHelper {
         }
     }
 
-    @Get("/orders/old/mine/:idCampaign/:idStructure")
-    @ApiDoc("Get my list of orders by idCampaign and idstructure")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessOrderRight.class)
-    public void listMyOrdersOldByCampaignByStructure(final HttpServerRequest request) {
-        try {
-            UserUtils.getUserInfos(eb, request, user -> {
-                Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
-                String idStructure = request.params().get("idStructure");
-                List<String> ordersIds = request.params().getAll("order_id");
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                Boolean old = Boolean.valueOf(request.getParam("old"));
-
-                orderService.listOrder(idCampaign, idStructure, user, ordersIds, startDate, endDate, old, orders -> {
-                    if (orders.isRight()) {
-                        final JsonArray finalResult = orders.right().getValue();
-                        renderJson(request, finalResult);
-                    } else {
-                        badRequest(request);
-                        log.error("Problem when catching orders");
-                    }
-                });
-            });
-        } catch (ClassCastException e) {
-            log.error("An error occured when casting campaign id ", e);
-        }
-    }
-
     @Get("/orders")
     @ApiDoc("Get the list of orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -315,7 +286,7 @@ public class OrderController extends ControllerHelper {
     }
 
     @Get("/orders/search_filter")
-    @ApiDoc("Filter order")
+    @ApiDoc("Filter orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorAndStructureRight.class)
     public void filter(HttpServerRequest request) {
@@ -357,9 +328,8 @@ public class OrderController extends ControllerHelper {
                 }
                 String finalQ = q;
                 Integer finalId_campaign = id_campaign;
-                Integer finalPage = page;
                 plainTextSearchName(finalQ, equipments -> {
-                    orderService.search(finalQ, filters, idStructure, equipments.right().getValue(), finalId_campaign, startDate, endDate, finalPage, arrayResponseHandler(request));
+                    orderService.search(finalQ, filters, idStructure, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                 });
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -368,7 +338,7 @@ public class OrderController extends ControllerHelper {
     }
 
     @Get("/orders/exports")
-    @ApiDoc("Export list of custumer's orders as CSV")
+    @ApiDoc("Export list of customer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorAndStructureRight.class)
     public void export(final HttpServerRequest request) {
@@ -422,7 +392,7 @@ public class OrderController extends ControllerHelper {
     }
 
     @Get("/orders/old/exports")
-    @ApiDoc("Export list of custumer's orders as CSV")
+    @ApiDoc("Export list of customer's old orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorAndStructureRight.class)
     public void exportOld(final HttpServerRequest request) {

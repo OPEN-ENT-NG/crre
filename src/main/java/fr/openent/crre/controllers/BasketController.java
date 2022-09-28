@@ -41,7 +41,7 @@ public class BasketController extends ControllerHelper {
     }
 
     @Get("/basket/:idCampaign/:idStructure")
-    @ApiDoc("List baskets of a campaign and a structure")
+    @ApiDoc("List baskets of the user in a campaign and a structure")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void list(HttpServerRequest request) {

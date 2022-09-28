@@ -135,7 +135,7 @@ public class StatisticsController extends BaseController {
     }
 
     @Get("region/stats/mongo")
-    @ApiDoc("Generate and send mail to library")
+    @ApiDoc("Generate and insert mongo statistics")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void exportMongoStat(HttpServerRequest request) {

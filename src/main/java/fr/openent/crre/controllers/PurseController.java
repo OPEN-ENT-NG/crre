@@ -350,7 +350,7 @@ public class PurseController extends ControllerHelper {
     }
 
     @Get("/purse/search")
-    @ApiDoc("Search in quotes")
+    @ApiDoc("Search in purses")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void search(HttpServerRequest request) throws UnsupportedEncodingException {

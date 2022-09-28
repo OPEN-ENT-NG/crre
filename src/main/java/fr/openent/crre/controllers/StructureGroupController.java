@@ -37,7 +37,7 @@ import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayRespo
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 /**
- * Created by agnes.lapeyronnie on 04/01/2018.
+ * Created by samuel jollois
  */
 public class StructureGroupController extends ControllerHelper {
 

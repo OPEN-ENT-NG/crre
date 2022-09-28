@@ -1,10 +1,7 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.security.AccessRight;
-import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.UserService;
-import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.openent.crre.service.impl.DefaultUserService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -18,21 +15,14 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-
 public class UserController extends ControllerHelper {
 
     private final UserService userService;
-    private final StructureService structureService;
 
 
     public UserController() {
         super();
         this.userService = new DefaultUserService();
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
 

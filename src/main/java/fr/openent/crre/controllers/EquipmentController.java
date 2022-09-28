@@ -175,7 +175,7 @@ public class EquipmentController extends ControllerHelper {
     }
 
     @Get("/equipments/catalog/filter")
-    @ApiDoc("Search an equipment by keyword")
+    @ApiDoc("Search an equipment by filter")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessRight.class)
     public void FilterEquipment(final HttpServerRequest request) {
