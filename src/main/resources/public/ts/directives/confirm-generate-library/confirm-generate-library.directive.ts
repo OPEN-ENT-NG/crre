@@ -52,9 +52,8 @@ class Controller implements IViewModel {
         Utils.safeApply(this.$scope);
         await selectedOrders.generateLibraryOrder().then(() => {
             toasts.confirm('crre.order.region.library.create.message');
-            this.$scope.vm.display.toggle = false;
+            this.$scope.vm.display.toggle = this.$scope.vm.display.allOrdersSelected = false;
             Utils.safeApply(this.$scope);
-            this.$scope.vm.display.allOrdersSelected = false;
             Behaviours.applicationsBehaviours['crre'].SnipletScrollService
                 .sendScroll(true);
         }).catch((error: AxiosError) => {

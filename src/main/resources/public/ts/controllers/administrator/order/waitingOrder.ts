@@ -3,7 +3,7 @@ import {
     OrdersRegion,
     Utils,
     Filter,
-    FilterFront, Projects, Project, OrderClient, OrderRegion,
+    FilterFront, Projects, Project, OrderRegion,
 } from "../../../model";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
@@ -120,8 +120,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 });
                 toasts.confirm('crre.order.validated');
                 $scope.projects = projectsToShow;
-                $scope.display.toggle = false;
-                $scope.display.loading = false;
+                $scope.display.toggle = $scope.display.allOrdersSelected = $scope.display.loading = false;
                 Utils.safeApply($scope);
             } else {
                 $scope.projects = projectsToShow;

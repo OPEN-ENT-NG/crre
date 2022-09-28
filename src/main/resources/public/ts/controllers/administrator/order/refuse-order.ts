@@ -36,7 +36,7 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
                 });
                 toasts.confirm('crre.order.refused');
                 $scope.projects = projectsToShow;
-                $scope.display.loading = false;
+                $scope.display.loading = $scope.display.allOrdersSelected = false;
                 $timeout(function() {
                     Utils.safeApply($scope);
                 }, 500)
