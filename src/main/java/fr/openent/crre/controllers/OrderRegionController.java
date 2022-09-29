@@ -1045,7 +1045,11 @@ public class OrderRegionController extends BaseController {
                 List<Integer> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
                 List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
                 List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
-                generateLogs(request, idsOrders, idsEquipments, idsStructures, user);
+                if (idsOrders.size() > 0 && idsStructures.size() > 0 && idsEquipments.size() > 0) {
+                    generateLogs(request, idsOrders, idsEquipments, idsStructures, user);
+                } else {
+                    noContent(request);
+                }
             });
         });
     }
