@@ -100,10 +100,10 @@ public class ElasticSearch {
 						elasticsearchConfig.getBoolean("keepAlive", true),
 						elasticsearchConfig);
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				log.error("[CRRE]" + e.getMessage(), e);
 			}
 		} else {
-			log.error("Invalid ElasticSearch URI");
+			log.error("[CRRE] Invalid ElasticSearch URI");
 		}
 	}
 
@@ -194,7 +194,7 @@ public class ElasticSearch {
 	}
 
 	private void checkDisableClientAfterError(ElasticSearchClient esc, Throwable e) {
-		log.error("Error with ElasticSearchClient : " + esc.index, e);
+		log.error("[CRRE] Error with ElasticSearchClient " + esc.index + " : " + e.getMessage(), e);
 		if (esc.checkError()) {
 			availableNodes.remove(Integer.valueOf(esc.index));
 			vertx.setTimer(60000L, h -> availableNodes.addIfAbsent(esc.index));
