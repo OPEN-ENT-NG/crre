@@ -43,12 +43,6 @@ public class updateStatus extends ControllerHelper implements Handler<Long> {
 
     public void updateStatusByLDE(final Handler<Either<String, JsonObject>> eitherHandler) throws IOException {
         Scanner sc = this.orderRegionController.getOrderLDE();
-        // skip header
-        if (sc.hasNextLine()) {
-            sc.nextLine();
-        } else {
-            log.info("Empty file");
-        }
         int part = 0;
         updateCommand(sc, part, eitherHandler);
     }
