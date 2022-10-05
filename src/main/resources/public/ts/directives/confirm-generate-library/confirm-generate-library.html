@@ -10,7 +10,9 @@
     </div>
 
     <div class="row">
-        <input type="submit" class="button right-magnet " ng-click="vm.generateLibraryOrder()" i18n-value="Validate"/>
-        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="vm.closeWaitingAdminLightbox()" i18n-value="cancel"/>
+        <input type="submit" class="button right-magnet " ng-click="vm.generateLibraryOrder()"
+               i18n-value="Validate" ng-disabled="vm.display.loading"/>
+        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="vm.closeWaitingAdminLightbox()"
+               i18n-value="cancel"/>
     </div>
 </div>

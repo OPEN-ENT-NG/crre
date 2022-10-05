@@ -77,7 +77,9 @@
                 </div>
             </div>
             <div class="cell twelve-mobile right-magnet">
-                <button ng-click="openConfirmGenerateLibraryLightbox()" class="right-magnet"><i18n>crre.take.order.library</i18n></button>
+                <button ng-click="openConfirmGenerateLibraryLightbox()" class="right-magnet" ng-disabled="display.loading">
+                    <i18n>crre.take.order.library</i18n>
+                </button>
             </div>
         </div>
 

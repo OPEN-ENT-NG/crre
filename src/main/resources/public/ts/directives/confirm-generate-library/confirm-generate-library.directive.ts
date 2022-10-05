@@ -44,11 +44,11 @@ class Controller implements IViewModel {
     }
 
     generateLibraryOrder = async () : Promise<void> => {
-        const selectedOrders : OrdersRegion = this.extractSelectedOrders();
-        this.$scope.vm.projects.all = [];
         this.$scope.vm.display.loading = true;
         this.$scope.vm.display.lightbox.waitingAdmin = false;
         template.close('lightbox.waitingAdmin');
+        const selectedOrders : OrdersRegion = this.extractSelectedOrders();
+        this.$scope.vm.projects.all = [];
         Utils.safeApply(this.$scope);
         await selectedOrders.generateLibraryOrder().then(() => {
             toasts.confirm('crre.order.region.library.create.message');
