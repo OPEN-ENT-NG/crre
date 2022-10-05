@@ -1134,7 +1134,20 @@ public class OrderRegionController extends BaseController {
                     .put("nbEtab", data.getInteger("nbEtab")));
             e++;
         }
-        sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, 0);
+        try {
+            orderRegionService.recursiveInsertOldClientOrders(orderRegion, 0, response -> {
+                if (response.isRight()) {
+                    sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, 0);
+                } else {
+                    log.error("[CRRE@OrderRegionController.recursiveInsertOldClientOrders] " +
+                            "An error has occurred recursiveInsertOldClientOrders : " + response.left().getValue());
+                }
+            });
+        } catch (ParseException err) {
+            err.printStackTrace();
+            log.error("[CRRE@OrderRegionController.recursiveInsertOldClientOrders] " +
+                    "An ParseException error has occurred recursiveInsertOldClientOrders : " + err.getMessage());
+        }
     }
 
     private void sendMails(HttpServerRequest request, UserInfos user, JsonArray orderRegion, JsonArray ordersClientId,
@@ -1180,35 +1193,23 @@ public class OrderRegionController extends BaseController {
 
     private void insertAndDeleteOrders(HttpServerRequest request, JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
         try {
-            orderRegionService.recursiveInsertOldClientOrders(orderRegion, 0, response -> {
-                if (response.isRight()) {
-                    try {
-                        Future<JsonObject> insertOldOrdersFuture = Future.future();
-                        Future<JsonObject> deleteOrderClientFuture = Future.future();
-                        Future<JsonObject> deleteOrderRegionFuture = Future.future();
-                        orderRegionService.deletedOrdersRecursive(ordersClientId, "order_client_equipment", 0,
-                                handlerJsonObject(deleteOrderClientFuture));
-                        orderRegionService.deletedOrdersRecursive(ordersRegionId, "order-region-equipment", 0,
-                                handlerJsonObject(deleteOrderRegionFuture));
-                        orderRegionService.recursiveInsertOldOrders(orderRegion, false, 0,
-                                handlerJsonObject(insertOldOrdersFuture));
-                        CompositeFuture.all(insertOldOrdersFuture, deleteOrderClientFuture, deleteOrderRegionFuture).setHandler(event -> {
-                            if (event.succeeded()) {
-                                ok(request);
-                                log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
-                                        "Orders Deleted and insert in old table was successfull");
-                            } else {
-                                log.error("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
-                                        "An error has occurred in CompositeFuture : " + event.cause().getMessage());
-                            }
-                        });
-                    } catch (ParseException err) {
-                        err.printStackTrace();
-                        log.error(err.getMessage());
-                    }
+            Future<JsonObject> insertOldOrdersFuture = Future.future();
+            Future<JsonObject> deleteOrderClientFuture = Future.future();
+            Future<JsonObject> deleteOrderRegionFuture = Future.future();
+            orderRegionService.deletedOrdersRecursive(ordersClientId, "order_client_equipment", 0,
+                    handlerJsonObject(deleteOrderClientFuture));
+            orderRegionService.deletedOrdersRecursive(ordersRegionId, "order-region-equipment", 0,
+                    handlerJsonObject(deleteOrderRegionFuture));
+            orderRegionService.recursiveInsertOldOrders(orderRegion, false, 0,
+                    handlerJsonObject(insertOldOrdersFuture));
+            CompositeFuture.all(insertOldOrdersFuture, deleteOrderClientFuture, deleteOrderRegionFuture).setHandler(event -> {
+                if (event.succeeded()) {
+                    ok(request);
+                    log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
+                            "Orders Deleted and insert in old table was successfull");
                 } else {
                     log.error("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
-                            "An error has occurred insertOldClientOrders : " + response.left().getValue());
+                            "An error has occurred in CompositeFuture : " + event.cause().getMessage());
                 }
             });
         } catch (ParseException err) {

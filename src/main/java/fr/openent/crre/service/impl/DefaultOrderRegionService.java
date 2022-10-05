@@ -10,6 +10,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.ArrayUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -35,6 +37,8 @@ import static java.lang.Math.min;
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
     private final Integer PAGE_SIZE = 10;
+    private static final Logger log = LoggerFactory.getLogger(DefaultOrderRegionService.class);
+
 
     public DefaultOrderRegionService(String table) {
         super(table);
@@ -562,75 +566,88 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonObject equipment;
         for (int i = 0; i < orderRegion.size(); i++) {
             order = orderRegion.getJsonObject(i);
-            // Skip offers
-            if (!order.containsKey("totalPriceTTC")) {
-                if (order.containsKey("owner_name")) {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                    String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                    order.put("creation_date", creation_date);
-                }
-                ordersRegionId.add(order.getLong("id"));
-                ordersClientId.add(order.getLong("id_order_client_equipment"));
+            try {
+                // Skip offers
+                if (!order.containsKey("totalPriceTTC")) {
+                    if (order.containsKey("owner_name")) {
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
+                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+                        order.put("creation_date", creation_date);
+                    }
+                    ordersRegionId.add(order.getLong("id"));
+                    ordersClientId.add(order.getLong("id_order_client_equipment"));
 
-                for (int j = 0; j < equipments.size(); j++) {
-                    equipment = equipments.getJsonObject(j);
-                    if (equipment.getString("id").equals(order.getString("equipment_key"))) {
-                        JsonObject priceDetails = getPriceTtc(equipment);
-                        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
-                        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
-                        double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
-                        double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
-                        order.put("priceht", Double.parseDouble(df2.format(priceDetails.getDouble("prixht"))));
-                        order.put("tva5", (priceDetails.containsKey("partTVA5")) ?
-                                Double.parseDouble(df2.format(priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht"))) : null);
-                        order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
-                                Double.parseDouble(df2.format(priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht"))) : null);
-                        order.put("unitedPriceTTC", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
-                        order.put("price", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
-                        order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-                        order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                        extractedEquipmentInfo(order, equipment);
-                        if (equipment.getJsonArray("disciplines").size() > 0) {
-                            order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
-                        } else {
-                            order.put("grade", "");
-                        }
-                        putStructuresNameUAI(structures, order);
-                        putEANLDE(equipment, order);
-                        getUniqueTypeCatalogue(order, equipment);
-                        if (equipment.getString("type").equals("articlenumerique")) {
-                            JsonArray offers = computeOffers(equipment, order);
-                            if (offers.size() > 0) {
-                                JsonArray orderOfferArray = new JsonArray();
-                                int freeAmount = 0;
-                                for (int k = 0; k < offers.size(); k++) {
-                                    JsonObject orderOffer = new JsonObject();
-                                    orderOffer.put("name", offers.getJsonObject(k).getString("name"));
-                                    orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
-                                    orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
-                                    freeAmount += offers.getJsonObject(k).getLong("value");
-                                    orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
-                                    orderOffer.put("unitedPriceTTC", 0);
-                                    orderOffer.put("totalPriceHT", 0);
-                                    orderOffer.put("totalPriceTTC", 0);
-                                    orderOffer.put("typeCatalogue", order.getString("typeCatalogue"));
-                                    orderOffer.put("creation_date", order.getString("creation_date"));
-                                    orderOffer.put("id_structure", order.getString("id_structure"));
-                                    orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                    orderOffer.put("id", "F" + order.getLong("id") + "_" + k);
-                                    orderOffer.put("title", order.getString("title"));
-                                    orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
-                                    putStructuresNameUAI(structures, orderOffer);
-                                    orderOfferArray.add(orderOffer);
-                                    orderRegion.add(orderOffer);
+                    for (int j = 0; j < equipments.size(); j++) {
+                        equipment = equipments.getJsonObject(j);
+                        if (equipment.getString("id").equals(order.getString("equipment_key"))) {
+                            JsonObject priceDetails = getPriceTtc(equipment);
+                            DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+                            DecimalFormat df2 = new DecimalFormat("#.##", dfs);
+                            double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
+                            double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
+                            order.put("priceht", Double.parseDouble(df2.format(priceDetails.getDouble("prixht"))));
+                            order.put("tva5", (priceDetails.containsKey("partTVA5")) ?
+                                    Double.parseDouble(df2.format(priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht"))) : null);
+                            order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
+                                    Double.parseDouble(df2.format(priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht"))) : null);
+                            order.put("unitedPriceTTC", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
+                            order.put("price", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
+                            order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
+                            order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
+                            extractedEquipmentInfo(order, equipment);
+                            if (equipment.getJsonArray("disciplines").size() > 0) {
+                                order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                            } else {
+                                order.put("grade", "");
+                            }
+                            putStructuresNameUAI(structures, order);
+                            putEANLDE(equipment, order);
+                            getUniqueTypeCatalogue(order, equipment);
+                            if (equipment.getString("type").equals("articlenumerique")) {
+                                JsonArray offers = computeOffers(equipment, order);
+                                if (offers.size() > 0) {
+                                    JsonArray orderOfferArray = new JsonArray();
+                                    int freeAmount = 0;
+                                    for (int k = 0; k < offers.size(); k++) {
+                                        JsonObject orderOffer = new JsonObject();
+                                        orderOffer.put("name", offers.getJsonObject(k).getString("name"));
+                                        orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
+                                        orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
+                                        freeAmount += offers.getJsonObject(k).getLong("value");
+                                        orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
+                                        orderOffer.put("unitedPriceTTC", 0);
+                                        orderOffer.put("totalPriceHT", 0);
+                                        orderOffer.put("totalPriceTTC", 0);
+                                        orderOffer.put("typeCatalogue", order.getString("typeCatalogue"));
+                                        orderOffer.put("creation_date", order.getString("creation_date"));
+                                        orderOffer.put("id_structure", order.getString("id_structure"));
+                                        orderOffer.put("campaign_name", order.getString("campaign_name"));
+                                        orderOffer.put("id", "F" + order.getLong("id") + "_" + k);
+                                        orderOffer.put("title", order.getString("title"));
+                                        orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
+                                        putStructuresNameUAI(structures, orderOffer);
+                                        orderOfferArray.add(orderOffer);
+                                        orderRegion.add(orderOffer);
+                                    }
+                                    order.put("total_free", freeAmount);
+                                    order.put("offers", orderOfferArray);
                                 }
-                                order.put("total_free", freeAmount);
-                                order.put("offers", orderOfferArray);
                             }
                         }
                     }
                 }
+            } catch (Exception error) {
+                log.error("[CRRE@beautifyOrders] Problem to beautify the order, error : " + error.getMessage());
+                log.error("[CRRE@beautifyOrders] Problem to beautify the order, order : " + order.toString());
+                orderRegion.remove(order);
+                try {
+                    ordersRegionId.remove(order.getLong("id"));
+                    ordersClientId.remove(order.getLong("id_order_client_equipment"));
+                } catch (Exception errorremoval) {
+                    log.error("[CRRE@beautifyOrders] Problem to beautify the order, error to removal ids : " + errorremoval.getMessage());
+                }
+                i--;
             }
         }
     }
@@ -645,7 +662,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 }
             } else {
                 if(equipment.getString("type").equals("articlepapier")){
-                    JsonObject campaign = order.getJsonObject("campaign", new JsonObject());
+                    JsonObject campaign;
+                    try {
+                        campaign = order.getJsonObject("campaign", new JsonObject());
+                    } catch (ClassCastException e){
+                        campaign = new JsonObject(order.getString("campaign"));
+                    }
                     String catalog = campaign.getString("catalog", "");
                     if(catalog.contains("pro") || !equipment.getString("typeCatalogue").contains("AO_IDF_PAP")){
                         order.put("typeCatalogue", "AO_IDF_PAP_PRO");
