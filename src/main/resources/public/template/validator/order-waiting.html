@@ -89,7 +89,7 @@
             </tr>
             </thead>
             <tbody ng-repeat="order in ordersClient.all" ng-if="!loading">
-            <tr class="subline">
+            <tr class="subline" ng-class="{'background-grey' : !order.campaign.accessible}">
                 <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="order.selected" ng-change="checkSwitchAll();"/>

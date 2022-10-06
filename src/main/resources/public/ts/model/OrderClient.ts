@@ -308,11 +308,13 @@ export class OrdersClient extends Selection<OrderClient> {
 
     calculTotalPriceTTC(consumable: boolean): number {
         let total : number = 0;
-        this.all.map((order : OrderClient) => {
-            if (!consumable && order.campaign.use_credit == "credits") {
-                total += order.price * order.amount;
-            } else if (consumable && order.campaign.use_credit == "consumable_credits") {
-                total += order.price * order.amount;
+        this.all.forEach((order : OrderClient) => {
+            if(order.selected) {
+                if (!consumable && order.campaign.use_credit == "credits") {
+                    total += order.price * order.amount;
+                } else if (consumable && order.campaign.use_credit == "consumable_credits") {
+                    total += order.price * order.amount;
+                }
             }
         });
         return total;

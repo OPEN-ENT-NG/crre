@@ -15,6 +15,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
     ['$scope', ($scope,) => {
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.allOrdersSelected = false;
+        $scope.campaignInaccessible = false;
         $scope.show = {
             comment: false
         };
@@ -32,6 +33,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         // @ts-ignore
         this.init = async () => {
             $scope.loading = true;
+            $scope.campaignInaccessible = true;
             Utils.safeApply($scope);
             $scope.filterChoice = {
                 users: [],
@@ -62,6 +64,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             await $scope.getAllAmount();
             $scope.allOrdersSelected = false;
             $scope.loading = false;
+            $scope.campaignInaccessible = await checkCampaignAccessibility();
             Utils.safeApply($scope);
         };
 
@@ -72,7 +75,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
 
         $scope.onScroll = async (init?: boolean): Promise<void> => {
             if (init) {
+                $scope.campaignInaccessible = true;
                 await $scope.searchByName(false)
+                $scope.campaignInaccessible = await checkCampaignAccessibility();
+                Utils.safeApply($scope);
             } else {
                 $scope.filter.page++;
                 await $scope.searchByName(true);
@@ -80,6 +86,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.getFilter = async () => {
+            $scope.campaignInaccessible = true;
             $scope.loading = true;
             $scope.filter.page = 0;
             $scope.ordersClient = new OrdersClient();
@@ -116,6 +123,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 }
             }
             await $scope.getAllAmount();
+            $scope.campaignInaccessible = await checkCampaignAccessibility();
             Utils.safeApply($scope);
         };
 
@@ -142,22 +150,31 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let purseAmount = $scope.campaign.purse_amount ? $scope.campaign.purse_amount : 0;
             let purseAmountConsumable = $scope.campaign.consumable_purse_amount ? $scope.campaign.consumable_purse_amount : 0;
 
-            let isAvailable: boolean = false;
+            let isInavailable: boolean = false;
 
-            if($scope.ordersClient && $scope.ordersClient.selectedElements && $scope.ordersClient.selectedElements.length > 0) {
-                isAvailable = $scope.ordersClient.all.length == 0 ||
+            if ($scope.ordersClient && $scope.ordersClient.selectedElements && $scope.ordersClient.selectedElements.length > 0) {
+                isInavailable = $scope.ordersClient.all.length == 0 ||
                     nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
-                    purseAmount - $scope.ordersClient.selectedElements.calculTotalPriceTTC(false) < 0 ||
-                    purseAmountConsumable - $scope.ordersClient.selectedElements.calculTotalPriceTTC(true) < 0;
-            } else if($scope.amountTotal && $scope.ordersClient) {
-                isAvailable = $scope.ordersClient.all.length == 0 ||
-                nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
-                purseAmount - $scope.amountTotal.credit < 0 ||
-                purseAmountConsumable - $scope.amountTotal.consumable_credit < 0;
+                    purseAmount - $scope.ordersClient.calculTotalPriceTTC(false) < 0 ||
+                    purseAmountConsumable - $scope.ordersClient.calculTotalPriceTTC(true) < 0;
+            } else if ($scope.amountTotal && $scope.ordersClient) {
+                isInavailable = $scope.ordersClient.all.length == 0 ||
+                    nbLicences - $scope.ordersClient.calculTotalAmount() < 0 ||
+                    purseAmount - $scope.amountTotal.credit < 0 ||
+                    purseAmountConsumable - $scope.amountTotal.consumable_credit < 0;
             }
 
-            return isAvailable;
+            return isInavailable || $scope.campaignInaccessible;
         };
+
+        const checkCampaignAccessibility = async (): Promise<boolean> => {
+            let ordersToCheck : OrdersClient = new OrdersClient();
+            await $scope.searchByName(true, ordersToCheck);
+            return ordersToCheck.filter((order : OrderClient) => {
+                order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
+                return (order.campaign) ? !order.campaign.accessible : true;
+            }).length > 0
+        }
 
         $scope.updateOrders = async (totalPrice: number, totalPriceConsumable: number, totalAmount: number, totalAmountConsumable: number,
                                      ordersToRemove: OrdersClient, numberOrdered: number) => {
@@ -251,18 +268,29 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             })
         };
 
-        $scope.switchAllOrders = () => {
+        $scope.switchAllOrders = async () => {
+            $scope.campaignInaccessible = true;
             $scope.ordersClient.all.map((order) => order.selected = $scope.allOrdersSelected);
+            $scope.campaignInaccessible = await checkCampaignAccessibility();
+            Utils.safeApply($scope);
         };
 
-        $scope.checkSwitchAll = (): void => {
-            let testAllTrue = true;
+        $scope.checkSwitchAll = async (): Promise<void> => {
+            let testAllTrue : boolean = true;
+            let testAllFalse : boolean = true;
+            let campaignInaccessible : boolean = false;
             $scope.ordersClient.all.forEach(function (order) {
-                if (!order.selected) {
+                if (order.selected) {
+                    if (order.campaign && !order.campaign.accessible) {
+                        campaignInaccessible = true;
+                    }
+                    testAllFalse = false;
+                } else {
                     testAllTrue = false;
                 }
             });
             $scope.allOrdersSelected = testAllTrue;
+            $scope.campaignInaccessible = (testAllFalse) ? await checkCampaignAccessibility() : campaignInaccessible;
             Utils.safeApply($scope);
         };
 
@@ -302,7 +330,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.syncSelected = (): void => {
-            $scope.ordersClient.all.forEach(order => order.selected = $scope.allOrdersSelected)
+            $scope.allOrdersSelected ? $scope.ordersClient.all.forEach(order => order.selected = $scope.allOrdersSelected) : null;
         };
 
         $scope.openLightboxRefuseOrder = () => {
