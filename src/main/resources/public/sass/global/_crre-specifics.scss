@@ -270,6 +270,10 @@ body.crre {
     background-color: grey !important;
   }
 
+  .grayscale-filter {
+    filter: grayscale(1);
+  }
+
   .manage-campaign {
     card {
       text-align: center;
