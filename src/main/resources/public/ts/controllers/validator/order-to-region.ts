@@ -26,7 +26,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             allOrdersSelected: false,
             lightbox: {
                 waitingAdmin: false
-            }
+            },
+            projects: new Projects()
         };
         $scope.filter = {
             page: 0,
@@ -37,10 +38,9 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.current.structure = {};
             $scope.current.structure.id = null;
         }
-        $scope.projects = new Projects();
 
         function initProjects() {
-            $scope.projects = new Projects();
+            $scope.display.projects = new Projects();
             $scope.filter.page = 0;
             $scope.display.loading = true;
             Utils.safeApply($scope);
@@ -56,11 +56,13 @@ export const orderRegionController = ng.controller('orderRegionController',
             let projets = new Projects();
             if (init) {
                 initProjects();
-                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
+                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate,
+                    $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
                 Utils.safeApply($scope);
             } else {
                 $scope.filter.page++;
-                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
+                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate,
+                    $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
                 Utils.safeApply($scope);
             }
             if (projets.all.length > 0) {
@@ -115,7 +117,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         };
 
         $scope.syncSelected = (): void => {
-            $scope.projects.all.forEach(project => {
+            $scope.display.projects.all.forEach(project => {
                 project.selected = $scope.display.allOrdersSelected;
                 project.orders.forEach(order => {
                     order.selected = $scope.display.allOrdersSelected;
@@ -173,7 +175,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 await projets.get(old, $scope.filtersDate.startDate, $scope.filtersDate.endDate,
                     !$scope.selectedType.split('/').includes('historic'), $scope.filter.page, $scope.current.structure.id);
             } else {
-                projets = (projects) ? projects : $scope.projects;
+                projets = (projects) ? projects : $scope.display.projects;
             }
             let promesses = [];
             let projetsSplit = new Projects();
@@ -266,9 +268,7 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.synchroRegionOrders = async (isSearching: boolean = false, onlyId: boolean = false, projects?: Projects,
                                             old = false, page?: number): Promise<void> => {
-            if (page == 0) {
-                $scope.filter.page = page;
-            }
+            (page == 0) ? $scope.filter.page = page : null;
             let {projets, responses} = await getOrdersOfProjects(isSearching, old, projects);
             if (responses[0]) {
                 let data = [];
@@ -279,14 +279,14 @@ export const orderRegionController = ng.controller('orderRegionController',
                 let projectWithOrders = new Projects();
                 beautifyProjectsFromOrders(projets, projectWithOrders);
                 if ((!isSearching || projects)) {
-                    $scope.projects.all = $scope.projects.all.concat(projectWithOrders.all);
+                    $scope.display.projects.all = $scope.display.projects.all.concat(projectWithOrders.all);
                 } else {
-                    $scope.projects = projectWithOrders;
+                    $scope.display.projects = projectWithOrders;
                 }
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
             } else {
-                $scope.projects.all = [];
+                $scope.display.projects.all = [];
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
             }
@@ -296,12 +296,12 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         const switchDisplayToggle = () => {
             let orderSelected = false
-            $scope.projects.all.forEach(project => {
+            $scope.display.projects.all.forEach(project => {
                 if (project.orders.some(order => order.selected)) {
                     orderSelected = true;
                 }
             });
-            $scope.display.toggle = $scope.projects.all.some(project => project.selected) || orderSelected;
+            $scope.display.toggle = $scope.display.projects.all.some(project => project.selected) || orderSelected;
             Utils.safeApply($scope);
         };
 

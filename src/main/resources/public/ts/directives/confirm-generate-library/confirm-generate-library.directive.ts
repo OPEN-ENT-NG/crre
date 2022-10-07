@@ -1,7 +1,7 @@
 import {Behaviours, ng, template, toasts} from 'entcore';
 import {IDirective, IScope} from "angular";
 import {AxiosError} from "axios";
-import {OrderRegion, OrdersRegion, Projects, Utils} from "../../model";
+import {OrderRegion, OrdersRegion, Utils} from "../../model";
 
 interface IViewModel extends ng.IController, ICrreProps {
     generateLibraryOrder(): Promise<void>;
@@ -18,7 +18,6 @@ interface ICrreScope extends IScope, ICrreProps {
 
 interface ICrreProps {
     display?: any;
-    projects?: Projects;
 
     onCloseWaitingAdminLightbox? : () => void;
 }
@@ -36,10 +35,10 @@ class Controller implements IViewModel {
     }
 
     extractSelectedOrders() : OrdersRegion {
-        if (this.$scope.vm.display.allOrdersSelected || !this.$scope.vm.projects.hasSelectedOrders()) {
-            return this.$scope.vm.projects.extractAllOrders();
+        if (this.$scope.vm.display.allOrdersSelected || !this.$scope.vm.display.projects.hasSelectedOrders()) {
+            return this.$scope.vm.display.projects.extractAllOrders();
         } else {
-            return this.$scope.vm.projects.extractSelectedOrders();
+            return this.$scope.vm.display.projects.extractSelectedOrders();
         }
     }
 
@@ -48,7 +47,7 @@ class Controller implements IViewModel {
         this.$scope.vm.display.lightbox.waitingAdmin = false;
         template.close('lightbox.waitingAdmin');
         const selectedOrders : OrdersRegion = this.extractSelectedOrders();
-        this.$scope.vm.projects.all = [];
+        this.$scope.vm.display.projects.all = [];
         Utils.safeApply(this.$scope);
         await selectedOrders.generateLibraryOrder().then(() => {
             toasts.confirm('crre.order.region.library.create.message');
@@ -85,7 +84,6 @@ function directive(): IDirective {
         templateUrl: `/crre/public/ts/directives/confirm-generate-library/confirm-generate-library.html`,
         scope: {
             display: '=',
-            projects: '=',
             onCloseWaitingAdminLightbox: '&'
         },
         controllerAs: 'vm',

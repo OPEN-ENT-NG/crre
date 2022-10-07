@@ -10,7 +10,7 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
         $scope.confirmRefuseOrder= async (justification:string) : Promise<void> =>{
             $scope.display.loading = true;
             let selectedOrders : OrdersRegion = new OrdersRegion();
-            $scope.projects.forEach((project: Project) => {
+            $scope.display.projects.forEach((project: Project) => {
                 project.orders.forEach( async (order: OrderRegion) => {
                     if(order.selected) {selectedOrders.all.push(order);}
                 });
@@ -18,8 +18,8 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
             $scope.display.toggle = false;
             $scope.display.lightbox.waitingAdmin = false;
             template.close('lightbox.waitingAdmin');
-            let projectsToShow : Projects = $scope.projects;
-            $scope.projects = new Projects();
+            let projectsToShow : Projects = $scope.display.projects;
+            $scope.display.projects = new Projects();
             Utils.safeApply($scope);
             let {status} = await selectedOrders.updateStatus('REJECTED', justification);
             if(status == 200){
@@ -35,13 +35,13 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
                     Utils.setStatus(project, project.orders);
                 });
                 toasts.confirm('crre.order.refused');
-                $scope.projects = projectsToShow;
+                $scope.display.projects = projectsToShow;
                 $scope.display.loading = $scope.display.allOrdersSelected = false;
                 $timeout(function() {
                     Utils.safeApply($scope);
                 }, 500)
             } else {
-                $scope.projects = projectsToShow;
+                $scope.display.projects = projectsToShow;
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
                 if (status == 401){

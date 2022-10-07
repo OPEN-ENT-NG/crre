@@ -1,4 +1,4 @@
-import {_, ng, template, toasts} from 'entcore';
+import {_, angular, ng, template, toasts} from 'entcore';
 import {
     OrdersRegion,
     Utils,
@@ -75,8 +75,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         }
 
         $scope.openConfirmGenerateLibraryLightbox = async () : Promise<void> => {
-            if ($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
-                $scope.projects.all = [];
+            if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
+                $scope.display.projects.all = [];
                 $scope.display.loading = true;
                 await $scope.searchProjectAndOrders(false, true, true)
             }
@@ -87,7 +87,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
 
         $scope.closeWaitingAdminLightbox = () => {
             $scope.display.lightbox.waitingAdmin = false;
-            if ($scope.display.allOrdersSelected || !$scope.projects.hasSelectedOrders()) {
+            if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
                 $scope.display.allOrdersSelected = false;
                 $scope.onScroll(true);
             }
@@ -97,18 +97,19 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         $scope.validateOrders = async () : Promise<void> => {
             $scope.display.loading = true;
             let selectedOrders : OrdersRegion = new OrdersRegion();
-            $scope.projects.all.forEach((project: Project) => {
+            $scope.display.projects.forEach((project: Project) => {
                 project.orders.forEach(async (order: OrderRegion) => {
                     if (order.selected) {
-                        selectedOrders.all.push(order);
+                        selectedOrders.push(order);
                     }
                 });
             });
-            let projectsToShow : Projects = $scope.projects;
-            $scope.projects = new Projects();
+            let projectsToShow : Projects = $scope.display.projects;
+            $scope.display.projects = new Projects();
+            Utils.safeApply($scope);
             let {status} = await selectedOrders.updateStatus('VALID');
             if (status == 200) {
-                projectsToShow.all.forEach((project: Project) => {
+                projectsToShow.forEach((project: Project) => {
                     project.orders.forEach(async (order: OrderRegion) => {
                         if (order.selected) {
                             order.status = "VALID";
@@ -119,11 +120,11 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     Utils.setStatus(project, project.orders);
                 });
                 toasts.confirm('crre.order.validated');
-                $scope.projects = projectsToShow;
+                $scope.display.projects = projectsToShow;
                 $scope.display.toggle = $scope.display.allOrdersSelected = $scope.display.loading = false;
                 Utils.safeApply($scope);
             } else {
-                $scope.projects = projectsToShow;
+                $scope.display.projects = projectsToShow;
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
                 if (status == 401){
@@ -175,7 +176,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.switchAllOrders = () => {
-            $scope.projects.all.forEach(project => {
+            $scope.display.projects.all.forEach(project => {
                 project.selected = $scope.display.allOrdersSelected;
                 project.orders.forEach(async order => {
                     order.selected = $scope.display.allOrdersSelected;
@@ -187,7 +188,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
 
         $scope.checkSwitchAll = (): void => {
             let testAllTrue = true;
-            $scope.projects.all.forEach(project => {
+            $scope.display.projects.all.forEach(project => {
                 if (!project.selected) {
                     testAllTrue = false;
                 } else {
@@ -206,9 +207,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.display.allOrdersSelected = $scope.display.toggle = false;
             if (all) {
                 await $scope.searchProjectAndOrders(old, true, true)
-                $scope.projects.exportCSV(old, true);
+                $scope.display.projects.exportCSV(old, true);
             } else {
-                $scope.projects.exportCSV(old, false);
+                $scope.display.projects.exportCSV(old, false);
             }
             Utils.safeApply($scope);
         }

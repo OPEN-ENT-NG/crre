@@ -47,7 +47,7 @@
                 </multi-combo>
             </div>
             <div class="cell twelve-mobile right-magnet">
-                <button ng-click="projects.exportCSV(filter.isOld) && uncheckAll()" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
+                <button ng-click="display.projects.exportCSV(filter.isOld) && uncheckAll()" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
             </div>
         </div>
         <div style="margin-bottom: -0.5%; margin-top: 1%">
@@ -72,7 +72,7 @@
                     <td><div class="smallTabElem center"><i18n>Statut</i18n></div></td>
                 </tr>
                 </thead>
-                <tbody ng-repeat="project in projects.all">
+                <tbody ng-repeat="project in display.projects.all">
                 <tr>
                     <td class="table-selector">
                         <label class="checkbox">
@@ -152,7 +152,7 @@
                 </tbody>
             </table>
             <loader data-ng-show="display.loading" min-height="'250px'" class="twelve-mobile ten absolute-position"></loader>
-            <div ng-show="projects.all.length === 0 && !display.loading" class="twelve-mobile ten absolute-position centered top-margin-100">
+            <div ng-show="display.projects.all.length === 0 && !display.loading" class="twelve-mobile ten absolute-position centered top-margin-100">
                 <div class="twelve cell centered-text" >
                     <h3><i18n>crre.info.empty.tab</i18n></h3>
                 </div>
@@ -217,7 +217,7 @@
             <div class="toggle">
                 <div class="row">
                     <button ng-click="reSubmit()" ><i18n>crre.resubmit</i18n></button>
-                    <button ng-click="projects.exportCSV(filter.isOld) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
+                    <button ng-click="display.projects.exportCSV(filter.isOld) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
                 </div>
             </div>
         </section>

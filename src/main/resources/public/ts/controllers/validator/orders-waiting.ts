@@ -19,7 +19,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         $scope.show = {
             comment: false
         };
-        $scope.projects = [];
+        $scope.display.projects = [];
         $scope.sort = {
             order: {
                 type: 'created',

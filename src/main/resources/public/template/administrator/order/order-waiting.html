@@ -105,7 +105,7 @@
                     <td><div class="smallTabElem center"></div></td>
                 </tr>
                 </thead>
-                <tbody ng-repeat="project in projects.all">
+                <tbody ng-repeat="project in display.projects.all">
                 <tr>
                     <td class="table-selector">
                         <label class="checkbox">
@@ -185,8 +185,8 @@
             </table>
         </div>
         <loader data-ng-show="display.loading" min-height="'250px'"></loader>
-        <infinite-scroll scrolled="onScroll()" loading-mode="true" ng-if="projects.all.length != 0"></infinite-scroll>
-        <div ng-show="projects.all.length === 0 && !display.loading" class="centered">
+        <infinite-scroll scrolled="onScroll()" loading-mode="true" ng-if="display.projects.all.length != 0"></infinite-scroll>
+        <div ng-show="display.projects.all.length === 0 && !display.loading" class="centered">
             <div class="twelve cell centered-text" >
                 <h3><i18n>crre.info.empty.tab</i18n></h3>
             </div>
