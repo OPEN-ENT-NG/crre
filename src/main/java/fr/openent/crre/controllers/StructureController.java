@@ -81,10 +81,10 @@ public class StructureController extends ControllerHelper {
     public void createGroupsRights(HttpServerRequest request) {
         JsonArray groups = new JsonArray()
                 .add(
-                        new JsonObject().put("name", "CRRE-VALIDEUR")
+                        new JsonObject().put(Field.NAME, "CRRE-VALIDEUR")
                                 .put("role", "val"))
                 .add(
-                        new JsonObject().put("name", "CRRE-PRESCRIPTEUR")
+                        new JsonObject().put(Field.NAME, "CRRE-PRESCRIPTEUR")
                                 .put("role", "presc"));
         structureService.getStructuresWithoutRight(event -> {
             if (event.isRight()) {
@@ -124,11 +124,11 @@ public class StructureController extends ControllerHelper {
                 String id_structure = structures.getJsonObject(i).getString(ID);
                 log.info("Insert manual groups and rights for CRRE for structure : " + structures.getJsonObject(i).getString(UAI));
                 JsonObject group = new JsonObject()
-                        .put("name", groups.getJsonObject(j).getString("name"))
+                        .put(Field.NAME, groups.getJsonObject(j).getString(Field.NAME))
                         .put("autolinkTargetAllStructs", false)
                         .put("autolinkTargetStructs", new JsonArray())
                         .put("autolinkUsersFromGroups", new JsonArray())
-                        .put("groupDisplayName", groups.getJsonObject(j).getString("name"));
+                        .put("groupDisplayName", groups.getJsonObject(j).getString(Field.NAME));
                 String role = groups.getJsonObject(j).getString("role");
                 structureService.createOrUpdateManual(group, id_structure, null, handlerJsonObject(insertGroupFuture));
                 structureService.getRole(role, handlerJsonObject(getRoleFuture));
@@ -210,7 +210,7 @@ public class StructureController extends ControllerHelper {
                             uais.add(values[1]);
                             JsonObject structure = new JsonObject();
                             structure.put(UAI, values[1]);
-                            structure.put("name", values[2]);
+                            structure.put(Field.NAME, values[2]);
                             structure.put("city", values[3]);
                             structure.put("region", values[5]);
                             structure.put("public", values[6]);

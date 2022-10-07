@@ -125,7 +125,7 @@ public class StructureGroupController extends ControllerHelper {
                 }
                 JsonObject object = new JsonObject();
                 object.put("structures", ids);
-                object.put("name", name);
+                object.put(Field.NAME, name);
                 object.put("description", "");
 
                 structureGroupService.create(object, event1 -> {

@@ -47,10 +47,11 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
     @Override
     public void insertQuote(UserInfos user, Integer nbEtab, String csvFile, String title, Handler<Either<String, JsonObject>> handler) {
         JsonArray params = new JsonArray();
-        String query = "INSERT INTO " + Crre.crreSchema + ".quote(title, owner_name, owner_id, nb_structures, attachment) " +
-                       "VALUES (?, ?, ?, ?, ?) RETURNING title;";
-        params.add(title)
-              .add(user.getUsername())
+        String query = "WITH next_id AS (SELECT nextval('" + Crre.crreSchema + ".quote_id_seq')) " +
+                "INSERT INTO " + Crre.crreSchema + ".quote(id, title, owner_name, owner_id, nb_structures, attachment) " +
+                "VALUES ((SELECT nextval FROM next_id), CONCAT('" + title + "-', (SELECT nextval FROM next_id)), ?, ?, ?, ?) " +
+                "RETURNING title;";
+        params.add(user.getUsername())
               .add(user.getUserId())
               .add(nbEtab)
               .add(csvFile);

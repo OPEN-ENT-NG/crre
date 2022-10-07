@@ -143,7 +143,7 @@ public class OrderRegionController extends BaseController {
     private void getLastProject(HttpServerRequest request, Promise<Integer> projectIdFuture) {
         orderRegionService.getLastProject(lastProject -> {
             if (lastProject.isRight()) {
-                String last = lastProject.right().getValue().getString("title");
+                String last = lastProject.right().getValue().getString(Field.TITLE);
                 String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                 String title = "Commande_" + date;
                 if (last != null) {
@@ -174,7 +174,7 @@ public class OrderRegionController extends BaseController {
                         null,
                         Actions.CREATE.toString(),
                         idProjectRight.toString(),
-                        new JsonObject().put("id", idProjectRight).put("title", title));
+                        new JsonObject().put("id", idProjectRight).put(Field.TITLE, title));
                 projectIdFuture.complete(idProjectRight);
             } else {
                 LOGGER.error("[CRRE] OrderRegionController@createProject An error when you want create project " +
@@ -440,7 +440,7 @@ public class OrderRegionController extends BaseController {
                 }
 
                 order.put(Field.STATUS, "SENT");
-                order.put("name", values[0]);
+                order.put(Field.NAME, values[0]);
                 order.put("editor", values[1]);
                 order.put("uai", values[11]);
                 order.put("diffusor", values[2]);
@@ -749,7 +749,7 @@ public class OrderRegionController extends BaseController {
                                         price = priceDetails.getDouble("priceTTC",0.0) * orderJson.getInteger("amount", 0);
                                     }
                                     orderJson.put("price", price);
-                                    orderJson.put("name", equipment.getString("titre"));
+                                    orderJson.put(Field.NAME, equipment.getString("titre"));
                                     orderJson.put("image", equipment.getString("urlcouverture", "/crre/public/img/pages-default.png"));
                                     orderJson.put("ean", equipment.getString("ean", idEquipment));
                                     orderJson.put("_index", equipment.getString("type","NaN"));
@@ -775,7 +775,7 @@ public class OrderRegionController extends BaseController {
 
     private void equipmentNotFound(JsonObject orderJson, String idEquipment) {
         orderJson.put("price", 0.0);
-        orderJson.put("name", "Manuel introuvable dans le catalogue");
+        orderJson.put(Field.NAME, "Manuel introuvable dans le catalogue");
         orderJson.put("image", "/crre/public/img/pages-default.png");
         orderJson.put("ean", idEquipment);
         orderJson.put("_index", "NaN");
@@ -1127,9 +1127,8 @@ public class OrderRegionController extends BaseController {
             JsonObject data = orderRegionService.generateExport(orderRegionSplit);
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyyyy-HHmmss");
             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
-            String title = "DD" + simpleDateFormat.format(new Date());
             attachment.add(new JsonObject()
-                    .put("name", title + ".csv")
+                    .put(Field.NAME, "DD" + simpleDateFormat.format(new Date()))
                     .put("content", Base64.getEncoder().encodeToString(data.getString("csvFile").getBytes(StandardCharsets.UTF_8)))
                     .put("nbEtab", data.getInteger("nbEtab")));
             e++;
@@ -1137,7 +1136,7 @@ public class OrderRegionController extends BaseController {
         try {
             orderRegionService.recursiveInsertOldClientOrders(orderRegion, 0, response -> {
                 if (response.isRight()) {
-                    sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, 0);
+                    insertQuote(request, user, attachment, 0, orderRegion, ordersClientId, ordersRegionId);
                 } else {
                     log.error("[CRRE@OrderRegionController.recursiveInsertOldClientOrders] " +
                             "An error has occurred recursiveInsertOldClientOrders : " + response.left().getValue());
@@ -1155,7 +1154,7 @@ public class OrderRegionController extends BaseController {
         JsonArray singleAttachment = new JsonArray().add(attachment.getJsonObject(e));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
-                "Demande Libraire CRRE ; csv : " + attachment.getJsonObject(e).getString("name"), singleAttachment, message -> {
+                "Demande Libraire CRRE ; csv : " + attachment.getJsonObject(e).getString(Field.NAME), singleAttachment, message -> {
                     if (!message.isRight()) {
                         log.error("[CRRE@OrderRegionController.sendMails] " +
                                 "An error has occurred sendMail : " + message.left());
@@ -1164,7 +1163,7 @@ public class OrderRegionController extends BaseController {
                         if (e + 1 < attachment.size()){
                             sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, e +1);
                         } else {
-                            insertQuote(request, user, attachment, 0, orderRegion, ordersClientId, ordersRegionId);
+                            insertAndDeleteOrders(request, orderRegion, ordersClientId, ordersRegionId);
                         }
                     }
                 });
@@ -1175,17 +1174,18 @@ public class OrderRegionController extends BaseController {
         JsonObject singleAttachment = attachment.getJsonObject(e);
         Integer nbEtab = singleAttachment.getInteger("nbEtab");
         String csvFileBase64 = singleAttachment.getString("content");
-        String title = singleAttachment.getString("name").replace(".csv","");
-        quoteService.insertQuote(user, nbEtab, csvFileBase64, title, response2 -> {
-            if (response2.isRight()) {
+        String title = singleAttachment.getString(Field.NAME);
+        quoteService.insertQuote(user, nbEtab, csvFileBase64, title, returningTitle -> {
+            if (returningTitle.isRight()) {
+                singleAttachment.put(Field.NAME,returningTitle.right().getValue().getString(Field.TITLE) + ".csv");
                 if (e + 1 < attachment.size()){
                     insertQuote(request, user, attachment, e +1, orderRegion, ordersClientId, ordersRegionId);
                 } else {
-                    insertAndDeleteOrders(request, orderRegion, ordersClientId, ordersRegionId);
+                    sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, 0);
                 }
             } else {
                 log.error("[CRRE@OrderRegionController.insertQuote] " +
-                        "An error has occurred insertQuote : " + response2.left().getValue());
+                        "An error has occurred insertQuote : " + returningTitle.left().getValue());
                 renderError(request);
             }
         });

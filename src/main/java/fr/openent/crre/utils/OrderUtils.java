@@ -1,5 +1,6 @@
 package fr.openent.crre.utils;
 
+import fr.openent.crre.core.constants.Field;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -92,7 +93,7 @@ public class OrderUtils {
     }
 
     public static void extractedEquipmentInfo(JsonObject order, JsonObject equipment) {
-        order.put("name", equipment.containsKey("titre") ? equipment.getString("titre","") : "");
+        order.put(Field.NAME, equipment.containsKey("titre") ? equipment.getString("titre","") : "");
         order.put("image", equipment.containsKey("urlcouverture") ? equipment.getString("urlcouverture","") : "");
         order.put("ean", equipment.containsKey("ean") ? equipment.getString("ean","") : "");
         order.put("editor", equipment.containsKey("editeur") ? equipment.getString("editeur","") : "");

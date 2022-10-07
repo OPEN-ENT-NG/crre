@@ -1,6 +1,7 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Arrays;
@@ -138,7 +139,7 @@ public class Campaign extends Model {
 
     public Campaign(JsonObject campaign) {
         this.id = campaign.getInteger("id", null);
-        this.name = campaign.getString("name", null);
+        this.name = campaign.getString(Field.NAME, null);
         this.description = campaign.getString("description", null);
         this.image = campaign.getString("image", null);
         this.accessible = campaign.getBoolean("accessible", null);
@@ -158,7 +159,7 @@ public class Campaign extends Model {
         table = Crre.crreSchema + ".campaign";
 
         fillables.put("id", Arrays.asList("CREATE", "UPDATE", "mandatory"));
-        fillables.put("name", Arrays.asList("CREATE", "UPDATE", "mandatory"));
+        fillables.put(Field.NAME, Arrays.asList("CREATE", "UPDATE", "mandatory"));
         fillables.put("description", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("image", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("accessible", Arrays.asList("CREATE", "UPDATE"));
@@ -178,7 +179,7 @@ public class Campaign extends Model {
     public JsonObject toJsonObject() {
         return new JsonObject()
                 .put("id", this.id)
-                .put("name", this.name)
+                .put(Field.NAME, this.name)
                 .put("description", this.description)
                 .put("image", this.image)
                 .put("accessible", this.accessible)

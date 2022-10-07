@@ -142,7 +142,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         JsonObject data = orderRegionService.generateExport(orderRegionSplit);
         String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
         JsonObject body = new JsonObject()
-                .put("name", "CRRE_Export_" + day + "_" + e + ".csv")
+                .put(Field.NAME, "CRRE_Export_" + day + "_" + e + ".csv")
                 .put("format", "csv");
         if (ordersSize < 1000) {
             log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
@@ -155,7 +155,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
                     JsonObject storageEntries = addFileEvent.right().getValue();
                     String application = config.getString("app-name");
                     UserUtils.getUserInfos(eb, idUser, user -> {
-                        workspaceHelper.addDocument(storageEntries, user, body.getString("name"), application, false, null, createEvent -> {
+                        workspaceHelper.addDocument(storageEntries, user, body.getString(Field.NAME), application, false, null, createEvent -> {
                             if (createEvent.succeeded()) {
                                 if ((e + 1) * 100000 < orderRegion.size()) {
                                     writeCSVFile(exportHandler, idUser, orderRegion, 100000, e + 1);

@@ -386,7 +386,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     private void setOrderValuesSQL(JsonArray params, JsonObject order) {
-        params.add(order.getString("name"))
+        params.add(order.getString(Field.NAME))
                 .add(order.getString("image", null))
                 .add(order.getDouble("unitedPriceTTC"))
                 .add(order.getString("grade", null))
@@ -611,7 +611,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                     int freeAmount = 0;
                                     for (int k = 0; k < offers.size(); k++) {
                                         JsonObject orderOffer = new JsonObject();
-                                        orderOffer.put("name", offers.getJsonObject(k).getString("name"));
+                                        orderOffer.put(Field.NAME, offers.getJsonObject(k).getString(Field.NAME));
                                         orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
                                         orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
                                         freeAmount += offers.getJsonObject(k).getLong("value");
@@ -624,7 +624,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                         orderOffer.put("id_structure", order.getString("id_structure"));
                                         orderOffer.put("campaign_name", order.getString("campaign_name"));
                                         orderOffer.put("id", "F" + order.getLong("id") + "_" + k);
-                                        orderOffer.put("title", order.getString("title"));
+                                        orderOffer.put(Field.TITLE, order.getString(Field.TITLE));
                                         orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
                                         putStructuresNameUAI(structures, orderOffer);
                                         orderOfferArray.add(orderOffer);
@@ -692,7 +692,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             JsonObject structure = structures.getJsonObject(s);
             if (structure.getString("id").equals(order.getString("id_structure"))) {
                 order.put("uai_structure", structure.getString("uai"));
-                order.put("name_structure", structure.getString("name"));
+                order.put("name_structure", structure.getString(Field.NAME));
                 order.put("address_structure", structure.getString("address"));
             }
         }
@@ -732,7 +732,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 }
                 offerObject.put("value", gratuite);
                 offerObject.put("ean", offer.getString("ean"));
-                offerObject.put("name", offer.getString("titre"));
+                offerObject.put(Field.NAME, offer.getString("titre"));
                 offerObject.put("comment", equipment.getString("ean"));
                 if (gratuite > 0) {
                     offers.add(offerObject);
@@ -804,10 +804,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
                 (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
                 (log.getString("address_structure") != null ? log.getString("address_structure") : "") + ";" +
-                (log.getString("title") != null ? log.getString("title") : "") + ";" +
+                (log.getString(Field.TITLE) != null ? log.getString(Field.TITLE) : "") + ";" +
                 (log.getString("campaign_name") != null ? log.getString("campaign_name") : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
-                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString(Field.NAME) != null ? log.getString(Field.NAME) : "") + ";" +
                 (log.getString("editor") != null ? log.getString("editor") : "") + ";" +
                 (log.getString("diffusor") != null ? log.getString("diffusor") : "") + ";" +
                 (log.getString("type") != null ? log.getString("type") : "") + ";" +

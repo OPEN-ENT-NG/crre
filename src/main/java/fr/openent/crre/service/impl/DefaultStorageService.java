@@ -37,7 +37,7 @@ public class DefaultStorageService implements StorageService {
             buff = contentToAdd.appendBuffer(buff);
         }
 
-        storage.writeBuffer(UUID.randomUUID().toString(), buff, contentType, body.getString("name"), file -> {
+        storage.writeBuffer(UUID.randomUUID().toString(), buff, contentType, body.getString(Field.NAME), file -> {
             if (Field.OK.equals(file.getString(Field.STATUS))) {
                 handler.handle(new Either.Right<>(file));
             }

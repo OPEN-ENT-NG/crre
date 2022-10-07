@@ -517,7 +517,7 @@ public class PurseController extends ControllerHelper {
      */
     private static String getCSVLine(JsonObject purse) {
         return  (purse.getString("uai") != null ? purse.getString("uai") : "") + ";" +
-                (purse.getString("name") != null ? purse.getString("name") : "") + ";" +
+                (purse.getString(Field.NAME) != null ? purse.getString(Field.NAME) : "") + ";" +
                 (purse.getDouble("initial_amount") != null ? purse.getDouble("initial_amount").toString() : "") + ";" +
                 (purse.getDouble("amount") != null ? purse.getDouble("amount").toString() : "") + ";" +
                 (purse.getInteger("licence_initial_amount") != null ? purse.getInteger("licence_initial_amount").toString() : "") + ";" +

@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -464,7 +465,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             JsonObject structure = structures.getJsonObject(i);
             params.add(structure.getString("uai"))
                     .add(structure.getString("id"))
-                    .add(structure.getString("name"))
+                    .add(structure.getString(Field.NAME))
                     .add(structure.getString("public"))
                     .add((structure.getString("mixte").equals("Vrai")))
                     .add(structure.getString("catalog"))

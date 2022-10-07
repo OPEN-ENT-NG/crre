@@ -1,5 +1,6 @@
 package fr.openent.crre.controllers;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.QuoteService;
 import fr.openent.crre.service.impl.DefaultQuoteService;
@@ -56,7 +57,7 @@ public class QuoteController extends BaseController {
                     } catch (IllegalArgumentException e) {
                         attachment = quoteResult.getString("attachment","");
                     }
-                    String title = quoteResult.getString("title");
+                    String title = quoteResult.getString(Field.TITLE);
                     request.response()
                             .putHeader("Content-Type", "text/csv; charset=utf-8")
                             .putHeader("Content-Disposition", "attachment; filename=" + title + ".csv")

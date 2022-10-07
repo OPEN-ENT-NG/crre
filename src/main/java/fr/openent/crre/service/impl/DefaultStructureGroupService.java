@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.webutils.Either;
@@ -141,7 +142,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
                 ".structure_group(id, name, description) VALUES (?,?,?) RETURNING id;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
        .add(id)
-       .add(structureGroup.getString("name"))
+       .add(structureGroup.getString(Field.NAME))
        .add(structureGroup.getString("description"));
         return new JsonObject()
                 .put("statement", insertStructureGroupQuery)
@@ -187,7 +188,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
         String query = "UPDATE "+ Crre.crreSchema + ".structure_group " +
                 "SET name = ?, description = ? WHERE id = ?;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(structureGroup.getString("name"))
+                .add(structureGroup.getString(Field.NAME))
                 .add(structureGroup.getString("description"))
                 .add(id);
         return new JsonObject()

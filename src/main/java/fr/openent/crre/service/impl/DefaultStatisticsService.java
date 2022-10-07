@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.service.StatisticsService;
 import fr.wseduc.mongodb.MongoDb;
 import fr.wseduc.webutils.Either;
@@ -168,7 +169,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         JsonObject match = new JsonObject().put("$or",
                 Arrays.asList(
                         new JsonObject().put("uai", new JsonObject().put("$regex", query).put("$options", "i")),
-                        new JsonObject().put("name", new JsonObject().put("$regex", query).put("$options", "i"))
+                        new JsonObject().put(Field.NAME, new JsonObject().put("$regex", query).put("$options", "i"))
                 ));
         return new JsonObject()
                 .put("$match", match);
@@ -311,11 +312,11 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                 ),
                                         new JsonObject().put("$project", new JsonObject()
                                                 .put("_id", 0)
-                                                .put("name", "$_id.year")),
+                                                .put(Field.NAME, "$_id.year")),
                                         new JsonObject().put("$match", new JsonObject()
-                                                .put("name", new JsonObject("{\"$ne\": null}"))),
+                                                .put(Field.NAME, new JsonObject("{\"$ne\": null}"))),
                                         new JsonObject().put("$sort", new JsonObject()
-                                                .put("name", -1))
+                                                .put(Field.NAME, -1))
                                 )
                         )
                 );
@@ -407,7 +408,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                 .put("$group", new JsonObject().put("_id", new JsonObject()
                                                                 .put("id_structure", "$id_structure")
                                                                 .put("uai", "$uai")
-                                                                .put("name", "$name")
+                                                                .put(Field.NAME, "$name")
                                                                 .put("city", "$city")
                                                                 .put("region", "$region")
                                                                 .put("catalog", "$catalog")
@@ -422,7 +423,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                                 .put("$group", new JsonObject().put("_id", new JsonObject()
                                                                         .put("id_structure", "$_id.id_structure")
                                                                         .put("uai", "$_id.uai")
-                                                                        .put("name", "$_id.name")
+                                                                        .put(Field.NAME, "$_id.name")
                                                                         .put("city", "$_id.city")
                                                                         .put("region", "$_id.region")
                                                                         .put("catalog", "$_id.catalog")
@@ -437,7 +438,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                         new JsonObject()
                                                 .put("$project", new JsonObject()
                                                         .put("_id", 0)
-                                                        .put("name", "$_id.name")
+                                                        .put(Field.NAME, "$_id.name")
                                                         .put("uai", "$_id.uai")
                                                         .put("city", "$_id.city")
                                                         .put("region", "$_id.region")

@@ -91,18 +91,18 @@ public class OrderController extends ControllerHelper {
                                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
                                                 if (idEquipment.equals(equipment.getString("id"))) {
                                                     orderJson.put("price", getPriceTtc(equipment).getDouble("priceTTC"));
-                                                    orderJson.put("name", equipment.getString("titre"));
+                                                    orderJson.put(Field.NAME, equipment.getString("titre"));
                                                     orderJson.put("image", equipment.getString("urlcouverture"));
                                                     break;
                                                 } else if (equipmentsArray.size() - 1 == i) {
                                                     orderJson.put("price", 0.0);
-                                                    orderJson.put("name", "Manuel introuvable dans le catalogue");
+                                                    orderJson.put(Field.NAME, "Manuel introuvable dans le catalogue");
                                                     orderJson.put("image", "/crre/public/img/pages-default.png");
                                                 }
                                             }
                                         } else {
                                             orderJson.put("price", 0.0);
-                                            orderJson.put("name", "Manuel introuvable dans le catalogue");
+                                            orderJson.put(Field.NAME, "Manuel introuvable dans le catalogue");
                                             orderJson.put("image", "/crre/public/img/pages-default.png");
                                         }
                                     }
@@ -373,7 +373,7 @@ public class OrderController extends ControllerHelper {
                                         if (equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
                                             orderMap = new JsonObject();
                                             equipment = equipments.getJsonObject(j);
-                                            orderMap.put("name", equipment.getString("titre"));
+                                            orderMap.put(Field.NAME, equipment.getString("titre"));
                                             orderMap.put("ean", equipment.getString("ean"));
                                             setOrderMap(orders, orderMap, order, equipment, false);
                                             check = false;
@@ -413,7 +413,7 @@ public class OrderController extends ControllerHelper {
                             for (int i = 0; i < orderClients.size(); i++) {
                                 order = orderClients.getJsonObject(i);
                                 orderMap = new JsonObject();
-                                orderMap.put("name", order.getString("equipment_name"));
+                                orderMap.put(Field.NAME, order.getString("equipment_name"));
                                 orderMap.put("ean", order.getString("equipment_key"));
                                 setOrderMap(orders, orderMap, order, null, true);
                             }
@@ -484,7 +484,7 @@ public class OrderController extends ControllerHelper {
     private static String generateExportLine(HttpServerRequest request, JsonObject log) {
         return (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
-                (log.getString("name") != null ? log.getString("name") : "") + ";" +
+                (log.getString(Field.NAME) != null ? log.getString(Field.NAME) : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
                 exportPriceComment(log) + ";" +
                 (log.getString(Field.STATUS) != null ? I18n.getInstance().translate(log.getString(Field.STATUS), getHost(request), I18n.acceptLanguage(request)) : "")
