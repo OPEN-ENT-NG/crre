@@ -62,7 +62,7 @@ public class DefaultBasketService extends SqlCrudService implements BasketServic
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
             if (event.isRight()) {
                 try {
-                    final Number id = event.right().getValue().getInteger("id");
+                    final Number id = event.right().getValue().getInteger(Field.ID);
                     JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
                             .add(getBasketEquipmentCreationStatement(id, basket, user));
                     sql.transaction(statements, event1 ->

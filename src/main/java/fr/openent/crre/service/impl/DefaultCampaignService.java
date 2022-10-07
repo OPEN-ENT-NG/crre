@@ -51,7 +51,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 for (int i = 0; i < campaigns.size(); i++) {
                     object = campaigns.getJsonObject(i);
                     object.put("nb_orders_waiting", 0).put("nb_orders_valid", 0).put("nb_orders_sent", 0);
-                    campaignMap.put(object.getInteger("id").toString(), object);
+                    campaignMap.put(object.getInteger(Field.ID).toString(), object);
                 }
 
                 for (int i = 0; i < purses.size(); i++) {
@@ -210,7 +210,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                             //LOGGER.warn("A purse is present on this structure but the structure is not linked to the campaign");
                         }
                     }
-                    campaignMap.put(campaign.getInteger("id").toString(), campaign);
+                    campaignMap.put(campaign.getInteger(Field.ID).toString(), campaign);
                 }
 
                 for (int i = 0; i < baskets.size(); i++) {
@@ -231,7 +231,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                         int nb_total_consumable = object.getInteger("consumable_initial_amount",0);
                         int nb_total_available_consumable = object.getInteger("consumable_amount",0);
                         for (int s = 0; s < campaigns.size(); s++) {
-                            campaign = campaignMap.getJsonObject(campaigns.getJsonObject(s).getInteger("id").toString());
+                            campaign = campaignMap.getJsonObject(campaigns.getJsonObject(s).getInteger(Field.ID).toString());
                             campaign.put("nb_licences_total", nb_total);
                             campaign.put("nb_licences_available", nb_total_available);
                             campaign.put("nb_licences_consumable_total", nb_total_consumable);
@@ -315,7 +315,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
             if (event.isRight()) {
                 try {
-                    final Number id = event.right().getValue().getInteger("id");
+                    final Number id = event.right().getValue().getInteger(Field.ID);
 
                     Campaign createCampaign = new Campaign();
                     createCampaign.setFromJson(campaign);
@@ -441,7 +441,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
             JsonObject group =  groups.getJsonObject(j);
             insertTagCampaignRelationshipQuery += "(?, ?), ";
             params.add(id)
-                    .add(group.getInteger("id"));
+                    .add(group.getInteger(Field.ID));
         }
         insertTagCampaignRelationshipQuery = insertTagCampaignRelationshipQuery.substring(0, insertTagCampaignRelationshipQuery.length() - 2);
         return new JsonObject()
@@ -498,7 +498,7 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         JsonObject result = event.body();
         if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
-                    .put("id", id);
+                    .put(Field.ID, id);
             either = new Either.Right<>(returns);
         } else {
             LOGGER.error("An error occurred when launching campaign transaction");

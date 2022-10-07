@@ -196,7 +196,7 @@ public class PurseController extends ControllerHelper {
                             } catch (NumberFormatException e){
                                 invalidDatas = true;
                             }
-                            statementsValues.put(structure.getString("id"), new JsonObject()
+                            statementsValues.put(structure.getString(Field.ID), new JsonObject()
                                     .put("amount",amount.getJsonObject(structure.getString("uai")))
                                     .put("consumable_amount",consumable_amount.getJsonObject(structure.getString("uai")))
                                     .put("licence",licence.getInteger(structure.getString("uai")))
@@ -274,7 +274,7 @@ public class PurseController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     public void export(final HttpServerRequest request) {
         try {
-            List<String> params = request.params().getAll("id");
+            List<String> params = request.params().getAll(Field.ID);
             purseService.getPursesStudentsAndLicences(params, event -> {
                 if (event.isRight()) {
                     JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
@@ -365,7 +365,7 @@ public class PurseController extends ControllerHelper {
                 JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
                 for (int i = 0; i < structuresJson.size(); i++) {
                     JsonObject structure = structuresJson.getJsonObject(i);
-                    ids.add(structure.getString("id"));
+                    ids.add(structure.getString(Field.ID));
                 }
                 if(ids.isEmpty()){
                     Renders.renderJson(request, new JsonObject());
@@ -449,7 +449,7 @@ public class PurseController extends ControllerHelper {
             for (int j = 0; j < purses.size(); j++) {
                 purse = purses.getJsonObject(j);
 
-                if (purse.getString("id_structure").equals(structure.getString("id"))) {
+                if (purse.getString("id_structure").equals(structure.getString(Field.ID))) {
                     structure.put("id_structure",purse.getString("id_structure"));
                     // we convert amount to get a number instead of a string
                     structure.put("amount", purse.getDouble("amount",0.0));

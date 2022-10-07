@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -56,7 +57,7 @@ public class CampaignController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     public void campaign(HttpServerRequest request) {
         try {
-            Integer id = Integer.parseInt(request.params().get("id"));
+            Integer id = Integer.parseInt(request.params().get(Field.ID));
             campaignService.getCampaign(id, defaultResponseHandler(request));
         } catch (ClassCastException e) {
             log.error(" An error occurred when casting campaign id", e);
@@ -82,12 +83,12 @@ public class CampaignController extends ControllerHelper {
     public void updateAccessibility(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "campaign", campaign -> {
             try {
-                Integer id = Integer.parseInt(request.params().get("id"));
+                Integer id = Integer.parseInt(request.params().get(Field.ID));
                 campaignService.updateAccessibility(id, campaign, Logging.defaultResponseHandler(eb,
                         request,
                         Contexts.CAMPAIGN.toString(),
                         Actions.UPDATE.toString(),
-                        request.params().get("id"),
+                        request.params().get(Field.ID),
                         campaign));
             } catch (ClassCastException e) {
                 log.error(" An error occurred when casting campaign id", e);
@@ -103,12 +104,12 @@ public class CampaignController extends ControllerHelper {
     public void update(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "campaign", campaign -> {
             try {
-                Integer id = Integer.parseInt(request.params().get("id"));
+                Integer id = Integer.parseInt(request.params().get(Field.ID));
                 campaignService.update(id, campaign, Logging.defaultResponseHandler(eb,
                         request,
                         Contexts.CAMPAIGN.toString(),
                         Actions.UPDATE.toString(),
-                        request.params().get("id"),
+                        request.params().get(Field.ID),
                         campaign));
             } catch (ClassCastException e) {
                 log.error(" An error occurred when casting campaign id", e);
@@ -123,7 +124,7 @@ public class CampaignController extends ControllerHelper {
     @Override
     public void delete(HttpServerRequest request) {
         try{
-            List<String> params = request.params().getAll("id");
+            List<String> params = request.params().getAll(Field.ID);
             if (!params.isEmpty()) {
                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
                 campaignService.delete(ids, Logging.defaultResponsesHandler(eb,

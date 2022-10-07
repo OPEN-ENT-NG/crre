@@ -7,6 +7,7 @@ public class Field {
     }
 
     public static final String STATUS = "status";
+    public static final String ID = "id";
     public static final String OK = "ok";
     public static final String ERROR = "error";
     public static final String rejected = "rejected";

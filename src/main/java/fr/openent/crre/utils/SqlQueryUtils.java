@@ -38,7 +38,7 @@ public final class SqlQueryUtils {
         JsonObject result = event.body();
         if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
-                    .put("id", id);
+                    .put(Field.ID, id);
             either = new Either.Right<>(returns);
         } else {
             LOGGER.error("An error occurred when launching transaction");
@@ -52,7 +52,7 @@ public final class SqlQueryUtils {
         JsonObject result = event.body();
         if (result.containsKey(Field.STATUS) && Field.OK.equals(result.getString(Field.STATUS))) {
             JsonObject returns = new JsonObject()
-                    .put("id", id)
+                    .put(Field.ID, id)
                     .put("idCampaign", idCampaign);
             either = new Either.Right<>(returns);
         } else {

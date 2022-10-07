@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.service.EquipmentService;
 import fr.openent.crre.service.OrderRegionService;
@@ -45,7 +46,7 @@ public class EquipmentController extends ControllerHelper {
     @ResourceFilter(AccessRight.class)
     @Override
     public void list(HttpServerRequest request) {
-        List<String> ids = request.params().getAll("id");
+        List<String> ids = request.params().getAll(Field.ID);
         List<String> idsInt = new ArrayList<>(ids);
         searchByIds(idsInt, arrayResponseHandler(request));
     }
@@ -56,8 +57,8 @@ public class EquipmentController extends ControllerHelper {
     @ResourceFilter(AccessRight.class)
     public void equipment(final HttpServerRequest request) {
         try {
-            String idEquipment = request.params().contains("id")
-                    ? request.params().get("id")
+            String idEquipment = request.params().contains(Field.ID)
+                    ? request.params().get(Field.ID)
                     : null;
             String idStructure = request.params().contains("idStructure")
                     ? request.params().get("idStructure")

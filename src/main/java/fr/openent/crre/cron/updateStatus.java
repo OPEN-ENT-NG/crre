@@ -2,12 +2,14 @@ package fr.openent.crre.cron;
 
 import fr.openent.crre.controllers.OrderRegionController;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.ColumnsLDEOrders;
 import fr.openent.crre.service.impl.DefaultOrderRegionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.entcore.common.controller.ControllerHelper;
 
 import java.io.IOException;
@@ -60,9 +62,12 @@ public class updateStatus extends ControllerHelper implements Handler<Long> {
                 String userLine = sc.nextLine();
                 String[] values = userLine.split(Pattern.quote("|"));
                 JsonObject order = new JsonObject();
-                order.put(Field.STATUS, values[21]);
-                order.put("id", values[22]);
-                if (!values[22].equals("0")) {
+                String etat = values[ColumnsLDEOrders.ETAT.column()];
+                String id = values[ColumnsLDEOrders.ID_CGI.column()];
+                if (!etat.isEmpty() && NumberUtils.isParsable(etat) &&
+                        !id.isEmpty() && NumberUtils.isParsable(id) && !id.equals("0")) {
+                    order.put(Field.STATUS, etat);
+                    order.put(Field.ID, id);
                     ordersRegion.add(order);
                 }
             }

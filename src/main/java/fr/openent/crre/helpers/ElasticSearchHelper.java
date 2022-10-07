@@ -1,5 +1,6 @@
 package fr.openent.crre.helpers;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
@@ -56,7 +57,7 @@ public class ElasticSearchHelper {
                         typePapier = type;
                     }
                     addingArticle.put("type", articleJson.getString("_index"))
-                            .put("id", articleJson.getString("_id"));
+                            .put(Field.ID, articleJson.getString("_id"));
                     List<String> typesNumeric = Arrays.asList(typeNumeric.split(Pattern.quote("|")));
                     boolean ressourceNumeric = isRessource == typesNumeric.contains("Ressource");;
                     boolean consoNumeric = isConso == typesNumeric.contains("Consommable");

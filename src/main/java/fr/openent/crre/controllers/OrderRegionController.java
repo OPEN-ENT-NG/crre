@@ -168,7 +168,7 @@ public class OrderRegionController extends BaseController {
     private void createProject(HttpServerRequest request, String title, Promise<Integer> projectIdFuture) {
         orderRegionService.createProject(title, idProject -> {
             if (idProject.isRight()) {
-                Integer idProjectRight = idProject.right().getValue().getInteger("id");
+                Integer idProjectRight = idProject.right().getValue().getInteger(Field.ID);
                 Logging.insert(eb,
                         request,
                         null,
@@ -195,7 +195,7 @@ public class OrderRegionController extends BaseController {
                 updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
                         .onSuccess(res -> orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, event -> {
                                     if (event.isRight()) {
-                                        Number idReturning = event.right().getValue().getInteger("id");
+                                        Number idReturning = event.right().getValue().getInteger(Field.ID);
                                         Logging.insert(eb,
                                                 request,
                                                 Contexts.ORDERREGION.toString(),
@@ -230,8 +230,8 @@ public class OrderRegionController extends BaseController {
         try {
             UserUtils.getUserInfos(eb, request, user ->
                     RequestUtils.bodyToJson(request, orders -> {
-                        Integer idProject = request.getParam("id") != null ?
-                                Integer.parseInt(request.getParam("id")) : null;
+                        Integer idProject = request.getParam(Field.ID) != null ?
+                                Integer.parseInt(request.getParam(Field.ID)) : null;
                         if (!orders.isEmpty() || idProject == null) {
                             JsonArray ordersList = orders.getJsonArray("orders");
                             HashSet<String> idsEquipment = new HashSet<>();
@@ -272,7 +272,7 @@ public class OrderRegionController extends BaseController {
             if (equipmentsArray.size() > 0) {
                 for (int j = 0; j < equipmentsArray.size(); j++) {
                     JsonObject equipment = equipmentsArray.getJsonObject(j);
-                    if (idEquipment.equals(equipment.getString("id"))) {
+                    if (idEquipment.equals(equipment.getString(Field.ID))) {
                         order.put("price",equipment.getDouble("price"));
                     }
                 }
@@ -314,11 +314,11 @@ public class OrderRegionController extends BaseController {
                                 JsonArray result = event.right().getValue();
                                 List<Integer> idsStatus = new ArrayList<>();
                                 for (Object id : result) {
-                                    idsStatus.add(((JsonObject) id).getInteger("id"));
+                                    idsStatus.add(((JsonObject) id).getInteger(Field.ID));
                                 }
                                 // Store all orders by key (uai + date) and value (id project) No duplicate
                                 HashMap<String, Integer> projetMap = new HashMap<>();
-                                historicCommand(request, sc, lastProject.right().getValue().getInteger("id"),
+                                historicCommand(request, sc, lastProject.right().getValue().getInteger(Field.ID),
                                         getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
                             } else {
                                 badRequest(request);
@@ -493,7 +493,7 @@ public class OrderRegionController extends BaseController {
                         while (checkEtab && k < structures.size()) {
                             if (structures.getJsonObject(k).getString("uai").equals(ordersRegion.getJsonObject(i).getString("uai"))) {
                                 JsonObject structure = structures.getJsonObject(k);
-                                ordersRegion.getJsonObject(i).put("id_structure", structure.getString("id"));
+                                ordersRegion.getJsonObject(i).put("id_structure", structure.getString(Field.ID));
                                 checkEtab = false;
                             }
                             k++;
@@ -742,7 +742,7 @@ public class OrderRegionController extends BaseController {
                         if (equipmentsArray.size() > 0 && idEquipment != null) {
                             for (int i = 0; i < equipmentsArray.size(); i++) {
                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
-                                if (idEquipment.equals(equipment.getString("id"))) {
+                                if (idEquipment.equals(equipment.getString(Field.ID))) {
                                     JsonObject priceDetails = equipment.getJsonObject("priceDetails");
                                     double price = 0.0;
                                     if (priceDetails.getDouble("priceTTC") != null && orderJson.getInteger("amount") != null) {

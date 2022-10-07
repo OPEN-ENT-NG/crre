@@ -45,7 +45,7 @@ public class QuoteController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void getCSVQuote(HttpServerRequest request) {
-        Integer id = request.params().contains("id") ? parseInt(request.params().get("id")) : null;
+        Integer id = request.params().contains(Field.ID) ? parseInt(request.params().get(Field.ID)) : null;
         if(id != null){
             quoteService.getQuote(id, quote -> {
                 if(quote.isRight()) {

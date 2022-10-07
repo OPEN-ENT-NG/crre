@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -71,7 +72,7 @@ public class BasketController extends ControllerHelper {
                                     if (equipmentsArray.size() > 0) {
                                         for (int i = 0; i < equipmentsArray.size(); i++) {
                                             JsonObject equipment = equipmentsArray.getJsonObject(i);
-                                            if (idEquipment.equals(equipment.getString("id"))) {
+                                            if (idEquipment.equals(equipment.getString(Field.ID))) {
                                                 basket.put("equipment", equipment);
                                                 break;
                                             } else if(equipmentsArray.size() - 1 == i) {

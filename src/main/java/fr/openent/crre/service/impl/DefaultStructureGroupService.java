@@ -50,7 +50,7 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
         sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
             if(event.isRight()) {
                 try{
-                    final Number id = event.right().getValue().getInteger("id");
+                    final Number id = event.right().getValue().getInteger(Field.ID);
                     JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
                             .add(getStructureGroupCreationStatement(id,structureGroup));
 

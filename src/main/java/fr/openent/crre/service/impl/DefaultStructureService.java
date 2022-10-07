@@ -464,7 +464,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
             query += "(?, ?, ?, ?, ?, ?, ?, ?),";
             JsonObject structure = structures.getJsonObject(i);
             params.add(structure.getString("uai"))
-                    .add(structure.getString("id"))
+                    .add(structure.getString(Field.ID))
                     .add(structure.getString(Field.NAME))
                     .add(structure.getString("public"))
                     .add((structure.getString("mixte").equals("Vrai")))
@@ -492,7 +492,7 @@ public class DefaultStructureService extends SqlCrudService implements Structure
                     "  END" +
                     "); ";
             JsonObject structure = structures.getJsonObject(i);
-            params.add(structure.getString("id"))
+            params.add(structure.getString(Field.ID))
                     .add(Integer.parseInt(structure.getString(RELIQUAT)))
                     .add(Integer.parseInt(structure.getString(RELIQUAT)))
                     .add(Integer.parseInt(structure.getString(RELIQUAT)))

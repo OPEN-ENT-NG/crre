@@ -138,7 +138,7 @@ public class Campaign extends Model {
     }
 
     public Campaign(JsonObject campaign) {
-        this.id = campaign.getInteger("id", null);
+        this.id = campaign.getInteger(Field.ID, null);
         this.name = campaign.getString(Field.NAME, null);
         this.description = campaign.getString("description", null);
         this.image = campaign.getString("image", null);
@@ -158,7 +158,7 @@ public class Campaign extends Model {
     public Campaign() {
         table = Crre.crreSchema + ".campaign";
 
-        fillables.put("id", Arrays.asList("CREATE", "UPDATE", "mandatory"));
+        fillables.put(Field.ID, Arrays.asList("CREATE", "UPDATE", "mandatory"));
         fillables.put(Field.NAME, Arrays.asList("CREATE", "UPDATE", "mandatory"));
         fillables.put("description", Arrays.asList("CREATE", "UPDATE"));
         fillables.put("image", Arrays.asList("CREATE", "UPDATE"));
@@ -178,7 +178,7 @@ public class Campaign extends Model {
     @Override
     public JsonObject toJsonObject() {
         return new JsonObject()
-                .put("id", this.id)
+                .put(Field.ID, this.id)
                 .put(Field.NAME, this.name)
                 .put("description", this.description)
                 .put("image", this.image)

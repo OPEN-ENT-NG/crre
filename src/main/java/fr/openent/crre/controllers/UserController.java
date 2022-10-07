@@ -39,7 +39,7 @@ public class UserController extends ControllerHelper {
 /* Uncomment if we need to have info (papier, num, mixte) of a structure
 List<String> idStructures = new ArrayList<>();
                         for(int i = 0; i < structures.size(); i++) {
-                            idStructures.add(structures.getJsonObject(i).getString("id"));
+                            idStructures.add(structures.getJsonObject(i).getString(Field.ID));
                         }
                         structureService.getAllStructureByIds(idStructures, structuresInfos -> {
                             if(structuresInfos.isRight()) {
@@ -48,7 +48,7 @@ List<String> idStructures = new ArrayList<>();
                                     JsonObject structure = structures.getJsonObject(j);
                                     for(int i = 0; i < structuresCatalog.size(); i++) {
                                         JsonObject structureCatalog = structuresCatalog.getJsonObject(i);
-                                        if(structure.getString("id").equals(structureCatalog.getString("id_structure"))) {
+                                        if(structure.getString(Field.ID).equals(structureCatalog.getString("id_structure"))) {
                                             String catalog = structureCatalog.getString("catalog");
                                             if(structureCatalog.getBoolean("mixte")) {
                                                 structure.put("catalog", "Mixte");

@@ -276,7 +276,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                                         new JsonObject()
                                                 .put("$group", new JsonObject()
                                                         .put("_id", new JsonObject()
-                                                                .put("id", "$public")
+                                                                .put(Field.ID, "$public")
                                                                 .put("id_structure", "$_id"))
                                                 ),
                                         new JsonObject()

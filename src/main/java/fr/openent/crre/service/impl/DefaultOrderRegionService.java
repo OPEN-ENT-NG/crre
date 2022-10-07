@@ -307,7 +307,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     Date date = new SimpleDateFormat("dd/MM/yyyy").parse(order.getString("creation_date"));
                     creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
                 } else {
-                    params.add(order.getLong("id"));
+                    params.add(order.getLong(Field.ID));
                     query.append(", ?) ,");
                     Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
                     creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
@@ -468,7 +468,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     private void formatOffers(JsonObject order) {
         for (int i = 0; i < order.getJsonArray("offers").size(); i++) {
             JsonObject offer = order.getJsonArray("offers").getJsonObject(i);
-            offer.put("id", "F" + order.getLong("id_order_client_equipment") + "_" + i);
+            offer.put(Field.ID, "F" + order.getLong("id_order_client_equipment") + "_" + i);
         }
     }
 
@@ -504,7 +504,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     " SET id_status = ?" +
                     " WHERE id = ?; ";
             params.add(ordersRegion.getJsonObject(i).getString(Field.STATUS));
-            params.add(ordersRegion.getJsonObject(i).getString("id"));
+            params.add(ordersRegion.getJsonObject(i).getString(Field.ID));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
@@ -546,7 +546,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         JsonArray params = new JsonArray();
         for (int i = 0; i < listIdOrders.size(); i++) {
             query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" SET id_status = ? WHERE id = ?;";
-            params.add(listIdOrders.getJsonObject(i).getInteger(Field.STATUS)).add(listIdOrders.getJsonObject(i).getInteger("id"));
+            params.add(listIdOrders.getJsonObject(i).getInteger(Field.STATUS)).add(listIdOrders.getJsonObject(i).getInteger(Field.ID));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
@@ -575,12 +575,12 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                         order.put("creation_date", creation_date);
                     }
-                    ordersRegionId.add(order.getLong("id"));
+                    ordersRegionId.add(order.getLong(Field.ID));
                     ordersClientId.add(order.getLong("id_order_client_equipment"));
 
                     for (int j = 0; j < equipments.size(); j++) {
                         equipment = equipments.getJsonObject(j);
-                        if (equipment.getString("id").equals(order.getString("equipment_key"))) {
+                        if (equipment.getString(Field.ID).equals(order.getString("equipment_key"))) {
                             JsonObject priceDetails = getPriceTtc(equipment);
                             DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
                             DecimalFormat df2 = new DecimalFormat("#.##", dfs);
@@ -623,7 +623,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                         orderOffer.put("creation_date", order.getString("creation_date"));
                                         orderOffer.put("id_structure", order.getString("id_structure"));
                                         orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                        orderOffer.put("id", "F" + order.getLong("id") + "_" + k);
+                                        orderOffer.put(Field.ID, "F" + order.getLong(Field.ID) + "_" + k);
                                         orderOffer.put(Field.TITLE, order.getString(Field.TITLE));
                                         orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
                                         putStructuresNameUAI(structures, orderOffer);
@@ -642,7 +642,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 log.error("[CRRE@beautifyOrders] Problem to beautify the order, order : " + order.toString());
                 orderRegion.remove(order);
                 try {
-                    ordersRegionId.remove(order.getLong("id"));
+                    ordersRegionId.remove(order.getLong(Field.ID));
                     ordersClientId.remove(order.getLong("id_order_client_equipment"));
                 } catch (Exception errorremoval) {
                     log.error("[CRRE@beautifyOrders] Problem to beautify the order, error to removal ids : " + errorremoval.getMessage());
@@ -690,7 +690,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     private void putStructuresNameUAI(JsonArray structures, JsonObject order) {
         for (int s = 0; s < structures.size(); s++) {
             JsonObject structure = structures.getJsonObject(s);
-            if (structure.getString("id").equals(order.getString("id_structure"))) {
+            if (structure.getString(Field.ID).equals(order.getString("id_structure"))) {
                 order.put("uai_structure", structure.getString("uai"));
                 order.put("name_structure", structure.getString(Field.NAME));
                 order.put("address_structure", structure.getString("address"));
@@ -799,7 +799,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     private String generateExportLine(JsonObject log) {
-        return (log.containsKey("id_project") ? log.getLong("id").toString() : log.getString("id")) + ";" +
+        return (log.containsKey("id_project") ? log.getLong(Field.ID).toString() : log.getString(Field.ID)) + ";" +
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
                 (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
                 (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +

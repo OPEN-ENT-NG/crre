@@ -89,7 +89,7 @@ public class OrderController extends ControllerHelper {
                                         if (equipmentsArray.size() > 0) {
                                             for (int i = 0; i < equipmentsArray.size(); i++) {
                                                 JsonObject equipment = equipmentsArray.getJsonObject(i);
-                                                if (idEquipment.equals(equipment.getString("id"))) {
+                                                if (idEquipment.equals(equipment.getString(Field.ID))) {
                                                     orderJson.put("price", getPriceTtc(equipment).getDouble("priceTTC"));
                                                     orderJson.put(Field.NAME, equipment.getString("titre"));
                                                     orderJson.put("image", equipment.getString("urlcouverture"));
@@ -163,7 +163,7 @@ public class OrderController extends ControllerHelper {
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals("id") && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
+                    if (!key.equals(Field.ID) && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
                         for (int f = 0; f < filters.size(); f++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
@@ -208,7 +208,7 @@ public class OrderController extends ControllerHelper {
                                 idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
                             }
                             for (int i = 0; i < totalAmount.size(); i++) {
-                                idsOrderFiltered.add(totalAmount.getJsonObject(i).getLong("id"));
+                                idsOrderFiltered.add(totalAmount.getJsonObject(i).getLong(Field.ID));
                                 total_amount += totalAmount.getJsonObject(i).getLong("amount");
                             }
                             int finalTotal_amount = total_amount;
@@ -221,12 +221,12 @@ public class OrderController extends ControllerHelper {
                                     for (int i = 0; i < order_credit.size(); i++) {
                                         JsonObject order = order_credit.getJsonObject(i);
                                         String idEquipment = order.getString("equipment_key");
-                                        Long idOrder = order.getLong("id");
+                                        Long idOrder = order.getLong(Field.ID);
                                         String credit = order.getString("use_credit");
                                         if (equipmentsArray.size() > 0) {
                                             for (int j = 0; j < equipmentsArray.size(); j++) {
                                                 JsonObject equipment = equipmentsArray.getJsonObject(j);
-                                                if (idEquipment.equals(equipment.getString("id"))) {
+                                                if (idEquipment.equals(equipment.getString(Field.ID))) {
                                                     double totalPriceEquipment = order.getInteger("amount") *
                                                             getPriceTtc(equipment).getDouble("priceTTC");
                                                     if ((credit.equals("credits") || credit.equals("consumable_credits")) && idsOrderFiltered.contains(idOrder)) {
@@ -305,7 +305,7 @@ public class OrderController extends ControllerHelper {
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals("id") && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
+                    if (!key.equals(Field.ID) && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
                             !key.equals("startDate") && !key.equals("endDate")) {
                         for (int f = 0; f < filters.size(); f++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
@@ -323,8 +323,8 @@ public class OrderController extends ControllerHelper {
                     q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
                 }
                 Integer id_campaign = null;
-                if (request.getParam("id") != null) {
-                    id_campaign = parseInt(request.getParam("id"));
+                if (request.getParam(Field.ID) != null) {
+                    id_campaign = parseInt(request.getParam(Field.ID));
                 }
                 String finalQ = q;
                 Integer finalId_campaign = id_campaign;
@@ -344,7 +344,7 @@ public class OrderController extends ControllerHelper {
     public void export(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,
                 userInfos -> {
-                    List<String> params = request.params().getAll("id");
+                    List<String> params = request.params().getAll(Field.ID);
                     String idCampaign = request.params().contains("idCampaign") ? request.params().get("idCampaign") : null;
                     String idStructure = request.params().contains("idStructure") ? request.params().get("idStructure") : null;
                     String statut = request.params().contains("statut") ? request.params().get("statut") : null;
@@ -398,7 +398,7 @@ public class OrderController extends ControllerHelper {
     public void exportOld(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,
                 userInfos -> {
-                    List<String> params = request.params().getAll("id");
+                    List<String> params = request.params().getAll(Field.ID);
                     String idCampaign = request.params().contains("idCampaign") ? request.params().get("idCampaign") : null;
                     String idStructure = request.params().contains("idStructure") ? request.params().get("idStructure") : null;
                     String startDate = request.getParam("startDate");
@@ -428,7 +428,7 @@ public class OrderController extends ControllerHelper {
 
     private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order, JsonObject equipment,
                              boolean old) {
-        orderMap.put("id", order.getInteger("id"));
+        orderMap.put(Field.ID, order.getInteger(Field.ID));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);

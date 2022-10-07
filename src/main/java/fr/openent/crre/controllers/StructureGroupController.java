@@ -120,7 +120,7 @@ public class StructureGroupController extends ControllerHelper {
                 String name = m.find() ? m.group(0).replace(".csv", "") : UUID.randomUUID().toString();
                 for (int i = 0; i < data.size(); i++) {
                     o = data.getJsonObject(i);
-                    id = o.getString("id");
+                    id = o.getString(Field.ID);
                     ids.add(id);
                 }
                 JsonObject object = new JsonObject();
@@ -199,12 +199,12 @@ public class StructureGroupController extends ControllerHelper {
     public void update(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "structureGroup", structureGroup -> {
             try {
-                Integer id = Integer.parseInt(request.params().get("id"));
+                Integer id = Integer.parseInt(request.params().get(Field.ID));
                 structureGroupService.update(id, structureGroup, Logging.defaultResponseHandler(eb,
                         request,
                         Contexts.STRUCTUREGROUP.toString(),
                         Actions.UPDATE.toString(),
-                        request.params().get("id"),
+                        request.params().get(Field.ID),
                         structureGroup));
             } catch (ClassCastException e) {
                 log.error("An error occured when casting structureGroup id" + e);
@@ -220,7 +220,7 @@ public class StructureGroupController extends ControllerHelper {
     @Override
     public void delete(final HttpServerRequest request) {
         try {
-            List<String> params = request.params().getAll("id");
+            List<String> params = request.params().getAll(Field.ID);
             if (!params.isEmpty()) {
                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
                 structureGroupService.delete(ids, Logging.defaultResponsesHandler(eb,

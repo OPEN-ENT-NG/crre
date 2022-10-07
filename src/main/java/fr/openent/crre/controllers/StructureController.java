@@ -59,7 +59,7 @@ public class StructureController extends ControllerHelper {
     private static final String CAP3 = "cap3";
     private static final String ID_STRUCTURE = "id_structure";
     private static final String UAI = "uai";
-    private static final String ID = "id";
+    private static final String ID = Field.ID;
 
     public StructureController(EventBus eventBus) {
         super();
