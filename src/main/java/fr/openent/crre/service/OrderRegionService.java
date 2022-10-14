@@ -46,7 +46,7 @@ public interface OrderRegionService {
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClient, JsonArray ordersRegion);
+    void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClient);
 
     JsonObject generateExport(JsonArray orderRegion);
 }

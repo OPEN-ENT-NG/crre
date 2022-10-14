@@ -116,11 +116,11 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
             if (event.succeeded()) {
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonArray ordersClientId = new JsonArray(), orderRegion = new JsonArray(), ordersRegionId = new JsonArray();
+                JsonArray ordersClientId = new JsonArray(), orderRegion = new JsonArray();
                 for (int i = 2; i < futures.size(); i++) {
                     orderRegion.addAll((JsonArray) futures.get(i).result());
                 }
-                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId, ordersRegionId);
+                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId);
                 writeCSVFile(exportHandler, idUser, orderRegion, listOrders.size(), 0);
             } else {
                 log.error("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage(), event.cause());

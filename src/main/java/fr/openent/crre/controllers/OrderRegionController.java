@@ -1073,11 +1073,11 @@ public class OrderRegionController extends BaseController {
             if (event.succeeded()) {
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonArray ordersRegionId = new JsonArray(), ordersClientId = new JsonArray(), orderRegion = new JsonArray();
+                JsonArray ordersClientId = new JsonArray(), orderRegion = new JsonArray();
                 for (int i = 2; i < futures.size(); i++) {
                     orderRegion.addAll((JsonArray) futures.get(i).result());
                 }
-                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId, ordersRegionId);
+                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId);
                 JsonArray orderRegionClean = new JsonArray();
                 for (int i = 0; i < orderRegion.size() ; i++){
                     JsonObject order = orderRegion.getJsonObject(i);
@@ -1089,13 +1089,13 @@ public class OrderRegionController extends BaseController {
                 if (orderRegionClean.size() > 0) {
                     updatePurseLicence("valid", orderRegionClean, 0, purse -> {
                         if (purse.isRight()) {
-                            sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId, ordersRegionId);
+                            sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId);
                         } else {
                             unauthorized(request);
                         }
                     });
                 } else {
-                    sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId, ordersRegionId);
+                    sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId);
                 }
             }
         });
@@ -1115,7 +1115,7 @@ public class OrderRegionController extends BaseController {
     }
 
     private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
-                                                      JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
+                                                      JsonArray orderRegion, JsonArray ordersClientId) {
         JsonArray attachment = new fr.wseduc.webutils.collections.JsonArray();
 
         int e = 0;
@@ -1136,7 +1136,7 @@ public class OrderRegionController extends BaseController {
         try {
             orderRegionService.recursiveInsertOldClientOrders(orderRegion, 0, response -> {
                 if (response.isRight()) {
-                    insertQuote(request, user, attachment, 0, orderRegion, ordersClientId, ordersRegionId);
+                    insertQuote(request, user, attachment, 0, orderRegion, ordersClientId);
                 } else {
                     log.error("[CRRE@OrderRegionController.recursiveInsertOldClientOrders] " +
                             "An error has occurred recursiveInsertOldClientOrders : " + response.left().getValue());
@@ -1149,8 +1149,8 @@ public class OrderRegionController extends BaseController {
         }
     }
 
-    private void sendMails(HttpServerRequest request, UserInfos user, JsonArray orderRegion, JsonArray ordersClientId,
-                           JsonArray ordersRegionId, JsonArray attachment, int e) {
+    private void sendMails(HttpServerRequest request, JsonArray orderRegion, JsonArray ordersClientId,
+                           JsonArray attachment, int e) {
         JsonArray singleAttachment = new JsonArray().add(attachment.getJsonObject(e));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
@@ -1161,16 +1161,16 @@ public class OrderRegionController extends BaseController {
                         renderError(request);
                     } else {
                         if (e + 1 < attachment.size()){
-                            sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, e +1);
+                            sendMails(request, orderRegion, ordersClientId, attachment, e +1);
                         } else {
-                            insertAndDeleteOrders(request, orderRegion, ordersClientId, ordersRegionId);
+                            insertAndDeleteOrders(request, orderRegion, ordersClientId);
                         }
                     }
                 });
     }
 
     private void insertQuote(HttpServerRequest request, UserInfos user, JsonArray attachment, int e,
-                             JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
+                             JsonArray orderRegion, JsonArray ordersClientId) {
         JsonObject singleAttachment = attachment.getJsonObject(e);
         Integer nbEtab = singleAttachment.getInteger("nbEtab");
         String csvFileBase64 = singleAttachment.getString("content");
@@ -1179,9 +1179,9 @@ public class OrderRegionController extends BaseController {
             if (returningTitle.isRight()) {
                 singleAttachment.put(Field.NAME,returningTitle.right().getValue().getString(Field.TITLE) + ".csv");
                 if (e + 1 < attachment.size()){
-                    insertQuote(request, user, attachment, e +1, orderRegion, ordersClientId, ordersRegionId);
+                    insertQuote(request, user, attachment, e +1, orderRegion, ordersClientId);
                 } else {
-                    sendMails(request, user, orderRegion, ordersClientId, ordersRegionId, attachment, 0);
+                    sendMails(request, orderRegion, ordersClientId, attachment, 0);
                 }
             } else {
                 log.error("[CRRE@OrderRegionController.insertQuote] " +
@@ -1191,18 +1191,15 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void insertAndDeleteOrders(HttpServerRequest request, JsonArray orderRegion, JsonArray ordersClientId, JsonArray ordersRegionId) {
+    private void insertAndDeleteOrders(HttpServerRequest request, JsonArray orderRegion, JsonArray ordersClientId) {
         try {
             Future<JsonObject> insertOldOrdersFuture = Future.future();
             Future<JsonObject> deleteOrderClientFuture = Future.future();
-            Future<JsonObject> deleteOrderRegionFuture = Future.future();
             orderRegionService.deletedOrdersRecursive(ordersClientId, "order_client_equipment", 0,
                     handlerJsonObject(deleteOrderClientFuture));
-            orderRegionService.deletedOrdersRecursive(ordersRegionId, "order-region-equipment", 0,
-                    handlerJsonObject(deleteOrderRegionFuture));
             orderRegionService.recursiveInsertOldOrders(orderRegion, false, 0,
                     handlerJsonObject(insertOldOrdersFuture));
-            CompositeFuture.all(insertOldOrdersFuture, deleteOrderClientFuture, deleteOrderRegionFuture).setHandler(event -> {
+            CompositeFuture.all(insertOldOrdersFuture, deleteOrderClientFuture).setHandler(event -> {
                 if (event.succeeded()) {
                     ok(request);
                     log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +

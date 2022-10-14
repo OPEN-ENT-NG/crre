@@ -560,8 +560,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
 
-    public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray
-            ordersClientId, JsonArray ordersRegionId) {
+    public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClientId) {
         JsonObject order;
         JsonObject equipment;
         for (int i = 0; i < orderRegion.size(); i++) {
@@ -575,7 +574,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
                         order.put("creation_date", creation_date);
                     }
-                    ordersRegionId.add(order.getLong(Field.ID));
                     ordersClientId.add(order.getLong("id_order_client_equipment"));
 
                     for (int j = 0; j < equipments.size(); j++) {
@@ -642,7 +640,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 log.error("[CRRE@beautifyOrders] Problem to beautify the order, order : " + order.toString());
                 orderRegion.remove(order);
                 try {
-                    ordersRegionId.remove(order.getLong(Field.ID));
                     ordersClientId.remove(order.getLong("id_order_client_equipment"));
                 } catch (Exception errorremoval) {
                     log.error("[CRRE@beautifyOrders] Problem to beautify the order, error to removal ids : " + errorremoval.getMessage());
