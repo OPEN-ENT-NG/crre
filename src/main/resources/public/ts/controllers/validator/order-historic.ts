@@ -11,7 +11,7 @@ import {
     OrdersRegion,
     Project,
     OrderRegion,
-    OrderClient, Projects,
+    OrderClient,
 } from "../../model";
 import {Mix} from "entcore-toolkit";
 
@@ -48,7 +48,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             let totalAmount : number = 0;
             let baskets : Baskets = new Baskets();
             let ordersRegionToResubmit : OrdersRegion = new OrdersRegion();
-            $scope.display.projects.all.forEach((project : Project) => {
+            $scope.display.projects.forEach((project : Project) => {
                 project.orders.forEach(async (order : OrderRegion) => {
                     if (order.selected) {
                         const campaign : Campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
@@ -71,7 +71,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 toasts.warning('crre.order.update.err');
             }
 
-            $scope.display.projects.all.forEach((project : Project) => {
+            $scope.display.projects.forEach((project : Project) => {
                 project.orders.forEach(async (order : OrderClient) => {
                     if (order.selected) {
                         order.status = 'RESUBMIT';
@@ -112,7 +112,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
         };
 
         const uncheckAll = () : void => {
-            $scope.display.projects.all.forEach((project : Project) => {
+            $scope.display.projects.forEach((project : Project) => {
                 project.selected = false;
                 project.orders.forEach(async (order : OrderClient) => {
                     order.selected = false;
