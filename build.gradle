@@ -70,6 +70,7 @@ dependencies {
   compile "org.apache.poi:poi-ooxml:$apachePoiVersion"
   compile "fr.wseduc:vertx-cron-timer:$vertxCronTimer"
   compile "org.apache.commons:commons-text:1.6"
+  compile "io.vertx:vertx-web-client:$vertxVersion"
   testCompile "junit:junit:$junitVersion"
   testCompile "org.entcore:tests:$entCoreVersion"
   testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'

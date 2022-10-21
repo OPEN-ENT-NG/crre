@@ -2,6 +2,9 @@ package fr.openent.crre.core.constants;
 
 public class Field {
 
+    public static final String MAIL = "mail";
+    public static final String EQUIPEMENT = "equipment";
+
     private Field() {
         throw new IllegalStateException("Utility class");
     }

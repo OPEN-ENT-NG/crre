@@ -2,17 +2,21 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.model.OrderLDEModel;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -26,6 +30,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
@@ -507,6 +512,39 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             params.add(ordersRegion.getJsonObject(i).getString(Field.ID));
         }
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        List<JsonObject> ordersRegion = listOrder.stream()
+                .map(orderLDEModel -> {
+                    if (!orderLDEModel.getEtat().isEmpty() && NumberUtils.isParsable(orderLDEModel.getEtat()) &&
+                            !orderLDEModel.getCGIId().isEmpty() && NumberUtils.isParsable(orderLDEModel.getCGIId()) &&
+                            !orderLDEModel.getCGIId().equals("0")) {
+                        return new JsonObject()
+                                .put(Field.STATUS, orderLDEModel.getEtat())
+                                .put(Field.ID, orderLDEModel.getCGIId());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        if (ordersRegion.isEmpty()) {
+            return Future.succeededFuture();
+        }
+        this.updateOldOrders(new JsonArray(ordersRegion), res -> {
+            if (res.isLeft()) {
+                log.error(String.format("[CRRE@%s::updateOldOrderLDEModel] Failed to update order: %s",
+                        this.getClass().getSimpleName(), res.left().getValue()));
+                promise.fail(res.left().getValue());
+            } else {
+                promise.complete(res.right().getValue());
+            }
+        });
+
+        return promise.future();
     }
 
     @Override

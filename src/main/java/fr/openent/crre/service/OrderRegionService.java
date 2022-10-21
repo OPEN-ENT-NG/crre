@@ -1,6 +1,8 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.OrderLDEModel;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -37,6 +39,8 @@ public interface OrderRegionService {
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 
     void updateOldOrders(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handler);
+
+    Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder);
 
     void deletedOrdersRecursive(JsonArray ordersClient, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject);
 

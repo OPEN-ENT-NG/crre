@@ -2,17 +2,17 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.FileHelper;
+import fr.openent.crre.helpers.HttpRequestHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.OrderLDEModel;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureRight;
 import fr.openent.crre.security.ValidatorRight;
-import fr.openent.crre.service.OrderRegionService;
-import fr.openent.crre.service.PurseService;
-import fr.openent.crre.service.QuoteService;
-import fr.openent.crre.service.StructureService;
+import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.*;
 import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
@@ -27,12 +27,17 @@ import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.parsetools.RecordParser;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -74,9 +79,16 @@ public class OrderRegionController extends BaseController {
     private final QuoteService quoteService;
     private final EmailSendService emailSender;
     private final JsonObject mail;
+    private final WebClient webClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderService.class);
+    private static final String LDE_ORDER_URI = "http://www.lde.fr/4dlink1/4dcgi/idf/ldc";
 
-
+    /**
+     * Old constructor with webClient to null. Can throw {@link NullPointerException} when calling some methode
+     *
+     * @deprecated use {@link #OrderRegionController(ServiceFactory)} instead.
+     */
+    @Deprecated
     public OrderRegionController(Vertx vertx, JsonObject config, JsonObject mail) {
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender emailSender = emailFactory.getSender();
@@ -86,6 +98,18 @@ public class OrderRegionController extends BaseController {
         this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService("equipment");
         this.structureService = new DefaultStructureService(Crre.crreSchema, null);
+        this.webClient = null;
+    }
+
+    public OrderRegionController(ServiceFactory serviceFactory) {
+        this.emailSender = serviceFactory.getEmailSender();
+        this.mail = serviceFactory.getConfig().getJsonObject(Field.MAIL, new JsonObject());
+        this.orderRegionService = serviceFactory.getOrderRegionService();
+        this.purseService = serviceFactory.getPurseService();
+        this.quoteService = serviceFactory.getQuoteService();
+        this.structureService = serviceFactory.getStructureService();
+        this.webClient = serviceFactory.getWebClient();
+        this.vertx = serviceFactory.getVertx();
     }
 
     @Post("/region/orders")
@@ -337,6 +361,12 @@ public class OrderRegionController extends BaseController {
         });
     }
 
+    /**
+     * Use a lot of JVM memory with {@link Scanner}.
+     *
+     * @deprecated Replaced by {@link #getOrderLDE(Handler)}
+     */
+    @Deprecated
     public Scanner getOrderLDE() throws IOException {
         disableSslVerification();
         URL hh = new URL("http://www.lde.fr/4dlink1/4dcgi/idf/ldc");
@@ -382,6 +412,52 @@ public class OrderRegionController extends BaseController {
             log.info("Empty file");
         }
         return sc;
+    }
+
+    /**
+     * Get order LDE from LDE API. Due to a large amount of data, the response must be processed little by little.
+     * This is why we provide a handler which will be executed for each order.
+     *
+     * @param orderLDEModelHandler handler executed for each order of the HTTP response
+     * @return future completed when HTTP response has finish to be read
+     */
+    public Future<Void> getOrderLDE(Handler<OrderLDEModel> orderLDEModelHandler) {
+        Promise<Void> promise = Promise.promise();
+
+        HttpRequest<Buffer> request = this.webClient.getAbs(LDE_ORDER_URI);
+        FileSystem fs = this.vertx.fileSystem();
+
+        //Create tmpFile
+        FileHelper.createTempFile(fs)
+                //Get tmpFile
+                .compose(path -> FileHelper.getFile(fs, path))
+                //Write in tmpFile in Stream
+                .compose(tmpFile -> HttpRequestHelper.getHttpRequestResponseAsStream(request, tmpFile, false))
+                //Read tmpFile in Stream
+                .onSuccess(tmpFile -> {
+                    RecordParser recordParser = RecordParser.newDelimited("\r", bufferedLine -> {
+                        orderLDEModelHandler.handle(new OrderLDEModel(bufferedLine.toString()));
+                    });
+
+                    tmpFile.handler(recordParser)
+                            .exceptionHandler(error -> {
+                                String message = String.format("[CRRE@%s::getOrderLDE] Failed to stream order LDE response: %s",
+                                        this.getClass().getSimpleName(), error.getMessage());
+                                log.error(message);
+                                promise.fail(error.getMessage());
+                            })
+                            .endHandler(v -> {
+                                tmpFile.close();
+                                promise.complete();
+                            });
+                })
+                .onFailure(error -> {
+                    String message = String.format("[CRRE@%s::getOrderLDE] Failed to get LDE order: %s",
+                            this.getClass().getSimpleName(), error.getMessage());
+                    log.error(message);
+                    promise.fail(error.getMessage());
+                });
+        return promise.future();
     }
 
     private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments,

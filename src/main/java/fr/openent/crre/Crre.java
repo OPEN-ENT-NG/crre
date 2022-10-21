@@ -5,6 +5,7 @@ import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.cron.updateStatus;
 import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.ExportWorker;
 import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.DeploymentOptions;
@@ -27,6 +28,8 @@ public class Crre extends BaseServer {
     public static final String ACCESS_RIGHT = "crre.access";
     public static long timeout = 99999999999L;
 
+    private ServiceFactory serviceFactory;
+
 
     @Override
     public void start() throws Exception {
@@ -39,6 +42,7 @@ public class Crre extends BaseServer {
             iterationWorker = 10 ;
         }
         storage = new StorageFactory(vertx, config).getStorage();
+        serviceFactory = new ServiceFactory(vertx, config);
         JsonObject mail = config.getJsonObject("mail", new JsonObject());
 
         try {
@@ -49,7 +53,7 @@ public class Crre extends BaseServer {
                     new statistics(vertx)
             );
             new CronTrigger(vertx, config.getString("timeSecondStatutCron")).schedule(
-                    new updateStatus(vertx)
+                    new updateStatus(serviceFactory)
             );
         } catch (Exception e) {
             log.error("Invalid CRRE cron expression.", e);
