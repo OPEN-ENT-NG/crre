@@ -157,7 +157,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             query.append(" AND ore.id_structure = ?");
             values.add(idStructure);
         }
-        query.append(" GROUP BY p.id, ore.creation_date ORDER BY ore.creation_date DESC ");
+        query.append(" GROUP BY p.id, ore.creation_date ORDER BY id DESC ");
         if (page != null) {
             query.append("OFFSET ? LIMIT ? ");
             values.add(PAGE_SIZE * page);
@@ -190,7 +190,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
                 "LEFT JOIN " + Crre.crreSchema + ".structure AS s ON ore.id_structure = s.id_structure " +
-                "WHERE ore.creation_date BETWEEN ? AND ? ";
+                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ";
         values.add(startDate);
         values.add(endDate);
         if (!idStructure.equals("null")) {
@@ -269,7 +269,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 count++;
             }
         }
-        sqlquery = sqlquery + " GROUP BY p.id, ore.creation_date ORDER BY ore.creation_date DESC ";
+        sqlquery = sqlquery + " GROUP BY p.id, ore.creation_date ORDER BY id DESC ";
         if (page != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);
