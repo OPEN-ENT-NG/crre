@@ -25,7 +25,7 @@ export const manageOrderController = ng.controller('manageOrderController',
             isOld: false
         };
         $scope.filtersDate = [];
-        $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
+        $scope.filtersDate.startDate = moment().add(-6, 'months')._d;
         $scope.filtersDate.endDate = moment()._d;
         $scope.displayedBasketsOrders = [];
         $scope.loading = true;
@@ -58,10 +58,9 @@ export const manageOrderController = ng.controller('manageOrderController',
 
         $scope.filterByDate = async () : Promise<void> => {
             if ($scope.filter.isDate) {
-                if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+                if ($scope.filtersDate.startDate && $scope.filtersDate.endDate &&
+                    moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
                     await $scope.searchByName(true);
-                } else {
-                    toasts.warning('crre.date.err');
                 }
                 $scope.filter.isDate = false;
             } else {

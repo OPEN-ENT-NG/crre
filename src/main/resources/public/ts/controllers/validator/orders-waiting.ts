@@ -48,7 +48,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.type_campaign = [];
 
             $scope.filtersDate = [];
-            $scope.filtersDate.startDate = moment().add(-1, 'years')._d;
+            $scope.filtersDate.startDate = moment().add(-6, 'months')._d;
             $scope.filtersDate.endDate = moment()._d;
 
             $scope.filters = new Filters();
@@ -136,10 +136,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         }
 
         $scope.filterByDate = async () => {
-            if (moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
+            if ($scope.filtersDate.startDate && $scope.filtersDate.endDate &&
+                moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
                 await $scope.searchByName(false);
-            } else {
-                toasts.warning('crre.date.err');
             }
         };
 
