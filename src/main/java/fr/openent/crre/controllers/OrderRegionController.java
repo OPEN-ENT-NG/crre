@@ -1230,19 +1230,26 @@ public class OrderRegionController extends BaseController {
         JsonArray singleAttachment = new JsonArray().add(attachment.getJsonObject(e));
         String mail = this.mail.getString("address");
         emailSender.sendMail(request, mail, "Demande Libraire CRRE",
-                "Demande Libraire CRRE ; csv : " + attachment.getJsonObject(e).getString(Field.NAME), singleAttachment, message -> {
-                    if (!message.isRight()) {
+                "Demande Libraire CRRE ; csv : " + attachment.getJsonObject(e).getString(Field.NAME), singleAttachment,
+                message -> {
+            if (!message.isRight()) {
+                renderError(request);
+                log.error("[CRRE@OrderRegionController.sendMails] " +
+                        "An error has occurred sendMail : " + message.left().getValue());
+                //roolback from recursiveInsertOldClientOrders
+                orderRegionService.deletedOrdersRecursive(ordersClientId, "order_client_equipment_old", 0, event -> {
+                    if (event.isLeft()) {
                         log.error("[CRRE@OrderRegionController.sendMails] " +
-                                "An error has occurred sendMail : " + message.left());
-                        renderError(request);
-                    } else {
-                        if (e + 1 < attachment.size()){
-                            sendMails(request, orderRegion, ordersClientId, attachment, e +1);
-                        } else {
-                            insertAndDeleteOrders(request, orderRegion, ordersClientId);
-                        }
-                    }
-                });
+                                "An error has occurred when roolingback deletedOrdersRecursive : " + event.left().getValue());
+                    }});
+            } else {
+                if (e + 1 < attachment.size()) {
+                    sendMails(request, orderRegion, ordersClientId, attachment, e +1);
+                } else {
+                    insertAndDeleteOrders(request, orderRegion, ordersClientId);
+                }
+            }
+        });
     }
 
     private void insertQuote(HttpServerRequest request, UserInfos user, JsonArray attachment, int e,
