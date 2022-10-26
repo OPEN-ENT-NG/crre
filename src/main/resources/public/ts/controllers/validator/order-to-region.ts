@@ -1,16 +1,18 @@
 import {Behaviours, moment, ng, toasts} from 'entcore';
 import {
+    Campaign,
     Equipments,
     Filters,
     FiltersFront,
     Offer,
-    Offers, OrderRegion,
+    Offers, OrderClient, OrderRegion,
     OrdersRegion, Projects,
     Structures,
     Utils
 } from "../../model";
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 import {Subscription} from "rxjs";
+import {Mix} from "entcore-toolkit";
 
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
@@ -223,6 +225,10 @@ export const orderRegionController = ng.controller('orderRegionController',
                                 let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
                                 if (equipment && equipment.type === "articlenumerique") {
                                     order.offers = Utils.computeOffer(order, equipment);
+                                }
+                                if (!$scope.isAdministrator()) {
+                                    const orderClient : OrderClient = Mix.castAs(OrderClient, JSON.parse(order.order_parent));
+                                    (orderClient.status == "RESUBMIT") ? order.status =  orderClient.status : null;
                                 }
                             }
                         }

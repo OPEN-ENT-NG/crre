@@ -44,6 +44,7 @@ export class OrderRegion implements Order  {
     displayStatus: boolean;
     cause_status: string;
     campaign_name: string;
+    id_order_client_equipment: number;
 
     constructor() {
         this.typeOrder = "region";

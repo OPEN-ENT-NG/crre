@@ -8,7 +8,6 @@ import {
     Baskets,
     Campaign,
     OrdersClient,
-    OrdersRegion,
     Project,
     OrderRegion,
     OrderClient,
@@ -47,7 +46,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
         $scope.reSubmit = async () : Promise<void> => {
             let totalAmount : number = 0;
             let baskets : Baskets = new Baskets();
-            let ordersRegionToResubmit : OrdersRegion = new OrdersRegion();
+            let ordersToResubmit : OrdersClient = new OrdersClient();
             $scope.display.projects.forEach((project : Project) => {
                 project.orders.forEach(async (order : OrderRegion) => {
                     if (order.selected) {
@@ -59,14 +58,16 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                         basket.selected = true;
                         totalAmount += order.amount;
                         baskets.push(basket);
-                        ordersRegionToResubmit.push(order);
+                        let orderClient : OrderClient = new OrderClient();
+                        orderClient.id = order.id_order_client_equipment;
+                        ordersToResubmit.push(orderClient);
                     }
                 });
             });
 
             await new OrdersClient().resubmitOrderClient(baskets, totalAmount, $scope.current.structure);
 
-            let {status} = await ordersRegionToResubmit.updateStatus('RESUBMIT');
+            let {status} = await ordersToResubmit.updateStatus('RESUBMIT');
             if (status != 200) {
                 toasts.warning('crre.order.update.err');
             }
