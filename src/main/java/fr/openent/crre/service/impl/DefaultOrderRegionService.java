@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.model.OrderLDEModel;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
@@ -515,6 +516,33 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
+    public Future<JsonObject> updateOldOrdersWithTransaction(JsonArray ordersRegion) {
+        Promise<JsonObject> promise = Promise.promise();
+        JsonArray params = new JsonArray();
+        String query = "";
+        final Map<String, List<JsonObject>> statusIdOrderMap = ordersRegion.stream()
+                .map(JsonObject.class::cast)
+                .collect(Collectors.groupingBy(order -> order.getString(Field.STATUS)));
+
+        for (String statusId: statusIdOrderMap.keySet()) {
+            List<String> idOrderList = statusIdOrderMap.get(statusId).stream()
+                    .map(order -> order.getString(Field.ID))
+                    .collect(Collectors.toList());
+            query += "BEGIN;";
+            query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
+                    " SET id_status = ?" +
+                    " WHERE id IN " + Sql.listPrepared(idOrderList) + ";";
+            query += "COMMIT;";
+            params.add(statusId);
+            params.addAll(new JsonArray(idOrderList));
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
+
+        return promise.future();
+    }
+
+    @Override
     public Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder) {
         Promise<JsonObject> promise = Promise.promise();
 
@@ -534,15 +562,14 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (ordersRegion.isEmpty()) {
             return Future.succeededFuture();
         }
-        this.updateOldOrders(new JsonArray(ordersRegion), res -> {
-            if (res.isLeft()) {
-                log.error(String.format("[CRRE@%s::updateOldOrderLDEModel] Failed to update order: %s",
-                        this.getClass().getSimpleName(), res.left().getValue()));
-                promise.fail(res.left().getValue());
-            } else {
-                promise.complete(res.right().getValue());
-            }
-        });
+
+        this.updateOldOrdersWithTransaction(new JsonArray(ordersRegion))
+                .onSuccess(promise::complete)
+                .onFailure(error -> {
+                    log.error(String.format("[CRRE@%s::updateOldOrderLDEModel] Failed to update order: %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
 
         return promise.future();
     }

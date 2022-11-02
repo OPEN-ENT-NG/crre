@@ -435,8 +435,18 @@ public class OrderRegionController extends BaseController {
                 .compose(tmpFile -> HttpRequestHelper.getHttpRequestResponseAsStream(request, tmpFile, false))
                 //Read tmpFile in Stream
                 .onSuccess(tmpFile -> {
+                    //Use atomic to skip header csv line
+                    AtomicBoolean headerIsSkip = new AtomicBoolean(false);
                     RecordParser recordParser = RecordParser.newDelimited("\r", bufferedLine -> {
+                        if (!headerIsSkip.get()) {
+                            headerIsSkip.set(true);
+                            return;
+                        }
                         orderLDEModelHandler.handle(new OrderLDEModel(bufferedLine.toString()));
+                    }).exceptionHandler(error -> {
+                        String message = String.format("[CRRE@%s::getOrderLDE] Failed to execute handler: %s",
+                                this.getClass().getSimpleName(), error.getMessage());
+                        log.error(message);
                     });
 
                     tmpFile.handler(recordParser)

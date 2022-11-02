@@ -87,8 +87,15 @@ public class updateStatus extends ControllerHelper implements Handler<Long> {
      * @return handler witch must be executed for each order data
      */
     private Handler<OrderLDEModel> groupOrderLDEModelHandler(List<OrderLDEModel> listOrder, List<Future> futureList) {
-        return event -> {
-            listOrder.add(event);
+        return orderLDEModel -> {
+            OrderLDEModel duplicateOldOrder = listOrder.stream()
+                    .filter(order -> order.getCGIId().equals(orderLDEModel.getCGIId()))
+                    .findAny()
+                    .orElse(null);
+            if (duplicateOldOrder != null) {
+                listOrder.remove(duplicateOldOrder);
+            }
+            listOrder.add(orderLDEModel);
 
             if (listOrder.size() >= 1000) {
                 futureList.add(this.orderRegionService.updateOldOrderLDEModel(listOrder));
