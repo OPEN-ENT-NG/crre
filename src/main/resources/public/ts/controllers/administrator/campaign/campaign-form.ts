@@ -3,8 +3,8 @@ import {Campaign, StructureGroup, Utils} from '../../../model';
 import http from "axios";
 
 export const campaignFormController = ng.controller('campaignFormController',
-    ['$scope', ($scope) => {
-        this.init = async () => {
+    ['$scope', async ($scope) => {
+        const init = async () => {
             $scope.othersSelected = false;
             $scope.articleFormat = [
                 {name: "Tous", value: null},
@@ -171,7 +171,7 @@ export const campaignFormController = ng.controller('campaignFormController',
             $scope.redirectTo('/campaigns');
             Utils.safeApply($scope);
         };
-        this.init();
+        await init();
 
         function formatStructureGroups(groups: StructureGroup[]) {
             groups.forEach(group => {

@@ -30,7 +30,7 @@ export const manageOrderController = ng.controller('manageOrderController',
         $scope.displayedBasketsOrders = [];
         $scope.loading = true;
 
-        this.init = async () => {
+        const init = async () => {
             $scope.filters = new Filters();
             $scope.basketsOrders = new BasketsOrders();
             await $scope.getOrders();
@@ -218,6 +218,6 @@ export const manageOrderController = ng.controller('manageOrderController',
             Utils.safeApply($scope);
         };
 
-        this.init();
+        await init();
     }])
 ;

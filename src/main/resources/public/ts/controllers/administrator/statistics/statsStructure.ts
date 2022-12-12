@@ -9,7 +9,7 @@ export const statsStructureController = ng.controller('statsStructureController'
         $scope.consummation.forEach((item) => item.toString = () => $scope.translate(item.name));
         Utils.safeApply($scope);
 
-        this.init = async () => {
+        const init = async () => {
             await $scope.initFilter();
             await $scope.initYear();
             await $scope.statsStructure.get($scope.filters);
@@ -47,7 +47,7 @@ export const statsStructureController = ng.controller('statsStructureController'
             return value;
         }
 
-        this.init();
+        await init();
         Utils.safeApply($scope);
 
     }

@@ -11,7 +11,7 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
         $scope.reassorts.forEach((item) => item.toString = () => $scope.translate(item.name));
         $scope.schoolOrientation.forEach((item) => item.toString = () => $scope.translate(item.name));
 
-        this.init = async () => {
+        const init = async () => {
             await $scope.initFilter();
             await $scope.initYear();
             await $scope.stats.get($scope.filters);
@@ -251,7 +251,7 @@ export const statsGlobalController = ng.controller('statsGlobalController', [
             $scope.structureChart.render();
         }
 
-        this.init();
+        await init();
         Utils.safeApply($scope);
     }
 ]);

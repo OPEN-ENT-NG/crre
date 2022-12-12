@@ -2,8 +2,8 @@ import {_, ng} from 'entcore';
 import {Equipment, Filter, Filters, Utils} from '../../../model';
 
 export const catalogController = ng.controller('catalogController',
-    ['$scope', ($scope) => {
-        this.init = async () => {
+    ['$scope', async ($scope) => {
+        const init = async () => {
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
@@ -191,6 +191,6 @@ export const catalogController = ng.controller('catalogController',
             return sortName;
         }
 
-        this.init();
+        await init();
         $scope.addFilter();
     }]);

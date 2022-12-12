@@ -7,8 +7,8 @@ import {
 } from "../../../model";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
-    ['$scope', ($scope) => {
-        this.init = async () => {
+    ['$scope', async ($scope) => {
+        const init = async () => {
             $scope.filterChoice = {
                 states: [],
                 distributeurs: [],
@@ -74,7 +74,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         }
 
-        $scope.openConfirmGenerateLibraryLightbox = async () : Promise<void> => {
+        $scope.openConfirmGenerateLibraryLightbox = async (): Promise<void> => {
             if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
                 $scope.display.projects.all = [];
                 $scope.display.loading = true;
@@ -94,9 +94,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         };
 
-        $scope.validateOrders = async () : Promise<void> => {
+        $scope.validateOrders = async (): Promise<void> => {
             $scope.display.loading = true;
-            let selectedOrders : OrdersRegion = new OrdersRegion();
+            let selectedOrders: OrdersRegion = new OrdersRegion();
             $scope.display.projects.forEach((project: Project) => {
                 project.orders.forEach(async (order: OrderRegion) => {
                     if (order.selected) {
@@ -104,7 +104,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     }
                 });
             });
-            let projectsToShow : Projects = $scope.display.projects;
+            let projectsToShow: Projects = $scope.display.projects;
             $scope.display.projects = new Projects();
             Utils.safeApply($scope);
             let {status} = await selectedOrders.updateStatus('VALID');
@@ -127,7 +127,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 $scope.display.projects = projectsToShow;
                 $scope.display.loading = false;
                 Utils.safeApply($scope);
-                if (status == 401){
+                if (status == 401) {
                     toasts.warning('crre.order.error.purse');
                 } else {
                     toasts.warning('crre.order.validated.error');
@@ -214,6 +214,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         }
 
-        this.init();
+        await init();
     }
     ]);

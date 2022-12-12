@@ -12,7 +12,7 @@ import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 import {Mix} from "entcore-toolkit";
 
 export const waitingValidatorOrderController = ng.controller('waitingValidatorOrderController',
-    ['$scope', ($scope,) => {
+    ['$scope', async ($scope,) => {
         ($scope.ordersClient.selected[0]) ? $scope.orderToUpdate = $scope.ordersClient.selected[0] : $scope.orderToUpdate = new OrderClient();
         $scope.allOrdersSelected = false;
         $scope.campaignInaccessible = false;
@@ -30,8 +30,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             page: 0
         };
         $scope.displayedBasketsOrders = [];
-        // @ts-ignore
-        this.init = async () => {
+        const init = async () => {
             $scope.loading = true;
             $scope.onlyCampaignInaccessible = true;
             Utils.safeApply($scope);
@@ -167,9 +166,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         const checkCampaignAccessibility = async (): Promise<boolean> => {
-            let ordersToCheck : OrdersClient = new OrdersClient();
+            let ordersToCheck: OrdersClient = new OrdersClient();
             await $scope.searchByName(true, ordersToCheck);
-            return ordersToCheck.filter((order : OrderClient) => {
+            return ordersToCheck.filter((order: OrderClient) => {
                 order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
                 return (order.campaign) ? !order.campaign.accessible : true;
             }).length == ordersToCheck.all.length;
@@ -252,10 +251,10 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                         $scope.loading = true;
                         $scope.ordersClient.all = [];
                         Utils.safeApply($scope);
-                        if(!$scope.current.structure) await $scope.initStructures();
+                        if (!$scope.current.structure) await $scope.initStructures();
                         await $scope.getInfos();
                         await $scope.initOrders('WAITING');
-                        this.init();
+                        await init();
                     } else {
                         await $scope.updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable,
                             ordersToRemove, ordersToReformat.length);
@@ -279,9 +278,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.checkSwitchAll = async (): Promise<void> => {
-            let testAllTrue : boolean = true;
-            let testAllFalse : boolean = true;
-            let onlyCampaignInaccessible : boolean = true;
+            let testAllTrue: boolean = true;
+            let testAllFalse: boolean = true;
+            let onlyCampaignInaccessible: boolean = true;
             $scope.ordersClient.all.forEach(function (order) {
                 if (order.selected) {
                     if (order.campaign && order.campaign.accessible) {
@@ -300,7 +299,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         function endLoading(newData: any, all?) {
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-            if(!all)
+            if (!all)
                 $scope.loading = false;
             Utils.safeApply($scope);
         }
@@ -369,6 +368,5 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             await orderClient.updateReassort();
             Utils.safeApply($scope);
         };
-        // @ts-ignore
-        this.init();
+        await init();
     }]);
