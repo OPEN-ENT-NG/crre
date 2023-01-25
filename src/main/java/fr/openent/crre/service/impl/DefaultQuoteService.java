@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.model.MailAttachment;
 import fr.openent.crre.service.QuoteService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -11,10 +12,7 @@ import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.Base64;
-import java.util.Date;
-import java.util.TimeZone;
 
 public class DefaultQuoteService extends SqlCrudService implements QuoteService {
 
@@ -58,6 +56,11 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
               .add(nbEtab)
               .add(Base64.getEncoder().encodeToString(csvFile.getBytes(StandardCharsets.UTF_8)));
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void insertQuote(UserInfos user, MailAttachment attachment, Handler<Either<String, JsonObject>> handler) {
+        this.insertQuote(user, attachment.getNbEtab(), attachment.getContent(), attachment.getName(), handler);
     }
 
     @Override

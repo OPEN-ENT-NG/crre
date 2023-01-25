@@ -4,12 +4,16 @@ public class Field {
 
     public static final String MAIL = "mail";
     public static final String EQUIPEMENT = "equipment";
+    public static final String CONTENT = "content";
+    public static final String NB_ETAB = "nbEtab";
+    public static final String ADDRESS = "address";
+    public static final String CSVFILE = "csvFile";
+    public static final String ORDER_CLIENT_EQUIPMENT = "order_client_equipment";
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
     public static final String ELASTICSEARCHCONFIG = "elasticsearchConfig";
     public static final String API_DASH_KEY = "api-key";
     public static final String EMAILCONFIG = "emailConfig";
-    public static final String CONTENT = "content";
     public static final String ENCODEEMAILCONTENT = "encodeEmailContent";
 
     private Field() {

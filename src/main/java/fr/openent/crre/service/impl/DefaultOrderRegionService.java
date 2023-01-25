@@ -291,7 +291,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void recursiveInsertOldOrders(JsonArray orderRegions, boolean isRenew, int e,
+    public Future<JsonObject> insertOldOrders(JsonArray orderRegions, boolean isRenew) throws ParseException {
+        Promise<JsonObject> promise = Promise.promise();
+
+        this.recursiveInsertOldOrders(orderRegions, isRenew, 0, FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
+    }
+
+    private void recursiveInsertOldOrders(JsonArray orderRegions, boolean isRenew, int e,
                                          Handler<Either<String, JsonObject>> handler) throws ParseException {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
@@ -403,9 +411,18 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getString("id_structure", ""))
                 .add(order.getString("comment"));
     }
+
     @Override
-    public void recursiveInsertOldClientOrders(JsonArray orderRegions, int e,
-                                               Handler<Either<String, JsonObject>> handler) throws ParseException {
+    public Future<JsonObject> insertOldClientOrders(JsonArray orderRegions) throws ParseException {
+        Promise<JsonObject> promise = Promise.promise();
+
+        this.recursiveInsertOldClientOrders(orderRegions, 0, FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
+    }
+
+    private void recursiveInsertOldClientOrders(JsonArray orderRegions, int e,
+                                                    Handler<Either<String, JsonObject>> handler) throws ParseException {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order_client_equipment_old\"" +
@@ -575,7 +592,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void deletedOrdersRecursive(JsonArray orders, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject) {
+    public Future<JsonObject> deletedOrders(JsonArray orders, String table) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        this.deletedOrdersRecursive(orders, table, 0 , FutureHelper.handlerJsonObject(promise));
+
+        return promise.future();
+    }
+
+    private void deletedOrdersRecursive(JsonArray orders, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject) {
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder("DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" as t " +
                 "WHERE t.id IN ( ");

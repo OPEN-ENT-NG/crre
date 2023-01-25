@@ -76,6 +76,7 @@ dependencies {
   testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
   testCompile "io.vertx:vertx-unit:$vertxVersion"
   testCompile "org.mockito:mockito-core:$mockitoVersion"
+  testCompile "org.reflections:reflections:$reflectionsVersion"
 }
 
 jar {

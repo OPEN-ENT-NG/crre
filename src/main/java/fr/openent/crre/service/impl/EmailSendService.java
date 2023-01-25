@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.model.MailAttachment;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.Handler;
@@ -32,21 +33,17 @@ public class EmailSendService {
      *
      * @param handler Need to not be null if you send mail with attachments
      */
-    public void sendMail(HttpServerRequest request, String eMail, String object, String body, JsonArray attachment,
+    public void sendMail(HttpServerRequest request, String eMail, String object, String body, MailAttachment attachment,
                          Handler<Either<String, JsonObject>> handler) {
         if (config.getBoolean(Field.ENCODEEMAILCONTENT)) {
-            attachment.stream()
-                    .filter(JsonObject.class::isInstance)
-                    .map(JsonObject.class::cast)
-                    .forEach(jsonObject ->
-                            jsonObject.put(Field.CONTENT, Base64.getEncoder().encodeToString(jsonObject.getString(Field.CONTENT).getBytes(StandardCharsets.UTF_8))));
+            attachment.setContent(Base64.getEncoder().encodeToString(attachment.getContent().getBytes(StandardCharsets.UTF_8)));
         }
 
         String message = "[CRRE@EmailSendService@sendMail] Parameters : ";
         message += "\n request : " + request.toString();
         message += "\n eMail : " + eMail;
         message += "\n object : " + object;
-        message += "\n attachment : " + attachment.toString();
+        message += "\n attachment : " + attachment.toJson().toString();
         message += "\n body : " + body;
         log.info(message);
         emailSender.sendEmail(request,
@@ -54,7 +51,7 @@ public class EmailSendService {
                 null,
                 null,
                 object,
-                attachment,
+                new JsonArray().add(attachment.toJson()),
                 body,
                 null,
                 false,

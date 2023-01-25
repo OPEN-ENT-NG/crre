@@ -32,9 +32,9 @@ public interface OrderRegionService {
 
     void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler);
 
-    void recursiveInsertOldOrders(JsonArray orderRegions, boolean isRenew, int e, Handler<Either<String, JsonObject>> handlerJsonArray) throws ParseException;
+    Future<JsonObject> insertOldOrders(JsonArray orderRegions, boolean isRenew) throws ParseException;
 
-    void recursiveInsertOldClientOrders(JsonArray orderRegions, int e, Handler<Either<String, JsonObject>> handler) throws ParseException;
+    Future<JsonObject> insertOldClientOrders(JsonArray orderRegions) throws ParseException;
 
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 
@@ -51,7 +51,7 @@ public interface OrderRegionService {
 
     Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder);
 
-    void deletedOrdersRecursive(JsonArray ordersClient, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject);
+    Future<JsonObject> deletedOrders(JsonArray orders, String table);
 
     void getStatusByOrderId(Handler<Either<String, JsonArray>> arrayResponseHandler);
 
