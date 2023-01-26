@@ -1,10 +1,11 @@
 package fr.openent.crre.helpers;
 
-import fr.openent.crre.model.MailAttachment;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -129,6 +130,14 @@ public class FutureHelper {
         init.complete();
 
         return promise.future();
+    }
+
+    public static <T> CompositeFuture all(List<Future<T>> futures) {
+        return CompositeFutureImpl.all(futures.toArray(new Future[futures.size()]));
+    }
+
+    public static <T> CompositeFuture join(List<Future<T>> futures) {
+        return CompositeFutureImpl.join(futures.toArray(new Future[futures.size()]));
     }
 }
 

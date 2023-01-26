@@ -2,8 +2,10 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
@@ -16,6 +18,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -25,8 +28,6 @@ import org.entcore.common.user.UserInfos;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -291,17 +292,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public Future<JsonObject> insertOldOrders(JsonArray orderRegions, boolean isRenew) throws ParseException {
-        Promise<JsonObject> promise = Promise.promise();
+    public List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew) {
+        List<JsonObject> allOrderRegionsList = orderRegions.stream().map(JsonObject.class::cast).collect(Collectors.toList());
 
-        this.recursiveInsertOldOrders(orderRegions, isRenew, 0, FutureHelper.handlerEitherPromise(promise));
-
-        return promise.future();
+        return ListUtils.partition(allOrderRegionsList, 500).stream()
+                .map(orderRegionsList -> this.insertOldOrderList(orderRegionsList, isRenew))
+                .collect(Collectors.toList());
     }
 
-    private void recursiveInsertOldOrders(JsonArray orderRegions, boolean isRenew, int e,
-                                         Handler<Either<String, JsonObject>> handler) throws ParseException {
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+    private TransactionElement insertOldOrderList(List<JsonObject> orderRegionsList, boolean isRenew) {
+        JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
                 " (" +
@@ -311,20 +311,17 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_order_client_equipment, id_project, reassort, id_status, total_free) VALUES ");
 
-        for (int i = e * 500; i < min((e +1) * 500, orderRegions.size()); i++) {
-            if (orderRegions.getJsonObject(i).containsKey("id_project")) {
+        for (JsonObject order: orderRegionsList) {
+            if (order.containsKey("id_project")) {
                 query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
-                JsonObject order = orderRegions.getJsonObject(i);
                 String creation_date;
                 if (isRenew) {
                     query.append(") ,");
-                    Date date = new SimpleDateFormat("dd/MM/yyyy").parse(order.getString("creation_date"));
-                    creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                    creation_date = DateHelper.convertStringDateToOtherFormat(order.getString("creation_date"), DateHelper.DAY_FORMAT, DateHelper.SQL_FORMAT);
                 } else {
                     params.add(order.getLong(Field.ID));
                     query.append(", ?) ,");
-                    Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
-                    creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                    creation_date = DateHelper.convertStringDateToOtherFormat(order.getString("creation_date"), DateHelper.DAY_FORMAT_DASH, DateHelper.SQL_FORMAT);
                 }
 
                 params.add(order.getInteger("amount"))
@@ -342,32 +339,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
         }
         query = new StringBuilder(query.substring(0, query.length() - 1));
-        if(params.size() > 0) {
-            launchSQL(params, query, sql -> {
-                if (sql.isRight()) {
-                    nextIterationOrdersRegion(orderRegions, isRenew, e, handler);
-                } else {
-                    handler.handle(new Either.Left<>("[CRRE@DefaultOrderRegionService.recursiveInsertOldOrders] " +
-                            "An error has occurred : " + sql.left().getValue()));
-                }
-            });
-        } else {
-            nextIterationOrdersRegion(orderRegions, isRenew, e, handler);
-        }
-    }
-
-    private void nextIterationOrdersRegion(JsonArray orderRegions, boolean isRenew, int e, Handler<Either<String, JsonObject>> handler) {
-        if ((e + 1) * 500 >= orderRegions.size()) {
-            handler.handle(new Either.Right<>(new JsonObject()));
-        } else {
-            try {
-                recursiveInsertOldOrders(orderRegions, isRenew, e + 1, handler);
-            } catch (ParseException ex) {
-                ex.printStackTrace();
-                handler.handle(new Either.Left<>(ex.getMessage()));
-                throw new RuntimeException(ex);
-            }
-        }
+        return new TransactionElement(query.toString(), params);
     }
 
     private String selectOrderRegion(boolean old) {
@@ -413,29 +385,26 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public Future<JsonObject> insertOldClientOrders(JsonArray orderRegions) throws ParseException {
-        Promise<JsonObject> promise = Promise.promise();
+    public List<TransactionElement> insertOldClientOrders(JsonArray orderRegions) {
+        List<JsonObject> allOrderRegionsList = orderRegions.stream().map(JsonObject.class::cast).collect(Collectors.toList());
 
-        this.recursiveInsertOldClientOrders(orderRegions, 0, FutureHelper.handlerEitherPromise(promise));
-
-        return promise.future();
+        return ListUtils.partition(allOrderRegionsList, 500).stream()
+                .map(this::insertOldClientOrderList)
+                .collect(Collectors.toList());
     }
 
-    private void recursiveInsertOldClientOrders(JsonArray orderRegions, int e,
-                                                    Handler<Either<String, JsonObject>> handler) throws ParseException {
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+    private TransactionElement insertOldClientOrderList(List<JsonObject> orderRegionsList) {
+        JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order_client_equipment_old\"" +
                 " (id, amount, creation_date, user_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ");
-        for (int i = e * 500; i < min((e +1) * 500, orderRegions.size()); i++) {
-            if (orderRegions.getJsonObject(i).containsKey("id_project")) {
+        for (JsonObject order: orderRegionsList) {
+            if (order.containsKey("id_project")) {
                 query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
-                JsonObject order = orderRegions.getJsonObject(i);
-                Date date = new SimpleDateFormat("dd-MM-yyyy").parse(order.getString("creation_date"));
-                String creation_date = new SimpleDateFormat("yyyy-MM-dd").format(date);
+                String creation_date = DateHelper.convertStringDateToOtherFormat(order.getString("creation_date"), DateHelper.DAY_FORMAT_DASH, DateHelper.SQL_FORMAT);
                 params.add(order.getLong("id_order_client_equipment"))
                         .add(order.getInteger("amount"))
                         .add(creation_date)
@@ -455,32 +424,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
         }
         query = new StringBuilder(query.substring(0, query.length() - 1));
-        if(params.size() > 0) {
-            launchSQL(params, query, sql -> {
-                if (sql.isRight()) {
-                    nextIterationOrders(orderRegions, e, handler);
-                } else {
-                    handler.handle(new Either.Left<>("[CRRE@DefaultOrderRegionService.recursiveinsertOldClientOrders] " +
-                            "An error has occurred : " + sql.left().getValue()));
-                }
-            });
-        } else {
-            nextIterationOrders(orderRegions, e, handler);
-        }
-    }
-
-    private void nextIterationOrders(JsonArray orderRegions, int e, Handler<Either<String, JsonObject>> handler) {
-        if ((e + 1) * 500 >= orderRegions.size()) {
-            handler.handle(new Either.Right<>(new JsonObject()));
-        } else {
-            try {
-                recursiveInsertOldClientOrders(orderRegions, e + 1, handler);
-            } catch (ParseException ex) {
-                ex.printStackTrace();
-                handler.handle(new Either.Left<>(ex.getMessage()));
-                throw new RuntimeException(ex);
-            }
-        }
+        return new TransactionElement(query.toString(), params);
     }
 
     private static void launchSQL(JsonArray params, StringBuilder query, Handler<Either<String, JsonObject>> handler) {
@@ -592,12 +536,24 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public Future<JsonObject> deletedOrders(JsonArray orders, String table) {
-        Promise<JsonObject> promise = Promise.promise();
+    public List<TransactionElement> deletedOrders(List<Long> ordersClientIdList, String table) {
+        List<Long> allOrderRegionsList = ordersClientIdList.stream().map(Long.class::cast).collect(Collectors.toList());
 
-        this.deletedOrdersRecursive(orders, table, 0 , FutureHelper.handlerJsonObject(promise));
+        return ListUtils.partition(allOrderRegionsList, 25000).stream()
+                .map(ordersClientList -> this.deletedOrderList(ordersClientList, table))
+                .collect(Collectors.toList());
+    }
 
-        return promise.future();
+    private TransactionElement deletedOrderList(List<Long> ordersClientIdList, String table) {
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder query = new StringBuilder("DELETE FROM " + Crre.crreSchema + ".\"" + table + "\" as t " +
+                "WHERE t.id IN ( ");
+        for (Long orderClientId: ordersClientIdList) {
+            query.append("?,");
+            params.add(orderClientId);
+        }
+        query = new StringBuilder(query.substring(0, query.length() - 1) + ")");
+        return new TransactionElement(query.toString(), params);
     }
 
     private void deletedOrdersRecursive(JsonArray orders, String table, int e, Handler<Either<String, JsonObject>> handlerJsonObject) {
@@ -650,7 +606,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handlerJsonObject));
     }
 
-    public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClientId) {
+    public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, List<Long> ordersClientId) {
         JsonObject order;
         JsonObject equipment;
         for (int i = 0; i < orderRegion.size(); i++) {
@@ -905,6 +861,4 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 exportStudents(log) +
                 "\n";
     }
-
-
 }

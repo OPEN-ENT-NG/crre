@@ -2,15 +2,13 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.helpers.DateHelper;
-import fr.openent.crre.helpers.FileHelper;
-import fr.openent.crre.helpers.FutureHelper;
-import fr.openent.crre.helpers.HttpRequestHelper;
+import fr.openent.crre.helpers.*;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.MailAttachment;
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureRight;
@@ -28,6 +26,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
@@ -591,18 +590,16 @@ public class OrderRegionController extends BaseController {
                             orderRegionService.createProject("Commandes LDE", handlerJsonObject(createProjectFuture));
                         }
                     }
-                    CompositeFuture.all(futures).setHandler(event2 -> {
+                    CompositeFuture.all(futures).onComplete(event2 -> {
                         if (event2.succeeded()) {
-                            try {
-                                orderRegionService.insertOldOrders(ordersRegion, true)
-                                        .onSuccess(res -> historicCommand(request, sc, finalProject_id, equipments, projetMap, idsStatus, part + 1))
-                                        .onFailure(error -> {
-                                            badRequest(request);
-                                            log.error(String.format("[CRRE@%s::historicCommand] Insert old orders failed %s", this.getClass().getSimpleName(), error.getMessage()));
-                                        });
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                            }
+                            TransactionHelper.executeTransaction(orderRegionService.insertOldOrders(ordersRegion, true))
+                                    .onSuccess(res -> historicCommand(request, sc, finalProject_id, equipments, projetMap, idsStatus, part + 1))
+                                    .onFailure(error -> {
+                                        badRequest(request);
+                                        log.error(String.format("[CRRE@%s::historicCommand] Insert old orders failed %s", this.getClass().getSimpleName(), error.getMessage()));
+                                    });
+                        } else {
+                            badRequest(request);
                         }
                     });
                 } else {
@@ -1148,7 +1145,7 @@ public class OrderRegionController extends BaseController {
             idStructures.add(structureId);
         }
 
-        List<Future> futures = new ArrayList<>();
+        List<Future<JsonArray>> futures = new ArrayList<>();
         Future<JsonArray> structureFuture = Future.future();
         Future<JsonArray> equipmentsFuture = Future.future();
         futures.add(structureFuture);
@@ -1156,13 +1153,14 @@ public class OrderRegionController extends BaseController {
 
         getOrdersRecursively(0, idsOrders, futures);
 
-        CompositeFuture.all(futures).setHandler(event -> {
+        FutureHelper.all(futures).onComplete(event -> {
             if (event.succeeded()) {
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonArray ordersClientId = new JsonArray(), orderRegion = new JsonArray();
+                List<Long> ordersClientId = new ArrayList<>();
+                JsonArray orderRegion = new JsonArray();
                 for (int i = 2; i < futures.size(); i++) {
-                    orderRegion.addAll((JsonArray) futures.get(i).result());
+                    orderRegion.addAll(futures.get(i).result());
                 }
                 orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId);
                 JsonArray orderRegionClean = new JsonArray();
@@ -1191,7 +1189,7 @@ public class OrderRegionController extends BaseController {
         searchByIds(idsEquipments, handlerJsonArray(equipmentsFuture));
     }
 
-    private void getOrdersRecursively(int e, List<Integer> listOrders, List<Future> futures) {
+    private void getOrdersRecursively(int e, List<Integer> listOrders, List<Future<JsonArray>> futures) {
         Future<JsonArray> orderRegionFuture = Future.future();
         futures.add(orderRegionFuture);
         List<Integer> subList = listOrders.subList(e * 5000, min((e +1) * 5000, listOrders.size()) );
@@ -1202,7 +1200,7 @@ public class OrderRegionController extends BaseController {
     }
 
     private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
-                                                      JsonArray orderRegion, JsonArray ordersClientId) {
+                                                      JsonArray orderRegion, List<Long> ordersClientId) {
         List<MailAttachment> attachmentList = new ArrayList<>();
 
         int e = 0;
@@ -1218,14 +1216,15 @@ public class OrderRegionController extends BaseController {
                     .setNbEtab(data.getInteger(Field.NB_ETAB)));
             e++;
         }
-        Function<MailAttachment, Future<JsonObject>> function = attachment ->
-                this.insertQuote(user, attachment)
-                        .compose(res -> sendMail(request, attachment));
-        FutureHelper.compositeSequential(function, attachmentList, true)
-                .onSuccess(res -> insertAndDeleteOrders(request, orderRegion, ordersClientId))
+        Function<MailAttachment, Future<JsonObject>> functionSendMail = attachment -> this.sendMail(request, attachment);
+        Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
+        FutureHelper.compositeSequential(functionSendMail, attachmentList, true)
+                .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
+                .compose(res -> insertAndDeleteOrders(orderRegion, ordersClientId))
+                .onSuccess(res -> Renders.ok(request))
                 .onFailure(error -> {
                     renderError(request);
-                    log.error(String.format("[CRRE@%s::sendMailLibraryAndRemoveWaitingAdmin] An error has occurred sendMail : %s",
+                    log.error(String.format("[CRRE@%s::sendMailLibraryAndRemoveWaitingAdmin] An error has occurred when send mail to library and remove waiting admin : %s",
                             this.getClass().getSimpleName(), error.getMessage()));
                 });
     }
@@ -1249,8 +1248,8 @@ public class OrderRegionController extends BaseController {
                 attachment.setName(returningTitle.right().getValue().getString(Field.TITLE) + ".csv");
                 promise.complete(attachment);
             } else {
-                String message = String.format("[CRRE@%s::insertQuote] An error has occurred insertQuote : %s",
-                        this.getClass().getSimpleName(), returningTitle.left().getValue());
+                String message = String.format("[CRRE@%s::insertQuote] An error has occurred insertQuote %s : %s",
+                        this.getClass().getSimpleName(), attachment.toJson().toString(), returningTitle.left().getValue());
                 log.error(message);
                 promise.fail(message);
             }
@@ -1259,25 +1258,25 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private void insertAndDeleteOrders(HttpServerRequest request, JsonArray orderRegion, JsonArray ordersClientId) {
-        try {
-            Future<JsonObject> insertOldOrdersFuture = orderRegionService.insertOldOrders(orderRegion, false);
-            Future<JsonObject> insertOldClientOrdersFuture = orderRegionService.insertOldClientOrders(orderRegion);
-            Future<JsonObject> deleteOrderClientFuture = orderRegionService.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT);
+    private Future<Void> insertAndDeleteOrders(JsonArray orderRegion, List<Long> ordersClientId) {
+        Promise<Void> promise = Promise.promise();
+        List<TransactionElement> prepareRequestList = new ArrayList<>();
+        prepareRequestList.addAll(orderRegionService.insertOldOrders(orderRegion, false));
+        prepareRequestList.addAll(orderRegionService.insertOldClientOrders(orderRegion));
+        prepareRequestList.addAll(orderRegionService.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT));
 
-            CompositeFuture.all(insertOldOrdersFuture, deleteOrderClientFuture, insertOldClientOrdersFuture).setHandler(event -> {
-                if (event.succeeded()) {
-                    ok(request);
+        TransactionHelper.executeTransaction(prepareRequestList)
+                .onSuccess(event -> {
                     log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
                             "Orders Deleted and insert in old table was successfull");
-                } else {
-                    log.error("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
-                            "An error has occurred in CompositeFuture : " + event.cause().getMessage());
-                }
-            });
-        } catch (ParseException err) {
-            err.printStackTrace();
-            log.error(err.getMessage());
-        }
+                    promise.complete();
+                })
+                .onFailure(error -> {
+                    String message = String.format("An error has occurred in CompositeFuture : %s", error.getMessage());
+                    promise.fail(message);
+                    log.error(String.format("[CRRE@O%s::insertAndDeleteOrders] %s", this.getClass().getSimpleName(), message));
+                });
+
+        return promise.future();
     }
 }

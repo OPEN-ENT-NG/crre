@@ -116,7 +116,8 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
             if (event.succeeded()) {
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
-                JsonArray ordersClientId = new JsonArray(), orderRegion = new JsonArray();
+                List<Long> ordersClientId = new ArrayList<>();
+                JsonArray orderRegion = new JsonArray();
                 for (int i = 2; i < futures.size(); i++) {
                     orderRegion.addAll((JsonArray) futures.get(i).result());
                 }

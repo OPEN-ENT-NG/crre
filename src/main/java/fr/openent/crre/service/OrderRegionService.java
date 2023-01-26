@@ -1,6 +1,7 @@
 package fr.openent.crre.service;
 
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -8,7 +9,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
-import java.text.ParseException;
 import java.util.List;
 
 public interface OrderRegionService {
@@ -32,9 +32,9 @@ public interface OrderRegionService {
 
     void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler);
 
-    Future<JsonObject> insertOldOrders(JsonArray orderRegions, boolean isRenew) throws ParseException;
+    List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew);
 
-    Future<JsonObject> insertOldClientOrders(JsonArray orderRegions) throws ParseException;
+    List<TransactionElement> insertOldClientOrders(JsonArray orderRegions);
 
     void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
 
@@ -51,7 +51,7 @@ public interface OrderRegionService {
 
     Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder);
 
-    Future<JsonObject> deletedOrders(JsonArray orders, String table);
+    List<TransactionElement> deletedOrders(List<Long> ordersClientIdList, String table);
 
     void getStatusByOrderId(Handler<Either<String, JsonArray>> arrayResponseHandler);
 
@@ -59,7 +59,7 @@ public interface OrderRegionService {
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, JsonArray ordersClient);
+    void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, List<Long> ordersClient);
 
     JsonObject generateExport(JsonArray orderRegion);
 }
