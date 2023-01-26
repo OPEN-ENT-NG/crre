@@ -26,16 +26,6 @@ public class updateStatus extends ControllerHelper implements Handler<Long> {
     private final DefaultOrderRegionService orderRegionService;
     private final OrderRegionController orderRegionController;
 
-    /**
-     * @deprecated  Replaced by {@link #updateStatus(ServiceFactory)}
-     */
-    @Deprecated
-    public updateStatus(Vertx vertx) {
-        this.orderRegionController = new OrderRegionController(vertx, null, null);
-        this.orderRegionService = new DefaultOrderRegionService("equipment");
-        this.vertx = vertx;
-    }
-
     public updateStatus(ServiceFactory serviceFactory) {
         this.orderRegionController = new OrderRegionController(serviceFactory);
         this.orderRegionService = serviceFactory.getOrderRegionService();

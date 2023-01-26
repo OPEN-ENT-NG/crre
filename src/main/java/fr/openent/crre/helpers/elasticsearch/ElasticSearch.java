@@ -19,6 +19,7 @@
 
 package fr.openent.crre.helpers.elasticsearch;
 
+import fr.openent.crre.model.config.ConfigElasticSearch;
 import fr.wseduc.webutils.DefaultAsyncResult;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -33,8 +34,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.ProxyOptions;
 
 import java.net.URI;
-import java.util.Base64;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -81,24 +81,21 @@ public class ElasticSearch {
 		return ElasticSearchHolder.instance;
 	}
 
-	public void init(Vertx vertx, JsonObject elasticsearchConfig) {
+	public void init(Vertx vertx, ConfigElasticSearch elasticsearchConfig) {
 		this.vertx = vertx;
-		JsonArray serverUris = elasticsearchConfig.getJsonArray("server-uris");
-		String serverUri = elasticsearchConfig.getString("server-uri");
+		List<String> serverUris = elasticsearchConfig.getServerUris();
+		String serverUri = elasticsearchConfig.getServerUri();
 		if (serverUris == null && serverUri != null) {
-			serverUris = new fr.wseduc.webutils.collections.JsonArray().add(serverUri);
+			serverUris = Collections.singletonList(serverUri);
 		}
 
 		if (serverUris != null) {
 			try {
 				URI[] uris = new URI[serverUris.size()];
 				for (int i = 0; i < serverUris.size(); i++) {
-					uris[i] = new URI(serverUris.getString(i));
+					uris[i] = new URI(serverUris.get(i));
 				}
-				init(uris, vertx,
-						elasticsearchConfig.getInteger("poolSize", 16),
-						elasticsearchConfig.getBoolean("keepAlive", true),
-						elasticsearchConfig);
+				init(uris, vertx, elasticsearchConfig);
 			} catch (Exception e) {
 				log.error("[CRRE]" + e.getMessage(), e);
 			}
@@ -107,16 +104,16 @@ public class ElasticSearch {
 		}
 	}
 
-	public void init(URI[] uris, Vertx vertx, int poolSize, boolean keepAlive, JsonObject elasticsearchConfig) {
-		defaultIndex = elasticsearchConfig.getString("index");
-		username = elasticsearchConfig.getString("username", null);
-		password = elasticsearchConfig.getString("password", null);
-		Boolean elasticSearchSSL = elasticsearchConfig.getBoolean("elasticsearch-ssl", false);
+	private void init(URI[] uris, Vertx vertx, ConfigElasticSearch elasticsearchConfig) {
+		defaultIndex = elasticsearchConfig.getIndex();
+		username = elasticsearchConfig.getUsername();
+		password = elasticsearchConfig.getPassword();
+		boolean elasticSearchSSL = elasticsearchConfig.isElasticSearchSsl();
 		clients = new ElasticSearchClient[uris.length];
 		for (int i = 0; i < uris.length; i++) {
 			HttpClientOptions httpClientOptions = new HttpClientOptions()
-					.setKeepAlive(keepAlive)
-					.setMaxPoolSize(poolSize)
+					.setKeepAlive(elasticsearchConfig.isKeepAlive())
+					.setMaxPoolSize(elasticsearchConfig.getPoolSize())
 					.setDefaultHost(uris[i].getHost())
 					.setDefaultPort(uris[i].getPort())
 					.setConnectTimeout(20000)

@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.model.MailAttachment;
+import fr.openent.crre.model.config.ConfigModel;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.Handler;
@@ -21,9 +22,9 @@ public class EmailSendService {
     private static final Logger log = LoggerFactory.getLogger(EmailSendService.class);
 
     private final EmailSender emailSender;
-    private final JsonObject config;
+    private final ConfigModel config;
 
-    public EmailSendService(EmailSender emailSender, JsonObject config){
+    public EmailSendService(EmailSender emailSender, ConfigModel config){
         this.emailSender = emailSender;
         this.config = config;
     }
@@ -35,7 +36,7 @@ public class EmailSendService {
      */
     public void sendMail(HttpServerRequest request, String eMail, String object, String body, MailAttachment attachment,
                          Handler<Either<String, JsonObject>> handler) {
-        if (config.getBoolean(Field.ENCODEEMAILCONTENT)) {
+        if (config.isEncodeEmailContent()) {
             attachment.setContent(Base64.getEncoder().encodeToString(attachment.getContent().getBytes(StandardCharsets.UTF_8)));
         }
 

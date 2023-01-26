@@ -2,10 +2,9 @@ package fr.openent.crre.service;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.model.config.ConfigModel;
 import fr.openent.crre.service.impl.*;
-import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.core.net.ProxyType;
 import io.vertx.ext.web.client.WebClient;
@@ -14,7 +13,7 @@ import org.entcore.common.email.EmailFactory;
 
 public class ServiceFactory {
     private final Vertx vertx;
-    private final JsonObject config;
+    private final ConfigModel config;
     private final WebClient webClient;
     private final EmailSendService emailSender;
     private final DefaultOrderRegionService orderRegionService;
@@ -22,11 +21,11 @@ public class ServiceFactory {
     private final DefaultQuoteService quoteService;
     private final DefaultStructureService structureService;
 
-    public ServiceFactory(Vertx vertx, JsonObject config) {
+    public ServiceFactory(Vertx vertx, ConfigModel config, EmailFactory emailFactory) {
         this.vertx = vertx;
         this.config = config;
         this.webClient = initWebClient();
-        this.emailSender = initEmailSender();
+        this.emailSender = new EmailSendService(emailFactory.getSender(), config);
         this.orderRegionService = new DefaultOrderRegionService(Field.EQUIPEMENT);
         this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService(Field.EQUIPEMENT);
@@ -37,7 +36,7 @@ public class ServiceFactory {
         return vertx;
     }
 
-    public JsonObject getConfig() {
+    public ConfigModel getConfig() {
         return config;
     }
 
@@ -63,12 +62,6 @@ public class ServiceFactory {
 
     public DefaultStructureService getStructureService() {
         return structureService;
-    }
-
-    private EmailSendService initEmailSender() {
-        EmailFactory emailFactory = new EmailFactory(this.vertx, this.config);
-        EmailSender emailSender = emailFactory.getSender();
-        return new EmailSendService(emailSender, this.config);
     }
 
     private WebClient initWebClient() {

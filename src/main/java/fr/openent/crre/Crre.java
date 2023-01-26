@@ -5,11 +5,13 @@ import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.cron.updateStatus;
 import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
+import fr.openent.crre.model.config.ConfigModel;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.ExportWorker;
 import fr.wseduc.cron.CronTrigger;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
@@ -28,41 +30,33 @@ public class Crre extends BaseServer {
     public static final String ACCESS_RIGHT = "crre.access";
     public static long timeout = 99999999999L;
 
-    private ServiceFactory serviceFactory;
-
 
     @Override
     public void start() throws Exception {
         super.start();
-        crreSchema = config.getString("db-schema");
-        if(config.containsKey("iteration-worker")){
-            iterationWorker = config.getInteger("iteration-worker");
-        }else{
-            log.info("no iteration worker in config");
-            iterationWorker = 10 ;
-        }
+        ConfigModel configModel = new ConfigModel(config);
+        crreSchema = configModel.getDbSchema();
+        iterationWorker = configModel.getIterationWorker();
         storage = new StorageFactory(vertx, config).getStorage();
-        serviceFactory = new ServiceFactory(vertx, config);
-        JsonObject mail = config.getJsonObject("mail", new JsonObject());
+        EmailFactory emailFactory = new EmailFactory(this.vertx, this.config);
+        ServiceFactory serviceFactory = new ServiceFactory(vertx, configModel, emailFactory);
 
         try {
-            new CronTrigger(vertx, config.getString("timeSecondSynchCron")).schedule(
+            new CronTrigger(vertx, configModel.getTimeSecondSynchCron()).schedule(
                     new synchTotalStudents(vertx)
             );
-            new CronTrigger(vertx, config.getString("timeSecondStatCron")).schedule(
+            new CronTrigger(vertx, configModel.getTimeSecondStatCron()).schedule(
                     new statistics(vertx)
             );
-            new CronTrigger(vertx, config.getString("timeSecondStatutCron")).schedule(
+            new CronTrigger(vertx, configModel.getTimeSecondStatutCron()).schedule(
                     new updateStatus(serviceFactory)
             );
         } catch (Exception e) {
-            log.error("Invalid CRRE cron expression.", e);
+            log.error(String.format("[CRRE@%s::start] Invalid CRRE cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));
         }
 
-        if (this.config.getBoolean("elasticsearch", false)) {
-            if (this.config.getJsonObject("elasticsearchConfig") != null) {
-                ElasticSearch.getInstance().init(this.vertx, this.config.getJsonObject("elasticsearchConfig"));
-            }
+        if (configModel.isElasticSearch() && configModel.getElasticSearchConfig() != null) {
+            ElasticSearch.getInstance().init(this.vertx, configModel.getElasticSearchConfig());
         }
 
         addController(new CrreController());
@@ -75,7 +69,7 @@ public class Crre extends BaseServer {
         addController(new BasketController());
         addController(new OrderController());
         addController(new UserController());
-        addController(new OrderRegionController(vertx, config, mail));
+        addController(new OrderRegionController(serviceFactory));
         addController(new StatisticsController());
         addController(new QuoteController());
         vertx.deployVerticle(ExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));

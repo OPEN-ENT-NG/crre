@@ -6,6 +6,7 @@ import fr.openent.crre.helpers.*;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.config.ConfigMailModel;
 import fr.openent.crre.model.MailAttachment;
 import fr.openent.crre.model.OrderLDEModel;
 import fr.openent.crre.model.TransactionElement;
@@ -80,32 +81,14 @@ public class OrderRegionController extends BaseController {
     private final StructureService structureService;
     private final QuoteService quoteService;
     private final EmailSendService emailSender;
-    private final JsonObject mail;
+    private final ConfigMailModel mail;
     private final WebClient webClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderService.class);
     private static final String LDE_ORDER_URI = "http://www.lde.fr/4dlink1/4dcgi/idf/ldc";
 
-    /**
-     * Old constructor with webClient to null. Can throw {@link NullPointerException} when calling some methode
-     *
-     * @deprecated use {@link #OrderRegionController(ServiceFactory)} instead.
-     */
-    @Deprecated
-    public OrderRegionController(Vertx vertx, JsonObject config, JsonObject mail) {
-        EmailFactory emailFactory = new EmailFactory(vertx, config);
-        EmailSender emailSender = emailFactory.getSender();
-        this.emailSender = new EmailSendService(emailSender, config);
-        this.mail = mail;
-        this.orderRegionService = new DefaultOrderRegionService("equipment");
-        this.purseService = new DefaultPurseService();
-        this.quoteService = new DefaultQuoteService("equipment");
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
-        this.webClient = null;
-    }
-
     public OrderRegionController(ServiceFactory serviceFactory) {
         this.emailSender = serviceFactory.getEmailSender();
-        this.mail = serviceFactory.getConfig().getJsonObject(Field.MAIL, new JsonObject());
+        this.mail = serviceFactory.getConfig().getMail();
         this.orderRegionService = serviceFactory.getOrderRegionService();
         this.purseService = serviceFactory.getPurseService();
         this.quoteService = serviceFactory.getQuoteService();
@@ -1232,7 +1215,7 @@ public class OrderRegionController extends BaseController {
     private Future<JsonObject> sendMail(HttpServerRequest request, MailAttachment attachment) {
         Promise<JsonObject> promise = Promise.promise();
 
-        String mail = this.mail.getString(Field.ADDRESS);
+        String mail = this.mail.getAddress();
         String title = "Demande Libraire CRRE";
         String body = "Demande Libraire CRRE ; csv : " + attachment.getName();
         emailSender.sendMail(request, mail, title, body, attachment, FutureHelper.handlerEitherPromise(promise));
