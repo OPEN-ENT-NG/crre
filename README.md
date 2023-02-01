@@ -66,3 +66,100 @@ Dans votre springboard, vous devez inclure des variables d'environnement :
 | "${timeSecondSynchCron}"  | Cron pour la récupération des statistiques de tous les estabs (nombre de commandes d'articles numériques, papier, crédits dépensés...) et injection dans la base de données Mongo pour stockage. | */30 * * * * ? *                |
 | "${timeSecondStatCron}"   | Cron pour mettre à jour le statut des commandes dans BDD par rapport aux informations transmises par LDE.                                                                                        | */30 * * * * ? *                |
 | "${timeSecondStatutCron}" | Cron pour récupérer le nombre d'élèves de chaque filière (seconde à terminale, cap, bma....) de chaque établissement et mettre à jour les effectifs de chaque établissement en BDD.              | */30 * * * * ? *                |
+
+De base CRRE va prendre le service mail défini dans la config de l'infra
+On peut redéfinir ce paramétrage en rajoutant une config dans la conf de CRRE
+
+<pre>
+{
+   "name":"fr.openent~crre~1.1.8",
+   "config":{
+        ...
+        "emailConfig": ${crreEmailConfig},
+        ...
+   }
+}
+</pre>
+
+crreEmailConfig peut prendre 3 valeurs en fonction des types suivants :
+ - SMTP:
+<pre>
+{
+   "name":"fr.openent~crre~1.1.8",
+   "config":{
+        ...
+        "emailConfig": {
+            "type": "SMTP",
+            "hostname": ${crreSMTPHost},
+            "port": ${crreSMTPPort},
+            "username": ${crreSMTPUsername},
+            "password": ${crreSMTPPassword},
+            "split-recipients": ${crreSMTPSplitRecipients},
+            "ssl": ${crreSMTPSSL},
+            "tls": ${crreSMTPTLS}
+        },
+        ...
+   }
+}
+</pre>
+| **conf.properties**          | **Utilisation**                                          | **Exemple**                                |
+|------------------------------|----------------------------------------------------------|--------------------------------------------|
+| "${crreSMTPHost}"            | Smtp host                                                | yyy.ovh.net (String)                       |
+| "${crreSMTPPort}"            | Smtp port                                                | 460 (Integer)                              |
+| "${crreSMTPUsername}"        | Smtp username                                            | nepasrepondre.ovh@support-ovh.net (String) |
+| "${crreSMTPPassword}"        | Smtp password                                            | MyStrongPassword (String)                  |
+| "${crreSMTPSplitRecipients}" | Permet de crée un mail sépare pour chaques destinataires | true (Boolean)                             |
+| "${crreSMTPSSL}"             | Active le SSL                                            | true (Boolean)                             |
+| "${crreSMTPTLS}"             | Active le TLS                                            | true (Boolean)                             |
+
+ - SendInBlue
+<pre>
+{
+   "name":"fr.openent~crre~1.1.8",
+   "config":{
+        ...
+        "emailConfig": {
+            "type": "SendInBlue",
+            "uri": ${crreSIBUri},
+            "api-key": ${crreSIBApiKey},
+            "ip": ${crreSIBIp},
+            "max-size": ${crreSIBMaxSize},
+            "date-pattern": ${crreSIBDatePattern}
+        },
+        ...
+   }
+}
+</pre>
+| **conf.properties**     | **Utilisation**                       | **Exemple**                        |
+|-------------------------|---------------------------------------|------------------------------------|
+| "${crreSIBUri}"         | SendInBlue uri                        | https://send.in.blue (String)      |
+| "${crreSIBApiKey}"      | SendInBlue api key                    | SECUREAPIKEY (String)              |
+| "${crreSIBIp}"          | SendInBlue API                        | 127.0.0.1 (String)                 |
+| "${crreSIBMaxSize}"     | Taille maximum des mail               | 1000 (Integer)                     |
+| "${crreSIBDatePattern}" | Format de date utilisé dans les mails | yyyy-MM-dd'T'HH:mm:ss.SSS (String) |
+
+ - GoMail
+<pre>
+{
+   "name":"fr.openent~crre~1.1.8",
+   "config":{
+        ...
+        "emailConfig": {
+            "type": "GoMail",
+            "uri": ${crreGMUri},
+            "user": ${crreGMUser},
+            "password": ${crreGMPassword},
+            "platform": ${crreGMPlatform}
+        },
+        ...
+   }
+}
+</pre>
+| **conf.properties** | **Utilisation** | **Exemple**               |
+|---------------------|-----------------|---------------------------|
+| "${crreGMUri}"      | GoMail uri      | https://go.mail (String)  |
+| "${crreGMUser}"     | GoMail user     | myUser (String)           |
+| "${crreGMPassword}" | GoMail password | MyStrongPassword (String) |
+| "${crreGMPlatform}" | GoMail platform | customPlatform (String)   |
+
+Si crreEmailConfig est null alors CRRE prend la configuration de base (Attention la variable ne doit pas etre un jsonObject vide mais bien null)
