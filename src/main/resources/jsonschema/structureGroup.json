@@ -14,9 +14,6 @@
     },
     "structures": {
       "type": "array"
-    },
-    "tags": {
-      "type":"array"
     }
   },
   "required": [

@@ -2,6 +2,7 @@ package fr.openent.crre.utils;
 
 import fr.openent.crre.core.constants.Field;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -41,10 +42,20 @@ public final class SqlQueryUtils {
                     .put(Field.ID, id);
             either = new Either.Right<>(returns);
         } else {
-            LOGGER.error("An error occurred when launching transaction");
+            LOGGER.error(String.format("[CRRE@%s::getTransactionHandler] An error occurred when launching transaction %s",
+                    SqlQueryUtils.class.getSimpleName(), result));
             either = new Either.Left<>("");
         }
         return either;
+    }
+
+    public static void getTransactionPromise(Message<JsonObject> event, Number id, Promise<JsonObject> promise) {
+        Either<String, JsonObject> either = getTransactionHandler(event, id);
+        if (either.isLeft()) {
+            promise.fail(either.left().getValue());
+        } else {
+            promise.complete(either.right().getValue());
+        }
     }
 
     public static Either<String, JsonObject> getTransactionHandler(Message<JsonObject> event, Number id, Number idCampaign) {

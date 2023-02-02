@@ -114,8 +114,5 @@ export class StructureGroups extends Selection<StructureGroup> {
     async sync() {
         let {data} = await http.get(`/crre/structure/groups`);
         this.all = Mix.castArrayAs(StructureGroup, data);
-        this.all.map((structureGroup) => {
-            structureGroup.structures = JSON.parse(structureGroup.structures.toString());
-        });
     }
 }

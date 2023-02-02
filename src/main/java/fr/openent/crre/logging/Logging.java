@@ -4,6 +4,7 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -52,7 +53,21 @@ public final class Logging {
         return statement;
     }
 
-    public static Handler<Either<String, JsonObject>> defaultResponseHandler (final EventBus eb,
+    public static void defaultResponseFuture(final EventBus eb, final HttpServerRequest request, final String context, final String action,
+                                              final String item, final JsonObject object, Future<JsonObject> future) {
+        Handler<Either<String, JsonObject>> handler = defaultResponseHandler(eb, request, context, action, item, object);
+        future.onSuccess(res -> handler.handle(new Either.Right<>(res)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
+    }
+
+    public static void defaultResponsesFuture(final EventBus eb, final HttpServerRequest request, final String context, final String action,
+                                              final List<String> item, final JsonObject object, Future<JsonObject> future) {
+        Handler<Either<String, JsonObject>> handler = defaultResponsesHandler(eb, request, context, action, item, object);
+        future.onSuccess(res -> handler.handle(new Either.Right<>(res)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
+    }
+
+    public static Handler<Either<String, JsonObject>> defaultResponseHandler(final EventBus eb,
                       final HttpServerRequest request, final String context, final String action,
                       final String item, final JsonObject object) {
         return event -> {
@@ -82,7 +97,7 @@ public final class Logging {
             if (event.isRight()) {
                 UserUtils.getUserInfos(eb, request, user -> {
                     Renders.renderJson(request, event.right().getValue(), OK_STATUS);
-                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonArray statements = new JsonArray();
                     for (String item : items) {
                         statements.add(add(context, action, item, object, user));
                     }

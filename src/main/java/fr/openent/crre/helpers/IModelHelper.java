@@ -1,8 +1,15 @@
 package fr.openent.crre.helpers;
 
 import fr.openent.crre.model.IModel;
+import fr.openent.crre.model.StructureGroupModel;
+import fr.openent.crre.service.impl.DefaultStructureGroupService;
+import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -20,6 +27,7 @@ public class IModelHelper {
     private final static List<Class<?>> validJsonClasses = Arrays.asList(String.class, boolean.class, Boolean.class,
             double.class, Double.class, float.class, Float.class, Integer.class, int.class, CharSequence.class,
             JsonObject.class, JsonArray.class, Long.class, long.class);
+    private final static Logger log = LoggerFactory.getLogger(IModelHelper.class);
 
     private IModelHelper() {
         throw new IllegalStateException("Utility class");
@@ -108,5 +116,22 @@ public class IModelHelper {
                     }
                 });
         return res;
+    }
+
+    public static <T extends IModel<T>> Handler<Either<String, JsonArray>> sqlResultToIModel(Promise<List<T>> promise, Class<T> modelClass) {
+        return sqlResultToIModel(promise, modelClass, null);
+    }
+
+    public static <T extends IModel<T>> Handler<Either<String, JsonArray>> sqlResultToIModel(Promise<List<T>> promise, Class<T> modelClass, String errorMessage) {
+        return event -> {
+            if (event.isLeft()) {
+                if (errorMessage != null) {
+                    log.error(errorMessage + event.left().getValue());
+                }
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(toList(event.right().getValue(), modelClass));
+            }
+        };
     }
 }

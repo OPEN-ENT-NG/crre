@@ -3,85 +3,84 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.TransactionHelper;
+import fr.openent.crre.model.StructureGroupModel;
+import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.utils.SqlQueryUtils;
-import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 
 /**
  * Created by agnes.lapeyronnie on 28/12/2017.
  */
-public class DefaultStructureGroupService extends SqlCrudService implements StructureGroupService {
+public class DefaultStructureGroupService implements StructureGroupService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStructureGroupService.class);
     private final DefaultStructureService structureService;
 
-    public DefaultStructureGroupService(String schema, String table){
-        super(schema, table);
+    public DefaultStructureGroupService(){
         this.structureService = new DefaultStructureService(Crre.crreSchema, null);
     }
 
     @Override
-    public void listStructureGroups(Handler<Either<String, JsonArray>> handler) {
+    public Future<List<StructureGroupModel>> listStructureGroups() {
+        Promise<List<StructureGroupModel>> promise = Promise.promise();
+
         String query = "SELECT id, name, description, array_to_json(array_agg(id_structure)) as structures FROM "
                 + Crre.crreSchema + ".structure_group " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure" +
                 " on structure_group.id = rel_group_structure.id_structure_group " +
                 "group by (id, name , description ) ORDER BY id;";
-        this.sql.prepared(query,new fr.wseduc.webutils.collections.JsonArray(), SqlResult.validResultHandler(handler));
+        String errorMessage = String.format("[CRRE@%s::listStructureGroups] Error when listing structure", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, StructureGroupModel.class, errorMessage)));
+
+        return promise.future();
     }
 
     @Override
-    public void create(final JsonObject structureGroup, final Handler<Either<String, JsonObject>> handler) {
-        String getIdQuery = "Select nextval('"+ Crre.crreSchema + ".structure_group_id_seq') as id";
-        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
-            if(event.isRight()) {
-                try{
-                    final Number id = event.right().getValue().getInteger(Field.ID);
-                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                            .add(getStructureGroupCreationStatement(id,structureGroup));
+    public Future<JsonObject> create(final StructureGroupModel structureGroup) {
+        Promise<JsonObject> promise = Promise.promise();
 
-                    JsonArray idsStructures = structureGroup.getJsonArray("structures");
-                    JsonArray allIds = new JsonArray();
-                    JsonArray newIds = new JsonArray();
-                    sql.raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event2 -> {
-                        setAllAndNewIds(idsStructures, allIds, newIds, event2);
-                        statements.add(getGroupStructureRelationshipStatement(id, idsStructures));
+        Future<Integer> getNextValFuture = this.getNextVal();
+        Future<List<String>> getOldIdStructureListFuture = this.getOldIdStructureList();
 
-                        sql.transaction(statements, event1 -> {
-                            if(!newIds.isEmpty()) {
-                                getStudentsByStructures(newIds);
-                            }
-                            handler.handle(SqlQueryUtils.getTransactionHandler(event1, id));
-                        });
-                    }));
+        CompositeFuture.all(Arrays.asList(getNextValFuture, getOldIdStructureListFuture))
+                .compose(actualIdStructureList -> {
+                    Integer nextVal = getNextValFuture.result();
+                    List<TransactionElement> statements = new ArrayList<>();
+                    statements.add(getStructureGroupCreationStatement(nextVal, structureGroup));
+                    statements.add(getGroupStructureRelationshipStatement(nextVal, structureGroup.getStructures()));
+                    String errorMessage = String.format("[CRRE@%s::create] An error occurred when launching transaction", this.getClass().getSimpleName());
+                    return TransactionHelper.executeTransaction(statements, errorMessage);
+                })
+                .onSuccess(result -> {
+                    Integer nextVal = getNextValFuture.result();
+                    List<String> newIdStructureList = getNewIdStructure(structureGroup.getStructures(), getOldIdStructureListFuture.result());
+                    if (!newIdStructureList.isEmpty()) {
+                        getStudentsByStructures(newIdStructureList);
+                    }
+                    promise.complete(new JsonObject().put(Field.ID, nextVal));
+                })
+                .onFailure(promise::fail);
 
-                }catch(ClassCastException e){
-                    LOGGER.error("An error occured when casting structures ids " + e);
-                    handler.handle(new Either.Left<>(""));
-                }
-            }else{
-               LOGGER.error("An error occurred when selecting next val");
-                handler.handle(new Either.Left<>(""));
-            }
-        }));
+        return promise.future();
     }
 
-    private void getStudentsByStructures(JsonArray structures) {
-        structureService.insertStudentsInfos(structures, event -> {
+    //Todo revoir les logs
+    private void getStudentsByStructures(List<String> structures) {
+        structureService.insertStudentsInfos(new JsonArray(new ArrayList<>(structures)), event -> {
             if(event.isRight()) {
                 LOGGER.info("Insert total success");
             } else {
@@ -90,45 +89,59 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
         });
     }
 
-    private void setAllAndNewIds(JsonArray idsStructures, JsonArray allIds, JsonArray newIds, Either<String, JsonArray> event2) {
-        JsonArray structure_id = event2.right().getValue();
-        for (int i = 0; i < structure_id.size(); i++) {
-            allIds.add(structure_id.getJsonObject(i).getString("id_structure"));
-        }
-        for (int j = 0; j < idsStructures.size(); j++) {
-            if (!allIds.contains(idsStructures.getString(j))) {
-                newIds.add(idsStructures.getString(j));
-            }
-        }
+    private List<String> getNewIdStructure(List<String> idsStructures, List<String> actualIdStructureList) {
+        return idsStructures.stream()
+                .filter(idStructure -> !actualIdStructureList.contains(idStructure))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public void update(final Integer id, JsonObject structureGroup,final Handler<Either<String, JsonObject>> handler) {
-        JsonArray idsStructures = structureGroup.getJsonArray("structures");
-        JsonArray allIds = new JsonArray();
-        JsonArray newIds = new JsonArray();
-        sql.raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event -> {
-            setAllAndNewIds(idsStructures, allIds, newIds, event);
-            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                    .add(getStructureGroupUpdateStatement(id,structureGroup))
-                    .add(getStructureGroupRelationshipDeletion(id))
-                    .add(getGroupStructureRelationshipStatement(id,idsStructures));
-            sql.transaction(statements, event2 -> {
-                if(!newIds.isEmpty()) {
-                    getStudentsByStructures(newIds);
-                }
-                handler.handle(SqlQueryUtils.getTransactionHandler(event2, id));
-            });
-        }));
+    public Future<JsonObject> update(final Integer id, StructureGroupModel structureGroup) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        Future<List<String>> oldIdStructureListFuture = this.getOldIdStructureList();
+
+        oldIdStructureListFuture
+                .compose(oldIdStructureList -> {
+
+                    List<TransactionElement> statements = new ArrayList<>();
+                    statements.add(getStructureGroupUpdateStatement(id, structureGroup));
+                    statements.add(getStructureGroupRelationshipDeletion(id));
+                    statements.add(getGroupStructureRelationshipStatement(id, structureGroup.getStructures()));
+                    String errorMessage = String.format("[CRRE@%s::update] An error occurred when launching transaction", this.getClass().getSimpleName());
+                    return TransactionHelper.executeTransaction(statements, errorMessage);
+                })
+                .onSuccess(res -> {
+                    List<String> newIds = getNewIdStructure(structureGroup.getStructures(), oldIdStructureListFuture.result());
+                    if(!newIds.isEmpty()) {
+                        getStudentsByStructures(newIds);
+                    }
+                    promise.complete(new JsonObject().put(Field.ID, id));
+                })
+                .onFailure(promise::fail);
+
+        return promise.future();
     }
 
     @Override
-    public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                .add(getStructureGroupRelationshipDeletion(ids))
-                .add(getStructureGroupDeletion(ids));
+    public Future<JsonObject> delete(final List<Integer> ids) {
+        Promise<JsonObject> promise = Promise.promise();
 
-        sql.transaction(statements, event -> handler.handle(SqlQueryUtils.getTransactionHandler(event,ids.get(0))));
+        if (ids.isEmpty()) {
+            promise.complete(new JsonObject());
+            return promise.future();
+        }
+
+        List<TransactionElement> transactionElementList = new ArrayList<>();
+        transactionElementList.add(getStructureGroupRelationshipDeletion(ids));
+        transactionElementList.add(getStructureGroupDeletion(ids));
+
+        String errorMessage = String.format("[CRRE@%s::delete] An error occurred when launching transaction", this.getClass().getSimpleName());
+        TransactionHelper.executeTransaction(transactionElementList, errorMessage)
+                .onSuccess(result -> promise.complete(new JsonObject().put(Field.ID, new JsonArray(new ArrayList<>(ids)))))
+                .onFailure(promise::fail);
+
+        return promise.future();
     }
 
     /**
@@ -137,17 +150,14 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param structureGroup structureGroup to create
      * @return structureGroup creation statement
      */
-    private JsonObject getStructureGroupCreationStatement(Number id, JsonObject structureGroup){
+    private TransactionElement getStructureGroupCreationStatement(Integer id, StructureGroupModel structureGroup){
         String insertStructureGroupQuery = "INSERT INTO "+ Crre.crreSchema +
                 ".structure_group(id, name, description) VALUES (?,?,?) RETURNING id;";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+        JsonArray params = new JsonArray()
        .add(id)
-       .add(structureGroup.getString(Field.NAME))
-       .add(structureGroup.getString("description"));
-        return new JsonObject()
-                .put("statement", insertStructureGroupQuery)
-                .put("values",params)
-                .put("action","prepared");
+       .add(structureGroup.getName())
+       .add(structureGroup.getDescription());
+        return new TransactionElement(insertStructureGroupQuery, params);
     }
 
     /**
@@ -156,26 +166,22 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param idsStructure structure ids
      * @return structureGroup idStructure relationship transaction statement
      */
-    private JsonObject getGroupStructureRelationshipStatement(Number idStructureGroup, JsonArray idsStructure) {
+    private TransactionElement getGroupStructureRelationshipStatement(Integer idStructureGroup, List<String> idsStructure) {
         StringBuilder insertGroupStructureRelationshipQuery = new StringBuilder();
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray params = new JsonArray();
         insertGroupStructureRelationshipQuery.append("INSERT INTO ").append(Crre.crreSchema)
-        .append(".rel_group_structure(id_structure,id_structure_group) VALUES ");
+                .append(".rel_group_structure(id_structure,id_structure_group) VALUES ");
 
-        for(int i = 0; i < idsStructure.size();i++ ){
-            String idStructure = idsStructure.getString(i);
-            insertGroupStructureRelationshipQuery.append("(?,?)");
-            params.add(idStructure)
-                    .add(idStructureGroup);
-            if(i != idsStructure.size()-1){
-                insertGroupStructureRelationshipQuery.append(",");
-            }
-        }
+        insertGroupStructureRelationshipQuery.append(idsStructure.stream()
+                .map(idStructure -> {
+                    params.add(idStructure)
+                            .add(idStructureGroup);
+                    return "(?,?)";
+                })
+                .collect(Collectors.joining(",")));
+
         insertGroupStructureRelationshipQuery.append(" ON CONFLICT DO NOTHING RETURNING id_structure;");
-        return new JsonObject()
-                .put("statement",insertGroupStructureRelationshipQuery.toString())
-                .put("values",params)
-                .put("action","prepared");
+        return new TransactionElement(insertGroupStructureRelationshipQuery.toString(), params);
     }
 
     /**
@@ -184,17 +190,14 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param structureGroup to update
      * @return update statement
      */
-    private JsonObject getStructureGroupUpdateStatement(Number id, JsonObject structureGroup){
+    private TransactionElement getStructureGroupUpdateStatement(Number id, StructureGroupModel structureGroup){
         String query = "UPDATE "+ Crre.crreSchema + ".structure_group " +
                 "SET name = ?, description = ? WHERE id = ?;";
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(structureGroup.getString(Field.NAME))
-                .add(structureGroup.getString("description"))
+        JsonArray params = new JsonArray()
+                .add(structureGroup.getName())
+                .add(structureGroup.getDescription())
                 .add(id);
-        return new JsonObject()
-        .put("statement", query)
-        .put("values",params)
-        .put("action","prepared");
+        return new TransactionElement(query, params);
     }
 
     /**
@@ -202,13 +205,10 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param idStructureGroup of structureGroup
      * @return Delete statement
      */
-    private JsonObject getStructureGroupRelationshipDeletion(Number idStructureGroup){
+    private TransactionElement getStructureGroupRelationshipDeletion(Number idStructureGroup){
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_structure WHERE id_structure_group = ?;";
 
-        return new JsonObject()
-                .put("statement", query)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray().add(idStructureGroup))
-                .put("action", "prepared");
+        return new TransactionElement(query, new JsonArray().add(idStructureGroup));
     }
 
     /**
@@ -216,18 +216,15 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param ids list of id group
      * @return Delete statement
      */
-    private JsonObject getStructureGroupRelationshipDeletion(List<Integer> ids){
+    private TransactionElement getStructureGroupRelationshipDeletion(List<Integer> ids){
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_structure " +
                 "WHERE id_structure_group IN " +Sql.listPrepared(ids.toArray());
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray params = new JsonArray();
 
         for (Integer id : ids) {
             params.add(id);
         }
-        return new JsonObject()
-                .put("statement", query)
-                .put("values",params)
-                .put("action","prepared");
+        return new TransactionElement(query, params);
     }
 
     /**
@@ -235,18 +232,50 @@ public class DefaultStructureGroupService extends SqlCrudService implements Stru
      * @param ids list of id_group_structure
      * @return Delete statement
      */
-    private JsonObject getStructureGroupDeletion(List<Integer> ids){
+    private TransactionElement getStructureGroupDeletion(List<Integer> ids){
         String query = "DELETE FROM "+ Crre.crreSchema +".structure_group " +
                 "WHERE id IN "+Sql.listPrepared(ids.toArray());
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray params = new JsonArray();
 
         for (Integer id : ids) {
             params.add(id);
         }
-        return new JsonObject()
-                .put("statement", query)
-                .put("values",params)
-                .put("action","prepared");
+        return new TransactionElement(query, params);
     }
 
+    private Future<List<String>> getOldIdStructureList() {
+        Promise<List<String>> promise = Promise.promise();
+
+        Sql.getInstance().raw("SELECT DISTINCT r.id_structure FROM " + Crre.crreSchema + ".rel_group_structure r ", SqlResult.validResultHandler(event -> {
+            if (event.isLeft()) {
+                String message = String.format("An error occurred when selecting next val %s", event.left().getValue());
+                LOGGER.error(String.format("[CRRE@%s::getNext] %s", this.getClass().getSimpleName(), message));
+                promise.fail(message);
+            } else  {
+                List<String> actualIdStructureList = event.right().getValue().stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .collect(Collectors.toList());
+                promise.complete(actualIdStructureList);
+            }
+        }));
+
+        return promise.future();
+    }
+
+    private Future<Integer> getNextVal() {
+        Promise<Integer> promise = Promise.promise();
+
+        String getIdQuery = "Select nextval('" + Crre.crreSchema + ".structure_group_id_seq') as id";
+        Sql.getInstance().raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
+            if (event.isRight()) {
+                promise.complete(event.right().getValue().getInteger(Field.ID));
+            } else {
+                LOGGER.error(String.format("[CRRE@%s::getNextVal] Fail to get next value id %s", this.getClass().getSimpleName(), event.left().getValue()));
+                promise.fail(event.left().getValue());
+            }
+        }));
+
+        return promise.future();
+    }
 }

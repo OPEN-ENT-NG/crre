@@ -3,9 +3,11 @@ package fr.openent.crre.controllers;
 import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.StructureGroupModel;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.service.StructureService;
@@ -17,6 +19,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -28,6 +31,7 @@ import org.entcore.common.user.UserUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -47,7 +51,7 @@ public class StructureGroupController extends ControllerHelper {
 
     public StructureGroupController(Storage storage) {
         super();
-        this.structureGroupService = new DefaultStructureGroupService(Crre.crreSchema, "structure_group");
+        this.structureGroupService = new DefaultStructureGroupService();
         this.structureService = new DefaultStructureService(Crre.crreSchema, null);
         this.storage = storage;
     }
@@ -62,8 +66,8 @@ public class StructureGroupController extends ControllerHelper {
                 renderError(request);
                 return;
             }
-            String fileId = entries.getString("_id");
-            String filename = entries.getJsonObject("metadata").getString("filename");
+            String fileId = entries.getString(Field._ID);
+            String filename = entries.getJsonObject(Field.METADATA).getString(Field.FILENAME);
             parseCsv(request, fileId, filename);
         });
     }
@@ -81,8 +85,7 @@ public class StructureGroupController extends ControllerHelper {
                         new ByteArrayInputStream(event.getBytes())),
                         ';', '"', 1);
                 String[] values;
-                JsonArray uais = new fr.wseduc.webutils.collections.JsonArray();
-                ;
+                JsonArray uais = new JsonArray();
 
                 while ((values = csv.readNext()) != null) {
                     uais.add(values[0]);
@@ -93,7 +96,7 @@ public class StructureGroupController extends ControllerHelper {
                     returnErrorMessage(request, new Throwable("missing.uai"), filename);
                 }
             } catch (IOException e) {
-                log.error("[Crre@CSVImport]: csv exception", e);
+                log.error(String.format("[Crre@%s::parseCsv]: csv exception %s", this.getClass().getSimpleName(), e.getMessage()));
                 returnErrorMessage(request, e.getCause(), filename);
             }
         });
@@ -111,33 +114,30 @@ public class StructureGroupController extends ControllerHelper {
             if (uaisEvent.isRight()) {
 
                 JsonArray data = uaisEvent.right().getValue();
-                JsonArray ids = new JsonArray();
+                List<String> ids = new ArrayList<>();
                 JsonObject o;
-                String id;
-                String regexp = "([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(.csv)$";
-                Pattern r = Pattern.compile(regexp);
-                Matcher m = r.matcher(path);
-                String name = m.find() ? m.group(0).replace(".csv", "") : UUID.randomUUID().toString();
+                Pattern regex = Pattern.compile("([a-zA-Z0-9\\s_\\\\.\\-\\(\\):])+(.csv)$");
+                Matcher matcher = regex.matcher(path);
+                String name = matcher.find() ? matcher.group(0).replace(".csv", "") : UUID.randomUUID().toString();
                 for (int i = 0; i < data.size(); i++) {
                     o = data.getJsonObject(i);
-                    id = o.getString(Field.ID);
+                    String id = o.getString(Field.ID);
                     ids.add(id);
                 }
-                JsonObject object = new JsonObject();
-                object.put("structures", ids);
-                object.put(Field.NAME, name);
-                object.put("description", "");
 
-                structureGroupService.create(object, event1 -> {
-                    if (event1.isRight()) {
-                        Renders.renderJson(request, new JsonObject());
-                        UserUtils.getUserInfos(eb, request,
-                                user -> Logging.add(Contexts.STRUCTUREGROUP.toString(),
-                                        Actions.IMPORT.toString(), m.group(0), object, user));
-                    } else {
-                        returnErrorMessage(request, new Throwable(event1.left().getValue()), path);
-                    }
-                });
+                StructureGroupModel structureGroupModel = new StructureGroupModel()
+                        .setDescription("")
+                        .setName(name)
+                        .setStructures(ids);
+
+                structureGroupService.create(structureGroupModel)
+                        .onSuccess(res -> {
+                            Renders.renderJson(request, new JsonObject());
+                            UserUtils.getUserInfos(eb, request,
+                                    user -> Logging.add(Contexts.STRUCTUREGROUP.toString(),
+                                            Actions.IMPORT.toString(), matcher.group(0), structureGroupModel.toJson(), user));
+                        })
+                        .onFailure(error -> returnErrorMessage(request, error, path));
             } else {
                 returnErrorMessage(request, new Throwable(uaisEvent.left().getValue()), path);
             }
@@ -163,7 +163,7 @@ public class StructureGroupController extends ControllerHelper {
      * @param cause   Cause error
      */
     private static void renderErrorMessage(HttpServerRequest request, Throwable cause) {
-        renderError(request, new JsonObject().put("message", cause.getMessage()));
+        renderError(request, new JsonObject().put(Field.MESSAGE, cause.getMessage()));
     }
 
     @Get("/structure/groups")
@@ -172,7 +172,9 @@ public class StructureGroupController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void list(final HttpServerRequest request) {
-        structureGroupService.listStructureGroups(arrayResponseHandler(request));
+        structureGroupService.listStructureGroups()
+                .onSuccess(structureGroupModels -> Renders.renderJson(request, IModelHelper.toJsonArray(structureGroupModels)))
+                .onFailure(error -> Renders.renderError(request));
     }
 
 
@@ -183,12 +185,10 @@ public class StructureGroupController extends ControllerHelper {
     @Override
     public void create(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "structureGroup",
-                structureGroup -> structureGroupService.create(structureGroup, Logging.defaultResponseHandler(eb,
-                        request,
-                        Contexts.STRUCTUREGROUP.toString(),
-                        Actions.CREATE.toString(),
-                        null,
-                        structureGroup)));
+                structureGroupJson -> {
+                    Future<JsonObject> future = structureGroupService.create(new StructureGroupModel(structureGroupJson));
+                    Logging.defaultResponseFuture(eb, request, Contexts.STRUCTUREGROUP.toString(), Actions.CREATE.toString(), null, structureGroupJson, future);
+                });
     }
 
     @Put("/structure/group/:id")
@@ -197,17 +197,13 @@ public class StructureGroupController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void update(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "structureGroup", structureGroup -> {
+        RequestUtils.bodyToJson(request, pathPrefix + "structureGroup", structureGroupJson -> {
             try {
                 Integer id = Integer.parseInt(request.params().get(Field.ID));
-                structureGroupService.update(id, structureGroup, Logging.defaultResponseHandler(eb,
-                        request,
-                        Contexts.STRUCTUREGROUP.toString(),
-                        Actions.UPDATE.toString(),
-                        request.params().get(Field.ID),
-                        structureGroup));
-            } catch (ClassCastException e) {
-                log.error("An error occured when casting structureGroup id" + e);
+                Future<JsonObject> future = structureGroupService.update(id, new StructureGroupModel(structureGroupJson));
+                Logging.defaultResponseFuture(eb, request, Contexts.STRUCTUREGROUP.toString(), Actions.UPDATE.toString(), null, structureGroupJson, future);
+            } catch (NumberFormatException e) {
+                log.error(String.format("[CRRE@%s::update] An error occured when casting structureGroup id %s", this.getClass().getSimpleName(), e.getMessage()));
                 badRequest(request);
             }
         });
@@ -219,23 +215,18 @@ public class StructureGroupController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void delete(final HttpServerRequest request) {
-        try {
-            List<String> params = request.params().getAll(Field.ID);
-            if (!params.isEmpty()) {
+        List<String> params = request.params().getAll(Field.ID);
+        if (!params.isEmpty()) {
+            try {
                 List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                structureGroupService.delete(ids, Logging.defaultResponsesHandler(eb,
-                        request,
-                        Contexts.STRUCTUREGROUP.toString(),
-                        Actions.DELETE.toString(),
-                        params,
-                        null));
-            } else {
+                Future<JsonObject> future = structureGroupService.delete(ids);
+                Logging.defaultResponsesFuture(eb, request, Contexts.STRUCTUREGROUP.toString(), Actions.DELETE.toString(), params, null, future);
+            } catch (NumberFormatException e) {
+                log.error(String.format("[CRRE@%s::delete] An error occurred when casting group(s) of structures id(s) %s", this.getClass().getSimpleName(), e.getMessage()));
                 badRequest(request);
             }
-        } catch (ClassCastException e) {
-            log.error("An error occurred when casting group(s) of structures id(s)" + e);
+        } else {
             badRequest(request);
         }
     }
-
 }

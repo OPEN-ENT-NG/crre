@@ -85,7 +85,7 @@ public class ElasticSearch {
 		this.vertx = vertx;
 		List<String> serverUris = elasticsearchConfig.getServerUris();
 		String serverUri = elasticsearchConfig.getServerUri();
-		if (serverUris == null && serverUri != null) {
+		if ((serverUris == null || serverUris.isEmpty()) && serverUri != null) {
 			serverUris = Collections.singletonList(serverUri);
 		}
 

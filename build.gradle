@@ -76,7 +76,12 @@ dependencies {
   testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.2.2'
   testCompile "io.vertx:vertx-unit:$vertxVersion"
   testCompile "org.mockito:mockito-core:$mockitoVersion"
+  testCompile "org.powermock:powermock-core:$powerMockVersion"
+  testCompile "org.powermock:powermock-api-mockito2:$powerMockVersion"
+  testCompile "org.powermock:powermock-module-junit4:$powerMockVersion"
+  testCompile "org.powermock:powermock-module-testng:$powerMockVersion"
   testCompile "org.reflections:reflections:$reflectionsVersion"
+  testCompile "io.vertx:vertx-codegen:$vertxVersion"
 }
 
 jar {

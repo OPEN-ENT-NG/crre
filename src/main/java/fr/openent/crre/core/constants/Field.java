@@ -9,6 +9,13 @@ public class Field {
     public static final String ADDRESS = "address";
     public static final String CSVFILE = "csvFile";
     public static final String ORDER_CLIENT_EQUIPMENT = "order_client_equipment";
+    public static final String ID_STRUCTURE = "id_structure";
+    public static final String DESCRIPTION = "description";
+    public static final String STRUCTURES = "structures";
+    public static final String _ID = "_id";
+    public static final String METADATA = "metadata";
+    public static final String FILENAME = "filename";
+    public static final String MESSAGE = "message";
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
     public static final String ELASTICSEARCHCONFIG = "elasticsearchConfig";

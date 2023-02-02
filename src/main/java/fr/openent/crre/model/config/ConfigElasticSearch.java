@@ -20,7 +20,7 @@ public class ConfigElasticSearch implements IModel<ConfigElasticSearch> {
     private final boolean elasticSearchSsl;
 
     public ConfigElasticSearch(JsonObject jsonObject) {
-        this.serverUris = jsonObject.getJsonArray(ConfigField.SERVER_DASH_URIS).stream()
+        this.serverUris = jsonObject.getJsonArray(ConfigField.SERVER_DASH_URIS, new JsonArray()).stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
                 .collect(Collectors.toList());
