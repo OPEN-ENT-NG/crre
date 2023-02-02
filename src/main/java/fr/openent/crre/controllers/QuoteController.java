@@ -3,6 +3,7 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.QuoteService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultQuoteService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -22,13 +23,10 @@ import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayRespo
 import static java.lang.Integer.parseInt;
 
 public class QuoteController extends BaseController {
-
-
     private final QuoteService quoteService;
 
-
-    public QuoteController() {
-        this.quoteService = new DefaultQuoteService("equipment");
+    public QuoteController(ServiceFactory serviceFactory) {
+        this.quoteService = serviceFactory.getQuoteService();
     }
 
     @Get("/quote")

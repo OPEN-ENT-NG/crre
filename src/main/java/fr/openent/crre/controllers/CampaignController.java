@@ -1,13 +1,15 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.security.*;
+import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.security.PrescriptorAndStructureRight;
+import fr.openent.crre.security.WorkflowActionUtils;
+import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.CampaignService;
-import fr.openent.crre.service.impl.DefaultCampaignService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -27,9 +29,9 @@ public class CampaignController extends ControllerHelper {
 
     private final CampaignService campaignService;
 
-    public CampaignController () {
+    public CampaignController (ServiceFactory serviceFactory) {
         super();
-        this.campaignService = new DefaultCampaignService(Crre.crreSchema, "campaign");
+        this.campaignService = serviceFactory.getCampaignService();
     }
 
     @Get("/campaigns")

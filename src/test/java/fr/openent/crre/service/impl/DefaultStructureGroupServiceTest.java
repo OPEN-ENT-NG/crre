@@ -35,7 +35,7 @@ public class DefaultStructureGroupServiceTest {
 
     @Before
     public void setup() {
-        this.defaultStructureGroupService = PowerMockito.spy(new DefaultStructureGroupService());
+        this.defaultStructureGroupService = PowerMockito.spy(new DefaultStructureGroupService(null));
         this.sql = Mockito.spy(Sql.getInstance());
         PowerMockito.spy(DefaultStructureGroupService.class);
         PowerMockito.spy(TransactionHelper.class);

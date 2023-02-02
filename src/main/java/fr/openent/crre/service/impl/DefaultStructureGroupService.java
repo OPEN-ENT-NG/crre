@@ -7,6 +7,7 @@ import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.StructureGroupModel;
 import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.utils.SqlQueryUtils;
 import io.vertx.core.*;
@@ -28,10 +29,10 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 public class DefaultStructureGroupService implements StructureGroupService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultStructureGroupService.class);
-    private final DefaultStructureService structureService;
+    private final ServiceFactory serviceFactory;
 
-    public DefaultStructureGroupService(){
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
+    public DefaultStructureGroupService(ServiceFactory serviceFactory){
+        this.serviceFactory = serviceFactory;
     }
 
     @Override
@@ -80,7 +81,7 @@ public class DefaultStructureGroupService implements StructureGroupService {
 
     //Todo revoir les logs
     private void getStudentsByStructures(List<String> structures) {
-        structureService.insertStudentsInfos(new JsonArray(new ArrayList<>(structures)), event -> {
+        this.serviceFactory.getStructureService().insertStudentsInfos(new JsonArray(new ArrayList<>(structures)), event -> {
             if(event.isRight()) {
                 LOGGER.info("Insert total success");
             } else {

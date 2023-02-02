@@ -1,12 +1,10 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.service.EquipmentService;
 import fr.openent.crre.service.OrderRegionService;
-import fr.openent.crre.service.impl.DefaultEquipmentService;
-import fr.openent.crre.service.impl.DefaultOrderRegionService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -34,10 +32,10 @@ public class EquipmentController extends ControllerHelper {
     private final EquipmentService equipmentService;
     private final OrderRegionService orderRegionService;
 
-    public EquipmentController() {
+    public EquipmentController(ServiceFactory serviceFactory) {
         super();
-        this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, "equipment");
-        this.orderRegionService = new DefaultOrderRegionService("equipment");
+        this.equipmentService = serviceFactory.getEquipmentService();
+        this.orderRegionService = serviceFactory.getOrderRegionService();
     }
 
     @Get("/equipments")

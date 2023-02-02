@@ -9,6 +9,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.StructureGroupModel;
 import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StructureGroupService;
 import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.DefaultStructureGroupService;
@@ -49,10 +50,10 @@ public class StructureGroupController extends ControllerHelper {
     private final StructureService structureService;
     private final Storage storage;
 
-    public StructureGroupController(Storage storage) {
+    public StructureGroupController(Storage storage, ServiceFactory serviceFactory) {
         super();
-        this.structureGroupService = new DefaultStructureGroupService();
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
+        this.structureGroupService = serviceFactory.getStructureGroupService();
+        this.structureService = serviceFactory.getStructureService();
         this.storage = storage;
     }
 

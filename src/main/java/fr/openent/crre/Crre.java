@@ -39,14 +39,14 @@ public class Crre extends BaseServer {
         iterationWorker = configModel.getIterationWorker();
         storage = new StorageFactory(vertx, config).getStorage();
         EmailFactory emailFactory = new EmailFactory(this.vertx, this.config);
-        ServiceFactory serviceFactory = new ServiceFactory(vertx, configModel, emailFactory);
+        ServiceFactory serviceFactory = new ServiceFactory(vertx, configModel, emailFactory, storage);
 
         try {
             new CronTrigger(vertx, configModel.getTimeSecondSynchCron()).schedule(
-                    new synchTotalStudents(vertx)
+                    new synchTotalStudents(serviceFactory)
             );
             new CronTrigger(vertx, configModel.getTimeSecondStatCron()).schedule(
-                    new statistics(vertx)
+                    new statistics(serviceFactory)
             );
             new CronTrigger(vertx, configModel.getTimeSecondStatutCron()).schedule(
                     new updateStatus(serviceFactory)
@@ -60,18 +60,18 @@ public class Crre extends BaseServer {
         }
 
         addController(new CrreController());
-        addController(new EquipmentController());
-        addController(new LogController());
-        addController(new CampaignController());
-        addController(new PurseController(storage));
-        addController(new StructureGroupController(storage));
-        addController(new StructureController(getEventBus(vertx)));
-        addController(new BasketController());
-        addController(new OrderController());
-        addController(new UserController());
+        addController(new EquipmentController(serviceFactory));
+        addController(new LogController(serviceFactory));
+        addController(new CampaignController(serviceFactory));
+        addController(new PurseController(storage, serviceFactory));
+        addController(new StructureGroupController(storage, serviceFactory));
+        addController(new StructureController(serviceFactory));
+        addController(new BasketController(serviceFactory));
+        addController(new OrderController(serviceFactory));
+        addController(new UserController(serviceFactory));
         addController(new OrderRegionController(serviceFactory));
-        addController(new StatisticsController());
-        addController(new QuoteController());
+        addController(new StatisticsController(serviceFactory));
+        addController(new QuoteController(serviceFactory));
         vertx.deployVerticle(ExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         CONFIG = config;
     }

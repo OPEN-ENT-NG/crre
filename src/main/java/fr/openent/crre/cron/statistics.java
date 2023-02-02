@@ -1,13 +1,12 @@
 package fr.openent.crre.cron;
 
-import fr.openent.crre.Crre;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultStatisticsService;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
@@ -28,10 +27,10 @@ public class statistics extends ControllerHelper implements Handler<Long> {
     private final DefaultStructureService structureService;
 
 
-    public statistics(Vertx vertx) {
-        this.statisticsService = new DefaultStatisticsService(Crre.crreSchema);
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
-        this.vertx = vertx;
+    public statistics(ServiceFactory serviceFactory) {
+        this.statisticsService = serviceFactory.getStatisticsService();
+        this.structureService = serviceFactory.getStructureService();
+        this.vertx = serviceFactory.getVertx();
     }
 
     @Override

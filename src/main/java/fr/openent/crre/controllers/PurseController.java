@@ -8,6 +8,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.PurseService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StructureService;
 import fr.openent.crre.service.impl.DefaultPurseService;
 import fr.openent.crre.service.impl.DefaultStructureService;
@@ -45,10 +46,10 @@ public class PurseController extends ControllerHelper {
     private final PurseService purseService;
     private final Storage storage;
 
-    public PurseController(Storage storage) {
+    public PurseController(Storage storage, ServiceFactory serviceFactory) {
         super();
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
-        this.purseService = new DefaultPurseService();
+        this.structureService = serviceFactory.getStructureService();
+        this.purseService = serviceFactory.getPurseService();
         this.storage = storage;
     }
 

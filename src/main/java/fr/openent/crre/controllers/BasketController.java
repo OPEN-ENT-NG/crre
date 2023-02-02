@@ -7,6 +7,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.BasketService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultBasketService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -36,9 +37,9 @@ import static java.lang.Integer.parseInt;
 public class BasketController extends ControllerHelper {
     private final BasketService basketService;
 
-    public BasketController() {
+    public BasketController(ServiceFactory serviceFactory) {
         super();
-        this.basketService = new DefaultBasketService(Crre.crreSchema, "basket");
+        this.basketService = serviceFactory.getBasketService();
     }
 
     @Get("/basket/:idCampaign/:idStructure")

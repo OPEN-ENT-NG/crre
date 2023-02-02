@@ -3,6 +3,7 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.*;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -61,9 +62,9 @@ public class StructureController extends ControllerHelper {
     private static final String UAI = "uai";
     private static final String ID = Field.ID;
 
-    public StructureController(EventBus eventBus) {
+    public StructureController(ServiceFactory serviceFactory) {
         super();
-        this.structureService = new DefaultStructureService(Crre.crreSchema, eventBus);
+        this.structureService = serviceFactory.getStructureService();
     }
 
     @Get("/structures")

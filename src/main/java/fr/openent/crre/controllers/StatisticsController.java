@@ -1,10 +1,9 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StatisticsService;
-import fr.openent.crre.service.impl.DefaultStatisticsService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -30,10 +29,9 @@ public class StatisticsController extends BaseController {
     private final statistics statCron;
     public static final String UTF8_BOM = "\uFEFF";
 
-
-    public StatisticsController() {
-        this.statisticsService = new DefaultStatisticsService(Crre.crreSchema);
-        this.statCron = new statistics(Vertx.vertx());
+    public StatisticsController(ServiceFactory serviceFactory) {
+        this.statisticsService = serviceFactory.getStatisticsService();
+        this.statCron = new statistics(serviceFactory);
     }
 
     @Get("region/statistics/structures")

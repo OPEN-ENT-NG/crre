@@ -16,6 +16,8 @@ public class Field {
     public static final String METADATA = "metadata";
     public static final String FILENAME = "filename";
     public static final String MESSAGE = "message";
+    public static final String BASKET = "basket";
+    public static final String CAMPAIGN = "campaign";
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
     public static final String ELASTICSEARCHCONFIG = "elasticsearchConfig";

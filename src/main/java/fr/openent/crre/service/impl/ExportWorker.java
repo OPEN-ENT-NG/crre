@@ -2,7 +2,9 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.model.config.ConfigModel;
 import fr.openent.crre.service.OrderRegionService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StorageService;
 import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
@@ -47,9 +49,10 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         String neo4jConfig = (String) vertx.sharedData().getLocalMap("server").get("neo4jConfig");
         Neo4j.getInstance().init(vertx, new JsonObject(neo4jConfig));
         Storage storage = new StorageFactory(vertx).getStorage();
-        this.orderRegionService = new DefaultOrderRegionService("equipment");
-        this.structureService = new DefaultStructureService(Crre.crreSchema, null);
-        this.storageService = new DefaultStorageService(storage);
+        ServiceFactory serviceFactory = new ServiceFactory(vertx, null, null, storage);
+        this.orderRegionService = serviceFactory.getOrderRegionService();
+        this.structureService = serviceFactory.getStructureService();
+        this.storageService = serviceFactory.getStorageService();
         this.workspaceHelper = new WorkspaceHelper(eb, storage);
         vertx.eventBus().localConsumer(ExportWorker.class.getSimpleName(), this);
     }

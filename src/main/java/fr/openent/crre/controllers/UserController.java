@@ -1,6 +1,8 @@
 package fr.openent.crre.controllers;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.AccessRight;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.UserService;
 import fr.openent.crre.service.impl.DefaultUserService;
 import fr.wseduc.rs.ApiDoc;
@@ -19,12 +21,10 @@ public class UserController extends ControllerHelper {
 
     private final UserService userService;
 
-
-    public UserController() {
+    public UserController(ServiceFactory serviceFactory) {
         super();
-        this.userService = new DefaultUserService();
+        this.userService = serviceFactory.getUserService();
     }
-
 
     @Get("/user/structures")
     @ApiDoc("Retrieve all user structures")
@@ -36,40 +36,10 @@ public class UserController extends ControllerHelper {
                     if(structuresResult.isRight()) {
                         JsonArray structures = structuresResult.right().getValue();
                         renderJson(request, structures);
-/* Uncomment if we need to have info (papier, num, mixte) of a structure
-List<String> idStructures = new ArrayList<>();
-                        for(int i = 0; i < structures.size(); i++) {
-                            idStructures.add(structures.getJsonObject(i).getString(Field.ID));
-                        }
-                        structureService.getAllStructureByIds(idStructures, structuresInfos -> {
-                            if(structuresInfos.isRight()) {
-                                JsonArray structuresCatalog = structuresInfos.right().getValue();
-                                for(int j = 0; j < structures.size(); j++) {
-                                    JsonObject structure = structures.getJsonObject(j);
-                                    for(int i = 0; i < structuresCatalog.size(); i++) {
-                                        JsonObject structureCatalog = structuresCatalog.getJsonObject(i);
-                                        if(structure.getString(Field.ID).equals(structureCatalog.getString("id_structure"))) {
-                                            String catalog = structureCatalog.getString("catalog");
-                                            if(structureCatalog.getBoolean("mixte")) {
-                                                structure.put("catalog", "Mixte");
-                                            } else if (catalog != null){
-                                                structure.put("catalog", structureCatalog.getString("catalog"));
-                                            } else {
-                                                structure.put("catalog", "Mixte");
-                                            }
-                                        }
-                                    }
-                                }
-                                renderJson(request, structures);
-                            } else {
-                                JsonObject error = (new JsonObject()).put("[Crre@getStructures] Unable to retrieve structures details :", structuresInfos.left().getValue());
-                                Renders.renderJson(request, error, 400);
-                            }
-                        });*/
                     } else {
-                        JsonObject error = (new JsonObject()).put("[Crre@getStructures] Unable to retrieve structures infos :", structuresResult.left().getValue());
+                        JsonObject error = (new JsonObject()).put(Field.ERROR, String.format("[Crre@%s::getStructures] Unable to retrieve structures infos : %s", this.getClass().getSimpleName(), structuresResult.left().getValue()));
                         Renders.renderJson(request, error, 400);
                     }
-        }));
+                }));
     }
 }

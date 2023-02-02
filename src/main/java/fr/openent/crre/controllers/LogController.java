@@ -2,6 +2,7 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.LogService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultLogService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -20,8 +21,8 @@ public class LogController extends ControllerHelper {
 
     private final LogService logService;
 
-    public LogController () {
-        this.logService = new DefaultLogService();
+    public LogController(ServiceFactory serviceFactory) {
+        this.logService = serviceFactory.getLogService();
     }
 
     @Get("/logs")

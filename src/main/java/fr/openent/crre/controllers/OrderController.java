@@ -7,6 +7,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.OrderService;
+import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
@@ -54,8 +55,8 @@ public class OrderController extends ControllerHelper {
 
     public static final String UTF8_BOM = "\uFEFF";
 
-    public OrderController() {
-        this.orderService = new DefaultOrderService(Crre.crreSchema, "order_client_equipment");
+    public OrderController(ServiceFactory serviceFactory) {
+        this.orderService =  serviceFactory.getOrderService();
     }
 
     @Get("/orders/mine/:idCampaign/:idStructure")

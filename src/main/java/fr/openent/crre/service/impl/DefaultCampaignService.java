@@ -28,7 +28,6 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 public class DefaultCampaignService extends SqlCrudService implements CampaignService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCampaignService.class);
 
-
     public DefaultCampaignService(String schema, String table) {
         super(schema, table);
     }
