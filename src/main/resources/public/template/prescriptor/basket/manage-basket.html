@@ -83,7 +83,7 @@
                 </div>
                 <div class="twelve cell commentDelete">
                     <div class="row" ng-init="basket.commentOnEdition = false;">
-                                <span ng-if="(basket.comment === null || basket.comment.trim() === '') && !basket.commentOnEdition"
+                                <span ng-if="(basket.comment == null || basket.comment.trim() === '') && !basket.commentOnEdition"
                                       style="font-style: italic">
                                     <i18n>crre.basket.no-comment</i18n>
                                 </span>
@@ -97,7 +97,7 @@
                                   ng-blur="basket.commentOnEdition = false; updateBasketComment(basket)"></textarea>
                     </div>
                     <div class="row addComment">
-                                <span ng-if="basket.comment === null || basket.comment===''"
+                                <span ng-if="basket.comment == null || basket.comment===''"
                                       ng-click="basket.commentOnEdition = true">
                                     <i18n>crre.basket.add-comment</i18n>
                                 </span>

@@ -9,7 +9,7 @@ export const structureGroupFormController = ng.controller('structureGroupFormCon
         $scope.search = {};
 
         $scope.structuresFilter = (structureRight) => {
-            return _.findWhere($scope.structureGroup.structures, {id: structureRight.id}) === undefined;
+            return _.findWhere($scope.structureGroup.structures, {id: structureRight.id}) == undefined;
         };
 
         $scope.getStructureNumber = () => {

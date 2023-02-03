@@ -343,7 +343,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         const initBasketItem = async (idEquipment: number, idCampaign: number, structure) => {
             $scope.equipment = _.findWhere($scope.equipments.all, {id: idEquipment});
-            if ($scope.equipment === undefined && !isNaN(idEquipment)) {
+            if ($scope.equipment == undefined && !isNaN(idEquipment)) {
                 $scope.equipment = new Equipment();
                 $scope.equipment.loading = true;
                 Utils.safeApply($scope);

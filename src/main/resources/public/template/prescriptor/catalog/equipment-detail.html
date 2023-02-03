@@ -91,7 +91,7 @@
                                 <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor"
                                      ng-if="!(basket.id_campaign == undefined) && !isAdministrator()">
                                     <input type="button"
-                                           ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
+                                           ng-disabled="!validArticle() || basket.id_campaign == undefined || !basket.equipment.commandable"
                                            ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
                                 </div>
                             </div>
@@ -170,7 +170,7 @@
                             </div>
                             <div class="row vertical-spacing centerColumn" workflow="crre.prescriptor" ng-if="!(basket.id_campaign == undefined) && !isAdministrator()">
                                 <input type="button"
-                                       ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
+                                       ng-disabled="!validArticle() || basket.id_campaign == undefined || !basket.equipment.commandable"
                                        ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
                             </div>
                         </div>
@@ -220,7 +220,7 @@
                         </div>
                         <div workflow="crre.prescriptor" class="row vertical-spacing centerColumn" ng-if="!(basket.id_campaign == undefined) && !isAdministrator()">
                             <input type="button"
-                                   ng-disabled="!validArticle() || basket.id_campaign === undefined || !basket.equipment.commandable"
+                                   ng-disabled="!validArticle() || basket.id_campaign == undefined || !basket.equipment.commandable"
                                    ng-click="addBasketItem(basket)" i18n-value="crre.add.to.basket"/>
                         </div>
                         <div class="warning right-magnet" ng-show="equipment.status !== 'Disponible'"

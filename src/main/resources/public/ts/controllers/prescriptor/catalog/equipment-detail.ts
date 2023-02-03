@@ -53,7 +53,7 @@ export const equipmentController = ng.controller('equipmentController',
         };
 
         $scope.addBasketItem = async (basket: Basket, campaign?: Campaign, id_structure?: string) => {
-            if(basket.id_campaign === undefined && campaign.accessible) {
+            if(basket.id_campaign == undefined && campaign.accessible) {
                 basket.id_campaign = campaign.id;
                 basket.id_structure= id_structure;
                 $scope.$emit('eventEmitedCampaign', campaign);
