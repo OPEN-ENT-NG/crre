@@ -9,11 +9,8 @@
     "processing_date": {
       "type": ["string", "null"]
     },
-    "equipment": {
+    "id_item": {
       "type": "string"
-    },
-    "options": {
-      "type": ["array", "null"  ]
     },
     "id_campaign":{
       "type": "number"
@@ -25,5 +22,5 @@
       "type": "number"
     }
   },
-  "required": [ "amount", "equipment", "id_campaign", "id_structure" ]
+  "required": [ "amount", "id_item", "id_campaign", "id_structure" ]
 }

@@ -8,7 +8,7 @@ export class Basket implements Selectable {
     id?: number;
     amount: number;
     processing_date: string| Date;
-    equipment: Equipment ;
+    equipment: Equipment;
     id_campaign: number;
     id_structure: string;
     selected: boolean;
@@ -35,7 +35,7 @@ export class Basket implements Selectable {
         return {
             amount: this.amount,
             processing_date : this.processing_date,
-            equipment : this.equipment.ean,
+            id_item : this.equipment.ean,
             id_campaign : this.id_campaign,
             id_structure : this.id_structure,
         };

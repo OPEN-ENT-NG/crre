@@ -1,106 +1,109 @@
 package fr.openent.crre.service;
 
-import fr.wseduc.webutils.Either;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerRequest;
+import fr.openent.crre.model.BasketOrder;
+import fr.openent.crre.model.BasketOrderItem;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.List;
+
 public interface BasketService {
     /**
-     * Create a basket item
-     * @param basket basket item to create
-     * @param handler function handler returning data
+     * Create a basket order item
+     *
+     * @param basketOrderItem basket item to create with all information
+     * @param user user information
      */
-     void create(JsonObject basket, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> create(BasketOrderItem basketOrderItem, UserInfos user);
 
     /**
-     * List  basket list of a campaign and a structure
-     * @param idCampaign campaign identifier
+     * List basket order item for a user of a campaign and a structure
+     *
+     * @param idCampaign  campaign identifier
      * @param idStructure structure identifier
-     * @param handler function handler returning data
+     * @param user user info
      */
-    void listBasket(Integer idCampaign, String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, UserInfos user);
 
     /**
-     * Get all my baskets orders
-     * @param startDate
-     * @param endDate
-     * @param handler function handler returning data
+     * Get all order for a user
+     *
+     * @param user user info
+     * @param page page to get
+     * @param idCampaign campaign identifier
+     * @param startDate start date for search
+     * @param endDate end date for search
+     * @param oldTable serach in history table or not
      */
-    void getMyBasketOrders(UserInfos user, Integer page, Integer id_campaign, String startDate, String endDate,
-                           boolean oldTable, Handler<Either<String, JsonArray>> handler);
+    Future<List<BasketOrder>> getMyBasketOrders(UserInfos user, Integer page, Integer idCampaign, String startDate, String endDate,
+                                                boolean oldTable);
 
     /**
      * Delete a basket item
+     *
      * @param idBasket id of the basket item
-     * @param handler function handler returning data
      */
-     void delete(Integer idBasket, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> delete(Integer idBasket);
 
     /**
      * Update a basket's amount
+     *
      * @param idBasket id of a basket item
-     * @param amount the new amount
-     * @param handler function handler returning data
+     * @param amount   the new amount
      */
-     void updateAmount(UserInfos user, Integer idBasket, Integer amount, Handler<Either<String, JsonObject>> handler );
+    Future<JsonObject> updateAmount(UserInfos user, Integer idBasket, Integer amount);
 
     /**
      * Update a basket's comment
      *
-     * @param idBasket
-     * @param comment
-     * @param handler
+     * @param idBasket id of a basket item
+     * @param comment the new comment
      */
-    void updateComment(Integer idBasket, String comment, Handler<Either<String, JsonObject>> handler );
+    Future<JsonObject> updateComment(Integer idBasket, String comment);
 
     /**
      * Update a basket's reassort
      *
-     * @param idBasket
-     * @param reassort
-     * @param handler
+     * @param idBasket id of a basket item
+     * @param reassort the new reassort value
      */
-    void updateReassort(Integer idBasket, Boolean reassort, Handler<Either<String, JsonObject>> handler );
+    Future<JsonObject> updateReassort(Integer idBasket, Boolean reassort);
+
 
     /**
-     * transform basket to an order
-     * @param request the request
-     * @param baskets list of basket's items to transform
-     * @param idCampaign the id of the campaign
-     * @param user the user that take an order
-     * @param idStructure the id of the structure
-     * @param nameStructure the name of the structure
-     * @param objects
+     * Transform basket to an order
+     *
+     * @param basketOrderItemList
+     * @param idCampaign
+     * @param user
+     * @param idStructure
      * @param nameBasket
-     * @param handler function handler returning data
+     * @return
      */
-    void takeOrder(HttpServerRequest request, JsonArray baskets, Integer idCampaign, UserInfos user,
-                   String idStructure, String nameStructure, JsonArray objects, String nameBasket, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> takeOrder(List<BasketOrderItem> basketOrderItemList, Integer idCampaign, UserInfos user,
+                                 String idStructure, String nameBasket);
+
     /**
      * List  basket list of a campaign and a structure to transform to an order
-     * @param idCampaign id of the campaign
-     * @param idStructure id of the structure
-     * @param baskets basket list to retrieve
-     * @param handler function handler returning data
+     *
+     * @param idCampaign   id of the campaign
+     * @param idStructure  id of the structure
+     * @param basketIdList basket list to retrieve
      */
-    void listebasketItemForOrder(Integer idCampaign, String idStructure, String idUser, JsonArray baskets, Handler<Either<String, JsonArray>> handler);
+    Future<List<BasketOrderItem>> listBasketItemForOrder(Integer idCampaign, String idStructure, String idUser, List<Integer> basketIdList);
 
     /**
      * Search basket from a query (name, user_name or article)
-     * @param query searching query (name, user_name or article)
-     * @param user   user object
-     * @param id_campaign  campaign identifier
+     *
+     * @param query       searching query (name, user_name or article)
+     * @param user        user object
+     * @param idCampaign campaign identifier
      * @param startDate
      * @param endDate
      * @param old
-     * @param arrayResponseHandler  Function handler returning data
      */
-
-    void search(String query, UserInfos user, JsonArray equipTab, int id_campaign, String startDate, String endDate, Integer page,
-                Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-
+    Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String startDate,
+                                     String endDate, Integer page, Boolean old);
 }

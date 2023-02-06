@@ -78,7 +78,7 @@ public class IModelHelperTest {
         }).collect(Collectors.toList());
 
         invalidModel.forEach(modelClass -> {
-            String message = String.format("[SupportPivot@%s::testSubClassIModel]: The class %s must have public constructor with JsonObject parameter declared",
+            String message = String.format("[CRRE@%s::testSubClassIModel]: The class %s must have public constructor with JsonObject parameter declared",
                     this.getClass().getSimpleName(), modelClass.getSimpleName());
             log.fatal(message);
         });

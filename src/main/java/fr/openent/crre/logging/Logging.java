@@ -2,10 +2,14 @@ package fr.openent.crre.logging;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.helpers.TransactionHelper;
+import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -17,6 +21,7 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class Logging {
 
@@ -30,6 +35,10 @@ public final class Logging {
         throw new IllegalAccessError("Utility class");
     }
 
+    /**
+     * @deprecated Use {@link #addTransaction(String, String, String, JsonObject, UserInfos)}
+     */
+    @Deprecated
     public static JsonObject add(final String context, final String action, final String item, final JsonObject object,
                                  UserInfos user) {
         final JsonObject statement = new JsonObject();
@@ -53,8 +62,27 @@ public final class Logging {
         return statement;
     }
 
+    public static TransactionElement addTransaction(final String context, final String action, final String item, final JsonObject object,
+                                         UserInfos user) {
+        StringBuilder query = new StringBuilder("INSERT INTO ")
+                .append(Crre.crreSchema)
+                .append(".logs(id_user, username, action, context, item" );
+        if (object != null) {
+            query.append(", value");
+        }
+        query.append(") VALUES (?, ?, ?, ?, ?");
+        if (object != null) {
+            query.append(", to_json(?::text)");
+        }
+        query.append(");");
+
+        JsonArray params = addParams(context, action, item, object, user);
+
+        return new TransactionElement(query.toString(), params);
+    }
+
     public static void defaultResponseFuture(final EventBus eb, final HttpServerRequest request, final String context, final String action,
-                                              final String item, final JsonObject object, Future<JsonObject> future) {
+                                             final String item, final JsonObject object, Future<JsonObject> future) {
         Handler<Either<String, JsonObject>> handler = defaultResponseHandler(eb, request, context, action, item, object);
         future.onSuccess(res -> handler.handle(new Either.Right<>(res)))
                 .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
@@ -123,7 +151,7 @@ public final class Logging {
                 UserUtils.getUserInfos(eb, request, user -> {
                     JsonObject object;
                     Renders.renderJson(request, event.right().getValue(), OK_STATUS);
-                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonArray statements = new JsonArray();
                     for(int i=0; i<objects.size(); i++){
                         object = objects.getJsonObject(i);
                         statements.add( add(context, action,
@@ -142,7 +170,12 @@ public final class Logging {
             }
         };
     }
-    public static void insert (EventBus eb, HttpServerRequest request, final String context,
+
+    /**
+     * @deprecated Use {@link #insert(EventBus, HttpServerRequest, String, String, String, JsonArray)}
+     */
+    @Deprecated
+    public static void insert(EventBus eb, HttpServerRequest request, final String context,
                                final String action, final String item, final JsonObject object) {
         UserUtils.getUserInfos(eb, request, user -> {
             String query = "INSERT INTO " + Crre.crreSchema + ".logs" +
@@ -163,8 +196,22 @@ public final class Logging {
         });
     }
 
+    public static void insert(EventBus eb, HttpServerRequest request, final String context,
+                              final String action, final String item, final JsonArray object) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            final List<TransactionElement> statements = object.stream()
+                    .filter(JsonObject.class::isInstance)
+                    .map(JsonObject.class::cast)
+                    .map(jsonObject -> addTransaction(context, action, item, jsonObject, user))
+                    .collect(Collectors.toList());
+
+            TransactionHelper.executeTransaction(statements)
+                    .onFailure(error -> log(context, action));
+        });
+    }
+
     private static JsonArray addParams(String context, String action, String item, JsonObject object, UserInfos user) {
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+        JsonArray params = new JsonArray()
                 .add(user.getUserId())
                 .add(user.getUsername())
                 .add(action)

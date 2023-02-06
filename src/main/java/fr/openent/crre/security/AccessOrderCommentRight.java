@@ -18,7 +18,7 @@ public class AccessOrderCommentRight implements ResourcesProvider {
         String id,query;
         if(binding.getServiceMethod().equals("fr.openent.crre.controllers.BasketController|updateComment")){
             id = request.getParam("idBasket");
-           query = "SELECT count(id) FROM " + Crre.crreSchema + ".basket_equipment WHERE id = ? AND id_structure IN " + Sql.listPrepared(userInfos.getStructures());
+           query = "SELECT count(id) FROM " + Crre.crreSchema + ".basket_order_item WHERE id = ? AND id_structure IN " + Sql.listPrepared(userInfos.getStructures());
         }else {
             id=request.getParam("idOrder");
            query = "SELECT count(id) FROM " + Crre.crreSchema + ".order_client_equipment WHERE id = ? AND id_structure IN " + Sql.listPrepared(userInfos.getStructures());

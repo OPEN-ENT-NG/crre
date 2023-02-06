@@ -6,6 +6,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -129,6 +130,14 @@ public class ElasticSearchHelper {
         search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
+    public static Future<JsonArray> plainTextSearchName(String query) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        plainTextSearchName(query, FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
+    }
+
     public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
         JsonObject regexTitre = regexpField("titre", query);
@@ -225,6 +234,14 @@ public class ElasticSearchHelper {
         JsonObject match = new JsonObject().put("_id", id);
         queryObject.put("match", match);
         search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+    }
+
+    public static Future<JsonArray> searchByIds(List<String> ids) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        searchByIds(ids, FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
     }
 
     public static void searchByIds(List<String> ids, Handler<Either<String, JsonArray>> handler) {

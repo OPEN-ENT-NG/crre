@@ -2,18 +2,21 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.EquipmentHelper;
+import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.BasketOrderItem;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.BasketService;
 import fr.openent.crre.service.ServiceFactory;
-import fr.openent.crre.service.impl.DefaultBasketService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -24,13 +27,12 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Integer.parseInt;
 
@@ -49,68 +51,40 @@ public class BasketController extends ControllerHelper {
     public void list(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
-                Integer idCampaign = request.params().contains("idCampaign")
-                        ? parseInt(request.params().get("idCampaign"))
+                Integer idCampaign = request.params().contains(Field.IDCAMPAIGN)
+                        ? parseInt(request.params().get(Field.IDCAMPAIGN))
                         : null;
-                String idStructure = request.params().contains("idStructure")
-                        ? request.params().get("idStructure")
+                String idStructure = request.params().contains(Field.IDSTRUCTURE)
+                        ? request.params().get(Field.IDSTRUCTURE)
                         : null;
-                basketService.listBasket(idCampaign, idStructure, user, baskets -> {
-                    if (baskets.isRight()) {
-                        JsonArray basketsResult = new JsonArray();
-                        List<String> listIdsEquipment = new ArrayList<>();
-                        for (Object bask : baskets.right().getValue()) {
-                            JsonObject basket = (JsonObject) bask;
-                            basketsResult.add(basket);
-                            listIdsEquipment.add(basket.getString("id_equipment"));
-                        }
-                        searchByIds(listIdsEquipment, equipments -> {
-                            if (equipments.isRight()) {
-                                for (Object bask : basketsResult) {
-                                    JsonObject basket = (JsonObject) bask;
-                                    String idEquipment = basket.getString("id_equipment");
-                                    JsonArray equipmentsArray = equipments.right().getValue();
-                                    if (equipmentsArray.size() > 0) {
-                                        for (int i = 0; i < equipmentsArray.size(); i++) {
-                                            JsonObject equipment = equipmentsArray.getJsonObject(i);
-                                            if (idEquipment.equals(equipment.getString(Field.ID))) {
-                                                basket.put("equipment", equipment);
-                                                break;
-                                            } else if(equipmentsArray.size() - 1 == i) {
-                                                JsonObject equipmentDefault = new JsonObject();
-                                                equipmentDefault.put("urlcouverture", "/crre/public/img/pages-default.png");
-                                                equipmentDefault.put("disponibilite", new JsonArray().add(new JsonObject().put("valeur", "Non disponible à long terme")));
-                                                equipmentDefault.put("titre", "Manuel introuvable dans le catalogue");
-                                                equipmentDefault.put("ean", idEquipment);
-                                                equipmentDefault.put("inCatalog", false);
-                                                equipmentDefault.put("price", 0.0);
-                                                basket.put("equipment", equipmentDefault);
-                                            }
-                                        }
-                                    } else {
-                                        JsonObject equipmentDefault = new JsonObject();
-                                        equipmentDefault.put("urlcouverture", "/crre/public/img/pages-default.png");
-                                        equipmentDefault.put("disponibilite", new JsonArray().add(new JsonObject().put("valeur", "Non disponible à long terme")));
-                                        equipmentDefault.put("titre", "Manuel introuvable dans le catalogue");
-                                        equipmentDefault.put("ean", idEquipment);
-                                        equipmentDefault.put("inCatalog", false);
-                                        equipmentDefault.put("price", 0.0);
-                                        basket.put("equipment", equipmentDefault);
-                                    }
-                                }
-                                renderJson(request, basketsResult);
-                            } else {
-                                log.error(equipments.left());
-                                badRequest(request);
-                            }
+                Future<List<BasketOrderItem>> listBasketOrderItemFuture = basketService.listBasketOrderItem(idCampaign, idStructure, user);
+                listBasketOrderItemFuture
+                        .compose(basketOrderItemList -> {
+                            List<String> itemIdList = basketOrderItemList.stream()
+                                    .map(BasketOrderItem::getIdItem)
+                                    .collect(Collectors.toList());
+                            return searchByIds(itemIdList);
+                        })
+                        .onSuccess(equipments -> {
+                            listBasketOrderItemFuture.result().forEach(basketOrderItem -> {
+                                JsonObject equipment = equipments.stream()
+                                        .filter(JsonObject.class::isInstance)
+                                        .map(JsonObject.class::cast)
+                                        .filter(equipmentResult -> basketOrderItem.getIdItem().equals(equipmentResult.getString(Field.ID)))
+                                        .findFirst()
+                                        .orElse(EquipmentHelper.getDefaultEquipment(basketOrderItem));
+                                basketOrderItem.setEquipment(equipment);
+                            });
+                            renderJson(request, IModelHelper.toJsonArray(listBasketOrderItemFuture.result()));
+                        })
+                        .onFailure(error -> {
+                            log.error(String.format("[CRRE@%s::list] An error occurred getting basket %s",
+                                    this.getClass().getSimpleName(), error.getMessage()));
+                            badRequest(request);
                         });
-                    } else {
-                        log.error("An error occurred getting basket", baskets.left());
-                        badRequest(request);
-                    }
-                });
-            } catch (ClassCastException e) {
-                log.error("An error occurred casting campaign id", e);
+            } catch (NumberFormatException e) {
+                log.error("[CRRE@%s::list] An error occurred casting campaign id %s", this.getClass().getSimpleName(), e.getMessage());
+                Renders.renderError(request);
             }
         });
     }
@@ -122,14 +96,18 @@ public class BasketController extends ControllerHelper {
     public void getMyBasketOrders(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
-                Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                Integer id_campaign = request.params().contains("idCampaign") ? parseInt(request.params().get("idCampaign")) : null;
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                boolean old = Boolean.parseBoolean(request.getParam("old"));
-                basketService.getMyBasketOrders(user, page, id_campaign, startDate, endDate, old, arrayResponseHandler(request));
-            } catch (ClassCastException e) {
-                log.error("An error occurred casting campaign id", e);
+                Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : 0;
+                Integer idCampaign = request.params().contains(Field.IDCAMPAIGN) ? parseInt(request.params().get(Field.IDCAMPAIGN)) : null;
+                String startDate = request.getParam(Field.STARTDATE);
+                String endDate = request.getParam(Field.ENDDATE);
+                boolean old = Boolean.parseBoolean(request.getParam(Field.OLD));
+                basketService.getMyBasketOrders(user, page, idCampaign, startDate, endDate, old)
+                        .onSuccess(basketOrders -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrders)))
+                        .onFailure(error -> Renders.renderError(request));
+            } catch (NumberFormatException e) {
+                log.error(String.format("[CRRE@%s::getMyBasketOrders] An error occurred casting campaign id %s",
+                        this.getClass().getSimpleName(), e.getMessage()));
+                Renders.renderError(request);
             }
         });
     }
@@ -140,19 +118,22 @@ public class BasketController extends ControllerHelper {
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void search(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains("q") && !request.params().get("q").trim().isEmpty()) {
+            if (request.params().contains(Field.Q) && !request.params().get(Field.Q).trim().isEmpty()) {
                 try {
-                    Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-                    String query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-                    int id_campaign = parseInt(request.getParam("idCampaign"));
-                    String startDate = request.getParam("startDate");
-                    String endDate = request.getParam("endDate");
-                    Boolean old = Boolean.valueOf(request.getParam("old"));
-                    plainTextSearchName(query, equipments -> basketService.search(query, user,
-                            equipments.right().getValue(), id_campaign, startDate, endDate, page, old,
-                            arrayResponseHandler(request)));
+                    Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : 0;
+                    String query = URLDecoder.decode(request.getParam(Field.Q), Field.UTF_DASH_8).toLowerCase();
+                    int idCampaign = parseInt(request.getParam(Field.IDCAMPAIGN));
+                    String startDate = request.getParam(Field.STARTDATE);
+                    String endDate = request.getParam(Field.ENDDATE);
+                    Boolean old = Boolean.valueOf(request.getParam(Field.OLD));
+                    plainTextSearchName(query)
+                            .compose(equipments -> basketService.search(query, user,
+                                    equipments, idCampaign, startDate, endDate, page, old))
+                            .onSuccess(basketOrderList -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrderList)))
+                            .onFailure(error -> Renders.renderError(request));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
+                    badRequest(request, "UnsupportedEncodingException");
                 }
             } else {
                 badRequest(request);
@@ -166,8 +147,10 @@ public class BasketController extends ControllerHelper {
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void create(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            RequestUtils.bodyToJson(request, pathPrefix + "basket",
-                    basket -> basketService.create(basket, user, defaultResponseHandler(request)));
+            RequestUtils.bodyToJson(request, pathPrefix + Field.BASKET,
+                    basketOrderItemJson -> basketService.create(new BasketOrderItem(basketOrderItemJson), user)
+                            .onSuccess(result -> Renders.renderJson(request, result))
+                            .onFailure(error -> Renders.renderError(request)));
 
         });
     }
@@ -177,25 +160,20 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void createBaskets(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJsonArray(request, baskets -> {
-            List<Future> futures = new ArrayList<>();
-            for (Object basket : baskets) {
-                Future<JsonObject> basketFuture = Future.future();
-                futures.add(basketFuture);
-                basketService.create((JsonObject) basket, user, handlerJsonObject(basketFuture));
-            }
-            CompositeFuture.all(futures).setHandler(event -> {
-                if (event.succeeded()) {
-                    JsonArray result = new JsonArray();
-                    for (Object f : futures) {
-                        result.add(((Future<JsonObject>) f).result());
-                    }
-                    renderJson(request, result);
-                } else {
-                    log.error("[CRRE@BasketController@createBaskets] error in future baskets : " + event.cause());
-                    badRequest(request);
-                }
-            });
+        UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJsonArray(request, basketsArray -> {
+            List<BasketOrderItem> basketOrderItemList = IModelHelper.toList(basketsArray, BasketOrderItem.class);
+            List<Future<JsonObject>> futures = basketOrderItemList.stream()
+                    .map(basketOrderItem -> basketService.create(basketOrderItem, user))
+                    .collect(Collectors.toList());
+            FutureHelper.all(futures).
+                    onSuccess(event -> {
+                        JsonArray result = new JsonArray(futures.stream().map(Future::result).collect(Collectors.toList()));
+                        renderJson(request, result);
+                    })
+                    .onFailure(error -> {
+                        log.error("[CRRE@%s::createBaskets] Error in future baskets : %s", this.getClass().getSimpleName(), error.getMessage());
+                        badRequest(request);
+                    });
         }));
     }
 
@@ -205,13 +183,15 @@ public class BasketController extends ControllerHelper {
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void delete(HttpServerRequest request) {
         try {
-            Integer idBasket = request.params().contains("idBasket")
-                    ? parseInt(request.params().get("idBasket"))
+            Integer idBasket = request.params().contains(Field.IDBASKET)
+                    ? parseInt(request.params().get(Field.IDBASKET))
                     : null;
-            basketService.delete(idBasket, defaultResponseHandler(request));
+            basketService.delete(idBasket)
+                    .onSuccess(result -> Renders.renderJson(request, result))
+                    .onFailure(error -> Renders.renderError(request));
 
-        } catch (ClassCastException e) {
-            log.error("An error occurred when casting basket id", e);
+        } catch (NumberFormatException e) {
+            log.error(String.format("[CRRE@%s::delete] An error occurred when casting basket id %s", this.getClass().getSimpleName(), e.getMessage()));
             badRequest(request);
         }
     }
@@ -222,13 +202,16 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(PrescriptorRight.class)
     public void updateAmount(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJson(request, pathPrefix + "basket", basket -> {
+        UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJson(request, pathPrefix + Field.BASKET, basket -> {
             try {
-                Integer id = parseInt(request.params().get("idBasket"));
-                Integer amount = basket.getInteger("amount");
-                basketService.updateAmount(user, id, amount, defaultResponseHandler(request));
+                Integer id = parseInt(request.params().get(Field.IDBASKET));
+                Integer amount = basket.getInteger(Field.AMOUNT);
+                basketService.updateAmount(user, id, amount)
+                        .onSuccess(result -> Renders.renderJson(request, result))
+                        .onFailure(error -> Renders.renderError(request));
             } catch (ClassCastException e) {
-                log.error("An error occurred when casting basket id", e);
+                log.error(String.format("[CRRE@%s::updateAmount] An error occurred when casting basket id %s", this.getClass().getSimpleName(), e.getMessage()));
+                Renders.renderError(request);
             }
         }));
     }
@@ -239,16 +222,19 @@ public class BasketController extends ControllerHelper {
     @ResourceFilter(AccessOrderCommentRight.class)
     public void updateComment(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, basket -> {
-            if (!basket.containsKey("comment")) {
+            if (!basket.containsKey(Field.COMMENT)) {
                 badRequest(request);
                 return;
             }
             try {
-                Integer id = parseInt(request.params().get("idBasket"));
-                String comment = basket.getString("comment");
-                basketService.updateComment(id, comment, defaultResponseHandler(request));
+                Integer id = parseInt(request.params().get(Field.IDBASKET));
+                String comment = basket.getString(Field.COMMENT);
+                basketService.updateComment(id, comment)
+                        .onSuccess(result -> Renders.renderJson(request, result))
+                        .onFailure(error -> Renders.renderError(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
+                Renders.renderError(request);
             }
         });
     }
@@ -259,16 +245,19 @@ public class BasketController extends ControllerHelper {
     @ResourceFilter(AccessOrderReassortRight.class)
     public void updateReassort(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, basket -> {
-            if (!basket.containsKey("reassort")) {
+            if (!basket.containsKey(Field.REASSORT)) {
                 badRequest(request);
                 return;
             }
             try {
-                Integer id = parseInt(request.params().get("idBasket"));
-                Boolean reassort = basket.getBoolean("reassort");
-                basketService.updateReassort(id, reassort, defaultResponseHandler(request));
+                Integer id = parseInt(request.params().get(Field.IDBASKET));
+                Boolean reassort = basket.getBoolean(Field.REASSORT);
+                basketService.updateReassort(id, reassort)
+                        .onSuccess(result -> Renders.renderJson(request, result))
+                        .onFailure(error -> Renders.renderError(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
+                Renders.renderError(request);
             }
         });
     }
@@ -278,33 +267,33 @@ public class BasketController extends ControllerHelper {
     @SecuredAction(Crre.PRESCRIPTOR_RIGHT)
     @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
     public void takeOrder(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "basketToOrder", object -> {
+        RequestUtils.bodyToJson(request, pathPrefix + Field.BASKETTOORDER, object -> {
             try {
-                final Integer idCampaign = parseInt(request.params().get("idCampaign"));
-                final String idStructure = object.getString("id_structure");
-                final String nameStructure = object.getString("structure_name");
-                final String nameBasket = object.getString("basket_name");
-                JsonArray baskets = object.containsKey("baskets") ? object.getJsonArray("baskets") : new JsonArray();
-                UserUtils.getUserInfos(eb, request, user ->
-                        basketService.listebasketItemForOrder(idCampaign, idStructure, user.getUserId(), baskets,
-                        listBasket -> {
-                            if (listBasket.isRight() && listBasket.right().getValue().size() > 0) {
-                                        basketService.takeOrder(request, listBasket.right().getValue(),
-                                                idCampaign, user, idStructure, nameStructure, baskets, nameBasket,
-                                                Logging.defaultCreateResponsesHandler(eb,
-                                                        request,
-                                                        Contexts.ORDER.toString(),
-                                                        Actions.CREATE.toString(),
-                                                        "id_order",
-                                                        listBasket.right().getValue()));
-                            } else {
-                                log.error("An error occurred when listing Baskets");
+                final Integer idCampaign = parseInt(request.params().get(Field.IDCAMPAIGN));
+                final String idStructure = object.getString(Field.ID_STRUCTURE);
+                final String nameStructure = object.getString(Field.STRUCTURE_NAME);
+                final String nameBasket = object.getString(Field.BASKET_NAME);
+                List<Integer> basketIdList = (object.containsKey(Field.BASKETS) ? object.getJsonArray(Field.BASKETS) : new JsonArray()).stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .collect(Collectors.toList());
+                UserUtils.getUserInfos(eb, request, user -> {
+                    Future<List<BasketOrderItem>> listBasketItemForOrderFuture = basketService.listBasketItemForOrder(idCampaign, idStructure, user.getUserId(), basketIdList);
+                    listBasketItemForOrderFuture.compose(listBasket ->
+                                    basketService.takeOrder(listBasket, idCampaign, user, idStructure, nameBasket))
+                            .onSuccess(result -> {
+                                Renders.renderJson(request, result);
+                                Logging.insert(eb, request, Contexts.ORDER.toString(), Actions.CREATE.toString(), Field.ID_ORDER,
+                                        IModelHelper.toJsonArray(listBasketItemForOrderFuture.result()));
+                            })
+                            .onFailure(error -> {
+                                log.error(String.format("[CRRE%s::takeOrder] An error occurred when listing Baskets %s", this.getClass().getSimpleName(), error.getMessage()));
                                 badRequest(request);
-                            }
-                        }));
+                            });
+                });
 
             } catch (ClassCastException e) {
-                log.error("An error occurred when casting Basket information", e);
+                log.error(String.format("[CRRE%s::takeOrder] An error occurred when casting Basket information %s", this.getClass().getSimpleName(), e.getMessage()));
                 renderError(request);
             }
         });

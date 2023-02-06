@@ -4,6 +4,7 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.SqlHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.StructureGroupModel;
 import fr.openent.crre.model.TransactionElement;
@@ -54,7 +55,7 @@ public class DefaultStructureGroupService implements StructureGroupService {
     public Future<JsonObject> create(final StructureGroupModel structureGroup) {
         Promise<JsonObject> promise = Promise.promise();
 
-        Future<Integer> getNextValFuture = this.getNextVal();
+        Future<Integer> getNextValFuture = SqlHelper.getNextVal("structure_group_id_seq");
         Future<List<String>> getOldIdStructureListFuture = this.getOldIdStructureList();
 
         CompositeFuture.all(Arrays.asList(getNextValFuture, getOldIdStructureListFuture))
@@ -63,7 +64,7 @@ public class DefaultStructureGroupService implements StructureGroupService {
                     List<TransactionElement> statements = new ArrayList<>();
                     statements.add(getStructureGroupCreationStatement(nextVal, structureGroup));
                     statements.add(getGroupStructureRelationshipStatement(nextVal, structureGroup.getStructures()));
-                    String errorMessage = String.format("[CRRE@%s::create] An error occurred when launching transaction", this.getClass().getSimpleName());
+                    String errorMessage = String.format("[CRRE@%s::create] Fail to create structure group", this.getClass().getSimpleName());
                     return TransactionHelper.executeTransaction(statements, errorMessage);
                 })
                 .onSuccess(result -> {
@@ -109,7 +110,7 @@ public class DefaultStructureGroupService implements StructureGroupService {
                     statements.add(getStructureGroupUpdateStatement(id, structureGroup));
                     statements.add(getStructureGroupRelationshipDeletion(id));
                     statements.add(getGroupStructureRelationshipStatement(id, structureGroup.getStructures()));
-                    String errorMessage = String.format("[CRRE@%s::update] An error occurred when launching transaction", this.getClass().getSimpleName());
+                    String errorMessage = String.format("[CRRE@%s::update] Fail to update structure group", this.getClass().getSimpleName());
                     return TransactionHelper.executeTransaction(statements, errorMessage);
                 })
                 .onSuccess(res -> {
@@ -137,7 +138,7 @@ public class DefaultStructureGroupService implements StructureGroupService {
         transactionElementList.add(getStructureGroupRelationshipDeletion(ids));
         transactionElementList.add(getStructureGroupDeletion(ids));
 
-        String errorMessage = String.format("[CRRE@%s::delete] An error occurred when launching transaction", this.getClass().getSimpleName());
+        String errorMessage = String.format("[CRRE@%s::delete] Fail to delete structure group", this.getClass().getSimpleName());
         TransactionHelper.executeTransaction(transactionElementList, errorMessage)
                 .onSuccess(result -> promise.complete(new JsonObject().put(Field.ID, new JsonArray(new ArrayList<>(ids)))))
                 .onFailure(promise::fail);
@@ -258,22 +259,6 @@ public class DefaultStructureGroupService implements StructureGroupService {
                         .map(String.class::cast)
                         .collect(Collectors.toList());
                 promise.complete(actualIdStructureList);
-            }
-        }));
-
-        return promise.future();
-    }
-
-    private Future<Integer> getNextVal() {
-        Promise<Integer> promise = Promise.promise();
-
-        String getIdQuery = "Select nextval('" + Crre.crreSchema + ".structure_group_id_seq') as id";
-        Sql.getInstance().raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
-            if (event.isRight()) {
-                promise.complete(event.right().getValue().getInteger(Field.ID));
-            } else {
-                LOGGER.error(String.format("[CRRE@%s::getNextVal] Fail to get next value id %s", this.getClass().getSimpleName(), event.left().getValue()));
-                promise.fail(event.left().getValue());
             }
         }));
 

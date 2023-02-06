@@ -1,5 +1,6 @@
 package fr.openent.crre.service.impl;
 
+import fr.openent.crre.helpers.SqlHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.StructureGroupModel;
 import fr.openent.crre.model.TransactionElement;
@@ -27,7 +28,7 @@ import java.util.List;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
-@PrepareForTest({Sql.class, DefaultStructureGroupService.class, TransactionHelper.class}) //Prepare the static class you want to test
+@PrepareForTest({Sql.class, DefaultStructureGroupService.class, TransactionHelper.class, SqlHelper.class}) //Prepare the static class you want to test
 public class DefaultStructureGroupServiceTest {
 
     private DefaultStructureGroupService defaultStructureGroupService;
@@ -102,7 +103,8 @@ public class DefaultStructureGroupServiceTest {
         String expectedParams2 = "[\"idStructure1\",10,\"idStructure2\",10]";
 
         PowerMockito.doReturn(Future.succeededFuture(Arrays.asList("structure1"))).when(this.defaultStructureGroupService, "getOldIdStructureList");
-        PowerMockito.doReturn(Future.succeededFuture(10)).when(this.defaultStructureGroupService, "getNextVal");
+        PowerMockito.spy(SqlHelper.class);
+        PowerMockito.doReturn(Future.succeededFuture(10)).when(SqlHelper.class, "getNextVal", Mockito.any());
 
         PowerMockito.doAnswer(invocation -> {
             List<TransactionElement> statements = invocation.getArgument(0);

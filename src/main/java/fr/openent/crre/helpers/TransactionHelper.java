@@ -20,30 +20,33 @@ public class TransactionHelper {
         throw new IllegalStateException("Utility class");
     }
 
-    public static Future<JsonArray> executeTransaction(List<TransactionElement> prepareRequestList) {
-        Promise<JsonArray> promise = Promise.promise();
-        JsonArray statements = new JsonArray();
-
-        statements.addAll(new JsonArray(prepareRequestList.stream().map(TransactionElement::toJson).collect(Collectors.toList())));
-
-        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
-
-        return promise.future();
+    /**
+     * See {@link #executeTransaction(List, String)}
+     */
+    public static Future<JsonArray> executeTransaction(List<TransactionElement> transactionElementList) {
+        return executeTransaction(transactionElementList, null);
     }
 
-    public static Future<JsonArray> executeTransaction(List<TransactionElement> prepareRequestList, String errorMessage) {
+    /**
+     * Allows you to execute a set of sql queries in a transaction
+     *
+     * @param transactionElementList list of queries in the form {@link TransactionElement}
+     * @param errorMessage message sent in the logs if the transaction failed
+     */
+    public static Future<JsonArray> executeTransaction(List<TransactionElement> transactionElementList, String errorMessage) {
         Promise<JsonArray> promise = Promise.promise();
         JsonArray statements = new JsonArray();
 
-        statements.addAll(new JsonArray(prepareRequestList.stream().map(TransactionElement::toJson).collect(Collectors.toList())));
+        statements.addAll(new JsonArray(transactionElementList.stream().map(TransactionElement::toJson).collect(Collectors.toList())));
 
-        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(res -> {
+        Sql.getInstance().transaction(statements, SqlResult.validResultsHandler(res -> {
             if (res.isRight()) {
                 promise.complete(res.right().getValue());
             } else {
-                String message = String.format("%s : %s", errorMessage, res.left().getValue());
-                log.error(String.format("[CRRE@%s::executeTransaction] %s", TransactionHelper.class.getSimpleName(), message));
-                promise.fail(message);
+                if (errorMessage != null) {
+                    log.error(errorMessage + " " + res.left().getValue());
+                }
+                promise.fail(res.left().getValue());
             }
         }));
 

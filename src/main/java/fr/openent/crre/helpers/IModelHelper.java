@@ -126,7 +126,7 @@ public class IModelHelper {
         return event -> {
             if (event.isLeft()) {
                 if (errorMessage != null) {
-                    log.error(errorMessage + event.left().getValue());
+                    log.error(errorMessage + fr.openent.crre.core.constants.Field.SPACE_CHARACTER + event.left().getValue());
                 }
                 promise.fail(event.left().getValue());
             } else {

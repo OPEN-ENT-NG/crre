@@ -4,7 +4,6 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.UserService;
-import fr.openent.crre.service.impl.DefaultUserService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;

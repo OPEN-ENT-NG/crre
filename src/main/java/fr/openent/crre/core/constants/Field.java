@@ -23,6 +23,36 @@ public class Field {
     public static final String ELASTICSEARCHCONFIG = "elasticsearchConfig";
     public static final String API_DASH_KEY = "api-key";
     public static final String EMAILCONFIG = "emailConfig";
+    public static final String PAGE = "page";
+    public static final String IDCAMPAIGN = "idCampaign";
+    public static final String STARTDATE = "startDate";
+    public static final String ENDDATE = "endDate";
+    public static final String OLD = "old";
+    public static final String ID_CAMPAIGN = "id_campaign";
+    public static final String NAME_USER = "name_user";
+    public static final String ID_USER = "id_user";
+    public static final String TOTAL = "total";
+    public static final String AMOUNT = "amount";
+    public static final String CREATED = "created";
+    public static final String PROCESSING_DATE = "processing_date";
+    public static final String ID_ITEM = "id_item";
+    public static final String COMMENT = "comment";
+    public static final String PRICE_PROPOSAL = "price_proposal";
+    public static final String ID_TYPE = "id_type";
+    public static final String OWNER_ID = "owner_id";
+    public static final String OWNER_NAME = "owner_name";
+    public static final String REASSORT = "reassort";
+    public static final String IDSTRUCTURE = "idStructure";
+    public static final String EQUIPMENT = "equipment";
+    public static final String Q = "q";
+    public static final String UTF_DASH_8 = "UTF-8";
+    public static final String IDBASKET = "idBasket";
+    public static final String BASKETTOORDER = "basketToOrder";
+    public static final String STRUCTURE_NAME = "structure_name";
+    public static final String BASKET_NAME = "basket_name";
+    public static final String ID_ORDER = "id_order";
+    public static final String BASKETS = "baskets";
+    public static final String SPACE_CHARACTER = " ";
 
     private Field() {
         throw new IllegalStateException("Utility class");

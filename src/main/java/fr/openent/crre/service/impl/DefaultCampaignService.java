@@ -283,11 +283,11 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
     }
 
     private void getBasketCampaigns(String idStructure, Handler<Either<String, JsonArray>> handler, UserInfos user) {
-        String query = "SELECT COUNT(basket_equipment.id) as nb_panier, campaign.id as id_campaign " +
-                "FROM " + Crre.crreSchema + ".basket_equipment " +
-                "INNER JOIN " + Crre.crreSchema + ".campaign ON (campaign.id = basket_equipment.id_campaign) " +
+        String query = "SELECT COUNT(basket_order_item.id) as nb_panier, campaign.id as id_campaign " +
+                "FROM " + Crre.crreSchema + ".basket_order_item " +
+                "INNER JOIN " + Crre.crreSchema + ".campaign ON (campaign.id = basket_order_item.id_campaign) " +
                 "WHERE id_structure = ? " +
-                "AND basket_equipment.owner_id = ? " +
+                "AND basket_order_item.owner_id = ? " +
                 "GROUP BY campaign.id;";
 
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(user.getUserId()), SqlResult.validResultHandler(handler));
