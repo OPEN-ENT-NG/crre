@@ -1,5 +1,6 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -45,4 +46,5 @@ public interface PurseService {
      */
     void updatePurseAmount(Double price, String idStructure, String operation, Boolean consumable, Handler<Either<String, JsonObject>> handler);
 
+    TransactionElement getTransactionUpdatePurseAmount(Double price, String idStructure, String operation, Boolean consumable);
 }

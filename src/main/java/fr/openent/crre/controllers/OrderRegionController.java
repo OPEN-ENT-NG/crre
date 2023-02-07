@@ -2,20 +2,21 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.CreditTypeEnum;
 import fr.openent.crre.helpers.*;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.*;
 import fr.openent.crre.model.config.ConfigMailModel;
-import fr.openent.crre.model.MailAttachment;
-import fr.openent.crre.model.OrderLDEModel;
-import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.*;
-import fr.openent.crre.service.impl.*;
+import fr.openent.crre.service.impl.DefaultOrderService;
+import fr.openent.crre.service.impl.EmailSendService;
+import fr.openent.crre.service.impl.ExportWorker;
 import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
@@ -25,11 +26,13 @@ import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.file.FileSystem;
@@ -42,7 +45,6 @@ import io.vertx.core.parsetools.RecordParser;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.StringUtils;
-import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -64,6 +66,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
@@ -102,133 +105,106 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(Crre.VALIDATOR_RIGHT)
     @ResourceFilter(ValidatorRight.class)
     public void createAdminOrder(final HttpServerRequest request) {
-        try {
-            UserUtils.getUserInfos(eb, request, user ->
+        UserUtils.getUserInfos(eb, request, user ->
                 RequestUtils.bodyToJson(request, orders -> {
-                    if (!orders.isEmpty()) {
-                        JsonArray ordersList = orders.getJsonArray("orders");
-                        HashSet<String> idsEquipment = new HashSet<>();
-                        for (int i = 0; i < ordersList.size(); i++) {
-                            idsEquipment.add(ordersList.getJsonObject(i).getString("equipment_key"));
-                        }
-                        Promise<Void> equipmentsFuture = Promise.promise();
-                        Promise<Integer> projectIdFuture = Promise.promise();
-                        List<Future> promises = new ArrayList<>();
-                        promises.add(equipmentsFuture.future());
-                        promises.add(projectIdFuture.future());
-                        CompositeFuture.all(promises).onComplete(event -> {
-                                    if (event.succeeded()) {
-                                        Integer idProject = projectIdFuture.future().result();
-                                        createOrdersRegion(request, user, ordersList, idProject);
-                                    } else {
-                                        LOGGER.error("[CRRE] OrderRegionController@createAdminOrder An error in compositeFuture :  " +
-                                                event.cause().getMessage());
-                                        request.response().setStatusCode(400).end();
-                                    }
-                                });
-                        getLastProject(request, projectIdFuture);
-                        searchByIds(new ArrayList<>(idsEquipment), equipments -> {
-                            if (equipments.isRight()) {
-                                setPriceToOrder(ordersList, equipments);
-                                equipmentsFuture.complete();
-                            } else {
-                                log.error("[CRRE] OrderRegionController@createAdminOrder searchByIds failed : " +
-                                        equipments.left().getValue());
-                                equipmentsFuture.fail("[CRRE] OrderRegionController@createAdminOrder searchByIds failed : " +
-                                        equipments.left().getValue());
-                            }
-                        });
-                    } else {
+                    if (orders.isEmpty()) {
                         noContent(request);
+                        return;
                     }
+                    JsonArray ordersList = orders.getJsonArray(Field.ORDERS);
+                    List<String> idsEquipment = ordersList.stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(orderJson -> orderJson.getString(Field.EQUIPMENT_KEY))
+                            .collect(Collectors.toList());
+
+                    searchByIds(idsEquipment)
+                            .compose(equipments -> {
+                                setPriceToOrder(ordersList, equipments);
+                                return createProject(user);
+                            })
+                            .compose(projectModel -> createOrdersRegion(user, ordersList, projectModel.getId()))
+                            .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject))
+                            .onFailure(error -> Renders.renderError(request));
+
                 })
-            );
-        } catch (Exception e) {
-            LOGGER.error("An error when you want create order region and project", e);
-            request.response().setStatusCode(400).end();
-        }
+        );
     }
 
-    private void getLastProject(HttpServerRequest request, Promise<Integer> projectIdFuture) {
-        orderRegionService.getLastProject(lastProject -> {
-            if (lastProject.isRight()) {
-                String last = lastProject.right().getValue().getString(Field.TITLE);
-                String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                String title = "Commande_" + date;
-                if (last != null) {
-                    if (title.equals(last.substring(0, last.length() - 2))) {
+    private Future<ProjectModel> createProject(UserInfos userInfos) {
+        Promise<ProjectModel> promise = Promise.promise();
+
+        orderRegionService.getLastProject()
+                .compose(lastProject -> {
+                    String last = lastProject.getString(Field.TITLE);
+                    String date = LocalDate.now().format(DateTimeFormatter.ofPattern(DateHelper.DAY_FORMAT_DASH));
+                    String title = "Commande_" + date;
+                    if (last != null && title.equals(last.substring(0, last.length() - 2))) {
                         title = title + "_" + (Integer.parseInt(last.substring(last.length() - 1)) + 1);
                     } else {
                         title += "_1";
                     }
-                } else {
-                    title += "_1";
-                }
-                createProject(request, title, projectIdFuture);
-            } else {
-                LOGGER.error("[CRRE] OrderRegionController@getLastProject An error when you want get last project " +
-                        lastProject.left());
-                projectIdFuture.fail("[CRRE] OrderRegionController@getLastProject An error when you want get last project " +
-                        lastProject.left());
-            }
-        });
+                    return orderRegionService.createProject(title);
+                })
+                .onSuccess(projectModel -> {
+                    promise.complete(projectModel);
+                    Logging.insert(userInfos, null, Actions.CREATE.toString(), String.valueOf(projectModel.getId()),
+                            projectModel.toJson());
+                })
+                .onFailure(error -> {
+                    LOGGER.error(String.format("[CRRE@%s::createProject] An error when create project %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 
-    private void createProject(HttpServerRequest request, String title, Promise<Integer> projectIdFuture) {
-        orderRegionService.createProject(title, idProject -> {
-            if (idProject.isRight()) {
-                Integer idProjectRight = idProject.right().getValue().getInteger(Field.ID);
-                Logging.insert(eb,
-                        request,
-                        null,
-                        Actions.CREATE.toString(),
-                        idProjectRight.toString(),
-                        new JsonObject().put("id", idProjectRight).put(Field.TITLE, title));
-                projectIdFuture.complete(idProjectRight);
-            } else {
-                LOGGER.error("[CRRE] OrderRegionController@createProject An error when you want create project " +
-                        idProject.left());
-                projectIdFuture.fail("[CRRE] OrderRegionController@createProject An error when you want create project " +
-                        idProject.left());
-            }
-        });
-    }
+    private Future<JsonObject> createOrdersRegion(UserInfos user, JsonArray ordersList, Integer idProject) {
+        Promise<JsonObject> promise = Promise.promise();
 
-    private void createOrdersRegion(HttpServerRequest request, UserInfos user, JsonArray ordersList, Integer idProjectRight) {
-        AtomicBoolean stillHaveCredit = new AtomicBoolean(true);
-        for (int i = 0; i < ordersList.size(); i++) {
-            if(stillHaveCredit.get()) {
-                JsonObject newOrder = ordersList.getJsonObject(i);
-                Double price = newOrder.getDouble("price") * newOrder.getInteger("amount");
-                int finalI = i;
-                updatePurseLicence(newOrder, "-", price, newOrder.getString("use_credit", "none"))
-                        .onSuccess(res -> orderRegionService.createOrdersRegion(newOrder, user, idProjectRight, event -> {
-                                    if (event.isRight()) {
-                                        Number idReturning = event.right().getValue().getInteger(Field.ID);
-                                        Logging.insert(eb,
-                                                request,
-                                                Contexts.ORDERREGION.toString(),
-                                                Actions.CREATE.toString(),
-                                                idReturning.toString(),
-                                                new JsonObject().put("order region", newOrder));
-                                        if (finalI == ordersList.size() - 1) {
-                                            renderJson(request,new JsonObject().put("idProject",idProjectRight),201);
-                                        }
-                                    } else {
-                                        LOGGER.error("An error when you want get id after create order region ",
-                                                event.left().getValue());
-                                        request.response().setStatusCode(400).end();
-                                        stillHaveCredit.set(false);
-                                    }
-                                }))
-                        .onFailure(err -> {
-                            LOGGER.error("[CRRE] OrderRegionController: " + err.getMessage() + ", " + err.getCause(),
-                                    err.getCause());
-                            request.response().setStatusCode(400).end();
-                            stillHaveCredit.set(false);
-                        });
-            }
-        }
+        final List<JsonObject> orderList = ordersList.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .collect(Collectors.toList());
+
+        final List<TransactionElement> transactionUpdatePurseList = orderList.stream()
+                .map(order -> {
+                    String structureId = order.getString(Field.ID_STRUCTURE);
+                    Double price = order.getDouble(Field.PRICE) * order.getInteger(Field.AMOUNT);
+                    CreditTypeEnum creditTypeEnum = CreditTypeEnum.getValue(order.getString(Field.USE_CREDIT, Field.NONE));
+                    return getUpdatePurseTransaction(structureId, "-", price, creditTypeEnum);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        final List<TransactionElement> transactionCreate = orderList.stream()
+                .map(order -> orderRegionService.getTransactionCreateOrdersRegion(order, idProject))
+                .collect(Collectors.toList());
+
+        final List<TransactionElement> transactionElementList = new ArrayList<>(transactionUpdatePurseList);
+        transactionElementList.addAll(transactionCreate);
+
+        String errorMessage = String.format("[CRRE@%s::createOrdersRegion] Fail to run transaction", this.getClass().getSimpleName());
+        TransactionHelper.executeTransaction(transactionElementList, errorMessage)
+                .onSuccess(transactionResult -> {
+                    JsonArray transactionResultCreateList = new JsonArray(transactionResult.getList().subList(transactionCreate.size(), transactionElementList.size()));
+                    transactionResultCreateList.stream()
+                            .filter(JsonArray.class::isInstance)
+                            .map(JsonArray.class::cast)
+                            .forEach(transactionResultCreate -> {
+                                JsonObject orderRegionCreatedJson = transactionResultCreate.getJsonObject(0);
+                                if (orderRegionCreatedJson != null) {
+                                    OrderRegionEquipmentModel order = new OrderRegionEquipmentModel(orderRegionCreatedJson);
+                                    Logging.insert(user, Contexts.ORDERREGION.toString(), Actions.CREATE.toString(), String.valueOf(order.getId()),
+                                            new JsonObject().put("order region", order.toJson()));
+                                }
+                            });
+                    promise.complete(new JsonObject().put("idProject", idProject));
+                })
+                .onFailure(promise::fail);
+
+        return promise.future();
     }
 
     @Post("/region/orders/:id")
@@ -241,25 +217,23 @@ public class OrderRegionController extends BaseController {
                     RequestUtils.bodyToJson(request, orders -> {
                         Integer idProject = request.getParam(Field.ID) != null ?
                                 Integer.parseInt(request.getParam(Field.ID)) : null;
-                        if (!orders.isEmpty() || idProject == null) {
-                            JsonArray ordersList = orders.getJsonArray("orders");
-                            HashSet<String> idsEquipment = new HashSet<>();
-                            for (int i = 0; i < ordersList.size(); i++) {
-                                idsEquipment.add(ordersList.getJsonObject(i).getString("equipment_key"));
-                            }
-                            searchByIds(new ArrayList<>(idsEquipment), equipments -> {
-                                if (equipments.isRight()) {
-                                    setPriceToOrder(ordersList, equipments);
-                                    createOrdersRegion(request, user, ordersList, idProject);
-                                } else {
-                                    log.error("[CRRE] OrderRegionController@createAdminOrderWithIdProject searchByIds failed : " +
-                                            equipments.left().getValue());
-                                    badRequest(request);
-                                }
-                            });
-                        } else {
+                        if (orders.isEmpty() || idProject == null) {
                             noContent(request);
+                            return;
                         }
+                        JsonArray ordersList = orders.getJsonArray(Field.ORDERS);
+                        List<String> idsEquipment = ordersList.stream()
+                                .filter(JsonObject.class::isInstance)
+                                .map(JsonObject.class::cast)
+                                .map(order -> order.getString(Field.EQUIPMENT_KEY))
+                                .collect(Collectors.toList());
+                        searchByIds(idsEquipment)
+                                .compose(equipments -> {
+                                    setPriceToOrder(ordersList, equipments);
+                                    return createOrdersRegion(user, ordersList, idProject);
+                                })
+                                .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject))
+                                .onFailure(error -> Renders.renderError(request));
                     })
             );
         } catch (Exception e) {
@@ -268,25 +242,31 @@ public class OrderRegionController extends BaseController {
         }
     }
 
-    private static void setPriceToOrder(JsonArray ordersList, Either<String, JsonArray> equipments) {
-        JsonArray equipmentsArray = equipments.right().getValue();
-        for (int j = 0; j < equipmentsArray.size(); j++) {
-            JsonObject equipment = equipmentsArray.getJsonObject(j);
-            double priceTTC = getPriceTtc(equipment).getDouble("priceTTC");
-            equipment.put("price",priceTTC);
-        }
-        for (int i = 0; i < ordersList.size(); i++) {
-            JsonObject order = ordersList.getJsonObject(i);
-            String idEquipment = order.getString("equipment_key");
-            if (equipmentsArray.size() > 0) {
-                for (int j = 0; j < equipmentsArray.size(); j++) {
-                    JsonObject equipment = equipmentsArray.getJsonObject(j);
-                    if (idEquipment.equals(equipment.getString(Field.ID))) {
-                        order.put("price",equipment.getDouble("price"));
-                    }
-                }
-            }
-        }
+    private static void setPriceToOrder(JsonArray ordersList, JsonArray equipmentsArray) {
+        if (equipmentsArray.isEmpty()) return;
+        //Pour chaque equipment on calcule le prix TTC
+        equipmentsArray.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .forEach(equipment -> {
+                    double priceTTC = getPriceTtc(equipment).getDouble(Field.PRICETTC);
+                    equipment.put(Field.PRICE, priceTTC);
+                });
+
+
+        ordersList.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .forEach(order -> {
+                    String idEquipment = order.getString(Field.EQUIPMENT_KEY);
+                    equipmentsArray.stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .filter(equipment -> idEquipment.equals(equipment.getString(Field.ID)))
+                            .map(equipment -> equipment.getDouble(Field.PRICE))
+                            .findFirst()
+                            .ifPresent(price -> order.put(Field.PRICE, price));
+                });
     }
 
     @Get("/orderRegion/projects")
@@ -1014,7 +994,10 @@ public class OrderRegionController extends BaseController {
         }
     }
 
-
+    /**
+     * @deprecated Use {@link #getUpdatePurseTransaction(String, String, Double, CreditTypeEnum)}
+     */
+    @Deprecated
     private Future<JsonObject> updatePurseLicence(JsonObject newOrder, String operation, Double price, String use_credit) {
         Future<JsonObject> updateFuture = Future.future();
         if (!use_credit.equals("none")) {
@@ -1049,6 +1032,26 @@ public class OrderRegionController extends BaseController {
         }
         return updateFuture;
 
+    }
+
+    private TransactionElement getUpdatePurseTransaction(String structureId, String operation, Double amount, CreditTypeEnum creditType) {
+        switch (creditType) {
+            case LICENCES: {
+                return structureService.getTransactionUpdateAmountLicence(structureId, operation, amount.intValue(), false);
+            }
+            case CONSUMABLE_LICENCES: {
+                return structureService.getTransactionUpdateAmountLicence(structureId, operation, amount.intValue(), true);
+            }
+            case CREDITS: {
+                return purseService.getTransactionUpdatePurseAmount(amount, structureId, operation, false);
+            }
+            case CONSUMABLE_CREDITS: {
+                return purseService.getTransactionUpdatePurseAmount(amount, structureId, operation, true);
+            }
+            default: {
+                return null;
+            }
+        }
     }
 
     @Post("region/orders/exports")

@@ -1,5 +1,6 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -34,6 +35,8 @@ public interface StructureService {
 
     void getTotalStructure(Handler<Either<String, JsonArray>> handler);
 
+    TransactionElement getTransactionUpdateAmountLicence(String idStructure, String operation, Integer licences, Boolean consumable);
+
     void getAllStructure(Handler<Either<String, JsonArray>> handler);
 
     void getAllStructureByIds(List<String> ids, Handler<Either<String, JsonArray>> handler);
@@ -50,8 +53,16 @@ public interface StructureService {
 
     void reinitAmountLicence(String id_structure, Integer difference, Handler<Either<String, JsonObject>> defaultResponseHandler);
 
+    /**
+     * Use {@link #getTransactionUpdateAmountLicence(String, String, Integer, Boolean)}
+     */
+    @Deprecated
     void updateAmountLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
 
+    /**
+     * Use {@link #getTransactionUpdateAmountLicence(String, String, Integer, Boolean)}
+     */
+    @Deprecated
     void updateAmountConsumableLicence(String idStructure, String operation, Integer licences, Handler<Either<String, JsonObject>> handler);
 
     void insertNewStructures(JsonArray structures, Handler<Either<String, JsonObject>> handler) throws ParseException;

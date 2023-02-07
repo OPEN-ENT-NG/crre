@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
@@ -433,6 +434,19 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
         Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
                 SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public TransactionElement getTransactionUpdateAmountLicence(String idStructure, String operation, Integer licences, Boolean consumable) {
+        String updateQuery = "UPDATE  " + Crre.crreSchema + ".licences " +
+                "SET " + (consumable ? "consumable_" : "") + "amount = " + (consumable ? "consumable_" : "") + "amount " + operation + " ?  " +
+                "WHERE id_structure = ? ;";
+
+        JsonArray params = new JsonArray()
+                .add(licences)
+                .add(idStructure);
+
+        return new TransactionElement(updateQuery, params);
     }
 
     @Override

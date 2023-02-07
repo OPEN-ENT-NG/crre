@@ -4,7 +4,9 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.ProjectModel;
 import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
@@ -52,29 +54,28 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void createOrdersRegion(JsonObject order, UserInfos user, Number id_project, Handler<Either<String, JsonObject>> handler) {
-        String queryOrderRegionEquipment = "" +
-                " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment\" ";
-        queryOrderRegionEquipment += " (amount, creation_date,  owner_name, owner_id," +
+    public TransactionElement getTransactionCreateOrdersRegion(JsonObject order, Number idProject) {
+        String queryOrderRegionEquipment = "INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment\" " +
+                " (amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, id_campaign, id_structure," +
                 " comment, id_order_client_equipment, id_project, reassort) " +
-                "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING id ; ";
+                "  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING * ;";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(order.getInteger("amount"))
-                .add(order.getString("creation_date"))
-                .add(order.getString("user_name"))
-                .add(order.getString("user_id"))
-                .add("IN PROGRESS")
-                .add(order.getString("equipment_key"))
-                .add(order.getInteger("id_campaign"))
-                .add(order.getString("id_structure"))
-                .add(order.getString("comment"))
-                .add(order.getLong("id_order_client_equipment"))
-                .add(id_project)
-                .add(order.getBoolean("reassort"));
-        Sql.getInstance().prepared(queryOrderRegionEquipment, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
-                SqlResult.validUniqueResultHandler(handler));
+        JsonArray params = new JsonArray()
+                .add(order.getInteger(Field.AMOUNT))
+                .add(order.getString(Field.CREATION_DATE))
+                .add(order.getString(Field.USER_NAME))
+                .add(order.getString(Field.USER_ID))
+                .add(Field.IN_SPACE_PROGRESS)
+                .add(order.getString(Field.EQUIPMENT_KEY))
+                .add(order.getInteger(Field.ID_CAMPAIGN))
+                .add(order.getString(Field.ID_STRUCTURE))
+                .add(order.getString(Field.COMMENT))
+                .add(order.getLong(Field.ID_ORDER_CLIENT_EQUIPMENT))
+                .add(idProject)
+                .add(order.getBoolean(Field.REASSORT));
+
+        return new TransactionElement(queryOrderRegionEquipment, params);
     }
 
     @Override
@@ -91,6 +92,26 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
         Sql.getInstance().prepared(queryProjectEquipment, params, new DeliveryOptions().setSendTimeout(600000L),
                 SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public Future<ProjectModel> createProject(String title) {
+        Promise<ProjectModel> promise = Promise.promise();
+
+        String queryProjectEquipment = "" +
+                "INSERT INTO " + Crre.crreSchema + ".project " +
+                "( title ) VALUES " +
+                "( ? )  RETURNING *;";
+        JsonArray params = new JsonArray();
+
+        params.add(title);
+
+        String errorMessage = String.format("[CRRE@%s::createProject] Fail to create project",
+                this.getClass().getSimpleName());
+        Sql.getInstance().prepared(queryProjectEquipment, params, new DeliveryOptions().setSendTimeout(600000L),
+                SqlResult.validUniqueResultHandler(IModelHelper.sqlUniqueResultToIModel(promise, ProjectModel.class, errorMessage)));
+
+        return promise.future();
     }
 
     @Override
@@ -289,6 +310,15 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id ";
         query = query + " ORDER BY p.id DESC LIMIT 1";
         sql.prepared(query, values, SqlResult.validUniqueResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public Future<JsonObject> getLastProject() {
+        Promise<JsonObject> promise = Promise.promise();
+
+        this.getLastProject(FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
     }
 
     @Override

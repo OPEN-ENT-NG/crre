@@ -1,9 +1,14 @@
 package fr.openent.crre.helpers;
 
 import fr.openent.crre.model.IModel;
+import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.Test;
@@ -26,7 +31,7 @@ public class IModelHelperTest {
         VALUE3
     }
 
-    class MyClass {
+    static class MyClass {
         public String id;
     }
     class MyIModel implements IModel<MyIModel> {
@@ -48,8 +53,15 @@ public class IModelHelperTest {
         }
     }
 
-    class MyOtherIModel implements IModel<MyOtherIModel> {
+    static class MyOtherIModel implements IModel<MyOtherIModel> {
         public String myName;
+
+        public MyOtherIModel() {
+        }
+
+        public MyOtherIModel(JsonObject jsonObject) {
+            this.myName = jsonObject.getString("myName");
+        }
 
         @Override
         public JsonObject toJson() {
@@ -126,5 +138,39 @@ public class IModelHelperTest {
         ctx.assertEquals(expected, iModel.toJson().toString());
 
         System.out.println();
+    }
+
+    @Test
+    public void sqlUniqueResultToIModelTest(TestContext ctx) {
+        Async async = ctx.async();
+        Promise<MyOtherIModel> promise = Promise.promise();
+
+        promise.future().onSuccess(myOtherIModel -> {
+            ctx.assertEquals(myOtherIModel.myName, "test");
+            async.complete();
+        });
+
+        final Handler<Either<String, JsonObject>> handler = IModelHelper.sqlUniqueResultToIModel(promise, MyOtherIModel.class);
+        handler.handle(new Either.Right<>(new JsonObject("{\"myName\":\"test\"}")));
+
+        async.awaitSuccess(1000);
+    }
+
+    @Test
+    public void sqlResultToIModelTest(TestContext ctx) {
+        Async async = ctx.async();
+        Promise<List<MyOtherIModel>> promise = Promise.promise();
+
+        promise.future().onSuccess(myOtherIModelList -> {
+            ctx.assertEquals(myOtherIModelList.size(), 2);
+            ctx.assertEquals(myOtherIModelList.get(0).myName, "test");
+            ctx.assertEquals(myOtherIModelList.get(1).myName, "test2");
+            async.complete();
+        });
+
+        final Handler<Either<String, JsonArray>> handler = IModelHelper.sqlResultToIModel(promise, MyOtherIModel.class);
+        handler.handle(new Either.Right<>(new JsonArray("[{\"myName\":\"test\"}, {\"myName\":\"test2\"}]")));
+
+        async.awaitSuccess(1000);
     }
 }

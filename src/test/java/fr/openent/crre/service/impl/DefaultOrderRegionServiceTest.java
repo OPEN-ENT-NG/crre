@@ -1,5 +1,12 @@
 package fr.openent.crre.service.impl;
 
+import com.sun.java.swing.plaf.motif.MotifBorders;
+import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.SqlHelper;
+import fr.openent.crre.helpers.TransactionHelper;
+import fr.openent.crre.model.TransactionElement;
+import fr.wseduc.webutils.Either;
+import io.gatling.commons.stats.assertion.In;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -10,20 +17,30 @@ import org.entcore.common.sql.Sql;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-@RunWith(VertxUnitRunner.class)
+@RunWith(PowerMockRunner.class) //Using the PowerMock runner
+@PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
+@PrepareForTest({Sql.class}) //Prepare the static class you want to test
 public class DefaultOrderRegionServiceTest {
     DefaultOrderRegionService defaultOrderRegionService;
     Vertx vertx;
+    private Sql sql;
 
     @Before
     public void setUp() {
         this.vertx = Vertx.vertx();
+        this.sql = Mockito.spy(Sql.getInstance());
+        PowerMockito.spy(Sql.class);
+        PowerMockito.when(Sql.getInstance()).thenReturn(sql);
+        this.sql.init(vertx.eventBus(), "fr.openent.crre");
         this.defaultOrderRegionService = new DefaultOrderRegionService("order_region_table");
-        Sql.getInstance().init(vertx.eventBus(), "fr.openent.crre");
     }
 
     @Test
@@ -76,6 +93,49 @@ public class DefaultOrderRegionServiceTest {
         });
 
         this.defaultOrderRegionService.updateOldOrdersWithTransaction(orderList);
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void getTransactionCreateOrdersRegionTest(TestContext ctx) {
+        JsonObject data = new JsonObject().put(Field.AMOUNT, 7)
+                .put(Field.CREATION_DATE, "creationDate")
+                .put(Field.USER_NAME, "userName")
+                .put(Field.USER_ID, "userId")
+                .put(Field.EQUIPMENT_KEY, "equipment_key")
+                .put(Field.ID_CAMPAIGN, 5)
+                .put(Field.ID_STRUCTURE, "id_structure")
+                .put(Field.COMMENT, "comment")
+                .put(Field.ID_ORDER_CLIENT_EQUIPMENT, 8L)
+                .put(Field.REASSORT, true);
+        TransactionElement transactionElement = this.defaultOrderRegionService.getTransactionCreateOrdersRegion(data, 9);
+        String expectedQuery = "INSERT INTO null.\"order-region-equipment\"  (amount, creation_date,  owner_name, owner_id," +
+                " status, equipment_key, id_campaign, id_structure, comment, id_order_client_equipment, id_project, reassort)" +
+                "   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING * ;";
+        String expectedParams = "[7,\"creationDate\",\"userName\",\"userId\",\"IN PROGRESS\",\"equipment_key\",5,\"id_structure\"," +
+                "\"comment\",8,9,true]";
+        ctx.assertEquals(transactionElement.getQuery(), expectedQuery);
+        ctx.assertEquals(transactionElement.getParams().toString(), expectedParams);
+    }
+
+    @Test
+    public void createProjectTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "INSERT INTO null.project ( title ) VALUES ( ? )  RETURNING *;";
+        String expectedParams = "[\"myTitle\"]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.createProject("myTitle");
 
         async.awaitSuccess(10000);
     }

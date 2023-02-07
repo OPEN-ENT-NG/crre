@@ -38,14 +38,7 @@ public class IModelHelper {
         return results.stream()
                 .filter(JsonObject.class::isInstance)
                 .map(JsonObject.class::cast)
-                .map(iModel -> {
-                    try {
-                        return modelClass.getConstructor(JsonObject.class).newInstance(iModel);
-                    } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-                             InvocationTargetException e) {
-                        return null;
-                    }
-                }).filter(Objects::nonNull)
+                .map(iModel -> toModel(iModel, modelClass)).filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -118,10 +111,21 @@ public class IModelHelper {
         return res;
     }
 
+    /**
+     * See {@link #sqlResultToIModel(Promise, Class, String)}
+     */
     public static <T extends IModel<T>> Handler<Either<String, JsonArray>> sqlResultToIModel(Promise<List<T>> promise, Class<T> modelClass) {
         return sqlResultToIModel(promise, modelClass, null);
     }
 
+    /**
+     * Complete a promise from the result of a sql query, while converting this result into a list of model.
+     *
+     * @param promise the promise we want to complete
+     * @param modelClass the class of the model we want to convert
+     * @param errorMessage a message logged when the sql query fail
+     * @param <T> the type of the model
+     */
     public static <T extends IModel<T>> Handler<Either<String, JsonArray>> sqlResultToIModel(Promise<List<T>> promise, Class<T> modelClass, String errorMessage) {
         return event -> {
             if (event.isLeft()) {
@@ -133,5 +137,42 @@ public class IModelHelper {
                 promise.complete(toList(event.right().getValue(), modelClass));
             }
         };
+    }
+
+    /**
+     * See {@link #sqlUniqueResultToIModel(Promise, Class, String)}
+     */
+    public static <T extends IModel<T>> Handler<Either<String, JsonObject>> sqlUniqueResultToIModel(Promise<T> promise, Class<T> modelClass) {
+        return sqlUniqueResultToIModel(promise, modelClass, null);
+    }
+
+    /**
+     * Complete a promise from the result of a sql query, while converting this result into a model.
+     *
+     * @param promise the promise we want to complete
+     * @param modelClass the class of the model we want to convert
+     * @param errorMessage a message logged when the sql query fail
+     * @param <T> the type of the model
+     */
+    public static <T extends IModel<T>> Handler<Either<String, JsonObject>> sqlUniqueResultToIModel(Promise<T> promise, Class<T> modelClass, String errorMessage) {
+        return event -> {
+            if (event.isLeft()) {
+                if (errorMessage != null) {
+                    log.error(errorMessage + " " + event.left().getValue());
+                }
+                promise.fail(event.left().getValue());
+            } else {
+                promise.complete(toModel(event.right().getValue(), modelClass));
+            }
+        };
+    }
+
+    private static <T extends IModel<T>> T toModel(JsonObject iModel, Class<T> modelClass) {
+        try {
+            return modelClass.getConstructor(JsonObject.class).newInstance(iModel);
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                 InvocationTargetException e) {
+            return null;
+        }
     }
 }

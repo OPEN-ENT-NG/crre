@@ -53,6 +53,21 @@ public class Field {
     public static final String ID_ORDER = "id_order";
     public static final String BASKETS = "baskets";
     public static final String SPACE_CHARACTER = " ";
+    public static final String ORDERS = "orders";
+    public static final String PRICETTC = "priceTTC";
+    public static final String PRICE = "price";
+    public static final String EQUIPMENT_KEY = "equipment_key";
+    public static final String NONE = "none";
+    public static final String USE_CREDIT = "use_credit";
+    public static final String CREATION_DATE = "creation_date";
+    public static final String MODIFICATION_DATE = "modification_date";
+    public static final String CAUSE_STATUS = "cause_status";
+    public static final String ID_PROJECT = "id_project";
+    public static final String ID_OFFER_EQUIPMENT = "id_offer_equipment";
+    public static final String ID_ORDER_CLIENT_EQUIPMENT = "id_order_client_equipment";
+    public static final String USER_NAME = "user_name";
+    public static final String USER_ID = "user_id";
+    public static final String IN_SPACE_PROGRESS = "IN PROGRESS";
 
     private Field() {
         throw new IllegalStateException("Utility class");

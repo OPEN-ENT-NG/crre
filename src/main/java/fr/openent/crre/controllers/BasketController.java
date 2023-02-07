@@ -283,7 +283,7 @@ public class BasketController extends ControllerHelper {
                                     basketService.takeOrder(listBasket, idCampaign, user, idStructure, nameBasket))
                             .onSuccess(result -> {
                                 Renders.renderJson(request, result);
-                                Logging.insert(eb, request, Contexts.ORDER.toString(), Actions.CREATE.toString(), Field.ID_ORDER,
+                                Logging.insert(user, Contexts.ORDER.toString(), Actions.CREATE.toString(), Field.ID_ORDER,
                                         IModelHelper.toJsonArray(listBasketItemForOrderFuture.result()));
                             })
                             .onFailure(error -> {

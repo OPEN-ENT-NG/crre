@@ -20,6 +20,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -172,7 +173,7 @@ public final class Logging {
     }
 
     /**
-     * @deprecated Use {@link #insert(EventBus, HttpServerRequest, String, String, String, JsonArray)}
+     * @deprecated Use {@link #insert(EventBus, HttpServerRequest, String, String, String, JsonObject)}
      */
     @Deprecated
     public static void insert(EventBus eb, HttpServerRequest request, final String context,
@@ -196,18 +197,24 @@ public final class Logging {
         });
     }
 
-    public static void insert(EventBus eb, HttpServerRequest request, final String context,
+    public static void insert(UserInfos userInfos, final String context,
                               final String action, final String item, final JsonArray object) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            final List<TransactionElement> statements = object.stream()
-                    .filter(JsonObject.class::isInstance)
-                    .map(JsonObject.class::cast)
-                    .map(jsonObject -> addTransaction(context, action, item, jsonObject, user))
-                    .collect(Collectors.toList());
+        final List<TransactionElement> statements = object.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .map(jsonObject -> addTransaction(context, action, item, jsonObject, userInfos))
+                .collect(Collectors.toList());
 
-            TransactionHelper.executeTransaction(statements)
-                    .onFailure(error -> log(context, action));
-        });
+        TransactionHelper.executeTransaction(statements)
+                .onFailure(error -> log(context, action));
+    }
+
+    public static void insert(UserInfos userInfos, final String context,
+                              final String action, final String item, final JsonObject object) {
+        final List<TransactionElement> statements = Collections.singletonList(addTransaction(context, action, item, object, userInfos));
+
+        TransactionHelper.executeTransaction(statements)
+                .onFailure(error -> log(context, action));
     }
 
     private static JsonArray addParams(String context, String action, String item, JsonObject object, UserInfos user) {

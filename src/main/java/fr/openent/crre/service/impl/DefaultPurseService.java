@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.service.PurseService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -245,17 +246,24 @@ public class DefaultPurseService implements PurseService {
     @Override
     public void updatePurseAmount(Double price, String idStructure, String operation, Boolean consumable,
                                   Handler<Either<String, JsonObject>> handler) {
+        TransactionElement transactionElement = this.getTransactionUpdatePurseAmount(price, idStructure, operation, consumable);
+
+        Sql.getInstance().prepared(transactionElement.getQuery(), transactionElement.getParams(),
+                new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public TransactionElement getTransactionUpdatePurseAmount(Double price, String idStructure, String operation, Boolean consumable) {
         final double cons = 100.0;
         String updateQuery = "UPDATE  " + Crre.crreSchema + ".purse " +
                 "SET " + (consumable ? "consumable_" : "") + "amount = ROUND((" +
                 (consumable ? "consumable_" : "") + "amount " + operation + " ? )::numeric ,2)::double precision " +
                 "WHERE id_structure = ? ;";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+        JsonArray params = new JsonArray()
                 .add(Math.round(price * cons) / cons)
                 .add(idStructure);
 
-        Sql.getInstance().prepared(updateQuery, params, new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L),
-                SqlResult.validUniqueResultHandler(handler));
+        return new TransactionElement(updateQuery, params);
     }
 }

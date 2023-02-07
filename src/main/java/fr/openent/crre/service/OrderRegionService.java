@@ -1,6 +1,7 @@
 package fr.openent.crre.service;
 
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.ProjectModel;
 import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -12,11 +13,17 @@ import org.entcore.common.user.UserInfos;
 import java.util.List;
 
 public interface OrderRegionService {
-    void createOrdersRegion(JsonObject order, UserInfos event, Number id_project, Handler<Either<String, JsonObject>> handler);
+    TransactionElement getTransactionCreateOrdersRegion(JsonObject order, Number idProject);
 
     void equipmentAlreadyPayed(String idEquipment, String idStructure, Handler<Either<String, JsonObject>> handler);
 
-    void createProject (String title,  Handler<Either<String, JsonObject>> handler);
+    /**
+     * @deprecated Use {@link #createProject(String)}
+     */
+    @Deprecated
+    void createProject(String title,  Handler<Either<String, JsonObject>> handler);
+
+    Future<ProjectModel> createProject(String title);
 
     void getAllIdsStatus(Handler<Either<String, JsonArray>> handler);
 
@@ -30,7 +37,13 @@ public interface OrderRegionService {
     void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
+    /**
+     * @deprecated Use {@link #getLastProject()}
+     */
+    @Deprecated
     void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler);
+
+    Future<JsonObject> getLastProject();
 
     List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew);
 
