@@ -4,6 +4,11 @@ public class Field {
 
     public static final String MAIL = "mail";
     public static final String EQUIPEMENT = "equipment";
+    public static final String USERNAME = "username";
+    public static final String PASSWORD = "password";
+    public static final String ELASTICSEARCHCONFIG = "elasticsearchConfig";
+    public static final String API_DASH_KEY = "api-key";
+    public static final String EMAILCONFIG = "emailConfig";
 
     private Field() {
         throw new IllegalStateException("Utility class");

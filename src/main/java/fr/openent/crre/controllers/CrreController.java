@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -17,6 +18,7 @@ import static fr.openent.crre.Crre.ACCESS_RIGHT;
 
 
 public class CrreController extends ControllerHelper {
+    private final static String STAR = "**********";
 
     private final EventStore eventStore;
 
@@ -33,10 +35,18 @@ public class CrreController extends ControllerHelper {
     public void getConfig(final HttpServerRequest request) {
         JsonObject safeConfig = config.copy();
 
-        JsonObject elasticsearchConfig = safeConfig.getJsonObject("elasticsearchConfig", null);
+        JsonObject elasticsearchConfig = safeConfig.getJsonObject(Field.ELASTICSEARCHCONFIG, null);
         if (elasticsearchConfig != null) {
-            if (elasticsearchConfig.getString("username", null) != null) elasticsearchConfig.put("username", "**********");
-            if (elasticsearchConfig.getString("password", null) != null) elasticsearchConfig.put("password", "**********");
+            if (elasticsearchConfig.getString(Field.USERNAME, null) != null) elasticsearchConfig.put(Field.USERNAME, STAR);
+            if (elasticsearchConfig.getString(Field.PASSWORD, null) != null) elasticsearchConfig.put(Field.PASSWORD, STAR);
+        }
+
+        JsonObject emailConfig = safeConfig.getJsonObject(Field.EMAILCONFIG, null);
+        if (emailConfig != null) {
+            if (emailConfig.getString(Field.USERNAME, null) != null) emailConfig.put(Field.USERNAME, STAR);
+            if (emailConfig.getString(Field.PASSWORD, null) != null) emailConfig.put(Field.PASSWORD, STAR);
+            if (emailConfig.getString(Field.API_DASH_KEY, null) != null) emailConfig.put(Field.API_DASH_KEY, STAR);
+
         }
 
         renderJson(request, safeConfig);    }
