@@ -283,7 +283,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(id_campaign);
         }
 
-        sqlquery = DefaultBasketService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
+        sqlquery = DefaultBasketOrderService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
 
         sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure = ? ";
         values.add(idStructure);

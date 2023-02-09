@@ -21,7 +21,7 @@ public class ServiceFactory {
     private final DefaultPurseService purseService;
     private final DefaultQuoteService quoteService;
     private final DefaultStructureService structureService;
-    private final DefaultBasketService basketService;
+    private final DefaultBasketOrderService basketOrderService;
     private final DefaultCampaignService campaignService;
     private final DefaultEquipmentService equipmentService;
     private final DefaultOrderService orderService;
@@ -30,6 +30,7 @@ public class ServiceFactory {
     private final DefaultUserService userService;
     private final DefaultLogService logService;
     private final DefaultStorageService storageService;
+    private final DefaultBasketOrderItemService basketOrderItemService;
 
 
     public ServiceFactory(Vertx vertx, ConfigModel config, EmailFactory emailFactory, Storage storage) {
@@ -45,7 +46,8 @@ public class ServiceFactory {
         this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService(Field.EQUIPEMENT);
         this.structureService = new DefaultStructureService(Crre.crreSchema, vertx.eventBus());
-        this.basketService = new DefaultBasketService();
+        this.basketOrderService = new DefaultBasketOrderService();
+        this.basketOrderItemService = new DefaultBasketOrderItemService(this);
         this.campaignService = new DefaultCampaignService(Crre.crreSchema, Field.CAMPAIGN);
         this.equipmentService = new DefaultEquipmentService(Crre.crreSchema, Field.EQUIPEMENT);
         this.orderService = new DefaultOrderService(Crre.crreSchema, Field.ORDER_CLIENT_EQUIPMENT);
@@ -88,8 +90,8 @@ public class ServiceFactory {
         return structureService;
     }
 
-    public DefaultBasketService getBasketService() {
-        return basketService;
+    public DefaultBasketOrderService getBasketOrderService() {
+        return basketOrderService;
     }
 
     public DefaultCampaignService getCampaignService() {
@@ -122,6 +124,10 @@ public class ServiceFactory {
 
     public DefaultStorageService getStorageService() {
         return storageService;
+    }
+
+    public DefaultBasketOrderItemService getBasketOrderItemService() {
+        return basketOrderItemService;
     }
 
     private WebClient initWebClient() {

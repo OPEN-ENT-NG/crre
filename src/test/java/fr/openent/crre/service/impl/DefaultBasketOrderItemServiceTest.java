@@ -27,14 +27,14 @@ import java.util.List;
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
 @PrepareForTest({Sql.class, TransactionHelper.class, SqlHelper.class}) //Prepare the static class you want to test
-public class DefaultBasketServiceTest {
+public class DefaultBasketOrderItemServiceTest {
 
-    private DefaultBasketService defaultBasketService;
+    private DefaultBasketOrderItemService defaultBasketItemService;
     private Sql sql;
 
     @Before
     public void setup() {
-        this.defaultBasketService = PowerMockito.spy(new DefaultBasketService());
+        this.defaultBasketItemService = PowerMockito.spy(new DefaultBasketOrderItemService(null));
         this.sql = Mockito.spy(Sql.getInstance());
         PowerMockito.spy(TransactionHelper.class);
         PowerMockito.spy(Sql.class);
@@ -62,30 +62,7 @@ public class DefaultBasketServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.listBasketOrderItem(1, "idStructure", userInfos);
-
-        async.awaitSuccess(10000);
-    }
-
-    @Test
-    public void getMyBasketOrdersTest(TestContext ctx) {
-        Async async = ctx.async();
-        UserInfos userInfos = new UserInfos();
-        userInfos.setUserId("userId");
-
-        String expectedQuery = "SELECT distinct b.* FROM null.basket_order b INNER JOIN null.order_client_equipment oce on (oce.id_basket = b.id) WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? ORDER BY b.id DESC OFFSET ? LIMIT ? ";
-        String expectedParams = "[\"startDate\",\"endDate\",\"userId\",30,15,15]";
-
-        Mockito.doAnswer(invocation -> {
-            String query = invocation.getArgument(0);
-            JsonArray values = invocation.getArgument(1);
-            ctx.assertEquals(expectedQuery, query);
-            ctx.assertEquals(expectedParams, values.toString());
-            async.complete();
-            return null;
-        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
-
-        this.defaultBasketService.getMyBasketOrders(userInfos, 1, 30, "startDate", "endDate", false);
+        this.defaultBasketItemService.listBasketOrderItem(1, "idStructure", userInfos.getUserId());
 
         async.awaitSuccess(10000);
     }
@@ -118,7 +95,7 @@ public class DefaultBasketServiceTest {
             return Future.succeededFuture();
         }).when(TransactionHelper.class, "executeTransaction", Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.create(basketOrderItem, userInfos)
+        this.defaultBasketItemService.create(basketOrderItem, userInfos)
                 .onSuccess(res -> {
                     ctx.assertEquals(res.toString(), expectedRes);
                     async.complete();
@@ -146,7 +123,7 @@ public class DefaultBasketServiceTest {
             return Future.succeededFuture();
         }).when(TransactionHelper.class, "executeTransaction", Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.delete(10)
+        this.defaultBasketItemService.delete(10)
                 .onSuccess(res -> {
                     ctx.assertEquals(res.toString(), expectedRes);
                     async.complete();
@@ -174,7 +151,7 @@ public class DefaultBasketServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.updateAmount(userInfos, 60, 29);
+        this.defaultBasketItemService.updateAmount(userInfos, 60, 29);
 
         async.awaitSuccess(10000);
     }
@@ -195,7 +172,7 @@ public class DefaultBasketServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.updateComment(26, "comment");
+        this.defaultBasketItemService.updateComment(26, "comment");
 
         async.awaitSuccess(10000);
     }
@@ -216,7 +193,7 @@ public class DefaultBasketServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.updateReassort(26, false);
+        this.defaultBasketItemService.updateReassort(26, false);
 
         async.awaitSuccess(10000);
     }
@@ -242,35 +219,7 @@ public class DefaultBasketServiceTest {
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
         List<Integer> basketIdList = Arrays.asList(84, 715, 1315);
-        this.defaultBasketService.listBasketItemForOrder(75, "structureId", "userId", basketIdList);
-
-        async.awaitSuccess(10000);
-    }
-
-    @Test
-    public void searchTest(TestContext ctx) {
-        Async async = ctx.async();
-        UserInfos userInfos = new UserInfos();
-        userInfos.setUserId("userId");
-        userInfos.setStructures(Arrays.asList("structure1", "structure2"));
-
-        String expectedQuery = "SELECT distinct bo.* FROM null.basket_order bo INNER JOIN null.order_client_equipment AS" +
-                " oe ON (bo.id = oe.id_basket) WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ?" +
-                " AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (?,?)) AND bo.id_structure" +
-                " IN ( ?,?) ORDER BY bo.id DESC OFFSET ? LIMIT ? ";
-        String expectedParams = "[\"startDate\",\"endDate\",\"userId\",13,\"query\",\"query\",\"ean1\",\"ean2\",\"structure1\",\"structure2\",60,15]";
-
-        Mockito.doAnswer(invocation -> {
-            String query = invocation.getArgument(0);
-            JsonArray values = invocation.getArgument(1);
-            ctx.assertEquals(expectedQuery, query);
-            ctx.assertEquals(expectedParams, values.toString());
-            async.complete();
-            return null;
-        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
-        JsonArray equipTab = new JsonArray().add(new JsonObject().put("ean", "ean1")).add(new JsonObject().put("ean", "ean2"));
-
-        this.defaultBasketService.search("query", userInfos, equipTab, 13, "startDate", "endDate", 4, false);
+        this.defaultBasketItemService.listBasketItemForOrder(75, "structureId", "userId", basketIdList);
 
         async.awaitSuccess(10000);
     }

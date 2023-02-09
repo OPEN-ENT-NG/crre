@@ -9,7 +9,7 @@ import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 
-public interface BasketService {
+public interface BasketOrderItemService {
     /**
      * Create a basket order item
      *
@@ -17,28 +17,6 @@ public interface BasketService {
      * @param user user information
      */
     Future<JsonObject> create(BasketOrderItem basketOrderItem, UserInfos user);
-
-    /**
-     * List basket order item for a user of a campaign and a structure
-     *
-     * @param idCampaign  campaign identifier
-     * @param idStructure structure identifier
-     * @param user user info
-     */
-    Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, UserInfos user);
-
-    /**
-     * Get all order for a user
-     *
-     * @param user user info
-     * @param page page to get
-     * @param idCampaign campaign identifier
-     * @param startDate start date for search
-     * @param endDate end date for search
-     * @param oldTable serach in history table or not
-     */
-    Future<List<BasketOrder>> getMyBasketOrders(UserInfos user, Integer page, Integer idCampaign, String startDate, String endDate,
-                                                boolean oldTable);
 
     /**
      * Delete a basket item
@@ -75,13 +53,13 @@ public interface BasketService {
     /**
      * Transform basket to an order
      *
-     * @param basketOrderItemList
-     * @param idCampaign
-     * @param user
-     * @param idStructure
-     * @param nameBasket
-     * @return
+     * @param basketOrderItemList basket order items we want to add in order
+     * @param idCampaign campaign identifier
+     * @param user user information
+     * @param idStructure structure identifier
+     * @param nameBasket basket name
      */
+    //todo décalé cette fonction dans orderService
     Future<JsonObject> takeOrder(List<BasketOrderItem> basketOrderItemList, Integer idCampaign, UserInfos user,
                                  String idStructure, String nameBasket);
 
@@ -95,15 +73,11 @@ public interface BasketService {
     Future<List<BasketOrderItem>> listBasketItemForOrder(Integer idCampaign, String idStructure, String idUser, List<Integer> basketIdList);
 
     /**
-     * Search basket from a query (name, user_name or article)
+     * List basket order item for a user of a campaign and a structure
      *
-     * @param query       searching query (name, user_name or article)
-     * @param user        user object
-     * @param idCampaign campaign identifier
-     * @param startDate
-     * @param endDate
-     * @param old
+     * @param idCampaign  campaign identifier
+     * @param idStructure structure identifier
+     * @param userId user id
      */
-    Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String startDate,
-                                     String endDate, Integer page, Boolean old);
+    Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, String userId);
 }

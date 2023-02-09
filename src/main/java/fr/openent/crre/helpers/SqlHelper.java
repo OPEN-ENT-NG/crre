@@ -2,7 +2,6 @@ package fr.openent.crre.helpers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.service.impl.DefaultBasketService;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
@@ -11,7 +10,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 public class SqlHelper {
-    private static final Logger log = LoggerFactory.getLogger(DefaultBasketService.class);
+    private static final Logger log = LoggerFactory.getLogger(SqlHelper.class);
 
     private SqlHelper() {
         throw new IllegalStateException("Utility class");
