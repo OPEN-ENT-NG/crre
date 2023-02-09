@@ -122,12 +122,12 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
                 .map(BasketOrderItem::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(0, Integer::sum);
-        List<TransactionElement> statements = Collections.singletonList(this.serviceFactory.getBasketOrderService().getTransactionInsertBasketName(user, idStructure, idCampaign, nameBasket, 0, amount));
+        TransactionElement transactionInsertBasketName = this.serviceFactory.getBasketOrderService().getTransactionInsertBasketName(user, idStructure, idCampaign, nameBasket, 0, amount);
 
         String errorMessage = String.format("[CRRE@%s::takeOrder] Fail to insert basket name" , this.getClass().getSimpleName());
-        TransactionHelper.executeTransaction(statements, errorMessage)
+        TransactionHelper.executeTransaction(Collections.singletonList(transactionInsertBasketName), errorMessage)
                 .compose(transactionResult -> {
-                    int idBasket = transactionResult.getJsonArray(0).getJsonObject(0).getInteger(Field.ID);
+                    int idBasket = transactionInsertBasketName.getResult().getJsonObject(0).getInteger(Field.ID);
 
                     List<TransactionElement> otherStatements = basketOrderItemList.stream()
                             .map(basketOrderItem -> getInsertEquipmentOrderStatement(basketOrderItem, user.getUserId(), idBasket))
@@ -142,7 +142,7 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
                     return TransactionHelper.executeTransaction(otherStatements, otherErrorMessage);
                 })
                 .onSuccess(transactionResult -> {
-                    JsonObject basicBDObject = new JsonObject(transactionResult.getJsonArray(transactionResult.size()-1).getJsonObject(0).getString("row_to_json"));
+                    JsonObject basicBDObject = new JsonObject(transactionResult.get(transactionResult.size()-1).getResult().getJsonObject(0).getString(Field.ROW_TO_JSON));
                     promise.complete(getTransactionFuture(basicBDObject));
                 })
                 .onFailure(promise::fail);

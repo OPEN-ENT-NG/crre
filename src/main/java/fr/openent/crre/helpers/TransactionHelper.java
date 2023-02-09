@@ -23,7 +23,7 @@ public class TransactionHelper {
     /**
      * See {@link #executeTransaction(List, String)}
      */
-    public static Future<JsonArray> executeTransaction(List<TransactionElement> transactionElementList) {
+    public static Future<List<TransactionElement>> executeTransaction(List<TransactionElement> transactionElementList) {
         return executeTransaction(transactionElementList, null);
     }
 
@@ -33,15 +33,18 @@ public class TransactionHelper {
      * @param transactionElementList list of queries in the form {@link TransactionElement}
      * @param errorMessage message sent in the logs if the transaction failed
      */
-    public static Future<JsonArray> executeTransaction(List<TransactionElement> transactionElementList, String errorMessage) {
-        Promise<JsonArray> promise = Promise.promise();
+    public static Future<List<TransactionElement>> executeTransaction(List<TransactionElement> transactionElementList, String errorMessage) {
+        Promise<List<TransactionElement>> promise = Promise.promise();
         JsonArray statements = new JsonArray();
 
         statements.addAll(new JsonArray(transactionElementList.stream().map(TransactionElement::toJson).collect(Collectors.toList())));
 
         Sql.getInstance().transaction(statements, SqlResult.validResultsHandler(res -> {
             if (res.isRight()) {
-                promise.complete(res.right().getValue());
+                for (int i = 0; i < transactionElementList.size(); i++) {
+                    transactionElementList.get(i).setResult((JsonArray) res.right().getValue().getList().get(i));
+                }
+                promise.complete(transactionElementList);
             } else {
                 if (errorMessage != null) {
                     log.error(errorMessage + " " + res.left().getValue());

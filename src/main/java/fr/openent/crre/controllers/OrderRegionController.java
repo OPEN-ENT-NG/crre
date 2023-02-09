@@ -124,7 +124,7 @@ public class OrderRegionController extends BaseController {
                                 return createProject(user);
                             })
                             .compose(projectModel -> createOrdersRegion(user, ordersList, projectModel.getId()))
-                            .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject))
+                            .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject, 201))
                             .onFailure(error -> Renders.renderError(request));
 
                 })
@@ -188,19 +188,14 @@ public class OrderRegionController extends BaseController {
         String errorMessage = String.format("[CRRE@%s::createOrdersRegion] Fail to run transaction", this.getClass().getSimpleName());
         TransactionHelper.executeTransaction(transactionElementList, errorMessage)
                 .onSuccess(transactionResult -> {
-                    JsonArray transactionResultCreateList = new JsonArray(transactionResult.getList().subList(transactionCreate.size(), transactionElementList.size()));
-                    transactionResultCreateList.stream()
-                            .filter(JsonArray.class::isInstance)
-                            .map(JsonArray.class::cast)
-                            .forEach(transactionResultCreate -> {
-                                JsonObject orderRegionCreatedJson = transactionResultCreate.getJsonObject(0);
-                                if (orderRegionCreatedJson != null) {
-                                    OrderRegionEquipmentModel order = new OrderRegionEquipmentModel(orderRegionCreatedJson);
-                                    Logging.insert(user, Contexts.ORDERREGION.toString(), Actions.CREATE.toString(), String.valueOf(order.getId()),
-                                            new JsonObject().put("order region", order.toJson()));
-                                }
-                            });
-                    promise.complete(new JsonObject().put("idProject", idProject));
+                    transactionCreate.stream()
+                            .map(TransactionElement::getResult)
+                            .map(transactionResultCreate -> transactionResultCreate.getJsonObject(0))
+                            .filter(Objects::nonNull)
+                            .map(OrderRegionEquipmentModel::new)
+                            .forEach(orderRegionEquipmentModel -> Logging.insert(user, Contexts.ORDERREGION.toString(), Actions.CREATE.toString(),
+                                    String.valueOf(orderRegionEquipmentModel.getId()), new JsonObject().put("order region", orderRegionEquipmentModel.toJson())));
+                    promise.complete(new JsonObject().put(Field.IDPROJET, idProject));
                 })
                 .onFailure(promise::fail);
 
@@ -232,7 +227,7 @@ public class OrderRegionController extends BaseController {
                                     setPriceToOrder(ordersList, equipments);
                                     return createOrdersRegion(user, ordersList, idProject);
                                 })
-                                .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject))
+                                .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject, 201))
                                 .onFailure(error -> Renders.renderError(request));
                     })
             );

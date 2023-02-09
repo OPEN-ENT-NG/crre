@@ -68,6 +68,8 @@ public class Field {
     public static final String USER_NAME = "user_name";
     public static final String USER_ID = "user_id";
     public static final String IN_SPACE_PROGRESS = "IN PROGRESS";
+    public static final String ROW_TO_JSON = "row_to_json";
+    public static final String IDPROJET = "idProject";
 
     private Field() {
         throw new IllegalStateException("Utility class");

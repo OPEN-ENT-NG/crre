@@ -11,9 +11,6 @@ public class StringHelperTest {
 
     @Test
     public void camelToSnakeTest(TestContext ctx) {
-        JsonArray jsonArray = new JsonArray();
-        Integer test = null;
-        jsonArray.add(test);
         ctx.assertEquals(StringHelper.camelToSnake(""), "");
         ctx.assertEquals(StringHelper.camelToSnake("camelCase"), "camel_case");
         ctx.assertEquals(StringHelper.camelToSnake("DTRE"), "d_t_r_e");

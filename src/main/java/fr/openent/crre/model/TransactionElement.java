@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 public class TransactionElement implements IModel<TransactionElement> {
     private String query;
     private JsonArray params;
+    private JsonArray result;
 
     public TransactionElement(JsonObject jsonObject) {
         throw new RuntimeException("Not implemented");
@@ -39,6 +40,15 @@ public class TransactionElement implements IModel<TransactionElement> {
 
     public TransactionElement setParams(JsonArray params) {
         this.params = params;
+        return this;
+    }
+
+    public JsonArray getResult() {
+        return result;
+    }
+
+    public TransactionElement setResult(JsonArray result) {
+        this.result = result;
         return this;
     }
 }
