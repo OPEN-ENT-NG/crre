@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -92,7 +91,7 @@ public class OrderRegionController extends BaseController {
     public OrderRegionController(Vertx vertx, JsonObject config, JsonObject mail) {
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender emailSender = emailFactory.getSender();
-        this.emailSender = new EmailSendService(emailSender);
+        this.emailSender = new EmailSendService(emailSender, config);
         this.mail = mail;
         this.orderRegionService = new DefaultOrderRegionService("equipment");
         this.purseService = new DefaultPurseService();
@@ -1215,7 +1214,7 @@ public class OrderRegionController extends BaseController {
             simpleDateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
             attachment.add(new JsonObject()
                     .put(Field.NAME, "DD" + simpleDateFormat.format(new Date()))
-                    .put("content", Base64.getEncoder().encodeToString(data.getString("csvFile").getBytes(StandardCharsets.UTF_8)))
+                    .put("content", data.getString("csvFile"))
                     .put("nbEtab", data.getInteger("nbEtab")));
             e++;
         }
@@ -1266,9 +1265,9 @@ public class OrderRegionController extends BaseController {
                              JsonArray orderRegion, JsonArray ordersClientId) {
         JsonObject singleAttachment = attachment.getJsonObject(e);
         Integer nbEtab = singleAttachment.getInteger("nbEtab");
-        String csvFileBase64 = singleAttachment.getString("content");
+        String csvFile = singleAttachment.getString("content");
         String title = singleAttachment.getString(Field.NAME);
-        quoteService.insertQuote(user, nbEtab, csvFileBase64, title, returningTitle -> {
+        quoteService.insertQuote(user, nbEtab, csvFile, title, returningTitle -> {
             if (returningTitle.isRight()) {
                 singleAttachment.put(Field.NAME,returningTitle.right().getValue().getString(Field.TITLE) + ".csv");
                 if (e + 1 < attachment.size()){

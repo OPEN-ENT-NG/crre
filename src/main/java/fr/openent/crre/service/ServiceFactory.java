@@ -68,7 +68,7 @@ public class ServiceFactory {
     private EmailSendService initEmailSender() {
         EmailFactory emailFactory = new EmailFactory(this.vertx, this.config);
         EmailSender emailSender = emailFactory.getSender();
-        return new EmailSendService(emailSender);
+        return new EmailSendService(emailSender, this.config);
     }
 
     private WebClient initWebClient() {

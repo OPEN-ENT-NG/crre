@@ -10,7 +10,9 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -54,7 +56,7 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
         params.add(user.getUsername())
               .add(user.getUserId())
               .add(nbEtab)
-              .add(csvFile);
+              .add(Base64.getEncoder().encodeToString(csvFile.getBytes(StandardCharsets.UTF_8)));
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 

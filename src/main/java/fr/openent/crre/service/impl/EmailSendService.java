@@ -10,15 +10,21 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Objects;
+
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class EmailSendService {
     private static final Logger log = LoggerFactory.getLogger(EmailSendService.class);
 
     private final EmailSender emailSender;
+    private final JsonObject config;
 
-    public EmailSendService(EmailSender emailSender){
+    public EmailSendService(EmailSender emailSender, JsonObject config){
         this.emailSender = emailSender;
+        this.config = config;
     }
 
     /**
@@ -28,6 +34,14 @@ public class EmailSendService {
      */
     public void sendMail(HttpServerRequest request, String eMail, String object, String body, JsonArray attachment,
                          Handler<Either<String, JsonObject>> handler) {
+        if (config.getBoolean(Field.ENCODEEMAILCONTENT)) {
+            attachment.stream()
+                    .filter(JsonObject.class::isInstance)
+                    .map(JsonObject.class::cast)
+                    .forEach(jsonObject ->
+                            jsonObject.put(Field.CONTENT, Base64.getEncoder().encodeToString(jsonObject.getString(Field.CONTENT).getBytes(StandardCharsets.UTF_8))));
+        }
+
         String message = "[CRRE@EmailSendService@sendMail] Parameters : ";
         message += "\n request : " + request.toString();
         message += "\n eMail : " + eMail;

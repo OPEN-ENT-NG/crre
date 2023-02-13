@@ -9,6 +9,8 @@ public class Field {
     public static final String ELASTICSEARCHCONFIG = "elasticsearchConfig";
     public static final String API_DASH_KEY = "api-key";
     public static final String EMAILCONFIG = "emailConfig";
+    public static final String CONTENT = "content";
+    public static final String ENCODEEMAILCONTENT = "encodeEmailContent";
 
     private Field() {
         throw new IllegalStateException("Utility class");
