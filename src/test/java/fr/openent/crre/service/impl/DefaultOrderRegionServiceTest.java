@@ -113,7 +113,7 @@ public class DefaultOrderRegionServiceTest {
         String expectedQuery = "INSERT INTO null.\"order-region-equipment\"  (amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, id_campaign, id_structure, comment, id_order_client_equipment, id_project, reassort)" +
                 "   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ) RETURNING * ;";
-        String expectedParams = "[7,\"creationDate\",\"userName\",\"userId\",\"IN PROGRESS\",\"equipment_key\",5,\"id_structure\"," +
+        String expectedParams = "[7,\"creationDate\",\"userName\",\"userId\",\"IN_PROGRESS\",\"equipment_key\",5,\"id_structure\"," +
                 "\"comment\",8,9,true]";
         ctx.assertEquals(transactionElement.getQuery(), expectedQuery);
         ctx.assertEquals(transactionElement.getParams().toString(), expectedParams);

@@ -66,7 +66,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getString(Field.CREATION_DATE))
                 .add(order.getString(Field.USER_NAME))
                 .add(order.getString(Field.USER_ID))
-                .add(Field.IN_SPACE_PROGRESS)
+                .add(Field.IN_PROGRESS)
                 .add(order.getString(Field.EQUIPMENT_KEY))
                 .add(order.getInteger(Field.ID_CAMPAIGN))
                 .add(order.getString(Field.ID_STRUCTURE))

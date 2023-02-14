@@ -1,14 +1,14 @@
 package fr.openent.crre.controllers;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.OrderService;
 import fr.openent.crre.service.ServiceFactory;
-import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
@@ -18,6 +18,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -38,6 +39,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
@@ -527,19 +529,25 @@ public class OrderController extends ControllerHelper {
     @ResourceFilter(UpdateStatusRight.class)
     public void updateStatus(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
-            final JsonArray ids = orders.getJsonArray("ids");
-            List<String> stringIds = new ArrayList<>();
-            for (Object id : ids) {
-                stringIds.add(id.toString());
-            }
-            String status = request.params().get(Field.STATUS);
+            OrderClientEquipmentType status = OrderClientEquipmentType.getValue(request.params().get(Field.STATUS));
             if (status != null) {
-                orderService.updateStatus(ids, status, Logging.defaultResponsesHandler(eb,
-                        request,
-                        Contexts.ORDER.toString(),
-                        Actions.UPDATE.toString(),
-                        stringIds,
-                        new JsonObject().put(Field.STATUS,status)));
+                List<Integer> orderClientEquipmentIdList = orders.getJsonArray(Field.IDS)
+                                .stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .collect(Collectors.toList());
+                orderService.updateStatus(orderClientEquipmentIdList, status)
+                        .onSuccess(orderClientEquipmentModels -> {
+                            List<Integer> orderClientEquipmentIdUpdated = orderClientEquipmentModels.stream()
+                                    .map(OrderClientEquipmentModel::getId)
+                                    .collect(Collectors.toList());
+                            Renders.renderJson(request, new JsonArray(orderClientEquipmentIdUpdated));
+                            UserUtils.getUserInfos(eb, request, userInfos ->
+                                    Logging.insert(userInfos, Contexts.ORDER.toString(), Actions.UPDATE.toString(),
+                                    orderClientEquipmentIdUpdated.stream().map(String::valueOf).collect(Collectors.toList()),
+                                    new JsonObject().put(Field.STATUS,status)));
+                        })
+                        .onFailure(error -> Renders.renderError(request));
             } else {
                 noContent(request);
             }

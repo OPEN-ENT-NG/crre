@@ -32,9 +32,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 id_structure: "id_structure"
             };
 
-            $scope.states = [{status: "WAITING"}, {status: "IN PROGRESS"}, {status: "VALID"}, {status: "DONE"}, {status: "REJECTED"}];
+            $scope.states = [{status: "WAITING"}, {status: "IN_PROGRESS"}, {status: "VALID"}, {status: "DONE"}, {status: "REJECTED"}];
             $scope.states.forEach((item) => item.toString = () => {
-                if (item.status === "IN PROGRESS") {
+                if (item.status === "IN_PROGRESS") {
                     return $scope.translate("NEW")
                 } else {
                     return $scope.translate(item.status)
@@ -52,7 +52,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             });
             let newFilterFront = new FilterFront();
             newFilterFront.name = "status";
-            newFilterFront.value = ["WAITING", "IN PROGRESS", "VALID", "DONE"];
+            newFilterFront.value = ["WAITING", "IN_PROGRESS", "VALID", "DONE"];
             $scope.filtersFront.all.push(newFilterFront);
 
             $scope.schoolType = [{name: 'PU'}, {name: 'PR'}];

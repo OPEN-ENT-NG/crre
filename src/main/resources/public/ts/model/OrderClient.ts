@@ -274,12 +274,8 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async updateStatus(status: string): Promise<AxiosResponse> {
         try {
-            let statusURL : string = status;
-            if (status === "IN PROGRESS") {
-                statusURL = "inprogress";
-            }
             let config : {} = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
-            return await http.put(`/crre/orders/${statusURL.toLowerCase()}`, this.toJson(status), config);
+            return await http.put(`/crre/orders/${status.toLowerCase()}`, this.toJson(status), config);
         } catch (e) {
             toasts.warning('crre.order.update.err');
             throw e;

@@ -1,6 +1,9 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -54,7 +57,7 @@ public interface OrderService {
 
     void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> eitherHandler);
 
-    void updateStatus(JsonArray ids, String status, Handler<Either<String, JsonObject>> handler);
+    Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderClientEquipmentType orderClientEquipmentType);
 
     void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);

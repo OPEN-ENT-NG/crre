@@ -121,11 +121,11 @@
                     <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.amount]]</div></td>
                     <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.total]]</div></td>
                     <td ng-click="project.expanded = !project.expanded">
-                        <div class="smallTabElem status center ellipsis" ng-if="project.status == 'IN PROGRESS'" tooltip="crre.new">
+                        <div class="smallTabElem status center ellipsis" ng-if="project.status == 'IN_PROGRESS'" tooltip="crre.new">
                             <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
                             <span class="zero-mobile"><i18n>crre.new</i18n></span>
                         </div>
-                        <div class="smallTabElem status center ellipsis" ng-if="project.status !== 'IN PROGRESS'" tooltip="[[project.status]]">
+                        <div class="smallTabElem status center ellipsis" ng-if="project.status !== 'IN_PROGRESS'" tooltip="[[project.status]]">
                             <div class="[[project.status]] status-circle  cell row myOrder centerCircleMobile"></div>
                             <span ng-bind="lang.translate(project.status)" class="zero-mobile"></span>
                         </div>
@@ -156,11 +156,11 @@
                              ng-if="order.comment">
                             <i class="comment-icon"></i>
                         </div>
-                        <div class="smallTabElem status center ellipsis" ng-if="order.displayStatus && order.status == 'IN PROGRESS'" tooltip="crre.new">
+                        <div class="smallTabElem status center ellipsis" ng-if="order.displayStatus && order.status == 'IN_PROGRESS'" tooltip="crre.new">
                             <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
                             <span class="zero-mobile"><i18n>crre.new</i18n></span>
                         </div>
-                        <div class="smallTabElem status center ellipsis" ng-if="order.displayStatus && order.status !== 'IN PROGRESS' && order.status !== 'REJECTED'" tooltip="[[order.status]]">
+                        <div class="smallTabElem status center ellipsis" ng-if="order.displayStatus && order.status !== 'IN_PROGRESS' && order.status !== 'REJECTED'" tooltip="[[order.status]]">
                             <div class="[[order.status]] status-circle  cell row myOrder centerCircleMobile"></div>
                             <span ng-bind="lang.translate(order.status)" class="zero-mobile"></span>
                         </div>

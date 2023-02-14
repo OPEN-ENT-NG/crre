@@ -1,9 +1,14 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.service.OrderService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -11,6 +16,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.util.Collections;
 import java.util.List;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
@@ -248,23 +254,19 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void updateStatus(JsonArray ids, String status, Handler<Either<String, JsonObject>> handler) {
+    public Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderClientEquipmentType orderClientEquipmentType) {
+        Promise<List<OrderClientEquipmentModel>> promise = Promise.promise();
+
         JsonArray values = new JsonArray();
-        String query = " UPDATE " + Crre.crreSchema + ".order_client_equipment " +
-                "SET  " +
-                "status = ? " +
-                "WHERE id IN " +
-                Sql.listPrepared(ids.getList()) +
-                " RETURNING id";
-        if (status.equals("inprogress")) {
-            values.add("IN PROGRESS");
-        } else {
-            values.add(status.toUpperCase());
-        }
-        for (int i = 0; i < ids.size(); i++) {
-            values.add(ids.getInteger(i));
-        }
-        sql.prepared(query, values, SqlResult.validRowsResultHandler(handler));
+        String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment SET status = ? WHERE id IN " +
+                Sql.listPrepared(orderClientEquipmentIdList) + " RETURNING *";
+        values.add(orderClientEquipmentType.toString());
+        values.addAll(new JsonArray(orderClientEquipmentIdList));
+
+        String errorMessage = String.format("[CRRE@%s::updateStatus] Fail to update status", this.getClass().getSimpleName());
+        sql.prepared(query, values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderClientEquipmentModel.class, errorMessage)));
+
+        return promise.future();
     }
 
     public void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,

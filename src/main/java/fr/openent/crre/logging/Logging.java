@@ -2,14 +2,12 @@ package fr.openent.crre.logging;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -37,7 +35,7 @@ public final class Logging {
     }
 
     /**
-     * @deprecated Use {@link #addTransaction(String, String, String, JsonObject, UserInfos)}
+     * @deprecated Use {@link #insert(UserInfos, String, String, String, JsonObject)}
      */
     @Deprecated
     public static JsonObject add(final String context, final String action, final String item, final JsonObject object,
@@ -173,7 +171,7 @@ public final class Logging {
     }
 
     /**
-     * @deprecated Use {@link #insert(EventBus, HttpServerRequest, String, String, String, JsonObject)}
+     * @deprecated Use {@link #insert(UserInfos, String, String, String, JsonObject)}
      */
     @Deprecated
     public static void insert(EventBus eb, HttpServerRequest request, final String context,
@@ -217,6 +215,16 @@ public final class Logging {
                 .onFailure(error -> log(context, action));
     }
 
+    public static void insert(UserInfos userInfos, final String context,
+                              final String action, final List<String> items, final JsonObject object) {
+        final List<TransactionElement> statements = items.stream()
+                .map(item -> addTransaction(context, action, item, object, userInfos))
+                .collect(Collectors.toList());
+
+        TransactionHelper.executeTransaction(statements)
+                .onFailure(error -> log(context, action));
+    }
+
     private static JsonArray addParams(String context, String action, String item, JsonObject object, UserInfos user) {
         JsonArray params = new JsonArray()
                 .add(user.getUserId())
@@ -233,5 +241,4 @@ public final class Logging {
     private static void log(String context, String action) {
         LOGGER.error("An error occurred when logging state for " + context + " - " + action);
     }
-
 }
