@@ -161,7 +161,7 @@ export class Baskets extends Selection<Basket> {
             let basketToCreate = {
                 amount: basket.amount,
                 processing_date : basket.processing_date,
-                equipment : basket.equipment.ean,
+                id_item : basket.equipment.ean,
                 id_campaign : basket.id_campaign,
                 id_structure : basket.id_structure,
             };
