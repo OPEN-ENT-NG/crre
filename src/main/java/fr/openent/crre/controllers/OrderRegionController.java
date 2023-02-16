@@ -44,6 +44,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.parsetools.RecordParser;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -1182,24 +1183,31 @@ public class OrderRegionController extends BaseController {
 
     private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
                                                       JsonArray orderRegion, List<Long> ordersClientId) {
-        List<MailAttachment> attachmentList = new ArrayList<>();
 
-        int e = 0;
-        while (e * 100000 < orderRegion.size()) {
-            JsonArray orderRegionSplit = new JsonArray();
-            for(int i = e * 100000; i < min((e +1) * 100000, orderRegion.size()); i ++){
-                orderRegionSplit.add(orderRegion.getJsonObject(i));
-            }
-            JsonObject data = orderRegionService.generateExport(orderRegionSplit);
-            attachmentList.add(new MailAttachment()
-                    .setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
-                    .setContent(data.getString(Field.CSVFILE))
-                    .setNbEtab(data.getInteger(Field.NB_ETAB)));
-            e++;
-        }
+        List<JsonObject> allOrderRegionList = orderRegion.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .collect(Collectors.toList());
+
+        List<MailAttachment> attachmentList = ListUtils.partition(allOrderRegionList, 10000).stream()
+                .map(splitOrderRegionList -> orderRegionService.generateExport(new JsonArray(splitOrderRegionList)))
+                .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
+                        .setContent(data.getString(Field.CSVFILE))
+                        .setNbEtab(data.getInteger(Field.NB_ETAB)))
+                .collect(Collectors.toList());
+
         Function<MailAttachment, Future<JsonObject>> functionSendMail = attachment -> this.sendMail(request, attachment);
         Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
-        FutureHelper.compositeSequential(functionSendMail, attachmentList, true)
+
+        SqlHelper.getNextVal("quote_id_seq")
+                .compose(nextVal -> {
+                    for (int i = 0; i < attachmentList.size(); i++) {
+                        MailAttachment mailAttachment = attachmentList.get(i);
+                        int id = nextVal + i;
+                        mailAttachment.setName(mailAttachment.getName() + "-" + id + ".csv");
+                    }
+                    return FutureHelper.compositeSequential(functionSendMail, attachmentList, true);
+                })
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
                 .compose(res -> insertAndDeleteOrders(orderRegion, ordersClientId))
                 .onSuccess(res -> Renders.ok(request))
@@ -1226,7 +1234,6 @@ public class OrderRegionController extends BaseController {
 
         quoteService.insertQuote(user, attachment, returningTitle -> {
             if (returningTitle.isRight()) {
-                attachment.setName(returningTitle.right().getValue().getString(Field.TITLE) + ".csv");
                 promise.complete(attachment);
             } else {
                 String message = String.format("[CRRE@%s::insertQuote] An error has occurred insertQuote %s : %s",

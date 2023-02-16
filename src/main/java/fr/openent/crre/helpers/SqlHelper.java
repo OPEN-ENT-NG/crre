@@ -22,9 +22,22 @@ public class SqlHelper {
      * @return a future succeed with the next value
      */
     public static Future<Integer> getNextVal(String sequencesName) {
+        return getNextVal(sequencesName, null);
+    }
+
+    public static Future<Integer> getNextVal(String sequencesName, String schema) {
         Promise<Integer> promise = Promise.promise();
 
-        String getIdQuery = "Select nextval('" + Crre.crreSchema + "." + sequencesName + "') as id";
+        String resourceTable;
+        if (schema != null && !schema.isEmpty()) {
+            resourceTable = schema + "." + sequencesName;
+        } else if (schema == null) {
+            resourceTable = Crre.crreSchema + "." + sequencesName;
+        } else {
+            resourceTable = sequencesName;
+        }
+
+        String getIdQuery = "Select nextval('" + resourceTable + "') as id";
         Sql.getInstance().raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
             if (event.isRight()) {
                 promise.complete(event.right().getValue().getInteger(Field.ID));

@@ -49,12 +49,13 @@ public class DefaultQuoteService extends SqlCrudService implements QuoteService 
         JsonArray params = new JsonArray();
         String query = "WITH next_id AS (SELECT nextval('" + Crre.crreSchema + ".quote_id_seq')) " +
                 "INSERT INTO " + Crre.crreSchema + ".quote(id, title, owner_name, owner_id, nb_structures, attachment) " +
-                "VALUES ((SELECT nextval FROM next_id), CONCAT('" + title + "-', (SELECT nextval FROM next_id)), ?, ?, ?, ?) " +
+                "VALUES ((SELECT nextval FROM next_id), ?, ?, ?, ?, ?) " +
                 "RETURNING title;";
-        params.add(user.getUsername())
-              .add(user.getUserId())
-              .add(nbEtab)
-              .add(Base64.getEncoder().encodeToString(csvFile.getBytes(StandardCharsets.UTF_8)));
+        params.add(title.replaceAll("\\.csv$", ""))
+                .add(user.getUsername())
+                .add(user.getUserId())
+                .add(nbEtab)
+                .add(Base64.getEncoder().encodeToString(csvFile.getBytes(StandardCharsets.UTF_8)));
         sql.prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
