@@ -72,6 +72,21 @@ public class Field {
     public static final String IDPROJET = "idProject";
     public static final String ID_BASKET = "id_basket";
     public static final String IDS = "ids";
+    public static final String ARRAY_TO_JSON = "array_to_json";
+    public static final String PROJECT = "project";
+    public static final String DATA = "data";
+    public static final String U = "u";
+    public static final String PREFERENCES = "preferences";
+    public static final Object LANGUAGE = "language";
+    public static final String DEFAULT_DASH_DOMAIN = "default-domain";
+    public static final String USERID = "userId";
+    public static final String PUSHNOTIF = "pushNotif";
+    public static final String BODY = "body";
+    public static final String DISABLEMAILNOTIFICATION = "disableMailNotification";
+    public static final String DISABLEANTIFLOOD = "disableAntiFlood";
+    public static final String JUSTIFICATION = "justification";
+    public static final String REJECTED = "REJECTED";
+    public static final String FR = "fr";
 
     private Field() {
         throw new IllegalStateException("Utility class");

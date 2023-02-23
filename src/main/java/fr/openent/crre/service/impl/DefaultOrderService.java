@@ -1,9 +1,12 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.OrderClientEquipmentModel;
+import fr.openent.crre.model.OrderRegionEquipmentModel;
+import fr.openent.crre.model.ProjectModel;
 import fr.openent.crre.service.OrderService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -16,8 +19,10 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
 
@@ -269,6 +274,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         return promise.future();
     }
 
+    @Override
     public void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -322,5 +328,28 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
     }
 
+    @Override
+    public Future<List<OrderClientEquipmentModel>> getOrderClientEquipmentList(List<Integer> orderClientEquipmentIdList) {
+        Promise<List<OrderClientEquipmentModel>> promise = Promise.promise();
+
+        String selectQuery = "SELECT * FROM " + Crre.crreSchema + ".order_client_equipment WHERE id IN " + Sql.listPrepared(orderClientEquipmentIdList) + ";";
+        String errorMessage = String.format("[CRRE@%s::getOrderClientEquipmentList] Fail to get basket order", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(selectQuery, new JsonArray(orderClientEquipmentIdList),
+                SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderClientEquipmentModel.class, errorMessage)));
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<List<OrderClientEquipmentModel>> getOrderClientEquipmentListFromBasketId(List<Integer> basketIdList) {
+        Promise<List<OrderClientEquipmentModel>> promise = Promise.promise();
+
+        String selectQuery = "SELECT * FROM " + Crre.crreSchema + ".order_client_equipment WHERE id_basket IN " + Sql.listPrepared(basketIdList) + ";";
+        String errorMessage = String.format("[CRRE@%s::getOrderClientEquipmentList] Fail to get basket order", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(selectQuery, new JsonArray(basketIdList),
+                SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderClientEquipmentModel.class, errorMessage)));
+
+        return promise.future();
+    }
 }
 

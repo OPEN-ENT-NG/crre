@@ -6,6 +6,7 @@ import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.OrderRegionEquipmentModel;
 import fr.openent.crre.model.ProjectModel;
 import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.security.WorkflowActionUtils;
@@ -139,6 +140,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
         query = groupOrderRegion(old, query);
         Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
+    }
+
+    @Override
+    public Future<List<OrderRegionEquipmentModel>> getOrdersRegionById(List<Integer> orderRegionEquipmentIdList) {
+        Promise<List<OrderRegionEquipmentModel>> promise = Promise.promise();
+
+        String query = "SELECT * FROM " + Crre.crreSchema + ".\"order-region-equipment\"" +
+                "WHERE id IN " + Sql.listPrepared(orderRegionEquipmentIdList);
+
+        JsonArray parmas = new JsonArray(orderRegionEquipmentIdList);
+
+        String errorMessage = String.format("[CRRE@%s::getOrdersRegionById] Fail to get orders region by id", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(query, parmas, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderRegionEquipmentModel.class, errorMessage)));
+        return promise.future();
     }
 
     @Override
@@ -470,7 +485,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void updateOrders(List<Integer> ids, String status, String justification, final Handler<Either<String, JsonObject>> handler) {
+    public Future<JsonObject> updateOrdersStatus(List<Integer> ids, String status, String justification) {
+        Promise<JsonObject> promise = Promise.promise();
+
         String query = "UPDATE " + Crre.crreSchema + ".\"order-region-equipment\" " +
                 " SET  status = ?, cause_status = ?" +
                 " WHERE id in " + Sql.listPrepared(ids.toArray()) + " ; ";
@@ -478,7 +495,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         query += "UPDATE " + Crre.crreSchema + ".order_client_equipment " +
                 "SET  status = ?, cause_status = ? " +
                 "WHERE id in ( SELECT ore.id_order_client_equipment FROM " + Crre.crreSchema + ".\"order-region-equipment\" ore " +
-                "WHERE id in " + Sql.listPrepared(ids.toArray()) + " ) ; ";
+                "WHERE id in " + Sql.listPrepared(ids.toArray()) + " );";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status.toUpperCase()).add(justification);
         for (Integer id : ids) {
@@ -489,7 +506,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             params.add(id);
         }
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
     }
 
     @Override
@@ -634,6 +653,36 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".\"order-region-equipment\"', 'id')), (SELECT max(id) FROM " + Crre.crreSchema + ".\"order-region-equipment-old\")+1, FALSE);" +
                 "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('" + Crre.crreSchema + ".structure_group', 'id')), (SELECT (count(*) + 1) FROM " + Crre.crreSchema + ".structure_group), FALSE);";
         Sql.getInstance().raw(query, SqlResult.validUniqueResultHandler(handlerJsonObject));
+    }
+
+    @Override
+    public Future<Map<ProjectModel, List<OrderRegionEquipmentModel>>> getOrderRegionEquipmentInSameProject(List<Integer> projectIdList, boolean old) {
+        if (projectIdList.isEmpty()) {
+            return Future.succeededFuture(new HashMap<>());
+        }
+
+        Promise<Map<ProjectModel, List<OrderRegionEquipmentModel>>> promise = Promise.promise();
+
+        String query = "SELECT array_to_json(array_agg(o_r_e.*)), row_to_json(p.*) as project " +
+                "FROM crre.\"order-region-equipment" + (old ? "-old" : "")+ "\" o_r_e " +
+                "INNER JOIN crre.project p on o_r_e.id_project = p.id " +
+                "WHERE p.id IN " + Sql.listPrepared(projectIdList) + " " +
+                "GROUP BY p.id";
+
+        Sql.getInstance().prepared(query, new JsonArray(projectIdList), SqlResult.validResultHandler(stringJsonArrayEither -> {
+            if (stringJsonArrayEither.isRight()) {
+                promise.complete(stringJsonArrayEither.right().getValue().stream()
+                        .filter(JsonObject.class::isInstance)
+                        .map(JsonObject.class::cast)
+                        .collect(Collectors.toMap(jsonObject -> IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class),
+                                jsonObject -> IModelHelper.toList(new JsonArray(jsonObject.getString(Field.ARRAY_TO_JSON)), OrderRegionEquipmentModel.class))));
+            } else {
+
+                promise.fail(stringJsonArrayEither.left().getValue());
+            }
+        }));
+
+        return promise.future();
     }
 
     public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, List<Long> ordersClientId) {
@@ -815,6 +864,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return offers;
     }
 
+    @Override
     public JsonObject generateExport(JsonArray logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader());
         HashSet<String> structures = new HashSet<>();

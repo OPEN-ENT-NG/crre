@@ -8,6 +8,8 @@ public class ProjectModel implements IModel<ProjectModel> {
     private Integer id;
     private String title;
 
+    private String structureId;
+
     public ProjectModel() {
     }
 
@@ -36,6 +38,15 @@ public class ProjectModel implements IModel<ProjectModel> {
 
     public ProjectModel setTitle(String title) {
         this.title = title;
+        return this;
+    }
+
+    public String getStructureId() {
+        return structureId;
+    }
+
+    public ProjectModel setStructureId(String structureId) {
+        this.structureId = structureId;
         return this;
     }
 }

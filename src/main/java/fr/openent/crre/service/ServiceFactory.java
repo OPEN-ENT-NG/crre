@@ -31,6 +31,8 @@ public class ServiceFactory {
     private final DefaultLogService logService;
     private final DefaultStorageService storageService;
     private final DefaultBasketOrderItemService basketOrderItemService;
+    private final DefaultNotificationService notificationService;
+    private final DefaultProjectService projectService;
 
 
     public ServiceFactory(Vertx vertx, ConfigModel config, EmailFactory emailFactory, Storage storage) {
@@ -56,6 +58,8 @@ public class ServiceFactory {
         this.userService = new DefaultUserService();
         this.logService = new DefaultLogService();
         this.storageService = new DefaultStorageService(storage);
+        this.notificationService = new DefaultNotificationService(vertx, this);
+        this.projectService = new DefaultProjectService();
     }
 
     public Vertx getVertx() {
@@ -128,6 +132,14 @@ public class ServiceFactory {
 
     public DefaultBasketOrderItemService getBasketOrderItemService() {
         return basketOrderItemService;
+    }
+
+    public DefaultNotificationService getNotificationService() {
+        return notificationService;
+    }
+
+    public DefaultProjectService getProjectService() {
+        return projectService;
     }
 
     private WebClient initWebClient() {

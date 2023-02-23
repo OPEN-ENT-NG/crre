@@ -167,7 +167,7 @@ public class IModelHelper {
         };
     }
 
-    private static <T extends IModel<T>> T toModel(JsonObject iModel, Class<T> modelClass) {
+    public static <T extends IModel<T>> T toModel(JsonObject iModel, Class<T> modelClass) {
         try {
             return modelClass.getConstructor(JsonObject.class).newInstance(iModel);
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |

@@ -1,6 +1,7 @@
 package fr.openent.crre.service;
 
 import fr.openent.crre.model.OrderLDEModel;
+import fr.openent.crre.model.OrderRegionEquipmentModel;
 import fr.openent.crre.model.ProjectModel;
 import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
@@ -11,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 import java.util.List;
+import java.util.Map;
 
 public interface OrderRegionService {
     TransactionElement getTransactionCreateOrdersRegion(JsonObject order, Number idProject);
@@ -28,6 +30,8 @@ public interface OrderRegionService {
     void getAllIdsStatus(Handler<Either<String, JsonArray>> handler);
 
     void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    Future<List<OrderRegionEquipmentModel>> getOrdersRegionById(List<Integer> orderRegionEquipmentIdList);
 
     void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
@@ -49,7 +53,7 @@ public interface OrderRegionService {
 
     List<TransactionElement> insertOldClientOrders(JsonArray orderRegions);
 
-    void updateOrders(List<Integer> ids, String status, String justification, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> updateOrdersStatus(List<Integer> ids, String status, String justification);
 
     void updateOldOrders(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handler);
 
@@ -75,4 +79,10 @@ public interface OrderRegionService {
     void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, List<Long> ordersClient);
 
     JsonObject generateExport(JsonArray orderRegion);
+
+    /**
+     * Gets the list of all orders region in the same project as the order region pass in parameter
+     * @param projectIdList list of projectId
+     */
+    Future<Map<ProjectModel, List<OrderRegionEquipmentModel>>> getOrderRegionEquipmentInSameProject(List<Integer> projectIdList, boolean old);
 }

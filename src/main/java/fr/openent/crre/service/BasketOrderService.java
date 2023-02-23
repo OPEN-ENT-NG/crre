@@ -12,7 +12,7 @@ public interface BasketOrderService {
     /**
      * Get all order for a user
      *
-     * @param user user info
+     * @param userId user info id
      * @param page page to get
      * @param idCampaign campaign identifier
      * @param startDate start date for search
@@ -46,4 +46,11 @@ public interface BasketOrderService {
      * @param amount price of total basket order
      */
     TransactionElement getTransactionInsertBasketName(UserInfos user, String idStructure, Integer idCampaign, String basketName, double total, int amount);
+
+    /**
+     * Get all basket order from a list of id
+     *
+     * @param basketIdList list of basket order id
+     */
+    Future<List<BasketOrder>> getBasketOrderList(List<Integer> basketIdList);
 }

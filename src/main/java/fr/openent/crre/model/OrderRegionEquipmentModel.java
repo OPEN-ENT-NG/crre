@@ -1,6 +1,7 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.CreditTypeEnum;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
@@ -22,6 +23,9 @@ public class OrderRegionEquipmentModel implements IModel<OrderRegionEquipmentMod
     private Boolean reassort;
     private String idOfferEquipment;
 
+    private Double price;
+    private CreditTypeEnum useCredit;
+
     public OrderRegionEquipmentModel() {
     }
 
@@ -42,11 +46,14 @@ public class OrderRegionEquipmentModel implements IModel<OrderRegionEquipmentMod
         this.idOrderClientEquipment = jsonObject.getInteger(Field.ID_ORDER_CLIENT_EQUIPMENT);
         this.reassort = jsonObject.getBoolean(Field.REASSORT);
         this.idOfferEquipment = jsonObject.getString(Field.ID_OFFER_EQUIPMENT);
+
+        this.price = jsonObject.getDouble(Field.PRICE);
+        this.useCredit = CreditTypeEnum.getValue(jsonObject.getString(Field.USE_CREDIT));
     }
 
     @Override
     public JsonObject toJson() {
-        return IModelHelper.toJson(this, false, true);
+        return IModelHelper.toJson(this, true, true);
     }
 
     public Integer getId() {
@@ -190,6 +197,24 @@ public class OrderRegionEquipmentModel implements IModel<OrderRegionEquipmentMod
 
     public OrderRegionEquipmentModel setIdOfferEquipment(String idOfferEquipment) {
         this.idOfferEquipment = idOfferEquipment;
+        return this;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public OrderRegionEquipmentModel setPrice(Double price) {
+        this.price = price;
+        return this;
+    }
+
+    public CreditTypeEnum getUseCredit() {
+        return useCredit;
+    }
+
+    public OrderRegionEquipmentModel setUseCredit(CreditTypeEnum useCredit) {
+        this.useCredit = useCredit;
         return this;
     }
 }

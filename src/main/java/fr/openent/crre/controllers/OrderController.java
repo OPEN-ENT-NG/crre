@@ -7,6 +7,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.security.*;
+import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.utils.OrderUtils;
@@ -54,11 +55,13 @@ import static java.lang.Integer.parseInt;
 public class OrderController extends ControllerHelper {
 
     private final OrderService orderService;
+    private final NotificationService notificationService;
 
     public static final String UTF8_BOM = "\uFEFF";
 
     public OrderController(ServiceFactory serviceFactory) {
         this.orderService =  serviceFactory.getOrderService();
+        this.notificationService = serviceFactory.getNotificationService();
     }
 
     @Get("/orders/mine/:idCampaign/:idStructure")
@@ -532,7 +535,7 @@ public class OrderController extends ControllerHelper {
             OrderClientEquipmentType status = OrderClientEquipmentType.getValue(request.params().get(Field.STATUS));
             if (status != null) {
                 List<Integer> orderClientEquipmentIdList = orders.getJsonArray(Field.IDS)
-                                .stream()
+                        .stream()
                         .filter(Integer.class::isInstance)
                         .map(Integer.class::cast)
                         .collect(Collectors.toList());
@@ -542,10 +545,11 @@ public class OrderController extends ControllerHelper {
                                     .map(OrderClientEquipmentModel::getId)
                                     .collect(Collectors.toList());
                             Renders.renderJson(request, new JsonArray(orderClientEquipmentIdUpdated));
+                            this.notificationService.sendNotificationPrescriber(orderClientEquipmentIdUpdated);
                             UserUtils.getUserInfos(eb, request, userInfos ->
                                     Logging.insert(userInfos, Contexts.ORDER.toString(), Actions.UPDATE.toString(),
                                     orderClientEquipmentIdUpdated.stream().map(String::valueOf).collect(Collectors.toList()),
-                                    new JsonObject().put(Field.STATUS,status)));
+                                    new JsonObject().put(Field.STATUS, status)));
                         })
                         .onFailure(error -> Renders.renderError(request));
             } else {

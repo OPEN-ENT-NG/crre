@@ -16,9 +16,13 @@ public enum CreditTypeEnum {
     }
 
     public static CreditTypeEnum getValue(String value) {
+        return getValue(value, null);
+    }
+
+    public static CreditTypeEnum getValue(String value, CreditTypeEnum defaultValue) {
         return Arrays.stream(CreditTypeEnum.values())
                 .filter(creditTypeEnum -> creditTypeEnum.name.equals(value))
                 .findFirst()
-                .orElse(CreditTypeEnum.NONE);
+                .orElse(defaultValue);
     }
 }

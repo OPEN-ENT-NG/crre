@@ -3,13 +3,11 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.BasketOrder;
-import fr.openent.crre.model.BasketOrderItem;
 import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.service.BasketOrderService;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
@@ -134,5 +132,17 @@ public class DefaultBasketOrderService implements BasketOrderService {
 
 
         return new TransactionElement(insertBasketNameQuery, params);
+    }
+
+    @Override
+    public Future<List<BasketOrder>> getBasketOrderList(List<Integer> basketIdList) {
+        Promise<List<BasketOrder>> promise = Promise.promise();
+
+        String selectQuery = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id IN " + Sql.listPrepared(basketIdList) + ";";
+        String errorMessage = String.format("[CRRE@%s::getBasketOrderList] Fail to get basket order", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(selectQuery, new JsonArray(basketIdList),
+                SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class, errorMessage)));
+
+        return promise.future();
     }
 }

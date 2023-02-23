@@ -61,4 +61,18 @@ public interface OrderService {
 
     void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
+
+    /**
+     * Get customer orders from a list of ids
+     *
+     * @param orderClientEquipmentIdList list of order client id
+     */
+    Future<List<OrderClientEquipmentModel>> getOrderClientEquipmentList(List<Integer> orderClientEquipmentIdList);
+
+    /**
+     * Gets all customer orders that belong to the basket list provided as a parameter
+     *
+     * @param basketIdList list of basket id
+     */
+    Future<List<OrderClientEquipmentModel>> getOrderClientEquipmentListFromBasketId(List<Integer> basketIdList);
 }

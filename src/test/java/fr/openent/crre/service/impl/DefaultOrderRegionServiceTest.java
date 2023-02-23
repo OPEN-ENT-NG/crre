@@ -47,9 +47,9 @@ public class DefaultOrderRegionServiceTest {
     public void testUpdateOldOrdersWithTransaction(TestContext ctx) {
         Async async = ctx.async();
         JsonArray orderList = new JsonArray();
-        for(int i = 0; i < 100; i++) {
-            List<String> list = Arrays.asList("0", "1", "2","3", "4", "6", "7","9", "10", "14", "15", "20","35", "55", "57", "58", "59","70", "71", "72", "52", "1000");
-            orderList.add(new JsonObject().put("status", list.get(i%list.size())).put("id", String.valueOf(i+1)));
+        for (int i = 0; i < 100; i++) {
+            List<String> list = Arrays.asList("0", "1", "2", "3", "4", "6", "7", "9", "10", "14", "15", "20", "35", "55", "57", "58", "59", "70", "71", "72", "52", "1000");
+            orderList.add(new JsonObject().put("status", list.get(i % list.size())).put("id", String.valueOf(i + 1)));
         }
 
         String expectedQuery = "BEGIN;UPDATE null.\"order-region-equipment-old\"  SET id_status = ? WHERE id IN (?,?,?,?);COMMIT;" +
@@ -136,6 +136,96 @@ public class DefaultOrderRegionServiceTest {
         }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
         this.defaultOrderRegionService.createProject("myTitle");
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void getOrdersRegionByIdTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "SELECT * FROM null.\"order-region-equipment\"WHERE id IN (?,?,?)";
+        String expectedParams = "[184,5946,84]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.getOrdersRegionById(Arrays.asList(184, 5946, 84));
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void updateOrdersStatusTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "UPDATE null.\"order-region-equipment\"  SET  status = ?, cause_status = ? WHERE id in (?,?,?)" +
+                " ; UPDATE null.order_client_equipment SET  status = ?, cause_status = ? WHERE id in ( " +
+                "SELECT ore.id_order_client_equipment FROM null.\"order-region-equipment\" ore WHERE id in (?,?,?) );";
+        String expectedParams = "[\"STATUS\",\"justification\",184,5946,84,\"STATUS\",\"justification\",184,5946,84]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.updateOrdersStatus(Arrays.asList(184, 5946, 84), "status", "justification");
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void getOrderRegionEquipmentInSameProjectTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "SELECT array_to_json(array_agg(o_r_e.*)), row_to_json(p.*) as project FROM " +
+                "crre.\"order-region-equipment\" o_r_e INNER JOIN crre.project p on o_r_e.id_project = " +
+                "p.id WHERE p.id IN (?,?,?) GROUP BY p.id";
+        String expectedParams = "[846,184,30]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.getOrderRegionEquipmentInSameProject(Arrays.asList(846, 184, 30), false);
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void getOrderRegionEquipmentInSameProjectTest_Old(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "SELECT array_to_json(array_agg(o_r_e.*)), row_to_json(p.*) as project FROM " +
+                "crre.\"order-region-equipment-old\" o_r_e INNER JOIN crre.project p on o_r_e.id_project = " +
+                "p.id WHERE p.id IN (?,?,?) GROUP BY p.id";
+        String expectedParams = "[846,184,30]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.getOrderRegionEquipmentInSameProject(Arrays.asList(846, 184, 30), true);
 
         async.awaitSuccess(10000);
     }

@@ -10,7 +10,9 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class TransactionHelper {
@@ -31,20 +33,26 @@ public class TransactionHelper {
      * Allows you to execute a set of sql queries in a transaction
      *
      * @param transactionElementList list of queries in the form {@link TransactionElement}
-     * @param errorMessage message sent in the logs if the transaction failed
+     * @param errorMessage           message sent in the logs if the transaction failed
      */
     public static Future<List<TransactionElement>> executeTransaction(List<TransactionElement> transactionElementList, String errorMessage) {
+        List<TransactionElement> filtredTransactionElementList = transactionElementList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+        if (filtredTransactionElementList.isEmpty()) {
+            return Future.succeededFuture(new ArrayList<>());
+        }
+
         Promise<List<TransactionElement>> promise = Promise.promise();
         JsonArray statements = new JsonArray();
 
-        statements.addAll(new JsonArray(transactionElementList.stream().map(TransactionElement::toJson).collect(Collectors.toList())));
+        statements.addAll(new JsonArray(filtredTransactionElementList.stream().map(TransactionElement::toJson).collect(Collectors.toList())));
 
         Sql.getInstance().transaction(statements, SqlResult.validResultsHandler(res -> {
             if (res.isRight()) {
-                for (int i = 0; i < transactionElementList.size(); i++) {
-                    transactionElementList.get(i).setResult((JsonArray) res.right().getValue().getList().get(i));
+                for (int i = 0; i < filtredTransactionElementList.size(); i++) {
+                    filtredTransactionElementList.get(i).setResult((JsonArray) res.right().getValue().getList().get(i));
                 }
-                promise.complete(transactionElementList);
+                promise.complete(filtredTransactionElementList);
             } else {
                 if (errorMessage != null) {
                     log.error(errorMessage + " " + res.left().getValue());

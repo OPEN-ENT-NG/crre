@@ -3,32 +3,29 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.CreditTypeEnum;
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.*;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.*;
 import fr.openent.crre.model.config.ConfigMailModel;
-import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.security.UpdateStatusRight;
-import fr.openent.crre.security.ValidatorAndStructureRight;
-import fr.openent.crre.security.ValidatorRight;
+import fr.openent.crre.security.*;
 import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.openent.crre.service.impl.EmailSendService;
 import fr.openent.crre.service.impl.ExportWorker;
 import fr.openent.crre.utils.OrderUtils;
-import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -89,6 +86,7 @@ public class OrderRegionController extends BaseController {
     private final WebClient webClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderService.class);
     private static final String LDE_ORDER_URI = "http://www.lde.fr/4dlink1/4dcgi/idf/ldc";
+    private final NotificationService notificationService;
 
     public OrderRegionController(ServiceFactory serviceFactory) {
         this.emailSender = serviceFactory.getEmailSender();
@@ -99,6 +97,7 @@ public class OrderRegionController extends BaseController {
         this.structureService = serviceFactory.getStructureService();
         this.webClient = serviceFactory.getWebClient();
         this.vertx = serviceFactory.getVertx();
+        this.notificationService = serviceFactory.getNotificationService();
     }
 
     @Post("/region/orders")
@@ -112,20 +111,24 @@ public class OrderRegionController extends BaseController {
                         noContent(request);
                         return;
                     }
-                    JsonArray ordersList = orders.getJsonArray(Field.ORDERS);
-                    List<String> idsEquipment = ordersList.stream()
-                            .filter(JsonObject.class::isInstance)
-                            .map(JsonObject.class::cast)
-                            .map(orderJson -> orderJson.getString(Field.EQUIPMENT_KEY))
+                    List<OrderRegionEquipmentModel> ordersRegionList = IModelHelper.toList(orders.getJsonArray(Field.ORDERS), OrderRegionEquipmentModel.class);
+                    List<String> idsEquipment = ordersRegionList.stream()
+                            .map(OrderRegionEquipmentModel::getEquipmentKey)
+                            .collect(Collectors.toList());
+                    List<Integer> IdOrderClientEquipmentList = ordersRegionList.stream()
+                            .map(OrderRegionEquipmentModel::getIdOrderClientEquipment)
                             .collect(Collectors.toList());
 
                     searchByIds(idsEquipment)
                             .compose(equipments -> {
-                                setPriceToOrder(ordersList, equipments);
+                                setPriceToOrder(orders.getJsonArray(Field.ORDERS), equipments);
                                 return createProject(user);
                             })
-                            .compose(projectModel -> createOrdersRegion(user, ordersList, projectModel.getId()))
-                            .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject, 201))
+                            .compose(projectModel -> createOrdersRegion(user, orders.getJsonArray(Field.ORDERS), projectModel.getId()))
+                            .onSuccess(resJsonObject -> {
+                                Renders.renderJson(request, resJsonObject, HttpResponseStatus.CREATED.code());
+                                this.notificationService.sendNotificationPrescriber(IdOrderClientEquipmentList);
+                            })
                             .onFailure(error -> Renders.renderError(request));
 
                 })
@@ -173,7 +176,7 @@ public class OrderRegionController extends BaseController {
                 .map(order -> {
                     String structureId = order.getString(Field.ID_STRUCTURE);
                     Double price = order.getDouble(Field.PRICE) * order.getInteger(Field.AMOUNT);
-                    CreditTypeEnum creditTypeEnum = CreditTypeEnum.getValue(order.getString(Field.USE_CREDIT, Field.NONE));
+                    CreditTypeEnum creditTypeEnum = CreditTypeEnum.getValue(order.getString(Field.USE_CREDIT), CreditTypeEnum.NONE);
                     return getUpdatePurseTransaction(structureId, "-", price, creditTypeEnum);
                 })
                 .filter(Objects::nonNull)
@@ -228,7 +231,7 @@ public class OrderRegionController extends BaseController {
                                     setPriceToOrder(ordersList, equipments);
                                     return createOrdersRegion(user, ordersList, idProject);
                                 })
-                                .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject, 201))
+                                .onSuccess(resJsonObject -> Renders.renderJson(request, resJsonObject, HttpResponseStatus.CREATED.code()))
                                 .onFailure(error -> Renders.renderError(request));
                     })
             );
@@ -855,179 +858,76 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(UpdateStatusRight.class)
     public void updateStatusOrders(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds",
-                orders -> UserUtils.getUserInfos(eb, request,
+                body -> UserUtils.getUserInfos(eb, request,
                         userInfos -> {
                             try {
-                                String status = request.getParam(Field.STATUS);
-                                List<String> params = new ArrayList<>();
-                                for (Object id : orders.getJsonArray("ids")) {
-                                    params.add(id.toString());
+                                OrderClientEquipmentType status = OrderClientEquipmentType.getValue(request.getParam(Field.STATUS));
+                                if (status == null) {
+                                    badRequest(request, "Unknown status");
+                                    return;
                                 }
-                                List<Integer> ids = SqlQueryUtils.getIntegerIds(params);
-                                String justification = orders.getString("justification");
-                                JsonArray ordersList = orders.getJsonArray("orders");
-                                updatePurseLicence(status, ordersList, 0, purse -> {
-                                    if(purse.isRight()){
-                                        updateStatusRecursive(request, status, ids, justification, 0);
-                                    } else {
-                                        unauthorized(request);
-                                    }
-                                });
+                                List<Integer> orderRegionEquipmentIdList = body.getJsonArray(Field.IDS, new JsonArray()).stream()
+                                        .filter(Integer.class::isInstance)
+                                        .map(Integer.class::cast)
+                                        .collect(Collectors.toList());
+                                String justification = body.getString(Field.JUSTIFICATION);
+                                JsonArray ordersList = body.getJsonArray(Field.ORDERS);
+                                List<OrderRegionEquipmentModel> orderRegionModelList = IModelHelper.toList(ordersList, OrderRegionEquipmentModel.class);
+
+                                List<TransactionElement> updatePurseLicenceTransactionList = orderRegionModelList.stream()
+                                        .map(orderRegion -> this.getUpdateTransactionElement(status, orderRegion))
+                                        .collect(Collectors.toList());
+
+                                String errorMessage = String.format("[CRRE@%s::updateStatusOrders] Fail to update purse licence", this.getClass().getSimpleName());
+                                TransactionHelper.executeTransaction(updatePurseLicenceTransactionList, errorMessage)
+                                        .compose(res -> this.sequentialUpdateOrderStatus(userInfos, status, orderRegionEquipmentIdList, justification))
+                                        .onSuccess(res -> {
+                                            Renders.renderJson(request, new JsonArray(orderRegionEquipmentIdList));
+                                            this.notificationService.sendNotificationValidator(orderRegionEquipmentIdList);
+                                        })
+                                        .onFailure(error -> unauthorized(request));
                             } catch (ClassCastException e) {
                                 log.error("An error occurred when casting order id", e);
+                                renderError(request);
                             }
                         }));
     }
 
-    private void updateStatusRecursive(HttpServerRequest request, String status, List<Integer> ids, String justification, int e) {
-        List<Integer> idsSplit = ids.subList(e * 25000, min( (e + 1) * 25000, ids.size() ) );
-        if ((e + 1) * 25000 < ids.size() ) {
-            orderRegionService.updateOrders(idsSplit, status, justification, event -> {
-                if (event.isRight()) {
-                    updateStatusRecursive(request, status, ids, justification, e + 1);
-                } else {
-                    LOGGER.error("An error when you want get id after create order region ",
-                            event.left().getValue());
-                    request.response().setStatusCode(400).end();
-                }
-            });
-        } else {
-            List<String> stringIds = new ArrayList<>();
-            for (Object id : ids) {
-                stringIds.add(id.toString());
-            }
-            orderRegionService.updateOrders(idsSplit, status, justification, Logging.defaultResponsesHandler(eb,
-                    request,
-                    Contexts.ORDERREGION.toString(),
-                    Actions.UPDATE.toString(),
-                    stringIds,
-                    new JsonObject().put("status",status)));
-        }
+    private Future<Void> sequentialUpdateOrderStatus(UserInfos userInfos, OrderClientEquipmentType status, List<Integer> ids, String justification) {
+        Promise<Void> promise = Promise.promise();
+        List<List<Integer>> partitionOfIdList = ListUtils.partition(ids, 2500);
+
+        Function<List<Integer>, Future<JsonObject>> functionUpdateOrders = orderIdList ->
+                this.orderRegionService.updateOrdersStatus(orderIdList, status.toString(), justification);
+
+        FutureHelper.compositeSequential(functionUpdateOrders, partitionOfIdList, true)
+                .onSuccess(res -> {
+                    promise.complete();
+                    List<String> stringIdList = ids.stream().map(String::valueOf).collect(Collectors.toList());
+                    Logging.insert(userInfos, Contexts.ORDERREGION.toString(), Actions.UPDATE.toString(),
+                            stringIdList, new JsonObject().put(Field.STATUS, status));
+                })
+                .onFailure(error -> {
+                    LOGGER.error(String.format("[CRRE@%s::sequentialUpdateOrderStatus] Fail to update order region status %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 
-    private void updatePurseLicence(String status, JsonArray ordersList, int i, Handler<Either<String, JsonObject>> handler) {
-        JsonObject order = ordersList.getJsonObject(i);
-        Double price = order.getDouble("price", (double) 0);
-
-        if (order.getString(Field.STATUS).equals("REJECTED")) {
-            if (status.equals("valid")) {
-                updatePurseLicence(order, "-", price, order.getString("use_credit", "none"))
-                        .onSuccess(res -> {
-                            if (i + 1 < ordersList.size()){
-                                updatePurseLicence(status, ordersList, i + 1, handler);
-                            } else {
-                                handler.handle(new Either.Right<>(new JsonObject()));
-                            }
-                        })
-                        .onFailure(err -> {
-                            LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
-                            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
-                        });
-            } else if (i + 1 < ordersList.size()){
-                updatePurseLicence(status, ordersList, i + 1, handler);
+    private TransactionElement getUpdateTransactionElement(OrderClientEquipmentType status, OrderRegionEquipmentModel orderRegion) {
+        if (OrderClientEquipmentType.REJECTED.toString().equalsIgnoreCase(orderRegion.getStatus())) {
+            if (status.equals(OrderClientEquipmentType.VALID)) {
+                 return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", orderRegion.getPrice(), orderRegion.getUseCredit());
             } else {
-                handler.handle(new Either.Right<>(new JsonObject()));
+                return null;
             }
-        } else if (status.equals(Field.rejected)) {
-            updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
-                    .onSuccess(res -> {
-                        if (i + 1 < ordersList.size()){
-                            updatePurseLicence(status, ordersList, i + 1, handler);
-                        } else {
-                            handler.handle(new Either.Right<>(new JsonObject()));
-                        }
-                    })
-                    .onFailure(err -> {
-                        LOGGER.error("[CRRE] OrderRegionController@updatePurseLicence : " + err.getMessage() + ", " + err.getCause(), err.getCause());
-                        updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
-                    });
-        } else if (i + 1 < ordersList.size()){
-            updatePurseLicence(status, ordersList, i + 1, handler);
-        } else {
-            handler.handle(new Either.Right<>(new JsonObject()));
+        } else if (status.equals(OrderClientEquipmentType.REJECTED)) {
+            return getUpdatePurseTransaction(orderRegion.getIdStructure(), "+", orderRegion.getPrice(), orderRegion.getUseCredit());
         }
-    }
 
-    private void updatePurseLicenceRoolback(String status, JsonArray ordersList, int i, Handler<Either<String, JsonObject>> handler) {
-        JsonObject order = ordersList.getJsonObject(i);
-        Double price = Double.parseDouble(order.getDouble("price").toString());
-
-        if (order.getString(Field.STATUS).equals("REJECTED")) {
-            if (status.equals("valid")) {
-                updatePurseLicence(order, "+", price, order.getString("use_credit", "none"))
-                        .onSuccess(res -> {
-                            if (i - 1 >= 0){
-                                updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
-                            } else {
-                                LOGGER.info("[CRRE] OrderRegionController@updatePurseLicenceRoolback : roolback purse is success");
-                                handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback"));
-                            }
-                        })
-                        .onFailure(err -> {
-                            LOGGER.error("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause(), err.getCause());
-                            handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause()));
-                        });
-            }
-        } else if (status.equals(Field.rejected)) {
-            updatePurseLicence(order, "-", price, order.getString("use_credit", "none"))
-                    .onSuccess(res -> {
-                        if (i - 1 >= 0){
-                            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
-                        } else {
-                            LOGGER.info("[CRRE] OrderRegionController@updatePurseLicenceRoolback : roolback purse is success");
-                            handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback"));
-                        }
-                    })
-                    .onFailure(err -> {
-                        LOGGER.error("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause(), err.getCause());
-                        handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback : " + err.getMessage() + ", " + err.getCause()));
-                    });
-        } else if (i - 1 >= 0){
-            updatePurseLicenceRoolback(status, ordersList, i - 1, handler);
-        } else {
-            LOGGER.info("[CRRE] OrderRegionController@updatePurseLicenceRoolback : roolback purse is success");
-            handler.handle(new Either.Left<>("[CRRE] OrderRegionController@updatePurseLicenceRoolback"));
-        }
-    }
-
-    /**
-     * @deprecated Use {@link #getUpdatePurseTransaction(String, String, Double, CreditTypeEnum)}
-     */
-    @Deprecated
-    private Future<JsonObject> updatePurseLicence(JsonObject newOrder, String operation, Double price, String use_credit) {
-        Future<JsonObject> updateFuture = Future.future();
-        if (!use_credit.equals("none")) {
-            switch (use_credit) {
-                case "licences": {
-                    structureService.updateAmountLicence(newOrder.getString("id_structure"), operation,
-                            newOrder.getInteger("amount"),
-                            handlerJsonObject(updateFuture));
-                    break;
-                }
-                case "consumable_licences": {
-                    structureService.updateAmountConsumableLicence(newOrder.getString("id_structure"), operation,
-                            newOrder.getInteger("amount"),
-                            handlerJsonObject(updateFuture));
-                    break;
-                }
-                case "credits": {
-                    purseService.updatePurseAmount(price,
-                            newOrder.getString("id_structure"), operation, false,
-                            handlerJsonObject(updateFuture));
-                    break;
-                }
-                case "consumable_credits": {
-                    purseService.updatePurseAmount(price,
-                            newOrder.getString("id_structure"), operation, true,
-                            handlerJsonObject(updateFuture));
-                    break;
-                }
-            }
-        } else {
-            updateFuture = Future.succeededFuture();
-        }
-        return updateFuture;
-
+        return null;
     }
 
     private TransactionElement getUpdatePurseTransaction(String structureId, String operation, Double amount, CreditTypeEnum creditType) {
@@ -1140,30 +1040,43 @@ public class OrderRegionController extends BaseController {
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
                 List<Long> ordersClientId = new ArrayList<>();
-                JsonArray orderRegion = new JsonArray();
+                JsonArray orderRegions = new JsonArray();
                 for (int i = 2; i < futures.size(); i++) {
-                    orderRegion.addAll(futures.get(i).result());
+                    orderRegions.addAll(futures.get(i).result());
                 }
-                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId);
+                List<Integer> orderRegionIdList = orderRegions.stream()
+                        .filter(JsonObject.class::isInstance)
+                        .map(JsonObject.class::cast)
+                        .map(orderRegion -> orderRegion.getInteger(Field.ID))
+                        .collect(Collectors.toList());
+                orderRegionService.beautifyOrders(structures, orderRegions, equipments, ordersClientId);
                 JsonArray orderRegionClean = new JsonArray();
-                for (int i = 0; i < orderRegion.size() ; i++){
-                    JsonObject order = orderRegion.getJsonObject(i);
-                    if (order.getString(Field.STATUS,"").equals("REJECTED") && order.getDouble("price") != null &&
-                            !order.getDouble("price", 0.0).equals(0.0)) {
+                for (int i = 0; i < orderRegions.size() ; i++){
+                    JsonObject order = orderRegions.getJsonObject(i);
+                    if (order.getString(Field.STATUS,"").equals(Field.REJECTED) && order.getDouble(Field.PRICE) != null &&
+                            !order.getDouble(Field.PRICE, 0.0).equals(0.0)) {
                         orderRegionClean.add(order);
                     }
                 }
+                Future<List<TransactionElement>> transactionFuture = Future.succeededFuture();
                 if (orderRegionClean.size() > 0) {
-                    updatePurseLicence("valid", orderRegionClean, 0, purse -> {
-                        if (purse.isRight()) {
-                            sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId);
-                        } else {
-                            unauthorized(request);
-                        }
-                    });
-                } else {
-                    sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegion, ordersClientId);
+                    List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(OrderRegionEquipmentModel::new)
+                            .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID, orderRegion))
+                            .collect(Collectors.toList());
+
+                    String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
+                    transactionFuture = TransactionHelper.executeTransaction(updatePurseLicenceTransactionList, errorMessage);
                 }
+                transactionFuture
+                        .compose(res -> sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegions, ordersClientId))
+                        .onSuccess(res -> {
+                            Renders.ok(request);
+                            this.notificationService.sendNotificationValidator(orderRegionIdList);
+                        })
+                        .onFailure(error -> unauthorized(request));
             }
         });
 
@@ -1181,8 +1094,9 @@ public class OrderRegionController extends BaseController {
         }
     }
 
-    private void sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
+    private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
                                                       JsonArray orderRegion, List<Long> ordersClientId) {
+        Promise<Void> promise = Promise.promise();
 
         List<JsonObject> allOrderRegionList = orderRegion.stream()
                 .filter(JsonObject.class::isInstance)
@@ -1210,12 +1124,14 @@ public class OrderRegionController extends BaseController {
                 })
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
                 .compose(res -> insertAndDeleteOrders(orderRegion, ordersClientId))
-                .onSuccess(res -> Renders.ok(request))
+                .onSuccess(res -> promise.complete())
                 .onFailure(error -> {
-                    renderError(request);
                     log.error(String.format("[CRRE@%s::sendMailLibraryAndRemoveWaitingAdmin] An error has occurred when send mail to library and remove waiting admin : %s",
                             this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
                 });
+
+        return promise.future();
     }
 
     private Future<JsonObject> sendMail(HttpServerRequest request, MailAttachment attachment) {

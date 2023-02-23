@@ -821,5 +821,13 @@
   "crre.basket.resubmit": "Panier soumis le ",
   "crre.confirm.generate.library.title": "Demande de confirmation",
   "crre.confirm.generate.library": "Confirmez-vous l'envoi de ces commandes au libraire ?",
-  "crre.generate.refused.to.library": "Attention, votre commande comporte des lignes refusées."
+  "crre.generate.refused.to.library": "Attention, votre commande comporte des lignes refusées.",
+  "crre.timeline.prescriptor.in.progress": "Votre panier {0} a été validé et soumis à la Région Île-de-France pour validation.",
+  "crre.timeline.prescriptor.partially.in.progress": "Votre panier {0} a été partiellement validé et soumis à la Région Île-de-France pour validation.",
+  "crre.timeline.prescriptor.refused": "Votre panier {0} a été refusé.",
+  "crre.timeline.validator.send": "Une des commandes de votre établisement a été transmise au libraire.",
+  "crre.timeline.validator.partially.send": "Une des commandes de votre établisement a été partiellement transmise au libraire.",
+  "crre.timeline.validator.valid": "Une des commandes de votre établisement a été validée par la Région Île-de-France.",
+  "crre.timeline.validator.partially.valid": "Une des commandes de votre établisement a été partiellement validée par la Région Île-de-France.",
+  "crre.timeline.validator.refused": "Une des commandes de votre établisement a été refusée par la Région Île-de-France."
 }

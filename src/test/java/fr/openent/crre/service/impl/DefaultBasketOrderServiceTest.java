@@ -20,6 +20,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 import java.util.Arrays;
+import java.util.List;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
@@ -94,11 +95,33 @@ public class DefaultBasketOrderServiceTest {
         UserInfos userInfos = new UserInfos();
         userInfos.setUsername("userName");
         userInfos.setUserId("userId");
-        TransactionElement transactionElement = this.defaultBasketService.getTransactionInsertBasketName(userInfos, "idStructure", 8, "basketName", 10.5d, 89);
+        TransactionElement transactionElement = this.defaultBasketService
+                .getTransactionInsertBasketName(userInfos, "idStructure", 8, "basketName", 10.5d, 89);
 
-        String expectedQuery = "INSERT INTO null.basket_order(name, id_structure, id_campaign, name_user, id_user, total, amount, created)VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) returning id;";
+        String expectedQuery = "INSERT INTO null.basket_order(name, id_structure, id_campaign, name_user, id_user, total," +
+                " amount, created)VALUES (?, ?, ?, ?, ?, ?, ?, NOW()) returning id;";
         String expectedParams = "[\"basketName\",\"idStructure\",8,\"userName\",\"userId\",10.5,89]";
         ctx.assertEquals(transactionElement.getQuery(), expectedQuery);
         ctx.assertEquals(transactionElement.getParams().toString(), expectedParams);
+    }
+
+    @Test
+    public void getBasketOrderListTest(TestContext ctx) {
+        Async async = ctx.async();
+        List<Integer> idList = Arrays.asList(84, 62, 84);
+        String expectedQuery = "SELECT * FROM null.basket_order WHERE id IN (?,?,?);";
+        String expectedParams = "[84,62,84]";
+
+        Mockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray values = invocation.getArgument(1);
+            ctx.assertEquals(expectedQuery, query);
+            ctx.assertEquals(expectedParams, values.toString());
+            async.complete();
+            return null;
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+
+        this.defaultBasketService.getBasketOrderList(idList);
+
     }
 }

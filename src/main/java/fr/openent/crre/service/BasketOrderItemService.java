@@ -1,9 +1,7 @@
 package fr.openent.crre.service;
 
-import fr.openent.crre.model.BasketOrder;
 import fr.openent.crre.model.BasketOrderItem;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
