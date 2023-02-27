@@ -83,10 +83,10 @@ export const manageOrderController = ng.controller('manageOrderController',
             let newData : BasketsOrders;
             if (!!$scope.query_name) {
                 newData = await $scope.basketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld);
+                    $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld, $scope.current.structure.id);
             } else {
                 newData = await $scope.basketsOrders.getMyOrders($scope.filter.page,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld);
+                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld, $scope.current.structure.id);
             }
             if(newData.length > 0) {
                 await $scope.synchroMyBaskets(newData);
@@ -138,7 +138,7 @@ export const manageOrderController = ng.controller('manageOrderController',
 
         $scope.getOrders = async (): Promise<void> => {
             let newData : BasketsOrders = await $scope.basketsOrders.getMyOrders($scope.filter.page,
-                $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld);
+                $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld, $scope.current.structure.id);
             if(newData.length > 0) {
                 await $scope.synchroMyBaskets(newData);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);

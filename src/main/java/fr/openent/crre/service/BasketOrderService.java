@@ -15,12 +15,13 @@ public interface BasketOrderService {
      * @param userId user info id
      * @param page page to get
      * @param idCampaign campaign identifier
+     * @param idStructure structure identifier
      * @param startDate start date for search
      * @param endDate end date for search
      * @param oldTable serach in history table or not
      */
-    Future<List<BasketOrder>> getMyBasketOrders(String userId, Integer page, Integer idCampaign, String startDate, String endDate,
-                                                boolean oldTable);
+    Future<List<BasketOrder>> getMyBasketOrders(String userId, Integer page, Integer idCampaign, String idStructure,
+                                                String startDate, String endDate, boolean oldTable);
 
     /**
      * Search basket from a query (name, user_name or article)
@@ -28,12 +29,13 @@ public interface BasketOrderService {
      * @param query       searching query (name, user_name or article)
      * @param user        user object
      * @param idCampaign campaign identifier
+     * @param idStructure structure identifier
      * @param startDate starting date filter
      * @param endDate ending date filter
      * @param old search in historic or not
      */
-    Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String startDate,
-                                     String endDate, Integer page, Boolean old);
+    Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String idStructure,
+                                     String startDate, String endDate, Integer page, Boolean old);
 
     /**
      * Get transaction element for create a new basketOrder

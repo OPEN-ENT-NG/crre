@@ -105,7 +105,8 @@ public class BasketController extends ControllerHelper {
                 String startDate = request.getParam(Field.STARTDATE);
                 String endDate = request.getParam(Field.ENDDATE);
                 boolean old = Boolean.parseBoolean(request.getParam(Field.OLD));
-                basketOrderService.getMyBasketOrders(user.getUserId(), page, idCampaign, startDate, endDate, old)
+                String structureId = request.params().contains(Field.IDSTRUCTURE) ? request.params().get(Field.IDSTRUCTURE) : null;
+                basketOrderService.getMyBasketOrders(user.getUserId(), page, idCampaign, structureId, startDate, endDate, old)
                         .onSuccess(basketOrders -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrders)))
                         .onFailure(error -> Renders.renderError(request));
             } catch (NumberFormatException e) {
@@ -127,12 +128,13 @@ public class BasketController extends ControllerHelper {
                     Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : 0;
                     String query = URLDecoder.decode(request.getParam(Field.Q), Field.UTF_DASH_8).toLowerCase();
                     int idCampaign = parseInt(request.getParam(Field.IDCAMPAIGN));
+                    String idStructure = request.params().contains(Field.IDSTRUCTURE) ? request.params().get(Field.IDSTRUCTURE) : null;
                     String startDate = request.getParam(Field.STARTDATE);
                     String endDate = request.getParam(Field.ENDDATE);
                     Boolean old = Boolean.valueOf(request.getParam(Field.OLD));
                     plainTextSearchName(query)
                             .compose(equipments -> basketOrderService.search(query, user,
-                                    equipments, idCampaign, startDate, endDate, page, old))
+                                    equipments, idCampaign, idStructure, startDate, endDate, page, old))
                             .onSuccess(basketOrderList -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrderList)))
                             .onFailure(error -> Renders.renderError(request));
                 } catch (UnsupportedEncodingException e) {

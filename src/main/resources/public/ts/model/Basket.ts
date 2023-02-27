@@ -191,12 +191,15 @@ export class BasketsOrders extends Selection<BasketOrder> {
         super([]);
     }
 
-    async search(text: String, id_campaign: number, start: string, end: string, page?:number, old?:boolean) {
+    async search(text: String, id_campaign: number, start: string, end: string, page?:number, old?:boolean, idStructure?: string) {
         try {
             if ((text.trim() === '' || !text)) return;
             const {startDate, endDate} = Utils.formatDate(start, end);
             const pageParams = (page) ? `&page=${page}` : ``;
             let url = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&old=${old}&q=${text}`;
+            if (idStructure) {
+                url += `&idStructure=${idStructure}`;
+            }
             url += `&idCampaign=${id_campaign}${pageParams}`;
             const {data} = await http.get(url);
             return this.setBaskets(data);
@@ -206,11 +209,11 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async getMyOrders (page:number, start: string, end: string, id_campaign: string, old: boolean) {
+    async getMyOrders(page:number, start: string, end: string, id_campaign: string, old: boolean, structureId: string) {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const pageParams = (page) ? `&page=${page}` : ``;
-            let url = `/crre/basketOrder/allMyOrders?idCampaign=${id_campaign}&old=${old}`;
+            let url = `/crre/basketOrder/allMyOrders?idCampaign=${id_campaign}&old=${old}&idStructure=${structureId}`;
             url += `&startDate=${startDate}&endDate=${endDate}${pageParams}`;
             let { data } = await http.get(url);
             return this.setBaskets(data);

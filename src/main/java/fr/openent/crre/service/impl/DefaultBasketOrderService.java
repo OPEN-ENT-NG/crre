@@ -27,16 +27,22 @@ public class DefaultBasketOrderService implements BasketOrderService {
     }
 
     @Override
-    public Future<List<BasketOrder>> getMyBasketOrders(String userId, Integer page, Integer idCampaign, String startDate, String endDate,
-                                                       boolean oldTable) {
+    public Future<List<BasketOrder>> getMyBasketOrders(String userId, Integer page, Integer idCampaign, String idStructure,
+                                                       String startDate, String endDate, boolean oldTable) {
         Promise<List<BasketOrder>> promise = Promise.promise();
 
         JsonArray values = new JsonArray();
         String query = "SELECT distinct b.* FROM " + Crre.crreSchema + ".basket_order b " +
                 "INNER JOIN " + Crre.crreSchema + "." + (oldTable ? "order_client_equipment_old" :"order_client_equipment") + " oce on (oce.id_basket = b.id) " +
-                "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? " +
-                "ORDER BY b.id DESC ";
+                "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? ";
         values.add(startDate).add(endDate).add(userId).add(idCampaign);
+        if (idStructure != null) {
+            query += "AND b.id_structure = ? ";
+            values.add(idStructure);
+        }
+
+        query += "ORDER BY b.id DESC ";
+
         if (page != null) {
             query += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);
@@ -49,10 +55,10 @@ public class DefaultBasketOrderService implements BasketOrderService {
     }
 
     @Override
-    public Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign,
+    public Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String idStructure,
                        String startDate, String endDate, Integer page, Boolean old) {
         Promise<List<BasketOrder>> promise = Promise.promise();
-        if (user.getStructures().isEmpty()) {
+        if (user.getStructures().isEmpty() && idStructure == null) {
             promise.complete(new ArrayList<>());
             return promise.future();
         }
@@ -66,12 +72,18 @@ public class DefaultBasketOrderService implements BasketOrderService {
 
         sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
 
-        sqlquery += ") AND bo.id_structure IN ( ";
-        for (String idStruct : user.getStructures()) {
-            sqlquery += "?,";
-            values.add(idStruct);
+        if (idStructure != null) {
+            sqlquery += ") AND bo.id_structure = ? ";
+            values.add(idStructure);
+        } else {
+            sqlquery += ") AND bo.id_structure IN ( ";
+            for (String idStruct : user.getStructures()) {
+                sqlquery += "?,";
+                values.add(idStruct);
+            }
+            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+
 
         sqlquery += " ORDER BY bo.id DESC ";
         if (page != null) {

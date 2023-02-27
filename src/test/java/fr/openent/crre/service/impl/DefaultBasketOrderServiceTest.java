@@ -45,8 +45,10 @@ public class DefaultBasketOrderServiceTest {
         UserInfos userInfos = new UserInfos();
         userInfos.setUserId("userId");
 
-        String expectedQuery = "SELECT distinct b.* FROM null.basket_order b INNER JOIN null.order_client_equipment oce on (oce.id_basket = b.id) WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? ORDER BY b.id DESC OFFSET ? LIMIT ? ";
-        String expectedParams = "[\"startDate\",\"endDate\",\"userId\",30,15,15]";
+        String expectedQuery = "SELECT distinct b.* FROM null.basket_order b INNER JOIN null.order_client_equipment oce " +
+                "on (oce.id_basket = b.id) WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? AND" +
+                " b.id_structure = ? ORDER BY b.id DESC OFFSET ? LIMIT ? ";
+        String expectedParams = "[\"idStructure\",\"endDate\",\"userId\",30,\"startDate\",15,15]";
 
         Mockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);
@@ -57,7 +59,7 @@ public class DefaultBasketOrderServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.getMyBasketOrders(userInfos.getUserId(), 1, 30, "startDate", "endDate", false);
+        this.defaultBasketService.getMyBasketOrders(userInfos.getUserId(), 1, 30, "startDate", "idStructure", "endDate", false);
 
         async.awaitSuccess(10000);
     }
@@ -85,7 +87,7 @@ public class DefaultBasketOrderServiceTest {
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
         JsonArray equipTab = new JsonArray().add(new JsonObject().put("ean", "ean1")).add(new JsonObject().put("ean", "ean2"));
 
-        this.defaultBasketService.search("query", userInfos, equipTab, 13, "startDate", "endDate", 4, false);
+        this.defaultBasketService.search("query", userInfos, equipTab, 13, null, "startDate", "endDate", 4, false);
 
         async.awaitSuccess(10000);
     }
