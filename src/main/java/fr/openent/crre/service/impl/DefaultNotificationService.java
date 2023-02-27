@@ -70,11 +70,12 @@ public class DefaultNotificationService implements NotificationService {
                     projectModelListMapAll.forEach((projectModel, orderRegionEquipmentModels) -> projectModel.setStructureId(orderRegionEquipmentModels.get(0).getIdStructure()));
                     //merging of the 2 maps
                     projectModelListMap.forEach((projectModel, orderRegionEquipmentModels) -> {
-                        if (projectModelListMapAll.keySet().stream().anyMatch(projectModel1 -> projectModel1.getId().equals(projectModel.getId()))) {
-                            projectModelListMapAll.get(projectModelListMapAll.keySet().stream()
-                                    .filter(projectModel1 -> projectModel1.getStructureId().equals(projectModel.getStructureId()))
-                                    .findFirst()
-                                    .orElse(null)).addAll(orderRegionEquipmentModels);
+                        ProjectModel existingProjectModel = projectModelListMapAll.keySet().stream()
+                                .filter(projectModel1 -> projectModel1.getId().equals(projectModel.getId()))
+                                .findFirst()
+                                .orElse(null);
+                        if (existingProjectModel != null) {
+                            projectModelListMapAll.get(existingProjectModel).addAll(orderRegionEquipmentModels);
                         } else {
                             projectModelListMapAll.put(projectModel, orderRegionEquipmentModels);
                         }
@@ -88,16 +89,11 @@ public class DefaultNotificationService implements NotificationService {
                     return this.serviceFactory.getUserService().getValidatorUser(structureIdList);
                 })
                 .onSuccess(userStructureMap -> {
-                    Map<String, Map<ProjectModel, List<OrderRegionEquipmentModel>>> userIdProjectMap = userStructureMap.entrySet().stream()
-                            .collect(Collectors.toMap(neo4jUserModelStringEntry -> neo4jUserModelStringEntry.getKey().getUserId(),
-                                    neo4jUserModelStringEntry -> projectModelListMapAll.entrySet().stream()
-                                            .filter(this::isProjectIsComplete)
-                                            .filter(projectModelListEntry -> neo4jUserModelStringEntry.getValue().equals(projectModelListEntry.getKey().getStructureId()))
-                                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
-
-                    userIdProjectMap.forEach((userId, userProjectModelListMap) ->
-                            userProjectModelListMap.forEach((projectModel, orderRegionEquipmentModelList) ->
-                                    this.prepareMessageToValidator(userId, projectModel, orderRegionEquipmentModelList)));
+                    projectModelListMapAll.forEach((projectModel, orderRegionEquipmentModels) -> {
+                        userStructureMap.stream()
+                                .filter(neo4jUserModel -> neo4jUserModel.getStructureId().equals(projectModel.getStructureId()))
+                                .forEach(neo4jUserModel -> this.prepareMessageToValidator(neo4jUserModel.getUserId(), projectModel, orderRegionEquipmentModels));
+                    });
                 })
                 .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationToValidator] Fail to send notification to validator %s",
                         this.getClass().getSimpleName(), error.getMessage())));

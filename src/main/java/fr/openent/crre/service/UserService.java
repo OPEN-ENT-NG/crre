@@ -23,5 +23,5 @@ public interface UserService {
      *
      * @param structureIdList structure id list filter
      */
-    Future<Map<Neo4jUserModel, String>> getValidatorUser(List<String> structureIdList);
+    Future<List<Neo4jUserModel>> getValidatorUser(List<String> structureIdList);
 }

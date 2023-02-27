@@ -7,10 +7,21 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 public class Neo4jUserModel extends UserInfos {
+    private String structureId;
+
     public Neo4jUserModel() {
     }
 
-    public Neo4jUserModel(JsonObject jsonObject) {
-        setUserId(jsonObject.getString(Field.ID));
+    public Neo4jUserModel(String userId) {
+        setUserId(userId);
+    }
+
+    public String getStructureId() {
+        return structureId;
+    }
+
+    public Neo4jUserModel setStructureId(String structureId) {
+        this.structureId = structureId;
+        return this;
     }
 }

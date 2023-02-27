@@ -33,25 +33,25 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
-    public Future<Map<Neo4jUserModel, String>> getValidatorUser(List<String> structureIdList) {
-        Promise<Map<Neo4jUserModel, String>> promise = Promise.promise();
+    public Future<List<Neo4jUserModel>> getValidatorUser(List<String> structureIdList) {
+        Promise<List<Neo4jUserModel>> promise = Promise.promise();
 
         String query = "MATCH (s:Structure)<--()--(u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'" + Crre.VALIDATOR_RIGHT + "'})" +
                 " WHERE s.id IN {structureIdList}" +
                 " WITH r,u,s" +
                 " MATCH (wa:WorkflowAction{displayName:'" + Crre.ADMINISTRATOR_RIGHT + "'})" +
                 " WHERE NOT ((r)-[:AUTHORIZE]->(wa))" +
-                " return distinct u,s.id";
+                " return distinct u.id,s.id";
         JsonObject params = new JsonObject()
                 .put("structureIdList", structureIdList);
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(stringJsonArrayEither -> {
             if (stringJsonArrayEither.isRight()) {
-                final Map<Neo4jUserModel, String> userStructureMap = stringJsonArrayEither.right().getValue().stream()
+                promise.complete(stringJsonArrayEither.right().getValue().stream()
                         .filter(JsonObject.class::isInstance)
                         .map(JsonObject.class::cast)
-                        .collect(Collectors.toMap(jsonObject -> new Neo4jUserModel(jsonObject.getJsonObject(Field.U)), jsonObject -> jsonObject.getString("s.id")));
-                promise.complete(userStructureMap);
+                        .map(jsonObject -> new Neo4jUserModel(jsonObject.getString("u.id")).setStructureId(jsonObject.getString("s.id")))
+                        .collect(Collectors.toList()));
             } else {
                 log.error(String.format("[CRRE@%s::getValidatorUser] Fail to get validator user %s",
                         this.getClass().getSimpleName(), stringJsonArrayEither.left().getValue()));
