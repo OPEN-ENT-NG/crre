@@ -21,7 +21,7 @@ gulp.task('webpack', ['drop-cache'], () => {
 });
 
 gulp.task('build', ['webpack'], () => {
-    var refs = gulp.src("./src/main/resources/view-src/**/*.html")
+    var refs = gulp.src("./src/main/resources/view-src/**/*.+(html|json)")
         .pipe(replace('@@VERSION', Date.now()))
         .pipe(gulp.dest("./src/main/resources/view"));
 
