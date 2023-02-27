@@ -18,9 +18,11 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class DefaultBasketOrderItemService implements BasketOrderItemService {
@@ -51,7 +53,7 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
     }
 
     @Override
-    public Future<JsonObject> delete(Integer idBasket){
+    public Future<JsonObject> delete(Integer idBasket) {
         Promise<JsonObject> promise = Promise.promise();
 
         List<TransactionElement> statements = Collections.singletonList(getBasketOrderItemDeletion(idBasket));
@@ -122,32 +124,41 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
                 .map(BasketOrderItem::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(0, Integer::sum);
-        TransactionElement transactionInsertBasketName = this.serviceFactory.getBasketOrderService().getTransactionInsertBasketName(user, idStructure, idCampaign, nameBasket, 0, amount);
 
-        String errorMessage = String.format("[CRRE@%s::takeOrder] Fail to insert basket name" , this.getClass().getSimpleName());
+        TransactionElement transactionInsertBasketName = this.serviceFactory.getBasketOrderService()
+                .getTransactionInsertBasketName(user, idStructure, idCampaign, nameBasket, 0, amount);
+
+        String errorMessage = String.format("[CRRE@%s::takeOrder] Fail to insert basket name", this.getClass().getSimpleName());
+
         TransactionHelper.executeTransaction(Collections.singletonList(transactionInsertBasketName), errorMessage)
                 .compose(transactionResult -> {
                     int idBasket = transactionInsertBasketName.getResult().getJsonObject(0).getInteger(Field.ID);
+                    List<TransactionElement> otherStatements = new ArrayList<>();
 
-                    List<TransactionElement> otherStatements = basketOrderItemList.stream()
-                            .map(basketOrderItem -> getInsertEquipmentOrderStatement(basketOrderItem, user.getUserId(), idBasket))
-                            .collect(Collectors.toList());
+                    basketOrderItemList.forEach(basketOrderItem -> {
+                        TransactionElement insertEquipmentOrderStatement = getInsertEquipmentOrderStatement(basketOrderItem, user.getUserId(), idBasket);
+                        otherStatements.add(insertEquipmentOrderStatement);
+                    });
 
                     List<Integer> basketOrderItemIdList = basketOrderItemList.stream()
                             .map(BasketOrderItem::getId)
                             .collect(Collectors.toList());
+
                     otherStatements.add(getDeletionBasketsOrderItemStatements(idCampaign, idStructure, user.getUserId(), basketOrderItemIdList, user));
-                    String otherErrorMessage = String.format("[CRRE@%s::takeOrder] Fail to interact with basket item" , this.getClass().getSimpleName());
+
+                    String otherErrorMessage = String.format("[CRRE@%s::takeOrder] Fail to interact with basket item", this.getClass().getSimpleName());
 
                     return TransactionHelper.executeTransaction(otherStatements, otherErrorMessage);
                 })
                 .onSuccess(transactionResult -> {
-                    JsonObject basicBDObject = new JsonObject(transactionResult.get(transactionResult.size()-1).getResult().getJsonObject(0).getString(Field.ROW_TO_JSON));
-                    promise.complete(getTransactionFuture(basicBDObject));
+                    JsonObject basicBDObject = new JsonObject(transactionResult.get(transactionResult.size() - 1).getResult().getJsonObject(0).getString(Field.ROW_TO_JSON));
+                    promise.complete(getTransactionFuture(basicBDObject)
+                            .put(Field.ID_BASKET, transactionInsertBasketName.getResult().getJsonObject(0).getInteger(Field.ID)));
                 })
                 .onFailure(promise::fail);
 
         return promise.future();
+
     }
 
     @Override
@@ -209,7 +220,7 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
     /**
      * Returns a basket order item insert statement
      *
-     * @param id    basket Id
+     * @param id              basket Id
      * @param basketOrderItem basket order item Object
      * @return basket item relationship transaction statement
      */
@@ -261,10 +272,10 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
         JsonObject returns = new JsonObject()
                 .put("nb_order", basicBDObject.getInteger(basicBDObject.containsKey("f2") ? "f2" : "f1"));
         if (basicBDObject.containsKey("f2")) {
-            try{
+            try {
                 returns.put("amount", basicBDObject.getDouble("f1"));
-            }catch (Exception e){
-                returns.put("amount",basicBDObject.getInteger("f1"));
+            } catch (Exception e) {
+                returns.put("amount", basicBDObject.getInteger("f1"));
             }
         }
         return returns;
@@ -272,35 +283,27 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
 
     /**
      * Basket to order
+     *
      * @param basketOrderItem
      * @param userId
      * @param idBasket
      * @return
      */
     private TransactionElement getInsertEquipmentOrderStatement(BasketOrderItem basketOrderItem, String userId, int idBasket) {
-        StringBuilder queryEquipmentOrder;
-        JsonArray params;
-        try {
-            queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
-                    .append(" (id, amount,  id_campaign, id_structure, status, " +
-                            " equipment_key, comment, user_id, id_basket, reassort ) VALUES ")
-                    .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ");
-            params = getObjects(basketOrderItem);
-            params.add(userId)
-                    .add(idBasket)
-                    .add(Boolean.TRUE.equals(basketOrderItem.getReassort()));
+        StringBuilder queryEquipmentOrder = new StringBuilder()
+                .append("INSERT INTO ")
+                .append(Crre.crreSchema)
+                .append(".order_client_equipment ")
+                .append("(id, amount, id_campaign, id_structure, status, equipment_key, comment, user_id, id_basket, reassort) VALUES ")
+                .append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        } catch (NullPointerException e) {
-            queryEquipmentOrder = new StringBuilder().append(" INSERT INTO ").append(Crre.crreSchema).append(".order_client_equipment ")
-                    .append(" (id, amount,  id_campaign, id_structure, status, " +
-                            " equipment_key, comment, user_id, id_basket, reassort ) VALUES ")
-                    .append(" (?, ?, ?, ?, ?, ?, ?, ?, ?, ?); ");
-            params = getObjects(basketOrderItem);
-            params.add(userId)
-                    .add(idBasket)
-                    .add(Boolean.TRUE.equals(basketOrderItem.getReassort()));
-        }
+        JsonArray params = getObjects(basketOrderItem)
+                .add(userId)
+                .add(idBasket)
+                .add(Boolean.TRUE.equals(basketOrderItem.getReassort()));
+
         return new TransactionElement(queryEquipmentOrder.toString(), params);
+
     }
 
     private JsonArray getObjects(BasketOrderItem basketOrderItem) {

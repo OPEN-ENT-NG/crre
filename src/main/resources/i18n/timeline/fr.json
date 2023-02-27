@@ -3,6 +3,8 @@
   "timeline.crre.new.notification": "Nouvelle notification CRRE",
   "push.notif.crre.new.notification": "Nouvelle notification CRRE",
   "crre.timeline.prescriptor.basket": "Votre panier",
-  "crre.timeline.validator.order": "La demande"
+  "crre.timeline.validator.order": "La demande",
+  "crre.timeline.new.basket.1": "Nouvelle demande en attente de validation :",
+  "crre.timeline.new.basket.2": "a créé le panier",
+  "crre.timeline.new.basket.3": "pour la campagne"
 }
-

@@ -8,6 +8,7 @@ public class BasketOrder implements IModel<BasketOrder> {
     private Integer id;
     private String name;
     private String idStructure;
+    private String nameCampaign;
     private Integer idCampaign;
     private String nameUser;
     private String idUser;
@@ -20,6 +21,7 @@ public class BasketOrder implements IModel<BasketOrder> {
         this.name = jsonObject.getString(Field.NAME);
         this.idStructure = jsonObject.getString(Field.ID_STRUCTURE);
         this.idCampaign = jsonObject.getInteger(Field.ID_CAMPAIGN);
+        this.nameCampaign = jsonObject.getString(Field.NAME_CAMPAIGN);
         this.nameUser = jsonObject.getString(Field.NAME_USER);
         this.idUser = jsonObject.getString(Field.ID_USER);
         this.total = jsonObject.getDouble(Field.TOTAL);
@@ -77,6 +79,15 @@ public class BasketOrder implements IModel<BasketOrder> {
 
     public BasketOrder setNameUser(String nameUser) {
         this.nameUser = nameUser;
+        return this;
+    }
+
+    public String getNameCampaign() {
+        return nameCampaign;
+    }
+
+    public BasketOrder setNameCampaign(String nameCampaign) {
+        this.nameCampaign = nameCampaign;
         return this;
     }
 

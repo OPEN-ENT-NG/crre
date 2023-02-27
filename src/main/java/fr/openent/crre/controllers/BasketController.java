@@ -12,6 +12,7 @@ import fr.openent.crre.model.BasketOrderItem;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.BasketOrderItemService;
 import fr.openent.crre.service.BasketOrderService;
+import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -38,11 +39,13 @@ import static java.lang.Integer.parseInt;
 public class BasketController extends ControllerHelper {
     private final BasketOrderService basketOrderService;
     private final BasketOrderItemService basketOrderItemService;
+    private final NotificationService notificationService;
 
     public BasketController(ServiceFactory serviceFactory) {
         super();
         this.basketOrderService = serviceFactory.getBasketOrderService();
         this.basketOrderItemService = serviceFactory.getBasketOrderItemService();
+        this.notificationService = serviceFactory.getNotificationService();
     }
 
     @Get("/basket/:idCampaign/:idStructure")
@@ -283,6 +286,7 @@ public class BasketController extends ControllerHelper {
                     listBasketItemForOrderFuture.compose(listBasket ->
                                     basketOrderItemService.takeOrder(listBasket, idCampaign, user, idStructure, nameBasket))
                             .onSuccess(result -> {
+                                this.notificationService.sendNotificationValidatorBasket(result.getInteger(Field.ID_BASKET));
                                 Renders.renderJson(request, result);
                                 Logging.insert(user, Contexts.ORDER.toString(), Actions.CREATE.toString(), Field.ID_ORDER,
                                         IModelHelper.toJsonArray(listBasketItemForOrderFuture.result()));

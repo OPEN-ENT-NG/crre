@@ -3,6 +3,13 @@ package fr.openent.crre.service;
 import java.util.List;
 
 public interface NotificationService {
+
+    /**
+     * Send a notification to the validator when he sends a basket provided in parameter
+     * @param basketId basket identifier
+     */
+    void sendNotificationValidatorBasket(Integer basketId);
+
     /**
      * Send a notification to the prescriber in relation to the list of orderClientEquipment provided in parameter
      * @param orderClientEquipmentIdList list of order client equipment id

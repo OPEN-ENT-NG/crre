@@ -43,9 +43,9 @@ public class DefaultNotificationService implements NotificationService {
     private boolean isProjectIsComplete(Map.Entry<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListEntry) {
         return projectModelListEntry.getValue().stream().noneMatch(orderRegionEquipmentModel ->
                 OrderClientEquipmentType.WAITING.toString().equals(orderRegionEquipmentModel.getStatus()) ||
-                OrderClientEquipmentType.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()) ||
-                OrderClientEquipmentType.RESUBMIT.toString().equals(orderRegionEquipmentModel.getStatus()) ||
-                OrderClientEquipmentType.WAITING_FOR_ACCEPTANCE.toString().equals(orderRegionEquipmentModel.getStatus()));
+                        OrderClientEquipmentType.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()) ||
+                        OrderClientEquipmentType.RESUBMIT.toString().equals(orderRegionEquipmentModel.getStatus()) ||
+                        OrderClientEquipmentType.WAITING_FOR_ACCEPTANCE.toString().equals(orderRegionEquipmentModel.getStatus()));
     }
 
     @Override
@@ -80,10 +80,10 @@ public class DefaultNotificationService implements NotificationService {
                         }
                     });
                     List<String> structureIdList = projectModelListMapAll.entrySet().stream()
-                    .filter(this::isProjectIsComplete)
-                    .map(projectModelListEntry -> projectModelListEntry.getKey().getStructureId())
-                    .distinct()
-                    .collect(Collectors.toList());
+                            .filter(this::isProjectIsComplete)
+                            .map(projectModelListEntry -> projectModelListEntry.getKey().getStructureId())
+                            .distinct()
+                            .collect(Collectors.toList());
 
                     return this.serviceFactory.getUserService().getValidatorUser(structureIdList);
                 })
@@ -98,6 +98,33 @@ public class DefaultNotificationService implements NotificationService {
                     userIdProjectMap.forEach((userId, userProjectModelListMap) ->
                             userProjectModelListMap.forEach((projectModel, orderRegionEquipmentModelList) ->
                                     this.prepareMessageToValidator(userId, projectModel, orderRegionEquipmentModelList)));
+                })
+                .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationToValidator] Fail to send notification to validator %s",
+                        this.getClass().getSimpleName(), error.getMessage())));
+    }
+
+    @Override
+    public void sendNotificationValidatorBasket(Integer basketId) {
+        List<BasketOrder> basketMap = new ArrayList<>();
+        this.serviceFactory.getBasketOrderService()
+                .getBasketOrderList(Collections.singletonList(basketId))
+                .compose(basketResult -> {
+                    basketMap.addAll(basketResult);
+                    return CompositeFuture.all(
+                            this.serviceFactory.getUserService().getValidatorUser(Collections.singletonList(basketResult.get(0).getIdStructure())),
+                            this.serviceFactory.getCampaignService().getCampaign(basketResult.get(0).getIdCampaign()));
+                })
+                .onSuccess(compositeResult -> {
+                    final Map<String, BasketOrder> userIdBasketMap = ((Map<Neo4jUserModel, String>) compositeResult.resultAt(0)).entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    neo4jUserModelStringEntry -> neo4jUserModelStringEntry.getKey().getUserId(),
+                                    neo4jUserModelStringEntry -> basketMap.stream()
+                                            .filter(orderClientListEntry -> neo4jUserModelStringEntry.getValue().equals(orderClientListEntry.getIdStructure()))
+                                            .map(basket -> basket.setNameCampaign(((JsonObject) compositeResult.resultAt(1)).getString(Field.NAME)))
+                                            .findFirst()
+                                            .orElse(new BasketOrder())
+                            ));
+                    userIdBasketMap.forEach(this::prepareMessageToValidatorBasket);
                 })
                 .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationToValidator] Fail to send notification to validator %s",
                         this.getClass().getSimpleName(), error.getMessage())));
@@ -124,6 +151,21 @@ public class DefaultNotificationService implements NotificationService {
                     Collections.singletonList(userId));
         });
     }
+
+    private void prepareMessageToValidatorBasket(String userId, BasketOrder basketOrder) {
+        if (basketOrder == null) {
+            return;
+        }
+
+        this.sendNotification(null, new Notify()
+                        .setUserName(basketOrder.getNameUser())
+                        .setCampaignName(basketOrder.getNameCampaign())
+                        .setStructureId(basketOrder.getIdStructure())
+                        .setBasketName(basketOrder.getName()),
+                NotifyField.NEW_BASKET,
+                Collections.singletonList(userId));
+    }
+
 
     private void prepareMessageToPrescriber(BasketOrder basketOrder, List<OrderClientEquipmentModel> orderClientEquipmentModels) {
         if (orderClientEquipmentModels.isEmpty()) {
@@ -212,11 +254,11 @@ public class DefaultNotificationService implements NotificationService {
 
         if (containsInProgress && !containsRejected) {
             return "crre.timeline.prescriptor.in.progress";
-       } else if (containsInProgress) {
+        } else if (containsInProgress) {
             return "crre.timeline.prescriptor.partially.in.progress";
-       } else {
+        } else {
             return "crre.timeline.prescriptor.refused";
-       }
+        }
     }
 
     private void sendNotification(UserInfos userInfos, Notify notifyData, String notification, List<String> recipientList) {
@@ -225,6 +267,7 @@ public class DefaultNotificationService implements NotificationService {
             params.put(Field.USERID, "/userbook/annuaire#" + userInfos.getUserId())
                     .put(Field.USERNAME, userInfos.getUsername());
         }
+
         params.put(Field.PUSHNOTIF, new JsonObject().put(Field.TITLE, "push.notif.crre.new.notification").put(Field.BODY, ""))
                 .put(Field.DISABLEANTIFLOOD, true);
         this.timelineHelper.notifyTimeline(null, notification, userInfos, recipientList, params);

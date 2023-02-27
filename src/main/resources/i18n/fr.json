@@ -826,8 +826,8 @@
   "crre.timeline.prescriptor.partially.in.progress": "a été partiellement validé et soumis à la Région Île-de-France pour validation.",
   "crre.timeline.prescriptor.refused": "a été refusé.",
   "crre.timeline.validator.send": "a été transmise au libraire.",
-  "crre.timeline.validator.partially.send": "de votre établisement a été partiellement transmise au libraire.",
-  "crre.timeline.validator.valid": "de votre établisement a été validée par la Région Île-de-France.",
-  "crre.timeline.validator.partially.valid": "de votre établisement a été partiellement validée par la Région Île-de-France.",
-  "crre.timeline.validator.refused": "de votre établisement a été refusée par la Région Île-de-France."
+  "crre.timeline.validator.partially.send": "a été partiellement transmise au libraire.",
+  "crre.timeline.validator.valid": "a été validée par la Région Île-de-France.",
+  "crre.timeline.validator.partially.valid": "a été partiellement validée par la Région Île-de-France.",
+  "crre.timeline.validator.refused": "a été refusée par la Région Île-de-France."
 }
