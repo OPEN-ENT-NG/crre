@@ -1,0 +1,1 @@
+SELECT setval('crre.structure_group_id_seq', (SELECT GREATEST(MAX(sg.id)+1, nextval('crre.structure_group_id_seq')) FROM crre.structure_group as sg));
