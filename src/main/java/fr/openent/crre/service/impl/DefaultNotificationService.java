@@ -1,14 +1,14 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.constants.NotifyField;
 import fr.openent.crre.core.enums.OrderClientEquipmentType;
-import fr.openent.crre.model.BasketOrder;
-import fr.openent.crre.model.OrderClientEquipmentModel;
-import fr.openent.crre.model.OrderRegionEquipmentModel;
-import fr.openent.crre.model.ProjectModel;
+import fr.openent.crre.model.*;
+import fr.openent.crre.model.neo4j.Neo4jUserModel;
 import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.wseduc.webutils.I18n;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -70,8 +70,11 @@ public class DefaultNotificationService implements NotificationService {
                     projectModelListMapAll.forEach((projectModel, orderRegionEquipmentModels) -> projectModel.setStructureId(orderRegionEquipmentModels.get(0).getIdStructure()));
                     //merging of the 2 maps
                     projectModelListMap.forEach((projectModel, orderRegionEquipmentModels) -> {
-                        if (projectModelListMapAll.keySet().stream().anyMatch(projectModel1 -> projectModel1.getStructureId().equals(projectModel.getStructureId()))){
-                            projectModelListMapAll.get(projectModelListMapAll.keySet().stream().filter(projectModel1 -> projectModel1.getStructureId().equals(projectModel.getStructureId())).findFirst().orElse(null)).addAll(orderRegionEquipmentModels);
+                        if (projectModelListMapAll.keySet().stream().anyMatch(projectModel1 -> projectModel1.getId().equals(projectModel.getId()))) {
+                            projectModelListMapAll.get(projectModelListMapAll.keySet().stream()
+                                    .filter(projectModel1 -> projectModel1.getStructureId().equals(projectModel.getStructureId()))
+                                    .findFirst()
+                                    .orElse(null)).addAll(orderRegionEquipmentModels);
                         } else {
                             projectModelListMapAll.put(projectModel, orderRegionEquipmentModels);
                         }
@@ -85,22 +88,22 @@ public class DefaultNotificationService implements NotificationService {
                     return this.serviceFactory.getUserService().getValidatorUser(structureIdList);
                 })
                 .onSuccess(userStructureMap -> {
-                    final Map<String, List<OrderRegionEquipmentModel>> userIdOrderRegionMap = userStructureMap.entrySet().stream()
+                    Map<String, Map<ProjectModel, List<OrderRegionEquipmentModel>>> userIdProjectMap = userStructureMap.entrySet().stream()
                             .collect(Collectors.toMap(neo4jUserModelStringEntry -> neo4jUserModelStringEntry.getKey().getUserId(),
                                     neo4jUserModelStringEntry -> projectModelListMapAll.entrySet().stream()
                                             .filter(this::isProjectIsComplete)
                                             .filter(projectModelListEntry -> neo4jUserModelStringEntry.getValue().equals(projectModelListEntry.getKey().getStructureId()))
-                                            .findFirst()
-                                            .map(Map.Entry::getValue)
-                                            .orElse(new ArrayList<>())));
+                                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
 
-                    userIdOrderRegionMap.forEach(this::prepareMessageToValidator);
+                    userIdProjectMap.forEach((userId, userProjectModelListMap) ->
+                            userProjectModelListMap.forEach((projectModel, orderRegionEquipmentModelList) ->
+                                    this.prepareMessageToValidator(userId, projectModel, orderRegionEquipmentModelList)));
                 })
                 .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationToValidator] Fail to send notification to validator %s",
                         this.getClass().getSimpleName(), error.getMessage())));
     }
 
-    private void prepareMessageToValidator(String userId, List<OrderRegionEquipmentModel> orderRegionEquipmentModels) {
+    private void prepareMessageToValidator(String userId, ProjectModel projectModel, List<OrderRegionEquipmentModel> orderRegionEquipmentModels) {
         if (orderRegionEquipmentModels.isEmpty()) {
             return;
         }
@@ -113,7 +116,12 @@ public class DefaultNotificationService implements NotificationService {
             } catch (Exception ignored) {
             }
             String messageStatus = I18n.getInstance().translate(i18nStatus, Field.DEFAULT_DASH_DOMAIN, local);
-            this.sendNotification(null, messageStatus, Collections.singletonList(userId));
+            this.sendNotification(null, new Notify()
+                            .setMessage(messageStatus)
+                            .setStructureId(projectModel.getStructureId())
+                            .setProjectTitle(projectModel.getTitle()),
+                    NotifyField.ORDER_VALIDATOR,
+                    Collections.singletonList(userId));
         });
     }
 
@@ -129,8 +137,13 @@ public class DefaultNotificationService implements NotificationService {
                 local = new JsonObject((String) ((LinkedHashMap<?, ?>) userInfos.getAttribute(Field.PREFERENCES)).get(Field.LANGUAGE)).getString(Field.DEFAULT_DASH_DOMAIN);
             } catch (Exception ignored) {
             }
-            String messageStatus = I18n.getInstance().translate(i18nStatus, Field.DEFAULT_DASH_DOMAIN, local).replace("{0}", basketOrder.getName());
-            this.sendNotification(null, messageStatus, Collections.singletonList(basketOrder.getIdUser()));
+            String messageStatus = I18n.getInstance().translate(i18nStatus, Field.DEFAULT_DASH_DOMAIN, local);
+            this.sendNotification(null, new Notify()
+                            .setMessage(messageStatus)
+                            .setCampaignId(basketOrder.getIdCampaign())
+                            .setBasketName(basketOrder.getName()),
+                    NotifyField.ORDER_PRESCRIPTOR,
+                    Collections.singletonList(basketOrder.getIdUser()));
         });
     }
 
@@ -206,16 +219,15 @@ public class DefaultNotificationService implements NotificationService {
        }
     }
 
-    private void sendNotification(UserInfos userInfos, String message, List<String> recipientList) {
-        JsonObject params = new JsonObject();
+    private void sendNotification(UserInfos userInfos, Notify notifyData, String notification, List<String> recipientList) {
+        JsonObject params = notifyData.toJson();
         if (userInfos != null) {
             params.put(Field.USERID, "/userbook/annuaire#" + userInfos.getUserId())
                     .put(Field.USERNAME, userInfos.getUsername());
         }
         params.put(Field.PUSHNOTIF, new JsonObject().put(Field.TITLE, "push.notif.crre.new.notification").put(Field.BODY, ""))
-                .put(Field.MESSAGE, message)
                 .put(Field.DISABLEANTIFLOOD, true);
-        this.timelineHelper.notifyTimeline(null, "crre.new_notification", userInfos, recipientList, params);
+        this.timelineHelper.notifyTimeline(null, notification, userInfos, recipientList, params);
 
     }
 }

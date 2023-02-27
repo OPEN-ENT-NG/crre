@@ -1,6 +1,7 @@
 package fr.openent.crre.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -25,9 +26,8 @@ public interface CampaignService {
     /**
      * Get a campaign information
      * @param id id campaign to get
-     * @param handler function handler returning data
      */
-    void getCampaign(Integer id, Handler<Either<String, JsonObject>> handler);
+    Future<JsonObject> getCampaign(Integer id);
 
     /**
      * Create a campaign

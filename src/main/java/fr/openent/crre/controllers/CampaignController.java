@@ -60,7 +60,9 @@ public class CampaignController extends ControllerHelper {
     public void campaign(HttpServerRequest request) {
         try {
             Integer id = Integer.parseInt(request.params().get(Field.ID));
-            campaignService.getCampaign(id, defaultResponseHandler(request));
+            campaignService.getCampaign(id)
+                    .onSuccess(success -> renderJson(request, success))
+                    .onFailure(fail -> renderError(request));
         } catch (ClassCastException e) {
             log.error(" An error occurred when casting campaign id", e);
         }

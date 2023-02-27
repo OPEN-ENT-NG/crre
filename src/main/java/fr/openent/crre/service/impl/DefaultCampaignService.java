@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.model.Campaign;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
@@ -10,6 +11,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -292,8 +294,8 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
         Sql.getInstance().prepared(query, new JsonArray().add(idStructure).add(user.getUserId()), SqlResult.validResultHandler(handler));
     }
-
-    public void getCampaign(Integer id, Handler<Either<String, JsonObject>> handler){
+    public Future<JsonObject> getCampaign(Integer id) {
+        Promise<JsonObject> promise = Promise.promise();
         String query = "  SELECT campaign.*,jsonb(array_to_json(array_agg(groupe))) as  groups "+
                 "FROM  " + Crre.crreSchema + ".campaign campaign  "+
                 "LEFT JOIN  "+
@@ -306,8 +308,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                 "ON groupe.id_campaign = campaign.id "+
                 "where campaign.id = ?  "+
                 "group by (campaign.id);  " ;
+        sql.prepared(query, new JsonArray().add(id).add(id),
+                SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
 
-        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(id).add(id), SqlResult.validUniqueResultHandler(handler));
+        return promise.future();
     }
     public void create(final JsonObject campaign, final Handler<Either<String, JsonObject>> handler) {
         String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".campaign_id_seq') as id";

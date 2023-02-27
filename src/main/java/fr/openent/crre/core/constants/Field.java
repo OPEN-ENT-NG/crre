@@ -29,6 +29,7 @@ public class Field {
     public static final String ENDDATE = "endDate";
     public static final String OLD = "old";
     public static final String ID_CAMPAIGN = "id_campaign";
+    public static final String NAME_CAMPAIGN = "name_campaign";
     public static final String NAME_USER = "name_user";
     public static final String ID_USER = "id_user";
     public static final String TOTAL = "total";
@@ -100,4 +101,6 @@ public class Field {
     public static final String resubmit = "resubmit";
     public static final String NAME = "name";
     public static final String TITLE = "title";
+    public static final String PROJECT_TITLE = "project_title";
+
 }

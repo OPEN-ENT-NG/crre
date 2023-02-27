@@ -9,7 +9,6 @@ import {
     Equipments,
     Filters,
     Logs,
-    Offer,
     Offers,
     OrdersClient,
     Statistics,
@@ -21,7 +20,6 @@ import {
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
-import http from "axios";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -43,7 +41,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.displayedOrders = new OrdersClient();
         $scope.basketsOrders = new BasketsOrders();
         $scope.users = [];
-        if(!!!$scope.filters) {
+        if (!!!$scope.filters) {
             $scope.filters = new Filters();
         }
         $scope.student = new Student();
@@ -57,8 +55,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         $scope.labels = ["technologie", "dispositifDYS", "webAdaptatif", "exercicesInteractifs", "availableViaENT",
             "availableViaGAR", "canUseOffline", "needFlash", "corrigesPourEnseignants"];
         $scope.categories = ["Établissements professionnels papier", "Établissements généraux papier", "Établissements polyvalents papier",
-            "Établissements professionnels numériques","Établissements généraux numériques", "Établissements polyvalents numériques",
-            "Établissements professionnels mixtes","Établissements généraux mixtes", "Établissements polyvalents mixtes"];
+            "Établissements professionnels numériques", "Établissements généraux numériques", "Établissements polyvalents numériques",
+            "Établissements professionnels mixtes", "Établissements généraux mixtes", "Établissements polyvalents mixtes"];
         $scope.selectedType = $location.path();
         $scope.comboLabels = COMBO_LABELS;
         $scope.offerStudent = [];
@@ -70,13 +68,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.equipments.filterFulfilled = false;
                 if ($scope.isAdministrator()) {
                     $scope.redirectTo("/order/waitingAdmin");
-                } else{
+                } else {
                     if ($scope.isValidator() || $scope.isPrescriptor()) {
                         $scope.selectedType = $location.path();
                         await $scope.initStructures();
                         await $scope.initCampaign($scope.current.structure);
                         await template.open('main-profile', 'prescriptor/campaign/campaign-list');
-                    } else if($scope.hasAccess()){
+                    } else if ($scope.hasAccess()) {
                         $scope.redirectTo(`/equipments/catalog/0`);
                     }
                 }
@@ -173,8 +171,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.selectedType = $location.path();
                 let idCampaign = params.idCampaign;
                 idIsInteger(idCampaign);
-                if(!$scope.current.structure)
-                    await $scope.initStructures() ;
+                if (!$scope.current.structure)
+                    await $scope.initStructures();
                 await template.open('main-profile', 'prescriptor/campaign-main');
                 await template.open('order-list', 'prescriptor/order/orders-list');
                 await selectCampaign(idCampaign);
@@ -188,29 +186,33 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await template.open('campaign-main', 'prescriptor/basket/manage-basket');
                 let idCampaign = params.idCampaign;
                 idIsInteger(idCampaign);
-                if(!$scope.current.structure)
-                    await $scope.initStructures() ;
-                if($scope.current.structure) {
+                if (!$scope.current.structure)
+                    await $scope.initStructures();
+                if ($scope.current.structure) {
                     await $scope.baskets.sync(idCampaign, $scope.current.structure.id, $scope.campaign.reassort);
                 }
                 await selectCampaign(idCampaign);
                 Utils.safeApply($scope);
             },
-            orderWaiting: async () => {
+            orderWaiting: async (params: any) => {
                 $scope.selectedType = $location.path();
                 $scope.loading = true;
                 $scope.ordersClient.all = [];
                 Utils.safeApply($scope);
-                if(!$scope.current.structure)
-                    await $scope.initStructures();
+                if (!$scope.current.structure) {
+                    let idStructure = params.idStructure;
+                    await $scope.initStructures(idStructure);
+                }
                 await $scope.getInfos();
                 await $scope.initOrders('WAITING');
                 selectCampaignShow($scope.campaign, "WAITING");
             },
-            orderHistoric: async () => {
+            orderHistoric: async (params: any) => {
                 $scope.selectedType = $location.path();
-                if(!$scope.current.structure)
-                    await $scope.initStructures();
+                if (!$scope.current.structure) {
+                    let idStructure = params.idStructure;
+                    await $scope.initStructures(idStructure);
+                }
                 await $scope.getInfos();
                 selectCampaignShow($scope.campaign, "HISTORIC");
                 $scope.campaign.historic_etab_notification = 0;
@@ -232,9 +234,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         });
 
-        $scope.translate = (key: string):string => lang.translate(key);
+        $scope.translate = (key: string): string => lang.translate(key);
 
-        $scope.checkParentSwitch = (basket, checker) : void => {
+        $scope.checkParentSwitch = (basket, checker): void => {
             if (checker) {
                 let testAllTrue = true;
                 basket.orders.all.forEach(function (order) {
@@ -258,25 +260,25 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-        const selectCatalog = async function (){
-            $scope.fromCatalog=true
+        const selectCatalog = async function () {
+            $scope.fromCatalog = true
             $scope.display.equipment = false;
             $scope.equipments.loading = true;
             $scope.equipments.all = [];
             Utils.safeApply($scope);
         }
 
-        const selectEquipment = async function (params){
+        const selectEquipment = async function (params) {
             let idEquipment = params.idEquipment;
             idIsInteger(idEquipment);
-            if(!$scope.current.structure){
+            if (!$scope.current.structure) {
                 await $scope.initStructures()
                 await initBasketItem(parseInt(idEquipment), $scope.campaign.id,
                     ($scope.current.structure) ? $scope.current.structure.id : null);
             } else {
                 await initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             }
-            if($scope.basket.equipment.type === 'articlenumerique') {
+            if ($scope.basket.equipment.type === 'articlenumerique') {
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                     $scope.offerStudent, $scope.offerTeacher);
                 await computeTechnos();
@@ -316,17 +318,17 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         const computeTechnos = async () => {
             let technos = $scope.basket.equipment.technos;
             for (let i = 0; i < technos.length; i++) {
-                if(i + 1 < technos.length) {
+                if (i + 1 < technos.length) {
                     let technoTemp = JSON.parse(JSON.stringify(technos[i]));
                     removeUselessTechnos(technoTemp);
-                    for(let j = i + 1; j < technos.length; j++) {
+                    for (let j = i + 1; j < technos.length; j++) {
                         let technoTemp2 = JSON.parse(JSON.stringify(technos[j]));
                         removeUselessTechnos(technoTemp2);
                         if (_.isEqual(technoTemp, technoTemp2)) {
                             $scope.basket.equipment.technos[i].technologie += ", " + $scope.basket.equipment.technos[j].technologie;
                             $scope.basket.equipment.technos.splice(j, 1);
                         }
-                        if(i + 1 >= technos.length && technos.length == 2) {
+                        if (i + 1 >= technos.length && technos.length == 2) {
                             let technoTemp = JSON.parse(JSON.stringify(technos[0]));
                             removeUselessTechnos(technoTemp);
                             let technoTemp2 = JSON.parse(JSON.stringify(technos[1]));
@@ -349,7 +351,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
                 await $scope.equipment.sync(idEquipment, structure);
             }
-            if(!idCampaign)
+            if (!idCampaign)
                 idCampaign = null;
             $scope.basket = new Basket($scope.equipment, idCampaign, structure);
             Utils.safeApply($scope);
@@ -403,16 +405,22 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.openEquipmentId = (equipmentId: string) => {
             let url = `/equipments/catalog/equipment/${equipmentId}`;
-            if($scope.campaign && $scope.campaign.id)
+            if ($scope.campaign && $scope.campaign.id)
                 url += `/${$scope.campaign.id}`
             else
                 url += `/0`
             $scope.redirectTo(url);
         };
 
-        $scope.initStructures = async () => {
+        $scope.initStructures = async (idStructure?: string) => {
             await $scope.structures.syncUserStructures();
-            $scope.current.structure = $scope.structures.all[0];
+            if (idStructure) {
+                $scope.current.structure = $scope.structures.all.find(structure => {
+                    return structure.id == idStructure;
+                });
+            } else {
+                $scope.current.structure = $scope.structures.all[0];
+            }
         };
 
         $scope.avoidDecimals = (event) => {
@@ -434,7 +442,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
-        const syncOrders = async (status: string) =>{
+        const syncOrders = async (status: string) => {
             $scope.ordersClient = new OrdersClient();
             let startDate = moment().add(-1, 'years')._d;
             let endDate = moment()._d;
@@ -459,7 +467,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         const selectCampaignShow = (campaign?: Campaign, type?: string): void => {
-            if(campaign){
+            if (campaign) {
                 $scope.$emit('eventEmitedCampaign', campaign);
                 $scope.campaign = campaign;
                 Utils.safeApply($scope);
@@ -471,7 +479,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.isInCampaignList = () => {
             let isInCampaign = false;
-            if(location.hash == "#/") {
+            if (location.hash == "#/") {
                 isInCampaign = true;
             }
             return isInCampaign;
@@ -479,8 +487,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         $scope.getColor = (id) => {
             let color = "";
-            switch (id)
-            {
+            switch (id) {
                 case 0:
                     color = "SENT";
                     break;
@@ -551,12 +558,12 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return color;
         };
 
-        const cancelSelectCampaign = (initOrder: boolean, type:string):void => {
-            if(initOrder) {
+        const cancelSelectCampaign = (initOrder: boolean, type: string): void => {
+            if (initOrder) {
                 $scope.displayedOrders.all = $scope.ordersClient.all;
             }
             template.open('main-profile', 'validator/main');
-            if(type == "WAITING") {
+            if (type == "WAITING") {
                 template.open('campaign-main', 'validator/order-waiting');
             } else {
                 template.open('campaign-main', 'validator/order-historic');
@@ -564,13 +571,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             Utils.safeApply($scope);
         };
 
-        $scope.statsByStructures =  async () => {
+        $scope.statsByStructures = async () => {
             template.open('main-profile', 'administrator/management-main');
             await template.open('administrator-main', 'administrator/stats/view-stats-structures');
             Utils.safeApply($scope);
         }
 
-        $scope.statsGlobal =  async () => {
+        $scope.statsGlobal = async () => {
             template.open('main-profile', 'administrator/management-main');
             await template.open('administrator-main', 'administrator/stats/view-stats');
             Utils.safeApply($scope);

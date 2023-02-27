@@ -1,5 +1,8 @@
 {
   "crre": "CRRE",
   "timeline.crre.new.notification": "Nouvelle notification CRRE",
-  "push.notif.crre.new.notification": "Nouvelle notification CRRE"
+  "push.notif.crre.new.notification": "Nouvelle notification CRRE",
+  "crre.timeline.prescriptor.basket": "Votre panier",
+  "crre.timeline.validator.order": "La demande"
 }
+

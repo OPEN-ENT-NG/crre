@@ -70,10 +70,10 @@ routes.define(($routeProvider) => {
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator) &&
     !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
-            .when('/order/waiting', {
+            .when('/order/waiting/:idStructure?', {
                 action: 'orderWaiting'
             })
-            .when('/order/historic', {
+            .when('/order/historic/:idStructure?', {
                 action: 'orderHistoric'
             });
 
