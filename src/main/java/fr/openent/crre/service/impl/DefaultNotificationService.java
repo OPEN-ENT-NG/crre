@@ -132,11 +132,11 @@ public class DefaultNotificationService implements NotificationService {
                             this.serviceFactory.getCampaignService().getCampaign(basketResult.get(0).getIdCampaign()));
                 })
                 .onSuccess(compositeResult -> {
-                    final Map<String, BasketOrder> userIdBasketMap = ((Map<Neo4jUserModel, String>) compositeResult.resultAt(0)).entrySet().stream()
+                    final Map<String, BasketOrder> userIdBasketMap = ((List<Neo4jUserModel>) compositeResult.resultAt(0)).stream()
                             .collect(Collectors.toMap(
-                                    neo4jUserModelStringEntry -> neo4jUserModelStringEntry.getKey().getUserId(),
+                                    UserInfos::getUserId,
                                     neo4jUserModelStringEntry -> basketMap.stream()
-                                            .filter(orderClientListEntry -> neo4jUserModelStringEntry.getValue().equals(orderClientListEntry.getIdStructure()))
+                                            .filter(orderClientListEntry -> neo4jUserModelStringEntry.getStructureId().equals(orderClientListEntry.getIdStructure()))
                                             .map(basket -> basket.setNameCampaign(((JsonObject) compositeResult.resultAt(1)).getString(Field.NAME)))
                                             .findFirst()
                                             .orElse(new BasketOrder())
