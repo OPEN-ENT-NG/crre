@@ -53,21 +53,23 @@ L'application **CRRE**, mise à disposition des collèges et lycées d'île-de-F
       "timeSecondSynchCron":"${timeSecondSynchCron}",
       "timeSecondStatCron":"${timeSecondStatCron}",
       "timeSecondStatutCron":"${timeSecondStatutCron}",
+      "timeSecondNotifyAdminsCron":"${timeSecondNotifyAdminsCron}",
       "encodeEmailContent":"${crreEncodeEmailContent}"
    }
 }
 </pre>
 Dans votre springboard, vous devez inclure des variables d'environnement :
 
-| **conf.properties**       | **Utilisation**                                                                                                                                                                                  | **Exemple**                     |
-|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
-| "${address}"              | adresse e-mail du libraire                                                                                                                                                                       | xxx@yyy.com                     |
-| "${elasticServerURI}"     | URI du serveur Elasticsearch                                                                                                                                                                     | http://XXX.XXX.XXX.XXX:XXXXX    |
-| "${elasticCRREIndexName}" | Nom de l'indice Elasticsearch pour CRRE                                                                                                                                                          | /articlenumerique,articlepapier |
+| **conf.properties**       | **Utilisation**                                                                                                                                                                                 | **Exemple**                     |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| "${address}"              | adresse e-mail du libraire                                                                                                                                                                      | xxx@yyy.com                     |
+| "${elasticServerURI}"     | URI du serveur Elasticsearch                                                                                                                                                                    | http://XXX.XXX.XXX.XXX:XXXXX    |
+| "${elasticCRREIndexName}" | Nom de l'indice Elasticsearch pour CRRE                                                                                                                                                         | /articlenumerique,articlepapier |
 | "${timeSecondSynchCron}"  | Cron pour la récupération des statistiques de tous les estabs (nombre de commandes d'articles numériques, papier, crédits dépensés...) et injection dans la base de données Mongo pour stockage. | */30 * * * * ? *                |
-| "${timeSecondStatCron}"   | Cron pour mettre à jour le statut des commandes dans BDD par rapport aux informations transmises par LDE.                                                                                        | */30 * * * * ? *                |
-| "${timeSecondStatutCron}" | Cron pour récupérer le nombre d'élèves de chaque filière (seconde à terminale, cap, bma....) de chaque établissement et mettre à jour les effectifs de chaque établissement en BDD.              | */30 * * * * ? *                |
-| "${crreEncodeEmailContent}" | Encode le contenu des mail en base64 avant l'envois. Utilisez pour le serveur SendingBlue de ODE                                                                                                 | true                            |
+| "${timeSecondStatCron}"   | Cron pour mettre à jour le statut des commandes dans BDD par rapport aux informations transmises par LDE.                                                                                       | */30 * * * * ? *                |
+| "${timeSecondStatutCron}" | Cron pour récupérer le nombre d'élèves de chaque filière (seconde à terminale, cap, bma....) de chaque établissement et mettre à jour les effectifs de chaque établissement en BDD.             | */30 * * * * ? *                |
+| "${timeSecondNotifyAdminsCron}" | Cron pour envoyer une notification aux admins chaque soir avec le nombre de commande reçue.                                                                                                     | */30 * * * * ? *                |
+| "${crreEncodeEmailContent}" | Encode le contenu des mail en base64 avant l'envois. Utilisez pour le serveur SendingBlue de ODE                                                                                                | true                            |
 
 De base CRRE va prendre le service mail défini dans la config de l'infra
 On peut redéfinir ce paramétrage en rajoutant une config dans la conf de CRRE

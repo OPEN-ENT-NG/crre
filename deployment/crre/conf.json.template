@@ -28,6 +28,7 @@
          "timeSecondSynchCron": "${timeSecondSynchCron}",
          "timeSecondStatCron": "${timeSecondStatCron}",
          "timeSecondStatutCron": "${timeSecondStatutCron}",
+         "timeSecondNotifyAdminsCron": "${timeSecondNotifyAdminsCron}",
          "encodeEmailContent": ${crreEncodeEmailContent}
       }
     }

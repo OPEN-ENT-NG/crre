@@ -7,7 +7,11 @@
   "crre.timeline.new.basket.1": "Nouvelle demande en attente de validation :",
   "crre.timeline.new.basket.2": "a créé le panier",
   "crre.timeline.new.basket.3": "pour la campagne",
+  "crre.timeline.validator.order": "La demande",
   "crre.new_basket_notification": "Nouvelle demande en attente de validation",
   "crre.order_prescriptor_notification": "Mise à jour du statut d'un panier",
-  "crre.order_validator_notification": "Mise à jour du statut d'une demande"
+  "crre.order_validator_notification": "Mise à jour du statut d'une demande",
+  "crre.timeline.new.order.1": "Vous avez ",
+  "crre.timeline.new.order.2": "nouvelle(s) demande(s) : consulter le",
+  "crre.timeline.new.order.3": "tableau des demandes."
 }

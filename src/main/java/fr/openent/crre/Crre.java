@@ -1,6 +1,7 @@
 package fr.openent.crre;
 
 import fr.openent.crre.controllers.*;
+import fr.openent.crre.cron.NotifyNewOrdersAdmin;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
 import fr.openent.crre.cron.updateStatus;
@@ -50,6 +51,9 @@ public class Crre extends BaseServer {
             );
             new CronTrigger(vertx, configModel.getTimeSecondStatutCron()).schedule(
                     new updateStatus(serviceFactory)
+            );
+            new CronTrigger(vertx, configModel.getTimeSecondNotifyAdminsCron()).schedule(
+                    new NotifyNewOrdersAdmin(serviceFactory)
             );
         } catch (Exception e) {
             log.error(String.format("[CRRE@%s::start] Invalid CRRE cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));

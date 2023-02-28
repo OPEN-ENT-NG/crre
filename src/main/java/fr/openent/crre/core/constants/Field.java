@@ -6,6 +6,7 @@ public class Field {
     public static final String EQUIPEMENT = "equipment";
     public static final String CONTENT = "content";
     public static final String NB_ETAB = "nbEtab";
+    public static final String NB_ORDER = "nbOrder";
     public static final String ADDRESS = "address";
     public static final String CSVFILE = "csvFile";
     public static final String ORDER_CLIENT_EQUIPMENT = "order_client_equipment";

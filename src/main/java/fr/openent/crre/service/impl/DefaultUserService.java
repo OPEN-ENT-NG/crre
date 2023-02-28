@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.neo4j.Neo4jUserModel;
 import fr.openent.crre.service.UserService;
 import fr.wseduc.webutils.Either;
@@ -50,10 +51,31 @@ public class DefaultUserService implements UserService {
                 promise.complete(stringJsonArrayEither.right().getValue().stream()
                         .filter(JsonObject.class::isInstance)
                         .map(JsonObject.class::cast)
-                        .map(jsonObject -> new Neo4jUserModel(jsonObject.getString("u.id")).setStructureId(jsonObject.getString("s.id")))
+                        .map(jsonObject -> new Neo4jUserModel(jsonObject.getString("u.id"))
+                                .setStructureId(jsonObject.getString("s.id")))
                         .collect(Collectors.toList()));
             } else {
                 log.error(String.format("[CRRE@%s::getValidatorUser] Fail to get validator user %s",
+                        this.getClass().getSimpleName(), stringJsonArrayEither.left().getValue()));
+                promise.fail(stringJsonArrayEither.left().getValue());
+            }
+        }));
+
+        return promise.future();
+    }
+
+    public Future<List<Neo4jUserModel>> getAdminUser() {
+        Promise<List<Neo4jUserModel>> promise = Promise.promise();
+
+        String query = "MATCH (s:Structure)<--()--(u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'" + Crre.ADMINISTRATOR_RIGHT + "'})" +
+                " RETURN distinct u.id as id;";
+
+        Neo4j.getInstance().execute(query, new JsonObject(), Neo4jResult.validResultHandler(stringJsonArrayEither -> {
+            if (stringJsonArrayEither.isRight()) {
+                final List<Neo4jUserModel> adminUsers = IModelHelper.toList(stringJsonArrayEither.right().getValue(), Neo4jUserModel.class);
+                promise.complete(adminUsers);
+            } else {
+                log.error(String.format("[CRRE@%s::getAdminUser] Fail to get admin user %s",
                         this.getClass().getSimpleName(), stringJsonArrayEither.left().getValue()));
                 promise.fail(stringJsonArrayEither.left().getValue());
             }

@@ -12,6 +12,7 @@ public class Notify implements IModel<Notify> {
     private String projectTitle;
     private String structureId;
     private int campaignId;
+    private int nbOrder;
 
     public Notify() {
     }
@@ -24,6 +25,7 @@ public class Notify implements IModel<Notify> {
         this.userName = jsonObject.getString(Field.NAME_USER, null);
         this.projectTitle = jsonObject.getString(Field.PROJECT_TITLE, null);
         this.structureId = jsonObject.getString(Field.ID_STRUCTURE, null);
+        this.nbOrder = jsonObject.getInteger(Field.NB_ORDER, null);
     }
 
     @Override
@@ -91,6 +93,14 @@ public class Notify implements IModel<Notify> {
 
     public Notify setStructureId(String structureId) {
         this.structureId = structureId;
+        return this;
+    }
+    public int getNbOrder() {
+        return nbOrder;
+    }
+
+    public Notify setNbOrder(int nbOrder) {
+        this.nbOrder = nbOrder;
         return this;
     }
 }

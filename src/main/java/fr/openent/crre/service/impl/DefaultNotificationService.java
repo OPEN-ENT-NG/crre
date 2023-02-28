@@ -9,6 +9,7 @@ import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -46,6 +47,25 @@ public class DefaultNotificationService implements NotificationService {
                         OrderClientEquipmentType.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()) ||
                         OrderClientEquipmentType.RESUBMIT.toString().equals(orderRegionEquipmentModel.getStatus()) ||
                         OrderClientEquipmentType.WAITING_FOR_ACCEPTANCE.toString().equals(orderRegionEquipmentModel.getStatus()));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void sendNotificationAdmin() {
+        Future<JsonObject> newOrderCountFuture = this.serviceFactory.getOrderRegionService().getNewOrdersCount();
+        Future<List<Neo4jUserModel>> adminUserFuture = this.serviceFactory.getUserService().getAdminUser();
+
+        CompositeFuture.all(newOrderCountFuture, adminUserFuture)
+                .onSuccess(compositeResult -> {
+                    JsonObject newOrderResult = newOrderCountFuture.result();
+                    if (adminUserFuture.result().size() > 0 && !newOrderResult.isEmpty() &&
+                            newOrderResult.getInteger(Field.NB_ORDER.toLowerCase()) > 0) {
+                        adminUserFuture.result()
+                                .forEach(adminUser -> this.prepareMessageToAdmin(adminUser.getUserId(), newOrderResult.getInteger(Field.NB_ORDER.toLowerCase())));
+                    }
+                })
+                .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationAdmin] Fail to send notification to admins %s",
+                        this.getClass().getSimpleName(), error.getMessage())));
     }
 
     @Override
@@ -100,6 +120,7 @@ public class DefaultNotificationService implements NotificationService {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void sendNotificationValidatorBasket(Integer basketId) {
         List<BasketOrder> basketMap = new ArrayList<>();
         this.serviceFactory.getBasketOrderService()
@@ -159,6 +180,15 @@ public class DefaultNotificationService implements NotificationService {
                         .setStructureId(basketOrder.getIdStructure())
                         .setBasketName(basketOrder.getName()),
                 NotifyField.NEW_BASKET,
+                Collections.singletonList(userId));
+    }
+
+    private void prepareMessageToAdmin(String userId, int nbOrder) {
+
+        this.sendNotification(null,
+                new Notify()
+                        .setNbOrder(nbOrder),
+                NotifyField.NEW_ORDER,
                 Collections.singletonList(userId));
     }
 

@@ -7,6 +7,8 @@ public class ConfigField {
     public static final String TIME_SECOND_SYNCH_CRON = "timeSecondSynchCron";
     public static final String TIME_SECOND_STAT_CRON = "timeSecondStatCron";
     public static final String TIME_SECOND_STATUT_CRON = "timeSecondStatutCron";
+    public static final String TIME_SECOND_NOTIFY_ADMINS_CRON = "timeSecondNotifyAdminsCron";
+
     public static final String ELASTIC_SEARCH = "elasticsearch";
     public static final String SERVER_DASH_URIS = "server-uris";
     public static final String SERVER_DASH_URI = "server-uri";

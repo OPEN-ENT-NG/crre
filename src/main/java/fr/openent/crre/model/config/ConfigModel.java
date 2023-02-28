@@ -11,6 +11,7 @@ public class ConfigModel implements IModel<ConfigModel> {
     private final String timeSecondSynchCron;
     private final String timeSecondStatCron;
     private final String timeSecondStatutCron;
+    private final String timeSecondNotifyAdminsCron;
     private final boolean elasticSearch;
     private final ConfigMailModel mail;
     private final ConfigElasticSearch elasticSearchConfig;
@@ -22,6 +23,7 @@ public class ConfigModel implements IModel<ConfigModel> {
         this.timeSecondSynchCron = jsonObject.getString(ConfigField.TIME_SECOND_SYNCH_CRON);
         this.timeSecondStatCron = jsonObject.getString(ConfigField.TIME_SECOND_STAT_CRON);
         this.timeSecondStatutCron = jsonObject.getString(ConfigField.TIME_SECOND_STATUT_CRON);
+        this.timeSecondNotifyAdminsCron = jsonObject.getString(ConfigField.TIME_SECOND_NOTIFY_ADMINS_CRON);
         this.elasticSearch = jsonObject.getBoolean(ConfigField.ELASTIC_SEARCH, false);
         this.mail = new ConfigMailModel(jsonObject.getJsonObject(ConfigField.MAIL, new JsonObject()));
         JsonObject elasticSearchConfigJson = jsonObject.getJsonObject(ConfigField.ELASTIC_SEARCH_CONFIG, null);
@@ -65,6 +67,10 @@ public class ConfigModel implements IModel<ConfigModel> {
 
     public String getTimeSecondStatutCron() {
         return timeSecondStatutCron;
+    }
+
+    public String getTimeSecondNotifyAdminsCron() {
+        return timeSecondNotifyAdminsCron;
     }
 
     public boolean isElasticSearch() {
