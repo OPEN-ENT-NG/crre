@@ -81,7 +81,7 @@ routes.define(($routeProvider) => {
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) &&
     !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
-            .when('/campaign/:idCampaign/order', {
+            .when('/campaign/:idCampaign/order/:idStructure?', {
                 action: 'campaignOrder'
             })
             .when('/campaign/:idCampaign/basket', {

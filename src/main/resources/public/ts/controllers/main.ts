@@ -171,8 +171,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 $scope.selectedType = $location.path();
                 let idCampaign = params.idCampaign;
                 idIsInteger(idCampaign);
-                if (!$scope.current.structure)
-                    await $scope.initStructures();
+                if (!$scope.current.structure) {
+                    let idStructure = params.idStructure;
+                    await $scope.initStructures(idStructure);
+                }
                 await template.open('main-profile', 'prescriptor/campaign-main');
                 await template.open('order-list', 'prescriptor/order/orders-list');
                 await selectCampaign(idCampaign);

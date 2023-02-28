@@ -297,22 +297,21 @@ public class OrderRegionController extends BaseController {
                 search_All(getEquipmentEvent -> {
                     if (getEquipmentEvent.isRight()) {
                         ok(request);
-                        orderRegionService.getAllIdsStatus(event -> {
-                            if (event.isRight()) {
-                                JsonArray result = event.right().getValue();
-                                List<Integer> idsStatus = new ArrayList<>();
-                                for (Object id : result) {
-                                    idsStatus.add(((JsonObject) id).getInteger(Field.ID));
-                                }
-                                // Store all orders by key (uai + date) and value (id project) No duplicate
-                                HashMap<String, Integer> projetMap = new HashMap<>();
-                                historicCommand(request, sc, lastProject.right().getValue().getInteger(Field.ID),
-                                        getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
-                            } else {
-                                badRequest(request);
-                                log.error("getAllIdsStatus failed", event.left().getValue());
-                            }
-                        });
+                        orderRegionService.getAllIdsStatus()
+                                .onSuccess(idsStatusResult -> {
+                                    List<Integer> idsStatus = new ArrayList<>();
+                                    for (Object id : idsStatusResult) {
+                                        idsStatus.add(((JsonObject) id).getInteger(Field.ID));
+                                    }
+                                    // Store all orders by key (uai + date) and value (id project) No duplicate
+                                    HashMap<String, Integer> projetMap = new HashMap<>();
+                                    historicCommand(request, sc, lastProject.right().getValue().getInteger(Field.ID),
+                                            getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
+                                })
+                                .onFailure(error -> {
+                                    badRequest(request);
+                                    log.error(String.format("[CRRE%s::addOrders] An error occurred when getting all ids by status %s", this.getClass().getSimpleName(), error.getMessage()));
+                                });
                     } else {
                         badRequest(request);
                         log.error("search_All failed", getEquipmentEvent.left().getValue());

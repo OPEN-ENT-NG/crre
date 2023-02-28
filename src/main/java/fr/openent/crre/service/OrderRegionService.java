@@ -1,5 +1,6 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.model.OrderLDEModel;
 import fr.openent.crre.model.OrderRegionEquipmentModel;
 import fr.openent.crre.model.ProjectModel;
@@ -27,13 +28,13 @@ public interface OrderRegionService {
 
     Future<ProjectModel> createProject(String title);
 
-    void getAllIdsStatus(Handler<Either<String, JsonArray>> handler);
+    Future<List<Integer>> getAllIdsStatus();
 
     void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     Future<List<OrderRegionEquipmentModel>> getOrdersRegionById(List<Integer> orderRegionEquipmentIdList);
 
-    Future<JsonObject> getNewOrdersCount();
+    Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderClientEquipmentType status);
 
     void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 

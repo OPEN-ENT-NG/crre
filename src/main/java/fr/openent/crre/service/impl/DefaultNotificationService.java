@@ -41,6 +41,11 @@ public class DefaultNotificationService implements NotificationService {
                 OrderClientEquipmentType.WAITING.equals(orderClientEquipmentModel.getStatus()) || OrderClientEquipmentType.RESUBMIT.equals(orderClientEquipmentModel.getStatus()));
     }
 
+    private boolean isProjectIsNew(Map.Entry<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListEntry) {
+        return projectModelListEntry.getValue().stream().allMatch(orderRegionEquipmentModel ->
+                OrderClientEquipmentType.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()));
+    }
+
     private boolean isProjectIsComplete(Map.Entry<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListEntry) {
         return projectModelListEntry.getValue().stream().noneMatch(orderRegionEquipmentModel ->
                 OrderClientEquipmentType.WAITING.toString().equals(orderRegionEquipmentModel.getStatus()) ||
@@ -52,16 +57,53 @@ public class DefaultNotificationService implements NotificationService {
     @Override
     @SuppressWarnings("unchecked")
     public void sendNotificationAdmin() {
-        Future<JsonObject> newOrderCountFuture = this.serviceFactory.getOrderRegionService().getNewOrdersCount();
-        Future<List<Neo4jUserModel>> adminUserFuture = this.serviceFactory.getUserService().getAdminUser();
-
-        CompositeFuture.all(newOrderCountFuture, adminUserFuture)
-                .onSuccess(compositeResult -> {
-                    JsonObject newOrderResult = newOrderCountFuture.result();
-                    if (adminUserFuture.result().size() > 0 && !newOrderResult.isEmpty() &&
-                            newOrderResult.getInteger(Field.NB_ORDER.toLowerCase()) > 0) {
-                        adminUserFuture.result()
-                                .forEach(adminUser -> this.prepareMessageToAdmin(adminUser.getUserId(), newOrderResult.getInteger(Field.NB_ORDER.toLowerCase())));
+        List<Integer> projectIdList = new ArrayList<>();
+        Map<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListMapAll = new HashMap<>();
+        Map<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListMap = new HashMap<>();
+        this.serviceFactory.getOrderRegionService().getOrdersRegionByStatus(OrderClientEquipmentType.IN_PROGRESS)
+                .compose(idsStatusResult -> {
+                    List<Integer> idsStatus = idsStatusResult
+                            .stream()
+                            .map(OrderRegionEquipmentModel::getId)
+                            .collect(Collectors.toList());
+                    return this.serviceFactory.getProjectService().getProjectList(idsStatus);
+                })
+                .compose(projectModels -> {
+                    projectIdList.addAll(projectModels.stream().map(ProjectModel::getId).collect(Collectors.toList()));
+                    return this.serviceFactory.getOrderRegionService()
+                            .getOrderRegionEquipmentInSameProject(projectIdList, false);
+                })
+                .compose(projectModelListMapResult -> {
+                    projectModelListMap.putAll(projectModelListMapResult);
+                    return this.serviceFactory.getOrderRegionService()
+                            .getOrderRegionEquipmentInSameProject(projectIdList, true);
+                })
+                .compose(projectModelListMapOld -> {
+                    projectModelListMapAll.putAll(projectModelListMapOld);
+                    //merging of the 2 maps
+                    projectModelListMap.forEach((projectModel, orderRegionEquipmentModels) -> {
+                        ProjectModel existingProjectModel = projectModelListMapAll.keySet().stream()
+                                .filter(projectModel1 -> projectModel1.getId().equals(projectModel.getId()))
+                                .findFirst()
+                                .orElse(null);
+                        if (existingProjectModel != null) {
+                            projectModelListMapAll.get(existingProjectModel).addAll(orderRegionEquipmentModels);
+                        } else {
+                            projectModelListMapAll.put(projectModel, orderRegionEquipmentModels);
+                        }
+                    });
+                    return this.serviceFactory.getUserService().getAdminUser();
+                })
+                .onSuccess(adminUsers -> {
+                    List<ProjectModel> newProjects = projectModelListMapAll.entrySet()
+                            .stream()
+                            .filter(this::isProjectIsNew)
+                            .map(Map.Entry::getKey)
+                            .distinct()
+                            .collect(Collectors.toList());
+                    if (newProjects.size() > 0) {
+                        adminUsers
+                                .forEach(adminUser -> this.prepareMessageToAdmin(adminUser.getUserId(), newProjects.size()));
                     }
                 })
                 .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationAdmin] Fail to send notification to admins %s",
@@ -209,6 +251,7 @@ public class DefaultNotificationService implements NotificationService {
             this.sendNotification(null, new Notify()
                             .setMessage(messageStatus)
                             .setCampaignId(basketOrder.getIdCampaign())
+                            .setStructureId(basketOrder.getIdStructure())
                             .setBasketName(basketOrder.getName()),
                     NotifyField.ORDER_PRESCRIPTOR,
                     Collections.singletonList(basketOrder.getIdUser()));

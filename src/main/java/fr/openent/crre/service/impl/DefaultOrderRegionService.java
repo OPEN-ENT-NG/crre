@@ -2,6 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
@@ -116,10 +117,26 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getAllIdsStatus(Handler<Either<String, JsonArray>> handler) {
+    public Future<List<Integer>> getAllIdsStatus() {
+        Promise<List<Integer>> promise = Promise.promise();
         String query = "SELECT id FROM " + Crre.crreSchema + ".status;";
 
-        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, new JsonArray(), SqlResult.validResultHandler(event -> {
+            if (event.isRight()) {
+                List<Integer> idsStatus = event.right().getValue()
+                        .stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .collect(Collectors.toList());
+                promise.complete(idsStatus);
+            } else {
+                String errorMessage = String.format("[CRRE@%s::getAllIdsStatus] Fail to get status ids. %s",
+                        this.getClass().getSimpleName(), event.left().getValue());
+                log.error(errorMessage);
+                promise.fail(event.left().getValue());
+            }
+        }));
+        return promise.future();
     }
 
 
@@ -149,21 +166,21 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         String query = "SELECT * FROM " + Crre.crreSchema + ".\"order-region-equipment\"" +
                 "WHERE id IN " + Sql.listPrepared(orderRegionEquipmentIdList);
 
-        JsonArray parmas = new JsonArray(orderRegionEquipmentIdList);
+        JsonArray params = new JsonArray(orderRegionEquipmentIdList);
 
         String errorMessage = String.format("[CRRE@%s::getOrdersRegionById] Fail to get orders region by id", this.getClass().getSimpleName());
-        Sql.getInstance().prepared(query, parmas, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderRegionEquipmentModel.class, errorMessage)));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderRegionEquipmentModel.class, errorMessage)));
         return promise.future();
     }
-
     @Override
-    public Future<JsonObject> getNewOrdersCount() {
-        Promise<JsonObject> promise = Promise.promise();
-        String query = "SELECT COUNT(*) as " + Field.NB_ORDER +
-                " FROM " + Crre.crreSchema + ".\"order-region-equipment\"" +
-                " WHERE status = ?; ";
+    public Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderClientEquipmentType status) {
+        Promise<List<OrderRegionEquipmentModel>> promise = Promise.promise();
 
-        Sql.getInstance().prepared(query, new JsonArray().add(Field.IN_PROGRESS), SqlResult.validUniqueResultHandler(FutureHelper.handlerEitherPromise(promise)));
+        String query = "SELECT * FROM " + Crre.crreSchema + ".\"order-region-equipment\"" +
+                "WHERE status = ?;";
+
+        String errorMessage = String.format("[CRRE@%s::getOrdersRegionByStatus] Fail to get orders region by status", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(query, new JsonArray().add(status), SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderRegionEquipmentModel.class, errorMessage)));
         return promise.future();
     }
 
