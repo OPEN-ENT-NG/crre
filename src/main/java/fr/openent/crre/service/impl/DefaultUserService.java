@@ -37,7 +37,7 @@ public class DefaultUserService implements UserService {
     public Future<List<Neo4jUserModel>> getValidatorUser(List<String> structureIdList) {
         Promise<List<Neo4jUserModel>> promise = Promise.promise();
 
-        String query = "MATCH (s:Structure)<--()--(u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'" + Crre.VALIDATOR_RIGHT + "'})" +
+        String query = "MATCH (u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'" + Crre.VALIDATOR_RIGHT + "'}), (g)-[:DEPENDS]->(s:Structure)" +
                 " WHERE s.id IN {structureIdList}" +
                 " WITH r,u,s" +
                 " MATCH (wa:WorkflowAction{displayName:'" + Crre.ADMINISTRATOR_RIGHT + "'})" +

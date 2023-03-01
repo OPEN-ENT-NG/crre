@@ -41,9 +41,9 @@ public class DefaultUserServiceTest {
     public void getOrderClientEquipmentListTest(TestContext ctx) {
         Async async = ctx.async();
 
-        String expectedQuery = "MATCH (s:Structure)<--()--(u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'crre.validator'})" +
-                " WHERE s.id IN {structureIdList} WITH r,u,s MATCH (wa:WorkflowAction{displayName:'crre.administrator'})" +
-                " WHERE NOT ((r)-[:AUTHORIZE]->(wa)) return distinct u.id,s.id";
+        String expectedQuery = "MATCH (u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'crre.validator'})," +
+                " (g)-[:DEPENDS]->(s:Structure) WHERE s.id IN {structureIdList} WITH r,u,s MATCH " +
+                "(wa:WorkflowAction{displayName:'crre.administrator'}) WHERE NOT ((r)-[:AUTHORIZE]->(wa)) return distinct u.id,s.id";
         String expectedParams = "{\"structureIdList\":[\"591\",\"220\",\"75\"]}";
 
         PowerMockito.doAnswer(invocation -> {
