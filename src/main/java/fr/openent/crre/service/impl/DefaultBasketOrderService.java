@@ -33,7 +33,7 @@ public class DefaultBasketOrderService implements BasketOrderService {
 
         JsonArray values = new JsonArray();
         String query = "SELECT distinct b.* FROM " + Crre.crreSchema + ".basket_order b " +
-                "INNER JOIN " + Crre.crreSchema + "." + (oldTable ? "order_client_equipment_old" :"order_client_equipment") + " oce on (oce.id_basket = b.id) " +
+                "INNER JOIN " + Crre.crreSchema + "." + (oldTable ? "order_client_equipment_old" : "order_client_equipment") + " oce on (oce.id_basket = b.id) " +
                 "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? ";
         values.add(startDate).add(endDate).add(userId).add(idCampaign);
         if (idStructure != null) {
@@ -56,7 +56,7 @@ public class DefaultBasketOrderService implements BasketOrderService {
 
     @Override
     public Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String idStructure,
-                       String startDate, String endDate, Integer page, Boolean old) {
+                                            String startDate, String endDate, Integer page, Boolean old) {
         Promise<List<BasketOrder>> promise = Promise.promise();
         if (user.getStructures().isEmpty() && idStructure == null) {
             promise.complete(new ArrayList<>());
@@ -98,13 +98,13 @@ public class DefaultBasketOrderService implements BasketOrderService {
     }
 
     static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlQuery) {
-        if(!old) {
+        if (!old) {
             if (!query.equals("")) {
                 sqlQuery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? ";
                 values.add(query);
                 values.add(query);
             }
-            if(!equipTab.isEmpty()) {
+            if (!equipTab.isEmpty()) {
                 if (!query.equals("")) {
                     sqlQuery += "OR ";
                 } else {
@@ -153,6 +153,26 @@ public class DefaultBasketOrderService implements BasketOrderService {
         String selectQuery = "SELECT * FROM " + Crre.crreSchema + ".basket_order WHERE id IN " + Sql.listPrepared(basketIdList) + ";";
         String errorMessage = String.format("[CRRE@%s::getBasketOrderList] Fail to get basket order", this.getClass().getSimpleName());
         Sql.getInstance().prepared(selectQuery, new JsonArray(basketIdList),
+                SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class, errorMessage)));
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<List<BasketOrder>> getBasketOrderListByOrderRegion(List<Integer> orderRegionIdList) {
+        Promise<List<BasketOrder>> promise = Promise.promise();
+        String selectQuery = "SELECT DISTINCT(bo.*) " +
+                "FROM " + Crre.crreSchema + ".basket_order AS bo " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS o_c_e ON (bo.id = o_c_e.id_basket) " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment_old AS o_c_e_o ON (bo.id = o_c_e_o.id_basket) " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS o_r_e ON (o_c_e.id = o_r_e.id_order_client_equipment) " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment-old\" o_r_e_o ON (o_c_e_o.id = o_r_e_o.id_order_client_equipment) " +
+                "WHERE o_r_e.id IN " + Sql.listPrepared(orderRegionIdList) +
+                "OR " + "o_r_e_o.id IN " + Sql.listPrepared(orderRegionIdList) + ";";
+        JsonArray params = new JsonArray(new ArrayList<>(orderRegionIdList));
+        params.addAll(new JsonArray(orderRegionIdList));
+        String errorMessage = String.format("[CRRE@%s::getBasketOrderListByOrderRegion] Fail to get basket order", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(selectQuery, params,
                 SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class, errorMessage)));
 
         return promise.future();

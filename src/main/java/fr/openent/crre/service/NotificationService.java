@@ -27,4 +27,9 @@ public interface NotificationService {
      */
     void sendNotificationPrescriber(List<Integer> orderClientEquipmentIdList);
 
+    /**
+     * Send a notification to the prescriber in relation to the list of orderClientEquipment provided in parameter for order regions
+     * @param orderRegionIdList list of order region equipment id
+     */
+    void sendNotificationPrescriberRegion(List<Integer> orderRegionIdList);
 }

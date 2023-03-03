@@ -1,5 +1,6 @@
 package fr.openent.crre.service.impl;
 
+import fr.openent.crre.Crre;
 import fr.openent.crre.helpers.SqlHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.TransactionElement;
@@ -124,6 +125,33 @@ public class DefaultBasketOrderServiceTest {
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
         this.defaultBasketService.getBasketOrderList(idList);
+
+    }
+
+    @Test
+    public void getBasketOrderListByOrderRegionTest(TestContext ctx) {
+        Async async = ctx.async();
+        List<Integer> idList = Arrays.asList(84, 62, 84);
+        String expectedQuery = "SELECT DISTINCT(bo.*) " +
+                "FROM null.basket_order AS bo " +
+                "LEFT JOIN null.order_client_equipment AS o_c_e ON (bo.id = o_c_e.id_basket) " +
+                "LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON (bo.id = o_c_e_o.id_basket) " +
+                "LEFT JOIN null.\"order-region-equipment\" AS o_r_e ON (o_c_e.id = o_r_e.id_order_client_equipment) " +
+                "LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON (o_c_e_o.id = o_r_e_o.id_order_client_equipment) " +
+                "WHERE o_r_e.id IN " + Sql.listPrepared(idList) +
+                "OR " + "o_r_e_o.id IN " + Sql.listPrepared(idList) + ";";
+        String expectedParams = "[84,62,84,84,62,84]";
+
+        Mockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray values = invocation.getArgument(1);
+            ctx.assertEquals(expectedQuery, query);
+            ctx.assertEquals(expectedParams, values.toString());
+            async.complete();
+            return null;
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+
+        this.defaultBasketService.getBasketOrderListByOrderRegion(idList);
 
     }
 }

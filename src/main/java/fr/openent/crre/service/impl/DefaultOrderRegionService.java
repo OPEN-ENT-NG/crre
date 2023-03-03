@@ -705,7 +705,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .collect(Collectors.toMap(jsonObject -> IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class),
                                 jsonObject -> IModelHelper.toList(new JsonArray(jsonObject.getString(Field.ARRAY_TO_JSON)), OrderRegionEquipmentModel.class))));
             } else {
-
                 promise.fail(stringJsonArrayEither.left().getValue());
             }
         }));

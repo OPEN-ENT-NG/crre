@@ -9,7 +9,6 @@ import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -20,6 +19,7 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DefaultNotificationService implements NotificationService {
@@ -36,7 +36,7 @@ public class DefaultNotificationService implements NotificationService {
         this.eventBus = vertx.eventBus();
     }
 
-    private boolean isBasketOrderIsComplete(Map.Entry<Integer, List<OrderClientEquipmentModel>> basketIdOrderClientEquipmentEntry) {
+    private boolean isBasketOrderIsComplete(Map.Entry<?, List<OrderClientEquipmentModel>> basketIdOrderClientEquipmentEntry) {
         return basketIdOrderClientEquipmentEntry.getValue().stream().noneMatch(orderClientEquipmentModel ->
                 OrderClientEquipmentType.WAITING.equals(orderClientEquipmentModel.getStatus()) || OrderClientEquipmentType.RESUBMIT.equals(orderClientEquipmentModel.getStatus()));
     }
@@ -161,6 +161,7 @@ public class DefaultNotificationService implements NotificationService {
                         this.getClass().getSimpleName(), error.getMessage())));
     }
 
+
     @Override
     @SuppressWarnings("unchecked")
     public void sendNotificationValidatorBasket(Integer basketId) {
@@ -258,6 +259,77 @@ public class DefaultNotificationService implements NotificationService {
         });
     }
 
+    private void prepareMessageToPrescriberRegion(BasketOrder basketOrder, List<OrderClientEquipmentModel> orderClientEquipmentModels) {
+        if (orderClientEquipmentModels.isEmpty()) {
+            return;
+        }
+
+        String i18nStatus = this.getI18nStatusToPrescriberRegion(orderClientEquipmentModels);
+        UserUtils.getUserInfos(this.eventBus, basketOrder.getIdUser(), userInfos -> {
+            String local = null;
+            try {
+                local = new JsonObject((String) ((LinkedHashMap<?, ?>) userInfos.getAttribute(Field.PREFERENCES)).get(Field.LANGUAGE)).getString(Field.DEFAULT_DASH_DOMAIN);
+            } catch (Exception ignored) {
+            }
+            String messageStatus = I18n.getInstance().translate(i18nStatus, Field.DEFAULT_DASH_DOMAIN, local);
+            if (!messageStatus.equals("")) {
+                this.sendNotification(null, new Notify()
+                                .setMessage(messageStatus)
+                                .setCampaignId(basketOrder.getIdCampaign())
+                                .setStructureId(basketOrder.getIdStructure())
+                                .setBasketName(basketOrder.getName()),
+                        NotifyField.ORDER_PRESCRIPTOR,
+                        Collections.singletonList(basketOrder.getIdUser()));
+            }
+        });
+    }
+
+    @Override
+    public void sendNotificationPrescriberRegion(List<Integer> orderRegionEquipmentList) {
+        List<BasketOrder> listBasket = new ArrayList<>();
+        this.serviceFactory.getBasketOrderService().getBasketOrderListByOrderRegion(orderRegionEquipmentList)
+                .compose(listBasketResult -> {
+                    listBasket.addAll(listBasketResult);
+                    List<Integer> listBasketId =
+                            listBasketResult.stream()
+                                    .distinct()
+                                    .map(BasketOrder::getId)
+                                    .collect(Collectors.toList());
+
+                    List<String> structureIdList = listBasketResult.stream()
+                            .map(BasketOrder::getIdStructure)
+                            .distinct()
+                            .collect(Collectors.toList());
+
+                    return CompositeFuture.all(
+                            this.serviceFactory.getOrderService().getOrderClientEquipmentListFromBasketId(listBasketId),
+                            this.serviceFactory.getUserService().getValidatorUser(structureIdList));
+                })
+                .onSuccess(compositeResult -> {
+                    List<OrderClientEquipmentModel> orderClientsResult = compositeResult.resultAt(0);
+                    List<Neo4jUserModel> validatorUsers = compositeResult.resultAt(1);
+
+                    Map<BasketOrder, List<OrderClientEquipmentModel>> basketOrderMap = listBasket.stream()
+                            .filter(basket -> validatorUsers.stream()
+                                    .noneMatch(neo4jUserModel -> neo4jUserModel.getStructureId().equals(basket.getIdStructure()) &&
+                                            neo4jUserModel.getUserId().equals(basket.getIdUser()))
+                            )
+                            .collect(Collectors.toMap(
+                                    Function.identity(),
+                                    basket -> orderClientsResult.stream()
+                                            .filter(orderClientEquipment -> orderClientEquipment.getIdBasket().equals(basket.getId()))
+                                            .collect(Collectors.toList())
+                            ))
+                            .entrySet().stream()
+                            .filter(this::isBasketOrderIsComplete)
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                    basketOrderMap.forEach(this::prepareMessageToPrescriberRegion);
+                })
+                .onFailure(error -> log.error(String.format("[CRRE@%s::sendNotificationToPrescriberRegion] Fail to send notification to prescriber region %s",
+                        this.getClass().getSimpleName(), error.getMessage())));
+    }
+
     @Override
     public void sendNotificationPrescriber(List<Integer> orderClientEquipmentList) {
         this.serviceFactory.getOrderService()
@@ -320,17 +392,37 @@ public class DefaultNotificationService implements NotificationService {
     private String getI18nStatusToPrescriber(List<OrderClientEquipmentModel> orderClientEquipmentModels) {
         boolean containsInProgress = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.IN_PROGRESS.equals(orderClientEquipmentModel.getStatus()));
         boolean containsRejected = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.REJECTED.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsSend = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.SENT.equals(orderClientEquipmentModel.getStatus()));
 
-        if (containsInProgress && !containsRejected) {
+        if (!containsRejected && (containsInProgress || containsSend) ) {
             return "crre.timeline.prescriptor.in.progress";
-        } else if (containsInProgress) {
-            return "crre.timeline.prescriptor.partially.in.progress";
-        } else {
+        } else if (containsRejected && !(containsInProgress || containsSend)) {
             return "crre.timeline.prescriptor.refused";
+        } else {
+            return "crre.timeline.prescriptor.partially.in.progress";
         }
     }
 
-    private void sendNotification(UserInfos userInfos, Notify notifyData, String notification, List<String> recipientList) {
+    private String getI18nStatusToPrescriberRegion(List<OrderClientEquipmentModel> orderClientEquipmentModels) {
+        boolean containsSend = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.SENT.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsValid = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.VALID.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsRejected = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.REJECTED.equals(orderClientEquipmentModel.getStatus()));
+
+        if (containsSend && !containsRejected && !containsValid) {
+            return "crre.timeline.prescriptor.region.send";
+        } else if (containsSend) {
+            return "crre.timeline.prescriptor.region.partially.send";
+        } else if (containsValid && !containsRejected) {
+            return "crre.timeline.prescriptor.region.valid";
+        } else if (containsValid) {
+            return "crre.timeline.prescriptor.region.partially.valid";
+        } else {
+            return "crre.timeline.prescriptor.region.refused";
+        }
+    }
+
+    private void sendNotification(UserInfos userInfos, Notify notifyData, String
+            notification, List<String> recipientList) {
         JsonObject params = notifyData.toJson();
         if (userInfos != null) {
             params.put(Field.USERID, "/userbook/annuaire#" + userInfos.getUserId())

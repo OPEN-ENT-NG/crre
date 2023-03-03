@@ -5,8 +5,6 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.OrderClientEquipmentModel;
-import fr.openent.crre.model.OrderRegionEquipmentModel;
-import fr.openent.crre.model.ProjectModel;
 import fr.openent.crre.service.OrderService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -14,19 +12,22 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
 
     private final Integer PAGE_SIZE = 15;
+    private static final Logger log = LoggerFactory.getLogger(DefaultOrderService.class);
+
 
     public DefaultOrderService(String schema, String table) {
         super(schema, table);
@@ -344,11 +345,31 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     public Future<List<OrderClientEquipmentModel>> getOrderClientEquipmentListFromBasketId(List<Integer> basketIdList) {
         Promise<List<OrderClientEquipmentModel>> promise = Promise.promise();
 
-        String selectQuery = "SELECT * FROM " + Crre.crreSchema + ".order_client_equipment WHERE id_basket IN " + Sql.listPrepared(basketIdList) + ";";
-        String errorMessage = String.format("[CRRE@%s::getOrderClientEquipmentList] Fail to get basket order", this.getClass().getSimpleName());
-        Sql.getInstance().prepared(selectQuery, new JsonArray(basketIdList),
-                SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderClientEquipmentModel.class, errorMessage)));
-
+        String selectQuery = "SELECT row_to_json(o_c_e.*) " +
+                "FROM " + Crre.crreSchema + ".basket_order AS bo " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS o_c_e ON (bo.id = o_c_e.id_basket) " +
+                "WHERE o_c_e.id_basket IN " + Sql.listPrepared(basketIdList) + " " +
+                "UNION ALL " +
+                "SELECT row_to_json(o_c_e_o.*) " +
+                "FROM " + Crre.crreSchema + ".basket_order AS bo " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment_old AS o_c_e_o ON (bo.id = o_c_e_o.id_basket) " +
+                "WHERE o_c_e_o.id_basket IN " + Sql.listPrepared(basketIdList) + ";";
+        JsonArray params = new JsonArray(new ArrayList<>(basketIdList));
+        params.addAll(new JsonArray(basketIdList));
+        Sql.getInstance().prepared(selectQuery, params,
+                SqlResult.validResultHandler(stringJsonArrayEither -> {
+                    if (stringJsonArrayEither.isRight()) {
+                        promise.complete(stringJsonArrayEither.right().getValue().stream()
+                                .filter(JsonObject.class::isInstance)
+                                .map(JsonObject.class::cast)
+                                .map(orderJson -> IModelHelper.toModel(new JsonObject(orderJson.getString(Field.ROW_TO_JSON)), OrderClientEquipmentModel.class))
+                                .collect(Collectors.toList()));
+                    } else {
+                        String errorMessage = String.format("[CRRE@%s::getOrderClientEquipmentListFromBasketId] Fail to get basket order", this.getClass().getSimpleName());
+                        log.error(errorMessage);
+                        promise.fail(stringJsonArrayEither.left().getValue());
+                    }
+                }));
         return promise.future();
     }
 }

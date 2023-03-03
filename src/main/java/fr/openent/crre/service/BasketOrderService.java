@@ -55,4 +55,11 @@ public interface BasketOrderService {
      * @param basketIdList list of basket order id
      */
     Future<List<BasketOrder>> getBasketOrderList(List<Integer> basketIdList);
+
+    /**
+     * Get all basket order from a list of order region id
+     *
+     * @param orderRegionIdList list of order region id
+     */
+    Future<List<BasketOrder>> getBasketOrderListByOrderRegion(List<Integer> orderRegionIdList);
 }

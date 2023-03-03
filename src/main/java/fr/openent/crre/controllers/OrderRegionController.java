@@ -883,6 +883,7 @@ public class OrderRegionController extends BaseController {
                                         .onSuccess(res -> {
                                             Renders.renderJson(request, new JsonArray(orderRegionEquipmentIdList));
                                             this.notificationService.sendNotificationValidator(orderRegionEquipmentIdList);
+                                            this.notificationService.sendNotificationPrescriberRegion(orderRegionEquipmentIdList);
                                         })
                                         .onFailure(error -> unauthorized(request));
                             } catch (ClassCastException e) {
@@ -1074,6 +1075,7 @@ public class OrderRegionController extends BaseController {
                         .onSuccess(res -> {
                             Renders.ok(request);
                             this.notificationService.sendNotificationValidator(orderRegionIdList);
+                            this.notificationService.sendNotificationPrescriberRegion(orderRegionIdList);
                         })
                         .onFailure(error -> unauthorized(request));
             }
