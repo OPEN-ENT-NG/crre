@@ -874,7 +874,7 @@ public class OrderRegionController extends BaseController {
                                 List<OrderRegionEquipmentModel> orderRegionModelList = IModelHelper.toList(ordersList, OrderRegionEquipmentModel.class);
 
                                 List<TransactionElement> updatePurseLicenceTransactionList = orderRegionModelList.stream()
-                                        .map(orderRegion -> this.getUpdateTransactionElement(status, orderRegion))
+                                        .map(orderRegion -> this.getUpdateTransactionElement(status, orderRegion, orderRegion.getPrice()))
                                         .collect(Collectors.toList());
 
                                 String errorMessage = String.format("[CRRE@%s::updateStatusOrders] Fail to update purse licence", this.getClass().getSimpleName());
@@ -916,15 +916,15 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private TransactionElement getUpdateTransactionElement(OrderClientEquipmentType status, OrderRegionEquipmentModel orderRegion) {
+    private TransactionElement getUpdateTransactionElement(OrderClientEquipmentType status, OrderRegionEquipmentModel orderRegion, Double price) {
         if (OrderClientEquipmentType.REJECTED.toString().equalsIgnoreCase(orderRegion.getStatus())) {
             if (status.equals(OrderClientEquipmentType.VALID)) {
-                 return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", orderRegion.getPrice(), orderRegion.getUseCredit());
+                 return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", price, orderRegion.getUseCredit());
             } else {
                 return null;
             }
         } else if (status.equals(OrderClientEquipmentType.REJECTED)) {
-            return getUpdatePurseTransaction(orderRegion.getIdStructure(), "+", orderRegion.getPrice(), orderRegion.getUseCredit());
+            return getUpdatePurseTransaction(orderRegion.getIdStructure(), "+", price, orderRegion.getUseCredit());
         }
 
         return null;
@@ -1064,7 +1064,7 @@ public class OrderRegionController extends BaseController {
                             .filter(JsonObject.class::isInstance)
                             .map(JsonObject.class::cast)
                             .map(OrderRegionEquipmentModel::new)
-                            .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID, orderRegion))
+                            .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID, orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
                             .collect(Collectors.toList());
 
                     String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
