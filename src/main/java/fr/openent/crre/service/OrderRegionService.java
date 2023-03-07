@@ -41,7 +41,7 @@ public interface OrderRegionService {
     void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders,
                         String idStructure, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
+    void search(UserInfos user, List<String> equipementIdList, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                 Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     /**

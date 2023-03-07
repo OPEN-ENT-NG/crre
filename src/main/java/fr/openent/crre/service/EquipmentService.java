@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonArray;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public interface EquipmentService {
 
@@ -14,13 +15,13 @@ public interface EquipmentService {
      * @param idEquipment equipment identifier
      * @param handler function handler returning data
      */
-    void equipment(String idEquipment,  Handler<Either<String, JsonArray>> handler);
+    void equipment(String idEquipment, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
 
-    void searchWord(String word, Handler<Either<String, JsonArray>> handler);
+    void searchWord(String word, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
 
-    void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler);
+    void filterWord(HashMap<String, ArrayList<String>> test, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
 
     void searchAll(Handler<Either<String, JsonArray>> handler);
 
-    void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler);
+    void searchFilter(HashMap<String, ArrayList<String>> result, String query, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
 }

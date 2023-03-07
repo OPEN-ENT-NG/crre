@@ -119,7 +119,7 @@ public class OrderRegionController extends BaseController {
                             .map(OrderRegionEquipmentModel::getIdOrderClientEquipment)
                             .collect(Collectors.toList());
 
-                    searchByIds(idsEquipment)
+                    searchByIds(idsEquipment, null)
                             .compose(equipments -> {
                                 setPriceToOrder(orders.getJsonArray(Field.ORDERS), equipments);
                                 return createProject(user);
@@ -226,7 +226,7 @@ public class OrderRegionController extends BaseController {
                                 .map(JsonObject.class::cast)
                                 .map(order -> order.getString(Field.EQUIPMENT_KEY))
                                 .collect(Collectors.toList());
-                        searchByIds(idsEquipment)
+                        searchByIds(idsEquipment, null)
                                 .compose(equipments -> {
                                     setPriceToOrder(ordersList, equipments);
                                     return createOrdersRegion(user, ordersList, idProject);
@@ -648,12 +648,12 @@ public class OrderRegionController extends BaseController {
                 Future<JsonArray> equipmentFilterFuture = Future.future();
                 Future<JsonArray> equipmentFilterAndQFuture = Future.future();
 
-                filters(params, handlerJsonArray(equipmentFilterFuture));
+                filters(params, null, handlerJsonArray(equipmentFilterFuture));
 
                 if (StringUtils.isEmpty(query)) {
                     equipmentFilterAndQFuture.complete(new JsonArray());
                 } else {
-                    searchfilter(params, query, handlerJsonArray(equipmentFilterAndQFuture));
+                    searchfilter(params, query, Collections.singletonList(Field.EAN), handlerJsonArray(equipmentFilterAndQFuture));
                 }
 
                 CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
@@ -663,18 +663,28 @@ public class OrderRegionController extends BaseController {
                         JsonArray allEquipments = new JsonArray();
                         allEquipments.addAll(equipmentsGrade);
                         allEquipments.addAll(equipmentsGradeAndQ);
-                        orderRegionService.search(user, allEquipments, query, startDate,
+                        List<String> equipementIdList = allEquipments.stream()
+                                .filter(JsonObject.class::isInstance)
+                                .map(JsonObject.class::cast)
+                                .map(jsonObject -> jsonObject.getString(Field.EAN))
+                                .collect(Collectors.toList());
+                        orderRegionService.search(user, equipementIdList, query, startDate,
                                 endDate, idStructure, filters, page, old, arrayResponseHandler(request));
                     }
                 });
             }
         } else {
             if (query.equals("")) {
-                orderRegionService.search(user, new JsonArray(), query, startDate,
+                orderRegionService.search(user, new ArrayList<>(), query, startDate,
                         endDate, idStructure, filters, page, old, arrayResponseHandler(request));
             } else {
-                plainTextSearchName(query, equipments -> {
-                    orderRegionService.search(user, equipments.right().getValue(), query, startDate,
+                plainTextSearchName(query, Collections.singletonList(Field.EAN), equipments -> {
+                    List<String> equipementIdList = equipments.right().getValue().stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .collect(Collectors.toList());
+                    orderRegionService.search(user, equipementIdList, query, startDate,
                             endDate, idStructure, filters, page, old, arrayResponseHandler(request));
                 });
             }
@@ -765,7 +775,7 @@ public class OrderRegionController extends BaseController {
 
     private void getSearchByIds(HttpServerRequest
                                         request, List<JsonArray> resultsList, List<String> listIdsEquipment) {
-        searchByIds(listIdsEquipment, equipments -> {
+        searchByIds(listIdsEquipment, null, equipments -> {
             if (equipments.isRight()) {
                 JsonArray equipmentsArray = equipments.right().getValue();
                 for (int i = 0; i < equipmentsArray.size(); i++) {
@@ -1082,7 +1092,7 @@ public class OrderRegionController extends BaseController {
         });
 
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
-        searchByIds(idsEquipments, handlerJsonArray(equipmentsFuture));
+        searchByIds(idsEquipments, null, handlerJsonArray(equipmentsFuture));
     }
 
     private void getOrdersRecursively(int e, List<Integer> listOrders, List<Future<JsonArray>> futures) {

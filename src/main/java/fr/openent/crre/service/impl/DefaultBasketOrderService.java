@@ -55,8 +55,8 @@ public class DefaultBasketOrderService implements BasketOrderService {
     }
 
     @Override
-    public Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String idStructure,
-                                            String startDate, String endDate, Integer page, Boolean old) {
+    public Future<List<BasketOrder>> search(String query, UserInfos user, List<String> equipementIdList, int idCampaign, String idStructure,
+                       String startDate, String endDate, Integer page, Boolean old) {
         Promise<List<BasketOrder>> promise = Promise.promise();
         if (user.getStructures().isEmpty() && idStructure == null) {
             promise.complete(new ArrayList<>());
@@ -70,7 +70,7 @@ public class DefaultBasketOrderService implements BasketOrderService {
                 "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
         values.add(startDate).add(endDate).add(user.getUserId()).add(idCampaign);
 
-        sqlquery = SQLConditionQueryEquipments(query, equipTab, values, old, sqlquery);
+        sqlquery = SQLConditionQueryEquipments(query, equipementIdList, values, old, sqlquery);
 
         if (idStructure != null) {
             sqlquery += ") AND bo.id_structure = ? ";
@@ -97,23 +97,24 @@ public class DefaultBasketOrderService implements BasketOrderService {
         return promise.future();
     }
 
-    static String SQLConditionQueryEquipments(String query, JsonArray equipTab, JsonArray values, Boolean old, String sqlQuery) {
+    static String SQLConditionQueryEquipments(String query, List<String> equipementIdList, JsonArray values, Boolean old, String sqlQuery) {
         if (!old) {
             if (!query.equals("")) {
                 sqlQuery += "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? ";
                 values.add(query);
                 values.add(query);
             }
-            if (!equipTab.isEmpty()) {
+            if (!equipementIdList.isEmpty()) {
                 if (!query.equals("")) {
                     sqlQuery += "OR ";
                 } else {
                     sqlQuery += "AND (";
                 }
                 sqlQuery += "oe.equipment_key IN (";
-                for (int i = 0; i < equipTab.size(); i++) {
+
+                for (String equipId : equipementIdList) {
                     sqlQuery += "?,";
-                    values.add(equipTab.getJsonObject(i).getString("ean"));
+                    values.add(equipId);
                 }
                 sqlQuery = sqlQuery.substring(0, sqlQuery.length() - 1) + ")";
             }

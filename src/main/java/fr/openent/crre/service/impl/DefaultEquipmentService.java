@@ -8,6 +8,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
 
@@ -18,24 +19,24 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         super(schema, table);
     }
 
-    public void searchWord(String word, Handler<Either<String, JsonArray>> handler) {
-        plainTextSearch(word, handler);
+    public void searchWord(String word, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
+        plainTextSearch(word, resultFieldsExpected, handler);
     }
 
     public void searchAll(Handler<Either<String, JsonArray>> handler) {
         search_All(handler);
     }
 
-    public void searchFilter(HashMap<String, ArrayList<String>> result, String query, Handler<Either<String, JsonArray>> handler) {
-        searchfilter(result, query, handler);
+    public void searchFilter(HashMap<String, ArrayList<String>> result, String query, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
+        searchfilter(result, query, resultFieldsExpected, handler);
     }
 
-    public void filterWord(HashMap<String, ArrayList<String>> test, Handler<Either<String, JsonArray>> handler) {
-        filters(test, handler);
+    public void filterWord(HashMap<String, ArrayList<String>> test, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
+        filters(test, resultFieldsExpected, handler);
     }
 
-    public void equipment(String idEquipment,  Handler<Either<String, JsonArray>> handler){
-        searchById(idEquipment, handler);
+    public void equipment(String idEquipment, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler){
+        searchById(idEquipment, resultFieldsExpected, handler);
     }
 }
 

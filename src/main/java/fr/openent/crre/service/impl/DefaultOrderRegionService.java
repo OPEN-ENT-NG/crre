@@ -246,7 +246,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         hashMap.put(key, tempList);
     }
 
-    public void search(UserInfos user, JsonArray equipTab, String query, String startDate, String endDate, String idStructure, JsonArray filters,
+    public void search(UserInfos user, List<String> equipementIdList, String query, String startDate, String endDate, String idStructure, JsonArray filters,
                        Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<String, ArrayList> hashMap = new HashMap<>();
@@ -275,19 +275,19 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             }
         }
         //condition with equipment
-        if (!equipTab.isEmpty() && !old) {
+        if (!equipementIdList.isEmpty() && !old) {
             if (!query.equals("")) {
                 sqlquery += " OR ore.equipment_key IN (";
             } else {
                 sqlquery += "AND (ore.equipment_key IN (";
             }
-            for (int i = 0; i < equipTab.size(); i++) {
+            for (String equipId : equipementIdList) {
                 sqlquery += "?,";
-                values.add(equipTab.getJsonObject(i).getString("ean"));
+                values.add(equipId);
             }
             sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
         }
-        if (!query.equals("") || (!equipTab.isEmpty() && !old)) {
+        if (!query.equals("") || (!equipementIdList.isEmpty() && !old)) {
             sqlquery += ")";
         }
 

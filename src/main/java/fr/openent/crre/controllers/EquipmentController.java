@@ -23,8 +23,7 @@ import java.net.URLDecoder;
 import java.util.*;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
+import static fr.openent.crre.helpers.FutureHelper.*;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class EquipmentController extends ControllerHelper {
@@ -46,7 +45,7 @@ public class EquipmentController extends ControllerHelper {
     public void list(HttpServerRequest request) {
         List<String> ids = request.params().getAll(Field.ID);
         List<String> idsInt = new ArrayList<>(ids);
-        searchByIds(idsInt, arrayResponseHandler(request));
+        searchByIds(idsInt, null, arrayResponseHandler(request));
     }
 
     @Get("/equipment/:id")
@@ -63,7 +62,7 @@ public class EquipmentController extends ControllerHelper {
                     : null;
             Promise<JsonArray> getEquipmentPromise = Promise.promise();
             Promise<JsonObject> alreadyPayedPromise = Promise.promise();
-            equipmentService.equipment(idEquipment, handlerJsonArray(getEquipmentPromise));
+            equipmentService.equipment(idEquipment, null, handlerEitherPromise(getEquipmentPromise));
             List<Future> promises = new ArrayList<>();
             promises.add(getEquipmentPromise.future());
             if(idStructure != null){
@@ -101,7 +100,7 @@ public class EquipmentController extends ControllerHelper {
     }
 
     private void getAllWithFilter(HttpServerRequest request, HashMap<String, ArrayList<String>> params) {
-        equipmentService.filterWord(params, event -> {
+        equipmentService.filterWord(params, null, event -> {
             JsonArray ressources = event.right().getValue();
             JsonArray filtres = new JsonArray();
             JsonArray response = new JsonArray();
@@ -164,9 +163,9 @@ public class EquipmentController extends ControllerHelper {
             HashMap<String, ArrayList<String>> params = new HashMap<>();
             getFilterFromRequest(request, params);
             if(!params.isEmpty()) {
-                equipmentService.searchFilter(params, query_word, arrayResponseHandler(request));
+                equipmentService.searchFilter(params, query_word, null, arrayResponseHandler(request));
             } else {
-                equipmentService.searchWord(query_word, arrayResponseHandler(request));
+                equipmentService.searchWord(query_word, null, arrayResponseHandler(request));
             }
         } catch (ClassCastException | UnsupportedEncodingException e) {
             log.error("An error occurred searching article", e);
@@ -185,7 +184,7 @@ public class EquipmentController extends ControllerHelper {
             if (emptyFilter) {
                 getAllWithFilter(request, params);
             } else {
-                equipmentService.filterWord(params, arrayResponseHandler(request));
+                equipmentService.filterWord(params, null, arrayResponseHandler(request));
             }
         } catch (ClassCastException e) {
             log.error("An error occurred searching article", e);

@@ -29,6 +29,7 @@ import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,14 +68,14 @@ public class BasketController extends ControllerHelper {
                             List<String> itemIdList = basketOrderItemList.stream()
                                     .map(BasketOrderItem::getIdItem)
                                     .collect(Collectors.toList());
-                            return searchByIds(itemIdList);
+                            return searchByIds(itemIdList, null);
                         })
                         .onSuccess(equipments -> {
                             listBasketOrderItemFuture.result().forEach(basketOrderItem -> {
                                 JsonObject equipment = equipments.stream()
                                         .filter(JsonObject.class::isInstance)
                                         .map(JsonObject.class::cast)
-                                        .filter(equipmentResult -> basketOrderItem.getIdItem().equals(equipmentResult.getString(Field.ID)))
+                                        .filter(equipmentResult -> basketOrderItem.getIdItem().equals(equipmentResult.getString(Field.EAN)))
                                         .findFirst()
                                         .orElse(EquipmentHelper.getDefaultEquipment(basketOrderItem));
                                 basketOrderItem.setEquipment(equipment);
@@ -132,9 +133,16 @@ public class BasketController extends ControllerHelper {
                     String startDate = request.getParam(Field.STARTDATE);
                     String endDate = request.getParam(Field.ENDDATE);
                     Boolean old = Boolean.valueOf(request.getParam(Field.OLD));
-                    plainTextSearchName(query)
-                            .compose(equipments -> basketOrderService.search(query, user,
-                                    equipments, idCampaign, idStructure, startDate, endDate, page, old))
+                    plainTextSearchName(query, Collections.singletonList(Field.EAN))
+                            .compose(equipments -> {
+                                List<String> equipementIdList = equipments.stream()
+                                        .filter(JsonObject.class::isInstance)
+                                        .map(JsonObject.class::cast)
+                                        .map(jsonObject -> jsonObject.getString(Field.EAN))
+                                        .collect(Collectors.toList());
+                                return basketOrderService.search(query, user,
+                                        equipementIdList, idCampaign, idStructure, startDate, endDate, page, old);
+                            })
                             .onSuccess(basketOrderList -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrderList)))
                             .onFailure(error -> Renders.renderError(request));
                 } catch (UnsupportedEncodingException e) {

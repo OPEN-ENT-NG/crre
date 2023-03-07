@@ -89,6 +89,35 @@ public class Field {
     public static final String JUSTIFICATION = "justification";
     public static final String REJECTED = "REJECTED";
     public static final String FR = "fr";
+    public static final String EAN = "ean";
+    public static final String _SOURCE = "_source";
+    public static final String _INDEX = "_index";
+    public static final String ARTICULENUMERIQUE = "articlenumerique";
+    public static final String OFFRES = "offres";
+    public static final String TYPE = "type";
+    public static final String TYPECATALOGUE = "typeCatalogue";
+    public static final String RESSOURCE = "Ressource";
+    public static final String CONSOMMABLE = "Consommable";
+    public static final String NUMERIQUE = "Numerique";
+    public static final String NIVEAUX = "niveaux";
+    public static final String LIBELLE = "libelle";
+    public static final String SHOULD = "should";
+    public static final String BOOL = "bool";
+    public static final String MUST = "must";
+    public static final String TITRE = "titre";
+    public static final String ARK = "ark";
+    public static final String AUTEUR = "auteur";
+    public static final String DISTRIBUTEUR = "distributeur";
+    public static final String EDITEUR = "editeur";
+    public static final String FILTER = "filter";
+    public static final String MATCH = "match";
+    public static final String TERMS = "terms";
+    public static final String MINIMUM_SHOULD_MATCH = "minimum_should_match";
+    public static final String QUERY = "query";
+    public static final String FROM = "from";
+    public static final String SIZE = "size";
+    public static final String SORT = "sort";
+    public static final String ASC = "asc";
 
     private Field() {
         throw new IllegalStateException("Utility class");

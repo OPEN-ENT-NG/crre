@@ -59,7 +59,7 @@ public interface OrderService {
 
     Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderClientEquipmentType orderClientEquipmentType);
 
-    void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
+    void search(String query, JsonArray filters, String idStructure, List<String> equipementIdList, Integer id_campaign, String startDate, String endDate, Integer page,
                 Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     /**

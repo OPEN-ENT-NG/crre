@@ -44,31 +44,31 @@ public class ElasticSearchHelper {
 
                 for (Object article : ar.result()) {
                     JsonObject articleJson = ((JsonObject) article);
-                    JsonObject addingArticle = articleJson.getJsonObject("_source");
+                    JsonObject addingArticle = articleJson.getJsonObject(Field._SOURCE);
                     String typeNumeric = "";
                     String typePapier = "";
                     String type = "";
-                    if (articleJson.getString("_index").equals("articlenumerique") && addingArticle.getJsonArray("offres").size() > 0) {
-                        type = addingArticle.getJsonArray("offres").getJsonObject(0).getString("type") == null ? "" : addingArticle.getJsonArray("offres").getJsonObject(0).getString("type");
-                        addingArticle.put("typeCatalogue", type);
+                    if (articleJson.getString(Field._INDEX).equals(Field.ARTICULENUMERIQUE) && addingArticle.getJsonArray(Field.OFFRES, new JsonArray()).size() > 0) {
+                        type = addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE) == null ? "" : addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE);
+                        addingArticle.put(Field.TYPECATALOGUE, type);
                         typeNumeric = type;
                     } else {
-                        type = addingArticle.getString("type", "") == null ? "" : addingArticle.getString("type", "");
-                        addingArticle.put("typeCatalogue", type);
+                        type = addingArticle.getString(Field.TYPE, "") == null ? "" : addingArticle.getString(Field.TYPE, "");
+                        addingArticle.put(Field.TYPECATALOGUE, type);
                         typePapier = type;
                     }
-                    addingArticle.put("type", articleJson.getString("_index"))
-                            .put(Field.ID, articleJson.getString("_id"));
+                    addingArticle.put(Field.TYPE, articleJson.getString(Field._INDEX))
+                            .put(Field.ID, articleJson.getString(Field._ID));
                     List<String> typesNumeric = Arrays.asList(typeNumeric.split(Pattern.quote("|")));
-                    boolean ressourceNumeric = isRessource == typesNumeric.contains("Ressource");;
-                    boolean consoNumeric = isConso == typesNumeric.contains("Consommable");
-                    boolean manuelNumeric = !isConso == typesNumeric.contains("Numerique");
+                    boolean ressourceNumeric = isRessource == typesNumeric.contains(Field.RESSOURCE);
+                    boolean consoNumeric = isConso == typesNumeric.contains(Field.CONSOMMABLE);
+                    boolean manuelNumeric = !isConso == typesNumeric.contains(Field.NUMERIQUE);
                     boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     boolean proNumeric = false;
                     boolean lgtNumeric = false;
-                    if (addingArticle.getJsonArray("niveaux").size() > 0) {
-                        for (int i = 0; i < addingArticle.getJsonArray("niveaux").size(); i++) {
-                            String niveau = addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle") == null ? "" : addingArticle.getJsonArray("niveaux").getJsonObject(i).getString("libelle");
+                    if (addingArticle.getJsonArray(Field.NIVEAUX, new JsonArray()).size() > 0) {
+                        for (int i = 0; i < addingArticle.getJsonArray(Field.NIVEAUX).size(); i++) {
+                            String niveau = addingArticle.getJsonArray(Field.NIVEAUX).getJsonObject(i).getString(Field.LIBELLE) == null ? "" : addingArticle.getJsonArray(Field.NIVEAUX).getJsonObject(i).getString(Field.LIBELLE);
                             if (niveau.equals("Lycée pro.")) {
                                 proNumeric = true;
                             } else if (niveau.equals("Lycée général") || niveau.equals("Lycée techno.")) {
@@ -106,52 +106,52 @@ public class ElasticSearchHelper {
     }
 
 
-    public static void plainTextSearch(String query, Handler<Either<String, JsonArray>> handler) {
+    public static void plainTextSearch(String query, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
         for (String field : PLAIN_TEXT_FIELDS) {
             JsonObject regexp = regexpField(field, query);
             should.add(regexp);
         }
 
-        regexSearchBool(handler, should);
+        regexSearchBool(handler, should, resultFieldsExpected);
     }
 
-    private static void regexSearchBool(Handler<Either<String, JsonArray>> handler, JsonArray should) {
+    private static void regexSearchBool(Handler<Either<String, JsonArray>> handler, JsonArray should, List<String> resultFieldsExpected) {
         JsonObject regexpBool = new JsonObject()
-                .put("should", should);
+                .put(Field.SHOULD, should);
         JsonArray must = new JsonArray()
-                .add(new JsonObject().put("bool", regexpBool));
+                .add(new JsonObject().put(Field.BOOL, regexpBool));
 
         JsonObject bool = new JsonObject()
-                .put("must", must);
+                .put(Field.MUST, must);
         JsonObject queryObject = new JsonObject()
-                .put("bool", bool);
+                .put(Field.BOOL, bool);
 
-        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
-    public static Future<JsonArray> plainTextSearchName(String query) {
+    public static Future<JsonArray> plainTextSearchName(String query, List<String> resultFieldsExpected) {
         Promise<JsonArray> promise = Promise.promise();
 
-        plainTextSearchName(query, FutureHelper.handlerEitherPromise(promise));
+        plainTextSearchName(query, resultFieldsExpected, FutureHelper.handlerEitherPromise(promise));
 
         return promise.future();
     }
 
-    public static void plainTextSearchName(String query, Handler<Either<String, JsonArray>> handler) {
+    public static void plainTextSearchName(String query, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
         JsonArray should = new JsonArray();
-        JsonObject regexTitre = regexpField("titre", query);
-        JsonObject regexEAN = regexpField("ean", query);
-        JsonObject regexArk = regexpField("ark", query);
-        JsonObject regexAuthor = regexpField("auteur", query);
-        JsonObject regexDistributor = regexpField("distributeur", query);
-        JsonObject regexEditor = regexpField("editeur", query);
+        JsonObject regexTitre = regexpField(Field.TITRE, query);
+        JsonObject regexEAN = regexpField(Field.EAN, query);
+        JsonObject regexArk = regexpField(Field.ARK, query);
+        JsonObject regexAuthor = regexpField(Field.AUTEUR, query);
+        JsonObject regexDistributor = regexpField(Field.DISTRIBUTEUR, query);
+        JsonObject regexEditor = regexpField(Field.EDITEUR, query);
         should.add(regexTitre).add(regexEAN).add(regexArk).add(regexAuthor).add(regexDistributor).add(regexEditor);
 
-        regexSearchBool(handler, should);
+        regexSearchBool(handler, should, resultFieldsExpected);
     }
 
-    public static void filters(HashMap<String, ArrayList<String>> result, Handler<Either<String, JsonArray>> handler) {
+    public static void filters(HashMap<String, ArrayList<String>> result, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
         JsonObject filter = new JsonObject();
         JsonArray query = new JsonArray();
@@ -162,12 +162,12 @@ public class ElasticSearchHelper {
 
         prepareFilterES(result, term, query, conso, pro, ressource);
 
-        filter.put("filter", term.addAll(query));
+        filter.put(Field.FILTER, term.addAll(query));
 
         JsonObject queryObject = new JsonObject()
-                .put("bool", filter);
+                .put(Field.BOOL, filter);
 
-        search(esQueryObject(queryObject), pro, conso, ressource, handler);
+        search(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource, handler);
     }
 
     private static void prepareFilterES(HashMap<String, ArrayList<String>> result, JsonArray term, JsonArray query,
@@ -228,32 +228,32 @@ public class ElasticSearchHelper {
         }
     }
 
-    public static void searchById(String id, Handler<Either<String, JsonArray>> handler) {
+    public static void searchById(String id, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
 
         JsonObject queryObject = new JsonObject();
-        JsonObject match = new JsonObject().put("_id", id);
-        queryObject.put("match", match);
-        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        JsonObject match = new JsonObject().put(Field._ID, id);
+        queryObject.put(Field.MATCH, match);
+        search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
-    public static Future<JsonArray> searchByIds(List<String> ids) {
+    public static Future<JsonArray> searchByIds(List<String> ids, List<String> resultFieldsExpected) {
         Promise<JsonArray> promise = Promise.promise();
 
-        searchByIds(ids, FutureHelper.handlerEitherPromise(promise));
+        searchByIds(ids, resultFieldsExpected, FutureHelper.handlerEitherPromise(promise));
 
         return promise.future();
     }
 
-    public static void searchByIds(List<String> ids, Handler<Either<String, JsonArray>> handler) {
+    public static void searchByIds(List<String> ids, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
 
         JsonObject queryObject = new JsonObject();
-        JsonObject terms = new JsonObject().put("_id", new JsonArray(ids));
-        queryObject.put("terms", terms);
-        search(esQueryObject(queryObject), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        JsonObject terms = new JsonObject().put(Field._ID, new JsonArray(ids));
+        queryObject.put(Field.TERMS, terms);
+        search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
     }
 
 
-    public static void searchfilter(HashMap<String, ArrayList<String>> result, String query,
+    public static void searchfilter(HashMap<String, ArrayList<String>> result, String query, List<String> resultFieldsExpected,
                                     Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
         JsonArray should = new JsonArray();
@@ -270,14 +270,14 @@ public class ElasticSearchHelper {
         }
 
         prepareFilterES(result, term, j, conso, pro, ressource);
-        request.put("filter", term.addAll(j))
-                .put("minimum_should_match", 1)
-                .put("should", should);
+        request.put(Field.FILTER, term.addAll(j))
+                .put(Field.MINIMUM_SHOULD_MATCH, 1)
+                .put(Field.SHOULD, should);
 
         JsonObject queryObject = new JsonObject()
-                .put("bool", request);
+                .put(Field.BOOL, request);
 
-        search(esQueryObject(queryObject), pro, conso, ressource, handler);
+        search(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource, handler);
     }
 
     private static void executeEsSearch(JsonObject query, Handler<AsyncResult<JsonArray>> handler) {
@@ -298,15 +298,21 @@ public class ElasticSearchHelper {
                 .getJsonArray("hits", new JsonArray()).getList();
     }
 
-    private static JsonObject esQueryObject(JsonObject query) {
-        return new JsonObject()
-                .put("query", query)
-                .put("from", 0)
-                .put("size", PAGE_SIZE)
-                .put("sort", new JsonArray()
-                        .add(new JsonObject().put("_index", "asc"))
-                        .add(new JsonObject().put("titre", "asc"))
+    private static JsonObject esQueryObject(JsonObject query, List<String> resultFieldsExpected) {
+        JsonObject queryResult = new JsonObject()
+                .put(Field.QUERY, query)
+                .put(Field.FROM, 0)
+                .put(Field.SIZE, PAGE_SIZE)
+                .put(Field.SORT, new JsonArray()
+                        .add(new JsonObject().put(Field._INDEX, Field.ASC))
+                        .add(new JsonObject().put(Field.TITRE, Field.ASC))
                 );
+
+        if (resultFieldsExpected != null && !resultFieldsExpected.isEmpty()) {
+            queryResult.put(Field._SOURCE, new JsonArray(new ArrayList<>(resultFieldsExpected)));
+        }
+
+        return queryResult;
     }
 
 

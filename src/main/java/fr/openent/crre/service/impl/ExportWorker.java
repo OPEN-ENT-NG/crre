@@ -135,7 +135,7 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         });
 
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
-        searchByIds(idsEquipments.getList(), handlerJsonArray(equipmentsFuture));
+        searchByIds(idsEquipments.getList(), null, handlerJsonArray(equipmentsFuture));
     }
 
     private void writeCSVFile(Handler<Either<String, JsonObject>> exportHandler, String idUser, JsonArray orderRegion, int ordersSize, int e) {

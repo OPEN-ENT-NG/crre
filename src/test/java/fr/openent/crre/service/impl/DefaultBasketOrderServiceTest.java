@@ -86,9 +86,9 @@ public class DefaultBasketOrderServiceTest {
             async.complete();
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
-        JsonArray equipTab = new JsonArray().add(new JsonObject().put("ean", "ean1")).add(new JsonObject().put("ean", "ean2"));
+        List<String> equipementIdList = Arrays.asList("ean1", "ean2");
 
-        this.defaultBasketService.search("query", userInfos, equipTab, 13, null, "startDate", "endDate", 4, false);
+        this.defaultBasketService.search("query", userInfos, equipementIdList, 13, null, "startDate", "endDate", 4, false);
 
         async.awaitSuccess(10000);
     }

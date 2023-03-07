@@ -34,7 +34,7 @@ public interface BasketOrderService {
      * @param endDate ending date filter
      * @param old search in historic or not
      */
-    Future<List<BasketOrder>> search(String query, UserInfos user, JsonArray equipTab, int idCampaign, String idStructure,
+    Future<List<BasketOrder>> search(String query, UserInfos user, List<String> equipementIdList, int idCampaign, String idStructure,
                                      String startDate, String endDate, Integer page, Boolean old);
 
     /**

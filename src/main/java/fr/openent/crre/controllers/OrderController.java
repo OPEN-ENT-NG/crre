@@ -37,9 +37,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
@@ -86,7 +84,7 @@ public class OrderController extends ControllerHelper {
                                 String idEquipment = ((JsonObject) order).getString("equipment_key");
                                 idEquipments.add(idEquipment);
                             }
-                            searchByIds(idEquipments, equipments -> {
+                            searchByIds(idEquipments, null, equipments -> {
                                 if (equipments.isRight()) {
                                     for (Object order : orders.right().getValue()) {
                                         JsonObject orderJson = ((JsonObject) order);
@@ -218,7 +216,7 @@ public class OrderController extends ControllerHelper {
                                 total_amount += totalAmount.getJsonObject(i).getLong("amount");
                             }
                             int finalTotal_amount = total_amount;
-                            searchByIds(new ArrayList<>(idsEquipment), equipments -> {
+                            searchByIds(new ArrayList<>(idsEquipment), null, equipments -> {
                                 if (equipments.isRight()) {
                                     JsonArray equipmentsArray = equipments.right().getValue();
                                     double total = 0;
@@ -334,8 +332,13 @@ public class OrderController extends ControllerHelper {
                 }
                 String finalQ = q;
                 Integer finalId_campaign = id_campaign;
-                plainTextSearchName(finalQ, equipments -> {
-                    orderService.search(finalQ, filters, idStructure, equipments.right().getValue(), finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                plainTextSearchName(finalQ, Collections.singletonList(Field.EAN), equipments -> {
+                    List<String> equipementIdList = equipments.right().getValue().stream()
+                                    .filter(JsonObject.class::isInstance)
+                                    .map(JsonObject.class::cast)
+                                    .map(jsonObject -> jsonObject.getString(Field.EAN))
+                                    .collect(Collectors.toList());
+                    orderService.search(finalQ, filters, idStructure, equipementIdList, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                 });
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -459,7 +462,7 @@ public class OrderController extends ControllerHelper {
 
     private void getEquipment
             (List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        searchByIds(idsEquipment, handlerJsonArray);
+        searchByIds(idsEquipment, null, handlerJsonArray);
     }
 
     private static String generateExport(HttpServerRequest request, JsonArray logs) {

@@ -276,7 +276,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void search(String query, JsonArray filters, String idStructure, JsonArray equipTab, Integer id_campaign, String startDate, String endDate, Integer page,
+    public void search(String query, JsonArray filters, String idStructure, List<String> equipementIdList, Integer id_campaign, String startDate, String endDate, Integer page,
                        Handler<Either<String, JsonArray>> arrayResponseHandler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, " +
@@ -292,7 +292,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.add(id_campaign);
         }
 
-        sqlquery = DefaultBasketOrderService.SQLConditionQueryEquipments(query, equipTab, values, false, sqlquery);
+        sqlquery = DefaultBasketOrderService.SQLConditionQueryEquipments(query, equipementIdList, values, false, sqlquery);
 
         sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure = ? ";
         values.add(idStructure);
