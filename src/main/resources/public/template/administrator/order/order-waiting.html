@@ -131,7 +131,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr ng-repeat-start="order in project.orders" ng-if="project.expanded" class="subline">
+                <tr ng-repeat-start="order in project.orders | orderBy: 'name'" ng-if="project.expanded" class="subline">
                     <td class="table-selector">
                         <label class="checkbox">
                             <input type="checkbox" ng-model="order.selected" ng-change="checkParentSwitch(project); checkSwitchAll();"/>
