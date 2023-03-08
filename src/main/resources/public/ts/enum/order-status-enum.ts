@@ -1,0 +1,7 @@
+export enum ORDER_STATUS_ENUM {
+    WAITING = "WAITING",
+    IN_PROGRESS = "IN_PROGRESS",
+    VALID = "VALID",
+    DONE = "DONE",
+    REJECTED = "REJECTED",
+}

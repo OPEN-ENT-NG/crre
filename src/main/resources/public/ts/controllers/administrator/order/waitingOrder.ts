@@ -5,6 +5,7 @@ import {
     Filter,
     FilterFront, Projects, Project, OrderRegion,
 } from "../../../model";
+import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
     ['$scope', async ($scope) => {
@@ -32,18 +33,17 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 id_structure: "id_structure"
             };
 
-            $scope.states = [{status: "WAITING"}, {status: "IN_PROGRESS"}, {status: "VALID"}, {status: "DONE"}, {status: "REJECTED"}];
+            $scope.states = [{status: ORDER_STATUS_ENUM.WAITING}, {status: ORDER_STATUS_ENUM.IN_PROGRESS}, {status: ORDER_STATUS_ENUM.VALID}, {status: ORDER_STATUS_ENUM.DONE}, {status: ORDER_STATUS_ENUM.REJECTED}];
             $scope.states.forEach((item) => item.toString = () => {
-                if (item.status === "IN_PROGRESS") {
+                if (item.status === ORDER_STATUS_ENUM.IN_PROGRESS) {
                     return $scope.translate("NEW")
                 } else {
                     return $scope.translate(item.status)
                 }
             });
-            $scope.states.forEach(state => {
-                if (state.status != "REJECTED")
-                    $scope.filterChoice.states.push(state);
-            })
+
+            $scope.filterChoice.states = $scope.states.filter(state => state.status == ORDER_STATUS_ENUM.VALID || state.status == ORDER_STATUS_ENUM.IN_PROGRESS);
+
             $scope.filterChoice.states.forEach(state => {
                 let newFilter = new Filter();
                 newFilter.name = "status";
