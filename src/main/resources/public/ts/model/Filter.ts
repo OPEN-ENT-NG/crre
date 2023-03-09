@@ -23,3 +23,8 @@ export class FiltersFront {
         this.all = [];
     }
 }
+
+export interface IFilter {
+    getKey(): string
+    getValue(): string
+}

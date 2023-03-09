@@ -5,7 +5,7 @@ import {
     Baskets,
     Campaign,
     Equipment, Equipments,
-    Filter, Offer,
+    Filter, IFilter, Offer,
     Offers,
     Order,
     OrderRegion,
@@ -15,6 +15,9 @@ import {
     Utils
 } from './index';
 import http, {AxiosPromise, AxiosResponse} from 'axios';
+import {IUserModel, UserModel} from "./UserModel";
+import {element} from "angular";
+import {ValidatorOrderWaitingFilter} from "./ValidatorOrderWaitingFilter";
 
 declare let window: any;
 
@@ -94,128 +97,52 @@ export class OrdersClient extends Selection<OrderClient> {
         this.filters = [];
     }
 
-    async search(text: String, id_campaign: number, id_structure: string, start: string, end: string,
-                 page?: number, ordersToRemove?: OrdersClient) {
-        try {
-            if ((text.trim() === '' || !text)) return;
-            let params = (id_campaign) ? `&id=${id_campaign}` : ``;
-            const {startDate, endDate} = Utils.formatDate(start, end);
-            const {data} = await http.get(`/crre/orders/search_filter?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&page=${page}&q=${text}${params}`);
-            let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
-            if (newOrderClient.length > 0 && !ordersToRemove) {
-                await this.reformatOrders(newOrderClient);
-                return true;
-            } else {
-                ordersToRemove.all = newOrderClient;
-                return true
-            }
-        } catch (err) {
-            toasts.warning('crre.basket.sync.err');
-            throw err;
+    async searchOrder(idStructure: string, filter: ValidatorOrderWaitingFilter, replace: boolean, page?:number) {
+        let queryParam = "";
+        if (filter.queryName != null && filter.queryName.trim() === "") {
+            queryParam = `&q=${filter.queryName}`
         }
-    }
 
-    async filter_order(filters: Filter[], id_campaign: number, id_structure: string, start: string, end: string,
-                       word?: string, page?: number, ordersToRemove?: OrdersClient) {
-        try {
-            let params = (id_campaign) ? `&id=${id_campaign}` : ``;
-            filters.forEach(function (f) {
-                params += "&" + f.name + "=" + f.value;
-            });
-            const {startDate, endDate} = Utils.formatDate(start, end);
-            if (!Utils.format.test(word)) {
-                let url = `/crre/orders/search_filter?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&page=${page}${params}`;
-                url += (!!word) ? `&q=${word}` : ``;
-                let {data} = await http.get(url);
-                let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
-                if (newOrderClient.length > 0 && !ordersToRemove) {
-                    await this.reformatOrders(newOrderClient);
-                    return true;
-                } else {
-                    ordersToRemove.all = newOrderClient;
-                    return true
-                }
-            } else {
-                toasts.warning('crre.equipment.special');
-            }
-        } catch (e) {
-            toasts.warning('crre.equipment.sync.err');
-            throw e;
-        } finally {
+        let pageParam = "";
+        if (page != null) {
+            pageParam = `&page=${page}`
         }
-    }
 
-    private async reformatOrders(newOrderClient: Array<OrderClient>) : Promise<void> {
-        let equipments : Equipments = new Equipments();
-        await equipments.getEquipments(newOrderClient);
-        for (let order of newOrderClient) {
-            this.reformatOrder(equipments, order);
-            order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
-            order.creation_date = moment(order.creation_date).format('L');
+        let dateParam = "";
+        if (filter.startDate && filter.endDate) {
+            const {startDate, endDate} = Utils.formatDate(filter.startDate, filter.endDate);
+            dateParam = `&startDate=${startDate}&endDate=${endDate}`
         }
-        this.all = this.all.concat(newOrderClient);
-    }
 
-    private reformatOrder(equipments : Equipments, order : OrderClient) {
-        let equipment : Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
-        if (equipment != undefined) {
-            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
-            order.price = Utils.calculatePriceTTC(equipment, 2);
-            order.name = equipment.titre;
-            order.image = equipment.urlcouverture.replace("cns-edu.org", "www.cns-edu.com");
-            if (equipment.type === "articlenumerique") {
-                order.offers = Utils.computeOffer(order, equipment);
-            }
+        let params : string = '';
+        filter.filterChoiceCorrelation.forEach((key: string) => {
+            filter[key].forEach((el: IFilter) => params += "&" + el.getKey() + "=" + el.getValue())
+        });
+
+        let response: AxiosResponse;
+        if (queryParam != "" || params != "") {
+            response = await http.get(`/crre/orders/search_filter?idStructure=${idStructure}${dateParam}${pageParam}${queryParam}${params}`);
         } else {
-            order.priceTotalTTC = 0.0;
-            order.price = 0.0;
-            order.name = "Manuel introuvable dans le catalogue";
-            order.image = "/crre/public/img/pages-default.png";
+            response = await http.get(`/crre/orders?idStructure=${idStructure}${dateParam}${pageParam}&status=WAITING`);
         }
+
+        let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, response.data);
+        await this.reformatOrders(newOrderClient, replace);
+        return newOrderClient.length > 0;
     }
 
-    async sync(status: string, start: string, end: string, structures: Structures = new Structures(), idCampaign?: number,
-               idStructure?: string, ordersId?, page?: number, old = false, ordersToRemove?: OrdersClient): Promise<boolean> {
-        try {
-            const {startDate, endDate} = Utils.formatDate(start, end);
-            if (idCampaign && idStructure && ordersId) {
-                return await this.getSpecificOrders(ordersId, old, idCampaign, idStructure, startDate, endDate);
-            } else {
-                const {data} = await http.get(`/crre/orders?idStructure=${idStructure}&startDate=${startDate}&endDate=${endDate}&page=${page}&status=${status}`);
-                if (!ordersToRemove) {
-                    let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
-                    if (!old && newOrderClient.length > 0) {
-                        let equipments : Equipments = new Equipments();
-                        await equipments.getEquipments(newOrderClient);
-                        for (let order of newOrderClient) {
-                            this.reformatOrder(equipments, order);
-                            order.name_structure = (structures && structures.length > 0) ?
-                                OrderUtils.initNameStructure(order.id_structure, structures) : '';
-                            order.structure = (structures && structures.length > 0) ?
-                                OrderUtils.initStructure(order.id_structure, structures) : new Structure();
-                            order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
-                            order.priceTotalTTC = parseFloat((OrderUtils.calculatePriceTTC(2, order.equipment) as number).toString()) * order.amount;
-                            order.creation_date = moment(order.creation_date).format('DD-MM-YYYY');
-                        }
-                    }
-                    this.all = this.all.concat(newOrderClient);
-                } else {
-                    ordersToRemove.all = data;
-                }
-                return true;
-            }
-        } catch (e) {
-            console.warn(e)
-            toasts.warning('crre.order.sync.err');
+    async syncMyOrder(filter: ValidatorOrderWaitingFilter, idCampaign: number,
+                 idStructure: string, ordersId: Array<number>, old = false): Promise<boolean> {
+        let dateParam = "";
+        if (filter.startDate && filter.endDate) {
+            const {startDate, endDate} = Utils.formatDate(filter.startDate, filter.endDate);
+            dateParam = `startDate=${startDate}&endDate=${endDate}&`
         }
-    }
-
-    private async getSpecificOrders(ordersId, old: boolean, idCampaign: number, idStructure: string, startDate, endDate) : Promise<boolean> {
         let params : string = '?';
         ordersId.map((order) => {
             params += `order_id=${order}&`;
         });
-        let url : string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}startDate=${startDate}&endDate=${endDate}&old=${old}`;
+        let url : string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}${dateParam}old=${old}`;
         const {data} = await http.get(url);
         let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
         for (let order of newOrderClient) {
@@ -245,12 +172,45 @@ export class OrdersClient extends Selection<OrderClient> {
             }
         }
         this.all = newOrderClient;
-        return true;
+        return newOrderClient.length > 0;
     }
 
-    async getUsers(status: string, idStructure: string): Promise<boolean> {
+    private async reformatOrders(newOrderClient: Array<OrderClient>, replace: boolean) : Promise<void> {
+        let equipments : Equipments = new Equipments();
+        await equipments.getEquipments(newOrderClient);
+        for (let order of newOrderClient) {
+            this.reformatOrder(equipments, order);
+            order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
+            order.creation_date = moment(order.creation_date).format('L');
+        }
+        if (replace) {
+            this.all = newOrderClient;
+        } else {
+            this.all = this.all.concat(newOrderClient);
+        }
+    }
+
+    private reformatOrder(equipments : Equipments, order : OrderClient) {
+        let equipment : Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
+        if (equipment != undefined) {
+            order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
+            order.price = Utils.calculatePriceTTC(equipment, 2);
+            order.name = equipment.titre;
+            order.image = equipment.urlcouverture.replace("cns-edu.org", "www.cns-edu.com");
+            if (equipment.type === "articlenumerique") {
+                order.offers = Utils.computeOffer(order, equipment);
+            }
+        } else {
+            order.priceTotalTTC = 0.0;
+            order.price = 0.0;
+            order.name = "Manuel introuvable dans le catalogue";
+            order.image = "/crre/public/img/pages-default.png";
+        }
+    }
+
+    async getUsers(status: string, idStructure: string): Promise<Array<UserModel>> {
         const {data} = await http.get(`/crre/orders/users?status=${status}&idStructure=${idStructure}`);
-        return data;
+        return data.map((element: IUserModel) => new UserModel(element));
     }
 
     getEquipments(orders): AxiosPromise {
@@ -282,11 +242,11 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async calculTotal(status: string, id_structure: string, start: string, end: string, filters: Filter[]): Promise<AxiosResponse> {
-        const {startDate, endDate} = Utils.formatDate(start, end);
+    async calculTotal(status: string, id_structure: string, filterOrder: ValidatorOrderWaitingFilter): Promise<AxiosResponse> {
+        const {startDate, endDate} = Utils.formatDate(filterOrder.startDate, filterOrder.endDate);
         let params : string = '';
-        filters.forEach(function (f) {
-            params += "&" + f.name + "=" + f.value;
+        filterOrder.filterChoiceCorrelation.forEach((key: string) => {
+            filterOrder[key].forEach((el: IFilter) => params += "&" + el.getKey() + "=" + el.getValue())
         });
         const {data} = await http.get(`/crre/orders/amount?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&status=${status}${params}`);
         return data;

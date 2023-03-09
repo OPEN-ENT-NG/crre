@@ -5,3 +5,5 @@ export * from './searchAndSelect';
 export * from './infinite-scroll';
 export * from './loader';
 export * from './confirm-generate-library/confirm-generate-library.directive';
+export * from './order-waiting-price-display/order-waiting-price-display.directive';
+export * from './order-filter-validator/order-filter-validator.directive';

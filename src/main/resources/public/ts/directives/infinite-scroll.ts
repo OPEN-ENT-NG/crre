@@ -31,7 +31,7 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
             // latest height once scroll will reach
             const latestHeightBottom: number = 300;
 
-            $(window).on("scroll", () => {
+            function scroll() {
                 const scrollHeight: number = $(document).height() as number;
                 const scrollPos: number = Math.floor($(window).height() + $(window).scrollTop());
                 const isBottom: boolean = scrollHeight - latestHeightBottom < scrollPos;
@@ -47,11 +47,19 @@ export const InfiniteScroll = ng.directive('infiniteScroll', () => {
                     // Storing the latest scroll that has been the longest one in order to not redo the scrolled() each time
                     currentscrollHeight = scrollHeight;
                 }
-            });
+            }
+
+            $(window).on("scroll", scroll);
 
             // If somewhere in your controller you have to reinitialise anything that should "reset" your dom height
             // We reset currentscrollHeight
             $scope.$on(INFINITE_SCROLL_EVENTER.UPDATE, () => currentscrollHeight = 0);
+
+            // You can use this function to avoid launching the onScroll function if there is no more new data
+            $scope.$on(INFINITE_SCROLL_EVENTER.PAUSE, () => $(window).off("scroll", scroll));
+
+            // Allows you to restart the scroll
+            $scope.$on(INFINITE_SCROLL_EVENTER.RESUME, () => $(window).on("scroll", scroll));
         }
     }
 });

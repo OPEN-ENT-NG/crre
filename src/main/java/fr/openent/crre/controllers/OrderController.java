@@ -37,7 +37,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
@@ -128,6 +131,7 @@ public class OrderController extends ControllerHelper {
             });
         } catch (ClassCastException e) {
             log.error("An error occured when casting campaign id ", e);
+            renderError(request);
         }
     }
 
@@ -296,7 +300,7 @@ public class OrderController extends ControllerHelper {
     public void filter(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {
-                Integer page = OrderUtils.formatPage(request);
+                Integer page = request.getParam(Field.PAGE) == null ? null : Integer.parseInt(request.params().get(Field.PAGE));
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
                 String startDate = request.getParam("startDate");
                 String endDate = request.getParam("endDate");
@@ -340,8 +344,9 @@ public class OrderController extends ControllerHelper {
                                     .collect(Collectors.toList());
                     orderService.search(finalQ, filters, idStructure, equipementIdList, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
                 });
-            } catch (UnsupportedEncodingException e) {
+            } catch (UnsupportedEncodingException | NumberFormatException e) {
                 e.printStackTrace();
+                renderError(request);
             }
         });
     }
@@ -577,6 +582,7 @@ public class OrderController extends ControllerHelper {
                 orderService.updateAmount(id, amount, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
+                renderError(request);
             }
         });
     }
@@ -597,6 +603,7 @@ public class OrderController extends ControllerHelper {
                 orderService.updateReassort(id, reassort, defaultResponseHandler(request));
             } catch (NumberFormatException e) {
                 e.printStackTrace();
+                renderError(request);
             }
         });
     }

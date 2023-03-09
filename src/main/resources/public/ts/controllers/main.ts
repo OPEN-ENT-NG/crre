@@ -20,6 +20,7 @@ import {
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
+import {ValidatorOrderWaitingFilter} from "../model/ValidatorOrderWaitingFilter";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -446,9 +447,11 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         const syncOrders = async (status: string) => {
             $scope.ordersClient = new OrdersClient();
-            let startDate = moment().add(-1, 'years')._d;
-            let endDate = moment()._d;
-            const newData = await $scope.ordersClient.sync(status, startDate, endDate, $scope.structures.all, null, $scope.current.structure.id, null, 0);
+            let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter([]);
+            filter.startDate = moment().add(-1, 'years')._d;
+            filter.endDate = moment()._d;
+            filter.queryName = status;
+            const newData = await $scope.ordersClient.searchOrder($scope.current.structure.id, filter, true, 0);
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
             $scope.displayedOrders.all = $scope.ordersClient.all;

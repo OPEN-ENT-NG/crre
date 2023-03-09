@@ -1,10 +1,10 @@
 import http from 'axios';
 import {_, moment, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import {StructureGroup} from './index';
+import {IFilter, StructureGroup} from './index';
 
 
-export class Campaign implements Selectable  {
+export class Campaign implements Selectable, IFilter  {
     id?: number;
     name: string;
     description: string;
@@ -125,6 +125,14 @@ export class Campaign implements Selectable  {
         } catch (e) {
             toasts.warning('crre.campaign.sync.err');
         }
+    }
+
+    getValue(): string {
+        return this.id.toString();
+    }
+
+    getKey(): string {
+        return "id_campaign";
     }
 }
 

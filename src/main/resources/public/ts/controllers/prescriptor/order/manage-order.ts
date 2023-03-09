@@ -7,6 +7,7 @@ import {
     Utils
 } from '../../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
+import {ValidatorOrderWaitingFilter} from "../../../model/ValidatorOrderWaitingFilter";
 
 export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
@@ -114,8 +115,10 @@ export const manageOrderController = ng.controller('manageOrderController',
                 ordersId.push(order.id);
             });
             $scope.newOrders = new OrdersClient();
-            await $scope.newOrders.sync(null, $scope.filtersDate.startDate, $scope.filtersDate.endDate, [],
-                $routeParams.idCampaign, $scope.current.structure.id, ordersId, null, $scope.filter.isOld);
+            let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter([]);
+            filter.startDate = $scope.filtersDate.startDate;
+            filter.endDate = $scope.filtersDate.endDate;
+            await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, ordersId, $scope.filter.isOld);
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);
         };

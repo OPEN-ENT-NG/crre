@@ -1,0 +1,65 @@
+<div class="row margin-top-20">
+  <div class="min-width-date-picker margin-top-8 twelve-mobile">
+    <i18n>from</i18n>
+    &#58;&nbsp;
+    <!-- start date -->
+    <div class="date-picker-style">
+      <i class="diary-calendar"></i>
+      <date-picker
+              ng-model="vm.filter.startDate"
+              ng-change="vm.applyFilter()"
+              class="input-date-picker-style">
+      </date-picker>
+    </div>
+    &nbsp;&nbsp;&nbsp;
+    <i18n>to</i18n>
+    &#58;&nbsp;
+    <!-- end date -->
+    <div class="date-picker-style">
+      <i class="diary-calendar"></i>
+      <date-picker
+              ng-model="vm.filter.endDate"
+              ng-change="vm.applyFilter()"
+              class="input-date-picker-style">
+      </date-picker>
+    </div>
+  </div>
+  <div class="cell two margin-top-8 twelve-mobile">
+    <div class="search-bar order-search-bar">
+      <i class="search padding-5"></i>
+      <input class="twelve"
+             type="text"
+             ng-model="vm.filter.queryName"
+             ng-keyup="$event.keyCode == 13 ? vm.applyFilter() : null"
+             i18n-placeholder="search.filter.order"/>
+    </div>
+  </div>
+  <div class="cell twelve-mobile eight catalog margin-top-8 twelve-mobile">
+    <multi-combo title="[[vm.lang.translate('Teachers')]]"
+                 combo-model="vm.userList"
+                 search-on="user_name" order-by="user_name"
+                 labels="vm.comboLabels" filtered-model="vm.filter.users"
+                 selection-event="vm.applyFilter()"
+                 deselection-event="vm.applyFilter()"
+                 class="two inline-block horizontal-spacing no-border">
+    </multi-combo>
+    <multi-combo title="[[vm.lang.translate('crre.type.campaign')]]"
+                 combo-model="vm.typeCampaignList"
+                 search-on="name" order-by="name"
+                 labels="vm.comboLabels" filtered-model="vm.filter.typeCampaign"
+                 selection-event="vm.applyFilter()"
+                 deselection-event="vm.applyFilter()"
+                 class="six inline-block horizontal-spacing no-border">
+    </multi-combo>
+  </div>
+</div>
+<div class="row" ng-if="vm.haveOneFilterActive()">
+  <div class="remove-margin-bottom">
+    <div ng-repeat="key in vm.filter.filterChoiceCorrelation" class="select-blocks inline-block">
+      <div ng-repeat="item in vm.filter[key]"
+           ng-click="vm.dropElement(item,key)">
+        [[item.toString()]]
+      </div>
+    </div>
+  </div>
+</div>
