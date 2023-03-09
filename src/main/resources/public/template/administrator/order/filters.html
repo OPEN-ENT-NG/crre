@@ -2,13 +2,12 @@
 <div class="catalog">
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.campaigns</i18n></span>
-        <multi-combo title="[[lang.translate('crre.all.campaigns')]]"
-                     combo-model="campaigns.all"
-                     search-on="name" order-by="campaign"
-                     labels="comboLabels" filtered-model="filterChoice.campaigns"
+        <multi-combo title="[[lang.translate('docsType')]]"
+                     combo-model="equipments.docsType"
+                     search-on="name" order-by="name"
+                     labels="comboLabels" filtered-model="filterChoice.docType"
                      selection-event="getFilter()"
                      deselection-event="getFilter()"
-                     max-selected="10"
                      class="inline-block eight right-magnet">
         </multi-combo>
     </div>
