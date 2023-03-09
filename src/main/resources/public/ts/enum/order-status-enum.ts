@@ -4,4 +4,5 @@ export enum ORDER_STATUS_ENUM {
     VALID = "VALID",
     DONE = "DONE",
     REJECTED = "REJECTED",
+    SENT = "SENT",
 }

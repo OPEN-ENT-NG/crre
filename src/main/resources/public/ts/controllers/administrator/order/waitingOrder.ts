@@ -33,7 +33,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 id_structure: "id_structure"
             };
 
-            $scope.states = [{status: ORDER_STATUS_ENUM.WAITING}, {status: ORDER_STATUS_ENUM.IN_PROGRESS}, {status: ORDER_STATUS_ENUM.VALID}, {status: ORDER_STATUS_ENUM.DONE}, {status: ORDER_STATUS_ENUM.REJECTED}];
+            $scope.states = [{status: ORDER_STATUS_ENUM.SENT}, {status: ORDER_STATUS_ENUM.IN_PROGRESS}, {status: ORDER_STATUS_ENUM.VALID}, {status: ORDER_STATUS_ENUM.DONE}, {status: ORDER_STATUS_ENUM.REJECTED}];
             $scope.states.forEach((item) => item.toString = () => {
                 if (item.status === ORDER_STATUS_ENUM.IN_PROGRESS) {
                     return $scope.translate("NEW")
