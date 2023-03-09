@@ -500,7 +500,7 @@ public class OrderController extends ControllerHelper {
                 (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
                 (log.getString(Field.NAME) != null ? log.getString(Field.NAME) : "") + ";" +
                 (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
-                exportPriceComment(log) + ";" +
+                exportPriceComment(log) +
                 (log.getString(Field.STATUS) != null ? I18n.getInstance().translate(log.getString(Field.STATUS), getHost(request), I18n.acceptLanguage(request)) : "")
                 + "\n";
     }
