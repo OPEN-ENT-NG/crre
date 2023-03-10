@@ -37,11 +37,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
@@ -302,33 +300,25 @@ public class OrderController extends ControllerHelper {
             try {
                 Integer page = request.getParam(Field.PAGE) == null ? null : Integer.parseInt(request.params().get(Field.PAGE));
                 String q = ""; // Query pour chercher sur le nom du panier, le nom de la ressource ou le nom de l'enseignant
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                String idStructure = request.getParam("idStructure");
+                String startDate = request.getParam(Field.STARTDATE);
+                String endDate = request.getParam(Field.ENDDATE);
+                String idStructure = request.getParam(Field.IDSTRUCTURE);
 
                 // Récupération de tout les filtres
-                JsonArray filters = new JsonArray();
-                boolean exist;
-                int length = request.params().entries().size();
-                for (int i = 0; i < length; i++) {
-                    String key = request.params().entries().get(i).getKey();
-                    exist = false;
-                    if (!key.equals(Field.ID) && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
-                            !key.equals("startDate") && !key.equals("endDate")) {
-                        for (int f = 0; f < filters.size(); f++) {
-                            if (filters.getJsonObject(f).containsKey(key)) {
-                                filters.getJsonObject(f).getJsonArray(key).add(request.params().entries().get(i).getValue());
-                                exist = true;
-                            }
-                        }
-                        if (!exist) {
-                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), new JsonArray().add(request.params().entries().get(i).getValue())));
-                        }
-                    }
-                }
+                final Map<String, List<String>> filters = request.params().entries().stream()
+                        .filter(stringStringEntry -> !stringStringEntry.getKey().equals(Field.ID) &&
+                                !stringStringEntry.getKey().equals(Field.Q) && !stringStringEntry.getKey().equals(Field.IDSTRUCTURE) &&
+                                !stringStringEntry.getKey().equals(Field.PAGE) &&
+                                !stringStringEntry.getKey().equals(Field.STARTDATE) && !stringStringEntry.getKey().equals(Field.ENDDATE))
+                        .collect(Collectors.groupingBy(Map.Entry::getKey))
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                stringListEntry -> stringListEntry.getValue().stream().map(Map.Entry::getValue).collect(Collectors.toList())));
+
                 // On verifie si on a bien une query, si oui on la décode pour éviter les problèmes d'accents
-                if (request.params().contains("q")) {
-                    q = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
+                if (request.params().contains(Field.Q)) {
+                    q = URLDecoder.decode(request.getParam(Field.Q), Field.UTF_DASH_8).toLowerCase();
                 }
                 Integer id_campaign = null;
                 if (request.getParam(Field.ID) != null) {
@@ -342,7 +332,9 @@ public class OrderController extends ControllerHelper {
                                     .map(JsonObject.class::cast)
                                     .map(jsonObject -> jsonObject.getString(Field.EAN))
                                     .collect(Collectors.toList());
-                    orderService.search(finalQ, filters, idStructure, equipementIdList, finalId_campaign, startDate, endDate, page, arrayResponseHandler(request));
+                    orderService.search(finalQ, filters, idStructure, equipementIdList, finalId_campaign, startDate, endDate, page)
+                            .onSuccess(result -> Renders.renderJson(request, result))
+                            .onFailure(error -> Renders.renderError(request));
                 });
             } catch (UnsupportedEncodingException | NumberFormatException e) {
                 e.printStackTrace();

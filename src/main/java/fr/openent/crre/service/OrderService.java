@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
 import java.util.List;
+import java.util.Map;
 
 public interface OrderService {
     /**
@@ -59,8 +60,8 @@ public interface OrderService {
 
     Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderClientEquipmentType orderClientEquipmentType);
 
-    void search(String query, JsonArray filters, String idStructure, List<String> equipementIdList, Integer id_campaign, String startDate, String endDate, Integer page,
-                Handler<Either<String, JsonArray>> arrayResponseHandler);
+    Future<JsonArray> search(String query, Map<String, List<String>> filters, String idStructure, List<String> equipementIdList,
+                             Integer idCampaign, String startDate, String endDate, Integer page);
 
     /**
      * Get customer orders from a list of ids

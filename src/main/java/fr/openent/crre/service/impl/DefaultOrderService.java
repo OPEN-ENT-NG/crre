@@ -3,6 +3,8 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.database.sql.OrderClientEquipmentTableField;
+import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.service.OrderService;
@@ -19,8 +21,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
@@ -276,57 +277,63 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void search(String query, JsonArray filters, String idStructure, List<String> equipementIdList, Integer id_campaign, String startDate, String endDate, Integer page,
-                       Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String sqlquery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, " +
+    public Future<JsonArray> search(String query, Map<String, List<String>> filters, String idStructure, List<String> equipementIdList,
+                                    Integer idCampaign, String startDate, String endDate, Integer page) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray values = new JsonArray();
+        final StringBuilder sqlquery = new StringBuilder("SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount, " +
                 "oe.id as id, tc.name as type_name, to_json(c.* ) campaign " +
                 "FROM " + Crre.crreSchema + ".order_client_equipment oe " +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oe.id_basket) " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = oe.id_campaign) " +
                 "LEFT JOIN " + Crre.crreSchema + ".type_campaign tc ON (tc.id = c.id_type) " +
-                "WHERE oe.creation_date BETWEEN ? AND ? ";
+                "WHERE oe.creation_date BETWEEN ? AND ? ");
         values.add(startDate).add(endDate);
-        if (id_campaign != null) {
-            sqlquery += "AND oe.id_campaign = ? ";
-            values.add(id_campaign);
+        if (idCampaign != null) {
+            sqlquery.append("AND oe.id_campaign = ? ");
+            values.add(idCampaign);
         }
 
-        sqlquery = DefaultBasketOrderService.SQLConditionQueryEquipments(query, equipementIdList, values, false, sqlquery);
+        sqlquery.append(DefaultBasketOrderService.SQLConditionQueryEquipments(query, equipementIdList, values, false, ""));
 
-        sqlquery += ") AND oe.status = 'WAITING' AND oe.id_structure = ? ";
+        sqlquery.append(") AND oe.status = 'WAITING' AND oe.id_structure = ? ");
         values.add(idStructure);
 
         if (filters != null && filters.size() > 0) {
-            sqlquery += " AND ( ";
-            for (int i = 0; i < filters.size(); i++) {
-                String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
-                JsonArray value = filters.getJsonObject(i).getJsonArray(key);
-                if (key.equals("id_user")) {
-                    sqlquery += "bo." + key + " IN ( ";
-                } else {
-                    sqlquery += "oe." + key + " IN ( ";
-                }
-                for (int k = 0; k < value.size(); k++) {
-                    sqlquery += "?,";
-                    values.add(value.getString(k));
-                }
-                sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-                if (!(i == filters.size() - 1)) {
-                    sqlquery += " AND ";
-                } else {
-                    sqlquery += ")";
-                }
-            }
+            sqlquery.append(" AND ( ");
+
+            String filtersString = filters.entrySet().stream()
+                    .map(filter -> {
+                        String filterString;
+                        if (Field.ID_USER.equals(filter.getKey())) {
+                            filterString = "bo.";
+                        // if the key is in OrderClientEquipmentTableField
+                        } else if (Arrays.stream(OrderClientEquipmentTableField.values())
+                                .anyMatch(orderClientEquipmentTableField -> orderClientEquipmentTableField.name().equalsIgnoreCase(filter.getKey()))) {
+                            filterString = "oe.";
+                        } else {
+                            return null;
+                        }
+                        filterString += filter.getKey() + " IN ( " + Sql.listPrepared(filter.getValue()) + ")";
+                        values.addAll(new JsonArray(filter.getValue()));
+
+                        return filterString;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(" AND "));
+
+            sqlquery.append(filtersString).append(")");
         }
 
-        sqlquery += " ORDER BY creation_date DESC ";
+        sqlquery.append(" ORDER BY creation_date DESC ");
         if (page != null) {
-            sqlquery += "OFFSET ? LIMIT ? ";
+            sqlquery.append("OFFSET ? LIMIT ? ");
             values.add(PAGE_SIZE * page);
             values.add(PAGE_SIZE);
         }
-        sql.prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+        sql.prepared(sqlquery.toString(), values, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
     }
 
     @Override

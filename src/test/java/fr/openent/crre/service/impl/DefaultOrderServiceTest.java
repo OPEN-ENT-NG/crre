@@ -20,7 +20,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
@@ -86,6 +88,42 @@ public class DefaultOrderServiceTest {
 
         this.defaultOrderService.getOrderClientEquipmentListFromBasketId(Arrays.asList(62, 18, 9));
 
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void searchTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        Map<String, List<String>> filters = new HashMap<>();
+        filters.put("id_user", Arrays.asList("8555", "4846"));
+        filters.put("id_campaign", Arrays.asList("64353", "46813"));
+        filters.put("other_field", Arrays.asList(";DROP CASCADE"));
+
+        List<String> equipementIdList = Arrays.asList("a198f4c", "ade86f");
+
+        String expectedQuery = "SELECT oe.*, bo.*, bo.name as basket_name, bo.name_user as user_name, oe.amount as amount," +
+                " oe.id as id, tc.name as type_name, to_json(c.* ) campaign " +
+                "FROM null.order_client_equipment oe " +
+                "LEFT JOIN null.basket_order bo ON (bo.id = oe.id_basket) " +
+                "LEFT JOIN null.campaign c ON (c.id = oe.id_campaign) " +
+                "LEFT JOIN null.type_campaign tc ON (tc.id = c.id_type) " +
+                "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND " +
+                "(lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (?,?)) AND oe.status = 'WAITING' " +
+                "AND oe.id_structure = ?  AND ( bo.id_user IN ( (?,?)) AND oe.id_campaign IN ( (?,?))) ORDER BY creation_date DESC OFFSET ? LIMIT ? ";
+        String expectedParams = "[\"startDate\",\"endDate\",18,\"query_search\",\"query_search\",\"a198f4c\",\"ade86f\"," +
+                "\"idStructure\",\"8555\",\"4846\",\"64353\",\"46813\",135,15]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderService.search("query_search", filters, "idStructure", equipementIdList, 18, "startDate", "endDate", 9);
         async.awaitSuccess(10000);
     }
 }
