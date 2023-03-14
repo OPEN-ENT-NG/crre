@@ -754,6 +754,7 @@
   "crre.campaign.reassort" : "Campagne de réassort",
   "crre.catalog.access" : "Choix du catalogue :",
   "crre.catalog.type" : "Type de catalogue",
+  "crre.catalog.all" : "Tout catalogue",
   "crre.tag.reassort.auto" : "Toutes les références commandées dans cette campagne seront automatiquement taguées réassort",
   "crre.total.licences" : "Quantité totale",
   "crre.total.credits" : "Total en €",
