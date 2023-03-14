@@ -300,8 +300,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         values.add(idStructure);
 
         if (filters != null && filters.size() > 0) {
-            sqlquery.append(" AND ( ");
-
             String filtersString = filters.entrySet().stream()
                     .map(filter -> {
                         String filterString;
@@ -321,8 +319,9 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.joining(" AND "));
-
-            sqlquery.append(filtersString).append(")");
+            if (!filtersString.isEmpty()) {
+                sqlquery.append(" AND ( ").append(filtersString).append(")");
+            }
         }
 
         sqlquery.append(" ORDER BY creation_date DESC ");
