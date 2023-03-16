@@ -1,22 +1,21 @@
-import {_, model, moment, toasts, idiom as lang} from 'entcore';
+import {_, idiom as lang, model, moment, toasts} from 'entcore';
 import {Mix, Selection} from 'entcore-toolkit';
 import {
     Basket,
     Baskets,
     Campaign,
-    Equipment, Equipments,
-    Filter, IFilter, Offer,
+    Equipment,
+    Equipments,
+    IFilter,
+    Offer,
     Offers,
     Order,
     OrderRegion,
-    OrderUtils,
     Structure,
-    Structures,
     Utils
 } from './index';
 import http, {AxiosPromise, AxiosResponse} from 'axios';
 import {IUserModel, UserModel} from "./UserModel";
-import {element} from "angular";
 import {ValidatorOrderWaitingFilter} from "./ValidatorOrderWaitingFilter";
 
 declare let window: any;
@@ -99,7 +98,7 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async searchOrder(idStructure: string, filter: ValidatorOrderWaitingFilter, replace: boolean, page?:number) {
         let queryParam = "";
-        if (filter.queryName != null && filter.queryName.trim() === "") {
+        if (filter.queryName != null && filter.queryName.trim() !== "") {
             queryParam = `&q=${filter.queryName}`
         }
 
@@ -115,8 +114,8 @@ export class OrdersClient extends Selection<OrderClient> {
         }
 
         let params : string = '';
-        filter.filterChoiceCorrelation.forEach((key: string) => {
-            filter[key].forEach((el: IFilter) => params += "&" + el.getKey() + "=" + el.getValue())
+        filter.filterChoiceCorrelation.forEach((value: string, key: string) => {
+            filter[key].forEach((el: IFilter) => params += "&" + value + "=" + el.getValue())
         });
 
         let response: AxiosResponse;
@@ -245,8 +244,8 @@ export class OrdersClient extends Selection<OrderClient> {
     async calculTotal(status: string, id_structure: string, filterOrder: ValidatorOrderWaitingFilter): Promise<AxiosResponse> {
         const {startDate, endDate} = Utils.formatDate(filterOrder.startDate, filterOrder.endDate);
         let params : string = '';
-        filterOrder.filterChoiceCorrelation.forEach((key: string) => {
-            filterOrder[key].forEach((el: IFilter) => params += "&" + el.getKey() + "=" + el.getValue())
+        filterOrder.filterChoiceCorrelation.forEach((value: string, key: string) => {
+            filterOrder[key].forEach((el: IFilter) => params += "&" + value + "=" + el.getValue())
         });
         const {data} = await http.get(`/crre/orders/amount?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&status=${status}${params}`);
         return data;

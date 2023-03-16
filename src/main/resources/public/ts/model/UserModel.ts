@@ -37,8 +37,4 @@ export class UserModel implements IUserModel {
     getValue(): string {
         return this._id_user;
     }
-
-    getKey(): string {
-        return "id_user";
-    }
 }

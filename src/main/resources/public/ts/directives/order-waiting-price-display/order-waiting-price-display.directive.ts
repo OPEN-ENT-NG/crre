@@ -64,7 +64,7 @@ class Controller implements IViewModel {
 
     totalSelectedPriceConsumable(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.credit;
+            return this.amountTotal.consumable_credit;
         }
 
         return this.ordersClient.all
@@ -76,7 +76,7 @@ class Controller implements IViewModel {
 
     totalSelectedPrice(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.consumable_credit;
+            return this.amountTotal.credit;
         }
 
         return this.ordersClient.all

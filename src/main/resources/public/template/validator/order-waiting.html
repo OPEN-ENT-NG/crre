@@ -1,6 +1,6 @@
 <div ng-controller="waitingValidatorOrderController" class="crre-table">
     <div class="crre-order-waiting-header ten">
-        <order-filter-validator class="flex-one" on-search="search" filter="filterOrder" user-list="users" type-campaign-list="type_campaign"></order-filter-validator>
+        <order-waiting-filter-validator class="flex-one" on-search="search" filter="filterOrder" user-list="users" type-campaign-list="type_campaign"></order-waiting-filter-validator>
         <div class="cell twelve-mobile right-magnet" style="z-index: 1;">
             <button ng-disabled="remainAvailable()" ng-click="createOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
         </div>

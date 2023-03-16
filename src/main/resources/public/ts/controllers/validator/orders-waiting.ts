@@ -143,7 +143,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             if ($scope.allOrdersSelected || $scope.ordersClient.selectedElements.length === 0) {
                 await ordersToRemove.searchOrder($scope.current.structure.id, $scope.filterOrder, true);
                 ordersToRemove.forEach(order => {
-                    order.campaign = Mix.castAs(Campaign, JSON.parse(order.campaign.toString()));
                     if (order.campaign.accessible) {
                         const orderRegion = new OrderRegion();
                         orderRegion.createFromOrderClient(order);

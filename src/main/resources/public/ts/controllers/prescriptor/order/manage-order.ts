@@ -115,7 +115,7 @@ export const manageOrderController = ng.controller('manageOrderController',
                 ordersId.push(order.id);
             });
             $scope.newOrders = new OrdersClient();
-            let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter([]);
+            let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter();
             filter.startDate = $scope.filtersDate.startDate;
             filter.endDate = $scope.filtersDate.endDate;
             await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, ordersId, $scope.filter.isOld);

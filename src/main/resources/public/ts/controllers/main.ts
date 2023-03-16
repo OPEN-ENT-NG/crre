@@ -447,10 +447,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
 
         const syncOrders = async (status: string) => {
             $scope.ordersClient = new OrdersClient();
-            let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter([]);
+            let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter();
             filter.startDate = moment().add(-1, 'years')._d;
             filter.endDate = moment()._d;
-            filter.queryName = status;
             const newData = await $scope.ordersClient.searchOrder($scope.current.structure.id, filter, true, 0);
             if (newData)
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);

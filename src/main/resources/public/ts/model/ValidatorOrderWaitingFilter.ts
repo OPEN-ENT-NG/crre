@@ -6,17 +6,17 @@ export class ValidatorOrderWaitingFilter {
     startDate;
     endDate;
     queryName: string;
-    users: Array<UserModel>;
-    typeCampaign: Array<Campaign>;
-    filterChoiceCorrelation: Array<string>;
+    userList: Array<UserModel>;
+    typeCampaignList: Array<Campaign>;
+    filterChoiceCorrelation: Map<string, string>;
 
 
-    constructor(filterChoiceCorrelation: Array<string>) {
+    constructor() {
         this.startDate = moment().add(-6, 'months')._d;
         this.endDate = moment()._d;
         this.queryName = "";
-        this.users = [];
-        this.typeCampaign = [];
-        this.filterChoiceCorrelation = filterChoiceCorrelation;
+        this.userList = [];
+        this.typeCampaignList = [];
+        this.filterChoiceCorrelation = new Map<string, string>();
     }
 }

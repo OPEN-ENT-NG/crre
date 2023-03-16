@@ -38,7 +38,7 @@
     <multi-combo title="[[vm.lang.translate('Teachers')]]"
                  combo-model="vm.userList"
                  search-on="user_name" order-by="user_name"
-                 labels="vm.comboLabels" filtered-model="vm.filter.users"
+                 labels="vm.comboLabels" filtered-model="vm.filter.userList"
                  selection-event="vm.applyFilter()"
                  deselection-event="vm.applyFilter()"
                  class="two inline-block horizontal-spacing no-border">
@@ -46,7 +46,7 @@
     <multi-combo title="[[vm.lang.translate('crre.type.campaign')]]"
                  combo-model="vm.typeCampaignList"
                  search-on="name" order-by="name"
-                 labels="vm.comboLabels" filtered-model="vm.filter.typeCampaign"
+                 labels="vm.comboLabels" filtered-model="vm.filter.typeCampaignList"
                  selection-event="vm.applyFilter()"
                  deselection-event="vm.applyFilter()"
                  class="six inline-block horizontal-spacing no-border">

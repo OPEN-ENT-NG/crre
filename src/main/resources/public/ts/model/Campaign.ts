@@ -130,10 +130,6 @@ export class Campaign implements Selectable, IFilter  {
     getValue(): string {
         return this.id.toString();
     }
-
-    getKey(): string {
-        return "id_campaign";
-    }
 }
 
 export class Campaigns extends Selection<Campaign> {

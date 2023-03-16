@@ -6,7 +6,7 @@ import {ValidatorOrderWaitingFilter} from "../../model/ValidatorOrderWaitingFilt
 import {Campaign, Utils} from "../../model";
 import {COMBO_LABELS} from "../../enum/comboLabels";
 
-interface IViewModel extends ng.IController, IOrderFilterValidatorProps {
+interface IViewModel extends ng.IController, IOrderWaitingFilterValidatorProps {
     applyFilter?();
     haveOneFilterActive(): boolean
     dropElement(item: any, key: string): void;
@@ -14,14 +14,14 @@ interface IViewModel extends ng.IController, IOrderFilterValidatorProps {
     comboLabels: typeof COMBO_LABELS;
 }
 
-interface IOrderFilterValidatorProps {
+interface IOrderWaitingFilterValidatorProps {
     onSearch?;
     filter: ValidatorOrderWaitingFilter
     userList: Array<UserModel>;
     typeCampaignList: Array<Campaign>;
 }
 
-interface IOrderFilterValidatorScope extends IScope, IOrderFilterValidatorProps {
+interface IOrderWaitingFilterValidatorScope extends IScope, IOrderWaitingFilterValidatorProps {
     vm: IViewModel;
 }
 
@@ -33,7 +33,7 @@ class Controller implements IViewModel {
     lang: typeof lang;
     comboLabels: typeof COMBO_LABELS;
 
-    constructor(private $scope: IOrderFilterValidatorScope,
+    constructor(private $scope: IOrderWaitingFilterValidatorScope,
                 private $location: ILocationService,
                 private $window: IWindowService) {
     }
@@ -41,14 +41,15 @@ class Controller implements IViewModel {
     $onInit() {
         this.lang = lang;
         this.comboLabels = COMBO_LABELS;
-        this.filter = new ValidatorOrderWaitingFilter(["users", "typeCampaign"])
+        this.filter = new ValidatorOrderWaitingFilter();
+        this.filter.filterChoiceCorrelation = new Map<string, string>([["userList", "id_user"], ["typeCampaignList", "id_campaign"]]);
     }
 
     $onDestroy() {
     }
 
     haveOneFilterActive(): boolean {
-        return this.filter.users.length > 0 || this.filter.typeCampaign.length > 0;
+        return this.filter.userList.length > 0 || this.filter.typeCampaignList.length > 0;
     }
 
     dropElement(item: any, key: string): void {
@@ -60,7 +61,7 @@ class Controller implements IViewModel {
 function directive($parse: IParseService) {
     return {
         restrict: 'E',
-        templateUrl: `${RootsConst.directive}/order-filter-validator/order-filter-validator.html`,
+        templateUrl: `${RootsConst.directive}/order-waiting-filter-validator/order-waiting-filter-validator.html`,
         scope: {
             onSearch: '&',
             filter: '=',
@@ -71,7 +72,7 @@ function directive($parse: IParseService) {
         bindToController: true,
         controller: ['$scope', '$location', '$window', '$parse', Controller],
         /* interaction DOM/element */
-        link: function ($scope: IOrderFilterValidatorScope,
+        link: function ($scope: IOrderWaitingFilterValidatorScope,
                         element: ng.IAugmentedJQuery,
                         attrs: ng.IAttributes,
                         vm: IViewModel) {
@@ -86,4 +87,4 @@ function directive($parse: IParseService) {
     }
 }
 
-export const orderFilterValidator = ng.directive('orderFilterValidator', directive)
+export const orderWaitingFilterValidator = ng.directive('orderWaitingFilterValidator', directive)

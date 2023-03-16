@@ -25,6 +25,5 @@ export class FiltersFront {
 }
 
 export interface IFilter {
-    getKey(): string
     getValue(): string
 }
