@@ -56,7 +56,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
 
         $scope.remainAvailable = () => {
             let ordersClient: OrdersClient = $scope.allOrdersSelected ? $scope.allOrderCLient : $scope.ordersClient;
-            if (ordersClient.selected.length <= 0 || $scope.onlyCampaignInaccessible) return true
+            if ((ordersClient.selected.length <= 0 && !$scope.allOrdersSelected) || (ordersClient.all.length <= 0 && $scope.allOrdersSelected) || $scope.onlyCampaignInaccessible) return true
 
             let nbLicences = $scope.campaign.nb_licences_available ? $scope.campaign.nb_licences_available : 0;
             nbLicences += $scope.campaign.nb_licences_consumable_available ? $scope.campaign.nb_licences_consumable_available : 0;
