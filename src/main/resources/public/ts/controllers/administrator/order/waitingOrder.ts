@@ -1,62 +1,66 @@
-import {_, angular, ng, template, toasts} from 'entcore';
+import {Behaviours, ng, template, toasts} from 'entcore';
 import {
+    Equipments,
+    Offer,
+    Offers,
+    OrderClient,
+    OrderRegion,
     OrdersRegion,
+    Project,
+    Projects,
     Utils,
-    Filter,
-    FilterFront, Projects, Project, OrderRegion,
 } from "../../../model";
 import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
+import {ProjectFilter} from "../../../model/ProjectFilter";
+import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
+import {Mix} from "entcore-toolkit";
+import {StatusFilter} from "../../../model/StatusFilter";
+import {Subscription} from "rxjs";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
     ['$scope', async ($scope) => {
+        $scope.filter = {
+            page: 0
+        };
+        $scope.display = {
+            toggle: false,
+            loading: true,
+            allOrdersSelected: false,
+            lightbox: {
+                waitingAdmin: false
+            },
+            projects: new Projects()
+        };
+        $scope.projectFilter = new ProjectFilter();
+
+        let scrollSubscription: Subscription = new Subscription().add(Behaviours.applicationsBehaviours['crre'].SnipletScrollService
+            .getScrollSubject()
+            .subscribe(async () => {
+                await $scope.launchSearch($scope.display.projects, false, false, 0);
+                Utils.safeApply($scope);
+            }));
+
+        $scope.$on('$destroy', () => {
+            scrollSubscription.unsubscribe();
+            $scope.$broadcast(INFINITE_SCROLL_EVENTER.PAUSE);
+        });
+
+        function initProjects() {
+            $scope.display.projects = new Projects();
+            $scope.filter.page = 0;
+            $scope.display.loading = true;
+            Utils.safeApply($scope);
+        }
+
         const init = async () => {
-            $scope.filterChoice = {
-                states: [],
-                distributeurs: [],
-                editors: [],
-                schoolType: [],
-                campaigns: [],
-                docType: [],
-                reassort: [],
-                licence: [],
-                id_structure: [],
-            };
-            $scope.filterChoiceCorrelation = {
-                keys: ["docType", "licence", "campaigns", "schoolType", "editors", "distributeurs", "states", "id_structure"],
-                states: 'status',
-                distributeurs: 'distributeur',
-                editors: 'editeur',
-                schoolType: 'type',
-                campaigns: 'id_campaign',
-                docType: '_index',
-                licence: 'licence',
-                id_structure: "id_structure"
-            };
-
-            $scope.states = [{status: ORDER_STATUS_ENUM.SENT}, {status: ORDER_STATUS_ENUM.IN_PROGRESS}, {status: ORDER_STATUS_ENUM.VALID}, {status: ORDER_STATUS_ENUM.DONE}, {status: ORDER_STATUS_ENUM.REJECTED}];
-            $scope.states.forEach((item) => item.toString = () => {
-                if (item.status === ORDER_STATUS_ENUM.IN_PROGRESS) {
-                    return $scope.translate("NEW")
-                } else {
-                    return $scope.translate(item.status)
-                }
-            });
-
-            $scope.filterChoice.states = $scope.states.filter(state => state.status == ORDER_STATUS_ENUM.VALID || state.status == ORDER_STATUS_ENUM.IN_PROGRESS);
-
-            $scope.filterChoice.states.forEach(state => {
-                let newFilter = new Filter();
-                newFilter.name = "status";
-                newFilter.value = state.status;
-                $scope.filters.all.push(newFilter);
-            });
-            let newFilterFront = new FilterFront();
-            newFilterFront.name = "status";
-            newFilterFront.value = ["WAITING", "IN_PROGRESS", "VALID", "DONE"];
-            $scope.filtersFront.all.push(newFilterFront);
+            $scope.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+                new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.DONE), new StatusFilter(ORDER_STATUS_ENUM.REJECTED)];
 
             $scope.schoolType = [{name: 'PU'}, {name: 'PR'}];
-            $scope.schoolType.forEach((item) => item.toString = () => $scope.translate(item.name));
+            $scope.schoolType.forEach((item) => {
+                item.toString = () => $scope.translate(item.name);
+                item.getValue = () => item.name;
+            });
 
             await $scope.campaigns.sync();
             $scope.campaigns.all.forEach((item) => item.toString = () => $scope.translate(item.name));
@@ -65,34 +69,21 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.equipments.all = [];
             Utils.safeApply($scope);
             await $scope.equipments.sync(true, undefined, undefined);
+            $scope.equipments.docsType.forEach((item) => item.getValue = () => item.name);
+            await $scope.launchSearch($scope.display.projects, false, false, 0);
             Utils.safeApply($scope);
         };
-
-        $scope.openFiltersLightbox = () => {
-            template.open('lightbox.waitingAdmin', 'administrator/order/filters');
-            $scope.display.lightbox.waitingAdmin = true;
-            Utils.safeApply($scope);
-        }
 
         $scope.openConfirmGenerateLibraryLightbox = async (): Promise<void> => {
             if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
                 $scope.display.projects.all = [];
                 $scope.display.loading = true;
-                await $scope.searchProjectAndOrders(false, true, true)
+                await $scope.launchSearch(new Projects(), true, true, null);
             }
             template.open('lightbox.waitingAdmin', 'administrator/order/confirm-generate-library');
             $scope.display.lightbox.waitingAdmin = true;
             Utils.safeApply($scope);
         }
-
-        $scope.closeWaitingAdminLightbox = () => {
-            $scope.display.lightbox.waitingAdmin = false;
-            if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
-                $scope.display.allOrdersSelected = false;
-                $scope.onScroll(true);
-            }
-            Utils.safeApply($scope);
-        };
 
         $scope.validateOrders = async (): Promise<void> => {
             $scope.display.loading = true;
@@ -135,40 +126,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             }
         };
 
-        $scope.dropElement = (item, key): void => {
-            $scope.filterChoice[key] = _.without($scope.filterChoice[key], item);
-            $scope.getFilter();
-        };
-
-        $scope.getFilter = async () => {
-            $scope.filters.all = [];
-            $scope.filtersFront.all = [];
-            for (const key of Object.keys($scope.filterChoice)) {
-                let newFilterFront = new FilterFront();
-                newFilterFront.name = $scope.filterChoiceCorrelation[key];
-                newFilterFront.value = [];
-                $scope.filterChoice[key].forEach(item => {
-                    let newFilter = new Filter();
-                    newFilter.name = $scope.filterChoiceCorrelation[key];
-                    let value = item.name;
-                    if (key === "campaigns" || key === "id_structure") {
-                        value = item.id;
-                    } else if (key === "states") {
-                        value = item.status;
-                    }
-                    newFilter.value = value;
-                    newFilterFront.value.push(value);
-                    $scope.filters.all.push(newFilter);
-                });
-                $scope.filtersFront.all.push(newFilterFront);
-            }
-            if ($scope.filters.all.length > 0) {
-                await $scope.searchProjectAndOrders(false, false, false);
-            } else {
-                await $scope.searchByName($scope.query_name);
-            }
-        };
-
         $scope.openRefusingOrderLightbox = () => {
             template.open('lightbox.waitingAdmin', 'administrator/order/refuse-order');
             $scope.display.lightbox.waitingAdmin = true;
@@ -203,16 +160,204 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         };
 
-        $scope.exportCSVRegion = async (old: boolean, all: boolean): Promise<void> => {
-            $scope.display.allOrdersSelected = $scope.display.toggle = false;
-            if (all) {
-                await $scope.searchProjectAndOrders(old, true, true)
-                $scope.display.projects.exportCSV(old, true);
-            } else {
-                $scope.display.projects.exportCSV(old, false);
-            }
+        $scope.exportCSVRegion = async (): Promise<void> => {
+            let projects : Projects = ($scope.display.allOrdersSelected) ? new Projects() : $scope.display.projects;
+            await $scope.launchSearch(projects, false, true, null);
+            await projects.exportCSV(false, $scope.display.allOrdersSelected);
             Utils.safeApply($scope);
         }
+
+        $scope.loadNextPage = async (): Promise<void> => {
+            $scope.filter.page++;
+            await $scope.launchSearch(new Projects(), true, false, $scope.filter.page);
+        };
+
+        $scope.resetSearch = async (): Promise<void> => {
+            initProjects()
+            $scope.filter.page = 0;
+            await $scope.launchSearch($scope.display.projects, false, false, 0);
+            $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+            Utils.safeApply($scope);
+        }
+
+        $scope.launchSearch = async (projectList: Projects, addNewData: boolean, onlyId: boolean, page: number): Promise<void> => {
+            await projectList.search(false, $scope.projectFilter, page, null);
+            if (projectList.all.length > 0) {
+                await $scope.synchroRegionOrders(addNewData, onlyId, projectList, false);
+                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
+            }
+
+            $scope.display.loading = false;
+            $scope.syncSelected();
+        }
+
+        $scope.syncSelected = (): void => {
+            $scope.display.projects.all.forEach(project => {
+                project.selected = $scope.display.allOrdersSelected;
+                project.orders.forEach(order => {
+                    order.selected = $scope.display.allOrdersSelected;
+                });
+            })
+        };
+
+        $scope.synchroRegionOrders = async (addNewData: boolean = false, onlyId: boolean = false, projects?: Projects,
+                                            old = false, page?: number): Promise<void> => {
+            (page == 0) ? $scope.filter.page = page : null;
+            let {resultProject, responses} = await getOrdersOfProjects(addNewData, old, projects);
+            if (responses[0]) {
+                let data = [];
+                responses.forEach(response => {
+                    data = data.concat(response.data);
+                });
+                await filterAndBeautifyOrders(data, old, resultProject, onlyId);
+                let projectWithOrders = new Projects();
+                beautifyProjectsFromOrders(resultProject, projectWithOrders);
+                if (addNewData) {
+                    $scope.display.projects.all = $scope.display.projects.all.concat(projectWithOrders.all);
+                }
+            } else {
+                $scope.display.projects.all = [];
+            }
+            $scope.display.loading = false;
+            Utils.safeApply($scope);
+        };
+
+        async function getOrdersOfProjects(isSearching: boolean, old: boolean, projects: Projects) {
+            let resultProject = projects;
+            let promesses = [];
+            let projetsSplit = new Projects();
+            resultProject.forEach(projet => {
+                if (projet.count > 500) {
+                    if(projetsSplit.all.length > 0){
+                        promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit, !isSearching, old));
+                        projetsSplit = new Projects();
+                    }
+                    projetsSplit.push(projet);
+                    promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit, !isSearching, old));
+                    projetsSplit = new Projects();
+                } else if (projetsSplit.all.length > 100) {
+                    promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit, !isSearching, old));
+                    projetsSplit = new Projects();
+                    projetsSplit.push(projet);
+                } else {
+                    projetsSplit.push(projet);
+                }
+            });
+            if(projetsSplit.all.length > 0){
+                promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit, !isSearching, old));
+            }
+            if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
+                $scope.structures.sync();
+            }
+            const responses = await Promise.all(promesses);
+            return {resultProject, responses};
+        }
+
+        async function filterAndBeautifyOrders(data, old: boolean, projets: Projects, onlyId: boolean) {
+            for (let orders of data) {
+                if (orders.length > 0) {
+                    const idProject = orders[0].id_project;
+                    if (!old) {
+                        if (!onlyId) {
+                            let equipments = new Equipments();
+                            await equipments.getEquipments(orders);
+                            for (let order of orders) {
+                                let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+                                if (equipment && equipment.type === "articlenumerique") {
+                                    order.offers = Utils.computeOffer(order, equipment);
+                                }
+                                if (!$scope.isAdministrator()) {
+                                    const orderClient : OrderClient = Mix.castAs(OrderClient, JSON.parse(order.order_parent));
+                                    (orderClient.status == "RESUBMIT") ? order.status =  orderClient.status : null;
+                                }
+                            }
+                        }
+                    } else {
+                        for (let order of orders) {
+                            if (order.offers != null) {
+                                let offers = new Offers();
+                                let offersJson = JSON.parse(order.offers);
+                                for (let offerJson of offersJson) {
+                                    let offer = new Offer();
+                                    offer.name = offerJson.titre;
+                                    offer.value = offerJson.amount;
+                                    offers.all.push(offer);
+                                }
+                                order.offers = offers;
+                            }
+                        }
+                    }
+                    projets.all.find(project => project.id == idProject).orders = orders;
+                }
+            }
+        }
+
+        function beautifyProjectsFromOrders(projets: Projects, projectWithOrders: Projects) {
+            for (const project of projets.all) {
+                if (project.orders && project.orders.length > 0) {
+                    project.total = currencyFormatter.format(Number(calculateTotalRegion(project.orders, 2)));
+                    project.amount = calculateAmountRegion(project.orders);
+                    const firstOrder : OrderRegion = project.orders[0];
+                    project.creation_date = firstOrder.creation_date.toString();
+                    Utils.setStatus(project, project.orders);
+                    project.campaign_name = firstOrder.campaign_name;
+                    const structure = $scope.structures.all.find(structure => firstOrder.id_structure == structure.id);
+                    if (structure) {
+                        project.uai = structure.uai;
+                        project.structure_name = structure.name;
+                    }
+                    project.expanded = project.orders.length <= 500;
+                    projectWithOrders.all.push(project);
+                }
+            }
+        }
+
+        const currencyFormatter = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'});
+
+        const calculateTotalRegion = (orders: OrdersRegion, roundNumber: number) => {
+            let totalPrice = 0;
+            orders.forEach(order => {
+                let price;
+                if (typeof order.price === 'string') {
+                    price = parseFloat(order.price);
+                } else {
+                    price = order.price
+                }
+                totalPrice += price;
+            });
+            return totalPrice.toFixed(roundNumber);
+        };
+
+        const calculateAmountRegion = (orders: OrdersRegion) => {
+            let totalAmount = 0;
+            orders.forEach(order => {
+                totalAmount += order.amount;
+            });
+            return totalAmount;
+        };
+
+        $scope.closeWaitingAdminLightbox = async () => {
+            $scope.display.lightbox.waitingAdmin = false;
+            if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
+                $scope.display.allOrdersSelected = false;
+                await $scope.launchSearch($scope.display.projects, false, false, 0);
+            }
+            Utils.safeApply($scope);
+        };
+
+        $scope.switchAllOrdersOfProject = (project) => {
+            project.orders.forEach(order => {
+                order.selected = project.selected;
+            });
+            let orderSelected = false
+            $scope.display.projects.all.forEach(project => {
+                if (project.orders.some(order => order.selected)) {
+                    orderSelected = true;
+                }
+            });
+            $scope.display.toggle = $scope.display.projects.all.some(project => project.selected) || orderSelected;
+            Utils.safeApply($scope);
+        };
 
         await init();
     }

@@ -2,59 +2,59 @@
 <div class="catalog">
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.catalog</i18n></span>
-        <multi-combo title="[[lang.translate('crre.catalog.all')]]"
-                     combo-model="equipments.docsType"
+        <multi-combo title="[[vm.lang.translate('crre.catalog.all')]]"
+                     combo-model="vm.catalogList"
                      search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.docType"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
+                     labels="comboLabels" filtered-model="vm.filter.catalogList"
+                     selection-event="vm.applyFilter()"
+                     deselection-event="vm.applyFilter()"
                      class="inline-block eight right-magnet">
         </multi-combo>
     </div>
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.private.public.school</i18n></span>
-        <multi-combo title="[[lang.translate('crre.all.schools')]]"
-                     combo-model="schoolType"
+        <multi-combo title="[[vm.lang.translate('crre.all.schools')]]"
+                     combo-model="vm.schoolType"
                      search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.schoolType"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
+                     labels="comboLabels" filtered-model="vm.filter.schoolType"
+                     selection-event="vm.applyFilter()"
+                     deselection-event="vm.applyFilter()"
                      class="inline-block eight right-magnet">
         </multi-combo>
     </div>
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.editor.ressource</i18n></span>
-        <multi-combo title="[[lang.translate('crre.all.editors')]]"
-                     combo-model="equipments.editors"
+        <multi-combo title="[[vm.lang.translate('crre.all.editors')]]"
+                     combo-model="vm.editorList"
                      search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.editors"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
+                     labels="comboLabels" filtered-model="vm.filter.editorList"
+                     selection-event="vm.applyFilter()"
+                     deselection-event="vm.applyFilter()"
                      max-selected="10"
                      class="inline-block eight right-magnet">
         </multi-combo>
     </div>
     <div class="row">
         <span style="line-height: 50px;"><i18n>crre.diffusor.ressource</i18n></span>
-        <multi-combo title="[[lang.translate('crre.all.diffusors')]]"
-                     combo-model="equipments.distributeurs"
+        <multi-combo title="[[vm.lang.translate('crre.all.diffusors')]]"
+                     combo-model="vm.distributorList"
                      search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.distributeurs"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
+                     labels="comboLabels" filtered-model="vm.filter.distributorList"
+                     selection-event="vm.applyFilter()"
+                     deselection-event="vm.applyFilter()"
                      max-selected="10"
                      class="inline-block eight right-magnet">
         </multi-combo>
     </div>
-    <div class="row">
-        <span style="line-height: 50px;"><i18n>crre.licences.types</i18n></span>
-        <multi-combo title="[[lang.translate('crre.all.licences')]]"
-                     combo-model="licences"
-                     search-on="name" order-by="name"
-                     labels="comboLabels" filtered-model="filterChoice.licence"
-                     selection-event="getFilter()"
-                     deselection-event="getFilter()"
-                     class="inline-block eight right-magnet">
-        </multi-combo>
-    </div>
+<!--    <div class="row">-->
+<!--        <span style="line-height: 50px;"><i18n>crre.licences.types</i18n></span>-->
+<!--        <multi-combo title="[[lang.translate('crre.all.licences')]]"-->
+<!--                     combo-model="licences"-->
+<!--                     search-on="name" order-by="name"-->
+<!--                     labels="comboLabels" filtered-model="filterChoice.licence"-->
+<!--                     selection-event="vm.applyFilter()"-->
+<!--                     deselection-event="vm.applyFilter()"-->
+<!--                     class="inline-block eight right-magnet">-->
+<!--        </multi-combo>-->
+<!--    </div>-->
 </div>

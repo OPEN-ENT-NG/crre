@@ -259,7 +259,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ";
         values.add(startDate);
         values.add(endDate);
-        if (!idStructure.equals("null")) {
+        if (idStructure != null && !idStructure.equals("null")) {
             sqlquery += " AND ore.id_structure = ?";
             values.add(idStructure);
         }

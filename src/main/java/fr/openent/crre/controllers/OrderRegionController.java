@@ -699,7 +699,7 @@ public class OrderRegionController extends BaseController {
         UserUtils.getUserInfos(eb, request, user -> {
             String query = "";
             JsonArray filters = new JsonArray();
-            Integer page = OrderUtils.formatPage(request);
+            Integer page = request.getParam("page") == null ? null : OrderUtils.formatPage(request);
             if (request.params().contains("q")) {
                 try {
                     query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();

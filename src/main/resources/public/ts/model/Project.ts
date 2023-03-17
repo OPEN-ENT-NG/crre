@@ -3,7 +3,8 @@ import http from "axios";
 import {toasts} from "entcore";
 import {OrdersRegion} from "./OrderRegion";
 import {Utils} from "./Utils";
-import {Filters} from "./Filter";
+import {Filters, IFilter} from "./Filter";
+import {ProjectFilter} from "./ProjectFilter";
 
 declare let window: any;
 
@@ -43,6 +44,45 @@ export class Projects extends Selection<Project> {
         }
     }
 
+    async search(old = false, filter: ProjectFilter, pageNumber: number, idStructure: string) {
+        let queryParam = "";
+        if (filter.queryName != null && filter.queryName.trim() !== "") {
+            if (Utils.format.test(filter.queryName)) {
+                toasts.warning('crre.equipment.special');
+                return;
+            }
+            queryParam = `&q=${filter.queryName}`
+        }
+
+        let pageParam = "";
+        if (pageNumber != null) {
+            pageParam = `&page=${pageNumber}`
+        }
+
+        let dateParam = "";
+        if (filter.startDate && filter.endDate) {
+            const {startDate, endDate} = Utils.formatDate(filter.startDate, filter.endDate);
+            dateParam = `&startDate=${startDate}&endDate=${endDate}`
+        }
+
+        let structureParam = "";
+        if (idStructure) {
+            structureParam = `&idStructure=${idStructure}`
+        }
+
+        let params : string = '';
+        filter.filterChoiceCorrelation.forEach((value: string, key: string) => {
+            filter[key].forEach((el: IFilter) => params += "&" + value + "=" + ((el.getValue) ? el.getValue() : el));
+        });
+
+        let url = `/crre/ordersRegion/projects/search_filter?${dateParam}&old=${old}${structureParam}${params}${pageParam}${queryParam}`;
+        const {data} = await http.get(url);
+        this.all = Mix.castArrayAs(Project, data);
+    }
+
+    /**
+     * @deprecated Use {@link search}
+     */
     async filter_order(old = false, query_name: string, filters: Filters, start: string, end: string, pageNumber: number, idStructure: string) {
         function prepareParams() {
             let params = "";

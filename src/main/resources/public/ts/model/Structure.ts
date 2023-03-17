@@ -1,8 +1,9 @@
 import { Selectable, Mix, Selection } from 'entcore-toolkit';
 import http from 'axios';
 import {Log} from "./Log";
+import {IFilter} from "./Filter";
 
-export class Structure implements Selectable {
+export class Structure implements Selectable, IFilter {
     id: string;
     name: string;
     uai: string;
@@ -16,6 +17,10 @@ export class Structure implements Selectable {
 
     constructor () {
        this.selected = false;
+    }
+
+    getValue(): string {
+        return this.id;
     }
 
 }

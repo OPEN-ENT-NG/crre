@@ -19,4 +19,8 @@ export class ValidatorOrderWaitingFilter {
         this.typeCampaignList = [];
         this.filterChoiceCorrelation = new Map<string, string>();
     }
+
+    filterChoiceCorrelationKey(): Array<string> {
+        return Array.from(this.filterChoiceCorrelation.keys());
+    }
 }

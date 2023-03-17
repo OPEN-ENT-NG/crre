@@ -55,7 +55,7 @@
 </div>
 <div class="row" ng-if="vm.haveOneFilterActive()">
   <div class="remove-margin-bottom">
-    <div ng-repeat="key in vm.filter.filterChoiceCorrelation" class="select-blocks inline-block">
+    <div ng-repeat="key in vm.filter.filterChoiceCorrelationKey()" class="select-blocks inline-block">
       <div ng-repeat="item in vm.filter[key]"
            ng-click="vm.dropElement(item,key)">
         [[item.toString()]]

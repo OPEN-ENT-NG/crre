@@ -205,7 +205,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                     !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
             }
             if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
-                $scope.structures.sync($scope.structuresInRegroupement);
+                $scope.structures.sync();
             }
             const responses = await Promise.all(promesses);
             return {projets, responses};

@@ -7,3 +7,4 @@ export * from './loader';
 export * from './confirm-generate-library/confirm-generate-library.directive';
 export * from './order-waiting-price-display/order-waiting-price-display.directive';
 export * from './order-waiting-filter-validator/order-waiting-filter-validator.directive';
+export * from './project-filter-admin/project-filter-admin.directive';
