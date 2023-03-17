@@ -267,5 +267,27 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.syncSelected();
             Utils.safeApply($scope);
         }
+
+        $scope.checkParentSwitch = (project) => {
+            let all = true;
+            project.orders.forEach(order => {
+                if (!order.selected)
+                    all = order.selected;
+            });
+            project.selected = all;
+            switchDisplayToggle();
+        };
+
+        const switchDisplayToggle = () => {
+            let orderSelected = false
+            $scope.display.projects.all.forEach(project => {
+                if (project.orders.some(order => order.selected)) {
+                    orderSelected = true;
+                }
+            });
+            $scope.display.toggle = $scope.display.projects.all.some(project => project.selected) || orderSelected;
+            Utils.safeApply($scope);
+        };
+
         await init();
     }]);
