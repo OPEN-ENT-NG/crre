@@ -110,7 +110,7 @@ public class DefaultOrderServiceTest {
                 "LEFT JOIN null.type_campaign tc ON (tc.id = c.id_type) " +
                 "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND " +
                 "(lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (?,?)) AND oe.status = 'WAITING' " +
-                "AND oe.id_structure = ?  AND ( bo.id_user IN ( (?,?)) AND oe.id_campaign IN ( (?,?))) ORDER BY creation_date DESC OFFSET ? LIMIT ? ";
+                "AND oe.id_structure = ?  AND ( bo.id_user IN (?,?) AND oe.id_campaign IN (?,?)) ORDER BY creation_date DESC OFFSET ? LIMIT ? ";
         String expectedParams = "[\"startDate\",\"endDate\",18,\"query_search\",\"query_search\",\"a198f4c\",\"ade86f\"," +
                 "\"idStructure\",\"8555\",\"4846\",\"64353\",\"46813\",135,15]";
 

@@ -312,7 +312,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                         } else {
                             return null;
                         }
-                        filterString += filter.getKey() + " IN ( " + Sql.listPrepared(filter.getValue()) + ")";
+                        filterString += filter.getKey() + " IN " + Sql.listPrepared(filter.getValue());
                         values.addAll(new JsonArray(filter.getValue()));
 
                         return filterString;
