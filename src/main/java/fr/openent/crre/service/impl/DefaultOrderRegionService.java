@@ -319,6 +319,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             values.addAll(new JsonArray(filters.getIdsStructure())).addAll(new JsonArray(filters.getIdsStructure()));
         }
 
+        // Condition de filtrage des campagnes
+        if (!filters.getIdsCampaign().isEmpty()) {
+            sqlquery += " AND (o_r_e.id_campaign IN " + Sql.listPrepared(filters.getIdsCampaign());
+            sqlquery += " OR o_r_e_o.id_campaign IN " + Sql.listPrepared(filters.getIdsCampaign()) + " )";
+            values.addAll(new JsonArray(filters.getIdsCampaign())).addAll(new JsonArray(filters.getIdsCampaign()));
+        }
+
         // Condition de filtrage sur les commandes renouvellables
         if (filters.getRenew() != null) {
             if (filters.getRenew()) {

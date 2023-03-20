@@ -271,7 +271,7 @@ public class OrderRegionController extends BaseController {
     @ApiDoc("Get all projects")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorAndStructureHistoricRight.class)
-    public void getAllProjectsNew(HttpServerRequest request) {
+    public void getAllProjects(HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + Field.PROJECTSEARCH, filterOrderRegions -> {
             UserUtils.getUserInfos(eb, request, user -> {
                 FilterModel filters = new FilterModel(filterOrderRegions);
@@ -286,7 +286,10 @@ public class OrderRegionController extends BaseController {
                 }
 
                 structureFuture.compose(structures -> {
-                            filters.setIdsStructure(JsonHelper.jsonArrayToList(structures, String.class));
+                            filters.setIdsStructure(JsonHelper.jsonArrayToList(structures, JsonObject.class)
+                                    .stream()
+                                    .map(structure -> structure.getString(Field.IDSTRUCTURE))
+                                    .collect(Collectors.toList()));
                             return getOrders(filters, filtersItem);
                         })
                         .onSuccess(res -> renderJson(request, res))

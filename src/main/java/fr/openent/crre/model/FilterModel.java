@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.user.UserInfos;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,19 @@ public class FilterModel implements IModel<FilterModel> {
     private Boolean renew;
 
     public FilterModel() {
+        this.startDate = null;
+        this.endDate = null;
+        this.user = null;
+        this.idsCampaign = new ArrayList<>();
+        this.idsStructure = new ArrayList<>();
+        this.page = null;
+        this.status = new ArrayList<>();
+        this.searchingText = null;
+        this.distributors = new ArrayList<>();
+        this.editors = new ArrayList<>();
+        this.catalogs = new ArrayList<>();
+        this.structureTypes = new ArrayList<>();
+        this.renew = null;
     }
 
     public FilterModel(JsonObject jsonObject) {
