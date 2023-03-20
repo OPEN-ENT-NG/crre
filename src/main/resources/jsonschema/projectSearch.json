@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "idsCampaign": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "idsStructure": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "startDate": {
+      "type": "string"
+    },
+    "endDate": {
+      "type": "string"
+    },
+    "page": {
+      "type": "number"
+    },
+    "searchingText": {
+      "type": "string"
+    },
+    "distributors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "editors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "catalogs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "itemTypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "structureTypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "renew": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "startDate",
+    "endDate"
+  ]
+}

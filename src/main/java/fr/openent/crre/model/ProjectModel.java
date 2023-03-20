@@ -4,11 +4,14 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public class ProjectModel implements IModel<ProjectModel> {
     private Integer id;
     private String title;
-
     private String structureId;
+
+    private List<OrderRegionEquipmentModel> orderRegionEquipmentList;
 
     public ProjectModel() {
     }
@@ -47,6 +50,15 @@ public class ProjectModel implements IModel<ProjectModel> {
 
     public ProjectModel setStructureId(String structureId) {
         this.structureId = structureId;
+        return this;
+    }
+
+    public List<OrderRegionEquipmentModel> getOrderRegionEquipmentList() {
+        return orderRegionEquipmentList;
+    }
+
+    public ProjectModel setOrderRegionEquipmentList(List<OrderRegionEquipmentModel> orderRegionEquipmentList) {
+        this.orderRegionEquipmentList = orderRegionEquipmentList;
         return this;
     }
 }

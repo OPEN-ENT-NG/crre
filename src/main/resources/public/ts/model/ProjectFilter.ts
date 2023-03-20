@@ -5,6 +5,8 @@ import {Structure} from "./Structure";
 import {StatusFilter} from "./StatusFilter";
 
 export class ProjectFilter {
+
+
     private _startDate;
     private _endDate;
     private _queryName: string;
@@ -14,8 +16,11 @@ export class ProjectFilter {
     private _structureList: Array<Structure>;
     private _catalogList: Array<{name}>;
     private _schoolType: Array<{name}>;
-    private _editorList: Array<String>;
-    private _distributorList: Array<String>;
+    private _itemType: Array<{name}>;
+    private _editorList: Array<{name}>;
+    private _distributorList: Array<{name}>;
+    private _page: number;
+    private _renew: Array<{name}>;
 
 
     constructor() {
@@ -30,6 +35,9 @@ export class ProjectFilter {
         this._schoolType = [];
         this._editorList = [];
         this._distributorList = [];
+        this._itemType = [];
+        this._page = null;
+        this._renew = [];
     }
 
     get startDate() {
@@ -104,21 +112,46 @@ export class ProjectFilter {
         this._schoolType = value;
     }
 
-    get editorList(): Array<String> {
+    get editorList(): Array<{name}> {
         return this._editorList;
     }
 
-    set editorList(value: Array<String>) {
+    set editorList(value: Array<{name}>) {
         this._editorList = value;
     }
 
-    get distributorList(): Array<String> {
+    get distributorList(): Array<{name}> {
         return this._distributorList;
     }
 
-    set distributorList(value: Array<String>) {
+    set distributorList(value: Array<{name}>) {
         this._distributorList = value;
     }
+
+    get page(): number {
+        return this._page;
+    }
+
+    set page(value: number) {
+        this._page = value;
+    }
+
+    get renew(): Array<{name}> {
+        return this._renew;
+    }
+
+    set renew(value: Array<{name}>) {
+        this._renew = value;
+    }
+
+    get itemType(): Array<{ name }> {
+        return this._itemType;
+    }
+
+    set itemType(value: Array<{ name }>) {
+        this._itemType = value;
+    }
+
 
     filterChoiceCorrelationKey(): Array<string> {
         return Array.from(this.filterChoiceCorrelation.keys());

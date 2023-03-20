@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "idsProject": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "status": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "idsProject"
+  ]
+}

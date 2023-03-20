@@ -11,6 +11,8 @@ public class Field {
     public static final String CSVFILE = "csvFile";
     public static final String ORDER_CLIENT_EQUIPMENT = "order_client_equipment";
     public static final String ID_STRUCTURE = "id_structure";
+    public static final String IDS_STRUCTURE = "idsStructure";
+
     public static final String DESCRIPTION = "description";
     public static final String STRUCTURES = "structures";
     public static final String _ID = "_id";
@@ -30,6 +32,8 @@ public class Field {
     public static final String ENDDATE = "endDate";
     public static final String OLD = "old";
     public static final String ID_CAMPAIGN = "id_campaign";
+    public static final String IDS_CAMPAIGN = "idsCampaign";
+
     public static final String NAME_CAMPAIGN = "name_campaign";
     public static final String NAME_USER = "name_user";
     public static final String ID_USER = "id_user";
@@ -65,6 +69,9 @@ public class Field {
     public static final String MODIFICATION_DATE = "modification_date";
     public static final String CAUSE_STATUS = "cause_status";
     public static final String ID_PROJECT = "id_project";
+
+    public static final String IDS_PROJECT = "idsProject";
+
     public static final String ID_OFFER_EQUIPMENT = "id_offer_equipment";
     public static final String ID_ORDER_CLIENT_EQUIPMENT = "id_order_client_equipment";
     public static final String USER_NAME = "user_name";
@@ -110,6 +117,11 @@ public class Field {
     public static final String DISTRIBUTEUR = "distributeur";
     public static final String EDITEUR = "editeur";
     public static final String FILTER = "filter";
+
+    public static final String PATH = "path";
+
+    public static final String NESTED = "nested";
+
     public static final String MATCH = "match";
     public static final String TERMS = "terms";
     public static final String MINIMUM_SHOULD_MATCH = "minimum_should_match";
@@ -118,6 +130,23 @@ public class Field {
     public static final String SIZE = "size";
     public static final String SORT = "sort";
     public static final String ASC = "asc";
+    public static final String SEARCHING_TEXT = "searchingText";
+    public static final String IMAGE = "image";
+    public static final String DISTRIBUTORS = "distributors";
+    public static final String EDITORS = "editors";
+    public static final String CATALOGS = "catalogs";
+    public static final String STRUCTURE_TYPES = "structureTypes";
+    public static final String DISCIPLINES = "disciplines";
+    public static final String CLASSES = "classes";
+    public static final String GRADES = "grades";
+    public static final String STRUCTURE_SECTORS = "structureSectors";
+    public static final String ITEM_TYPES = "itemTypes";
+    public static final String TRUE = "true";
+    public static final String FALSE = "false";
+    public static final String ORDERSBYPROJECT = "ordersByProject";
+    public static final String PROJECTSEARCH = "projectSearch";
+
+
 
     private Field() {
         throw new IllegalStateException("Utility class");
@@ -132,5 +161,12 @@ public class Field {
     public static final String NAME = "name";
     public static final String TITLE = "title";
     public static final String PROJECT_TITLE = "project_title";
+
+    public static final String CONSUMABLE = "Consommable";
+    public static final String MANUAL = "Manuel";
+    public static final String STRUCTURE_PRO = "Lycée professionnel";
+    public static final String RENEW = "renew";
+    public static final String TARGETS = "targets";
+
 
 }
