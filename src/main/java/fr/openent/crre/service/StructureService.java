@@ -2,6 +2,7 @@ package fr.openent.crre.service;
 
 import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -19,7 +20,12 @@ public interface StructureService {
 
     void getStructuresWithoutRight(Handler<Either<String, JsonArray>> handler);
 
-    void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler);
+    /**
+     * List all Structures by type and/or ids
+     * @param structureTypes {@link List<String>} List of structure types (Public, Private ..)
+     * @param structureIds {@link List<String>} List of structure ids
+     */
+    Future<JsonArray> getStructuresFilter(List<String> structureTypes, List<String> structureIds);
 
     void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 

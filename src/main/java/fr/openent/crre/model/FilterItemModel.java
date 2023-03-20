@@ -6,6 +6,7 @@ import fr.openent.crre.helpers.JsonHelper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,16 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
 
 
     public FilterItemModel() {
+        this.searchingText = null;
+        this.disciplines = new ArrayList<>();
+        this.classes = new ArrayList<>();
+        this.grades = new ArrayList<>();
+        this.editors = new ArrayList<>();
+        this.distributors = new ArrayList<>();
+        this.catalogs = new ArrayList<>();
+        this.itemTypes = new ArrayList<>();
+        this.structureSectors = new ArrayList<>();
+        this.targets = new ArrayList<>();
     }
 
     public FilterItemModel(JsonObject jsonObject) {

@@ -10,12 +10,14 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.*;
 import fr.openent.crre.model.config.ConfigMailModel;
-import fr.openent.crre.security.*;
+import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.security.UpdateStatusRight;
+import fr.openent.crre.security.ValidatorAndStructureHistoricRight;
+import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.*;
 import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.openent.crre.service.impl.EmailSendService;
 import fr.openent.crre.service.impl.ExportWorker;
-import fr.openent.crre.utils.OrderUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -42,7 +44,6 @@ import io.vertx.core.parsetools.RecordParser;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -50,7 +51,6 @@ import org.entcore.common.user.UserUtils;
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -71,7 +71,6 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static java.lang.Math.min;
 
 public class OrderRegionController extends BaseController {
@@ -268,22 +267,34 @@ public class OrderRegionController extends BaseController {
                 });
     }
 
-    @Get("/orderRegion/projects")
+    @Post("/ordersRegion/projects")
     @ApiDoc("Get all projects")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorAndStructureRight.class)
-    public void getAllProjects(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            Integer page = OrderUtils.formatPage(request);
-            String startDate = request.getParam("startDate");
-            String endDate = request.getParam("endDate");
-            boolean old = Boolean.parseBoolean(request.getParam("old"));
-            String idStructure = request.getParam("idStructure");
-            boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null &&
-                    Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-            orderRegionService.getAllProjects(user, startDate, endDate, page, filterRejectedSentOrders, idStructure, old, arrayResponseHandler(request));
+    @ResourceFilter(ValidatorAndStructureHistoricRight.class)
+    public void getAllProjectsNew(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + Field.PROJECTSEARCH, filterOrderRegions -> {
+            UserUtils.getUserInfos(eb, request, user -> {
+                FilterModel filters = new FilterModel(filterOrderRegions);
+                FilterItemModel filtersItem = new FilterItemModel(filterOrderRegions);
+                filters.setUser(user);
+
+                Future<JsonArray> structureFuture;
+                if (filters.getStructureTypes().size() > 0 || filters.getIdsStructure().size() > 0) {
+                    structureFuture = structureService.getStructuresFilter(filters.getStructureTypes(), filters.getIdsStructure());
+                } else {
+                    structureFuture = Future.succeededFuture(new JsonArray());
+                }
+
+                structureFuture.compose(structures -> {
+                            filters.setIdsStructure(JsonHelper.jsonArrayToList(structures, String.class));
+                            return getOrders(filters, filtersItem);
+                        })
+                        .onSuccess(res -> renderJson(request, res))
+                        .onFailure(fail -> renderError(request));
+            });
         });
     }
+
 
     @Get("/add/orders/lde")
     @ApiDoc("Insert old orders from LDE")
@@ -610,120 +621,37 @@ public class OrderRegionController extends BaseController {
         }
     }
 
-    private void getOrders(String query, JsonArray filters, UserInfos user, Integer page, HttpServerRequest request) {
-        HashMap<String, ArrayList<String>> params = new HashMap<>();
-        if (request.params().contains("editeur")) {
-            params.put("editeur", new ArrayList<>(request.params().getAll("editeur")));
-        }
-        if (request.params().contains("distributeur")) {
-            params.put("distributeur", new ArrayList<>(request.params().getAll("distributeur")));
-        }
-        if (request.params().contains("_index")) {
-            params.put("_index", new ArrayList<>(request.params().getAll("_index")));
-        }
 
-        String startDate = request.getParam("startDate");
-        String endDate = request.getParam("endDate");
-        String idStructure = request.getParam("idStructure");
-        Boolean old = Boolean.valueOf(request.getParam("old"));
+    private Future<JsonArray> getOrders(FilterModel filters, FilterItemModel filtersItem) {
+        Promise<JsonArray> promise = Promise.promise();
+        FilterItemModel filtersItemQuery = new FilterItemModel().setSearchingText(filtersItem.getSearchingText());
+        FilterItemModel filtersItemFilter = filtersItem.clone().setSearchingText(null);
 
-        int length = request.params().entries().size();
-        for (int i = 0; i < length; i++) {
-            if (!request.params().entries().get(i).getKey().equals("q") &&
-                    !request.params().entries().get(i).getKey().equals("startDate") &&
-                    !request.params().entries().get(i).getKey().equals("distributeur") &&
-                    !request.params().entries().get(i).getKey().equals("editeur") &&
-                    !request.params().entries().get(i).getKey().equals("_index") &&
-                    !request.params().entries().get(i).getKey().equals("type") &&
-                    !request.params().entries().get(i).getKey().equals("endDate") &&
-                    !request.params().entries().get(i).getKey().equals("page") &&
-                    !request.params().entries().get(i).getKey().equals("id_structure") &&
-                    !request.params().entries().get(i).getKey().equals("old") &&
-                    !request.params().entries().get(i).getKey().equals("idStructure"))
-                filters.add(new JsonObject().put(request.params().entries().get(i).getKey(),
-                        request.params().entries().get(i).getValue()));
-        }
-        if (params.size() > 0) {
-            if (!old) {
-                Future<JsonArray> equipmentFilterFuture = Future.future();
-                Future<JsonArray> equipmentFilterAndQFuture = Future.future();
+        Future<JsonArray> filterFuture = filtersItem.isEmpty() ?
+                Future.succeededFuture(new JsonArray()) : searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN));
 
-                filters(params, null, handlerJsonArray(equipmentFilterFuture));
+        Future<JsonArray> searchFuture = filtersItem.isEmpty() ?
+                Future.succeededFuture(new JsonArray()) : searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN));
 
-                if (StringUtils.isEmpty(query)) {
-                    equipmentFilterAndQFuture.complete(new JsonArray());
-                } else {
-                    searchfilter(params, query, Collections.singletonList(Field.EAN), handlerJsonArray(equipmentFilterAndQFuture));
-                }
-
-                CompositeFuture.all(equipmentFilterFuture, equipmentFilterAndQFuture).setHandler(event -> {
-                    if (event.succeeded()) {
-                        JsonArray equipmentsGrade = equipmentFilterFuture.result(); // Tout les équipements correspondant aux grades
-                        JsonArray equipmentsGradeAndQ = equipmentFilterAndQFuture.result();
-                        JsonArray allEquipments = new JsonArray();
-                        allEquipments.addAll(equipmentsGrade);
-                        allEquipments.addAll(equipmentsGradeAndQ);
-                        List<String> equipementIdList = allEquipments.stream()
-                                .filter(JsonObject.class::isInstance)
-                                .map(JsonObject.class::cast)
-                                .map(jsonObject -> jsonObject.getString(Field.EAN))
-                                .collect(Collectors.toList());
-                        orderRegionService.search(user, equipementIdList, query, startDate,
-                                endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                    }
-                });
-            }
-        } else {
-            if (query.equals("")) {
-                orderRegionService.search(user, new ArrayList<>(), query, startDate,
-                        endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-            } else {
-                plainTextSearchName(query, Collections.singletonList(Field.EAN), equipments -> {
-                    List<String> equipementIdList = equipments.right().getValue().stream()
+        CompositeFuture.all(filterFuture, searchFuture)
+                .compose(items -> {
+                    JsonArray itemsSearch = searchFuture.result();
+                    JsonArray itemsFilter = filterFuture.result();
+                    List<String> itemSearchedIdsList = itemsSearch.stream()
                             .filter(JsonObject.class::isInstance)
                             .map(JsonObject.class::cast)
                             .map(jsonObject -> jsonObject.getString(Field.EAN))
                             .collect(Collectors.toList());
-                    orderRegionService.search(user, equipementIdList, query, startDate,
-                            endDate, idStructure, filters, page, old, arrayResponseHandler(request));
-                });
-            }
-        }
-    }
-
-    @Get("/ordersRegion/projects/search_filter")
-    @ApiDoc("Get all projects search and filter")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorAndStructureRight.class)
-    public void getProjectsDateSearch(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            String query = "";
-            JsonArray filters = new JsonArray();
-            Integer page = request.getParam("page") == null ? null : OrderUtils.formatPage(request);
-            if (request.params().contains("q")) {
-                try {
-                    query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (request.params().contains("type") || request.params().contains("id_structure")) {
-                String finalQuery = query;
-                structureService.getStructuresByTypeAndFilter(request.getParam("type"),
-                        request.params().getAll("id_structure"), event -> {
-                            if (event.isRight()) {
-                                JsonArray listeIdStructure = event.right().getValue();
-                                filters.add(new JsonObject().put("id_structure", listeIdStructure));
-                                getOrders(finalQuery, filters, user, page, request);
-                            } else {
-                                log.error(event.left().getValue());
-                                badRequest(request);
-                            }
-                        });
-            } else {
-                getOrders(query, filters, user, page, request);
-            }
-        });
+                    List<String> itemFilteredIdsList = itemsFilter.stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .collect(Collectors.toList());
+                    return orderRegionService.search(filters, filtersItem, itemSearchedIdsList, itemFilteredIdsList);
+                })
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+        return promise.future();
     }
 
     @Post("/ordersRegion/orders")
@@ -731,101 +659,103 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void getOrdersByProjects(HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, orderRegions -> {
+        RequestUtils.bodyToJson(request, pathPrefix + Field.ORDERSBYPROJECT, orderRegions -> {
             UserUtils.getUserInfos(eb, request, user -> {
-                boolean filterRejectedSentOrders = request.getParam("filterRejectedSentOrders") != null
-                        && Boolean.parseBoolean(request.getParam("filterRejectedSentOrders"));
-                Boolean old = Boolean.valueOf(request.getParam("old"));
-                List<Integer> idsProjects = orderRegions.getJsonArray("idsProjects").getList();
-                List<Future> futures = new ArrayList<>();
-                for (int id : idsProjects) {
-                    Future<JsonArray> projectIdFuture = Future.future();
-                    futures.add(projectIdFuture);
-                    orderRegionService.getAllOrderRegionByProject(id, filterRejectedSentOrders, old, handlerJsonArray(projectIdFuture));
-                }
-                getCompositeFutureAllOrderRegionByProject(request, old, futures);
+                List<Integer> idsProjects = orderRegions.getJsonArray(Field.IDS_PROJECT)
+                        .stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .collect(Collectors.toList());
+                FilterModel filters = new FilterModel(orderRegions);
+                Future<JsonArray> ordersFuture = orderRegionService.getAllOrderRegionByProject(idsProjects, filters);
+                ordersFuture
+                        .compose(orderResults -> {
+                            List<String> listIdsEquipment = orderResults.stream()
+                                    .filter(JsonObject.class::isInstance)
+                                    .map(JsonObject.class::cast)
+                                    .filter(order -> !order.getBoolean(Field.OLD))
+                                    .map(order -> order.getString(Field.EQUIPMENT_KEY, null))
+                                    .filter(Objects::nonNull)
+                                    .distinct()
+                                    .collect(Collectors.toList());
+                            return searchByIds(listIdsEquipment, null);
+                        })
+                        .onSuccess(itemResults -> {
+                            for (int i = 0; i < itemResults.size(); i++) {
+                                JsonObject equipment = itemResults.getJsonObject(i);
+                                JsonObject priceDetails = getPriceTtc(equipment);
+                                equipment.put("priceDetails", priceDetails);
+                            }
+                            ordersFuture.result().stream()
+                                    .filter(JsonObject.class::isInstance)
+                                    .map(JsonObject.class::cast)
+                                    .forEach(order -> {
+                                                // Verifie si l'order est dans la table old ou non
+                                                if (order.getBoolean(Field.OLD)) {
+                                                    getSearchByIdsOld(order);
+                                                } else {
+                                                    getSearchByIds(order, itemResults);
+                                                }
+                                            }
+                                    );
+
+                            Map<Integer, List<JsonObject>> ordersGrouped = ordersFuture.result()
+                                    .stream()
+                                    .map(JsonObject.class::cast)
+                                    .collect(Collectors.groupingBy(order -> order.getInteger(Field.ID_PROJECT)));
+
+                            JsonArray projectsArray = new JsonArray();
+                            for (Map.Entry<Integer, List<JsonObject>> entry : ordersGrouped.entrySet()) {
+                                JsonArray ordersArray = new JsonArray();
+                                for (JsonObject order : entry.getValue()) {
+                                    ordersArray.add(order);
+                                }
+                                projectsArray.add(ordersArray);
+                            }
+
+                            renderJson(request, projectsArray);
+                        })
+                        .onFailure(fail -> {
+                            log.error(fail.getMessage());
+                            badRequest(request);
+                        });
             });
         });
     }
 
-    private void getCompositeFutureAllOrderRegionByProject(HttpServerRequest request, Boolean old, List<Future> futures) {
-        CompositeFuture.all(futures).setHandler(event -> {
-            if (event.succeeded()) {
-                List<JsonArray> resultsList = event.result().list();
-                if (!old) {
-                    HashSet<String> listIdsEquipment = new HashSet<>();
-                    for (JsonArray orders : resultsList) {
-                        for (Object order : orders) {
-                            if(((JsonObject) order).getString("equipment_key") != null) {
-                                listIdsEquipment.add(((JsonObject) order).getString("equipment_key", ""));
-                            }
-                        }
+    private void getSearchByIds(JsonObject order, JsonArray items) {
+        String creation_date = "";
+        if (order.getString("creation_date") != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+            ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date", ""), formatter);
+            creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+        }
+        order.put("creation_date", creation_date);
+        String idEquipment = order.getString("equipment_key", "");
+        if (items.size() > 0 && idEquipment != null) {
+            for (int i = 0; i < items.size(); i++) {
+                JsonObject equipment = items.getJsonObject(i);
+                if (idEquipment.equals(equipment.getString(Field.ID))) {
+                    JsonObject priceDetails = equipment.getJsonObject("priceDetails");
+                    double price = 0.0;
+                    if (priceDetails.getDouble("priceTTC") != null && order.getInteger("amount") != null) {
+                        price = priceDetails.getDouble("priceTTC", 0.0) * order.getInteger("amount", 0);
                     }
-                    getSearchByIds(request, resultsList, new ArrayList<>(listIdsEquipment));
-                } else {
-                    getSearchByIdsOld(request, resultsList);
+                    order.put("price", price);
+                    order.put(Field.NAME, equipment.getString("titre"));
+                    order.put("image", equipment.getString("urlcouverture", "/crre/public/img/pages-default.png"));
+                    order.put("ean", equipment.getString("ean", idEquipment));
+                    order.put("_index", equipment.getString("type", "NaN"));
+                    order.put("editeur", equipment.getString("editeur", "NaN"));
+                    order.put("distributeur", equipment.getString("distributeur", "NaN"));
+                    break;
+                } else if (items.size() - 1 == i) {
+                    equipmentNotFound(order, idEquipment);
                 }
-
-            } else {
-                log.error(event.cause());
-                badRequest(request);
             }
-        });
-    }
-
-    private void getSearchByIds(HttpServerRequest
-                                        request, List<JsonArray> resultsList, List<String> listIdsEquipment) {
-        searchByIds(listIdsEquipment, null, equipments -> {
-            if (equipments.isRight()) {
-                JsonArray equipmentsArray = equipments.right().getValue();
-                for (int i = 0; i < equipmentsArray.size(); i++) {
-                    JsonObject equipment = equipmentsArray.getJsonObject(i);
-                    JsonObject priceDetails = getPriceTtc(equipment);
-                    equipment.put("priceDetails", priceDetails);
-                }
-                for (JsonArray orders : resultsList) {
-                    for (Object order : orders) {
-                        JsonObject orderJson = (JsonObject) order;
-                        String creation_date = "";
-                        if (orderJson.getString("creation_date") != null) {
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                            ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date",""), formatter);
-                            creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                        }
-                        orderJson.put("creation_date", creation_date);
-                        String idEquipment = orderJson.getString("equipment_key","");
-                        if (equipmentsArray.size() > 0 && idEquipment != null) {
-                            for (int i = 0; i < equipmentsArray.size(); i++) {
-                                JsonObject equipment = equipmentsArray.getJsonObject(i);
-                                if (idEquipment.equals(equipment.getString(Field.ID))) {
-                                    JsonObject priceDetails = equipment.getJsonObject("priceDetails");
-                                    double price = 0.0;
-                                    if (priceDetails.getDouble("priceTTC") != null && orderJson.getInteger("amount") != null) {
-                                        price = priceDetails.getDouble("priceTTC",0.0) * orderJson.getInteger("amount", 0);
-                                    }
-                                    orderJson.put("price", price);
-                                    orderJson.put(Field.NAME, equipment.getString("titre"));
-                                    orderJson.put("image", equipment.getString("urlcouverture", "/crre/public/img/pages-default.png"));
-                                    orderJson.put("ean", equipment.getString("ean", idEquipment));
-                                    orderJson.put("_index", equipment.getString("type","NaN"));
-                                    orderJson.put("editeur", equipment.getString("editeur","NaN"));
-                                    orderJson.put("distributeur", equipment.getString("distributeur","NaN"));
-                                    break;
-                                } else if (equipmentsArray.size() - 1 == i) {
-                                    equipmentNotFound(orderJson, idEquipment);
-                                }
-                            }
-                        } else {
-                            equipmentNotFound(orderJson, idEquipment);
-                        }
-                    }
-                }
-                renderJson(request, new JsonArray(resultsList));
-            } else {
-                log.error(equipments.left());
-                badRequest(request);
-            }
-        });
+        } else {
+            equipmentNotFound(order, idEquipment);
+        }
     }
 
     private void equipmentNotFound(JsonObject orderJson, String idEquipment) {
@@ -838,27 +768,19 @@ public class OrderRegionController extends BaseController {
         orderJson.put("distributeur", "NaN");
     }
 
-    private void getSearchByIdsOld(HttpServerRequest request, List<JsonArray> resultsList) {
-        JsonArray finalResult = new JsonArray();
-        for (JsonArray orders : resultsList) {
-            finalResult.add(orders);
-            for (Object order : orders) {
-                JsonObject orderJson = (JsonObject) order;
-                double price = 0.0;
-                if (orderJson.getString("equipment_price") != null && orderJson.getInteger("amount") != null) {
-                    price = Double.parseDouble(orderJson.getString("equipment_price")) * orderJson.getInteger("amount", 0);
-                }
-                orderJson.put("price", price);
-                String creation_date = "";
-                if (orderJson.getString("creation_date") != null) {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(orderJson.getString("creation_date", ""), formatter);
-                    creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                }
-                orderJson.put("creation_date", creation_date);
-            }
+    private void getSearchByIdsOld(JsonObject order) {
+        double price = 0.0;
+        if (order.getString(Field.PRICE) != null && order.getInteger(Field.AMOUNT) != null) {
+            price = Double.parseDouble(order.getString(Field.PRICE)) * order.getInteger(Field.AMOUNT, 0);
         }
-        renderJson(request, finalResult);
+        order.put(Field.PRICE, price);
+        String creation_date = "";
+        if (order.getString(Field.CREATION_DATE) != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+            ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString(Field.CREATION_DATE, ""), formatter);
+            creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+        }
+        order.put(Field.CREATION_DATE, creation_date);
     }
 
     @Put("/region/orders/:status")
@@ -929,7 +851,7 @@ public class OrderRegionController extends BaseController {
     private TransactionElement getUpdateTransactionElement(OrderClientEquipmentType status, OrderRegionEquipmentModel orderRegion, Double price) {
         if (OrderClientEquipmentType.REJECTED.toString().equalsIgnoreCase(orderRegion.getStatus())) {
             if (status.equals(OrderClientEquipmentType.VALID)) {
-                 return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", price, orderRegion.getUseCredit());
+                return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", price, orderRegion.getUseCredit());
             } else {
                 return null;
             }
@@ -981,7 +903,7 @@ public class OrderRegionController extends BaseController {
                             .put("params", params)
                             .put("action", "saveOrderRegion");
                     if (idsOrders.size() > 1000) {
-                        launchWorker(exportParams,null);
+                        launchWorker(exportParams, null);
                         ok(request);
                     } else {
                         launchWorker(exportParams, request);
@@ -993,22 +915,22 @@ public class OrderRegionController extends BaseController {
     private void launchWorker(JsonObject params, HttpServerRequest request) {
         eb.send(ExportWorker.class.getSimpleName(), params, new DeliveryOptions().setSendTimeout(1000 * 1000L),
                 handlerToAsyncHandler(eventExport -> {
-                    if (eventExport.body().getString(Field.STATUS).equals(Field.OK)) {
-                        if (request != null) {
-                            //Export CSV
-                            request.response()
-                                    .putHeader("Content-Type", "text/csv; charset=utf-8")
-                                    .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                    .end(eventExport.body().getJsonObject("data").getString("csvFile"));
+                            if (eventExport.body().getString(Field.STATUS).equals(Field.OK)) {
+                                if (request != null) {
+                                    //Export CSV
+                                    request.response()
+                                            .putHeader("Content-Type", "text/csv; charset=utf-8")
+                                            .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                                            .end(eventExport.body().getJsonObject("data").getString("csvFile"));
+                                }
+                            } else {
+                                log.error("Ko calling worker " + eventExport.body().toString());
+                                if (request != null) {
+                                    renderError(request);
+                                }
+                            }
                         }
-                    } else {
-                        log.error("Ko calling worker " + eventExport.body().toString());
-                        if (request != null) {
-                            renderError(request);
-                        }
-                    }
-                }
-        ));
+                ));
     }
 
     @Post("region/orders/library")
@@ -1061,9 +983,9 @@ public class OrderRegionController extends BaseController {
                         .collect(Collectors.toList());
                 orderRegionService.beautifyOrders(structures, orderRegions, equipments, ordersClientId);
                 JsonArray orderRegionClean = new JsonArray();
-                for (int i = 0; i < orderRegions.size() ; i++){
+                for (int i = 0; i < orderRegions.size(); i++) {
                     JsonObject order = orderRegions.getJsonObject(i);
-                    if (order.getString(Field.STATUS,"").equals(Field.REJECTED) && order.getDouble(Field.PRICE) != null &&
+                    if (order.getString(Field.STATUS, "").equals(Field.REJECTED) && order.getDouble(Field.PRICE) != null &&
                             !order.getDouble(Field.PRICE, 0.0).equals(0.0)) {
                         orderRegionClean.add(order);
                     }
@@ -1098,7 +1020,7 @@ public class OrderRegionController extends BaseController {
     private void getOrdersRecursively(int e, List<Integer> listOrders, List<Future<JsonArray>> futures) {
         Future<JsonArray> orderRegionFuture = Future.future();
         futures.add(orderRegionFuture);
-        List<Integer> subList = listOrders.subList(e * 5000, min((e +1) * 5000, listOrders.size()) );
+        List<Integer> subList = listOrders.subList(e * 5000, min((e + 1) * 5000, listOrders.size()));
         orderRegionService.getOrdersRegionById(subList, false, handlerJsonArray(orderRegionFuture));
         if ((e + 1) * 5000 < listOrders.size()) {
             getOrdersRecursively(e + 1, listOrders, futures);
@@ -1106,7 +1028,7 @@ public class OrderRegionController extends BaseController {
     }
 
     private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
-                                                      JsonArray orderRegion, List<Long> ordersClientId) {
+                                                              JsonArray orderRegion, List<Long> ordersClientId) {
         Promise<Void> promise = Promise.promise();
 
         List<JsonObject> allOrderRegionList = orderRegion.stream()

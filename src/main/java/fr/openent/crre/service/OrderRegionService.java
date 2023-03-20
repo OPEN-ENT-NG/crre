@@ -1,10 +1,7 @@
 package fr.openent.crre.service;
 
 import fr.openent.crre.core.enums.OrderClientEquipmentType;
-import fr.openent.crre.model.OrderLDEModel;
-import fr.openent.crre.model.OrderRegionEquipmentModel;
-import fr.openent.crre.model.ProjectModel;
-import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.model.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -24,13 +21,20 @@ public interface OrderRegionService {
      * @deprecated Use {@link #createProject(String)}
      */
     @Deprecated
-    void createProject(String title,  Handler<Either<String, JsonObject>> handler);
+    void createProject(String title, Handler<Either<String, JsonObject>> handler);
 
     Future<ProjectModel> createProject(String title);
 
     Future<List<Integer>> getAllIdsStatus();
 
-    void getAllOrderRegionByProject(int idProject, boolean filterRejectedOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    /**
+     * Get orders by projects filtered
+     *
+     * @param idsProject {@link List<Integer>} List of project ids
+     * @param filters {@link FilterModel} Filters containing status
+     */
+    Future<JsonArray> getAllOrderRegionByProject(List<Integer> idsProject, FilterModel filters);
+
 
     Future<List<OrderRegionEquipmentModel>> getOrdersRegionById(List<Integer> orderRegionEquipmentIdList);
 
@@ -38,11 +42,15 @@ public interface OrderRegionService {
 
     void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
-    void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders,
-                        String idStructure, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
-
-    void search(UserInfos user, List<String> equipementIdList, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler);
+    /**
+     * Get projects filtered
+     *
+     * @param filters {@link FilterModel} Filters (order) that contains date, status, searching text and more...
+     * @param filtersItem {@link FilterItemModel} Filters (item) that editors, distributors and more...
+     * @param itemSearchedIdsList {@link List<String>} List of item ids corresponding to searching item request
+     * @param itemFilteredIdsList {@link List<String>}  List of item ids corresponding to filtering item request
+     */
+    Future<JsonArray> search(FilterModel filters, FilterItemModel filtersItem, List<String> itemSearchedIdsList, List<String> itemFilteredIdsList);
 
     /**
      * @deprecated Use {@link #getLastProject()}
@@ -85,6 +93,7 @@ public interface OrderRegionService {
 
     /**
      * Gets the list of all orders region in the same project as the order region pass in parameter
+     *
      * @param projectIdList list of projectId
      */
     Future<Map<ProjectModel, List<OrderRegionEquipmentModel>>> getOrderRegionEquipmentInSameProject(List<Integer> projectIdList, boolean old);

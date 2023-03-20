@@ -2,17 +2,17 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.VertxException;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.neo4j.StatementsBuilder;
@@ -53,6 +53,9 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     private static final String ID_STRUCTURE = "id_structure";
     private static final String RELIQUAT = "reliquat";
 
+    private static final Logger log = LoggerFactory.getLogger(DefaultStructureService.class);
+
+
     public DefaultStructureService(String schema, EventBus eb) {
         super(schema, "");
         this.eb = eb;
@@ -80,19 +83,21 @@ public class DefaultStructureService extends SqlCrudService implements Structure
 
 
     @Override
-    public void getStructuresByTypeAndFilter(String type, List<String> filterStructures, Handler<Either<String, JsonArray>> handler) {
+    public Future<JsonArray> getStructuresFilter(List<String> structureTypes, List<String> structureIds) {
+        Promise<JsonArray> promise = Promise.promise();
         String query = "MATCH (s:Structure) WHERE s.UAI IS NOT NULL ";
-        JsonObject values = new JsonObject();
-        if (type != null) {
-            query += "AND s.contract = {type} ";
-            values.put("type", type);
+        JsonObject params = new JsonObject();
+        if (structureTypes != null && !structureTypes.isEmpty()) {
+            query += "AND s.contract IN {type} ";
+            params.put(Field.TYPE, new JsonArray(structureTypes));
         }
-        if (filterStructures != null && !filterStructures.isEmpty()) {
-            query += "AND s.id IN {stuctureIds} ";
-            values.put("stuctureIds", new JsonArray(filterStructures));
+        if (structureIds != null && !structureIds.isEmpty()) {
+            query += "AND s.id IN {structures} ";
+            params.put(Field.STRUCTURES, new JsonArray(structureIds));
         }
         query += "RETURN s.id as idStructure; ";
-        neo4j.execute(query, values, Neo4jResult.validResultHandler(handler));
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
+        return promise.future();
     }
 
     @Override

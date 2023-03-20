@@ -67,7 +67,7 @@ public class DefaultUserService implements UserService {
     public Future<List<Neo4jUserModel>> getAdminUser() {
         Promise<List<Neo4jUserModel>> promise = Promise.promise();
 
-        String query = "MATCH (s:Structure)<--()--(u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'" + Crre.ADMINISTRATOR_RIGHT + "'})" +
+        String query = "MATCH (u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction{displayName:'" + Crre.ADMINISTRATOR_RIGHT + "'})" +
                 " RETURN distinct u.id as id;";
 
         Neo4j.getInstance().execute(query, new JsonObject(), Neo4jResult.validResultHandler(stringJsonArrayEither -> {

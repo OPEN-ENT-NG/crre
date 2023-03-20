@@ -6,10 +6,7 @@ import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
-import fr.openent.crre.model.OrderLDEModel;
-import fr.openent.crre.model.OrderRegionEquipmentModel;
-import fr.openent.crre.model.ProjectModel;
-import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.model.*;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
@@ -149,14 +146,59 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void getAllOrderRegionByProject(int idProject, boolean filterRejectedSentOrders, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        String query = selectOrderRegion(old);
-        query += "WHERE ore.id_project = ? AND ore.equipment_key IS NOT NULL ";
-        if (filterRejectedSentOrders) {
-            query += "AND ore.status != 'SENT' AND ore.status != 'REJECTED'";
+    public Future<JsonArray> getAllOrderRegionByProject(List<Integer> idsProject, FilterModel filters) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray values = new JsonArray();
+
+        if (!filters.getStatus().isEmpty()) {
+            JsonArray statusArray = new JsonArray(filters.getStatus()
+                    .stream()
+                    .map(OrderClientEquipmentType::toString)
+                    .collect(Collectors.toList()));
+            values.addAll(statusArray).addAll(new JsonArray(idsProject)).addAll(statusArray).addAll(new JsonArray(idsProject));
+        } else {
+            values.addAll(new JsonArray(idsProject)).addAll(new JsonArray(idsProject));
         }
-        query = groupOrderRegion(old, query);
-        Sql.getInstance().prepared(query, new JsonArray().add(idProject), SqlResult.validResultHandler(arrayResponseHandler));
+        String select = "SELECT to_jsonb(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
+                "to_jsonb(o_c_e.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, " +
+                "st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2, " +
+                "o_r_e.id, o_r_e.id_structure, o_r_e.amount, o_r_e.creation_date, o_r_e.modification_date, o_r_e.owner_name, o_r_e.owner_id, o_r_e.status, " +
+                "o_r_e.equipment_key, o_r_e.cause_status, o_r_e.comment, o_r_e.id_project, o_r_e.id_order_client_equipment, " +
+                "o_r_e.reassort, NULL as total_free, null as image, null as name, null as price, null as offers, null as editeur, null as distributeur, null as _index, null as status_name, " +
+                "-1 as status_id, false as old " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project " + (filters.getStatus().size() > 0 ? "AND o_r_e.status IN " + Sql.listPrepared(filters.getStatus()) + " " : "") +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON (bo.id = o_c_e.id_basket) " +
+                "LEFT JOIN  " + Crre.crreSchema + ".campaign ON (o_r_e.id_campaign = campaign.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".students AS st ON (o_r_e.id_structure = st.id_structure) " +
+                "WHERE o_r_e.id_project IN " + Sql.listPrepared(idsProject) + " AND o_r_e.equipment_key IS NOT NULL " +
+                "GROUP BY o_r_e.id, campaign.name, campaign.use_credit, campaign.*, p.title, o_c_e.id, bo.name, bo.id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, " +
+                "st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2, status_name, status_id";
+
+        String selectOld = "SELECT to_jsonb(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title AS title, " +
+                "to_jsonb(o_c_e_o.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, " +
+                "st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2 , " +
+                "o_r_e_o.id, o_r_e_o.id_structure, o_r_e_o.amount,o_r_e_o.creation_date, o_r_e_o.modification_date, o_r_e_o.owner_name, o_r_e_o.owner_id, o_r_e_o.status, " +
+                "o_r_e_o.equipment_key, o_r_e_o.cause_status, o_r_e_o.comment, o_r_e_o.id_project, o_r_e_o.id_order_client_equipment, o_r_e_o.reassort, o_r_e_o.total_free, " +
+                "o_r_e_o.equipment_image as image, o_r_e_o.equipment_name as name, o_r_e_o.equipment_price as price, to_jsonb(o_c_e_o.offers) as offers, o_r_e_o.equipment_editor as editeur, " +
+                "o_r_e_o.equipment_diffusor as distributeur, o_r_e_o.equipment_format as _index, s.name as status_name, " +
+                "s.id as status_id, true as old " +
+                "FROM  " + Crre.crreSchema + ".project p " +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project " + (filters.getStatus().size() > 0 ? "AND o_r_e_o.status IN " + Sql.listPrepared(filters.getStatus()) + " " : "") +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS bo ON (bo.id = o_c_e_o.id_basket) " +
+                "LEFT JOIN  " + Crre.crreSchema + ".campaign ON (o_r_e_o.id_campaign = campaign.id) " +
+                "LEFT JOIN " + Crre.crreSchema + ".students AS st ON (o_r_e_o.id_structure = st.id_structure) " +
+                "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = o_r_e_o.id_status " +
+                "WHERE o_r_e_o.id_project IN " + Sql.listPrepared(idsProject) + " " +
+                "GROUP BY o_r_e_o.id, campaign.name, campaign.use_credit, campaign.*, p.title, o_c_e_o.id, bo.name, bo.id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, " +
+                "st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2, status_name, status_id";
+
+        String query = String.format("%s UNION %s;", select, selectOld);
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
+
+        return promise.future();
     }
 
     @Override
@@ -172,6 +214,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderRegionEquipmentModel.class, errorMessage)));
         return promise.future();
     }
+
     @Override
     public Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderClientEquipmentType status) {
         Promise<List<OrderRegionEquipmentModel>> promise = Promise.promise();
@@ -202,146 +245,99 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return query;
     }
 
+
     @Override
-    public void getAllProjects(UserInfos user, String startDate, String endDate, Integer page, boolean filterRejectedSentOrders,
-                               String idStructure, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder query = new StringBuilder("" +
-                "SELECT DISTINCT (p.*), ore.creation_date, count(ore.*) " +
+    public Future<JsonArray> search(FilterModel filters, FilterItemModel filtersItem, List<String> itemSearchedIdsList, List<String> itemFilteredIdsList) {
+        Promise<JsonArray> promise = Promise.promise();
+        JsonArray values = new JsonArray();
+        String sqlquery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate, count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders " +
                 "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + (oldTable ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
-                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ");
-        values.add(startDate);
-        values.add(endDate);
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project " + (filters.getStatus().size() > 0 ? "AND o_r_e_o.status IN " + Sql.listPrepared(filters.getStatus()) + " " : "") +
+                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project " + (filters.getStatus().size() > 0 ? "AND o_r_e.status IN " + Sql.listPrepared(filters.getStatus()) + " " : "") +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment " +
+                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON (b.id = o_c_e.id_basket OR b.id = o_c_e_o.id_basket) " +
+                "LEFT JOIN " + Crre.crreSchema + ".structure AS s ON (o_r_e.id_structure = s.id_structure OR o_r_e_o.id_structure = s.id_structure) " +
+                "WHERE ((o_r_e.creation_date BETWEEN ? AND ? AND o_r_e.equipment_key IS NOT NULL) OR " +
+                "(o_r_e_o.creation_date BETWEEN ? AND ?)) ";
+        // Condition de filtrage de status
+        if (!filters.getStatus().isEmpty()) {
+            JsonArray statusArray = new JsonArray(filters.getStatus()
+                    .stream()
+                    .map(OrderClientEquipmentType::toString)
+                    .collect(Collectors.toList()));
+            values.addAll(statusArray).addAll(statusArray);
+        }
+        values.add(filters.getStartDate()).add(filters.getEndDate()).add(filters.getStartDate()).add(filters.getEndDate());
 
-        if (filterRejectedSentOrders) {
-            query.append(" AND ore.status != 'SENT' AND ore.status != 'REJECTED' ");
-        }
-
-        if (!WorkflowActionUtils.hasRight(user, WorkflowActions.ADMINISTRATOR_RIGHT.toString()) &&
-                WorkflowActionUtils.hasRight(user, WorkflowActions.VALIDATOR_RIGHT.toString())) {
-            query.append(" AND ore.id_structure = ?");
-            values.add(idStructure);
-        }
-        query.append(" GROUP BY p.id, ore.creation_date ORDER BY id DESC ");
-        if (page != null) {
-            query.append("OFFSET ? LIMIT ? ");
-            values.add(PAGE_SIZE * page);
-            values.add(PAGE_SIZE);
-        }
-        sql.prepared(query.toString(), values, SqlResult.validResultHandler(arrayResponseHandler));
-    }
-
-    static void addValues(String key, String value, HashMap<String, ArrayList> hashMap) {
-        ArrayList tempList;
-        if (hashMap.containsKey(key)) {
-            tempList = hashMap.get(key);
-            if (tempList == null)
-                tempList = new ArrayList();
-            tempList.add(value);
-        } else {
-            tempList = new ArrayList();
-            tempList.add(value);
-        }
-        hashMap.put(key, tempList);
-    }
-
-    public void search(UserInfos user, List<String> equipementIdList, String query, String startDate, String endDate, String idStructure, JsonArray filters,
-                       Integer page, Boolean old, Handler<Either<String, JsonArray>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<String, ArrayList> hashMap = new HashMap<>();
-        String sqlquery = "SELECT DISTINCT (p.*), ore.creation_date, count(ore.*) " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + (old ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_project = p.id " +
-                "LEFT JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON oe.id = ore.id_order_client_equipment " +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order AS b ON b.id = oe.id_basket " +
-                "LEFT JOIN " + Crre.crreSchema + ".structure AS s ON ore.id_structure = s.id_structure " +
-                "WHERE ore.creation_date BETWEEN ? AND ? AND ore.equipment_key IS NOT NULL ";
-        values.add(startDate);
-        values.add(endDate);
-        if (idStructure != null && !idStructure.equals("null")) {
-            sqlquery += " AND ore.id_structure = ?";
-            values.add(idStructure);
-        }
-        //condition with query
-        if (!query.equals("")) {
+        // Condition de recherche de texte
+        if (filters.getSearchingText() != null) {
             sqlquery += "AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR " +
                     "lower(s.public) ~* ? OR lower(s.catalog) ~* ? OR " +
-                    "lower(p.title) ~* ? OR lower(ore.owner_name) ~* ? OR lower(b.name) ~* ? ";
-            values.add(query).add(query).add(query).add(query).add(query).add(query).add(query).add(query).add(query);
-            if (old) {
-                sqlquery += " OR ore.equipment_name ~* ? ";
-                values.add(query);
+                    "lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? OR lower(b.name) ~* ? OR o_r_e_o.equipment_name ~* ? ";
+            values.add(filters.getSearchingText()).add(filters.getSearchingText())
+                    .add(filters.getSearchingText()).add(filters.getSearchingText())
+                    .add(filters.getSearchingText()).add(filters.getSearchingText())
+                    .add(filters.getSearchingText()).add(filters.getSearchingText())
+                    .add(filters.getSearchingText()).add(filters.getSearchingText())
+                    .add(filters.getSearchingText());
+            if (!itemSearchedIdsList.isEmpty()) {
+                sqlquery += " OR o_r_e.equipment_key IN " + Sql.listPrepared(itemSearchedIdsList);
+                values.addAll(new JsonArray(itemSearchedIdsList));
             }
+            sqlquery += ") ";
         }
-        //condition with equipment
-        if (!equipementIdList.isEmpty() && !old) {
-            if (!query.equals("")) {
-                sqlquery += " OR ore.equipment_key IN (";
+
+        // Condition de filtrage d'équipements
+        if (!filtersItem.isEmpty()) {
+            if(!itemFilteredIdsList.isEmpty()) {
+                sqlquery += "AND (o_r_e.equipment_key IN " + Sql.listPrepared(itemFilteredIdsList) + " ";
+                values.addAll(new JsonArray(itemFilteredIdsList));
             } else {
-                sqlquery += "AND (ore.equipment_key IN (";
+                sqlquery += "AND (? ";
+                values.add(false);
             }
-            for (String equipId : equipementIdList) {
-                sqlquery += "?,";
-                values.add(equipId);
+            if (!filtersItem.getEditors().isEmpty() && !filtersItem.getDistributors().isEmpty()) {
+                sqlquery += " OR (o_r_e_o.equipment_editor IN " + Sql.listPrepared(filtersItem.getEditors()) + " " +
+                        "AND o_r_e_o.equipment_diffusor IN " + Sql.listPrepared(filtersItem.getDistributors()) + ")";
+                values.addAll(new JsonArray(filtersItem.getEditors())).addAll(new JsonArray(filtersItem.getDistributors()));
+            } else if (!filtersItem.getEditors().isEmpty() && filtersItem.getDistributors().isEmpty()) {
+                sqlquery += " OR o_r_e_o.equipment_editor IN " + Sql.listPrepared(filtersItem.getEditors());
+                values.addAll(new JsonArray(filtersItem.getEditors()));
+            } else if (filtersItem.getEditors().isEmpty() && !filtersItem.getDistributors().isEmpty()) {
+                sqlquery += " OR o_r_e_o.equipment_diffusor IN " + Sql.listPrepared(filtersItem.getDistributors());
+                values.addAll(new JsonArray(filtersItem.getDistributors()));
             }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
-        }
-        if (!query.equals("") || (!equipementIdList.isEmpty() && !old)) {
             sqlquery += ")";
         }
 
-        if (filters != null && filters.size() > 0) {
-            sqlquery += " AND ( ";
-            for (int i = 0; i < filters.size(); i++) {
-                String key = (String) filters.getJsonObject(i).fieldNames().toArray()[0];
-                if (key.equals("id_structure")) {
-                    JsonArray uai = filters.getJsonObject(i).getJsonArray(key);
-                    for (int j = 0; j < uai.size(); j++) {
-                        addValues(key, uai.getJsonObject(j).getString("idStructure"), hashMap);
-                    }
-                } else {
-                    String value = filters.getJsonObject(i).getString(key);
-                    addValues(key, value, hashMap);
-                }
-            }
-            int count = 0;
-            for (Map.Entry mapentry : hashMap.entrySet()) {
-                ArrayList list = (ArrayList) mapentry.getValue();
-                String keys = mapentry.getKey().toString();
-                if (keys.equals("renew")) {
-                    if (list.size() == 2) {
-                        sqlquery += "ore.owner_id ~* ore.owner_id";
-                    } else {
-                        if (Boolean.parseBoolean(String.valueOf(list.get(0)))) {
-                            sqlquery += "ore.owner_id ~* 'renew'";
-                        } else {
-                            sqlquery += "ore.owner_id !~* 'renew'";
-                        }
-                    }
-                } else {
-                    sqlquery += !(keys.equals("reassort") || keys.equals(Field.STATUS)) ? "b." + keys + " IN (" : "ore." + keys + " IN (";
-                    for (int k = 0; k < list.size(); k++) {
-                        sqlquery += k + 1 == list.size() ? "?)" : "?, ";
-                        values.add(list.get(k).toString());
-                    }
-                }
 
-                if (!(count == hashMap.entrySet().size() - 1)) {
-                    sqlquery += " AND ";
-                } else {
-                    sqlquery += ")";
-                }
-                count++;
+        // Condition de filtrage de structures
+        if (!filters.getIdsStructure().isEmpty()) {
+            sqlquery += " AND (o_r_e.id_structure IN " + Sql.listPrepared(filters.getIdsStructure());
+            sqlquery += " OR o_r_e_o.id_structure IN " + Sql.listPrepared(filters.getIdsStructure()) + " )";
+            values.addAll(new JsonArray(filters.getIdsStructure())).addAll(new JsonArray(filters.getIdsStructure()));
+        }
+
+        // Condition de filtrage sur les commandes renouvellables
+        if (filters.getRenew() != null) {
+            if (filters.getRenew()) {
+                sqlquery += " AND o_r_e_o.owner_id ~* 'renew' ";
+            } else {
+                sqlquery += " AND o_r_e_o.owner_id !~* 'renew' ";
             }
         }
-        sqlquery = sqlquery + " GROUP BY p.id, ore.creation_date ORDER BY id DESC ";
-        if (page != null) {
+
+
+        sqlquery = sqlquery + " GROUP BY p.id, creationDate ORDER BY id DESC ";
+        if (filters.getPage() != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
-            values.add(PAGE_SIZE * page);
+            values.add(PAGE_SIZE * filters.getPage());
             values.add(PAGE_SIZE);
         }
-        Sql.getInstance().prepared(sqlquery, values, SqlResult.validResultHandler(arrayResponseHandler));
+
+        Sql.getInstance().prepared(sqlquery, values, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
+        return promise.future();
     }
 
     @Override

@@ -1,12 +1,10 @@
 package fr.openent.crre.service.impl;
 
-import com.sun.java.swing.plaf.motif.MotifBorders;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.helpers.SqlHelper;
-import fr.openent.crre.helpers.TransactionHelper;
+import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.model.FilterItemModel;
+import fr.openent.crre.model.FilterModel;
 import fr.openent.crre.model.TransactionElement;
-import fr.wseduc.webutils.Either;
-import io.gatling.commons.stats.assertion.In;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,7 +21,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
@@ -228,5 +227,103 @@ public class DefaultOrderRegionServiceTest {
         this.defaultOrderRegionService.getOrderRegionEquipmentInSameProject(Arrays.asList(846, 184, 30), true);
 
         async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void getAllOrderRegionByProjectTest(TestContext ctx) {
+        Async async = ctx.async();
+        FilterModel filterModel = new FilterModel();
+        filterModel.setStatus(Arrays.asList(OrderClientEquipmentType.SENT, OrderClientEquipmentType.RESUBMIT));
+
+        String expectedQuery = "SELECT to_jsonb(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit," +
+                " p.title AS title, to_jsonb(o_c_e.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id, st.seconde," +
+                " st.premiere, st.terminale, st.secondepro, st.premierepro, st.terminalepro, st.secondetechno, st.premieretechno," +
+                " st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2, o_r_e.id, o_r_e.id_structure, o_r_e.amount, o_r_e.creation_date," +
+                " o_r_e.modification_date, o_r_e.owner_name, o_r_e.owner_id, o_r_e.status, o_r_e.equipment_key, o_r_e.cause_status," +
+                " o_r_e.comment, o_r_e.id_project, o_r_e.id_order_client_equipment, o_r_e.reassort, NULL as total_free," +
+                " null as image, null as name, null as price, null as offers, null as editeur, null as distributeur," +
+                " null as _index, null as status_name, -1 as status_id, false as old FROM  null.project p " +
+                "LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project AND o_r_e.status IN (?,?)" +
+                " LEFT JOIN null.order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment" +
+                " LEFT JOIN null.basket_order AS bo ON (bo.id = o_c_e.id_basket) LEFT JOIN  null.campaign ON (o_r_e.id_campaign = campaign.id)" +
+                " LEFT JOIN null.students AS st ON (o_r_e.id_structure = st.id_structure) WHERE o_r_e.id_project IN (?,?)" +
+                " AND o_r_e.equipment_key IS NOT NULL GROUP BY o_r_e.id, campaign.name, campaign.use_credit, campaign.*, p.title," +
+                " o_c_e.id, bo.name, bo.id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, st.terminalepro," +
+                " st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2, status_name," +
+                " status_id UNION SELECT to_jsonb(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit, p.title" +
+                " AS title, to_jsonb(o_c_e_o.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id, st.seconde, st.premiere," +
+                " st.terminale, st.secondepro, st.premierepro, st.terminalepro, st.secondetechno, st.premieretechno, st.terminaletechno," +
+                " st.cap1, st.cap2, st.cap3, st.bma1, st.bma2 , o_r_e_o.id, o_r_e_o.id_structure, o_r_e_o.amount,o_r_e_o.creation_date, o_r_e_o.modification_date," +
+                " o_r_e_o.owner_name, o_r_e_o.owner_id, o_r_e_o.status, o_r_e_o.equipment_key, o_r_e_o.cause_status, o_r_e_o.comment," +
+                " o_r_e_o.id_project, o_r_e_o.id_order_client_equipment, o_r_e_o.reassort, o_r_e_o.total_free, o_r_e_o.equipment_image" +
+                " as image, o_r_e_o.equipment_name as name, o_r_e_o.equipment_price as price, to_jsonb(o_c_e_o.offers) as offers," +
+                " o_r_e_o.equipment_editor as editeur, o_r_e_o.equipment_diffusor as distributeur, o_r_e_o.equipment_format as _index," +
+                " s.name as status_name, s.id as status_id, true as old FROM  null.project p LEFT JOIN null.\"order-region-equipment-old\"" +
+                " o_r_e_o ON p.id = o_r_e_o.id_project AND o_r_e_o.status IN (?,?) LEFT JOIN null.order_client_equipment_old" +
+                " AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment LEFT JOIN null.basket_order AS bo ON" +
+                " (bo.id = o_c_e_o.id_basket) LEFT JOIN  null.campaign ON (o_r_e_o.id_campaign = campaign.id) LEFT JOIN null.students" +
+                " AS st ON (o_r_e_o.id_structure = st.id_structure) LEFT JOIN  null.status AS s ON s.id = o_r_e_o.id_status" +
+                " WHERE o_r_e_o.id_project IN (?,?) GROUP BY o_r_e_o.id, campaign.name, campaign.use_credit, campaign.*, p.title," +
+                " o_c_e_o.id, bo.name, bo.id, st.seconde, st.premiere, st.terminale, st.secondepro, st.premierepro, st.terminalepro," +
+                " st.secondetechno, st.premieretechno, st.terminaletechno, st.cap1, st.cap2, st.cap3, st.bma1, st.bma2, status_name," +
+                " status_id;";
+        String expectedParams = "[\"SENT\",\"RESUBMIT\",18,2846,\"SENT\",\"RESUBMIT\",18,2846]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.getAllOrderRegionByProject(Arrays.asList(18, 2846), filterModel);
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void searchTest(TestContext ctx) {
+        Async async = ctx.async();
+        FilterModel filterModel = new FilterModel();
+        filterModel.setStartDate("startDate");
+        filterModel.setEndDate("endDate");
+        filterModel.setStatus(Arrays.asList(OrderClientEquipmentType.SENT, OrderClientEquipmentType.RESUBMIT));
+        filterModel.setSearchingText("searching text");
+        filterModel.setIdsStructure(Arrays.asList("idStructure1", "idStructure2"));
+        filterModel.setRenew(true);
+        filterModel.setPage(5);
+        FilterItemModel filterItem = new FilterItemModel();
+
+        String expectedQuery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate, " +
+                "count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders FROM  null.project p " +
+                "LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project AND o_r_e_o.status IN (?,?) " +
+                "LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project AND o_r_e.status IN (?,?) " +
+                "LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment " +
+                "LEFT JOIN null.order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment " +
+                "LEFT JOIN null.basket_order AS b ON (b.id = o_c_e.id_basket OR b.id = o_c_e_o.id_basket) " +
+                "LEFT JOIN null.structure AS s ON (o_r_e.id_structure = s.id_structure OR o_r_e_o.id_structure = s.id_structure) " +
+                "WHERE ((o_r_e.creation_date BETWEEN ? AND ? AND o_r_e.equipment_key IS NOT NULL) OR (o_r_e_o.creation_date BETWEEN ? AND ?)) " +
+                "AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR lower(s.public) ~* ? " +
+                "OR lower(s.catalog) ~* ? OR lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? " +
+                "OR lower(b.name) ~* ? OR o_r_e_o.equipment_name ~* ?  OR o_r_e.equipment_key IN (?,?))  " +
+                "AND (o_r_e.id_structure IN (?,?) OR o_r_e_o.id_structure IN (?,?) ) AND o_r_e_o.owner_id ~* 'renew'  " +
+                "GROUP BY p.id, creationDate ORDER BY id DESC OFFSET ? LIMIT ? ";
+        String expectedParams = "[\"SENT\",\"RESUBMIT\",\"SENT\",\"RESUBMIT\",\"startDate\",\"endDate\",\"startDate\",\"endDate\"," +
+                "\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
+                "\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"equipement1\"," +
+                "\"equipement2\",\"idStructure1\",\"idStructure2\",\"idStructure1\",\"idStructure2\",50,10]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderRegionService.search(filterModel, filterItem, Arrays.asList("equipement1", "equipement2"), Arrays.asList("equipement1", "equipement2"));
+         async.awaitSuccess(10000);
     }
 }
