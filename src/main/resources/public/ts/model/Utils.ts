@@ -135,6 +135,7 @@ export class Utils {
                 let partiallyRefused : boolean = false;
                 let partiallyValidated : boolean = false;
                 let partiallyResubmit : boolean = false;
+                let partiallySent : boolean = false;
                 if (orders.length > 1) {
                     for (const order of orders as Array<OrderRegion | OrderClient>) {
                         if (project.status != order.status) {
@@ -144,9 +145,11 @@ export class Utils {
                                 partiallyRefused = true;
                             else if (order.status == 'RESUBMIT' || project.status == 'RESUBMIT')
                                 partiallyResubmit = true;
+                            else if (order.status == 'IN_PROGRESS' || project.status == 'IN_PROGRESS')
+                                partiallySent = true;
                         }
                     }
-                    if (partiallyRefused || partiallyValidated || partiallyResubmit) {
+                    if (partiallyRefused || partiallyValidated || partiallyResubmit || partiallySent) {
                         for (const order of orders as Array<OrderRegion | OrderClient>) {
                             order.displayStatus = true;
                         }
@@ -156,6 +159,8 @@ export class Utils {
                             project.status = "PARTIALLYVALIDED"
                         else if (partiallyResubmit)
                             project.status = "PARTIALLYRESUBMIT"
+                        else if (partiallySent)
+                            project.status = "PARTIALLYSENT"
                     }
                 }
             }
@@ -252,6 +257,7 @@ export class Utils {
             return {startDate, endDate};
         }
     };
+
 
     static format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
 }

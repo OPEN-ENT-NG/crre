@@ -1,12 +1,31 @@
 import {Mix, Selectable, Selection} from "entcore-toolkit";
 import http from "axios";
-import {toasts} from "entcore";
+import {moment, toasts} from "entcore";
 import {OrdersRegion} from "./OrderRegion";
 import {Utils} from "./Utils";
-import {Filters, IFilter} from "./Filter";
+import {Filters} from "./Filter";
 import {ProjectFilter} from "./ProjectFilter";
+import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 
 declare let window: any;
+
+export interface IProjectPayload {
+    startDate: String;
+    endDate: String;
+    page?: Number;
+    status?: Array<String>;
+    idsStructure?: Array<String>;
+    idsCampaign?: Array<Number>;
+    distributors?: Array<String>;
+    editors?: Array<String>;
+    itemTypes?: Array<String>;
+    catalogs?: Array<String>;
+    structureTypes?: Array<String>;
+    renew?: Array<String>;
+    searchingText?: String;
+}
+
+
 
 export class Project implements Selectable {
     id: number;
@@ -44,40 +63,38 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    async search(old = false, filter: ProjectFilter, pageNumber: number, idStructure: string) {
-        let queryParam = "";
+    async search(filter: ProjectFilter) {
         if (filter.queryName != null && filter.queryName.trim() !== "") {
             if (Utils.format.test(filter.queryName)) {
                 toasts.warning('crre.equipment.special');
                 return;
             }
-            queryParam = `&q=${filter.queryName}`
         }
 
-        let pageParam = "";
-        if (pageNumber != null) {
-            pageParam = `&page=${pageNumber}`
-        }
-
-        let dateParam = "";
-        if (filter.startDate && filter.endDate) {
-            const {startDate, endDate} = Utils.formatDate(filter.startDate, filter.endDate);
-            dateParam = `&startDate=${startDate}&endDate=${endDate}`
-        }
-
-        let structureParam = "";
-        if (idStructure) {
-            structureParam = `&idStructure=${idStructure}`
-        }
-
-        let params : string = '';
-        filter.filterChoiceCorrelation.forEach((value: string, key: string) => {
-            filter[key].forEach((el: IFilter) => params += "&" + value + "=" + ((el.getValue) ? el.getValue() : el));
-        });
-
-        let url = `/crre/ordersRegion/projects/search_filter?${dateParam}&old=${old}${structureParam}${params}${pageParam}${queryParam}`;
-        const {data} = await http.get(url);
+        let url = `/crre/ordersRegion/projects`;
+        const {data} = await http.post(url, this.toJSON(filter));
         this.all = Mix.castArrayAs(Project, data);
+    }
+
+    toJSON(filter: ProjectFilter): IProjectPayload {
+
+        let payload: IProjectPayload = {
+            startDate: moment(filter.startDate).format('YYYY-MM-DD').toString(),
+            endDate: moment(filter.endDate).format('YYYY-MM-DD').toString()
+        };
+
+        if (filter.page != null) payload.page = filter.page;
+        if (!!filter.queryName) payload.searchingText = filter.queryName;
+        if (filter.statusFilterList.length > 0) payload.status = filter.statusFilterList.map(status => ORDER_STATUS_ENUM[status.orderStatusEnum]);
+        if (filter.structureList.length > 0) payload.idsStructure = filter.structureList.map(structure => structure.id);
+        if (filter.campaignList.length > 0) payload.idsCampaign = filter.campaignList.map(campaign => campaign.id);
+        if (filter.distributorList.length > 0) payload.distributors = filter.distributorList.map(distributor => distributor.name);
+        if (filter.editorList.length > 0) payload.editors = filter.editorList.map(editor => editor.name);
+        if (filter.schoolType.length > 0) payload.structureTypes = filter.schoolType.map(schoolType => schoolType.name);
+        if (filter.catalogList.length > 0) payload.catalogs = filter.catalogList.map(catalog => catalog.name);
+        if (filter.renew.length > 0) payload.renew = filter.renew.map(renew => renew.name);;
+
+        return payload;
     }
 
     /**
@@ -101,7 +118,7 @@ export class Projects extends Selection<Project> {
             if (!Utils.format.test(word)) {
                 const wordParams = (!!word) ? `&q=${word}` : ``
                 let url = `/crre/ordersRegion/projects/search_filter`;
-                url += `?startDate=${startDate}&endDate=${endDate}&old=${old}&idStructure=${idStructure}&${params}${wordParams}`;
+                url += `?startDate=${startDate}&endDate=${endDate}&old=${old}&${params}${wordParams}`;
                 const {data} = await http.get(url);
                 this.all = Mix.castArrayAs(Project, data);
             } else {

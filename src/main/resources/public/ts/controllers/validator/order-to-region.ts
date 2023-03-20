@@ -1,18 +1,24 @@
-import {Behaviours, moment, ng, toasts} from 'entcore';
+import {Behaviours, moment, ng} from 'entcore';
 import {
-    Campaign,
     Equipments,
     Filters,
     FiltersFront,
     Offer,
-    Offers, OrderClient, OrderRegion,
-    OrdersRegion, Projects,
+    Offers,
+    OrderClient,
+    OrderRegion,
+    OrdersRegion,
+    Projects,
+    Structure,
     Structures,
     Utils
 } from "../../model";
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 import {Subscription} from "rxjs";
 import {Mix} from "entcore-toolkit";
+import {ProjectFilter} from "../../model/ProjectFilter";
+import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
+import {StatusFilter} from "../../model/StatusFilter";
 
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', ($scope) => {
@@ -35,6 +41,9 @@ export const orderRegionController = ng.controller('orderRegionController',
             page: 0,
             isDate: false,
         };
+
+        $scope.projectFilter = new ProjectFilter();
+
         if (!$scope.selectedType.split('/').includes('historic')) {
             $scope.current = {};
             $scope.current.structure = {};
@@ -43,7 +52,6 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         function initProjects() {
             $scope.display.projects = new Projects();
-            $scope.filter.page = 0;
             $scope.display.loading = true;
             Utils.safeApply($scope);
         }
@@ -55,20 +63,24 @@ export const orderRegionController = ng.controller('orderRegionController',
             }));
 
         $scope.onScroll = async (init?: boolean, old?: boolean): Promise<void> => {
-            let projets = new Projects();
+            let projects = new Projects();
+            $scope.projectFilter.structureList.push($scope.current.structure as Structure);
+            if (old) {
+                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+            } else {
+                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+                    new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
+            }
             if (init) {
                 initProjects();
-                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
+                await projects.search($scope.projectFilter);
                 Utils.safeApply($scope);
             } else {
-                $scope.filter.page++;
-                await projets.filter_order(old, $scope.query_name, $scope.filters, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
+                $scope.projectFilter.page++;
                 Utils.safeApply($scope);
             }
-            if (projets.all.length > 0) {
-                await $scope.synchroRegionOrders(true, false, projets, old);
+            if (projects.all.length > 0) {
+                await $scope.synchroRegionOrders(true, false, projects, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             }
@@ -77,14 +89,20 @@ export const orderRegionController = ng.controller('orderRegionController',
             Utils.safeApply($scope);
         };
 
-        $scope.searchProjectAndOrders = async (old = false, all: boolean, onlyId:boolean) => {
-            let projets = new Projects();
+        $scope.searchProjectAndOrders = async (old = false, all: boolean, onlyId: boolean) => {
+            let projects = new Projects();
             initProjects();
-            all ? $scope.filter.page = null : 0;
-            await projets.filter_order(old, $scope.query_name, $scope.filters,
-                $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.filter.page, $scope.current.structure.id);
-            if (projets.all.length > 0) {
-                await $scope.synchroRegionOrders(true, onlyId, projets, old);
+            all ? $scope.projectFilter.page = null : 0;
+            $scope.projectFilter.structureList.push($scope.current.structure as Structure);
+            if (old) {
+                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+            } else {
+                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+                    new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
+            }
+            await projects.search($scope.projectFilter);
+            if (projects.all.length > 0) {
+                await $scope.synchroRegionOrders(true, onlyId, projects, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
@@ -93,29 +111,25 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.searchByName = async (name: string, old = false) => {
-            $scope.query_name = name;
-            if ($scope.filters.all.length == 0 && !name) {
+        $scope.search = async (old = false) => {
+            if (old) {
+                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+            } else {
+                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+                    new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
+            }
+            if ($scope.filters.all.length == 0 && !$scope.projectFilter.queryName) {
                 initProjects();
-                await $scope.synchroRegionOrders(false, false,null, old);
+                await $scope.synchroRegionOrders(false, false, null, old);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
                 Utils.safeApply($scope);
             } else {
-                await $scope.searchProjectAndOrders(old, false, false);
-            }
-        }
-
-        $scope.filterByDate = async (old = false) => {
-            if ($scope.filter.isDate) {
                 if ($scope.filtersDate.startDate && $scope.filtersDate.endDate &&
                     moment($scope.filtersDate.startDate).isSameOrBefore(moment($scope.filtersDate.endDate))) {
-                    await $scope.searchByName($scope.query_name, old);
+                    await $scope.searchProjectAndOrders(old, false, false);
                 }
-                $scope.filter.isDate = false;
-            } else {
-                $scope.filter.isDate = true;
             }
-        };
+        }
 
         $scope.syncSelected = (): void => {
             $scope.display.projects.all.forEach(project => {
@@ -150,103 +164,89 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         const currencyFormatter = new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR'});
 
-        const filterAll = function (order) {
-            let test = true;
-            let i = 0
-            while (test && $scope.filtersFront.all.length > i) {
-                if ($scope.filtersFront.all[i].name === "type")
-                    i++;
-                else {
-                    let valuePropOrder = order[$scope.filtersFront.all[i].name];
-                    for (let j = 0; j < $scope.filtersFront.all[i].value.length; j++) {
-                        test = valuePropOrder === $scope.filtersFront.all[i].value[j];
-                        if (test) {
-                            break;
-                        }
-                    }
-                    i++;
-                }
-            }
-            return test;
-        }
-
-        async function getOrdersOfProjects(isSearching: boolean, old: boolean, projects: Projects) {
-            let projets = new Projects();
+        async function getOrdersOfProjects(isSearching: boolean, old: boolean, projectsResult: Projects) {
+            let projects = new Projects();
             if (!isSearching) {
-                await projets.get(old, $scope.filtersDate.startDate, $scope.filtersDate.endDate,
-                    !$scope.selectedType.split('/').includes('historic'), $scope.filter.page, $scope.current.structure.id);
-            } else {
-                projets = (projects) ? projects : $scope.display.projects;
-            }
-            let promesses = [];
-            let projetsSplit = new Projects();
-            projets.forEach(projet => {
-                if (projet.count > 500) {
-                    if(projetsSplit.all.length > 0){
-                        promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
-                            !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
-                        projetsSplit = new Projects();
-                    }
-                    projetsSplit.push(projet);
-                    promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
-                        !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
-                    projetsSplit = new Projects();
-                } else if (projetsSplit.all.length > 100) {
-                    promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
-                        !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
-                    projetsSplit = new Projects();
-                    projetsSplit.push(projet);
+                $scope.projectFilter.structureList.push($scope.current.structure as Structure);
+                if (old) {
+                    $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
                 } else {
-                    projetsSplit.push(projet);
+                    $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+                        new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
+                }
+                await projects.search($scope.projectFilter);
+            } else {
+                projects = (projectsResult) ? projectsResult : $scope.display.projects;
+            }
+            let promises = [];
+            let projectsSplit = new Projects();
+            projects.forEach(projet => {
+                if (projet.count > 500) {
+                    if (projectsSplit.all.length > 0) {
+                        promises.push(new OrdersRegion().getOrdersFromProjects(projectsSplit,
+                            $scope.projectFilter));
+                        projectsSplit = new Projects();
+                    }
+                    projectsSplit.push(projet);
+                    promises.push(new OrdersRegion().getOrdersFromProjects(projectsSplit,
+                        $scope.projectFilter));
+                    projectsSplit = new Projects();
+                } else if (projectsSplit.all.length > 100) {
+                    promises.push(new OrdersRegion().getOrdersFromProjects(projectsSplit,
+                        $scope.projectFilter));
+                    projectsSplit = new Projects();
+                    projectsSplit.push(projet);
+                } else {
+                    projectsSplit.push(projet);
                 }
             });
-            if(projetsSplit.all.length > 0){
-                promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit,
-                    !isSearching && !$scope.selectedType.split('/').includes('historic'), old));
+            if (projectsSplit.all.length > 0) {
+                promises.push(new OrdersRegion().getOrdersFromProjects(projectsSplit,
+                    $scope.projectFilter));
             }
             if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
                 $scope.structures.sync();
             }
-            const responses = await Promise.all(promesses);
-            return {projets, responses};
+            const responses = await Promise.all(promises);
+            return {projects, responses};
         }
 
-        async function filterAndBeautifyOrders(data, old: boolean, projets: Projects, onlyId: boolean) {
-            for (let orders of data) {
+        async function filterAndBeautifyOrders(projectsResult, projects: Projects, onlyId: boolean) {
+            for (let orders of projectsResult) {
                 if (orders.length > 0) {
+                    let equipments = new Equipments();
+                    if (!onlyId) {
+                        const allProjects = projectsResult.reduce((acc, val) => acc.concat(val), []);
+                        await equipments.getEquipments(allProjects);
+                    }
                     const idProject = orders[0].id_project;
-                    if (!old) {
-                        orders = orders.filter(filterAll);
+                    for (let order of orders) {
                         if (!onlyId) {
-                            let equipments = new Equipments();
-                            await equipments.getEquipments(orders);
-                            for (let order of orders) {
+                            if (order.old) {
+                                if (order.offers != null) {
+                                    let offers = new Offers();
+                                    let offersJson = JSON.parse(order.offers);
+                                    for (let offerJson of offersJson) {
+                                        let offer = new Offer();
+                                        offer.name = offerJson.titre;
+                                        offer.value = offerJson.amount;
+                                        offers.all.push(offer);
+                                    }
+                                    order.offers = offers;
+                                }
+                            } else {
                                 let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
                                 if (equipment && equipment.type === "articlenumerique") {
                                     order.offers = Utils.computeOffer(order, equipment);
                                 }
                                 if (!$scope.isAdministrator()) {
-                                    const orderClient : OrderClient = Mix.castAs(OrderClient, JSON.parse(order.order_parent));
-                                    (orderClient.status == "RESUBMIT") ? order.status =  orderClient.status : null;
+                                    const orderClient: OrderClient = Mix.castAs(OrderClient, JSON.parse(order.order_parent));
+                                    (orderClient.status == "RESUBMIT") ? order.status = orderClient.status : null;
                                 }
-                            }
-                        }
-                    } else {
-                        for (let order of orders) {
-                            if (order.offers != null) {
-                                let offers = new Offers();
-                                let offersJson = JSON.parse(order.offers);
-                                for (let offerJson of offersJson) {
-                                    let offer = new Offer();
-                                    offer.name = offerJson.titre;
-                                    offer.value = offerJson.amount;
-                                    offers.all.push(offer);
-                                }
-                                order.offers = offers;
                             }
                         }
                     }
-                    projets.all.find(project => project.id == idProject).orders = orders;
+                    projects.all.find(project => project.id == idProject).orders = orders;
                 }
             }
         }
@@ -256,7 +256,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                 if (project.orders && project.orders.length > 0) {
                     project.total = currencyFormatter.format(Number(calculateTotalRegion(project.orders, 2)));
                     project.amount = calculateAmountRegion(project.orders);
-                    const firstOrder : OrderRegion = project.orders[0];
+                    const firstOrder: OrderRegion = project.orders[0];
                     project.creation_date = firstOrder.creation_date.toString();
                     Utils.setStatus(project, project.orders);
                     project.campaign_name = firstOrder.campaign_name;
@@ -271,18 +271,17 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.synchroRegionOrders = async (isSearching: boolean = false, onlyId: boolean = false, projects?: Projects,
-                                            old = false, page?: number): Promise<void> => {
-            (page == 0) ? $scope.filter.page = page : null;
-            let {projets, responses} = await getOrdersOfProjects(isSearching, old, projects);
+        $scope.synchroRegionOrders = async (isSearching: boolean = false, onlyId: boolean = false, projectsList?: Projects,
+                                            old = false): Promise<void> => {
+            let {projects, responses} = await getOrdersOfProjects(isSearching, old, projectsList);
             if (responses[0]) {
-                let data = [];
+                let projectsResult = [];
                 responses.forEach(response => {
-                    data = data.concat(response.data);
+                    projectsResult = projectsResult.concat(response.data);
                 });
-                await filterAndBeautifyOrders(data, old, projets, onlyId);
+                await filterAndBeautifyOrders(projectsResult, projects, onlyId);
                 let projectWithOrders = new Projects();
-                beautifyProjectsFromOrders(projets, projectWithOrders);
+                beautifyProjectsFromOrders(projects, projectWithOrders);
                 if ((!isSearching || projects)) {
                     $scope.display.projects.all = $scope.display.projects.all.concat(projectWithOrders.all);
                 } else {

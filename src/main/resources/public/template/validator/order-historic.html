@@ -8,8 +8,8 @@
                 <div class="date-picker-style">
                     <i class="diary-calendar"></i>
                     <date-picker
-                            ng-model="filtersDate.startDate"
-                            ng-change="filterByDate(filter.isOld)"
+                            ng-model="projectFilter.startDate"
+                            ng-change="search(filter.isOld)"
                             class="input-date-picker-style">
                     </date-picker>
                 </div>
@@ -20,8 +20,8 @@
                 <div class="date-picker-style">
                     <i class="diary-calendar"></i>
                     <date-picker
-                            ng-model="filtersDate.endDate"
-                            ng-change="filterByDate(filter.isOld)"
+                            ng-model="projectFilter.endDate"
+                            ng-change="search(filter.isOld)"
                             class="input-date-picker-style">
                     </date-picker>
                 </div>
@@ -31,8 +31,8 @@
                     <i class="search padding-5"></i>
                     <input class="twelve"
                            type="text"
-                           ng-model="query_name"
-                           ng-keyup="$event.keyCode == 13 ? searchByName(query_name, filter.isOld) : null"
+                           ng-model="projectFilter.queryName"
+                           ng-keyup="$event.keyCode == 13 ? search(filter.isOld) : null"
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>
@@ -40,7 +40,7 @@
                 <multi-combo title="[[lang.translate('Renews')]]"
                              combo-model="renews"
                              search-on="name" order-by="name"
-                             labels="comboLabels" filtered-model="filterChoice.renew"
+                             labels="comboLabels" filtered-model="projectFilter.renew"
                              selection-event="getFilter()"
                              deselection-event="getFilter()"
                              class="inline-block horizontal-spacing no-border">

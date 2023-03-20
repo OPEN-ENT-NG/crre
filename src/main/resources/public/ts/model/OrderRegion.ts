@@ -8,7 +8,14 @@ import {
     Equipment, Projects
 } from "./index";
 import {Mix, Selection} from "entcore-toolkit";
+import {ProjectFilter} from "./ProjectFilter";
+import {StatusFilter} from "./StatusFilter";
+import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 
+export interface IOrderByProjectPayload {
+    idsProject: Array<Number>;
+    status: Array<String>
+}
 
 export class OrderRegion implements Order  {
     amount: number;
@@ -185,12 +192,12 @@ export class OrdersRegion extends Selection<OrderRegion> {
         }
     }
 
-    async getOrdersFromProjects(projets: Projects, filterRejectedSentOrders : boolean, old: boolean):Promise<any> {
-        let params_id_project = projets.all.map(project => project.id);
+    async getOrdersFromProjects(projects: Projects, filters: ProjectFilter): Promise<any> {
 
-        let data = {
-            idsProjects: params_id_project
+        let payload: IOrderByProjectPayload = {
+            idsProject: projects.all.map(project => project.id),
+            status: filters.statusFilterList.map(status => ORDER_STATUS_ENUM[status.orderStatusEnum])
         };
-        return http.post(`/crre/ordersRegion/orders?filterRejectedSentOrders=${filterRejectedSentOrders}&old=${old}`, data);
+        return http.post(`/crre/ordersRegion/orders`, payload);
     }
 }

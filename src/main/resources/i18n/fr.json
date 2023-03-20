@@ -691,6 +691,7 @@
   "PARTIALLYVALIDED": "Validée partiellement",
   "PARTIALLYREJECTED": "Refusée partiellement",
   "PARTIALLYRESUBMIT": "Resoumis partiellement",
+  "PARTIALLYSENT": "Transmise partiellement",
   "crre.number.structure.concern": "Nombre d'établissements concernés",
   "crre.devis.posted": "Devis reçu",
   "crre.canceled": "Annulée",

@@ -5,4 +5,5 @@ export enum ORDER_STATUS_ENUM {
     DONE = "DONE",
     REJECTED = "REJECTED",
     SENT = "SENT",
+    RESUBMIT = "RESUBMIT"
 }

@@ -33,13 +33,13 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
         $scope.changeOld = async (old: boolean) : Promise<void> => {
             if ($scope.filter.isOld !== old) {
                 $scope.filter.isOld = old;
-                $scope.filter.page = 0;
+                $scope.projectFilter.page = 0;
                 $scope.filtersFront.all = [];
                 $scope.filters.all = []
                 $scope.display.loading = true;
                 $scope.display.projects.all = [];
                 Utils.safeApply($scope);
-                await $scope.synchroRegionOrders(null,false, null, $scope.filter.isOld, $scope.filter.page);
+                await $scope.synchroRegionOrders(null,false, null, $scope.filter.isOld);
             }
         };
 
@@ -105,11 +105,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 });
                 $scope.filtersFront.all.push(newFilterFront);
             }
-            if ($scope.filters.all.length > 0) {
-                await $scope.searchProjectAndOrders($scope.filter.isOld, false, false);
-            } else {
-                await $scope.searchByName($scope.query_name, $scope.filter.isOld);
-            }
+            await $scope.searchProjectAndOrders($scope.filter.isOld, false, false);
         };
 
         const uncheckAll = () : void => {
