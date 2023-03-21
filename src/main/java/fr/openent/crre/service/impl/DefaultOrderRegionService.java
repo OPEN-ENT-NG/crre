@@ -251,6 +251,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         Promise<JsonArray> promise = Promise.promise();
         JsonArray values = new JsonArray();
         String sqlquery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate, count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders " +
+                //used only for order
+                ", MAX(s.name) as orderName, MAX(s.uai) as orderUai " +
                 "FROM  " + Crre.crreSchema + ".project p " +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project " + (filters.getStatus().size() > 0 ? "AND o_r_e_o.status IN " + Sql.listPrepared(filters.getStatus()) + " " : "") +
                 "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project " + (filters.getStatus().size() > 0 ? "AND o_r_e.status IN " + Sql.listPrepared(filters.getStatus()) + " " : "") +
@@ -336,7 +338,32 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
 
 
-        sqlquery = sqlquery + " GROUP BY p.id, creationDate ORDER BY id DESC ";
+        sqlquery = sqlquery + " GROUP BY p.id, creationDate";
+
+        if (filters.getOrderBy() != null) {
+            switch (filters.getOrderBy()) {
+                case ID:
+                    sqlquery += " ORDER BY id ";
+                    break;
+                case DATE:
+                    sqlquery += " ORDER BY creationDate ";
+                    break;
+                case QUANTITY:
+                    sqlquery += " ORDER BY nbOrders ";
+                    break;
+                case UAI:
+                    sqlquery += " ORDER BY orderUai ";
+                    break;
+                case STRUCTURE_NAME:
+                    sqlquery += " ORDER BY orderName ";
+                    break;
+                case NAME:
+                    sqlquery += " ORDER BY p.title ";
+                    break;
+            }
+            sqlquery += (filters.getOrderDesc()) ? "DESC " : "ASC ";
+        }
+
         if (filters.getPage() != null) {
             sqlquery += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * filters.getPage());

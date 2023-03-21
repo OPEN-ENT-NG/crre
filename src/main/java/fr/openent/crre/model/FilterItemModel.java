@@ -22,7 +22,6 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
     private List<String> targets;
     private String searchingText;
 
-
     public FilterItemModel() {
         this.searchingText = null;
         this.disciplines = new ArrayList<>();

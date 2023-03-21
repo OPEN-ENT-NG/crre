@@ -1,8 +1,8 @@
 import {moment} from "entcore";
 import {Campaign} from "./Campaign";
-import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 import {Structure} from "./Structure";
 import {StatusFilter} from "./StatusFilter";
+import {ORDER_BY_PROJECT_FIELD_ENUM} from "../enum/order-by-project-field-enum";
 
 export class ProjectFilter {
 
@@ -21,6 +21,8 @@ export class ProjectFilter {
     private _distributorList: Array<{name}>;
     private _page: number;
     private _renew: Array<{name}>;
+    private _orderBy: ORDER_BY_PROJECT_FIELD_ENUM;
+    private _orderDesc: boolean;
 
 
     constructor() {
@@ -38,6 +40,8 @@ export class ProjectFilter {
         this._itemType = [];
         this._page = null;
         this._renew = [];
+        this._orderBy = ORDER_BY_PROJECT_FIELD_ENUM.ID;
+        this._orderDesc = false;
     }
 
     get startDate() {
@@ -152,6 +156,21 @@ export class ProjectFilter {
         this._itemType = value;
     }
 
+    get orderBy(): ORDER_BY_PROJECT_FIELD_ENUM {
+        return this._orderBy;
+    }
+
+    set orderBy(value: ORDER_BY_PROJECT_FIELD_ENUM) {
+        this._orderBy = value;
+    }
+
+    get orderDesc(): boolean {
+        return this._orderDesc;
+    }
+
+    set orderDesc(value: boolean) {
+        this._orderDesc = value;
+    }
 
     filterChoiceCorrelationKey(): Array<string> {
         return Array.from(this.filterChoiceCorrelation.keys());

@@ -68,6 +68,12 @@
       "items": {
         "type": "string"
       }
+    },
+    "orderBy": {
+      "type": "string"
+    },
+    "orderDesc": {
+      "type": "boolean"
     }
   },
   "required": [

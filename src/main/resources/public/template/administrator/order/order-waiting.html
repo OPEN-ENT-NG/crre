@@ -21,12 +21,47 @@
                         <span></span>
                     </label>
                 </td>
-                <td><div class="smallTabElem center"><i18n>crre.date</i18n></div></td>
-                <td><div class="tabElem center"><i18n>crre.structure</i18n></div></td>
-                <td><div class="smallTabElem center"><i18n>UAI</i18n></div></td>
-                <td><div class="smallTabElem center"><i18n>crre.request</i18n></div></td>
+                <td><div class="smallTabElem center crre-display-hover-element crre-order-waiting-table-header-column" ng-click="clickOnTableColumnHeader(orderByProjectField.DATE, true)">
+                    <i18n>crre.date</i18n>
+                    <div class="crre-order-waiting-table-header-column-order-icon">
+                        <i ng-if="isOrderBy(orderByProjectField.DATE) && projectFilter.orderDesc" class="crre-mdi-arrow-down"></i>
+                        <i ng-if="isOrderBy(orderByProjectField.DATE) && !projectFilter.orderDesc" class="crre-mdi-arrow-up"></i>
+                        <i ng-if="!isOrderBy(orderByProjectField.DATE)" class="crre-mdi-swap-vertical crre-hover-element"></i>
+                    </div>
+                </div></td>
+                <td><div class="tabElem center crre-display-hover-element crre-order-waiting-table-header-column" ng-click="clickOnTableColumnHeader(orderByProjectField.STRUCTURE_NAME, false)">
+                    <i18n>crre.structure</i18n>
+                    <div class="crre-order-waiting-table-header-column-order-icon">
+                        <i ng-if="isOrderBy(orderByProjectField.STRUCTURE_NAME) && projectFilter.orderDesc" class="crre-mdi-arrow-down"></i>
+                        <i ng-if="isOrderBy(orderByProjectField.STRUCTURE_NAME) && !projectFilter.orderDesc" class="crre-mdi-arrow-up"></i>
+                        <i ng-if="!isOrderBy(orderByProjectField.STRUCTURE_NAME)" class="crre-mdi-swap-vertical crre-hover-element"></i>
+                    </div>
+                </div></td>
+                <td><div class="smallTabElem center crre-display-hover-element crre-order-waiting-table-header-column" ng-click="clickOnTableColumnHeader(orderByProjectField.UAI, false)">
+                    <i18n>UAI</i18n>
+                    <div class="crre-order-waiting-table-header-column-order-icon">
+                        <i ng-if="isOrderBy(orderByProjectField.UAI) && projectFilter.orderDesc" class="crre-mdi-arrow-down"></i>
+                        <i ng-if="isOrderBy(orderByProjectField.UAI) && !projectFilter.orderDesc" class="crre-mdi-arrow-up"></i>
+                        <i ng-if="!isOrderBy(orderByProjectField.UAI)" class="crre-mdi-swap-vertical crre-hover-element"></i>
+                    </div>
+                </div></td>
+                <td><div class="smallTabElem center crre-display-hover-element crre-order-waiting-table-header-column" ng-click="clickOnTableColumnHeader(orderByProjectField.NAME, false)">
+                    <i18n>crre.request</i18n>
+                    <div class="crre-order-waiting-table-header-column-order-icon">
+                        <i ng-if="isOrderBy(orderByProjectField.NAME) && projectFilter.orderDesc" class="crre-mdi-arrow-down"></i>
+                        <i ng-if="isOrderBy(orderByProjectField.NAME) && !projectFilter.orderDesc" class="crre-mdi-arrow-up"></i>
+                        <i ng-if="!isOrderBy(orderByProjectField.NAME)" class="crre-mdi-swap-vertical crre-hover-element"></i>
+                    </div>
+                </div></td>
                 <td><div class="smallTabElem center"><i18n>CAMPAIGN</i18n></div></td>
-                <td><div class="smallTabElem center"><i18n>crre.quantity</i18n></div></td>
+                <td><div class="smallTabElem center crre-display-hover-element crre-order-waiting-table-header-column" ng-click="clickOnTableColumnHeader(orderByProjectField.QUANTITY, false)">
+                    <i18n>crre.quantity</i18n>
+                    <div class="crre-order-waiting-table-header-column-order-icon crre-order-waiting-table-header-column" ng-click="clickOnTableColumnHeader(orderByProjectField.QUANTITY, false)">
+                        <i ng-if="isOrderBy(orderByProjectField.QUANTITY) && projectFilter.orderDesc" class="crre-mdi-arrow-down"></i>
+                        <i ng-if="isOrderBy(orderByProjectField.QUANTITY) && !projectFilter.orderDesc" class="crre-mdi-arrow-up"></i>
+                        <i ng-if="!isOrderBy(orderByProjectField.QUANTITY)" class="crre-mdi-swap-vertical crre-hover-element"></i>
+                    </div>
+                </div></td>
                 <td><div class="smallTabElem center"><i18n>Total</i18n></div></td>
                 <td><div class="smallTabElem center"></div></td>
             </tr>
@@ -40,7 +75,7 @@
                     </label>
                 </td>
                 <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.creation_date]]</div></td>
-                <td ng-click="project.expanded = !project.expanded"><div class="TabElem ellipsis center">[[project.structure_name]]</div></td>
+                <td ng-click="project.expanded = !project.expanded"><div class="tabElem ellipsis center">[[project.structure_name]]</div></td>
                 <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem center">[[project.uai]]</div></td>
                 <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem ellipsis center">[[project.title]]</div></td>
                 <td ng-click="project.expanded = !project.expanded"><div class="smallTabElem ellipsis center" tooltip="[[project.campaign_name]]">[[project.campaign_name]]</div></td>

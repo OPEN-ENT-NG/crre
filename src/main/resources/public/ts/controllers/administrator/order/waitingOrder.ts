@@ -16,6 +16,7 @@ import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 import {Mix} from "entcore-toolkit";
 import {StatusFilter} from "../../../model/StatusFilter";
 import {Subscription} from "rxjs";
+import {ORDER_BY_PROJECT_FIELD_ENUM} from "../../../enum/order-by-project-field-enum";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
     ['$scope', async ($scope) => {
@@ -50,6 +51,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         }
 
         const init = async () => {
+            $scope.projectFilter.orderBy = ORDER_BY_PROJECT_FIELD_ENUM.DATE;
+            $scope.projectFilter.orderDesc = true;
             $scope.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                 new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.DONE), new StatusFilter(ORDER_STATUS_ENUM.REJECTED)];
 
@@ -354,6 +357,38 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.display.toggle = $scope.display.projects.all.some(project => project.selected) || orderSelected;
             Utils.safeApply($scope);
         };
+
+        $scope.orderByProjectField = ORDER_BY_PROJECT_FIELD_ENUM;
+
+        $scope.isOrderBy = (orderByProjectField: ORDER_BY_PROJECT_FIELD_ENUM): boolean => {
+            return $scope.projectFilter.orderBy === orderByProjectField;
+        }
+
+        $scope.switchOrderDesc = (): void => {
+            $scope.projectFilter.orderDesc = !$scope.projectFilter.orderDesc;
+            $scope.projectFilter.page = 0;
+            $scope.launchSearch($scope.display.projects, false, false)
+                .then(() => Utils.safeApply($scope))
+                .catch(err => console.error(err));
+        }
+
+        $scope.switchOrderBy = (orderByProjectField: ORDER_BY_PROJECT_FIELD_ENUM, defaultOrderDesc: boolean): void => {
+            $scope.projectFilter.orderBy = orderByProjectField;
+            $scope.projectFilter.orderDesc = (defaultOrderDesc != null) ? defaultOrderDesc : false;
+            $scope.projectFilter.page = 0;
+            $scope.launchSearch($scope.display.projects, false, false)
+                .then(() => Utils.safeApply($scope))
+                .catch(err => console.error(err));
+        }
+
+        $scope.clickOnTableColumnHeader = (orderByProjectField: ORDER_BY_PROJECT_FIELD_ENUM, defaultOrderDesc: boolean): void => {
+            initProjects();
+            if ($scope.isOrderBy(orderByProjectField)) {
+                $scope.switchOrderDesc();
+            } else {
+                $scope.switchOrderBy(orderByProjectField, defaultOrderDesc);
+            }
+        }
 
         await init();
     }

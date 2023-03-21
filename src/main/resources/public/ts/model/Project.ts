@@ -6,6 +6,7 @@ import {Utils} from "./Utils";
 import {Filters} from "./Filter";
 import {ProjectFilter} from "./ProjectFilter";
 import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
+import {ORDER_BY_PROJECT_FIELD_ENUM} from "../enum/order-by-project-field-enum";
 
 declare let window: any;
 
@@ -23,6 +24,8 @@ export interface IProjectPayload {
     structureTypes?: Array<String>;
     renew?: Array<String>;
     searchingText?: String;
+    orderBy?: ORDER_BY_PROJECT_FIELD_ENUM;
+    orderDesc?: boolean;
 }
 
 
@@ -92,7 +95,11 @@ export class Projects extends Selection<Project> {
         if (filter.editorList.length > 0) payload.editors = filter.editorList.map(editor => editor.name);
         if (filter.schoolType.length > 0) payload.structureTypes = filter.schoolType.map(schoolType => schoolType.name);
         if (filter.catalogList.length > 0) payload.catalogs = filter.catalogList.map(catalog => catalog.name);
-        if (filter.renew.length > 0) payload.renew = filter.renew.map(renew => renew.name);;
+        if (filter.renew.length > 0) payload.renew = filter.renew.map(renew => renew.name);
+        if (filter.orderDesc != null && filter.orderBy != null) {
+            payload.orderBy = filter.orderBy;
+            payload.orderDesc = filter.orderDesc;
+        }
 
         return payload;
     }

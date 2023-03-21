@@ -147,6 +147,8 @@ public class Field {
     public static final String PROJECTSEARCH = "projectSearch";
 
 
+    public static final String ORDERBY = "orderBy";
+    public static final String ORDERDESC = "orderDesc";
 
     private Field() {
         throw new IllegalStateException("Utility class");

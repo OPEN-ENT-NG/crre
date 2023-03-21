@@ -2,6 +2,7 @@ package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderByProjectFieldEnum;
 import fr.openent.crre.helpers.JsonHelper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -25,6 +26,9 @@ public class FilterModel implements IModel<FilterModel> {
     private List<String> catalogs;
     private List<String> structureTypes;
     private Boolean renew;
+
+    private OrderByProjectFieldEnum orderBy;
+    private Boolean orderDesc;
 
     public FilterModel() {
         this.startDate = null;
@@ -63,6 +67,9 @@ public class FilterModel implements IModel<FilterModel> {
                 .map(String.class::cast)
                 .map(OrderClientEquipmentType::getValue)
                 .collect(Collectors.toList());
+
+        this.orderBy = OrderByProjectFieldEnum.getValue(jsonObject.getString(Field.ORDERBY, ""), OrderByProjectFieldEnum.ID);
+        this.orderDesc = jsonObject.getBoolean(Field.ORDERDESC, true);
     }
 
     @Override
@@ -227,6 +234,24 @@ public class FilterModel implements IModel<FilterModel> {
 
     public FilterModel setRenew(Boolean renew) {
         this.renew = renew;
+        return this;
+    }
+
+    public OrderByProjectFieldEnum getOrderBy() {
+        return orderBy;
+    }
+
+    public FilterModel setOrderBy(OrderByProjectFieldEnum orderBy) {
+        this.orderBy = orderBy;
+        return this;
+    }
+
+    public Boolean getOrderDesc() {
+        return orderDesc;
+    }
+
+    public FilterModel setOrderDesc(Boolean orderDesc) {
+        this.orderDesc = orderDesc;
         return this;
     }
 }
