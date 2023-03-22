@@ -150,9 +150,12 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.exportCSVRegion = async (): Promise<void> => {
-            let projects: Projects = ($scope.display.allOrdersSelected) ? new Projects() : $scope.display.projects;
-            await $scope.launchSearch(projects, false, true);
-            await projects.exportCSV(false, $scope.display.allOrdersSelected);
+            let projects: Projects = $scope.display.projects;
+            if ($scope.display.allOrdersSelected) {
+                projects = new Projects();
+                await $scope.launchSearch(projects, false, true);
+            }
+            await projects.exportCSV($scope.display.allOrdersSelected);
             Utils.safeApply($scope);
         }
 
@@ -342,6 +345,20 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             project.orders.forEach(order => {
                 order.selected = project.selected;
             });
+            switchDisplayToggle();
+        };
+
+        $scope.checkParentSwitch = (project) => {
+            let all = true;
+            project.orders.forEach(order => {
+                if (!order.selected)
+                    all = order.selected;
+            });
+            project.selected = all;
+            switchDisplayToggle();
+        };
+
+        const switchDisplayToggle = () => {
             let orderSelected = false
             $scope.display.projects.all.forEach(project => {
                 if (project.orders.some(order => order.selected)) {

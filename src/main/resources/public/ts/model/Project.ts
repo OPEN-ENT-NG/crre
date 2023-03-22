@@ -138,7 +138,7 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    public exportCSV = async (old = false, all?: boolean) => {
+    public exportCSV = async (all?: boolean) => {
         let selectedOrders;
         if (all) {
             selectedOrders = this.extractAllOrders();
@@ -154,8 +154,7 @@ export class Projects extends Selection<Project> {
         let data = {
             idsStructures: params_id_structure,
             idsEquipments: params_id_equipment,
-            idsOrders: params_id_order,
-            old: old
+            idsOrders: params_id_order
         };
         const response = await http.post(`/crre/region/orders/exports`, data);
         if(response.status == 200) {
