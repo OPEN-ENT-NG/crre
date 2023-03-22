@@ -5,7 +5,7 @@ import fr.openent.crre.core.enums.CreditTypeEnum;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
-public class OrderRegionEquipmentModel implements IModel<OrderRegionEquipmentModel> {
+public class OrderRegionEquipmentModel implements IModel<OrderRegionEquipmentModel>, Cloneable {
     private Integer id;
     private Integer amount;
     private String creationDate;
@@ -216,5 +216,14 @@ public class OrderRegionEquipmentModel implements IModel<OrderRegionEquipmentMod
     public OrderRegionEquipmentModel setUseCredit(CreditTypeEnum useCredit) {
         this.useCredit = useCredit;
         return this;
+    }
+
+    @Override
+    public OrderRegionEquipmentModel clone() {
+        try {
+            return (OrderRegionEquipmentModel) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

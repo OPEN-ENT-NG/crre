@@ -6,7 +6,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.Arrays;
 
-public class Campaign extends Model {
+public class Campaign extends Model implements Cloneable {
 
     private Integer id;
     private String name;
@@ -193,6 +193,15 @@ public class Campaign extends Model {
                 .put("automatic_close", this.automatic_close)
                 .put("use_credit", this.use_credit)
                 .put("id_type", this.use_credit);
+    }
+
+    @Override
+    public Campaign clone() {
+        try {
+            return (Campaign) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }
 

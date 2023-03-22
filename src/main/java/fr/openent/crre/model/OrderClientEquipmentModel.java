@@ -5,7 +5,7 @@ import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
-public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentModel> {
+public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentModel>, Cloneable {
     private Integer id;
     private Integer amount;
     private String creationDate;
@@ -39,7 +39,7 @@ public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentMod
 
     @Override
     public JsonObject toJson() {
-        return IModelHelper.toJson(this, false, true);
+        return IModelHelper.toJson(this, true, true);
     }
 
     public Integer getId() {
@@ -148,5 +148,14 @@ public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentMod
     public OrderClientEquipmentModel setReassort(boolean reassort) {
         this.reassort = reassort;
         return this;
+    }
+
+    @Override
+    public OrderClientEquipmentModel clone() {
+        try {
+            return (OrderClientEquipmentModel) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

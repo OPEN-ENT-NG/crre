@@ -4,7 +4,7 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
-public class BasketOrder implements IModel<BasketOrder> {
+public class BasketOrder implements IModel<BasketOrder>, Cloneable {
     private Integer id;
     private String name;
     private String idStructure;
@@ -125,5 +125,14 @@ public class BasketOrder implements IModel<BasketOrder> {
     public BasketOrder setCreated(String created) {
         this.created = created;
         return this;
+    }
+
+    @Override
+    public BasketOrder clone() {
+        try {
+            return (BasketOrder) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

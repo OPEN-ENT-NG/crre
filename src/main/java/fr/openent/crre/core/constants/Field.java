@@ -145,10 +145,53 @@ public class Field {
     public static final String FALSE = "false";
     public static final String ORDERSBYPROJECT = "ordersByProject";
     public static final String PROJECTSEARCH = "projectSearch";
-
-
     public static final String ORDERBY = "orderBy";
     public static final String ORDERDESC = "orderDesc";
+    public static final String IDSORDERS = "idsOrders";
+    public static final String IDSEQUIPMENTS = "idsEquipments";
+    public static final String IDSSTRUCTURES = "idsStructures";
+    public static final String ACTION = "action";
+    public static final String PARAMS = "params";
+    public static final String ORDER_REGION = "order_region";
+    public static final String IDUSER = "idUser";
+    public static final String TO_JSONB = "to_jsonb";
+    public static final String STUDENTS = "students";
+    public static final String BASKET_ORDER = "basket_order";
+    public static final String SECONDE = "seconde";
+    public static final String PREMIERE = "premiere";
+    public static final String TERMINALE = "terminale";
+    public static final String SECONDEPRO = "secondepro";
+    public static final String PREMIEREPRO = "premierepro";
+    public static final String TERMINALEPRO = "terminalepro";
+    public static final String CAP1 = "cap1";
+    public static final String CAP2 = "cap2";
+    public static final String CAP3 = "cap3";
+    public static final String BMA1 = "bma1";
+    public static final String BMA2 = "bma2";
+    public static final String PRO = "pro";
+    public static final String GENERAL = "general";
+    public static final String TOTAL_APRIL = "total_april";
+    public static final String SECONDETECHNO = "secondetechno";
+    public static final String PREMIERETECHNO = "premieretechno";
+    public static final String TERMINALETECHNO = "terminaletechno";
+    public static final String CAMPAIGN_NAME = "campaign_name";
+    public static final String ORDER_CLIENT = "order_client";
+    public static final String ORDER_PARENT = "order_parent";
+    public static final String BASKET_ID = "basket_id";
+    public static final String PRICEHT = "priceht";
+    public static final String TVA5 = "tva5";
+    public static final String TVA20 = "tva20";
+    public static final String UNITEDPRICETTC = "unitedPriceTTC";
+    public static final String TOTALPRICEHT = "totalPriceHT";
+    public static final String TOTALPRICETTC = "totalPriceTTC";
+    public static final String GRADE = "grade";
+    public static final String EDITOR = "editor";
+    public static final String DIFFUSOR = "diffusor";
+    public static final String UAI_STRUCTURE = "uai_structure";
+    public static final String NAME_STRUCTURE = "name_structure";
+    public static final String ADDRESS_STRUCTURE = "address_structure";
+    public static final String EANLDE = "eanLDE";
+    public static final String RESULT = "result";
 
     private Field() {
         throw new IllegalStateException("Utility class");

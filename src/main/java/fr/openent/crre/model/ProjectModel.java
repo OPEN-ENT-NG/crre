@@ -5,8 +5,9 @@ import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class ProjectModel implements IModel<ProjectModel> {
+public class ProjectModel implements IModel<ProjectModel>, Cloneable {
     private Integer id;
     private String title;
     private String structureId;
@@ -60,5 +61,19 @@ public class ProjectModel implements IModel<ProjectModel> {
     public ProjectModel setOrderRegionEquipmentList(List<OrderRegionEquipmentModel> orderRegionEquipmentList) {
         this.orderRegionEquipmentList = orderRegionEquipmentList;
         return this;
+    }
+
+    @Override
+    public ProjectModel clone() {
+        try {
+            ProjectModel clone = (ProjectModel) super.clone();
+            if (this.orderRegionEquipmentList != null) {
+                clone.setOrderRegionEquipmentList(this.orderRegionEquipmentList.stream()
+                        .map(OrderRegionEquipmentModel::clone).collect(Collectors.toList()));
+            }
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }
