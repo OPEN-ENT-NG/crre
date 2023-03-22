@@ -7,7 +7,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.user.UserInfos;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +39,8 @@ public interface OrderRegionService {
 
     Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderClientEquipmentType status);
 
+    Future<List<OrderRegionComplex>> getOrdersRegionById(List<Integer> idsOrder, Boolean oldTable);
+
     void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     /**
@@ -60,9 +61,11 @@ public interface OrderRegionService {
 
     Future<JsonObject> getLastProject();
 
+    List<TransactionElement> insertOldOrders(List<OrderRegionBeautifyModel> orderRegionBeautify, boolean isRenew);
+
     List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew);
 
-    List<TransactionElement> insertOldClientOrders(List<JsonObject> orderRegions);
+    List<TransactionElement> insertOldClientOrders(List<OrderRegionBeautifyModel> orderRegionBeautifyList);
 
     Future<JsonObject> updateOrdersStatus(List<Integer> ids, String status, String justification);
 
@@ -87,9 +90,9 @@ public interface OrderRegionService {
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void beautifyOrders(JsonArray structures, List<JsonObject> ordersRegion, JsonArray equipments, List<Long> ordersClient);
+    List<OrderRegionBeautifyModel> orderResultToBeautifyModel(JsonArray structures, List<OrderRegionComplex> orderRegionComplexList, JsonArray equipments);
 
-    JsonObject generateExport(JsonArray orderRegion);
+    JsonObject generateExport(List<OrderRegionBeautifyModel> logs);
 
     /**
      * Gets the list of all orders region in the same project as the order region pass in parameter

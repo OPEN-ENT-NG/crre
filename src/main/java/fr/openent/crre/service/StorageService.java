@@ -1,11 +1,14 @@
 package fr.openent.crre.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 
 public interface StorageService {
+    Future<JsonObject> add(JsonObject body, Buffer buff, Buffer contentToAdd);
+
     /**
      * Add file in file system
      *

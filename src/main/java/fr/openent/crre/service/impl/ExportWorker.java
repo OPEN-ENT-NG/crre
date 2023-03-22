@@ -1,8 +1,12 @@
 package fr.openent.crre.service.impl;
 
-import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.model.config.ConfigModel;
+import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.model.OrderRegionBeautifyModel;
+import fr.openent.crre.model.OrderRegionComplex;
+import fr.openent.crre.model.OrderRegionEquipmentModel;
+import fr.openent.crre.model.export.ExportOrderRegion;
+import fr.openent.crre.model.export.ExportTypeEnum;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StorageService;
@@ -11,17 +15,19 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.collections4.ListUtils;
 import org.entcore.common.bus.WorkspaceHelper;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
+import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.busmods.BusModBase;
 
@@ -29,6 +35,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
@@ -36,7 +45,6 @@ import static java.lang.Math.min;
 
 
 public class ExportWorker extends BusModBase implements Handler<Message<JsonObject>> {
-    public static final String ORDER_REGION = "saveOrderRegion";
     private OrderRegionService orderRegionService;
     private StructureService structureService;
     private StorageService storageService;
@@ -64,130 +72,119 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         processExport(paramsEB, message);
     }
 
-
-    private void processExport(JsonObject params, Message<JsonObject> message) {
-        Handler<Either<String, JsonObject>> exportHandler = event -> {
-            log.info(String.format("[Crre@%s] exportHandler", this.getClass().getSimpleName()));
-            if (event.isRight()) {
-                log.info("[Crre@ExportWorker] Export finish");
-                message.reply(new JsonObject().put(Field.STATUS, Field.OK).put("data",event.right().getValue()));
-            } else {
-                log.error(event.left().getValue());
-            }
-        };
-        chooseExport(params, exportHandler);
-    }
-
-
-    private void chooseExport(JsonObject body, Handler<Either<String, JsonObject>> exportHandler) {
-        final String action = body.getString("action", "");
-        JsonObject params = body.getJsonObject("params");
-        log.info("[Crre@ExportWorker::chooseExport ] " + this.getClass().toString() + "  Export Type : " + action);
+    private void processExport(JsonObject body,  Message<JsonObject> message) {
+        final ExportTypeEnum action = ExportTypeEnum.getValue(body.getString(Field.ACTION, ""), ExportTypeEnum.NULL);
+        JsonObject params = body.getJsonObject(Field.PARAMS);
+        log.info(String.format("[CRRE@%s::chooseExport] Export Type : %s", this.getClass().getSimpleName(), action.name()));
+        Future<JsonObject> future;
         switch (action) {
             case ORDER_REGION:
-                processOrderRegion(params, exportHandler);
+                 future = processOrderRegion(new ExportOrderRegion(params));
                 break;
             default:
                 log.error("[Crre@ExportWorker::catchError ] Error for create file export excel");
+                future = Future.failedFuture("Error for create file export excel");
                 break;
         }
+
+        future.onSuccess(res -> message.reply(new JsonObject().put(Field.STATUS, Field.OK).put(Field.DATA, res)))
+                .onFailure(error -> message.fail(500, error.getMessage()));
     }
 
 
-    private void processOrderRegion(JsonObject params, Handler<Either<String, JsonObject>> exportHandler) {
+    private Future<JsonObject> processOrderRegion(ExportOrderRegion exportOrderRegion) {
+        Promise<JsonObject> promise = Promise.promise();
+
         log.info("[Crre@ExportWorker::processOrderRegion ] Process orders");
-        JsonArray idsOrders = params.getJsonArray("idsOrders");
-        JsonArray idsEquipments = params.getJsonArray("idsEquipments");
-        JsonArray idsStructures = params.getJsonArray("idsStructures");
-        String idUser = params.getString("idUser");
-        boolean old = params.getBoolean("old");
-
-        JsonArray idStructures = new JsonArray();
-        for (Object structureId : idsStructures) {
-            idStructures.add((String) structureId);
-        }
-        List<Integer> listOrders = idsOrders.getList();
-        List<Future> futures = new ArrayList<>();
-        Future<JsonArray> structureFuture = Future.future();
-        Future<JsonArray> equipmentsFuture = Future.future();
-        futures.add(structureFuture);
-        futures.add(equipmentsFuture);
-
-        getOrderRecursively(old, 0, listOrders, futures);
-
-        CompositeFuture.all(futures).setHandler(event -> {
-            if (event.succeeded()) {
-                JsonArray structures = structureFuture.result();
-                JsonArray equipments = equipmentsFuture.result();
-                List<Long> ordersClientId = new ArrayList<>();
-                List<JsonObject> ordersRegion = new ArrayList<>();
-                for (int i = 2; i < futures.size(); i++) {
-                    ordersRegion.addAll(((JsonArray) futures.get(i).result()).getList());
-                }
-                orderRegionService.beautifyOrders(structures, ordersRegion, equipments, ordersClientId);
-                writeCSVFile(exportHandler, idUser, ordersRegion, listOrders.size(), 0);
-            } else {
-                log.error("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage(), event.cause());
-                exportHandler.handle(new Either.Left<>("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage()));
-            }
+        Future<JsonArray> structureFuture = structureService.getStructureById(new JsonArray(new ArrayList<>(exportOrderRegion.getIdsStructures())), null);
+        Future<JsonArray> equipmentsFuture = searchByIds(exportOrderRegion.getIdsEquipments(), null);
 
 
+        CompositeFuture.all(structureFuture, equipmentsFuture)
+                .compose(res -> this.getOrder(exportOrderRegion.getIdsOrders()))
+                .compose(orderRegionComplexList -> {
+                    JsonArray structures = structureFuture.result();
+                    JsonArray equipments = equipmentsFuture.result();
+                    List<OrderRegionBeautifyModel> orderRegionList = orderRegionService.orderResultToBeautifyModel(structures, orderRegionComplexList, equipments);
+                    return writeCSVFile(exportOrderRegion.getIdUser(), orderRegionList);
+                })
+                .onSuccess(promise::complete)
+                .onFailure(error -> {
+                    log.error(String.format("[Crre@%s::processOrderRegion] : %s", this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
+    }
+
+    private Future<JsonObject> writeCSVFile(String idUser, List<OrderRegionBeautifyModel> orderRegion) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        UserUtils.getUserInfos(eb, idUser, userInfos -> {
+            List<List<OrderRegionBeautifyModel>> partition = ListUtils.partition(orderRegion, 10000);
+            AtomicInteger i = new AtomicInteger(0);
+            Function<List<OrderRegionBeautifyModel>, Future<JsonObject>> function = orderRegionList ->
+                    this.writeCSVFileForOnePartitionElement(userInfos, orderRegionList, i.getAndIncrement());
+
+            FutureHelper.compositeSequential(function, partition, true)
+                    .onSuccess(res -> promise.complete(res.get(0).result()))
+                    .onFailure(error -> {
+                        log.error(String.format("[CRRE@%s::writeCSVFile] Fail to write csv file %s", this.getClass().getSimpleName(), error.getMessage()));
+                        promise.fail(error);
+                    });
         });
 
-        structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
-        searchByIds(idsEquipments.getList(), null, handlerJsonArray(equipmentsFuture));
+        return promise.future();
     }
 
-    private void writeCSVFile(Handler<Either<String, JsonObject>> exportHandler, String idUser, List<JsonObject> orderRegion, int ordersSize, int e) {
-        JsonArray orderRegionSplit = new JsonArray();
-        for(int i = e * 100000; i < min((e +1) * 100000, orderRegion.size()); i ++){
-            orderRegionSplit.add(orderRegion.get(i));
-        }
-        JsonObject data = orderRegionService.generateExport(orderRegionSplit);
+    private Future<JsonObject> writeCSVFileForOnePartitionElement(UserInfos user, List<OrderRegionBeautifyModel> orderRegionList, Integer index) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        JsonObject data = orderRegionService.generateExport(orderRegionList);
         String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
         JsonObject body = new JsonObject()
-                .put(Field.NAME, "CRRE_Export_" + day + "_" + e + ".csv")
+                .put(Field.NAME, "CRRE_Export_" + day + "_" + index + ".csv")
                 .put("format", "csv");
-        if (ordersSize < 1000) {
-            log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
-            exportHandler.handle(new Either.Right<>(data));
-        } else {
-            final Buffer buff = Buffer.buffer();
-            buff.appendString(data.getString("csvFile"));
-            storageService.add(body, buff, null, addFileEvent -> {
-                if (addFileEvent.isRight()) {
-                    JsonObject storageEntries = addFileEvent.right().getValue();
+
+        final Buffer buff = Buffer.buffer();
+        buff.appendString(data.getString(Field.CSVFILE));
+        storageService.add(body, buff, null)
+                .onSuccess(storageEntries -> {
                     String application = config.getString("app-name");
-                    UserUtils.getUserInfos(eb, idUser, user -> {
-                        workspaceHelper.addDocument(storageEntries, user, body.getString(Field.NAME), application,
-                                false, null, createEvent -> {
-                            if (createEvent.succeeded()) {
-                                if ((e + 1) * 100000 < orderRegion.size()) {
-                                    writeCSVFile(exportHandler, idUser, orderRegion, 100000, e + 1);
+                    workspaceHelper.addDocument(storageEntries, user, body.getString(Field.NAME), application, false,
+                            null, event -> {
+                                if (event.failed()) {
+                                    log.error(String.format("[CRRE@%s::processOrderRegion] Failed to create a workspace document : ",
+                                            this.getClass().getSimpleName(), event.cause().getMessage()));
+                                    promise.fail(event.cause());
                                 } else {
-                                    log.info("[Crre@ExportWorker::processOrderRegion] process DONE");
-                                    exportHandler.handle(new Either.Right<>(new JsonObject()));
+                                    promise.complete(data);
                                 }
-                            } else {
-                                log.error("[Crre@processOrderRegion] Failed to create a workspace document : " +
-                                        createEvent.cause().getMessage());
-                            }
-                        });
-                    });
-                } else {
-                    log.error("[Crre@createFile] Failed to create a new entry in the storage");
-                }
-            });
-        }
+                            });
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[Crre@%s::writeCSVFileForOnePartitionElement] Failed to create a new entry in the storage",
+                            this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 
-    private void getOrderRecursively(boolean old, int e, List<Integer> listOrders, List<Future> futures) {
-        Future<JsonArray> orderRegionFuture = Future.future();
-        futures.add(orderRegionFuture);
-        List<Integer> subList = listOrders.subList(e * 5000, min((e +1) * 5000, listOrders.size()));
-        orderRegionService.getOrdersRegionById(subList, old, handlerJsonArray(orderRegionFuture));
-        if ((e + 1) * 5000 < listOrders.size()) {
-            getOrderRecursively(old, e + 1, listOrders, futures);
-        }
+    private Future<List<OrderRegionComplex>> getOrder(List<Integer> listOrders) {
+        Promise<List<OrderRegionComplex>> promise = Promise.promise();
+        List<List<Integer>> partition = ListUtils.partition(listOrders, 5000);
+
+        Function<List<Integer>, Future<List<OrderRegionComplex>>> function = idOrderList -> this.orderRegionService.getOrdersRegionById(idOrderList, null);
+
+        FutureHelper.compositeSequential(function, partition, true)
+                .onSuccess(res ->
+                        promise.complete(res.stream().flatMap(listFuture -> listFuture.result().stream()).collect(Collectors.toList())))
+                .onFailure(error -> {
+                    log.error(String.format("[CRRE@%s::getOrder]Fail to get all order %s", this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 }

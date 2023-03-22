@@ -6,6 +6,7 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.OrderClientEquipmentModel;
+import fr.openent.crre.model.OrderRegionBeautifyModel;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
@@ -427,6 +428,9 @@ public class OrderController extends ControllerHelper {
                                     .putHeader("Content-Type", "text/csv; charset=utf-8")
                                     .putHeader("Content-Disposition", "attachment; filename=orders.csv")
                                     .end(generateExport(request, orders));
+                        } else {
+                            Renders.renderError(request);
+                            log.error(String.format("[CRRE@%s::exportOld] Fail to get old order equipment %s", this.getClass().getSimpleName(), event.left().getValue()));
                         }
                     });
                 });
@@ -497,6 +501,21 @@ public class OrderController extends ControllerHelper {
                 + "\n";
     }
 
+    public static String exportPriceComment(OrderRegionBeautifyModel orderRegionBeautify) {
+        return (orderRegionBeautify.getOrderRegion().getAmount() != null ? orderRegionBeautify.getOrderRegion().getAmount() : "") + ";" +
+                (orderRegionBeautify.getPriceht() != null ? orderRegionBeautify.getPriceht() : "") + ";" +
+                (orderRegionBeautify.getTva5() != null ? orderRegionBeautify.getTva5() : "") + ";" +
+                (orderRegionBeautify.getTva20() != null ? orderRegionBeautify.getTva20() : "") + ";" +
+                (orderRegionBeautify.getUnitedPriceTTC() != null ? convertPriceString(orderRegionBeautify.getUnitedPriceTTC()) : "") + ";" +
+                (orderRegionBeautify.getTotalPriceHT() != null ? convertPriceString(orderRegionBeautify.getTotalPriceHT()) : "") + ";" +
+                (orderRegionBeautify.getTotalPriceTTC() != null ? convertPriceString(orderRegionBeautify.getTotalPriceTTC()) : "") + ";" +
+                (orderRegionBeautify.getOrderRegion().getComment() != null ? orderRegionBeautify.getOrderRegion().getComment().replaceAll("\n","").replaceAll("\r","") : "") + ";";
+    }
+
+    /**
+     * @deprecated Use {@link #exportPriceComment(OrderRegionBeautifyModel)}
+     */
+    @Deprecated
     public static String exportPriceComment(JsonObject log) {
         return (log.getInteger("amount") != null ? log.getInteger("amount").toString() : "") + ";" +
                 (log.getDouble("priceht") != null ? log.getDouble("priceht").toString() : "") + ";" +
@@ -509,6 +528,27 @@ public class OrderController extends ControllerHelper {
                         log.getString("comment").replaceAll("\n","").replaceAll("\r","") : "") + ";";
     }
 
+    public static String exportStudents(OrderRegionBeautifyModel orderRegionBeautify) {
+        return (orderRegionBeautify.getStudents().getSeconde() != null ? orderRegionBeautify.getStudents().getSeconde() : "") + ";" +
+                (orderRegionBeautify.getStudents().getPremiere() != null ? orderRegionBeautify.getStudents().getPremiere() : "") + ";" +
+                (orderRegionBeautify.getStudents().getTerminale() != null ? orderRegionBeautify.getStudents().getTerminale() : "") + ";" +
+                (orderRegionBeautify.getStudents().getSecondetechno() != null ? orderRegionBeautify.getStudents().getSecondetechno() : "") + ";" +
+                (orderRegionBeautify.getStudents().getPremieretechno() != null ? orderRegionBeautify.getStudents().getPremieretechno() : "") + ";" +
+                (orderRegionBeautify.getStudents().getTerminaletechno() != null ? orderRegionBeautify.getStudents().getTerminaletechno() : "") + ";" +
+                (orderRegionBeautify.getStudents().getSecondepro() != null ? orderRegionBeautify.getStudents().getSecondepro() : "") + ";" +
+                (orderRegionBeautify.getStudents().getPremierepro() != null ? orderRegionBeautify.getStudents().getPremierepro() : "") + ";" +
+                (orderRegionBeautify.getStudents().getTerminalepro() != null ? orderRegionBeautify.getStudents().getTerminalepro() : "") + ";" +
+                (orderRegionBeautify.getStudents().getBma1() != null ? orderRegionBeautify.getStudents().getBma1() : "") + ";" +
+                (orderRegionBeautify.getStudents().getBma2() != null ? orderRegionBeautify.getStudents().getBma2() : "") + ";" +
+                (orderRegionBeautify.getStudents().getCap1() != null ? orderRegionBeautify.getStudents().getCap1() : "") + ";" +
+                (orderRegionBeautify.getStudents().getCap2() != null ? orderRegionBeautify.getStudents().getCap2() : "") + ";" +
+                (orderRegionBeautify.getStudents().getCap3() != null ? orderRegionBeautify.getStudents().getCap3() : "");
+    }
+
+    /**
+     * @deprecated Use {@link #exportStudents(OrderRegionBeautifyModel)}
+     */
+    @Deprecated
     public static String exportStudents(JsonObject log) {
         return (log.getInteger("seconde") != null ? log.getInteger("seconde").toString() : "") + ";" +
                 (log.getInteger("premiere") != null ? log.getInteger("premiere").toString() : "") + ";" +

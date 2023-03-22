@@ -124,6 +124,15 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
+    public Future<JsonArray> getStructureById(JsonArray ids, List<String> consumable_formations) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        this.getStructureById(ids, consumable_formations, FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
+    }
+
+    @Override
     public void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
         try {
             String query = "MATCH (s:Structure) WHERE s.id IN {ids} ";

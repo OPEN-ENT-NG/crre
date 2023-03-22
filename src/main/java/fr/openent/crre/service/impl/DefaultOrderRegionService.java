@@ -6,9 +6,8 @@ import fr.openent.crre.core.enums.OrderClientEquipmentType;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.JsonHelper;
 import fr.openent.crre.model.*;
-import fr.openent.crre.security.WorkflowActionUtils;
-import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -26,19 +25,18 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
+import org.entcore.common.utils.StringUtils;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
 import static fr.openent.crre.controllers.OrderController.exportStudents;
-import static fr.openent.crre.utils.OrderUtils.extractedEquipmentInfo;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static java.lang.Math.min;
 
@@ -228,6 +226,72 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
+    public Future<List<OrderRegionComplex>> getOrdersRegionById(List<Integer> idsOrder, Boolean oldTable) {
+        Promise<List<OrderRegionComplex>> promise = Promise.promise();
+
+        String query;
+        JsonArray params = new JsonArray();
+        if (oldTable == null) {
+            query = getQueryOrdersRegionById(false, idsOrder, params) + " UNION " + getQueryOrdersRegionById(true, idsOrder, params);
+        } else {
+            query = getQueryOrdersRegionById(oldTable, idsOrder, params);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(event -> {
+            if (event.isLeft()) {
+                log.error(String.format("[CRRE@%s::getOrdersRegionById] Fail to get get orders region by id %s", this.getClass().getSimpleName(), event.left().getValue()));
+                promise.fail(event.left().getValue());
+            } else {
+                List<OrderRegionComplex> orderRegionComplexList = event.right().getValue().stream()
+                        .filter(JsonObject.class::isInstance)
+                        .map(JsonObject.class::cast)
+                        .map(jsonObject -> new OrderRegionComplex(new JsonObject(jsonObject.getString(Field.RESULT))))
+                        .collect(Collectors.toList());
+                promise.complete(orderRegionComplexList);
+            }
+        }));
+        return promise.future();
+    }
+
+    private String getQueryOrdersRegionById(boolean oldTable, List<Integer> idsOrder, JsonArray params) {
+        params.addAll(new JsonArray(new ArrayList<>(idsOrder)));
+        return "SELECT to_jsonb(selectTable" + ((oldTable) ? "_old" : "") + ".*) AS result\n" +
+                "FROM (SELECT To_json(ore.*) order_region,\n" +
+                "             To_json(campaign.*) campaign,\n" +
+                "             To_json(p.*) project,\n" +
+                "             To_json(oce.*) order_client,\n" +
+                "             To_json(bo.*) basket_order,\n" +
+                "             To_json(st.*) students\n" +
+                "      FROM   crre.\"order-region-equipment" + ((oldTable) ? "-old" : "") + "\" AS ore\n" +
+                "                 LEFT JOIN crre.order_client_equipment" + ((oldTable) ? "_old" : "") + " AS oce\n" +
+                "                           ON ore.id_order_client_equipment = oce.id\n" +
+                "                 LEFT JOIN crre.students st\n" +
+                "                           ON ( oce.id_structure = st.id_structure )\n" +
+                "                 INNER JOIN crre.basket_order AS bo\n" +
+                "                            ON bo.id = oce.id_basket\n" +
+                "                 INNER JOIN crre.campaign\n" +
+                "                            ON ore.id_campaign = campaign.id\n" +
+                "                 INNER JOIN crre.project AS p\n" +
+                "                            ON p.id = ore.id_project\n" +
+                "                 INNER JOIN crre.rel_group_structure\n" +
+                "                            ON ( ore.id_structure = rel_group_structure.id_structure )\n" +
+                "      WHERE  ore.id IN " + Sql.listPrepared(idsOrder) + "\n" +
+                "      GROUP  BY ore.id,\n" +
+                "                campaign.NAME,\n" +
+                "                campaign.use_credit,\n" +
+                "                campaign.*,\n" +
+                "                p.*,\n" +
+                "                oce.id,\n" +
+                "                bo.NAME,\n" +
+                "                bo.id,\n" +
+                "                st.*) as selectTable" + ((oldTable) ? "_old" : "");
+    }
+
+    /**
+     * @deprecated Use {@link #getOrdersRegionById(List, Boolean)}
+     */
+    @Deprecated
+    @Override
     public void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler) {
         String query = selectOrderRegion(oldTable);
         query += "WHERE ore.id in " + Sql.listPrepared(idsOrder.toArray());
@@ -395,6 +459,53 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
+    public List<TransactionElement> insertOldOrders(List<OrderRegionBeautifyModel> orderRegionBeautify, boolean isRenew) {
+        return ListUtils.partition(orderRegionBeautify, 500).stream()
+                .map(orderRegionsList -> this.insertOrderList(orderRegionsList, isRenew))
+                .collect(Collectors.toList());
+    }
+
+    private TransactionElement insertOrderList(List<OrderRegionBeautifyModel> orderRegionsList, boolean isRenew) {
+        JsonArray params = new JsonArray();
+        StringBuilder query = new StringBuilder("" +
+                " INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
+                " (" +
+                ((isRenew) ? "" : "id,") +
+                "amount, creation_date,  owner_name, owner_id," +
+                " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
+                " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
+                " comment, id_order_client_equipment, id_project, reassort, id_status, total_free) VALUES ");
+
+        for (OrderRegionBeautifyModel order : orderRegionsList) {
+            if (order.getOrderRegion().getIdProject() != null) {
+                query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
+                if (isRenew) {
+                    query.append(") ,");
+                } else {
+                    params.add(order.getOrderRegion().getId());
+                    query.append(", ?) ,");
+                }
+
+                params.add(order.getOrderRegion().getAmount())
+                        .add(order.getOrderRegion().getCreationDate())
+                        .add(order.getOrderRegion().getOwnerName())
+                        .add(order.getOrderRegion().getOwnerId())
+                        .add((!isRenew) ? "SENT" : order.getOrderRegion().getStatus())
+                        .add(order.getOrderRegion().getEquipmentKey());
+                setOrderValuesSQL(params, order);
+                params.add(order.getOrderRegion().getIdOrderClientEquipment())
+                        .add(order.getOrderRegion().getIdProject())
+                        .add(order.getOrderRegion().getReassort())
+                        .addNull() //Order region n'est pas encore envoyé a lde on ne peut pas avoir d'id status
+                        .add(order.getTotalFree());
+            }
+        }
+        query = new StringBuilder(query.substring(0, query.length() - 1));
+        return new TransactionElement(query.toString(), params);
+    }
+
+    @Deprecated
+    @Override
     public List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew) {
         List<JsonObject> allOrderRegionsList = orderRegions.stream().map(JsonObject.class::cast).collect(Collectors.toList());
 
@@ -403,6 +514,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .collect(Collectors.toList());
     }
 
+    @Deprecated
     private TransactionElement insertOldOrderList(List<JsonObject> orderRegionsList, boolean isRenew) {
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("" +
@@ -474,6 +586,20 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return query;
     }
 
+    private void setOrderValuesSQL(JsonArray params, OrderRegionBeautifyModel orderRegionBeautify) {
+        params.add(orderRegionBeautify.getName())
+                .add(orderRegionBeautify.getImage())
+                .add(orderRegionBeautify.getUnitedPriceTTC())
+                .add(orderRegionBeautify.getGrade())
+                .add(orderRegionBeautify.getEditor())
+                .add(orderRegionBeautify.getDiffusor())
+                .add(orderRegionBeautify.getType())
+                .add(orderRegionBeautify.getOrderRegion().getIdCampaign())
+                .add(orderRegionBeautify.getOrderRegion().getIdStructure())
+                .add(orderRegionBeautify.getOrderRegion().getComment());
+    }
+
+    @Deprecated
     private void setOrderValuesSQL(JsonArray params, JsonObject order) {
         params.add(order.getString(Field.NAME))
                 .add(order.getString("image", null))
@@ -488,13 +614,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public List<TransactionElement> insertOldClientOrders(List<JsonObject> orderRegions) {
-        return ListUtils.partition(orderRegions, 500).stream()
+    public List<TransactionElement> insertOldClientOrders(List<OrderRegionBeautifyModel> orderRegionBeautifyList) {
+        return ListUtils.partition(orderRegionBeautifyList, 500).stream()
                 .map(this::insertOldClientOrderList)
                 .collect(Collectors.toList());
     }
 
-    private TransactionElement insertOldClientOrderList(List<JsonObject> orderRegionsList) {
+    private TransactionElement insertOldClientOrderList(List<OrderRegionBeautifyModel> orderRegionBeautifyList) {
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("" +
                 " INSERT INTO " + Crre.crreSchema + ".\"order_client_equipment_old\"" +
@@ -502,26 +628,28 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ");
-        for (JsonObject order : orderRegionsList) {
-            if (order.containsKey("id_project")) {
+        for (OrderRegionBeautifyModel order : orderRegionBeautifyList) {
+            if (order.getOrderRegion().getIdProject() != null) {
                 query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
-                String creation_date = DateHelper.convertStringDateToOtherFormat(order.getString("creation_date"), DateHelper.DAY_FORMAT_DASH, DateHelper.SQL_FORMAT);
-                params.add(order.getLong("id_order_client_equipment"))
-                        .add(order.getInteger("amount"))
+                String creation_date = DateHelper.convertStringDateToOtherFormat(order.getOrderRegion().getCreationDate(), DateHelper.DAY_FORMAT_DASH, DateHelper.SQL_FORMAT);
+                params.add(order.getOrderRegion().getIdOrderClientEquipment())
+                        .add(order.getOrderRegion().getAmount())
                         .add(creation_date)
-                        .add(order.getString("owner_id"))
+                        .add(order.getOrderRegion().getOwnerId())
                         .add("SENT")
-                        .add(order.getString("equipment_key"));
+                        .add(order.getOrderRegion().getEquipmentKey());
                 setOrderValuesSQL(params, order);
-                if (order.containsKey("offers")) {
-                    formatOffers(order);
-                }
-                params.add(order.getInteger("basket_id"))
-                        .add(order.getBoolean("reassort"))
-                        .add(order.getJsonArray("offers"))
-                        .add(order.getDouble("tva5"))
-                        .add(order.getDouble("tva20"))
-                        .add(order.getDouble("priceht"));
+                //todo check delete methode
+//                if (order.containsKey("offers")) {
+//                    formatOffers(order);
+//                }
+                JsonArray offers = new JsonArray(order.getOffers().stream().map(OrderRegionBeautifyModel::toJsonFormat).collect(Collectors.toList()));
+                params.add(order.getBasketOrder().getId())
+                        .add(order.getOrderRegion().getReassort())
+                        .add(offers)
+                        .add(order.getTva5())
+                        .add(order.getTva20())
+                        .add(order.getPriceht());
             }
         }
         query = new StringBuilder(query.substring(0, query.length() - 1));
@@ -740,138 +868,117 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return promise.future();
     }
 
-    public void beautifyOrders(JsonArray structures, List<JsonObject> ordersRegion, JsonArray equipments, List<Long> ordersClientId) {
-        JsonObject order;
-        JsonObject equipment;
-        for (int i = 0; i < ordersRegion.size(); i++) {
-            order = ordersRegion.get(i);
-            try {
-                // Skip offers
-                if (!order.containsKey("totalPriceTTC")) {
-                    if (order.containsKey("owner_name")) {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-                        order.put("creation_date", creation_date);
-                    }
-                    ordersClientId.add(order.getLong("id_order_client_equipment"));
+    @Override
+    public List<OrderRegionBeautifyModel> orderResultToBeautifyModel(JsonArray structures, List<OrderRegionComplex> orderRegionComplexList, JsonArray equipments) {
+        return orderRegionComplexList.stream()
+                .flatMap(order -> {
+                    OrderRegionBeautifyModel orderRegionBeautifyModel = new OrderRegionBeautifyModel();
+                    orderRegionBeautifyModel.setOrderRegionComplex(order);
+                    orderRegionBeautifyModel.setId(order.getOrderRegion().getId().toString());
+                    orderRegionBeautifyModel.setTitle(order.getProject().getTitle());
+                    //todo check
+//                    if (StringUtils.isEmpty(order.getOrderRegion().getOwnerName())) {
+//                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
+//                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getOrderRegion().getCreationDate(), formatter);
+//                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
+//                        orderRegionBeautifyModel.setCreationDate(creation_date);
+//                    }
 
-                    for (int j = 0; j < equipments.size(); j++) {
-                        equipment = equipments.getJsonObject(j);
-                        if (equipment.getString(Field.ID).equals(order.getString("equipment_key"))) {
-                            JsonObject priceDetails = getPriceTtc(equipment);
-                            DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
-                            DecimalFormat df2 = new DecimalFormat("#.##", dfs);
-                            double priceTTC = priceDetails.getDouble("priceTTC") * order.getInteger("amount");
-                            double priceHT = priceDetails.getDouble("prixht") * order.getInteger("amount");
-                            order.put("priceht", Double.parseDouble(df2.format(priceDetails.getDouble("prixht"))));
-                            order.put("tva5", (priceDetails.containsKey("partTVA5")) ?
-                                    Double.parseDouble(df2.format(priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht"))) : null);
-                            order.put("tva20", (priceDetails.containsKey("partTVA20")) ?
-                                    Double.parseDouble(df2.format(priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht"))) : null);
-                            order.put("unitedPriceTTC", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
-                            order.put("price", Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
-                            order.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-                            order.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-                            extractedEquipmentInfo(order, equipment);
-                            if (equipment.getJsonArray("disciplines").size() > 0) {
-                                order.put("grade", equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
-                            } else {
-                                order.put("grade", "");
-                            }
-                            putStructuresNameUAI(structures, order);
-                            putEANLDE(equipment, order);
-                            getUniqueTypeCatalogue(order, equipment);
-                            if (equipment.getString("type").equals("articlenumerique")) {
-                                JsonArray offers = computeOffers(equipment, order);
-                                if (offers.size() > 0) {
-                                    JsonArray orderOfferArray = new JsonArray();
-                                    int freeAmount = 0;
-                                    for (int k = 0; k < offers.size(); k++) {
-                                        JsonObject orderOffer = new JsonObject();
-                                        orderOffer.put(Field.NAME, offers.getJsonObject(k).getString(Field.NAME));
-                                        orderOffer.put("titre", offers.getJsonObject(k).getString("titre"));
-                                        orderOffer.put("amount", offers.getJsonObject(k).getLong("value"));
-                                        freeAmount += offers.getJsonObject(k).getLong("value");
-                                        orderOffer.put("ean", offers.getJsonObject(k).getString("ean"));
-                                        orderOffer.put("unitedPriceTTC", 0);
-                                        orderOffer.put("totalPriceHT", 0);
-                                        orderOffer.put("totalPriceTTC", 0);
-                                        orderOffer.put("typeCatalogue", order.getString("typeCatalogue"));
-                                        orderOffer.put("creation_date", order.getString("creation_date"));
-                                        orderOffer.put("id_structure", order.getString("id_structure"));
-                                        orderOffer.put("campaign_name", order.getString("campaign_name"));
-                                        orderOffer.put(Field.ID, "F" + order.getLong(Field.ID) + "_" + k);
-                                        orderOffer.put(Field.TITLE, order.getString(Field.TITLE));
-                                        orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
-                                        putStructuresNameUAI(structures, orderOffer);
-                                        orderOfferArray.add(orderOffer);
-                                        ordersRegion.add(orderOffer);
-                                    }
-                                    order.put("total_free", freeAmount);
-                                    order.put("offers", orderOfferArray);
-                                }
-                            }
-                        }
+                    JsonObject equipment = JsonHelper.jsonArrayToList(equipments, JsonObject.class).stream()
+                            .filter(equipmentElement -> equipmentElement.getString(Field.ID).equals(order.getOrderRegion().getEquipmentKey()))
+                            .findFirst()
+                            .orElse(null);
+                    if (equipment == null) {
+                        return Stream.of(orderRegionBeautifyModel);
                     }
-                }
-            } catch (Exception error) {
-                log.error("[CRRE@beautifyOrders] Problem to beautify the order, error : " + error.getMessage());
-                log.error("[CRRE@beautifyOrders] Problem to beautify the order, order : " + order.toString());
-                ordersRegion.remove(order);
-                try {
-                    ordersClientId.remove(order.getLong("id_order_client_equipment"));
-                } catch (Exception errorremoval) {
-                    log.error("[CRRE@beautifyOrders] Problem to beautify the order, error to removal ids : " + errorremoval.getMessage());
-                }
-                i--;
-            }
-        }
+
+                    JsonObject priceDetails = getPriceTtc(equipment);
+                    DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
+                    DecimalFormat df2 = new DecimalFormat("#.##", dfs);
+                    double priceTTC = priceDetails.getDouble("priceTTC") * order.getOrderRegion().getAmount();
+                    double priceHT = priceDetails.getDouble("prixht") * order.getOrderRegion().getAmount();
+                    orderRegionBeautifyModel.setPriceht(Double.parseDouble(df2.format(priceDetails.getDouble("prixht"))));
+                    orderRegionBeautifyModel.setTva5((priceDetails.containsKey("partTVA5")) ?
+                            Double.parseDouble(df2.format(priceDetails.getDouble("partTVA5") + priceDetails.getDouble("prixht"))) : null);
+                    orderRegionBeautifyModel.setTva20((priceDetails.containsKey("partTVA20")) ?
+                            Double.parseDouble(df2.format(priceDetails.getDouble("partTVA20") + priceDetails.getDouble("prixht"))) : null);
+                    orderRegionBeautifyModel.setUnitedPriceTTC(Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
+                    orderRegionBeautifyModel.setPrice(Double.parseDouble(df2.format(priceDetails.getDouble("priceTTC"))));
+                    orderRegionBeautifyModel.setTotalPriceHT(Double.parseDouble(df2.format(priceHT)));
+                    orderRegionBeautifyModel.setTotalPriceTTC(Double.parseDouble(df2.format(priceTTC)));
+
+                    orderRegionBeautifyModel.setName(equipment.containsKey("titre") ? equipment.getString("titre", "") : "");
+                    orderRegionBeautifyModel.setImage(equipment.containsKey("urlcouverture") ? equipment.getString("urlcouverture", "") : "");
+                    orderRegionBeautifyModel.setEan(equipment.containsKey("ean") ? equipment.getString("ean", "") : "");
+                    orderRegionBeautifyModel.setEditor(equipment.containsKey("editeur") ? equipment.getString("editeur", "") : "");
+                    orderRegionBeautifyModel.setDiffusor(equipment.containsKey("distributeur") ? equipment.getString("distributeur", "") : "");
+                    orderRegionBeautifyModel.setType(equipment.containsKey("type") ? equipment.getString("type", "") : "");
+                    if (equipment.getJsonArray("disciplines", new JsonArray()).size() > 0) {
+                        orderRegionBeautifyModel.setGrade(equipment.getJsonArray("disciplines").getJsonObject(0).getString("libelle"));
+                    } else {
+                        orderRegionBeautifyModel.setGrade("");
+                    }
+                    if ("articlenumerique".equals(equipment.getString("type"))) {
+                        orderRegionBeautifyModel.setEanLDE(equipment.getJsonArray("offres").getJsonObject(0).getString("eanlibraire"));
+                    } else {
+                        orderRegionBeautifyModel.setEanLDE(equipment.getString("ean"));
+                    }
+
+                    putStructuresNameUAI(structures, orderRegionBeautifyModel);
+                    getUniqueTypeCatalogue(orderRegionBeautifyModel, order, equipment);
+
+                    List<OrderRegionBeautifyModel> offers = new ArrayList<>();
+                    if ("articlenumerique".equals(equipment.getString("type"))) {
+                        offers = computeOffers(orderRegionBeautifyModel, equipment);
+                        int totalFree = offers.stream().map(orderRegionOffer -> orderRegionOffer.getOrderRegion().getAmount()).reduce(0, Integer::sum);
+                        orderRegionBeautifyModel.setTotalFree(totalFree);
+                        orderRegionBeautifyModel.setOffers(new ArrayList<>(offers));
+                    }
+                    offers.add(orderRegionBeautifyModel);
+                    return offers.stream();
+                }).sorted(Comparator.comparing(OrderRegionBeautifyModel::getId)).collect(Collectors.toList());
     }
 
-    private void getUniqueTypeCatalogue(JsonObject order, JsonObject equipment) {
-        if (equipment.getString("typeCatalogue").contains("|")) {
-            if (order.getString("use_credit").contains("consumable")) {
-                if (equipment.getString("type").equals("articlepapier")) {
-                    order.put("typeCatalogue", "AO_IDF_CONSO");
+    private void getUniqueTypeCatalogue(OrderRegionBeautifyModel orderRegionBeautifyModel, OrderRegionComplex order, JsonObject equipment) {
+        if (equipment.getString("typeCatalogue", "").contains("|")) {
+            if (order.getCampaign().getUse_credit() != null && order.getCampaign().getUse_credit().contains("consumable")) {
+                if ("articlepapier".equals(equipment.getString("type"))) {
+                    orderRegionBeautifyModel.setTypeCatalogue("AO_IDF_CONSO");
                 } else {
-                    order.put("typeCatalogue", "Consommable");
+                    orderRegionBeautifyModel.setTypeCatalogue("Consommable");
                 }
             } else {
-                if (equipment.getString("type").equals("articlepapier")) {
-                    JsonObject campaign;
-                    try {
-                        campaign = order.getJsonObject("campaign", new JsonObject());
-                    } catch (ClassCastException e) {
-                        campaign = new JsonObject(order.getString("campaign"));
-                    }
-                    String catalog = campaign.getString("catalog", "");
-                    if (catalog.contains("pro") || !equipment.getString("typeCatalogue").contains("AO_IDF_PAP")) {
-                        order.put("typeCatalogue", "AO_IDF_PAP_PRO");
+                if ("articlepapier".equals(equipment.getString("type"))) {
+                    if ((order.getCampaign().getCatalog() != null && order.getCampaign().getCatalog().contains("pro")) ||
+                            !equipment.getString("typeCatalogue").contains("AO_IDF_PAP")) {
+                        orderRegionBeautifyModel.setTypeCatalogue("AO_IDF_PAP_PRO");
                     } else {
-                        order.put("typeCatalogue", "AO_IDF_PAP");
+                        orderRegionBeautifyModel.setTypeCatalogue("AO_IDF_PAP");
                     }
                 } else {
                     if (ArrayUtils.contains(equipment.getString("typeCatalogue").split(Pattern.quote("|")), "Ressource")) {
-                        order.put("typeCatalogue", "Ressource");
+                        orderRegionBeautifyModel.setTypeCatalogue("Ressource");
                     } else {
-                        order.put("typeCatalogue", "Numerique");
+                        orderRegionBeautifyModel.setTypeCatalogue("Numerique");
                     }
                 }
             }
         } else {
-            order.put("typeCatalogue", equipment.getString("typeCatalogue"));
+            orderRegionBeautifyModel.setTypeCatalogue(equipment.getString("typeCatalogue"));
         }
     }
 
-    private void putStructuresNameUAI(JsonArray structures, JsonObject order) {
-        for (int s = 0; s < structures.size(); s++) {
-            JsonObject structure = structures.getJsonObject(s);
-            if (structure.getString(Field.ID).equals(order.getString("id_structure"))) {
-                order.put("uai_structure", structure.getString("uai"));
-                order.put("name_structure", structure.getString(Field.NAME));
-                order.put("address_structure", structure.getString("address"));
-            }
+    private void putStructuresNameUAI(JsonArray structures, OrderRegionBeautifyModel orderRegionBeautifyModel) {
+        JsonObject structure = structures.stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .filter(structureElement -> structureElement.getString(Field.ID, "").equals(orderRegionBeautifyModel.getOrderRegion().getIdStructure()))
+                .findFirst()
+                .orElse(null);
+        if (structure != null ) {
+            orderRegionBeautifyModel.setUaiStructure(structure.getString("uai"));
+            orderRegionBeautifyModel.setNameStructure(structure.getString(Field.NAME));
+            orderRegionBeautifyModel.setAddressStructure(structure.getString("address"));
         }
     }
 
@@ -883,18 +990,19 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
     }
 
-    private static JsonArray computeOffers(JsonObject equipment, JsonObject order) {
-        JsonArray offers = new JsonArray();
+    private List<OrderRegionBeautifyModel> computeOffers(OrderRegionBeautifyModel orderRegionBeautifyModel, JsonObject equipment) {
+        List<OrderRegionBeautifyModel> offers = new ArrayList<>();
         if (equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps").size() > 0) {
             JsonArray leps = equipment.getJsonArray("offres").getJsonObject(0).getJsonArray("leps");
-            Long amount = order.getLong("amount");
+            Integer amount = orderRegionBeautifyModel.getOrderRegion().getAmount();
             int gratuit = 0;
             int gratuite = 0;
             for (int i = 0; i < leps.size(); i++) {
                 JsonObject offer = leps.getJsonObject(i);
                 JsonArray conditions = offer.getJsonArray("conditions");
-                JsonObject offerObject = new JsonObject().put("titre", "Manuel " +
-                        offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
+                OrderRegionBeautifyModel orderRegionBeautifyModelOffer = new OrderRegionBeautifyModel()
+                        .setTitle("Manuel " +
+                                offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
                 if (conditions.size() > 1) {
                     for (int j = 0; j < conditions.size(); j++) {
                         int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
@@ -907,12 +1015,24 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     gratuit = offer.getJsonArray("conditions").getJsonObject(0).getInteger("conditionGratuite");
                     gratuite = (int) (offer.getJsonArray("conditions").getJsonObject(0).getInteger("gratuite") * Math.floor(amount / gratuit));
                 }
-                offerObject.put("value", gratuite);
-                offerObject.put("ean", offer.getString("ean"));
-                offerObject.put(Field.NAME, offer.getString("titre"));
-                offerObject.put("comment", equipment.getString("ean"));
+                orderRegionBeautifyModelOffer.setOrderRegionComplex(orderRegionBeautifyModel.getOrderRegionComplex());
+                orderRegionBeautifyModelOffer.getOrderRegion().setIdProject(null);
+                orderRegionBeautifyModelOffer.setId("F" + orderRegionBeautifyModel.getOrderRegion().getId() + "_" + i);
+                orderRegionBeautifyModelOffer.getOrderRegion().setAmount(gratuite);
+                orderRegionBeautifyModelOffer.getOrderRegion().setComment(equipment.getString("ean"));
+                orderRegionBeautifyModelOffer.setEan(offer.getString("ean"));
+                orderRegionBeautifyModelOffer.setName(offer.getString("titre"));
+                orderRegionBeautifyModelOffer.setUnitedPriceTTC(0.0);
+                orderRegionBeautifyModelOffer.setTotalPriceHT(0.0);
+                orderRegionBeautifyModelOffer.setTotalPriceTTC(0.0);
+                orderRegionBeautifyModelOffer.setTypeCatalogue(orderRegionBeautifyModel.getTypeCatalogue());
+                orderRegionBeautifyModelOffer.setTitle(orderRegionBeautifyModel.getTitle());
+                orderRegionBeautifyModelOffer.setUaiStructure(orderRegionBeautifyModel.getUaiStructure());
+                orderRegionBeautifyModelOffer.setNameStructure(orderRegionBeautifyModel.getNameStructure());
+                orderRegionBeautifyModelOffer.setAddressStructure(orderRegionBeautifyModel.getAddressStructure());
+
                 if (gratuite > 0) {
-                    offers.add(offerObject);
+                    offers.add(orderRegionBeautifyModelOffer);
                 }
             }
         }
@@ -920,14 +1040,13 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public JsonObject generateExport(JsonArray logs) {
+    public JsonObject generateExport(List<OrderRegionBeautifyModel> logs) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader());
         HashSet<String> structures = new HashSet<>();
-        for (int i = 0; i < logs.size(); i++) {
-            JsonObject log = logs.getJsonObject(i);
-            report.append(generateExportLine(log));
-            if (log.getString("uai_structure") != null && !log.getString("uai_structure").isEmpty()) {
-                structures.add(log.getString("uai_structure"));
+        for (OrderRegionBeautifyModel orderRegionBeautifyModel: logs) {
+            report.append(generateExportLine(orderRegionBeautifyModel));
+            if (StringUtils.isEmpty(orderRegionBeautifyModel.getUaiStructure())) {
+                structures.add(orderRegionBeautifyModel.getUaiStructure());
             }
         }
         return new JsonObject()
@@ -976,6 +1095,28 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "\n";
     }
 
+    private String generateExportLine(OrderRegionBeautifyModel orderRegionBeautifyModel) {
+        return orderRegionBeautifyModel.getId() + ";" +
+                (orderRegionBeautifyModel.getOrderRegion().getCreationDate() != null ? orderRegionBeautifyModel.getOrderRegion().getCreationDate() : "") + ";" +
+                (orderRegionBeautifyModel.getNameStructure() != null ? orderRegionBeautifyModel.getNameStructure() : "") + ";" +
+                (orderRegionBeautifyModel.getUaiStructure() != null ? orderRegionBeautifyModel.getUaiStructure() : "") + ";" +
+                (orderRegionBeautifyModel.getAddressStructure() != null ? orderRegionBeautifyModel.getAddressStructure() : "") + ";" +
+                (orderRegionBeautifyModel.getTitle() != null ? orderRegionBeautifyModel.getTitle() : "") + ";" +
+                (orderRegionBeautifyModel.getCampaign().getName() != null ? orderRegionBeautifyModel.getCampaign().getName() : "") + ";" +
+                (orderRegionBeautifyModel.getEan() != null ? orderRegionBeautifyModel.getEan() : "") + ";" +
+                (orderRegionBeautifyModel.getName() != null ? orderRegionBeautifyModel.getName() : "") + ";" +
+                (orderRegionBeautifyModel.getEditor() != null ? orderRegionBeautifyModel.getEditor() : "") + ";" +
+                (orderRegionBeautifyModel.getDiffusor() != null ? orderRegionBeautifyModel.getDiffusor() : "") + ";" +
+                (orderRegionBeautifyModel.getType() != null ? orderRegionBeautifyModel.getType() : "") + ";" +
+                (orderRegionBeautifyModel.getEanLDE() != null ? orderRegionBeautifyModel.getEanLDE() : "") + ";" +
+                (orderRegionBeautifyModel.getTypeCatalogue() != null ? orderRegionBeautifyModel.getTypeCatalogue() : "") + ";" +
+                (orderRegionBeautifyModel.getOrderRegion().getReassort() != null ? orderRegionBeautifyModel.getOrderRegion().getReassort() : "") + ";" +
+                exportPriceComment(orderRegionBeautifyModel) +
+                exportStudents(orderRegionBeautifyModel) +
+                "\n";
+    }
+
+    @Deprecated
     private String generateExportLine(JsonObject log) {
         return (log.containsKey("id_project") ? log.getLong(Field.ID).toString() : log.getString(Field.ID)) + ";" +
                 (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +

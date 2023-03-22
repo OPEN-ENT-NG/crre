@@ -1,9 +1,12 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.service.StorageService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.storage.Storage;
@@ -16,6 +19,15 @@ public class DefaultStorageService implements StorageService {
 
     public DefaultStorageService(Storage storage) {
         this.storage = storage;
+    }
+
+    @Override
+    public Future<JsonObject> add(JsonObject body, Buffer buff, Buffer contentToAdd) {
+        Promise<JsonObject> promise = Promise.promise();
+
+        this.add(body, buff, contentToAdd, FutureHelper.handlerEitherPromise(promise));
+
+        return promise.future();
     }
 
     @Override

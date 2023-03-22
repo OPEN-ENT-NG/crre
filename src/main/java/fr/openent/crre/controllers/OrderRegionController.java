@@ -10,6 +10,12 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.*;
 import fr.openent.crre.model.config.ConfigMailModel;
+import fr.openent.crre.model.export.ExportOrderRegion;
+import fr.openent.crre.security.AdministratorRight;
+import fr.openent.crre.security.UpdateStatusRight;
+import fr.openent.crre.security.ValidatorAndStructureRight;
+import fr.openent.crre.security.ValidatorRight;
+import fr.openent.crre.security.*;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureHistoricRight;
@@ -890,33 +896,22 @@ public class OrderRegionController extends BaseController {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ValidatorRight.class)
     public void export(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, orderRegions ->
+        RequestUtils.bodyToJson(request, params ->
                 UserUtils.getUserInfos(eb, request, user -> {
-                    List<String> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
-                    List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
-                    List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
-                    Boolean old = orderRegions.getBoolean("old");
-                    JsonObject params = new JsonObject()
-                            .put("idsOrders", idsOrders)
-                            .put("idsEquipments", idsEquipments)
-                            .put("idsStructures", idsStructures)
-                            .put("idUser", user.getUserId())
-                            .put("old", old);
-                    JsonObject exportParams = new JsonObject()
-                            .put("params", params)
-                            .put("action", "saveOrderRegion");
-                    if (idsOrders.size() > 1000) {
-                        launchWorker(exportParams, null);
+                    params.put(Field.IDUSER, user.getUserId());
+                    ExportOrderRegion exportOrderRegion = new ExportOrderRegion(params);
+                    if (exportOrderRegion.getIdsOrders().size() > 1000) {
+                        launchWorker(exportOrderRegion, null);
                         ok(request);
                     } else {
-                        launchWorker(exportParams, request);
+                        launchWorker(exportOrderRegion, request);
                     }
                 })
         );
     }
 
-    private void launchWorker(JsonObject params, HttpServerRequest request) {
-        eb.send(ExportWorker.class.getSimpleName(), params, new DeliveryOptions().setSendTimeout(1000 * 1000L),
+    private void launchWorker(ExportOrderRegion exportOrderRegion, HttpServerRequest request) {
+        eb.request(ExportWorker.class.getSimpleName(), exportOrderRegion.toEventBusJson(), new DeliveryOptions().setSendTimeout(1000 * 1000L),
                 handlerToAsyncHandler(eventExport -> {
                             if (eventExport.body().getString(Field.STATUS).equals(Field.OK)) {
                                 if (request != null) {
@@ -962,84 +957,81 @@ public class OrderRegionController extends BaseController {
             idStructures.add(structureId);
         }
 
-        List<Future<JsonArray>> futures = new ArrayList<>();
         Future<JsonArray> structureFuture = Future.future();
         Future<JsonArray> equipmentsFuture = Future.future();
-        futures.add(structureFuture);
-        futures.add(equipmentsFuture);
 
-        getOrdersRecursively(0, idsOrders, futures);
+        List<OrderRegionBeautifyModel> orderRegionBeautifyList = new ArrayList<>();
+        List<Integer> orderRegionIdList = new ArrayList<>();
 
-        FutureHelper.all(futures).onComplete(event -> {
-            if (event.succeeded()) {
-                JsonArray structures = structureFuture.result();
-                JsonArray equipments = equipmentsFuture.result();
-                List<Long> ordersClientId = new ArrayList<>();
-                JsonArray ordersRegion = new JsonArray();
-                for (int i = 2; i < futures.size(); i++) {
-                    ordersRegion.addAll(futures.get(i).result());
-                }
-                List<JsonObject> filteredOrdersRegion = ordersRegion.stream()
-                        .filter(JsonObject.class::isInstance)
-                        .map(JsonObject.class::cast)
-                        .filter(orderRegion -> !Objects.equals(orderRegion.getString(Field.STATUS), OrderClientEquipmentType.SENT.toString()))
-                        .filter(orderRegion -> !Objects.equals(orderRegion.getString(Field.STATUS), OrderClientEquipmentType.DONE.toString()))
-                        .collect(Collectors.toList());
-                List<Integer> orderRegionIdList = filteredOrdersRegion.stream()
-                        .map(orderRegion -> orderRegion.getInteger(Field.ID))
-                        .collect(Collectors.toList());
-                orderRegionService.beautifyOrders(structures, filteredOrdersRegion, equipments, ordersClientId);
-                JsonArray orderRegionClean = new JsonArray();
-                filteredOrdersRegion.forEach(order -> {
-                    if (order.getString(Field.STATUS, "").equals(Field.REJECTED) && order.getDouble(Field.PRICE) != null &&
-                            !order.getDouble(Field.PRICE, 0.0).equals(0.0)) {
-                        orderRegionClean.add(order);
-                    }
-                });
-                Future<List<TransactionElement>> transactionFuture = Future.succeededFuture();
-                if (orderRegionClean.size() > 0) {
-                    List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
-                            .filter(JsonObject.class::isInstance)
-                            .map(JsonObject.class::cast)
-                            .map(OrderRegionEquipmentModel::new)
-                            .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID,
-                                    orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
+        CompositeFuture.all(structureFuture, equipmentsFuture)
+                .compose(res -> this.getOrder(idsOrders))
+                .compose(orderRegionComplexList -> {
+                    orderRegionComplexList = orderRegionComplexList.stream()
+                            .filter(orderRegionComplex ->
+                                    !OrderClientEquipmentType.SENT.toString().equals(orderRegionComplex.getOrderRegion().getStatus()) &&
+                                            !OrderClientEquipmentType.DONE.toString().equals(orderRegionComplex.getOrderRegion().getStatus()))
+                            .collect(Collectors.toList());
+                    JsonArray structures = structureFuture.result();
+                    JsonArray equipments = equipmentsFuture.result();
+
+                    orderRegionIdList.addAll(orderRegionComplexList.stream().map(orderRegionComplex -> orderRegionComplex.getOrderRegion().getId()).collect(Collectors.toList()));
+                    orderRegionBeautifyList.addAll(orderRegionService.orderResultToBeautifyModel(structures, orderRegionComplexList, equipments));
+                    List<OrderRegionBeautifyModel> orderRegionClean = orderRegionBeautifyList.stream()
+                            .filter(orderRegionBeautifyModel ->
+                                    Field.REJECTED.equals(orderRegionBeautifyModel.getOrderRegion().getStatus()) &&
+                                            Double.valueOf(0.0).equals(orderRegionBeautifyModel.getPrice()))
                             .collect(Collectors.toList());
 
-                    String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
-                    transactionFuture = TransactionHelper.executeTransaction(updatePurseLicenceTransactionList, errorMessage);
-                }
-                transactionFuture
-                        .compose(res -> sendMailLibraryAndRemoveWaitingAdmin(request, user, filteredOrdersRegion, ordersClientId))
-                        .onSuccess(res -> {
-                            Renders.ok(request);
-                            this.notificationService.sendNotificationValidator(orderRegionIdList);
-                            this.notificationService.sendNotificationPrescriberRegion(orderRegionIdList);
-                        })
-                        .onFailure(error -> unauthorized(request));
-            }
-        });
+                    Future<List<TransactionElement>> transactionFuture = Future.succeededFuture();
+                    if (orderRegionClean.size() > 0) {
+                        List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
+                                .map(OrderRegionBeautifyModel::getOrderRegion)
+                                .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID, orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
+                                .collect(Collectors.toList());
+
+                        String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
+                        transactionFuture = TransactionHelper.executeTransaction(updatePurseLicenceTransactionList, errorMessage);
+                    }
+                    return transactionFuture;
+                })
+                .compose(res -> sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegionBeautifyList))
+                .onSuccess(res -> {
+                    Renders.ok(request);
+                    this.notificationService.sendNotificationValidator(orderRegionIdList);
+                    this.notificationService.sendNotificationPrescriberRegion(orderRegionIdList);
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[CRRE@%s::generateLogs] Fail to generate logs %s"),
+                            this.getClass().getSimpleName(), error.getMessage());
+                    unauthorized(request);
+                });
 
         structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
         searchByIds(idsEquipments, null, handlerJsonArray(equipmentsFuture));
     }
 
-    private void getOrdersRecursively(int e, List<Integer> listOrders, List<Future<JsonArray>> futures) {
-        Future<JsonArray> orderRegionFuture = Future.future();
-        futures.add(orderRegionFuture);
-        List<Integer> subList = listOrders.subList(e * 5000, min((e + 1) * 5000, listOrders.size()));
-        orderRegionService.getOrdersRegionById(subList, false, handlerJsonArray(orderRegionFuture));
-        if ((e + 1) * 5000 < listOrders.size()) {
-            getOrdersRecursively(e + 1, listOrders, futures);
-        }
+    private Future<List<OrderRegionComplex>> getOrder(List<Integer> listOrders) {
+        Promise<List<OrderRegionComplex>> promise = Promise.promise();
+        List<List<Integer>> partition = ListUtils.partition(listOrders, 5000);
+
+        Function<List<Integer>, Future<List<OrderRegionComplex>>> function = idOrderList -> this.orderRegionService.getOrdersRegionById(idOrderList, false);
+
+        FutureHelper.compositeSequential(function, partition, true)
+                .onSuccess(res ->
+                        promise.complete(res.stream().flatMap(listFuture -> listFuture.result().stream()).collect(Collectors.toList())))
+                .onFailure(error -> {
+                    log.error(String.format("[CRRE@%s::getOrder] Fail to get all order %s", this.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 
-    private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
-                                                              List<JsonObject> orderRegion, List<Long> ordersClientId) {
+    private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, List<OrderRegionBeautifyModel> orderRegion) {
         Promise<Void> promise = Promise.promise();
 
         List<MailAttachment> attachmentList = ListUtils.partition(orderRegion, 10000).stream()
-                .map(splitOrderRegionList -> orderRegionService.generateExport(new JsonArray(splitOrderRegionList)))
+                .map(orderRegionService::generateExport)
                 .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
                         .setContent(data.getString(Field.CSVFILE))
                         .setNbEtab(data.getInteger(Field.NB_ETAB)))
@@ -1047,6 +1039,10 @@ public class OrderRegionController extends BaseController {
 
         Function<MailAttachment, Future<JsonObject>> functionSendMail = attachment -> this.sendMail(request, attachment);
         Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
+
+        List<Long> ordersClientId = orderRegion.stream()
+                .map(orderRegionBeautify -> orderRegionBeautify.getOrderRegion().getIdOrderClientEquipment().longValue())
+                .collect(Collectors.toList());
 
         SqlHelper.getNextVal("quote_id_seq")
                 .compose(nextVal -> {
@@ -1097,10 +1093,10 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private Future<Void> insertAndDeleteOrders(List<JsonObject> orderRegion, List<Long> ordersClientId) {
+    private Future<Void> insertAndDeleteOrders(List<OrderRegionBeautifyModel> orderRegion, List<Long> ordersClientId) {
         Promise<Void> promise = Promise.promise();
         List<TransactionElement> prepareRequestList = new ArrayList<>();
-        prepareRequestList.addAll(orderRegionService.insertOldOrders(new JsonArray(orderRegion), false));
+        prepareRequestList.addAll(orderRegionService.insertOldOrders(orderRegion, false));
         prepareRequestList.addAll(orderRegionService.insertOldClientOrders(orderRegion));
         prepareRequestList.addAll(orderRegionService.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT));
 

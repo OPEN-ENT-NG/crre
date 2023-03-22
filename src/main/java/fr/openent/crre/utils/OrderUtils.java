@@ -92,15 +92,6 @@ public class OrderUtils {
         orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
     }
 
-    public static void extractedEquipmentInfo(JsonObject order, JsonObject equipment) {
-        order.put(Field.NAME, equipment.containsKey("titre") ? equipment.getString("titre","") : "");
-        order.put("image", equipment.containsKey("urlcouverture") ? equipment.getString("urlcouverture","") : "");
-        order.put("ean", equipment.containsKey("ean") ? equipment.getString("ean","") : "");
-        order.put("editor", equipment.containsKey("editeur") ? equipment.getString("editeur","") : "");
-        order.put("diffusor", equipment.containsKey("distributeur") ? equipment.getString("distributeur","") : "");
-        order.put("type", equipment.containsKey("type") ? equipment.getString("type","") : "");
-    }
-
     public static String convertPriceString(double price) {
         return (price == 0) ? "GRATUIT" : Double.toString(price);
     }

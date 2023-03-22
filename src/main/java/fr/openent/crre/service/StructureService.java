@@ -29,6 +29,8 @@ public interface StructureService {
 
     void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
+    Future<JsonArray> getStructureById(JsonArray ids, List<String> consumable_formations);
+
     void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
     void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler);

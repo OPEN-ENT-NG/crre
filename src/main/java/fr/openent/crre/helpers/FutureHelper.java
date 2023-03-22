@@ -1,10 +1,8 @@
 package fr.openent.crre.helpers;
 
 import fr.wseduc.webutils.Either;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.impl.CompositeFutureImpl;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -84,6 +82,19 @@ public class FutureHelper {
                         FutureHelper.class.getSimpleName(), errormessage);
                 LOGGER.error(message);
                 promise.fail(errormessage);
+            }
+        };
+    }
+
+    public static <R> Handler<AsyncResult<Message<R>>> handlerAsyncResultPromise(Promise<R> promise) {
+        return event -> {
+            if (event.succeeded()) {
+                promise.complete(event.result().body());
+            } else {
+                String message = String.format("[CRRE@%s::handlerAsyncResultPromise]: %s",
+                        FutureHelper.class.getSimpleName(), event.cause().getMessage());
+                LOGGER.error(message);
+                promise.fail(event.cause());
             }
         };
     }
