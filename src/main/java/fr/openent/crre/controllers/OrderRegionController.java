@@ -975,38 +975,42 @@ public class OrderRegionController extends BaseController {
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
                 List<Long> ordersClientId = new ArrayList<>();
-                JsonArray orderRegions = new JsonArray();
+                JsonArray ordersRegion = new JsonArray();
                 for (int i = 2; i < futures.size(); i++) {
-                    orderRegions.addAll(futures.get(i).result());
+                    ordersRegion.addAll(futures.get(i).result());
                 }
-                List<Integer> orderRegionIdList = orderRegions.stream()
+                List<JsonObject> filteredOrdersRegion = ordersRegion.stream()
                         .filter(JsonObject.class::isInstance)
                         .map(JsonObject.class::cast)
+                        .filter(orderRegion -> !Objects.equals(orderRegion.getString(Field.STATUS), OrderClientEquipmentType.SENT.toString()))
+                        .filter(orderRegion -> !Objects.equals(orderRegion.getString(Field.STATUS), OrderClientEquipmentType.DONE.toString()))
+                        .collect(Collectors.toList());
+                List<Integer> orderRegionIdList = filteredOrdersRegion.stream()
                         .map(orderRegion -> orderRegion.getInteger(Field.ID))
                         .collect(Collectors.toList());
-                orderRegionService.beautifyOrders(structures, orderRegions, equipments, ordersClientId);
+                orderRegionService.beautifyOrders(structures, filteredOrdersRegion, equipments, ordersClientId);
                 JsonArray orderRegionClean = new JsonArray();
-                for (int i = 0; i < orderRegions.size(); i++) {
-                    JsonObject order = orderRegions.getJsonObject(i);
+                filteredOrdersRegion.forEach(order -> {
                     if (order.getString(Field.STATUS, "").equals(Field.REJECTED) && order.getDouble(Field.PRICE) != null &&
                             !order.getDouble(Field.PRICE, 0.0).equals(0.0)) {
                         orderRegionClean.add(order);
                     }
-                }
+                });
                 Future<List<TransactionElement>> transactionFuture = Future.succeededFuture();
                 if (orderRegionClean.size() > 0) {
                     List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
                             .filter(JsonObject.class::isInstance)
                             .map(JsonObject.class::cast)
                             .map(OrderRegionEquipmentModel::new)
-                            .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID, orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
+                            .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID,
+                                    orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
                             .collect(Collectors.toList());
 
                     String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
                     transactionFuture = TransactionHelper.executeTransaction(updatePurseLicenceTransactionList, errorMessage);
                 }
                 transactionFuture
-                        .compose(res -> sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegions, ordersClientId))
+                        .compose(res -> sendMailLibraryAndRemoveWaitingAdmin(request, user, filteredOrdersRegion, ordersClientId))
                         .onSuccess(res -> {
                             Renders.ok(request);
                             this.notificationService.sendNotificationValidator(orderRegionIdList);
@@ -1031,15 +1035,10 @@ public class OrderRegionController extends BaseController {
     }
 
     private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user,
-                                                              JsonArray orderRegion, List<Long> ordersClientId) {
+                                                              List<JsonObject> orderRegion, List<Long> ordersClientId) {
         Promise<Void> promise = Promise.promise();
 
-        List<JsonObject> allOrderRegionList = orderRegion.stream()
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
-                .collect(Collectors.toList());
-
-        List<MailAttachment> attachmentList = ListUtils.partition(allOrderRegionList, 10000).stream()
+        List<MailAttachment> attachmentList = ListUtils.partition(orderRegion, 10000).stream()
                 .map(splitOrderRegionList -> orderRegionService.generateExport(new JsonArray(splitOrderRegionList)))
                 .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
                         .setContent(data.getString(Field.CSVFILE))
@@ -1098,10 +1097,10 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private Future<Void> insertAndDeleteOrders(JsonArray orderRegion, List<Long> ordersClientId) {
+    private Future<Void> insertAndDeleteOrders(List<JsonObject> orderRegion, List<Long> ordersClientId) {
         Promise<Void> promise = Promise.promise();
         List<TransactionElement> prepareRequestList = new ArrayList<>();
-        prepareRequestList.addAll(orderRegionService.insertOldOrders(orderRegion, false));
+        prepareRequestList.addAll(orderRegionService.insertOldOrders(new JsonArray(orderRegion), false));
         prepareRequestList.addAll(orderRegionService.insertOldClientOrders(orderRegion));
         prepareRequestList.addAll(orderRegionService.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT));
 

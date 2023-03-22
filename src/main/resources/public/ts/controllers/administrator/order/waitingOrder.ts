@@ -15,7 +15,6 @@ import {ProjectFilter} from "../../../model/ProjectFilter";
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 import {Mix} from "entcore-toolkit";
 import {StatusFilter} from "../../../model/StatusFilter";
-import {Subscription} from "rxjs";
 import {ORDER_BY_PROJECT_FIELD_ENUM} from "../../../enum/order-by-project-field-enum";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
@@ -78,7 +77,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             let selectedOrders: OrdersRegion = new OrdersRegion();
             $scope.display.projects.forEach((project: Project) => {
                 project.orders.forEach(async (order: OrderRegion) => {
-                    if (order.selected) {
+                    if (order.selected &&
+                        order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE &&
+                        order.status != ORDER_STATUS_ENUM.VALID) {
                         selectedOrders.push(order);
                     }
                 });
@@ -86,12 +87,12 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             let projectsToShow: Projects = $scope.display.projects;
             $scope.display.projects = new Projects();
             Utils.safeApply($scope);
-            let {status} = await selectedOrders.updateStatus('VALID');
+            let {status} = await selectedOrders.updateStatus(ORDER_STATUS_ENUM.VALID);
             if (status == 200) {
                 projectsToShow.forEach((project: Project) => {
                     project.orders.forEach(async (order: OrderRegion) => {
-                        if (order.selected) {
-                            order.status = "VALID";
+                        if (order.selected && order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE) {
+                            order.status = ORDER_STATUS_ENUM.VALID;
                         }
                         order.selected = false;
                     });
@@ -382,6 +383,14 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                 $scope.switchOrderBy(orderByProjectField, defaultOrderDesc);
             }
         }
+
+        const checkStatusChoice = (status : string) : boolean => {
+            return $scope.filterChoice.states.filter((state) => state.status === status).length > 0;
+        };
+
+        $scope.containsSentOrDoneOrders = () : boolean => {
+            return checkStatusChoice(ORDER_STATUS_ENUM.SENT) || checkStatusChoice(ORDER_STATUS_ENUM.DONE);
+        };
 
         await init();
     }

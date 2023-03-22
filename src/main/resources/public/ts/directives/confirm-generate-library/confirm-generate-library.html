@@ -1,8 +1,11 @@
 <div>
     <div class="row">
         <h1><i18n>crre.confirm.generate.library.title</i18n></h1>
-        <div class="warning" ng-if="vm.checkRejectedOrder()">
+        <div class="warning" ng-if="vm.checkRejectedStatusOrder()">
             <i18n>crre.generate.refused.to.library</i18n>
+        </div>
+        <div class="info" ng-if="vm.checkSendOrDoneStatusOrder()">
+            <i18n>crre.generate.sent.to.library</i18n>
         </div>
         <div>
             <i18n>crre.confirm.generate.library</i18n>

@@ -4,6 +4,7 @@ import {
     OrdersRegion, Project, Projects,
     Utils,
 } from "../../../model";
+import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
 
 export const refuseOrderRegionController = ng.controller('refuseOrderRegionController',
     ['$scope', '$timeout', ($scope, $timeout) => {
@@ -12,7 +13,11 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
             let selectedOrders : OrdersRegion = new OrdersRegion();
             $scope.display.projects.forEach((project: Project) => {
                 project.orders.forEach( async (order: OrderRegion) => {
-                    if(order.selected) {selectedOrders.all.push(order);}
+                    if(order.selected &&
+                        order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE &&
+                        order.status != ORDER_STATUS_ENUM.REJECTED) {
+                        selectedOrders.all.push(order);
+                    }
                 });
             });
             $scope.display.toggle = false;
@@ -21,13 +26,15 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
             let projectsToShow : Projects = $scope.display.projects;
             $scope.display.projects = new Projects();
             Utils.safeApply($scope);
-            let {status} = await selectedOrders.updateStatus('REJECTED', justification);
+            let {status} = await selectedOrders.updateStatus(ORDER_STATUS_ENUM.REJECTED, justification);
             if(status == 200){
                 projectsToShow.all.forEach((project: Project) => {
                     project.orders.forEach( async (order: OrderRegion) => {
-                        if(order.selected) {
-                           order.status = "REJECTED";
-                           order.cause_status = justification;
+                        if(order.selected &&
+                            order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE &&
+                            order.status != ORDER_STATUS_ENUM.REJECTED) {
+                            order.status = ORDER_STATUS_ENUM.REJECTED;
+                            order.cause_status = justification;
                         }
                         order.selected = false;
                     });

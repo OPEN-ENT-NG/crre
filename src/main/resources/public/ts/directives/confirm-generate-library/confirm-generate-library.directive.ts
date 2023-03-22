@@ -2,11 +2,14 @@ import {Behaviours, ng, template, toasts} from 'entcore';
 import {IDirective, IScope} from "angular";
 import {AxiosError} from "axios";
 import {OrderRegion, OrdersRegion, Utils} from "../../model";
+import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
 
 interface IViewModel extends ng.IController, ICrreProps {
     generateLibraryOrder(): Promise<void>;
 
-    checkRejectedOrder(): boolean;
+    checkStatusOrder(status : string): boolean;
+    checkSendOrDoneStatusOrder(): boolean;
+    checkRejectedStatusOrder(): boolean;
 
     // link method
     closeWaitingAdminLightbox?(): void;
@@ -68,8 +71,16 @@ class Controller implements IViewModel {
 
     };
 
-    checkRejectedOrder = () : boolean => {
-        return this.extractSelectedOrders().all.filter((order : OrderRegion) => order.status === 'REJECTED').length > 0;
+    checkStatusOrder = (status : string) : boolean => {
+        return this.extractSelectedOrders().all.filter((order : OrderRegion) => order.status === status).length > 0;
+    };
+
+    checkSendOrDoneStatusOrder = () : boolean => {
+        return this.checkStatusOrder(ORDER_STATUS_ENUM.SENT) || this.checkStatusOrder(ORDER_STATUS_ENUM.DONE);
+    };
+
+    checkRejectedStatusOrder = () : boolean => {
+        return this.checkStatusOrder(ORDER_STATUS_ENUM.REJECTED);
     };
 
     closeWaitingAdminLightbox = (): void => {

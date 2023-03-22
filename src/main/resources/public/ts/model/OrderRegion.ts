@@ -1,15 +1,8 @@
 import http from "axios";
 import {_, moment, toasts} from "entcore";
-import {
-    Campaign,
-    Order,
-    Structure,
-    OrderClient,
-    Equipment, Projects
-} from "./index";
+import {Campaign, Equipment, Order, OrderClient, Projects, Structure} from "./index";
 import {Mix, Selection} from "entcore-toolkit";
 import {ProjectFilter} from "./ProjectFilter";
-import {StatusFilter} from "./StatusFilter";
 import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 
 export interface IOrderByProjectPayload {
@@ -174,11 +167,13 @@ export class OrdersRegion extends Selection<OrderRegion> {
 
     async generateLibraryOrder():Promise<any> {
         try {
+            const filteredOrder : OrderRegion[] = this.all
+                .filter((order:OrderRegion) => order.status != ORDER_STATUS_ENUM.SENT);
             let params_id_equipment = new Set();
             let params_id_structure = new Set();
-            let params_id_order = this.all.map(order => order.id);
-            this.all.forEach(order => params_id_equipment.add(order.equipment_key));
-            this.all.forEach(order => params_id_structure.add(order.id_structure));
+            let params_id_order = filteredOrder.map((order:OrderRegion) => order.id);
+            filteredOrder.forEach((order:OrderRegion) => params_id_equipment.add(order.equipment_key));
+            filteredOrder.forEach((order:OrderRegion) => params_id_structure.add(order.id_structure));
 
             let data = {
                 idsStructures: params_id_structure,

@@ -62,7 +62,7 @@ public interface OrderRegionService {
 
     List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew);
 
-    List<TransactionElement> insertOldClientOrders(JsonArray orderRegions);
+    List<TransactionElement> insertOldClientOrders(List<JsonObject> orderRegions);
 
     Future<JsonObject> updateOrdersStatus(List<Integer> ids, String status, String justification);
 
@@ -87,7 +87,7 @@ public interface OrderRegionService {
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, List<Long> ordersClient);
+    void beautifyOrders(JsonArray structures, List<JsonObject> ordersRegion, JsonArray equipments, List<Long> ordersClient);
 
     JsonObject generateExport(JsonArray orderRegion);
 

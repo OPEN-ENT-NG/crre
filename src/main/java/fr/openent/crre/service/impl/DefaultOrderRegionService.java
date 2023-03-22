@@ -488,10 +488,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public List<TransactionElement> insertOldClientOrders(JsonArray orderRegions) {
-        List<JsonObject> allOrderRegionsList = orderRegions.stream().map(JsonObject.class::cast).collect(Collectors.toList());
-
-        return ListUtils.partition(allOrderRegionsList, 500).stream()
+    public List<TransactionElement> insertOldClientOrders(List<JsonObject> orderRegions) {
+        return ListUtils.partition(orderRegions, 500).stream()
                 .map(this::insertOldClientOrderList)
                 .collect(Collectors.toList());
     }
@@ -742,11 +740,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return promise.future();
     }
 
-    public void beautifyOrders(JsonArray structures, JsonArray orderRegion, JsonArray equipments, List<Long> ordersClientId) {
+    public void beautifyOrders(JsonArray structures, List<JsonObject> ordersRegion, JsonArray equipments, List<Long> ordersClientId) {
         JsonObject order;
         JsonObject equipment;
-        for (int i = 0; i < orderRegion.size(); i++) {
-            order = orderRegion.getJsonObject(i);
+        for (int i = 0; i < ordersRegion.size(); i++) {
+            order = ordersRegion.get(i);
             try {
                 // Skip offers
                 if (!order.containsKey("totalPriceTTC")) {
@@ -808,7 +806,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                                         orderOffer.put("comment", offers.getJsonObject(k).getString("comment"));
                                         putStructuresNameUAI(structures, orderOffer);
                                         orderOfferArray.add(orderOffer);
-                                        orderRegion.add(orderOffer);
+                                        ordersRegion.add(orderOffer);
                                     }
                                     order.put("total_free", freeAmount);
                                     order.put("offers", orderOfferArray);
@@ -820,7 +818,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             } catch (Exception error) {
                 log.error("[CRRE@beautifyOrders] Problem to beautify the order, error : " + error.getMessage());
                 log.error("[CRRE@beautifyOrders] Problem to beautify the order, order : " + order.toString());
-                orderRegion.remove(order);
+                ordersRegion.remove(order);
                 try {
                     ordersClientId.remove(order.getLong("id_order_client_equipment"));
                 } catch (Exception errorremoval) {

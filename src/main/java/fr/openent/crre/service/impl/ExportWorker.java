@@ -120,12 +120,12 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
                 JsonArray structures = structureFuture.result();
                 JsonArray equipments = equipmentsFuture.result();
                 List<Long> ordersClientId = new ArrayList<>();
-                JsonArray orderRegion = new JsonArray();
+                List<JsonObject> ordersRegion = new ArrayList<>();
                 for (int i = 2; i < futures.size(); i++) {
-                    orderRegion.addAll((JsonArray) futures.get(i).result());
+                    ordersRegion.addAll(((JsonArray) futures.get(i).result()).getList());
                 }
-                orderRegionService.beautifyOrders(structures, orderRegion, equipments, ordersClientId);
-                writeCSVFile(exportHandler, idUser, orderRegion, listOrders.size(), 0);
+                orderRegionService.beautifyOrders(structures, ordersRegion, equipments, ordersClientId);
+                writeCSVFile(exportHandler, idUser, ordersRegion, listOrders.size(), 0);
             } else {
                 log.error("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage(), event.cause());
                 exportHandler.handle(new Either.Left<>("ERROR [Crre@ExportWorker::processOrderRegion] : " + event.cause().getMessage()));
@@ -138,10 +138,10 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         searchByIds(idsEquipments.getList(), null, handlerJsonArray(equipmentsFuture));
     }
 
-    private void writeCSVFile(Handler<Either<String, JsonObject>> exportHandler, String idUser, JsonArray orderRegion, int ordersSize, int e) {
+    private void writeCSVFile(Handler<Either<String, JsonObject>> exportHandler, String idUser, List<JsonObject> orderRegion, int ordersSize, int e) {
         JsonArray orderRegionSplit = new JsonArray();
         for(int i = e * 100000; i < min((e +1) * 100000, orderRegion.size()); i ++){
-            orderRegionSplit.add(orderRegion.getJsonObject(i));
+            orderRegionSplit.add(orderRegion.get(i));
         }
         JsonObject data = orderRegionService.generateExport(orderRegionSplit);
         String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
@@ -159,7 +159,8 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
                     JsonObject storageEntries = addFileEvent.right().getValue();
                     String application = config.getString("app-name");
                     UserUtils.getUserInfos(eb, idUser, user -> {
-                        workspaceHelper.addDocument(storageEntries, user, body.getString(Field.NAME), application, false, null, createEvent -> {
+                        workspaceHelper.addDocument(storageEntries, user, body.getString(Field.NAME), application,
+                                false, null, createEvent -> {
                             if (createEvent.succeeded()) {
                                 if ((e + 1) * 100000 < orderRegion.size()) {
                                     writeCSVFile(exportHandler, idUser, orderRegion, 100000, e + 1);

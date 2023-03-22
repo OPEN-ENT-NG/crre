@@ -8,7 +8,7 @@
                               class="flex-one"></project-filter-admin>
         <div class="cell twelve-mobile right-magnet">
             <button ng-click="openConfirmGenerateLibraryLightbox()" class="right-magnet"
-                    ng-disabled="display.loading">
+                    ng-disabled="display.loading || containsSentOrDoneOrders()">
                 <i18n>crre.take.order.library</i18n>
             </button>
         </div>
@@ -254,16 +254,19 @@
     <section class="toggle-buttons" ng-hide="!display.toggle">
         <div class="toggle">
             <div class="row">
-                <button ng-click="validateOrders()">
+                <button ng-click="validateOrders()"
+                        ng-disabled="containsSentOrDoneOrders()">
                     <i18n>Validate</i18n>
                 </button>
-                <button ng-click="openRefusingOrderLightbox()">
+                <button ng-click="openRefusingOrderLightbox()"
+                        ng-disabled="containsSentOrDoneOrders()">
                     <i18n>Denied</i18n>
                 </button>
                 <button ng-click="exportCSVRegion() && uncheckAll()">
                     <i18n>crre.logs.csv.export</i18n>
                 </button>
-                <button ng-click="openConfirmGenerateLibraryLightbox()">
+                <button ng-click="openConfirmGenerateLibraryLightbox()"
+                        ng-disabled="containsSentOrDoneOrders()">
                     <i18n>crre.take.order.library</i18n>
                 </button>
             </div>
