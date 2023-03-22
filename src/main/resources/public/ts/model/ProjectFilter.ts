@@ -38,7 +38,7 @@ export class ProjectFilter {
         this._editorList = [];
         this._distributorList = [];
         this._itemType = [];
-        this._page = null;
+        this._page = 0;
         this._renew = [];
         this._orderBy = ORDER_BY_PROJECT_FIELD_ENUM.ID;
         this._orderDesc = false;

@@ -31,18 +31,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
         $scope.projectFilter = new ProjectFilter();
 
-        let scrollSubscription: Subscription = new Subscription().add(Behaviours.applicationsBehaviours['crre'].SnipletScrollService
-            .getScrollSubject()
-            .subscribe(async () => {
-                await $scope.launchSearch($scope.display.projects, false, false);
-                Utils.safeApply($scope);
-            }));
-
-        $scope.$on('$destroy', () => {
-            scrollSubscription.unsubscribe();
-            $scope.$broadcast(INFINITE_SCROLL_EVENTER.PAUSE);
-        });
-
         function initProjects() {
             $scope.display.projects = new Projects();
             $scope.projectFilter.page = 0;
@@ -181,14 +169,19 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         }
 
         $scope.launchSearch = async (projectList: Projects, addNewData: boolean, onlyId: boolean): Promise<void> => {
-            await projectList.search($scope.projectFilter);
-            if (projectList.all.length > 0) {
-                await $scope.synchroRegionOrders(addNewData, onlyId, projectList);
-                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-            }
-
-            $scope.display.loading = false;
-            $scope.syncSelected();
+            projectList.search($scope.projectFilter)
+                .then(async (data: Project[]) => {
+                    if (data && data.length > 0) {
+                        if (projectList.all.length > 0) {
+                            await $scope.synchroRegionOrders(addNewData, onlyId, projectList);
+                            $scope.syncSelected();
+                            Behaviours.applicationsBehaviours['crre'].InfiniteScrollService
+                                .updateScroll();
+                        }
+                    }
+                    $scope.display.loading = false;
+                    Utils.safeApply($scope);
+                });
         }
 
         $scope.syncSelected = (): void => {

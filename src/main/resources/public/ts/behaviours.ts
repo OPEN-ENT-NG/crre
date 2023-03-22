@@ -1,5 +1,6 @@
 import { Behaviours } from 'entcore';
 import {SnipletScrollService} from "./services/sniplet-scroll-service";
+import {InfiniteScrollService} from "./services/infinite-scroll.service";
 
 Behaviours.register('crre', {
     rights: {
@@ -14,4 +15,5 @@ Behaviours.register('crre', {
         resource: {}
     },
     SnipletScrollService: new SnipletScrollService,
+    InfiniteScrollService: new InfiniteScrollService
 });

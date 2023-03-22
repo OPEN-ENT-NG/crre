@@ -7,7 +7,7 @@ import {
     Offers,
     OrderClient,
     OrderRegion,
-    OrdersRegion,
+    OrdersRegion, Project,
     Projects,
     Structure,
     Structures,
@@ -21,7 +21,7 @@ import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
 import {StatusFilter} from "../../model/StatusFilter";
 
 export const orderRegionController = ng.controller('orderRegionController',
-    ['$scope', ($scope) => {
+    ['$scope', async ($scope) => {
         $scope.filters = new Filters();
         $scope.filtersFront = new FiltersFront();
         $scope.structures = new Structures();
@@ -50,19 +50,14 @@ export const orderRegionController = ng.controller('orderRegionController',
             $scope.current.structure.id = null;
         }
 
+
         function initProjects() {
             $scope.display.projects = new Projects();
             $scope.display.loading = true;
             Utils.safeApply($scope);
         }
 
-        new Subscription().add(Behaviours.applicationsBehaviours['crre'].SnipletScrollService
-            .getScrollSubject()
-            .subscribe((init: boolean) => {
-                $scope.onScroll(init);
-            }));
-
-        $scope.onScroll = async (init?: boolean, old?: boolean): Promise<void> => {
+        $scope.onScroll = async (old?: boolean): Promise<void> => {
             let projects = new Projects();
             $scope.projectFilter.structureList.push($scope.current.structure as Structure);
             if (old) {
@@ -71,23 +66,21 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                     new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
             }
-            if (init) {
-                initProjects();
-                await projects.search($scope.projectFilter);
-                Utils.safeApply($scope);
-            } else {
+            if($scope.display.projects.all.length > 0) {
                 $scope.projectFilter.page++;
-                Utils.safeApply($scope);
             }
-            if (projects.all.length > 0) {
-                await $scope.synchroRegionOrders(true, false, projects, old);
-                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                Utils.safeApply($scope);
-            }
-            $scope.display.loading = false;
-            $scope.syncSelected();
-            Utils.safeApply($scope);
-        };
+            projects.search($scope.projectFilter)
+                .then(async (data: Project[]) => {
+                    if (data && data.length > 0) {
+                        await $scope.synchroRegionOrders(true, false, projects, old);
+                        Behaviours.applicationsBehaviours['crre'].InfiniteScrollService
+                            .updateScroll();
+                        $scope.syncSelected();
+                    }
+                    $scope.display.loading = false;
+                    Utils.safeApply($scope);
+                });
+         };
 
         $scope.searchProjectAndOrders = async (old = false, all: boolean, onlyId: boolean) => {
             let projects = new Projects();
@@ -100,18 +93,19 @@ export const orderRegionController = ng.controller('orderRegionController',
                 $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                     new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
             }
-            await projects.search($scope.projectFilter);
-            if (projects.all.length > 0) {
-                await $scope.synchroRegionOrders(true, onlyId, projects, old);
-                $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);
-                Utils.safeApply($scope);
-            } else {
-                $scope.display.loading = false;
-                Utils.safeApply($scope);
-            }
+            projects.search($scope.projectFilter)
+                .then(async (data: Project[]) => {
+                    if (data && data.length > 0) {
+                        await $scope.synchroRegionOrders(true, onlyId, projects, old);
+                    }
+                    $scope.display.loading = false;
+                    Utils.safeApply($scope);
+                });
+
         }
 
         $scope.search = async (old = false) => {
+            $scope.projectFilter.page = 0;
             if (old) {
                 $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
             } else {
@@ -296,8 +290,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         };
 
-        $scope.synchroRegionOrders();
-
         const switchDisplayToggle = () => {
             let orderSelected = false
             $scope.display.projects.all.forEach(project => {
@@ -325,5 +317,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             project.selected = all;
             switchDisplayToggle();
         };
+
+        initProjects();
+
     }
     ]);

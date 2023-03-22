@@ -66,7 +66,7 @@ export class Projects extends Selection<Project> {
         }
     }
 
-    async search(filter: ProjectFilter) {
+    async search(filter: ProjectFilter): Promise<Project[]> {
         if (filter.queryName != null && filter.queryName.trim() !== "") {
             if (Utils.format.test(filter.queryName)) {
                 toasts.warning('crre.equipment.special');
@@ -76,7 +76,8 @@ export class Projects extends Selection<Project> {
 
         let url = `/crre/ordersRegion/projects`;
         const {data} = await http.post(url, this.toJSON(filter));
-        this.all = Mix.castArrayAs(Project, data);
+        this.all = Mix.castArrayAs(Project, data)
+        return this.all;
     }
 
     toJSON(filter: ProjectFilter): IProjectPayload {
