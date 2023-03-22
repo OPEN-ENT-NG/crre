@@ -384,8 +384,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             }
         }
 
-        const checkStatusChoice = (status : string) : boolean => {
-            return $scope.filterChoice.states.filter((state) => state.status === status).length > 0;
+        const checkStatusChoice = (status : ORDER_STATUS_ENUM) : boolean => {
+            return $scope.projectFilter.statusFilterList.filter((state:StatusFilter) => state.getValue() === status).length > 0;
         };
 
         $scope.containsSentOrDoneOrders = () : boolean => {
