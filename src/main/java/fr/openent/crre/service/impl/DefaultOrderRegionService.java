@@ -639,10 +639,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add("SENT")
                         .add(order.getOrderRegion().getEquipmentKey());
                 setOrderValuesSQL(params, order);
-                //todo check delete methode
-//                if (order.containsKey("offers")) {
-//                    formatOffers(order);
-//                }
+
                 JsonArray offers = new JsonArray(order.getOffers().stream().map(OrderRegionBeautifyModel::toJsonFormat).collect(Collectors.toList()));
                 params.add(order.getBasketOrder().getId())
                         .add(order.getOrderRegion().getReassort())
@@ -876,13 +873,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     orderRegionBeautifyModel.setOrderRegionComplex(order);
                     orderRegionBeautifyModel.setId(order.getOrderRegion().getId().toString());
                     orderRegionBeautifyModel.setTitle(order.getProject().getTitle());
-                    //todo check
-//                    if (StringUtils.isEmpty(order.getOrderRegion().getOwnerName())) {
-//                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-//                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getOrderRegion().getCreationDate(), formatter);
-//                        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-//                        orderRegionBeautifyModel.setCreationDate(creation_date);
-//                    }
 
                     JsonObject equipment = JsonHelper.jsonArrayToList(equipments, JsonObject.class).stream()
                             .filter(equipmentElement -> equipmentElement.getString(Field.ID).equals(order.getOrderRegion().getEquipmentKey()))
@@ -1015,8 +1005,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     gratuit = offer.getJsonArray("conditions").getJsonObject(0).getInteger("conditionGratuite");
                     gratuite = (int) (offer.getJsonArray("conditions").getJsonObject(0).getInteger("gratuite") * Math.floor(amount / gratuit));
                 }
+                //add custom value for order
                 orderRegionBeautifyModelOffer.setOrderRegionComplex(orderRegionBeautifyModel.getOrderRegionComplex());
                 orderRegionBeautifyModelOffer.getOrderRegion().setIdProject(null);
+                orderRegionBeautifyModelOffer.getOrderRegion().setReassort(null);
                 orderRegionBeautifyModelOffer.setId("F" + orderRegionBeautifyModel.getOrderRegion().getId() + "_" + i);
                 orderRegionBeautifyModelOffer.getOrderRegion().setAmount(gratuite);
                 orderRegionBeautifyModelOffer.getOrderRegion().setComment(equipment.getString("ean"));
@@ -1110,7 +1102,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 (orderRegionBeautifyModel.getType() != null ? orderRegionBeautifyModel.getType() : "") + ";" +
                 (orderRegionBeautifyModel.getEanLDE() != null ? orderRegionBeautifyModel.getEanLDE() : "") + ";" +
                 (orderRegionBeautifyModel.getTypeCatalogue() != null ? orderRegionBeautifyModel.getTypeCatalogue() : "") + ";" +
-                (orderRegionBeautifyModel.getOrderRegion().getReassort() != null ? orderRegionBeautifyModel.getOrderRegion().getReassort() : "") + ";" +
+                (orderRegionBeautifyModel.getOrderRegion().getReassort() != null ? (orderRegionBeautifyModel.getOrderRegion().getReassort() ? "Oui" : "Non") : "") + ";" +
                 exportPriceComment(orderRegionBeautifyModel) +
                 exportStudents(orderRegionBeautifyModel) +
                 "\n";
