@@ -13,6 +13,7 @@ import {
 import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
 import {ProjectFilter} from "../../../model/ProjectFilter";
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
+import {Subscription} from "rxjs";
 import {Mix} from "entcore-toolkit";
 import {StatusFilter} from "../../../model/StatusFilter";
 import {ORDER_BY_PROJECT_FIELD_ENUM} from "../../../enum/order-by-project-field-enum";
@@ -29,6 +30,18 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             projects: new Projects()
         };
         $scope.projectFilter = new ProjectFilter();
+
+        let scrollSubscription: Subscription = new Subscription().add(Behaviours.applicationsBehaviours['crre'].SnipletScrollService
+            .getScrollSubject()
+            .subscribe(async () => {
+                $scope.projectFilter.page = 0;
+                await $scope.launchSearch($scope.display.projects, false, false, 0);
+                Utils.safeApply($scope);
+            }));
+
+        $scope.$on('$destroy', () => {
+            scrollSubscription.unsubscribe();
+        });
 
         function initProjects() {
             $scope.display.projects = new Projects();
@@ -159,6 +172,10 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             Utils.safeApply($scope);
         }
 
+        $scope.sortedOrders = (orders): any[] => {
+            return orders.sort(localeCompareSort('name', 'asc'));
+        }
+
         $scope.loadNextPage = async (): Promise<void> => {
             $scope.projectFilter.page++;
             await $scope.launchSearch(new Projects(), true, false);
@@ -173,6 +190,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         }
 
         $scope.launchSearch = async (projectList: Projects, addNewData: boolean, onlyId: boolean): Promise<void> => {
+            $scope.display.loading = true;
+            Utils.safeApply($scope);
             projectList.search($scope.projectFilter)
                 .then(async (data: Project[]) => {
                     if (data && data.length > 0) {
@@ -331,6 +350,14 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             });
             return totalAmount;
         };
+
+        const localeCompareSort = (property, order) => {
+            var sortOrder = order === 'desc' ? -1 : 1;
+            return function(a, b) {
+                var result = a[property].localeCompare(b[property], undefined, { sensitivity: 'accent' });
+                return result * sortOrder;
+            }
+        }
 
         $scope.closeWaitingAdminLightbox = async () => {
             $scope.display.lightbox.waitingAdmin = false;

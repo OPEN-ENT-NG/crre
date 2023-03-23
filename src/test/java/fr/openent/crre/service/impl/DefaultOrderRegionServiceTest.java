@@ -295,23 +295,25 @@ public class DefaultOrderRegionServiceTest {
         filterModel.setPage(5);
         FilterItemModel filterItem = new FilterItemModel();
 
-        String expectedQuery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate," +
-                " count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders , MAX(s.name) as orderName, MAX(s.uai) as orderUai FROM " +
-                " null.project p LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project AND" +
-                " o_r_e_o.status IN (?,?) LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project AND" +
-                " o_r_e.status IN (?,?) LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment" +
-                " LEFT JOIN null.order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment LEFT JOIN null.basket_order" +
-                " AS b ON (b.id = o_c_e.id_basket OR b.id = o_c_e_o.id_basket) LEFT JOIN null.structure AS s ON (o_r_e.id_structure" +
-                " = s.id_structure OR o_r_e_o.id_structure = s.id_structure) WHERE ((o_r_e.creation_date BETWEEN ? AND ? AND" +
-                " o_r_e.equipment_key IS NOT NULL) OR (o_r_e_o.creation_date BETWEEN ? AND ?)) AND (lower(s.uai) ~* ? OR" +
-                " lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR lower(s.public) ~* ? OR lower(s.catalog)" +
-                " ~* ? OR lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? OR lower(b.name)" +
-                " ~* ? OR o_r_e_o.equipment_name ~* ?  OR o_r_e.equipment_key IN (?,?))  AND (o_r_e.id_structure IN (?,?)" +
-                " OR o_r_e_o.id_structure IN (?,?) ) AND o_r_e_o.owner_id ~* 'renew'  GROUP BY p.id, creationDateOFFSET ? LIMIT ? ";
+        String expectedQuery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate, " +
+                "count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders , MAX(s.name) as orderName, MAX(s.uai) as orderUai " +
+                "FROM  null.project p LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project " +
+                "AND o_r_e_o.status IN (?,?) LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project " +
+                "AND o_r_e.status IN (?,?) LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment " +
+                "LEFT JOIN null.order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment " +
+                "LEFT JOIN null.basket_order AS b ON (b.id = o_c_e.id_basket OR b.id = o_c_e_o.id_basket) " +
+                "LEFT JOIN null.structure AS s ON (o_r_e.id_structure = s.id_structure OR o_r_e_o.id_structure = s.id_structure) " +
+                "WHERE ((o_r_e.creation_date BETWEEN ? AND ? AND o_r_e.equipment_key IS NOT NULL) OR (o_r_e_o.creation_date BETWEEN ? AND ?)) " +
+                "AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR lower(s.public) ~* ? " +
+                "OR lower(s.catalog) ~* ? OR lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? " +
+                "OR lower(b.name) ~* ? OR o_r_e_o.equipment_name ~* ?  OR o_r_e.equipment_key IN (?,?) OR o_r_e_o.equipment_key IN (?,?))  " +
+                "AND (o_r_e.id_structure IN (?,?) OR o_r_e_o.id_structure IN (?,?) ) AND o_r_e_o.owner_id ~* 'renew'  " +
+                "GROUP BY p.id, creationDateOFFSET ? LIMIT ? ";
         String expectedParams = "[\"SENT\",\"RESUBMIT\",\"SENT\",\"RESUBMIT\",\"startDate\",\"endDate\",\"startDate\"," +
                 "\"endDate\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
                 "\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
-                "\"equipement1\",\"equipement2\",\"idStructure1\",\"idStructure2\",\"idStructure1\",\"idStructure2\",50,10]";
+                "\"equipement1\",\"equipement2\",\"equipement1\",\"equipement2\",\"idStructure1\",\"idStructure2\",\"idStructure1\"," +
+                "\"idStructure2\",50,10]";
 
         PowerMockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);

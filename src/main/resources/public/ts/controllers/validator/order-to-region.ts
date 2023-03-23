@@ -7,14 +7,14 @@ import {
     Offers,
     OrderClient,
     OrderRegion,
-    OrdersRegion, Project,
+    OrdersRegion,
+    Project,
     Projects,
     Structure,
     Structures,
     Utils
 } from "../../model";
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
-import {Subscription} from "rxjs";
 import {Mix} from "entcore-toolkit";
 import {ProjectFilter} from "../../model/ProjectFilter";
 import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
@@ -58,6 +58,8 @@ export const orderRegionController = ng.controller('orderRegionController',
         }
 
         $scope.onScroll = async (old?: boolean): Promise<void> => {
+            $scope.display.loading = true;
+            Utils.safeApply($scope);
             let projects = new Projects();
             $scope.projectFilter.structureList.push($scope.current.structure as Structure);
             if (old) {

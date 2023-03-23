@@ -6,7 +6,7 @@
                               editor-list="equipments.editors"
                               distributor-list="equipments.distributeurs" on-search="resetSearch()"
                               class="flex-one"></project-filter-admin>
-        <div class="cell twelve-mobile right-magnet">
+        <div class="cell twelve-mobile right-magnet margin-bottom-10">
             <button ng-click="openConfirmGenerateLibraryLightbox()" class="right-magnet"
                     ng-disabled="display.loading || containsSentOrDoneOrders()">
                 <i18n>crre.take.order.library</i18n>
@@ -146,7 +146,7 @@
                     </div>
                 </td>
             </tr>
-            <tr ng-repeat-start="order in project.orders | orderBy: 'name'" ng-if="project.expanded"
+            <tr ng-repeat-start="order in sortedOrders(project.orders)" ng-if="project.expanded"
                 class="subline">
                 <td class="table-selector">
                     <label class="checkbox">
@@ -227,7 +227,7 @@
         </table>
     </div>
     <loader data-ng-show="display.loading" min-height="'250px'"></loader>
-    <infinite-scroll-v2 scrolled="loadNextPage()" loading-mode="true"
+    <infinite-scroll-v2 scrolled="loadNextPage()" loading-mode="false"
                       ng-if="display.projects.all.length != 0">
     </infinite-scroll-v2>
     <div ng-show="display.projects.all.length === 0 && !display.loading" class="centered">

@@ -636,11 +636,11 @@ public class OrderRegionController extends BaseController {
         FilterItemModel filtersItemQuery = new FilterItemModel().setSearchingText(filtersItem.getSearchingText());
         FilterItemModel filtersItemFilter = filtersItem.clone().setSearchingText(null);
 
-        Future<JsonArray> filterFuture = filtersItem.isEmpty() ?
-                Future.succeededFuture(new JsonArray()) : searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN));
+        Future<JsonArray> filterFuture = filtersItem.hasFilters() ?
+                searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
 
-        Future<JsonArray> searchFuture = filtersItem.isEmpty() ?
-                Future.succeededFuture(new JsonArray()) : searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN));
+        Future<JsonArray> searchFuture = filtersItem.getSearchingText() != null ?
+                searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
 
         CompositeFuture.all(filterFuture, searchFuture)
                 .compose(items -> {

@@ -68,7 +68,7 @@ public class FilterModel implements IModel<FilterModel> {
                 .map(OrderClientEquipmentType::getValue)
                 .collect(Collectors.toList());
 
-        this.orderBy = OrderByProjectFieldEnum.getValue(jsonObject.getString(Field.ORDERBY, ""), OrderByProjectFieldEnum.ID);
+        this.orderBy = OrderByProjectFieldEnum.getValue(jsonObject.getString(Field.ORDERBY, ""), OrderByProjectFieldEnum.DATE);
         this.orderDesc = jsonObject.getBoolean(Field.ORDERDESC, true);
     }
 

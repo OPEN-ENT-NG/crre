@@ -349,32 +349,36 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                     .add(filters.getSearchingText());
             if (!itemSearchedIdsList.isEmpty()) {
                 sqlquery += " OR o_r_e.equipment_key IN " + Sql.listPrepared(itemSearchedIdsList);
-                values.addAll(new JsonArray(itemSearchedIdsList));
+                sqlquery += " OR o_r_e_o.equipment_key IN " + Sql.listPrepared(itemSearchedIdsList);
+                values.addAll(new JsonArray(itemSearchedIdsList)).addAll(new JsonArray(itemSearchedIdsList));
             }
             sqlquery += ") ";
         }
 
         // Condition de filtrage d'équipements
-        if (!filtersItem.isEmpty()) {
+        if (filtersItem.hasFilters()) {
             if(!itemFilteredIdsList.isEmpty()) {
-                sqlquery += "AND (o_r_e.equipment_key IN " + Sql.listPrepared(itemFilteredIdsList) + " ";
+                sqlquery += "AND (o_r_e.equipment_key IN " + Sql.listPrepared(itemFilteredIdsList) + " " +
+                "OR o_r_e_o.id IS NOT NULL) ";
                 values.addAll(new JsonArray(itemFilteredIdsList));
             } else {
                 sqlquery += "AND (? ";
                 values.add(false);
             }
             if (!filtersItem.getEditors().isEmpty() && !filtersItem.getDistributors().isEmpty()) {
-                sqlquery += " OR (o_r_e_o.equipment_editor IN " + Sql.listPrepared(filtersItem.getEditors()) + " " +
-                        "AND o_r_e_o.equipment_diffusor IN " + Sql.listPrepared(filtersItem.getDistributors()) + ")";
+                sqlquery += " AND ((o_r_e_o.equipment_editor IN " + Sql.listPrepared(filtersItem.getEditors()) + " " +
+                        "AND o_r_e_o.equipment_diffusor IN " + Sql.listPrepared(filtersItem.getDistributors()) + ") " +
+                        "OR o_r_e.id IS NOT NULL) ";
                 values.addAll(new JsonArray(filtersItem.getEditors())).addAll(new JsonArray(filtersItem.getDistributors()));
             } else if (!filtersItem.getEditors().isEmpty() && filtersItem.getDistributors().isEmpty()) {
-                sqlquery += " OR o_r_e_o.equipment_editor IN " + Sql.listPrepared(filtersItem.getEditors());
+                sqlquery += " AND (o_r_e_o.equipment_editor IN " + Sql.listPrepared(filtersItem.getEditors()) +
+                            " OR o_r_e.id IS NOT NULL) ";
                 values.addAll(new JsonArray(filtersItem.getEditors()));
             } else if (filtersItem.getEditors().isEmpty() && !filtersItem.getDistributors().isEmpty()) {
-                sqlquery += " OR o_r_e_o.equipment_diffusor IN " + Sql.listPrepared(filtersItem.getDistributors());
+                sqlquery += " AND (o_r_e_o.equipment_diffusor IN " + Sql.listPrepared(filtersItem.getDistributors()) +
+                            " OR o_r_e.id IS NOT NULL) ";
                 values.addAll(new JsonArray(filtersItem.getDistributors()));
             }
-            sqlquery += ")";
         }
 
 

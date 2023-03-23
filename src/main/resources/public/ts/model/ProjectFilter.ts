@@ -40,8 +40,8 @@ export class ProjectFilter {
         this._itemType = [];
         this._page = 0;
         this._renew = [];
-        this._orderBy = ORDER_BY_PROJECT_FIELD_ENUM.ID;
-        this._orderDesc = false;
+        this._orderBy = ORDER_BY_PROJECT_FIELD_ENUM.DATE;
+        this._orderDesc = true;
     }
 
     get startDate() {

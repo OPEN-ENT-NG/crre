@@ -94,6 +94,12 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
                 && this.structureSectors.isEmpty() && this.targets.isEmpty() && this.searchingText == null;
     }
 
+    public boolean hasFilters() {
+        return !this.disciplines.isEmpty() || !this.classes.isEmpty() || !this.grades.isEmpty() || !this.editors.isEmpty()
+                || !this.distributors.isEmpty() || !this.catalogs.isEmpty() || !this.itemTypes.isEmpty()
+                || !this.structureSectors.isEmpty() || !this.targets.isEmpty();
+    }
+
     public List<String> getDisciplines() {
         return disciplines;
     }

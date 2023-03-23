@@ -354,7 +354,7 @@
   "REJECTED": "Refusée",
   "RESUBMIT": "Resoumis",
   "DONE": "Commande clôturée",
-  "SENT": "Commande transmise au fournisseur",
+  "SENT": "Transmise au libraire",
   "WAITING_FOR_ACCEPTANCE": "Demande en cours d'instruction",
   "create": "Créer",
   "money.symbol": "€",
