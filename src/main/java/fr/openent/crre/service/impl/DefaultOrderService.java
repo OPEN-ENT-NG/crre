@@ -233,11 +233,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
+    public void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut,
+                           String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT oce.*, bo.name as basket_name " +
-                "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oce " : ".order_client_equipment  oce ") +
+        String query = "SELECT DISTINCT oce.id, oce.equipment_key, oce.creation_date, oce.status, oce.comment, oce.amount, bo.name as basket_name ";
+        query += (oldTable) ? ", oce.equipment_name, oce.equipment_price, oce.equipment_priceht, oce.equipment_tva5, oce.equipment_tva20 " : "";
+        query += "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oce " : ".order_client_equipment  oce ") +
                 "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oce.id_basket) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
                 "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
