@@ -47,7 +47,7 @@
                 </multi-combo>
             </div>
             <div class="cell twelve-mobile right-magnet">
-                <button ng-click="display.projects.exportCSV(filter.isOld) && uncheckAll()" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
+                <button ng-click="display.projects.exportCSV(false)" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
             </div>
         </div>
         <div style="margin-bottom: -0.5%; margin-top: 1%">
@@ -217,7 +217,7 @@
             <div class="toggle">
                 <div class="row">
                     <button ng-click="reSubmit()" ><i18n>crre.resubmit</i18n></button>
-                    <button ng-click="display.projects.exportCSV(filter.isOld) && uncheckAll()"><i18n>crre.logs.csv.export</i18n></button>
+                    <button ng-click="display.projects.exportCSV(false)"><i18n>crre.logs.csv.export</i18n></button>
                 </div>
             </div>
         </section>
