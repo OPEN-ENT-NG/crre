@@ -192,6 +192,8 @@ public class Field {
     public static final String ADDRESS_STRUCTURE = "address_structure";
     public static final String EANLDE = "eanLDE";
     public static final String RESULT = "result";
+    public static final String ID_STRUCTURE_LIST = "id_structure_list";
+    public static final String LISTUSERWORKFLOW = "listUserWorkflow";
 
     private Field() {
         throw new IllegalStateException("Utility class");

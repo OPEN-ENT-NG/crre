@@ -33,6 +33,7 @@ public class ServiceFactory {
     private final DefaultBasketOrderItemService basketOrderItemService;
     private final DefaultNotificationService notificationService;
     private final DefaultProjectService projectService;
+    private final WorkflowService workflowService;
 
 
     public ServiceFactory(Vertx vertx, ConfigModel config, EmailFactory emailFactory, Storage storage) {
@@ -60,6 +61,7 @@ public class ServiceFactory {
         this.storageService = new DefaultStorageService(storage);
         this.notificationService = new DefaultNotificationService(vertx, this);
         this.projectService = new DefaultProjectService();
+        this.workflowService = new DefaultWorkflowService();
     }
 
     public Vertx getVertx() {
@@ -156,5 +158,9 @@ public class ServiceFactory {
             options.setProxyOptions(proxyOptions);
         }
         return WebClient.create(this.vertx, options);
+    }
+
+    public WorkflowService getWorkflowService() {
+        return workflowService;
     }
 }

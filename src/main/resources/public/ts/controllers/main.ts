@@ -13,6 +13,7 @@ import {
     OrdersClient,
     Statistics,
     StatisticsStructures,
+    Structure,
     StructureGroups,
     Structures,
     Student,
@@ -373,20 +374,48 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
         };
 
+        /**
+         * @deprecated Use {@link hasAccessInStructure}
+         */
         $scope.hasAccess = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.access);
         };
 
+        $scope.hasAccessInStructure = (structure: Structure): boolean => {
+            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.access) != null;
+        };
+
+        /**
+         * @deprecated Use {@link hasAccessInStructure}
+         */
         $scope.isValidator = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator);
         };
 
+        $scope.isValidatorInStructure = (structure: Structure): boolean => {
+            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.validator) != null;
+        };
+
+        /**
+         * @deprecated Use {@link hasAccessInStructure}
+         */
         $scope.isAdministrator = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator);
         };
 
+        $scope.isAdministratorInStructure = (structure: Structure): boolean => {
+            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.administrator) != null;
+        };
+
+        /**
+         * @deprecated Use {@link hasAccessInStructure}
+         */
         $scope.isPrescriptor = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor);
+        };
+
+        $scope.isPrescriptorInStructure = (structure: Structure): boolean => {
+            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) != null;
         };
 
         $scope.redirectTo = (path: string) => {

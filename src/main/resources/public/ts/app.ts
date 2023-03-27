@@ -2,6 +2,7 @@ import {Behaviours, model, ng, routes} from 'entcore';
 import * as controllers from './controllers';
 import * as directives from './directives';
 import * as filters from './filters';
+import * as services from './services';
 
 for (let controller in controllers) {
     ng.controllers.push(controllers[controller]);
@@ -13,6 +14,10 @@ for (let directive in directives) {
 
 for (let filter in filters) {
     ng.filters.push(filters[filter]);
+}
+
+for (let service in services) {
+    ng.services.push(services[service]);
 }
 
 routes.define(($routeProvider) => {
