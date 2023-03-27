@@ -76,6 +76,7 @@ public class Crre extends BaseServer {
         addController(new OrderRegionController(serviceFactory));
         addController(new StatisticsController(serviceFactory));
         addController(new QuoteController(serviceFactory));
+        addController(new WorkflowController(serviceFactory));
         vertx.deployVerticle(ExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         CONFIG = config;
     }

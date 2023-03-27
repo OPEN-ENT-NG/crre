@@ -2,6 +2,7 @@ import { Selectable, Mix, Selection } from 'entcore-toolkit';
 import http from 'axios';
 import {Log} from "./Log";
 import {IFilter} from "./Filter";
+import {workflowService} from "../services";
 
 export class Structure implements Selectable, IFilter {
     id: string;
@@ -14,6 +15,7 @@ export class Structure implements Selectable, IFilter {
     selected: boolean;
     search: string;
     inregroupment : boolean
+    workflow: Array<string>;
 
     constructor () {
        this.selected = false;
@@ -43,11 +45,22 @@ export class Structures  extends Selection<Structure> {
             if(structure.inregroupment)
                 this.inRegroupement.push(structure)
         }
+        await this.calculatesWorkflow();
     }
 
     async syncUserStructures (): Promise<void> {
         let { data } = await http.get('/crre/user/structures');
         this.all = Mix.castArrayAs(Structure, data);
+        await this.calculatesWorkflow();
     }
 
+    private async calculatesWorkflow(): Promise<void> {
+        await workflowService.getWorkflowListFromStructureScope(this.all.map((structure: Structure) => structure.id))
+            .then(result => {
+                this.all.forEach((structure: Structure) => {
+                    structure.workflow = result[structure.id];
+                })
+            })
+            .catch(error => console.error(error));
+    }
 }
