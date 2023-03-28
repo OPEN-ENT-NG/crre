@@ -841,7 +841,9 @@
   "crre.prescriptor.confirm.basket.message": "Votre panier va être soumis au valideur de l'établissement.",
   "crre.validator.confirm.order.title": "Confirmation de la demande",
   "crre.validator.confirm.order.message.1": "Vous êtes sur le point d'envoyer cette demande à la Région.",
-  "crre.validator.confirm.order.message.2": "Commentaire pour l'administrateur Région :",
+  "crre.validator.confirm.order.message.2": "Commentaire pour l'administrateur Région",
+  "crre.admin.valid.comment.prescriptor": "Commentaire prescripteur: ",
+  "crre.admin.valid.comment.validator": "Commentaire valideur: "
   "crre.validator.confirm.optionnel": "(Optionnel)",
   "crre.lde.orders": "Commandes LDE"
 }

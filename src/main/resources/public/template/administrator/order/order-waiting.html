@@ -99,6 +99,9 @@
                 <td>
                     <div class="smallTabElem center"></div>
                 </td>
+                <td>
+                    <div class="smallTabElem center"></div>
+                </td>
             </tr>
             </thead>
             <tbody ng-repeat="project in display.projects.all">
@@ -145,6 +148,11 @@
                         <span ng-bind="lang.translate(project.status)" class="zero-mobile"></span>
                     </div>
                 </td>
+                <td ng-click="project.expanded = !project.expanded">
+                    <div class="smallTabElem center" tooltip="[[lang.translate('crre.admin.valid.comment.validator') + project.comment]]">
+                        <i ng-if="project.comment" class="comment-icon"></i>
+                    </div>
+                </td>
             </tr>
             <tr ng-repeat-start="order in sortedOrders(project.orders)" ng-if="project.expanded"
                 class="subline">
@@ -182,11 +190,6 @@
                     <div class="smallTabElem center"><span ng-bind="order.price | currency"></span></div>
                 </td>
                 <td>
-                    <div class="smallTabElem center"
-                         tooltip="[[order.comment]]"
-                         ng-if="order.comment">
-                        <i class="comment-icon"></i>
-                    </div>
                     <div class="smallTabElem status center ellipsis"
                          ng-if="order.displayStatus && order.status == 'IN_PROGRESS'" tooltip="crre.new">
                         <div class="NEW status-circle  cell row myOrder centerCircleMobile"></div>
@@ -210,6 +213,13 @@
                         <span ng-bind="order.status_name" class="zero-mobile"></span>
                     </div>
                 </td>
+                <td>
+                    <div class="smallTabElem center"
+                         tooltip="[[lang.translate('crre.admin.valid.comment.prescriptor') + order.comment]]"
+                         ng-if="order.comment">
+                        <i class="comment-icon"></i>
+                    </div>
+                </td>
             </tr>
             <tr class="subline" ng-repeat="offer in order.offers.all"
                 ng-if="project.expanded && order.offers.all.length > 0" ng-repeat-end>
@@ -221,6 +231,7 @@
                 <td></td>
                 <td class="center">[[offer.value]]</td>
                 <td class="center">[[lang.translate('crre.FREE')]]</td>
+                <td></td>
                 <td></td>
             </tr>
             </tbody>
