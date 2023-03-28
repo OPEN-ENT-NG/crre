@@ -1,18 +1,41 @@
 <div ng-if="campaign.purse_enabled" class="confirm-order" ng-controller="basketConfirmationNameController">
     <div class="row">
-        <h1><i18n>crre.validate.basket</i18n></h1>
-        <i18n>CAMPAIGN</i18n> : <span>[[campaign.name]]</span>
+        <h1>
+            <i18n>crre.validate.basket</i18n>
+        </h1>
+        <i18n>CAMPAIGN</i18n>
+        : <span>[[campaign.name]]</span>
         <form>
-            <label><i18n>crre.basket.name</i18n></label>
+            <label>
+                <i18n>crre.basket.name</i18n>
+            </label>
             <input type="text" ng-model="basket_name"/>
         </form>
     </div>
 
-    <div class="margin-top-20">
+    <div class="margin-top-20" ng-if="duplicateBaskets.length == 0">
         <i18n>crre.prescriptor.confirm.basket.message</i18n>
     </div>
+
+    <div class="margin-top-20" ng-if="duplicateBaskets.length > 0">
+        <i18n>crre.duplicate.basket.info</i18n>
+        <ul>
+            <li ng-repeat="basket in duplicateBaskets" class="crre-display-duplicate-basket">
+                <span tooltip="[[basket.equipment.titre]]"
+                      class="basketTruncate flex-one"> [[basket.equipment.titre]]</span>
+                <span ng-bind="getQuantity(basket.amount)"></span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="warning">
+        <i18n>crre.duplicate.basket.warning</i18n>
+    </div>
+
     <div class="row">
-        <input type="submit" class="button right-magnet " ng-click="takeClientOrder(basket_name)" i18n-value="Confirmer"/>
-        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelConfirmBasketName()" i18n-value="cancel"/>
+        <input type="submit" class="button right-magnet " ng-click="takeClientOrder(basket_name)"
+               i18n-value="Confirmer"/>
+        <input type="button" class="cancel margin-right-10 right-magnet " ng-click="cancelConfirmBasketName()"
+               i18n-value="cancel"/>
     </div>
 </div>
