@@ -3,7 +3,6 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.LogService;
 import fr.openent.crre.service.ServiceFactory;
-import fr.openent.crre.service.impl.DefaultLogService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -15,10 +14,9 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 
+import static fr.openent.crre.core.constants.Field.UTF8_BOM;
+
 public class LogController extends ControllerHelper {
-
-    public static final String UTF8_BOM = "\uFEFF";
-
     private final LogService logService;
 
     public LogController(ServiceFactory serviceFactory) {
@@ -78,7 +76,7 @@ public class LogController extends ControllerHelper {
     }
 
     private static String generateExport(HttpServerRequest request, JsonArray logs) {
-        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
+        StringBuilder report = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
           report.append(generateExportLine(request, logs.getJsonObject(i)));
         }

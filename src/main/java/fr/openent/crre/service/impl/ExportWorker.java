@@ -4,14 +4,12 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.model.OrderRegionBeautifyModel;
 import fr.openent.crre.model.OrderRegionComplex;
-import fr.openent.crre.model.OrderRegionEquipmentModel;
 import fr.openent.crre.model.export.ExportOrderRegion;
 import fr.openent.crre.model.export.ExportTypeEnum;
 import fr.openent.crre.service.OrderRegionService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StorageService;
 import fr.openent.crre.service.StructureService;
-import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -40,8 +38,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
-import static java.lang.Math.min;
 
 
 public class ExportWorker extends BusModBase implements Handler<Message<JsonObject>> {

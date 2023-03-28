@@ -40,8 +40,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import static fr.openent.crre.core.constants.Field.UTF8_BOM;
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
@@ -56,8 +56,6 @@ public class OrderController extends ControllerHelper {
 
     private final OrderService orderService;
     private final NotificationService notificationService;
-
-    public static final String UTF8_BOM = "\uFEFF";
 
     public OrderController(ServiceFactory serviceFactory) {
         this.orderService =  serviceFactory.getOrderService();
@@ -467,7 +465,7 @@ public class OrderController extends ControllerHelper {
     }
 
     private static String generateExport(HttpServerRequest request, JsonArray logs) {
-        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader(request));
+        StringBuilder report = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getExportHeader(request));
         for (int i = 0; i < logs.size(); i++) {
             report.append(generateExportLine(request, logs.getJsonObject(i)));
         }

@@ -24,7 +24,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
 
 import java.text.DecimalFormat;
@@ -34,9 +33,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static fr.openent.crre.controllers.LogController.UTF8_BOM;
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
 import static fr.openent.crre.controllers.OrderController.exportStudents;
+import static fr.openent.crre.core.constants.Field.UTF8_BOM;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static java.lang.Math.min;
 
@@ -1037,7 +1036,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     @Override
     public JsonObject generateExport(List<OrderRegionBeautifyModel> logs) {
-        StringBuilder report = new StringBuilder(UTF8_BOM).append(getExportHeader());
+        StringBuilder report = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getExportHeader());
         HashSet<String> structures = new HashSet<>();
         for (OrderRegionBeautifyModel orderRegionBeautifyModel: logs) {
             report.append(generateExportLine(orderRegionBeautifyModel));

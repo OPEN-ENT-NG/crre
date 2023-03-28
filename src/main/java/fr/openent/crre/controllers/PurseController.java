@@ -10,8 +10,6 @@ import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.StructureService;
-import fr.openent.crre.service.impl.DefaultPurseService;
-import fr.openent.crre.service.impl.DefaultStructureService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -37,6 +35,7 @@ import java.net.URLDecoder;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static fr.openent.crre.core.constants.Field.UTF8_BOM;
 import static org.entcore.common.utils.FileUtils.deleteImportPath;
 
 public class PurseController extends ControllerHelper {
@@ -482,7 +481,7 @@ public class PurseController extends ControllerHelper {
      * @param request Http request
      */
     private static void launchExport(JsonArray purses, HttpServerRequest request) {
-        StringBuilder exportString = new StringBuilder(getCSVHeader(request));
+        StringBuilder exportString = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getCSVHeader(request));
         for (Object purse : purses) {
             exportString.append(getCSVLine((JsonObject) purse));
         }

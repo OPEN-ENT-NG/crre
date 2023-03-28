@@ -214,6 +214,7 @@ public class Field {
     public static final String STRUCTURE_PRO = "Lycée professionnel";
     public static final String RENEW = "renew";
     public static final String TARGETS = "targets";
+    public static final String UTF8_BOM = "\uFEFF";
 
 
 }
