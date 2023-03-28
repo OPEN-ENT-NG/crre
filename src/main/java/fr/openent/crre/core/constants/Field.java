@@ -194,6 +194,7 @@ public class Field {
     public static final String RESULT = "result";
     public static final String ID_STRUCTURE_LIST = "id_structure_list";
     public static final String LISTUSERWORKFLOW = "listUserWorkflow";
+    public static final String CREATEADMINORDER = "createAdminOrder";
 
     private Field() {
         throw new IllegalStateException("Utility class");

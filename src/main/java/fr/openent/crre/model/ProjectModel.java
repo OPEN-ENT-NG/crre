@@ -11,8 +11,7 @@ public class ProjectModel implements IModel<ProjectModel>, Cloneable {
     private Integer id;
     private String title;
     private String structureId;
-
-    private List<OrderRegionEquipmentModel> orderRegionEquipmentList;
+    private String comment;
 
     public ProjectModel() {
     }
@@ -20,11 +19,12 @@ public class ProjectModel implements IModel<ProjectModel>, Cloneable {
     public ProjectModel(JsonObject jsonObject) {
         this.id = jsonObject.getInteger(Field.ID);
         this.title = jsonObject.getString(Field.TITLE);
+        this.comment = jsonObject.getString(Field.COMMENT);
     }
 
     @Override
     public JsonObject toJson() {
-        return IModelHelper.toJson(this, false, true);
+        return IModelHelper.toJson(this, true, true);
     }
 
     public Integer getId() {
@@ -54,24 +54,19 @@ public class ProjectModel implements IModel<ProjectModel>, Cloneable {
         return this;
     }
 
-    public List<OrderRegionEquipmentModel> getOrderRegionEquipmentList() {
-        return orderRegionEquipmentList;
+    public String getComment() {
+        return comment;
     }
 
-    public ProjectModel setOrderRegionEquipmentList(List<OrderRegionEquipmentModel> orderRegionEquipmentList) {
-        this.orderRegionEquipmentList = orderRegionEquipmentList;
+    public ProjectModel setComment(String comment) {
+        this.comment = comment;
         return this;
     }
 
     @Override
     public ProjectModel clone() {
         try {
-            ProjectModel clone = (ProjectModel) super.clone();
-            if (this.orderRegionEquipmentList != null) {
-                clone.setOrderRegionEquipmentList(this.orderRegionEquipmentList.stream()
-                        .map(OrderRegionEquipmentModel::clone).collect(Collectors.toList()));
-            }
-            return clone;
+            return (ProjectModel) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
         }

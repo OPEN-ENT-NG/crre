@@ -103,7 +103,7 @@ export class OrdersRegion extends Selection<OrderRegion> {
         super([]);
     }
 
-    async create():Promise<any> {
+    async create(comment: string):Promise<any> {
         let orders = [];
         let singleOrders = [];
         for(let i = 0; i < Math.min(10000, this.all.length); i++){
@@ -114,7 +114,7 @@ export class OrdersRegion extends Selection<OrderRegion> {
             }
         }
         try {
-            let data = await http.post(`/crre/region/orders`, {orders: orders});
+            let data = await http.post(`/crre/region/orders`, {orders: orders, comment: comment});
             if(this.all.length > 10000 && data.status === 201){
                 const idProject = data.data.idProject;
                 let e = 1

@@ -129,7 +129,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             return {totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable};
         }
 
-        $scope.createOrder = async (): Promise<void> => {
+        $scope.createOrder = async (comment: string): Promise<void> => {
+            $scope.closeConfirmOrder();
             $scope.$broadcast(INFINITE_SCROLL_EVENTER.RESUME);
             $scope.loading = true;
             let ordersToCreate = new OrdersRegion();
@@ -158,7 +159,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 totalAmount = __ret.totalAmount;
                 totalAmountConsumable = __ret.totalAmountConsumable;
             }
-            ordersToCreate.create().then(async data => {
+            ordersToCreate.create(comment).then(async data => {
                 if (data.status === 201) {
                     toasts.confirm('crre.order.region.create.message');
                     $scope.$broadcast(INFINITE_SCROLL_EVENTER.RESUME);
@@ -225,6 +226,22 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         $scope.openLightboxRefuseOrder = () => {
             template.open('refuseOrder.lightbox', 'validator/order-refuse-confirmation');
             $scope.display.lightbox.refuseOrder = true;
+        };
+
+        $scope.closeRefuseOrder = () => {
+            $scope.display.lightbox.refuseOrder = false;
+            Utils.safeApply($scope);
+        };
+
+        $scope.openLightboxConfirmOrder = () => {
+            template.open('confirmOrder.lightbox', 'validator/order-confirm');
+            $scope.display.lightbox.confirmOrder = true;
+        };
+
+        $scope.closeConfirmOrder = () => {
+            template.close('confirmOrder.lightbox');
+            $scope.display.lightbox.confirmOrder = false;
+            Utils.safeApply($scope);
         };
 
         $scope.exportCSV = () => {

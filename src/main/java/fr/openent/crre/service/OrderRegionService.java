@@ -16,14 +16,6 @@ public interface OrderRegionService {
 
     void equipmentAlreadyPayed(String idEquipment, String idStructure, Handler<Either<String, JsonObject>> handler);
 
-    /**
-     * @deprecated Use {@link #createProject(String)}
-     */
-    @Deprecated
-    void createProject(String title, Handler<Either<String, JsonObject>> handler);
-
-    Future<ProjectModel> createProject(String title);
-
     Future<List<Integer>> getAllIdsStatus();
 
     /**
@@ -52,14 +44,6 @@ public interface OrderRegionService {
      * @param itemFilteredIdsList {@link List<String>}  List of item ids corresponding to filtering item request
      */
     Future<JsonArray> search(FilterModel filters, FilterItemModel filtersItem, List<String> itemSearchedIdsList, List<String> itemFilteredIdsList);
-
-    /**
-     * @deprecated Use {@link #getLastProject()}
-     */
-    @Deprecated
-    void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler);
-
-    Future<JsonObject> getLastProject();
 
     List<TransactionElement> insertOldOrders(List<OrderRegionBeautifyModel> orderRegionBeautify, boolean isRenew);
 

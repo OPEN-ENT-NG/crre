@@ -119,27 +119,6 @@ public class DefaultOrderRegionServiceTest {
     }
 
     @Test
-    public void createProjectTest(TestContext ctx) {
-        Async async = ctx.async();
-
-        String expectedQuery = "INSERT INTO null.project ( title ) VALUES ( ? )  RETURNING *;";
-        String expectedParams = "[\"myTitle\"]";
-
-        PowerMockito.doAnswer(invocation -> {
-            String query = invocation.getArgument(0);
-            JsonArray params = invocation.getArgument(1);
-            ctx.assertEquals(query, expectedQuery);
-            ctx.assertEquals(params.toString(), expectedParams);
-            async.complete();
-            return null;
-        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
-
-        this.defaultOrderRegionService.createProject("myTitle");
-
-        async.awaitSuccess(10000);
-    }
-
-    @Test
     public void getOrdersRegionByIdTest(TestContext ctx) {
         Async async = ctx.async();
 
