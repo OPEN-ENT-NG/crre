@@ -77,8 +77,34 @@ export const basketController = ng.controller('basketController',
                 toasts.warning("basket.price.null")
             }else{
                 $scope.baskets_test = baskets;
+                $scope.duplicateBaskets = checkDuplicate(baskets);
                 confirmBasketName();
             }
+        };
+
+        const checkDuplicate = (baskets: Baskets): Basket[] => {
+            let duplicateBaskets: Basket[] = [];
+            let allBaskets: Basket[];
+            let seen = {};
+            allBaskets = baskets.selected.length > 0 ? baskets.selected : baskets.all;
+
+            for (let i = 0; i < allBaskets.length; i++) {
+                let basket: Basket = allBaskets[i];
+                let key: string = basket.equipment.ean + "-" + basket.amount;
+                if (key in seen) {
+                    let foundBasket: Basket = seen[key];
+                    let foundIndex: number = duplicateBaskets.findIndex((b: Basket) => b.equipment.ean === foundBasket.equipment.ean && b.amount === foundBasket.amount);
+                    if (foundIndex === -1) {
+                        duplicateBaskets.push(foundBasket);
+                    }
+                    if (!duplicateBaskets.some((b: Basket) => b.equipment.ean === basket.equipment.ean && b.amount === basket.amount)) {
+                        duplicateBaskets.push(basket);
+                    }
+                } else {
+                    seen[key] = basket;
+                }
+            }
+            return duplicateBaskets;
         };
 
         $scope.canUpdateReassort = () => {

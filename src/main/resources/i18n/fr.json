@@ -838,12 +838,15 @@
   "crre.timeline.validator.valid": "a été validée par la Région Île-de-France.",
   "crre.timeline.validator.partially.valid": "a été partiellement validée par la Région Île-de-France.",
   "crre.timeline.validator.refused": "a été refusée par la Région Île-de-France.",
+  "crre.confirm.basket.quantity": "(Quantité: {0})",
+  "crre.duplicate.basket.info": "Votre panier contient ces références plusieurs fois, avec la même quantité :",
+  "crre.duplicate.basket.warning": "Si vous confirmez le panier, ces doublons seront envoyés aux valideurs de l'établissement.",
   "crre.prescriptor.confirm.basket.message": "Votre panier va être soumis au valideur de l'établissement.",
   "crre.validator.confirm.order.title": "Confirmation de la demande",
   "crre.validator.confirm.order.message.1": "Vous êtes sur le point d'envoyer cette demande à la Région.",
   "crre.validator.confirm.order.message.2": "Commentaire pour l'administrateur Région",
   "crre.admin.valid.comment.prescriptor": "Commentaire prescripteur: ",
-  "crre.admin.valid.comment.validator": "Commentaire valideur: "
+  "crre.admin.valid.comment.validator": "Commentaire valideur: ",
   "crre.validator.confirm.optionnel": "(Optionnel)",
   "crre.lde.orders": "Commandes LDE"
 }
