@@ -13,11 +13,6 @@ import fr.openent.crre.model.config.ConfigMailModel;
 import fr.openent.crre.model.export.ExportOrderRegion;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
-import fr.openent.crre.security.ValidatorAndStructureRight;
-import fr.openent.crre.security.ValidatorRight;
-import fr.openent.crre.security.*;
-import fr.openent.crre.security.AdministratorRight;
-import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureHistoricRight;
 import fr.openent.crre.security.ValidatorRight;
 import fr.openent.crre.service.*;
@@ -77,7 +72,6 @@ import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static java.lang.Math.min;
 
 public class OrderRegionController extends BaseController {
 

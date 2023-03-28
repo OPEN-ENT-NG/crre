@@ -12,7 +12,6 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.BaseController;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,13 +21,12 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
 
+import static fr.openent.crre.core.constants.Field.UTF8_BOM;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 
 public class StatisticsController extends BaseController {
     private final StatisticsService statisticsService;
     private final statistics statCron;
-    public static final String UTF8_BOM = "\uFEFF";
-
     public StatisticsController(ServiceFactory serviceFactory) {
         this.statisticsService = serviceFactory.getStatisticsService();
         this.statCron = new statistics(serviceFactory);
@@ -247,7 +245,7 @@ public class StatisticsController extends BaseController {
         CompositeFuture.all(futures).setHandler(event -> {
             if (event.succeeded()) {
                 JsonArray stats = prepareFuture(request, getNumericRessourcesFuture, getPaperRessourcesFuture, getAllRessourcesFuture, getRessourcesFuture, getOrdersFuture, getLicencesFuture, getStructuresMoreOneOrderFuture, getAllStructuresFuture);
-                StringBuilder exportString = new StringBuilder(UTF8_BOM).append(getCSVHeader(request));
+                StringBuilder exportString = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getCSVHeader(request));
                 JsonObject stat = formatStats(stats.getJsonObject(0));
                 exportString.append(getCSVLine(stat));
                 request.response()
