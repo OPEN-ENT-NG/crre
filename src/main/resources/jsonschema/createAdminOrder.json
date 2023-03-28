@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "orders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "creation_date": {
+            "type": "string"
+          },
+          "equipment_key": {
+            "type": "string"
+          },
+          "id_campaign": {
+            "type": "number"
+          },
+          "id_order_client_equipment": {
+            "type": "number"
+          },
+          "id_structure": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "reassort": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "use_credit": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "user_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "comment": {
+      "type": "string"
+    }
+  },
+  "required": [ "orders" ]
+}

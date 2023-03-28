@@ -75,42 +75,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void createProject(String title, Handler<Either<String, JsonObject>> handler) {
-        JsonArray params;
-
-        String queryProjectEquipment = "" +
-                "INSERT INTO " + Crre.crreSchema + ".project " +
-                "( title ) VALUES " +
-                "( ? )  RETURNING id ;";
-        params = new fr.wseduc.webutils.collections.JsonArray();
-
-        params.add(title);
-
-        Sql.getInstance().prepared(queryProjectEquipment, params, new DeliveryOptions().setSendTimeout(600000L),
-                SqlResult.validUniqueResultHandler(handler));
-    }
-
-    @Override
-    public Future<ProjectModel> createProject(String title) {
-        Promise<ProjectModel> promise = Promise.promise();
-
-        String queryProjectEquipment = "" +
-                "INSERT INTO " + Crre.crreSchema + ".project " +
-                "( title ) VALUES " +
-                "( ? )  RETURNING *;";
-        JsonArray params = new JsonArray();
-
-        params.add(title);
-
-        String errorMessage = String.format("[CRRE@%s::createProject] Fail to create project",
-                this.getClass().getSimpleName());
-        Sql.getInstance().prepared(queryProjectEquipment, params, new DeliveryOptions().setSendTimeout(600000L),
-                SqlResult.validUniqueResultHandler(IModelHelper.sqlUniqueResultToIModel(promise, ProjectModel.class, errorMessage)));
-
-        return promise.future();
-    }
-
-    @Override
     public Future<List<Integer>> getAllIdsStatus() {
         Promise<List<Integer>> promise = Promise.promise();
         String query = "SELECT id FROM " + Crre.crreSchema + ".status;";
@@ -438,26 +402,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
 
         Sql.getInstance().prepared(sqlquery, values, SqlResult.validResultHandler(FutureHelper.handlerEitherPromise(promise)));
-        return promise.future();
-    }
-
-    @Override
-    public void getLastProject(Handler<Either<String, JsonObject>> arrayResponseHandler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "" +
-                "SELECT p.title, ore.creation_date, p.id " +
-                "FROM  " + Crre.crreSchema + ".project p " +
-                "LEFT JOIN " + Crre.crreSchema + ".\"order-region-equipment\" AS ore ON ore.id_project = p.id ";
-        query = query + " ORDER BY p.id DESC LIMIT 1";
-        sql.prepared(query, values, SqlResult.validUniqueResultHandler(arrayResponseHandler));
-    }
-
-    @Override
-    public Future<JsonObject> getLastProject() {
-        Promise<JsonObject> promise = Promise.promise();
-
-        this.getLastProject(FutureHelper.handlerEitherPromise(promise));
-
         return promise.future();
     }
 

@@ -25,6 +25,7 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.BaseController;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
@@ -77,6 +78,7 @@ public class OrderRegionController extends BaseController {
 
 
     private final OrderRegionService orderRegionService;
+    private final ProjectService projectService;
     private final PurseService purseService;
     private final StructureService structureService;
     private final QuoteService quoteService;
@@ -91,6 +93,7 @@ public class OrderRegionController extends BaseController {
         this.emailSender = serviceFactory.getEmailSender();
         this.mail = serviceFactory.getConfig().getMail();
         this.orderRegionService = serviceFactory.getOrderRegionService();
+        this.projectService = serviceFactory.getProjectService();
         this.purseService = serviceFactory.getPurseService();
         this.quoteService = serviceFactory.getQuoteService();
         this.structureService = serviceFactory.getStructureService();
@@ -105,23 +108,24 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(ValidatorRight.class)
     public void createAdminOrder(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user ->
-                RequestUtils.bodyToJson(request, orders -> {
-                    if (orders.isEmpty()) {
+                RequestUtils.bodyToJson(request, pathPrefix + Field.CREATEADMINORDER, orders -> {
+                    List<OrderRegionEquipmentModel> ordersRegionList = IModelHelper.toList(orders.getJsonArray(Field.ORDERS, new JsonArray()), OrderRegionEquipmentModel.class);
+                    if (orders.isEmpty() || ordersRegionList.isEmpty()) {
                         noContent(request);
                         return;
                     }
-                    List<OrderRegionEquipmentModel> ordersRegionList = IModelHelper.toList(orders.getJsonArray(Field.ORDERS), OrderRegionEquipmentModel.class);
                     List<String> idsEquipment = ordersRegionList.stream()
                             .map(OrderRegionEquipmentModel::getEquipmentKey)
                             .collect(Collectors.toList());
                     List<Integer> IdOrderClientEquipmentList = ordersRegionList.stream()
                             .map(OrderRegionEquipmentModel::getIdOrderClientEquipment)
                             .collect(Collectors.toList());
+                    String commentProject = orders.getString(Field.COMMENT);
 
                     searchByIds(idsEquipment, null)
                             .compose(equipments -> {
                                 setPriceToOrder(orders.getJsonArray(Field.ORDERS), equipments);
-                                return createProject(user);
+                                return createProject(user, commentProject);
                             })
                             .compose(projectModel -> createOrdersRegion(user, orders.getJsonArray(Field.ORDERS), projectModel.getId()))
                             .onSuccess(resJsonObject -> {
@@ -134,12 +138,12 @@ public class OrderRegionController extends BaseController {
         );
     }
 
-    private Future<ProjectModel> createProject(UserInfos userInfos) {
+    private Future<ProjectModel> createProject(UserInfos userInfos, String commentProject) {
         Promise<ProjectModel> promise = Promise.promise();
 
-        orderRegionService.getLastProject()
+        projectService.getLastProject()
                 .compose(lastProject -> {
-                    String last = lastProject.getString(Field.TITLE);
+                    String last = lastProject.getTitle();
                     String date = LocalDate.now().format(DateTimeFormatter.ofPattern(DateHelper.DAY_FORMAT_DASH));
                     String title = "Commande_" + date;
                     if (last != null && title.equals(last.substring(0, last.length() - 2))) {
@@ -147,7 +151,7 @@ public class OrderRegionController extends BaseController {
                     } else {
                         title += "_1";
                     }
-                    return orderRegionService.createProject(title);
+                    return projectService.createProject(new ProjectModel().setTitle(title).setComment(commentProject));
                 })
                 .onSuccess(projectModel -> {
                     promise.complete(projectModel);
@@ -305,37 +309,39 @@ public class OrderRegionController extends BaseController {
     @ResourceFilter(AdministratorRight.class)
     public void addOrders(HttpServerRequest request) throws IOException {
         Scanner sc = getOrderLDE();
-        orderRegionService.getLastProject(lastProject -> {
-            if (lastProject.isRight()) {
-                int part = 0;
-                search_All(getEquipmentEvent -> {
-                    if (getEquipmentEvent.isRight()) {
-                        ok(request);
-                        orderRegionService.getAllIdsStatus()
-                                .onSuccess(idsStatusResult -> {
-                                    List<Integer> idsStatus = new ArrayList<>();
-                                    for (Object id : idsStatusResult) {
-                                        idsStatus.add(((JsonObject) id).getInteger(Field.ID));
-                                    }
-                                    // Store all orders by key (uai + date) and value (id project) No duplicate
-                                    HashMap<String, Integer> projetMap = new HashMap<>();
-                                    historicCommand(request, sc, lastProject.right().getValue().getInteger(Field.ID),
-                                            getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
-                                })
-                                .onFailure(error -> {
-                                    badRequest(request);
-                                    log.error(String.format("[CRRE%s::addOrders] An error occurred when getting all ids by status %s", this.getClass().getSimpleName(), error.getMessage()));
-                                });
-                    } else {
-                        badRequest(request);
-                        log.error("search_All failed", getEquipmentEvent.left().getValue());
-                    }
+        projectService.getLastProject()
+                .onSuccess(lastProject -> {
+                    int part = 0;
+                    search_All(getEquipmentEvent -> {
+                        if (getEquipmentEvent.isRight()) {
+                            ok(request);
+                            orderRegionService.getAllIdsStatus()
+                                    .onSuccess(idsStatusResult -> {
+                                        List<Integer> idsStatus = new ArrayList<>();
+                                        for (Object id : idsStatusResult) {
+                                            idsStatus.add(((JsonObject) id).getInteger(Field.ID));
+                                        }
+                                        // Store all orders by key (uai + date) and value (id project) No duplicate
+                                        HashMap<String, Integer> projetMap = new HashMap<>();
+                                        historicCommand(request, sc, lastProject.getId(),
+                                                getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
+                                    })
+                                    .onFailure(error -> {
+                                        badRequest(request);
+                                        log.error(String.format("[CRRE%s::addOrders] An error occurred when getting all ids by status %s", this.getClass().getSimpleName(), error.getMessage()));
+                                    });
+                        } else {
+                            badRequest(request);
+                            log.error(String.format("[CRRE@%s::addOrders] Failed to get items %s",
+                                    this.getClass().getSimpleName(), getEquipmentEvent.left().getValue()));
+                        }
+                    });
+                })
+                .onFailure(error -> {
+                    badRequest(request);
+                    log.error(String.format("[CRRE@%s::addOrders] Failed to add orders %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
                 });
-            } else {
-                badRequest(request);
-                log.error("getLastProject failed", lastProject.left().getValue());
-            }
-        });
     }
 
     /**
@@ -531,9 +537,8 @@ public class OrderRegionController extends BaseController {
                     int j;
                     JsonArray structures = structureEvent.right().getValue();
                     for (int i = 0; i < ordersRegion.size(); i++) {
-                        Future<JsonObject> createProjectFuture = Future.future();
                         if (finalProject_size > i) {
-                            futures.add(createProjectFuture);
+                            futures.add(projectService.createProject(new ProjectModel().setTitle(I18n.getInstance().translate("crre.lde.orders", getHost(request), I18n.acceptLanguage(request)))));
                         }
                         checkEquip = true;
                         checkEtab = true;
@@ -560,9 +565,6 @@ public class OrderRegionController extends BaseController {
                                 checkEtab = false;
                             }
                             k++;
-                        }
-                        if (finalProject_size > i) {
-                            orderRegionService.createProject("Commandes LDE", handlerJsonObject(createProjectFuture));
                         }
                     }
                     CompositeFuture.all(futures).onComplete(event2 -> {

@@ -1,5 +1,6 @@
 package fr.openent.crre.service.impl;
 
+import fr.openent.crre.model.ProjectModel;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.unit.Async;
@@ -35,6 +36,27 @@ public class DefaultProjectServiceTest {
     }
 
     @Test
+    public void createProjectTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "INSERT INTO null.project ( title, comment ) VALUES ( ?,? )  RETURNING *;";
+        String expectedParams = "[\"title\",\"comment\"]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultProjectService.createProject(new ProjectModel().setTitle("title").setComment("comment"));
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
     public void getOrderClientEquipmentListTest(TestContext ctx) {
         Async async = ctx.async();
 
@@ -53,6 +75,27 @@ public class DefaultProjectServiceTest {
         }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
         this.defaultProjectService.getProjectList(Arrays.asList(591, 220, 75));
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void getLastProjectTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "SELECT p.* FROM  null.project p  ORDER BY p.id DESC LIMIT 1";
+        String expectedParams = "[]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultProjectService.getLastProject();
 
         async.awaitSuccess(10000);
     }

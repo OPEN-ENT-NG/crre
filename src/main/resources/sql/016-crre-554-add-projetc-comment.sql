@@ -1,0 +1,1 @@
+ALTER TABLE crre.project ADD COLUMN comment text;
