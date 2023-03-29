@@ -1,7 +1,7 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
@@ -11,7 +11,7 @@ public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentMod
     private String creationDate;
     private Integer idCampaign;
     private String idStructure;
-    private OrderClientEquipmentType status;
+    private OrderStatus status;
     private String equipmentKey;
     private String causeStatus;
     private String comment;
@@ -28,7 +28,7 @@ public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentMod
         this.creationDate = jsonObject.getString(Field.CREATION_DATE);
         this.idCampaign = jsonObject.getInteger(Field.ID_CAMPAIGN);
         this.idStructure = jsonObject.getString(Field.ID_STRUCTURE);
-        this.status = OrderClientEquipmentType.getValue(jsonObject.getString(Field.STATUS));
+        this.status = OrderStatus.getValue(jsonObject.getString(Field.STATUS));
         this.equipmentKey = jsonObject.getString(Field.EQUIPMENT_KEY);
         this.causeStatus = jsonObject.getString(Field.CAUSE_STATUS);
         this.comment = jsonObject.getString(Field.COMMENT);
@@ -87,11 +87,11 @@ public class OrderClientEquipmentModel implements IModel<OrderClientEquipmentMod
         return this;
     }
 
-    public OrderClientEquipmentType getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public OrderClientEquipmentModel setStatus(OrderClientEquipmentType status) {
+    public OrderClientEquipmentModel setStatus(OrderStatus status) {
         this.status = status;
         return this;
     }

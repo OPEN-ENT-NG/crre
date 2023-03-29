@@ -1,7 +1,7 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.core.enums.OrderByProjectFieldEnum;
 import fr.openent.crre.helpers.JsonHelper;
 import io.vertx.core.json.JsonArray;
@@ -19,7 +19,7 @@ public class FilterModel implements IModel<FilterModel> {
     private List<Integer> idsCampaign;
     private List<String> idsStructure;
     private Integer page;
-    private List<OrderClientEquipmentType> status;
+    private List<OrderStatus> status;
     private String searchingText;
     private List<String> distributors;
     private List<String> editors;
@@ -65,7 +65,7 @@ public class FilterModel implements IModel<FilterModel> {
         this.status = jsonObject.getJsonArray(Field.STATUS, new JsonArray()).stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
-                .map(OrderClientEquipmentType::getValue)
+                .map(OrderStatus::getValue)
                 .collect(Collectors.toList());
 
         this.orderBy = OrderByProjectFieldEnum.getValue(jsonObject.getString(Field.ORDERBY, ""), OrderByProjectFieldEnum.DATE);
@@ -108,7 +108,7 @@ public class FilterModel implements IModel<FilterModel> {
         }
         if (this.status != null && !this.status.isEmpty()) {
             filterModelJson.put(Field.STATUS, new JsonArray(this.status.stream()
-                    .map(OrderClientEquipmentType::toString)
+                    .map(OrderStatus::toString)
                     .collect(Collectors.toList())));
         }
 
@@ -116,7 +116,7 @@ public class FilterModel implements IModel<FilterModel> {
     }
 
     public boolean isOld() {
-        return this.status.contains(OrderClientEquipmentType.SENT);
+        return this.status.contains(OrderStatus.SENT);
     }
 
 
@@ -138,11 +138,11 @@ public class FilterModel implements IModel<FilterModel> {
         return this;
     }
 
-    public List<OrderClientEquipmentType> getStatus() {
+    public List<OrderStatus> getStatus() {
         return status;
     }
 
-    public FilterModel setStatus(List<OrderClientEquipmentType> status) {
+    public FilterModel setStatus(List<OrderStatus> status) {
         this.status = status;
         return this;
     }

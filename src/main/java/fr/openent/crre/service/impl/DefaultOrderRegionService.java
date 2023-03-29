@@ -2,7 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
@@ -114,7 +114,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (!filters.getStatus().isEmpty()) {
             JsonArray statusArray = new JsonArray(filters.getStatus()
                     .stream()
-                    .map(OrderClientEquipmentType::toString)
+                    .map(OrderStatus::toString)
                     .collect(Collectors.toList()));
             values.addAll(statusArray).addAll(new JsonArray(idsProject)).addAll(statusArray).addAll(new JsonArray(idsProject));
         } else {
@@ -177,7 +177,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderClientEquipmentType status) {
+    public Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderStatus status) {
         Promise<List<OrderRegionEquipmentModel>> promise = Promise.promise();
 
         String query = "SELECT * FROM " + Crre.crreSchema + ".\"order-region-equipment\"" +
@@ -293,7 +293,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (!filters.getStatus().isEmpty()) {
             JsonArray statusArray = new JsonArray(filters.getStatus()
                     .stream()
-                    .map(OrderClientEquipmentType::toString)
+                    .map(OrderStatus::toString)
                     .collect(Collectors.toList()));
             values.addAll(statusArray).addAll(statusArray);
         }

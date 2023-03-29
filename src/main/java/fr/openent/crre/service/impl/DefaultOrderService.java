@@ -2,7 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.core.enums.database.sql.OrderClientEquipmentTableField;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
@@ -263,13 +263,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderClientEquipmentType orderClientEquipmentType) {
+    public Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderStatus orderStatus) {
         Promise<List<OrderClientEquipmentModel>> promise = Promise.promise();
 
         JsonArray values = new JsonArray();
         String query = "UPDATE " + Crre.crreSchema + ".order_client_equipment SET status = ? WHERE id IN " +
                 Sql.listPrepared(orderClientEquipmentIdList) + " RETURNING *";
-        values.add(orderClientEquipmentType.toString());
+        values.add(orderStatus.toString());
         values.addAll(new JsonArray(orderClientEquipmentIdList));
 
         String errorMessage = String.format("[CRRE@%s::updateStatus] Fail to update status", this.getClass().getSimpleName());

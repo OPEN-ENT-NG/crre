@@ -2,7 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.constants.NotifyField;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.model.*;
 import fr.openent.crre.model.neo4j.Neo4jUserModel;
 import fr.openent.crre.service.NotificationService;
@@ -38,20 +38,20 @@ public class DefaultNotificationService implements NotificationService {
 
     private boolean isBasketOrderIsComplete(Map.Entry<?, List<OrderClientEquipmentModel>> basketIdOrderClientEquipmentEntry) {
         return basketIdOrderClientEquipmentEntry.getValue().stream().noneMatch(orderClientEquipmentModel ->
-                OrderClientEquipmentType.WAITING.equals(orderClientEquipmentModel.getStatus()) || OrderClientEquipmentType.RESUBMIT.equals(orderClientEquipmentModel.getStatus()));
+                OrderStatus.WAITING.equals(orderClientEquipmentModel.getStatus()) || OrderStatus.RESUBMIT.equals(orderClientEquipmentModel.getStatus()));
     }
 
     private boolean isProjectIsNew(Map.Entry<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListEntry) {
         return projectModelListEntry.getValue().stream().allMatch(orderRegionEquipmentModel ->
-                OrderClientEquipmentType.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()));
+                OrderStatus.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()));
     }
 
     private boolean isProjectIsComplete(Map.Entry<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListEntry) {
         return projectModelListEntry.getValue().stream().noneMatch(orderRegionEquipmentModel ->
-                OrderClientEquipmentType.WAITING.toString().equals(orderRegionEquipmentModel.getStatus()) ||
-                        OrderClientEquipmentType.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()) ||
-                        OrderClientEquipmentType.RESUBMIT.toString().equals(orderRegionEquipmentModel.getStatus()) ||
-                        OrderClientEquipmentType.WAITING_FOR_ACCEPTANCE.toString().equals(orderRegionEquipmentModel.getStatus()));
+                OrderStatus.WAITING.toString().equals(orderRegionEquipmentModel.getStatus()) ||
+                        OrderStatus.IN_PROGRESS.toString().equals(orderRegionEquipmentModel.getStatus()) ||
+                        OrderStatus.RESUBMIT.toString().equals(orderRegionEquipmentModel.getStatus()) ||
+                        OrderStatus.WAITING_FOR_ACCEPTANCE.toString().equals(orderRegionEquipmentModel.getStatus()));
     }
 
     @Override
@@ -60,7 +60,7 @@ public class DefaultNotificationService implements NotificationService {
         List<Integer> projectIdList = new ArrayList<>();
         Map<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListMapAll = new HashMap<>();
         Map<ProjectModel, List<OrderRegionEquipmentModel>> projectModelListMap = new HashMap<>();
-        this.serviceFactory.getOrderRegionService().getOrdersRegionByStatus(OrderClientEquipmentType.IN_PROGRESS)
+        this.serviceFactory.getOrderRegionService().getOrdersRegionByStatus(OrderStatus.IN_PROGRESS)
                 .compose(idsStatusResult -> {
                     List<Integer> idsStatus = idsStatusResult
                             .stream()
@@ -372,9 +372,9 @@ public class DefaultNotificationService implements NotificationService {
     }
 
     private String getI18nStatusToValidator(List<OrderRegionEquipmentModel> orderRegionEquipmentModels) {
-        boolean containsSend = orderRegionEquipmentModels.stream().anyMatch(orderRegionEquipmentModel -> OrderClientEquipmentType.SENT.toString().equals(orderRegionEquipmentModel.getStatus()));
-        boolean containsValid = orderRegionEquipmentModels.stream().anyMatch(orderRegionEquipmentModel -> OrderClientEquipmentType.VALID.toString().equals(orderRegionEquipmentModel.getStatus()));
-        boolean containsRejected = orderRegionEquipmentModels.stream().anyMatch(orderRegionEquipmentModel -> OrderClientEquipmentType.REJECTED.toString().equals(orderRegionEquipmentModel.getStatus()));
+        boolean containsSend = orderRegionEquipmentModels.stream().anyMatch(orderRegionEquipmentModel -> OrderStatus.SENT.toString().equals(orderRegionEquipmentModel.getStatus()));
+        boolean containsValid = orderRegionEquipmentModels.stream().anyMatch(orderRegionEquipmentModel -> OrderStatus.VALID.toString().equals(orderRegionEquipmentModel.getStatus()));
+        boolean containsRejected = orderRegionEquipmentModels.stream().anyMatch(orderRegionEquipmentModel -> OrderStatus.REJECTED.toString().equals(orderRegionEquipmentModel.getStatus()));
 
         if (containsSend && !containsRejected && !containsValid) {
             return "crre.timeline.validator.send";
@@ -390,9 +390,9 @@ public class DefaultNotificationService implements NotificationService {
     }
 
     private String getI18nStatusToPrescriber(List<OrderClientEquipmentModel> orderClientEquipmentModels) {
-        boolean containsInProgress = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.IN_PROGRESS.equals(orderClientEquipmentModel.getStatus()));
-        boolean containsRejected = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.REJECTED.equals(orderClientEquipmentModel.getStatus()));
-        boolean containsSend = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.SENT.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsInProgress = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderStatus.IN_PROGRESS.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsRejected = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderStatus.REJECTED.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsSend = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderStatus.SENT.equals(orderClientEquipmentModel.getStatus()));
 
         if (!containsRejected && (containsInProgress || containsSend) ) {
             return "crre.timeline.prescriptor.in.progress";
@@ -404,9 +404,9 @@ public class DefaultNotificationService implements NotificationService {
     }
 
     private String getI18nStatusToPrescriberRegion(List<OrderClientEquipmentModel> orderClientEquipmentModels) {
-        boolean containsSend = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.SENT.equals(orderClientEquipmentModel.getStatus()));
-        boolean containsValid = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.VALID.equals(orderClientEquipmentModel.getStatus()));
-        boolean containsRejected = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderClientEquipmentType.REJECTED.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsSend = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderStatus.SENT.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsValid = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderStatus.VALID.equals(orderClientEquipmentModel.getStatus()));
+        boolean containsRejected = orderClientEquipmentModels.stream().anyMatch(orderClientEquipmentModel -> OrderStatus.REJECTED.equals(orderClientEquipmentModel.getStatus()));
 
         if (containsSend && !containsRejected && !containsValid) {
             return "crre.timeline.prescriptor.region.send";
