@@ -28,7 +28,7 @@
   "crre.contracts": "Marchés",
   "crre.logs": "Logs",
   "crre.statistics": "Statistiques",
-  "crre.orders.validations.waiting": "Traiter les demandes en attente",
+  "crre.orders.validations.waiting": "Tableau des demandes",
   "crre.orders.validate.historic": "Historique des demandes",
   "crre.order": "Bon de commande",
   "crre.order.number": "Numéro de Commande",
@@ -848,5 +848,7 @@
   "crre.admin.valid.comment.prescriptor": "Commentaire prescripteur: ",
   "crre.admin.valid.comment.validator": "Commentaire valideur: ",
   "crre.validator.confirm.optionnel": "(Optionnel)",
+  "crre.orders.sent.library": "Demandes envoyées au libraire",
+  "crre.orders.waiting.validation": "Demandes soumises à validation",
   "crre.lde.orders": "Commandes LDE"
 }

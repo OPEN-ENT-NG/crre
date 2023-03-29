@@ -284,7 +284,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             }
             if ($scope.basket.equipment.type === 'articlenumerique') {
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
-                    $scope.offerStudent, $scope.offerTeacher);
+                    $scope.offerStudent, $scope.offerTeacher, true);
                 await computeTechnos();
             }
             window.scrollTo(0, 0);
