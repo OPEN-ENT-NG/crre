@@ -1,8 +1,6 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;

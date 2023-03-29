@@ -1,6 +1,6 @@
 package fr.openent.crre.service;
 
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.model.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -29,7 +29,7 @@ public interface OrderRegionService {
 
     Future<List<OrderRegionEquipmentModel>> getOrdersRegionById(List<Integer> orderRegionEquipmentIdList);
 
-    Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderClientEquipmentType status);
+    Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderStatus status);
 
     Future<List<OrderRegionComplex>> getOrdersRegionById(List<Integer> idsOrder, Boolean oldTable);
 

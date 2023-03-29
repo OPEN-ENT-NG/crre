@@ -3,7 +3,7 @@ package fr.openent.crre.controllers;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.CreditTypeEnum;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.*;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
@@ -797,7 +797,7 @@ public class OrderRegionController extends BaseController {
                 body -> UserUtils.getUserInfos(eb, request,
                         userInfos -> {
                             try {
-                                OrderClientEquipmentType status = OrderClientEquipmentType.getValue(request.getParam(Field.STATUS));
+                                OrderStatus status = OrderStatus.getValue(request.getParam(Field.STATUS));
                                 if (status == null) {
                                     badRequest(request, "Unknown status");
                                     return;
@@ -830,7 +830,7 @@ public class OrderRegionController extends BaseController {
                         }));
     }
 
-    private Future<Void> sequentialUpdateOrderStatus(UserInfos userInfos, OrderClientEquipmentType status, List<Integer> ids, String justification) {
+    private Future<Void> sequentialUpdateOrderStatus(UserInfos userInfos, OrderStatus status, List<Integer> ids, String justification) {
         Promise<Void> promise = Promise.promise();
         List<List<Integer>> partitionOfIdList = ListUtils.partition(ids, 2500);
 
@@ -853,14 +853,14 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private TransactionElement getUpdateTransactionElement(OrderClientEquipmentType status, OrderRegionEquipmentModel orderRegion, Double price) {
-        if (OrderClientEquipmentType.REJECTED.toString().equalsIgnoreCase(orderRegion.getStatus())) {
-            if (status.equals(OrderClientEquipmentType.VALID)) {
+    private TransactionElement getUpdateTransactionElement(OrderStatus status, OrderRegionEquipmentModel orderRegion, Double price) {
+        if (OrderStatus.REJECTED.toString().equalsIgnoreCase(orderRegion.getStatus())) {
+            if (status.equals(OrderStatus.VALID)) {
                 return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", price, orderRegion.getUseCredit());
             } else {
                 return null;
             }
-        } else if (status.equals(OrderClientEquipmentType.REJECTED)) {
+        } else if (status.equals(OrderStatus.REJECTED)) {
             return getUpdatePurseTransaction(orderRegion.getIdStructure(), "+", price, orderRegion.getUseCredit());
         }
 
@@ -964,8 +964,8 @@ public class OrderRegionController extends BaseController {
                 .compose(orderRegionComplexList -> {
                     orderRegionComplexList = orderRegionComplexList.stream()
                             .filter(orderRegionComplex ->
-                                    !OrderClientEquipmentType.SENT.toString().equals(orderRegionComplex.getOrderRegion().getStatus()) &&
-                                            !OrderClientEquipmentType.DONE.toString().equals(orderRegionComplex.getOrderRegion().getStatus()))
+                                    !OrderStatus.SENT.toString().equals(orderRegionComplex.getOrderRegion().getStatus()) &&
+                                            !OrderStatus.DONE.toString().equals(orderRegionComplex.getOrderRegion().getStatus()))
                             .collect(Collectors.toList());
                     JsonArray structures = structureFuture.result();
                     JsonArray equipments = equipmentsFuture.result();
@@ -982,7 +982,7 @@ public class OrderRegionController extends BaseController {
                     if (orderRegionClean.size() > 0) {
                         List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
                                 .map(OrderRegionBeautifyModel::getOrderRegion)
-                                .map(orderRegion -> this.getUpdateTransactionElement(OrderClientEquipmentType.VALID, orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
+                                .map(orderRegion -> this.getUpdateTransactionElement(OrderStatus.VALID, orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
                                 .collect(Collectors.toList());
 
                         String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());

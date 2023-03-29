@@ -195,6 +195,23 @@ public class Field {
     public static final String ID_STRUCTURE_LIST = "id_structure_list";
     public static final String LISTUSERWORKFLOW = "listUserWorkflow";
     public static final String CREATEADMINORDER = "createAdminOrder";
+    public static final String PRESCRIBER_VALIDATION_DATE = "prescriber_validation_date";
+    public static final String PRESCRIBER_ID = "prescriber_id";
+    public static final String VALIDATOR_ID = "validator_id";
+    public static final String VALIDATOR_NAME = "validator_name";
+    public static final String VALIDATOR_VALIDATION_DATE = "validator_validation_date";
+    public static final String EQUIPMENT_NAME = "equipment_name";
+    public static final String EQUIPMENT_IMAGE = "equipment_image";
+    public static final String EQUIPMENT_PRICE = "equipment_price";
+    public static final String EQUIPMENT_GRADE = "equipment_grade";
+    public static final String EQUIPMENT_EDITOR = "equipment_editor";
+    public static final String EQUIPMENT_DIFFUSOR = "equipment_diffusor";
+    public static final String EQUIPMENT_FORMAT = "equipment_format";
+    public static final String EQUIPMENT_TVA5 = "equipment_tva5";
+    public static final String EQUIPMENT_TVA20 = "equipment_tva20";
+    public static final String EQUIPMENT_PRICEHT = "equipment_priceht";
+    public static final String OFFERS = "offers";
+    public static final String TOTAL_FREE = "total_free";
 
     private Field() {
         throw new IllegalStateException("Utility class");

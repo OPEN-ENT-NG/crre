@@ -1,6 +1,6 @@
 package fr.openent.crre.service;
 
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -58,7 +58,7 @@ public interface OrderService {
 
     void updateComment(Integer id, String comment, Handler<Either<String, JsonObject>> eitherHandler);
 
-    Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderClientEquipmentType orderClientEquipmentType);
+    Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderStatus orderStatus);
 
     Future<JsonArray> search(String query, Map<String, List<String>> filters, String idStructure, List<String> equipementIdList,
                              Integer idCampaign, String startDate, String endDate, Integer page);

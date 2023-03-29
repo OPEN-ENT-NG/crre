@@ -1,7 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -570,7 +570,7 @@ public class OrderController extends ControllerHelper {
     @ResourceFilter(UpdateStatusRight.class)
     public void updateStatus(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "orderIds", orders -> {
-            OrderClientEquipmentType status = OrderClientEquipmentType.getValue(request.params().get(Field.STATUS));
+            OrderStatus status = OrderStatus.getValue(request.params().get(Field.STATUS));
             if (status != null) {
                 List<Integer> orderClientEquipmentIdList = orders.getJsonArray(Field.IDS)
                         .stream()

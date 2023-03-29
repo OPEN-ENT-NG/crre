@@ -2,7 +2,7 @@ package fr.openent.crre.core.enums;
 
 import java.util.Arrays;
 
-public enum OrderClientEquipmentType {
+public enum OrderStatus {
     WAITING("WAITING"),
     REJECTED("REJECTED"),
     IN_PROGRESS("IN_PROGRESS"),
@@ -15,12 +15,12 @@ public enum OrderClientEquipmentType {
 
     private final String value;
 
-    OrderClientEquipmentType(String value) {
+    OrderStatus(String value) {
         this.value = value;
     }
 
-    public static OrderClientEquipmentType getValue(String value) {
-        return Arrays.stream(OrderClientEquipmentType.values())
+    public static OrderStatus getValue(String value) {
+        return Arrays.stream(OrderStatus.values())
                 .filter(orderClientEquipmentType -> orderClientEquipmentType.value.equalsIgnoreCase(value))
                 .findFirst()
                 .orElse(null);

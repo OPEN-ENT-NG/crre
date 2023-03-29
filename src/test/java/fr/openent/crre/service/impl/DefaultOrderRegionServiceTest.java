@@ -1,7 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.enums.OrderClientEquipmentType;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.model.FilterItemModel;
 import fr.openent.crre.model.FilterModel;
 import fr.openent.crre.model.TransactionElement;
@@ -212,7 +212,7 @@ public class DefaultOrderRegionServiceTest {
     public void getAllOrderRegionByProjectTest(TestContext ctx) {
         Async async = ctx.async();
         FilterModel filterModel = new FilterModel();
-        filterModel.setStatus(Arrays.asList(OrderClientEquipmentType.SENT, OrderClientEquipmentType.RESUBMIT));
+        filterModel.setStatus(Arrays.asList(OrderStatus.SENT, OrderStatus.RESUBMIT));
 
         String expectedQuery = "SELECT to_jsonb(campaign.*) campaign, campaign.name AS campaign_name, campaign.use_credit," +
                 " p.title AS title, to_jsonb(o_c_e.*) AS order_parent, bo.name AS basket_name, bo.id AS basket_id, st.seconde," +
@@ -267,7 +267,7 @@ public class DefaultOrderRegionServiceTest {
         FilterModel filterModel = new FilterModel();
         filterModel.setStartDate("startDate");
         filterModel.setEndDate("endDate");
-        filterModel.setStatus(Arrays.asList(OrderClientEquipmentType.SENT, OrderClientEquipmentType.RESUBMIT));
+        filterModel.setStatus(Arrays.asList(OrderStatus.SENT, OrderStatus.RESUBMIT));
         filterModel.setSearchingText("searching text");
         filterModel.setIdsStructure(Arrays.asList("idStructure1", "idStructure2"));
         filterModel.setRenew(true);
