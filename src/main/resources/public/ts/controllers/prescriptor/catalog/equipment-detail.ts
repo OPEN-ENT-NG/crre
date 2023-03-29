@@ -77,6 +77,7 @@ export const equipmentController = ng.controller('equipmentController',
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                     $scope.offerStudent, $scope.offerTeacher);
             }
+            Utils.safeApply($scope);
         };
 
         $scope.amountDecrease = async () => {
@@ -86,6 +87,7 @@ export const equipmentController = ng.controller('equipmentController',
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                     $scope.offerStudent, $scope.offerTeacher);
             }
+            Utils.safeApply($scope);
         };
 
         $scope.isOffer = () => {
