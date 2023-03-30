@@ -14,6 +14,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             page: 0
         };
         $scope.filterOrder = null as ValidatorOrderWaitingFilter;
+        $scope.ordersDuplicated = [] as OrderClient[];
+
         const init = async () => {
             $scope.loading = true;
             $scope.users = [] as Array<UserModel>;
@@ -233,8 +235,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         };
 
-        $scope.openLightboxConfirmOrder = () => {
-            template.open('confirmOrder.lightbox', 'validator/order-confirm');
+        $scope.openLightboxConfirmOrder = async () => {
+            $scope.allOrdersSelected ?  $scope.ordersDuplicated = $scope.allOrderCLient.all : $scope.ordersClient.selected;
+            await template.open('confirmOrder.lightbox', 'validator/order-confirm');
             $scope.display.lightbox.confirmOrder = true;
         };
 
