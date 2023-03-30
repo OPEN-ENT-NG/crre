@@ -142,7 +142,7 @@ public class OrderController extends ControllerHelper {
             String idStructure = request.getParam("idStructure");
             String startDate = request.getParam("startDate");
             String endDate = request.getParam("endDate");
-            Integer page = OrderUtils.formatPage(request);
+            Integer page = request.getParam(Field.PAGE) == null ? null : Integer.parseInt(request.params().get(Field.PAGE));
             orderService.listOrder(status, idStructure, page, startDate, endDate, arrayResponseHandler(request));
         } else {
             badRequest(request);

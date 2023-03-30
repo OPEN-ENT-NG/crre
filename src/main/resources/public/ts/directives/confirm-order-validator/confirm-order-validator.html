@@ -9,6 +9,19 @@
         <i18n>crre.validator.confirm.order.message.2</i18n>
         <textarea style="resize: none;" ng-model="vm.comment" auto-height placeholder="[[vm.lang.translate('crre.validator.confirm.optionnel')]]"></textarea>
       </div>
+      <div class="margin-top-20" ng-if="vm.ordersDuplicated.length > 0">
+        <i18n>crre.duplicate.order.info</i18n>
+        <ul>
+          <li ng-repeat="order in vm.ordersDuplicated" class="crre-display-duplicate-basket">
+                <span tooltip="[[order.name]]"
+                      class="basketTruncate flex-one"> [[order.name]]</span>
+            <span ng-bind="vm.getQuantity(order.amount)"></span>
+          </li>
+        </ul>
+        <div class="warning">
+          <i18n>crre.duplicate.order.warning</i18n>
+        </div>
+      </div>
     </div>
   </div>
 
