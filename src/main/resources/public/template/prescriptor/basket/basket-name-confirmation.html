@@ -1,12 +1,13 @@
 <div ng-if="campaign.purse_enabled" class="confirm-order" ng-controller="basketConfirmationNameController">
-    <div class="row">
+    <div class="flex-row f-column gap-16">
         <h1>
             <i18n>crre.validate.basket</i18n>
         </h1>
-        <i18n>CAMPAIGN</i18n>
-        : <span>[[campaign.name]]</span>
+        <div>
+            <i18n>CAMPAIGN</i18n>: <span>[[campaign.name]]</span>
+        </div>
         <form>
-            <label>
+        <label>
                 <i18n>crre.basket.name</i18n>
             </label>
             <input type="text" ng-model="basket_name"/>
