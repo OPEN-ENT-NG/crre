@@ -212,6 +212,17 @@ public class Field {
     public static final String EQUIPMENT_PRICEHT = "equipment_priceht";
     public static final String OFFERS = "offers";
     public static final String TOTAL_FREE = "total_free";
+    public static final String ACCESSIBLE = "accessible";
+    public static final String PURSE_ENABLED = "purse_enabled";
+    public static final String PRIORITY_ENABLED = "priority_enabled";
+    public static final String PRIORITY_FIELD = "priority_field";
+    public static final String CATALOG = "catalog";
+    public static final String START_DATE = "start_date";
+    public static final String END_DATE = "end_date";
+    public static final String AUTOMATIC_CLOSE = "automatic_close";
+    public static final String ORDER_CLIENT_ID = "order_client_id";
+    public static final String ORDER_REGION_ID = "order_region_id";
+    public static final String GROUPS = "groups";
 
     private Field() {
         throw new IllegalStateException("Utility class");
