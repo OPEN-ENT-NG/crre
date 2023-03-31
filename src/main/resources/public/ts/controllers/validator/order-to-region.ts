@@ -256,11 +256,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                     project.creation_date = firstOrder.creation_date.toString();
                     Utils.setStatus(project, project.orders);
                     project.campaign_name = firstOrder.campaign_name;
-                    const structure = $scope.structures.all.find(structure => firstOrder.id_structure == structure.id);
-                    if (structure) {
-                        project.uai = structure.uai;
-                        project.structure_name = structure.name;
-                    }
                     project.expanded = project.orders.length <= 500;
                     projectWithOrders.all.push(project);
                 }

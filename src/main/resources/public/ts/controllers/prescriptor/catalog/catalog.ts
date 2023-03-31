@@ -1,5 +1,6 @@
 import {_, ng} from 'entcore';
 import {Equipment, Filter, Filters, Utils} from '../../../model';
+import {FilterCatalogItem} from "../../../model/FiltersCatalogItem";
 
 export const catalogController = ng.controller('catalogController',
     ['$scope', async ($scope) => {
@@ -8,44 +9,41 @@ export const catalogController = ng.controller('catalogController',
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
             $scope.loading = true;
-            $scope.equipments.consumables = [{name: 'Consommable'}, {name: 'Manuel'}, {name: 'Ressource'}];
-            $scope.equipments.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
-            $scope.equipments.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}];
-            $scope.equipments.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
 
             $scope.catalog = {
-                subjects: [],
-                public: [],
+                disciplines: [],
+                targets: [],
                 grades: [],
-                levels: [],
-                docsType: [],
+                classes: [],
+                catalogs: [],
                 editors: [],
                 consumables: [],
                 pros: [],
             };
 
             $scope.preFilter = {
-                subjects: [],
-                public: [],
+                disciplines: [],
+                targets: [],
                 grades: [],
-                levels: [],
-                docsType: [],
+                classes: [],
+                catalogs: [],
                 editors: [],
                 consumables: [],
                 pros: [],
             }
             $scope.correlationFilterES = {
-                keys: ["docsType", "subjects", "grades", "levels", "editors", "consumables", "pros", "public"],
-                subjects: 'disciplines.libelle',
-                public: 'publiccible',
+                keys: ["catalogs", "disciplines", "grades", "classes", "editors", "consumables", "pros", "targets"],
+                disciplines: 'disciplines.libelle',
+                targets: 'targetscible',
                 grades: 'niveaux.libelle',
-                levels: 'classes.libelle',
-                docsType: '_index',
+                classes: 'classes.libelle',
+                catalogs: '_index',
                 editors: 'editeur',
                 consumables: 'conso',
                 pros: 'pro',
             };
             initFilters();
+            await  $scope.initStructures();
         }
 
         function initFilters() {
@@ -79,10 +77,10 @@ export const catalogController = ng.controller('catalogController',
                     $scope.filters.all.push(catalogFilter);
                 } else if ($scope.campaign.catalog.split("|").includes("articlepapier")) {
                     let catalogFilter = new Filter();
-                    if ($scope.correlationFilterES.keys.indexOf('levels') != -1) {
-                        $scope.correlationFilterES.keys.splice($scope.correlationFilterES.keys.indexOf('levels'), 1);
-                        delete $scope.equipments.levels;
-                        delete $scope.catalog.levels;
+                    if ($scope.correlationFilterES.keys.indexOf('classes') != -1) {
+                        $scope.correlationFilterES.keys.splice($scope.correlationFilterES.keys.indexOf('classes'), 1);
+                        delete $scope.equipments.filters.classes;
+                        delete $scope.catalog.classes;
                         Utils.safeApply($scope);
                     }
                     catalogFilter.name = "_index";
@@ -93,7 +91,7 @@ export const catalogController = ng.controller('catalogController',
                 $scope.correlationFilterES.keys.forEach(key => {
                     let arrayFilter = [];
                     $scope.filters.all.filter(t => t.name == $scope.correlationFilterES[key]).forEach(filter => {
-                        arrayFilter.push($scope.equipments[key].find(c => c.name == filter.value));
+                        arrayFilter.push($scope.equipments.filters[key].find(c => c.name == filter.value));
                     });
                     $scope.catalog[key] = arrayFilter;
                 });
@@ -115,29 +113,36 @@ export const catalogController = ng.controller('catalogController',
                     $scope.preFilter["consumables"].push(true);
                 }
                 if (splitCatalog.includes("articlepapier") || splitCatalog.includes("articlenumerique")) {
-                    $scope.preFilter["docsType"].push(true);
+                    $scope.preFilter["catalogs"].push(true);
                 }
                 if (splitCatalog.includes("pro") || splitCatalog.includes("lgt")) {
                     $scope.preFilter["pros"].push(true);
                 }
             }
-            Utils.safeApply($scope);
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
+            if($scope.isAdministratorInStructure($scope.current.structure)) {
+                $scope.equipments.filters.consumables = [{name: 'Consommable'}, {name: 'Manuel'}, {name: 'Ressource'}] as FilterCatalogItem[];
+                $scope.equipments.filters.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
+                $scope.equipments.filters.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}] as FilterCatalogItem[];
+                $scope.equipments.filters.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
+            }
+
+            Utils.safeApply($scope);
             if (!!$scope.campaign.catalog) {
                 if (!$scope.campaign.catalog.split("|").includes("consommable")) {
                     let arrayDocs = [];
-                    arrayDocs.push($scope.equipments.docsType.find(c => c.name = $scope.campaign.catalog.split("|")[0]));
-                    $scope.catalog["docsType"] = arrayDocs;
+                    arrayDocs.push($scope.equipments.filters.catalogs.find(c => c.name = $scope.campaign.catalog.split("|")[0]));
+                    $scope.catalog["catalogs"] = arrayDocs;
                 }
                 if ($scope.campaign.catalog.split("|").includes("consommable")) {
                     let arrayConso = [];
-                    arrayConso.push($scope.equipments.consumables.find(c => c.name = "Consommable"));
+                    arrayConso.push($scope.equipments.filters.consumables.find(c => c.name = "Consommable"));
                     $scope.catalog["consumables"] = arrayConso;
                 }
                 if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
                     let arrayPro = [];
                     let type = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
-                    arrayPro.push($scope.equipments.pros.find(t => t.name = type));
+                    arrayPro.push($scope.equipments.filters.pros.find(t => t.name = type));
                     $scope.catalog["pros"] = arrayPro;
                 }
             }
@@ -165,7 +170,7 @@ export const catalogController = ng.controller('catalogController',
             $scope.$emit('eventEmitedQuery', $scope.query.word);
             $scope.$emit('eventEmitedFilters', $scope.filters);
             if ($scope.filters.all.length > 0) {
-                await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
+                    await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
                 Utils.safeApply($scope);
             } else {
                 await $scope.equipments.getFilterEquipments($scope.query.word);
@@ -185,7 +190,7 @@ export const catalogController = ng.controller('catalogController',
 
         $scope.getSortName = (key): string => {
             let sortName = "name";
-            if (key == "editors" || key == "subjects") {
+            if (key == "editors" || key == "disciplines") {
                 sortName = "nameFormat"
             }
             return sortName;
