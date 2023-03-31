@@ -8,6 +8,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -226,12 +227,20 @@ public final class Logging {
     }
 
     private static JsonArray addParams(String context, String action, String item, JsonObject object, UserInfos user) {
+        String itemString;
+        if (item == null) {
+            itemString = null;
+        } else if (item.contains("id = ")) {
+            itemString = item;
+        } else {
+            itemString = ("id = " + item);
+        }
         JsonArray params = new JsonArray()
                 .add(user.getUserId())
                 .add(user.getUsername())
                 .add(action)
                 .add(context)
-                .add(item.contains("id = ") ? item : ("id = " + item));
+                .add(itemString);
         if (object != null) {
             params.add(object);
         }

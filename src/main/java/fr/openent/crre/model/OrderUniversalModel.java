@@ -9,23 +9,23 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Integer id;
     private Integer amount;
     private String prescriberValidationDate;
-    private Integer idCampaign;
+    private Campaign campaign;
     private String idStructure;
     private OrderStatus status;
     private String equipmentKey;
     private String causeStatus;
     private String comment;
     private String prescriberId;
-    private Integer idBasket;
+    private BasketOrder basket;
     private Boolean reassort;
     private String validatorId;
     private String validatorName;
     private String validatorValidationDate;
     private String modificationDate;
-    private Integer idProject;
+    private ProjectModel project;
     private String equipmentName;
     private String equipmentImage;
-    private Integer equipmentPrice;
+    private Double equipmentPrice;
     private String equipmentGrade;
     private String equipmentEditor;
     private String equipmentDiffusor;
@@ -36,6 +36,9 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private String offers;
     private Integer totalFree;
 
+    private Integer orderClientId;
+    private Integer orderRegionId;
+
     public OrderUniversalModel() {
     }
 
@@ -43,23 +46,20 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.id = jsonObject.getInteger(Field.ID);
         this.amount = jsonObject.getInteger(Field.AMOUNT);
         this.prescriberValidationDate = jsonObject.getString(Field.PRESCRIBER_VALIDATION_DATE);
-        this.idCampaign = jsonObject.getInteger(Field.ID_CAMPAIGN);
         this.idStructure = jsonObject.getString(Field.ID_STRUCTURE);
         this.status = OrderStatus.getValue(jsonObject.getString(Field.STATUS));
         this.equipmentKey = jsonObject.getString(Field.EQUIPMENT_KEY);
         this.causeStatus = jsonObject.getString(Field.CAUSE_STATUS);
         this.comment = jsonObject.getString(Field.COMMENT);
         this.prescriberId = jsonObject.getString(Field.PRESCRIBER_ID);
-        this.idBasket = jsonObject.getInteger(Field.ID_BASKET);
         this.reassort = jsonObject.getBoolean(Field.REASSORT);
         this.validatorId = jsonObject.getString(Field.VALIDATOR_ID);
         this.validatorName = jsonObject.getString(Field.VALIDATOR_NAME);
         this.validatorValidationDate = jsonObject.getString(Field.VALIDATOR_VALIDATION_DATE);
         this.modificationDate = jsonObject.getString(Field.MODIFICATION_DATE);
-        this.idProject = jsonObject.getInteger(Field.ID_PROJECT);
         this.equipmentName = jsonObject.getString(Field.EQUIPMENT_NAME);
         this.equipmentImage = jsonObject.getString(Field.EQUIPMENT_IMAGE);
-        this.equipmentPrice = jsonObject.getInteger(Field.EQUIPMENT_PRICE);
+        this.equipmentPrice = jsonObject.getDouble(Field.EQUIPMENT_PRICE);
         this.equipmentGrade = jsonObject.getString(Field.EQUIPMENT_GRADE);
         this.equipmentEditor = jsonObject.getString(Field.EQUIPMENT_EDITOR);
         this.equipmentDiffusor = jsonObject.getString(Field.EQUIPMENT_DIFFUSOR);
@@ -69,7 +69,27 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.equipmentPriceht = jsonObject.getDouble(Field.EQUIPMENT_PRICEHT);
         this.offers = jsonObject.getString(Field.OFFERS);
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
+        if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof JsonObject) {
+            this.project = IModelHelper.toModel(jsonObject.getJsonObject(Field.PROJECT), ProjectModel.class);
+        }
+        if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof String) {
+            this.project = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class);
+        }
+        if (jsonObject.getValue(Field.BASKET) != null && jsonObject.getValue(Field.BASKET) instanceof JsonObject) {
+            this.basket = IModelHelper.toModel(jsonObject.getJsonObject(Field.BASKET), BasketOrder.class);
+        }
+        if (jsonObject.getValue(Field.BASKET) != null && jsonObject.getValue(Field.BASKET) instanceof String) {
+            this.basket = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.BASKET)), BasketOrder.class);
+        }
+        if (jsonObject.getValue(Field.CAMPAIGN) != null && jsonObject.getValue(Field.CAMPAIGN) instanceof JsonObject) {
+            this.campaign = IModelHelper.toModel(jsonObject.getJsonObject(Field.CAMPAIGN), Campaign.class);
+        }
+        if (jsonObject.getValue(Field.CAMPAIGN) != null && jsonObject.getValue(Field.CAMPAIGN) instanceof String) {
+            this.campaign = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.CAMPAIGN)), Campaign.class);
+        }
 
+        this.orderClientId = jsonObject.getInteger(Field.ORDER_CLIENT_ID);
+        this.orderRegionId = jsonObject.getInteger(Field.ORDER_REGION_ID);
     }
 
     @Override
@@ -101,15 +121,6 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public OrderUniversalModel setPrescriberValidationDate(String prescriberValidationDate) {
         this.prescriberValidationDate = prescriberValidationDate;
-        return this;
-    }
-
-    public Integer getIdCampaign() {
-        return idCampaign;
-    }
-
-    public OrderUniversalModel setIdCampaign(Integer idCampaign) {
-        this.idCampaign = idCampaign;
         return this;
     }
 
@@ -167,15 +178,6 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         return this;
     }
 
-    public Integer getIdBasket() {
-        return idBasket;
-    }
-
-    public OrderUniversalModel setIdBasket(Integer idBasket) {
-        this.idBasket = idBasket;
-        return this;
-    }
-
     public Boolean getReassort() {
         return reassort;
     }
@@ -221,15 +223,6 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         return this;
     }
 
-    public Integer getIdProject() {
-        return idProject;
-    }
-
-    public OrderUniversalModel setIdProject(Integer idProject) {
-        this.idProject = idProject;
-        return this;
-    }
-
     public String getEquipmentName() {
         return equipmentName;
     }
@@ -248,11 +241,11 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         return this;
     }
 
-    public Integer getEquipmentPrice() {
+    public Double getEquipmentPrice() {
         return equipmentPrice;
     }
 
-    public OrderUniversalModel setEquipmentPrice(Integer equipmentPrice) {
+    public OrderUniversalModel setEquipmentPrice(Double equipmentPrice) {
         this.equipmentPrice = equipmentPrice;
         return this;
     }
@@ -335,6 +328,51 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public OrderUniversalModel setTotalFree(Integer totalFree) {
         this.totalFree = totalFree;
+        return this;
+    }
+
+    public Campaign getCampaign() {
+        return campaign;
+    }
+
+    public OrderUniversalModel setCampaign(Campaign campaign) {
+        this.campaign = campaign;
+        return this;
+    }
+
+    public BasketOrder getBasket() {
+        return basket;
+    }
+
+    public OrderUniversalModel setBasket(BasketOrder basket) {
+        this.basket = basket;
+        return this;
+    }
+
+    public ProjectModel getProject() {
+        return project;
+    }
+
+    public OrderUniversalModel setProject(ProjectModel project) {
+        this.project = project;
+        return this;
+    }
+
+    public Integer getOrderClientId() {
+        return orderClientId;
+    }
+
+    public OrderUniversalModel setOrderClientId(Integer orderClientId) {
+        this.orderClientId = orderClientId;
+        return this;
+    }
+
+    public Integer getOrderRegionId() {
+        return orderRegionId;
+    }
+
+    public OrderUniversalModel setOrderRegionId(Integer orderRegionId) {
+        this.orderRegionId = orderRegionId;
         return this;
     }
 }

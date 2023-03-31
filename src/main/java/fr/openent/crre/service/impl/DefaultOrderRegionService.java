@@ -878,7 +878,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
 
     private void getUniqueTypeCatalogue(OrderRegionBeautifyModel orderRegionBeautifyModel, OrderRegionComplex order, JsonObject equipment) {
         if (equipment.getString("typeCatalogue", "").contains("|")) {
-            if (order.getCampaign().getUse_credit() != null && order.getCampaign().getUse_credit().contains("consumable")) {
+            if (order.getCampaign().getUseCredit() != null && order.getCampaign().getUseCredit().contains("consumable")) {
                 if ("articlepapier".equals(equipment.getString("type"))) {
                     orderRegionBeautifyModel.setTypeCatalogue("AO_IDF_CONSO");
                 } else {
