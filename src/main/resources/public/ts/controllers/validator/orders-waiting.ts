@@ -136,7 +136,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.$broadcast(INFINITE_SCROLL_EVENTER.RESUME);
             $scope.loading = true;
             let ordersToCreate = new OrdersRegion();
-            let ordersToRemove = new OrdersClient();
             let totalPrice = 0;
             let totalPriceConsumable = 0;
             let totalAmount = 0;
@@ -144,8 +143,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let ordersToReformat;
 
             if ($scope.allOrdersSelected || $scope.ordersClient.selectedElements.length === 0) {
-                await ordersToRemove.searchOrder($scope.current.structure.id, $scope.filterOrder, true);
-                ordersToRemove.forEach(order => {
+                await $scope.ordersClient.searchOrder($scope.current.structure.id, $scope.filterOrder, true);
+                $scope.ordersClient.forEach(order => {
                     if (order.campaign.accessible) {
                         const orderRegion = new OrderRegion();
                         orderRegion.createFromOrderClient(order);
@@ -154,7 +153,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 })
             } else {
                 ordersToReformat = $scope.ordersClient.selectedElements;
-                const __ret = reformatOrders(ordersToReformat, ordersToCreate, ordersToRemove,
+                const __ret = reformatOrders(ordersToReformat, ordersToCreate, $scope.ordersClient,
                     totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable);
                 totalPrice = __ret.totalPrice;
                 totalPriceConsumable = __ret.totalPriceConsumable
@@ -175,7 +174,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                         await init();
                     } else {
                         await $scope.updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable,
-                            ordersToRemove, ordersToReformat.length);
+                            $scope.ordersClient, ordersToReformat.length);
                         await $scope.getAllFilters();
                         $scope.allOrdersSelected = false;
                         $scope.loadNextPage();
@@ -236,7 +235,12 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.openLightboxConfirmOrder = async () => {
-            $scope.allOrdersSelected ?  $scope.ordersDuplicated = $scope.allOrderCLient.all : $scope.ordersClient.selected;
+            if($scope.allOrdersSelected) {
+                await $scope.allOrderCLient.searchOrder($scope.current.structure.id, $scope.filterOrder, true);
+                $scope.ordersDuplicated = $scope.allOrderCLient.all
+            } else {
+                $scope.ordersClient.selected;
+            }
             await template.open('confirmOrder.lightbox', 'validator/order-confirm');
             $scope.display.lightbox.confirmOrder = true;
         };
