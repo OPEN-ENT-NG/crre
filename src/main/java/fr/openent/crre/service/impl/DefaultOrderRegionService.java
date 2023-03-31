@@ -578,10 +578,9 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         for (OrderRegionBeautifyModel order : orderRegionBeautifyList) {
             if (order.getOrderRegion().getIdProject() != null) {
                 query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
-                String creation_date = DateHelper.convertStringDateToOtherFormat(order.getOrderRegion().getCreationDate(), DateHelper.DAY_FORMAT_DASH, DateHelper.SQL_FORMAT);
                 params.add(order.getOrderRegion().getIdOrderClientEquipment())
                         .add(order.getOrderRegion().getAmount())
-                        .add(creation_date)
+                        .add(order.getOrderRegion().getCreationDate())
                         .add(order.getOrderRegion().getOwnerId())
                         .add("SENT")
                         .add(order.getOrderRegion().getEquipmentKey());

@@ -7,6 +7,7 @@ import fr.openent.crre.core.enums.database.sql.OrderClientEquipmentTableField;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.OrderClientEquipmentModel;
+import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.service.OrderService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -35,40 +36,61 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId, String startDate,
-                          String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
+    public Future<List<OrderUniversalModel>> listOrder(List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
+                                                 List<String> basketIdList, String startDate, String endDate, List<OrderStatus> orderStatusList) {
+        Promise<List<OrderUniversalModel>> promise = Promise.promise();
         JsonArray values = new JsonArray();
-        String selectOld = oldTable ? ", oe.equipment_image as image, oe.equipment_name as name, s.name as status_name, " +
-                "s.id as status_id, oe.equipment_price as price, oe.equipment_format as type, oe.offers as offers " : "";
-        String query = "SELECT oe.equipment_key, oe.id as id, oe.comment, oe.amount,to_char(oe.creation_date, 'dd-MM-yyyy') creation_date, " +
-                "oe.id_campaign, oe.status, oe.cause_status, oe.id_structure, oe.id_basket, oe.reassort, " +
-                "ore.status as region_status " + selectOld +
-                "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oe " : ".order_client_equipment  oe ") +
-                "LEFT JOIN " + Crre.crreSchema + ((oldTable) ? ".\"order-region-equipment-old\"" : ".\"order-region-equipment\"") + " AS ore ON ore.id_order_client_equipment = oe.id " +
-                "LEFT JOIN " + Crre.crreSchema + ".campaign ON oe.id_campaign = campaign.id ";
+        String query = "SELECT " + getOrderUniversalSelector() + ", to_jsonb(basket.*) basket, to_jsonb(campaign.*) campaign, to_jsonb(project.*) project" +
+                " FROM crre.order_universal as o_u" +
+                " LEFT JOIN crre.basket_order basket on o_u.id_basket = basket.id" +
+                " LEFT JOIN crre.project project on o_u.id_project = project.id" +
+                " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign";
 
-        if (oldTable) {
-            query += "LEFT JOIN  " + Crre.crreSchema + ".status AS s ON s.id = ore.id_status ";
+        query += " WHERE prescriber_validation_date BETWEEN ? AND ? ";
+        values.add(startDate).add(endDate);
+
+        if (campaignIdList != null && !campaignIdList.isEmpty()) {
+            query += "AND campaign.id IN " + Sql.listPrepared(campaignIdList) + " ";
+            values.addAll(new JsonArray(campaignIdList));
         }
 
-        query += "WHERE oe.creation_date BETWEEN ? AND ? AND oe.id_campaign = ? AND oe.id_structure = ? ";
-        values.add(startDate).add(endDate).add(idCampaign).add(idStructure);
-
-        if (user != null) {
-            query += "AND user_id = ? ";
-            values.add(user.getUserId());
+        if (structureIdList != null && !structureIdList.isEmpty()) {
+            query += "AND o_u.id_structure IN " + Sql.listPrepared(structureIdList) + " ";
+            values.addAll(new JsonArray(structureIdList));
         }
-        if (ordersId != null) {
-            query += "AND oe.id_basket IN " + Sql.listPrepared(ordersId.toArray());
-            for (String id : ordersId) {
-                values.add(Integer.parseInt(id));
-            }
+
+        if (basketIdList != null && !basketIdList.isEmpty()) {
+            query += "AND basket.id IN " + Sql.listPrepared(basketIdList) + " ";
+            values.addAll(new JsonArray(basketIdList));
         }
-        query += " GROUP BY ( oe.id, campaign.priority_enabled, ore.status" + ((oldTable) ? ", s.name, s.id) " : ") ") +
-                "ORDER BY oe.creation_date ASC";
 
-        sql.prepared(query, values, SqlResult.validResultHandler(handler));
+        if (userIdList != null && !userIdList.isEmpty()) {
+            query += "AND o_u.prescriber_id IN " + Sql.listPrepared(userIdList) + " ";
+            values.addAll(new JsonArray(userIdList));
+        }
 
+        if (orderStatusList != null && !orderStatusList.isEmpty()) {
+            query += "AND o_u.status IN " + Sql.listPrepared(orderStatusList) + " ";
+            values.addAll(new JsonArray(orderStatusList.stream().map(Enum::name).collect(Collectors.toList())));
+        }
+
+        query += "ORDER BY o_u.prescriber_validation_date ASC";
+
+        String errorMessage = String.format("[CRRE@%s::listOrder] Fail to list order", this.getClass().getSimpleName());
+        sql.prepared(query, values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderUniversalModel.class, errorMessage)));
+
+        return promise.future();
+    }
+
+    private String getOrderUniversalSelector() {
+        return "o_u.amount as amount, o_u.prescriber_validation_date as prescriber_validation_date, o_u.id_campaign as id_campaign, o_u.id_structure as id_structure," +
+                " o_u.status as status, o_u.equipment_key as equipment_key, o_u.cause_status as cause_status, o_u.comment as comment," +
+                " o_u.prescriber_id as prescriber_id, o_u.id_basket as id_basket, o_u.reassort as reassort, o_u.validator_id as validator_id," +
+                " o_u.validator_name as validator_name, o_u.validator_validation_date as validator_validation_date, o_u.modification_date as modification_date," +
+                " o_u.id_project as id_project," +
+                " o_u.equipment_name, o_u.equipment_image, o_u.equipment_price, o_u.equipment_grade," +
+                " o_u.equipment_editor, o_u.equipment_diffusor, o_u.equipment_format, o_u.equipment_tva5, o_u.equipment_tva20," +
+                " o_u.equipment_priceht, o_u.offers, o_u.total_free, o_u.order_client_id, o_u.order_region_id";
     }
 
     @Override
