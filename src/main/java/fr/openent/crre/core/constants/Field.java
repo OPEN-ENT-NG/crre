@@ -212,6 +212,12 @@ public class Field {
     public static final String EQUIPMENT_PRICEHT = "equipment_priceht";
     public static final String OFFERS = "offers";
     public static final String TOTAL_FREE = "total_free";
+    public static final String DEVICES = "devices";
+    public static final String TECHNOS = "technos";
+    public static final String TECHNOLOGY = "technologie";
+    public static final String RESOURCES = "resources";
+    public static final String FILTERS = "filters";
+    public static final String EMPTY_FILTER = "emptyFilter";
     public static final String ACCESSIBLE = "accessible";
     public static final String PURSE_ENABLED = "purse_enabled";
     public static final String PRIORITY_ENABLED = "priority_enabled";

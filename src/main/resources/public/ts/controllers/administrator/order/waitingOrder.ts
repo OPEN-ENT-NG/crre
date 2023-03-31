@@ -68,8 +68,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.equipments.loading = true;
             $scope.equipments.all = [];
             Utils.safeApply($scope);
-            await $scope.equipments.sync(true, undefined, undefined);
-            $scope.equipments.docsType.forEach((item) => item.getValue = () => item.name);
+            await $scope.equipments.getFilters();
             await $scope.launchSearch($scope.display.projects, false, false);
             Utils.safeApply($scope);
         };
@@ -316,11 +315,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                     project.creation_date = firstOrder.creation_date.toString();
                     Utils.setStatus(project, project.orders);
                     project.campaign_name = firstOrder.campaign_name;
-                    const structure = $scope.structures.all.find(structure => firstOrder.id_structure == structure.id);
-                    if (structure) {
-                        project.uai = structure.uai;
-                        project.structure_name = structure.name;
-                    }
                     project.expanded = project.orders.length <= 500;
                     projectWithOrders.all.push(project);
                 }
