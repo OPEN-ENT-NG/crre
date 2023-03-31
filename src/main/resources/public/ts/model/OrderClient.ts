@@ -17,6 +17,7 @@ import {
 import http, {AxiosPromise, AxiosResponse} from 'axios';
 import {IUserModel, UserModel} from "./UserModel";
 import {ValidatorOrderWaitingFilter} from "./ValidatorOrderWaitingFilter";
+import {OrderUniversal} from "./OrderUniversal";
 
 declare let window: any;
 
@@ -58,6 +59,7 @@ export class OrderClient implements Order {
     offers: Offers;
     type: string;
     displayStatus: boolean;
+    projectTitle: string;
 
     constructor() {
         this.typeOrder = "client";
@@ -139,11 +141,31 @@ export class OrdersClient extends Selection<OrderClient> {
         }
         let params : string = '?';
         ordersId.map((order) => {
-            params += `order_id=${order}&`;
+            params += `basket_id=${order}&`;
         });
         let url : string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}${dateParam}old=${old}`;
         const {data} = await http.get(url);
-        let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, data);
+        let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderUniversal, data)
+            .map((order: OrderUniversal) => {
+                let orderMap =  new OrderClient();
+                orderMap.amount = order.amount;
+                orderMap.cause_status = order.cause_status;
+                orderMap.comment = order.comment;
+                orderMap.creation_date = order.prescriber_validation_date;
+                orderMap.equipment_key = Number.parseInt(order.equipment_key);
+                orderMap.id = order.orderClientId || order.orderRegionId;
+                orderMap.id_basket = (!order.basket) ? null : order.basket.id;
+                orderMap.id_campaign = (!order.campaign) ? null : order.campaign.id;
+                orderMap.id_structure = order.id_structure;
+                orderMap.image = order.equipment_image;
+                orderMap.name = order.equipment_name;
+                orderMap.price = order.equipment_price;
+                orderMap.reassort = order.reassort;
+                orderMap.status = order.status;
+                orderMap.projectTitle = (!order.project) ? null : order.project.title;
+                return orderMap;
+            });
+
         for (let order of newOrderClient) {
             if (order.price !== 0.0) {
                 order.price = parseFloat(order.price.toString());

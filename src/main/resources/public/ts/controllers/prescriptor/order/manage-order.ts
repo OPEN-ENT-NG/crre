@@ -110,15 +110,15 @@ export const manageOrderController = ng.controller('manageOrderController',
         };
 
         $scope.synchroMyBaskets = async (newData : BasketsOrders) : Promise<void> => {
-            let ordersId : Array<number> = [];
-            newData.forEach((order) => {
-                ordersId.push(order.id);
+            let basketId : Array<number> = [];
+            newData.forEach((basket: BasketOrder) => {
+                basketId.push(basket.id);
             });
             $scope.newOrders = new OrdersClient();
             let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter();
             filter.startDate = $scope.filtersDate.startDate;
             filter.endDate = $scope.filtersDate.endDate;
-            await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, ordersId, $scope.filter.isOld);
+            await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, basketId, $scope.filter.isOld);
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);
         };

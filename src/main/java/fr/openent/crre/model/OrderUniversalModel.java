@@ -59,7 +59,9 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.modificationDate = jsonObject.getString(Field.MODIFICATION_DATE);
         this.equipmentName = jsonObject.getString(Field.EQUIPMENT_NAME);
         this.equipmentImage = jsonObject.getString(Field.EQUIPMENT_IMAGE);
-        this.equipmentPrice = jsonObject.getDouble(Field.EQUIPMENT_PRICE);
+        if (jsonObject.getValue(Field.EQUIPMENT_PRICE) != null) {
+            this.equipmentPrice = Double.parseDouble(jsonObject.getValue(Field.EQUIPMENT_PRICE).toString());
+        }
         this.equipmentGrade = jsonObject.getString(Field.EQUIPMENT_GRADE);
         this.equipmentEditor = jsonObject.getString(Field.EQUIPMENT_EDITOR);
         this.equipmentDiffusor = jsonObject.getString(Field.EQUIPMENT_DIFFUSOR);

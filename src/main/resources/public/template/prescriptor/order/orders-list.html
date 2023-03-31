@@ -22,6 +22,7 @@
             <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>Total</i18n> <i18n>crre.Licences.tab</i18n></div></td>
             <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
+            <td><div class="smallTabElem"><i18n>crre.request</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>crre.operation.status</i18n></div></td>
         </tr>
         </thead>
@@ -38,6 +39,7 @@
             <td><div class="tabElem order basketTruncate breakLines" style="-webkit-box-orient: vertical;" tooltip="[[basket.name]]">[[basket.name]]</div></td>
             <td><div class="smallTabElem center">[[basket.amount]]</div></td>
             <td><div class="smallTabElem center">[[basket.amount]]</div></td>
+            <td><div class="tabElem"></div></td>
             <td><div class="tabElem"></div></td>
             <td>
                 <div class="smallTabElem center ellipsis status" tooltip="[[basket.status]]">
@@ -85,6 +87,7 @@
                      ng-class="{ellipsis:!show.comment}"
                      ng-click="show.comment.fullDisplay = !show.comment.fullDisplay"> [[order.comment || '-']]</div>
             </td>
+            <td><div class="tabElem">[[order.projectTitle]]</div></td>
             <td>
                 <div class="justification-rejected cell"
                      tooltip="[[order.cause_status]]"
@@ -109,6 +112,7 @@
             <td><span class="arrowOffer">[[offer.name]]</span></td>
             <td class="center">[[offer.value]]</td>
             <td class="center">[[lang.translate('crre.FREE')]]</td>
+            <td></td>
             <td></td>
             <td></td>
         </tr>

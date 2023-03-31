@@ -2,6 +2,7 @@ package fr.openent.crre.service;
 
 import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.model.OrderClientEquipmentModel;
+import fr.openent.crre.model.OrderUniversalModel;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -14,16 +15,17 @@ import java.util.Map;
 
 public interface OrderService {
     /**
-     * List orders of a campaign and a structure in data base
-     * @param idCampaign campaign identifier
-     * @param idStructure structure identifier
-     * @param user user who is connected
-     * @param startDate
-     * @param endDate
-     * @param handler function handler returning data
+     * List orders of a campaign and a structure in database
+     * @param campaignIdList list of campaign id filter
+     * @param structureIdList list of structure id filter
+     * @param userIdList list of user id filter
+     * @param basketIdList list of basket id filter
+     * @param startDate start date filter
+     * @param endDate end date filter
+     * @return a future of result
      */
-    void listOrder(Integer idCampaign, String idStructure, UserInfos user, List<String> ordersId,
-                   String startDate, String endDate, boolean oldTable,  Handler<Either<String, JsonArray>> handler);
+    Future<List<OrderUniversalModel>> listOrder(List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
+                                                List<String> basketIdList, String startDate, String endDate, List<OrderStatus> orderStatusList);
 
     void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> catalog);
 

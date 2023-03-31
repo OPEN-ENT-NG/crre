@@ -1,11 +1,8 @@
 package fr.openent.crre.service.impl;
 
-import fr.openent.crre.Crre;
-import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.core.enums.OrderStatus;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -125,5 +122,40 @@ public class DefaultOrderServiceTest {
 
         this.defaultOrderService.search("query_search", filters, "idStructure", equipementIdList, 18, "startDate", "endDate", 9);
         async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void listOrderTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "SELECT o_u.amount as amount, o_u.prescriber_validation_date as prescriber_validation_date," +
+                " o_u.id_campaign as id_campaign, o_u.id_structure as id_structure, o_u.status as status, o_u.equipment_key" +
+                " as equipment_key, o_u.cause_status as cause_status, o_u.comment as comment, o_u.prescriber_id as prescriber_id," +
+                " o_u.id_basket as id_basket, o_u.reassort as reassort, o_u.validator_id as validator_id, o_u.validator_name" +
+                " as validator_name, o_u.validator_validation_date as validator_validation_date, o_u.modification_date" +
+                " as modification_date, o_u.id_project as id_project, o_u.equipment_name, o_u.equipment_image," +
+                " o_u.equipment_price, o_u.equipment_grade, o_u.equipment_editor, o_u.equipment_diffusor, o_u.equipment_format," +
+                " o_u.equipment_tva5, o_u.equipment_tva20, o_u.equipment_priceht, o_u.offers, o_u.total_free, o_u.order_client_id," +
+                " o_u.order_region_id, to_jsonb(basket.*) basket, to_jsonb(campaign.*) campaign, to_jsonb(project.*)" +
+                " project FROM crre.order_universal as o_u LEFT JOIN crre.basket_order basket on o_u.id_basket = basket.id" +
+                " LEFT JOIN crre.project project on o_u.id_project = project.id" +
+                " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign WHERE prescriber_validation_date" +
+                " BETWEEN ? AND ? AND campaign.id IN (?,?) AND o_u.id_structure IN (?,?) AND basket.id IN (?,?)" +
+                " AND o_u.prescriber_id IN (?,?) AND o_u.status IN (?,?) ORDER BY o_u.prescriber_validation_date ASC";
+        String expectedParams = "[\"startDate\",\"endDate\",185,56,\"structureId1\",\"structureId2\",\"basketId1\"," +
+                "\"basketId2\",\"userId1\",\"userId2\",\"SENT\",\"DONE\"]";
+
+        PowerMockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+            return null;
+        }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        this.defaultOrderService.listOrder(Arrays.asList(185, 56), Arrays.asList("structureId1", "structureId2"),
+                Arrays.asList("userId1", "userId2"), Arrays.asList("basketId1", "basketId2"), "startDate", "endDate",
+                Arrays.asList(OrderStatus.SENT, OrderStatus.DONE));
     }
 }

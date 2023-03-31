@@ -229,6 +229,7 @@ public class Field {
     public static final String ORDER_CLIENT_ID = "order_client_id";
     public static final String ORDER_REGION_ID = "order_region_id";
     public static final String GROUPS = "groups";
+    public static final String URLCOUVERTURE = "urlcouverture";
 
     private Field() {
         throw new IllegalStateException("Utility class");

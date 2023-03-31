@@ -70,5 +70,5 @@ SELECT oceo.amount            as amount,
        oceo.id                as order_client_id,
        oreo.id                as order_region_id
 FROM crre.order_client_equipment_old as oceo
-         LEFT JOIN crre."order-region-equipment-old" as oreo on oreo.id = oreo.id_order_client_equipment
+         LEFT JOIN crre."order-region-equipment-old" as oreo on oceo.id = oreo.id_order_client_equipment
     );

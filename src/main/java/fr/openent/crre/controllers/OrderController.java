@@ -2,11 +2,13 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderStatus;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.model.OrderRegionBeautifyModel;
+import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
@@ -69,62 +71,61 @@ public class OrderController extends ControllerHelper {
     public void listMyOrdersByCampaignByStructure(final HttpServerRequest request) {
         try {
             UserUtils.getUserInfos(eb, request, user -> {
-                Integer idCampaign = Integer.parseInt(request.params().get("idCampaign"));
-                String idStructure = request.params().get("idStructure");
-                List<String> ordersIds = request.params().getAll("order_id");
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
-                boolean old = Boolean.parseBoolean(request.getParam("old"));
+                Integer idCampaign = Integer.parseInt(request.params().get(Field.IDCAMPAIGN));
+                String idStructure = request.params().get(Field.IDSTRUCTURE);
+                List<String> basketIdList = request.params().getAll(Field.BASKET_ID);
+                String startDate = request.getParam(Field.STARTDATE);
+                String endDate = request.getParam(Field.ENDDATE);
+                Boolean old = request.getParam(Field.OLD) == null ? null : Boolean.parseBoolean(request.getParam(Field.OLD));
 
-                orderService.listOrder(idCampaign, idStructure, user, ordersIds, startDate, endDate, old, orders -> {
-                    if (orders.isRight()) {
-                        if (!old) {
-                            List<String> idEquipments = new ArrayList<>();
-                            for (Object order : orders.right().getValue()) {
-                                String idEquipment = ((JsonObject) order).getString("equipment_key");
-                                idEquipments.add(idEquipment);
-                            }
-                            searchByIds(idEquipments, null, equipments -> {
-                                if (equipments.isRight()) {
-                                    for (Object order : orders.right().getValue()) {
-                                        JsonObject orderJson = ((JsonObject) order);
-                                        String idEquipment = orderJson.getString("equipment_key");
-                                        JsonArray equipmentsArray = equipments.right().getValue();
-                                        if (equipmentsArray.size() > 0) {
-                                            for (int i = 0; i < equipmentsArray.size(); i++) {
-                                                JsonObject equipment = equipmentsArray.getJsonObject(i);
-                                                if (idEquipment.equals(equipment.getString(Field.ID))) {
-                                                    orderJson.put("price", getPriceTtc(equipment).getDouble("priceTTC"));
-                                                    orderJson.put(Field.NAME, equipment.getString("titre"));
-                                                    orderJson.put("image", equipment.getString("urlcouverture"));
-                                                    break;
-                                                } else if (equipmentsArray.size() - 1 == i) {
-                                                    orderJson.put("price", 0.0);
-                                                    orderJson.put(Field.NAME, "Manuel introuvable dans le catalogue");
-                                                    orderJson.put("image", "/crre/public/img/pages-default.png");
-                                                }
-                                            }
+                List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values())
+                        .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
+                                .collect(Collectors.toList());
+
+                Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(Collections.singletonList(idCampaign),
+                        Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), basketIdList,
+                        startDate, endDate, orderStatusList);
+
+                orderFuture
+                        .compose(orderUniversalModels -> {
+                            List<String> idEquipments = orderUniversalModels.stream()
+                                    .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
+                                    .map(OrderUniversalModel::getEquipmentKey)
+                                    .distinct()
+                                    .collect(Collectors.toList());
+                            return searchByIds(idEquipments, null);
+                        })
+                        .onSuccess(equipmentsArray -> {
+                            List<JsonObject> equipmentList = equipmentsArray.stream()
+                                    .filter(JsonObject.class::isInstance)
+                                    .map(JsonObject.class::cast)
+                                    .collect(Collectors.toList());
+                            List<OrderUniversalModel> orderUniversalModels = orderFuture.result();
+                            orderUniversalModels.stream()
+                                    .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
+                                    .forEach(orderUniversalModel -> {
+                                        JsonObject equipmentJson = equipmentList.stream()
+                                                .filter(equipment -> orderUniversalModel.getEquipmentKey().equals(equipment.getString(Field.ID)))
+                                                .findFirst()
+                                                .orElse(null);
+                                        if (equipmentJson != null) {
+                                            orderUniversalModel.setEquipmentPrice(getPriceTtc(equipmentJson).getDouble(Field.PRICETTC));
+                                            orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
+                                            orderUniversalModel.setEquipmentImage(equipmentJson.getString(Field.URLCOUVERTURE));
                                         } else {
-                                            orderJson.put("price", 0.0);
-                                            orderJson.put(Field.NAME, "Manuel introuvable dans le catalogue");
-                                            orderJson.put("image", "/crre/public/img/pages-default.png");
+                                            orderUniversalModel.setEquipmentPrice(0.0);
+                                            orderUniversalModel.setEquipmentName("Manuel introuvable dans le catalogue");
+                                            orderUniversalModel.setEquipmentImage("/crre/public/img/pages-default.png");
                                         }
-                                    }
-                                    final JsonArray finalResult = orders.right().getValue();
-                                    renderJson(request, finalResult);
-                                } else {
-                                    badRequest(request);
-                                    log.error("Problem when catching equipments");
-                                }
-                            });
-                        } else {
-                            renderJson(request, orders.right().getValue());
-                        }
-                    } else {
-                        badRequest(request);
-                        log.error("Problem when catching orders");
-                    }
-                });
+                                    });
+
+                            renderJson(request, IModelHelper.toJsonArray(orderUniversalModels));
+                        })
+                        .onFailure(error -> {
+                            badRequest(request);
+                            log.error(String.format("[CRRE@%s::listMyOrdersByCampaignByStructure] Problem when catching orders %s",
+                                    this.getClass().getSimpleName(), error.getMessage()));
+                        });
             });
         } catch (ClassCastException e) {
             log.error("An error occured when casting campaign id ", e);
