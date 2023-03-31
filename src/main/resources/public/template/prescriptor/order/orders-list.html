@@ -21,9 +21,9 @@
             <td><div class="tabElem"><i18n>crre.basket</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>number.articles</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>Total</i18n> <i18n>crre.Licences.tab</i18n></div></td>
-            <td><div class="smallTabElem"><i18n>comment</i18n></div></td>
             <td><div class="smallTabElem"><i18n>crre.request</i18n></div></td>
             <td><div class="smallTabElem center"><i18n>crre.operation.status</i18n></div></td>
+            <td><div class="smallTabElem"></div></td>
         </tr>
         </thead>
         <tbody ng-repeat="basket in displayedBasketsOrders | orderBy:sort.order.type:sort.order.reverse">
@@ -40,13 +40,13 @@
             <td><div class="smallTabElem center">[[basket.amount]]</div></td>
             <td><div class="smallTabElem center">[[basket.amount]]</div></td>
             <td><div class="tabElem"></div></td>
-            <td><div class="tabElem"></div></td>
             <td>
                 <div class="smallTabElem center ellipsis status" tooltip="[[basket.status]]">
                     <div class="[[basket.status]] status-circle  cell row myOrder"></div>
                     <span ng-bind="lang.translate(basket.status)" class="zero-mobile"></span>
                 </div>
             </td>
+            <td><div class="smallTabElem"></div></td>
         </tr>
         <tr ng-repeat-start="order in basket.orders.all | orderBy:sort.order.type:sort.order.reverse"
             ng-if="basket.expanded" class="subline">
@@ -81,12 +81,6 @@
                     <span ng-bind="order.price*order.amount | currency"></span>
                 </div>
             </td>
-            <td>
-                <div ng-init="show.comment = false"
-                     class="tabElem"
-                     ng-class="{ellipsis:!show.comment}"
-                     ng-click="show.comment.fullDisplay = !show.comment.fullDisplay"> [[order.comment || '-']]</div>
-            </td>
             <td><div class="tabElem">[[order.projectTitle]]</div></td>
             <td>
                 <div class="justification-rejected cell"
@@ -103,6 +97,13 @@
                     <div class="status-circle cell row myOrder centerCircleMobile"
                          ng-class="getColor([[order.status_id]])"></div>
                     <span ng-bind="order.status_name" class="zero-mobile"></span>
+                </div>
+            </td>
+            <td>
+                <div class="smallTabElem center"
+                     tooltip="[[order.comment]]"
+                     ng-if="order.comment">
+                    <i class="comment-icon"></i>
                 </div>
             </td>
         </tr>
