@@ -16,10 +16,10 @@ export const statsController = ng.controller('statsController', ['$scope', async
         };
 
         $scope.filterChoiceCorrelation = {
-            keys: ["docsType", "reassorts", "year", "schoolType", "schoolOrientation", "cities", "regions", "consummation"],
+            keys: ["catalogs", "reassorts", "year", "schoolType", "schoolOrientation", "cities", "regions", "consummation"],
             years: 'year',
             schoolType: 'public',
-            docsType: 'catalog',
+            catalogs: 'catalog',
             reassorts: 'reassort',
             schoolOrientation: 'orientation',
             cities: 'city',
@@ -27,11 +27,11 @@ export const statsController = ng.controller('statsController', ['$scope', async
             consummation: 'consummation'
         };
 
-        $scope.docsType = [{name: 'Papier'}, {name: 'Numerique'}];
+        $scope.catalogs = [{name: 'Papier'}, {name: 'Numerique'}];
         $scope.schoolType = [{name: 'Public'}, {name: 'Privé'}];
 
         $scope.schoolType.forEach((item) => item.toString = () => $scope.translate(item.name));
-        $scope.docsType.forEach((item) => item.toString = () => $scope.translate(item.name));
+        $scope.catalogs.forEach((item) => item.toString = () => $scope.translate(item.name));
 
         $scope.initFilter = async () => {
             // Init the stat for the current year

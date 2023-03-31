@@ -3,6 +3,7 @@ package fr.openent.crre.model;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.JsonHelper;
+import fr.openent.crre.helpers.ListHelper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -20,6 +21,8 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
     private List<String> itemTypes;
     private List<String> structureSectors;
     private List<String> targets;
+
+    private List<String> devices;
     private String searchingText;
 
     public FilterItemModel() {
@@ -32,6 +35,7 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         this.catalogs = new ArrayList<>();
         this.itemTypes = new ArrayList<>();
         this.structureSectors = new ArrayList<>();
+        this.devices = new ArrayList<>();
         this.targets = new ArrayList<>();
     }
 
@@ -46,8 +50,7 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         this.itemTypes = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.ITEM_TYPES, new JsonArray()), String.class);
         this.structureSectors = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.STRUCTURE_SECTORS, new JsonArray()), String.class);
         this.targets = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.TARGETS, new JsonArray()), String.class);
-
-
+        this.devices = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.DEVICES, new JsonArray()), String.class);
     }
 
     @Override
@@ -58,31 +61,34 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
             FilterItemModelJson.put(Field.SEARCHING_TEXT, this.searchingText);
         }
         if (this.distributors != null && !this.distributors.isEmpty()) {
-            FilterItemModelJson.put(Field.DISTRIBUTORS, new JsonArray(this.distributors));
+            FilterItemModelJson.put(Field.DISTRIBUTORS, new JsonArray(ListHelper.distinct(this.distributors)));
         }
         if (this.classes != null && !this.classes.isEmpty()) {
-            FilterItemModelJson.put(Field.CLASSES, new JsonArray(this.classes));
+            FilterItemModelJson.put(Field.CLASSES, new JsonArray(ListHelper.distinct(this.classes)));
         }
         if (this.grades != null && !this.grades.isEmpty()) {
-            FilterItemModelJson.put(Field.GRADES, new JsonArray(this.grades));
+            FilterItemModelJson.put(Field.GRADES, new JsonArray(ListHelper.distinct(this.grades)));
         }
         if (this.disciplines != null && !this.disciplines.isEmpty()) {
-            FilterItemModelJson.put(Field.DISCIPLINES, new JsonArray(this.disciplines));
+            FilterItemModelJson.put(Field.DISCIPLINES, new JsonArray(ListHelper.distinct(this.disciplines)));
         }
         if (this.itemTypes != null && !this.itemTypes.isEmpty()) {
-            FilterItemModelJson.put(Field.ITEM_TYPES, new JsonArray(this.itemTypes));
+            FilterItemModelJson.put(Field.ITEM_TYPES, new JsonArray(ListHelper.distinct(this.itemTypes)));
         }
         if (this.targets != null && !this.targets.isEmpty()) {
-            FilterItemModelJson.put(Field.TARGETS, new JsonArray(this.targets));
+            FilterItemModelJson.put(Field.TARGETS, new JsonArray(ListHelper.distinct(this.targets)));
         }
         if (this.editors != null && !this.editors.isEmpty()) {
-            FilterItemModelJson.put(Field.EDITORS, new JsonArray(this.editors));
+            FilterItemModelJson.put(Field.EDITORS, new JsonArray(ListHelper.distinct(this.editors)));
         }
         if (this.catalogs != null && !this.catalogs.isEmpty()) {
-            FilterItemModelJson.put(Field.CATALOGS, new JsonArray(this.catalogs));
+            FilterItemModelJson.put(Field.CATALOGS, new JsonArray(ListHelper.distinct(this.catalogs)));
         }
         if (this.structureSectors != null && !this.structureSectors.isEmpty()) {
-            FilterItemModelJson.put(Field.STRUCTURE_SECTORS, new JsonArray(this.structureSectors));
+            FilterItemModelJson.put(Field.STRUCTURE_SECTORS, new JsonArray(ListHelper.distinct(this.structureSectors)));
+        }
+        if (this.devices != null && !this.devices.isEmpty()) {
+            FilterItemModelJson.put(Field.DEVICES, new JsonArray(ListHelper.distinct(this.devices)));
         }
 
         return FilterItemModelJson;
@@ -91,13 +97,13 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
     public boolean isEmpty() {
         return this.disciplines.isEmpty() && this.classes.isEmpty() && this.grades.isEmpty() && this.editors.isEmpty()
                 && this.distributors.isEmpty() && this.catalogs.isEmpty() && this.itemTypes.isEmpty()
-                && this.structureSectors.isEmpty() && this.targets.isEmpty() && this.searchingText == null;
+                && this.structureSectors.isEmpty() && this.targets.isEmpty() && this.devices.isEmpty() && this.searchingText == null;
     }
 
     public boolean hasFilters() {
         return !this.disciplines.isEmpty() || !this.classes.isEmpty() || !this.grades.isEmpty() || !this.editors.isEmpty()
                 || !this.distributors.isEmpty() || !this.catalogs.isEmpty() || !this.itemTypes.isEmpty()
-                || !this.structureSectors.isEmpty() || !this.targets.isEmpty();
+                || !this.structureSectors.isEmpty() || !this.targets.isEmpty() || !this.devices.isEmpty();
     }
 
     public List<String> getDisciplines() {
@@ -178,6 +184,15 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
 
     public FilterItemModel setTargets(List<String> targets) {
         this.targets = targets;
+        return this;
+    }
+
+    public List<String> getDevices() {
+        return devices;
+    }
+
+    public FilterItemModel setDevices(List<String> devices) {
+        this.devices = devices;
         return this;
     }
 

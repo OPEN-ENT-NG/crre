@@ -1,6 +1,10 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.constants.ItemFilterField;
+import fr.openent.crre.core.enums.ResourceFieldEnum;
+import fr.openent.crre.helpers.JsonHelper;
+import fr.openent.crre.model.FilterItemModel;
 import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.service.EquipmentService;
 import fr.openent.crre.service.OrderRegionService;
@@ -9,6 +13,7 @@ import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -20,10 +25,15 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
-import static fr.openent.crre.helpers.FutureHelper.*;
+import static fr.openent.crre.helpers.FutureHelper.handlerEitherPromise;
+import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
 
 public class EquipmentController extends ControllerHelper {
@@ -65,17 +75,17 @@ public class EquipmentController extends ControllerHelper {
             equipmentService.equipment(idEquipment, null, handlerEitherPromise(getEquipmentPromise));
             List<Future> promises = new ArrayList<>();
             promises.add(getEquipmentPromise.future());
-            if(idStructure != null){
-                orderRegionService.equipmentAlreadyPayed(idEquipment,idStructure, handlerJsonObject(alreadyPayedPromise));
+            if (idStructure != null) {
+                orderRegionService.equipmentAlreadyPayed(idEquipment, idStructure, handlerJsonObject(alreadyPayedPromise));
                 promises.add(alreadyPayedPromise.future());
             }
             CompositeFuture.all(promises).onComplete(event -> {
-                if(event.succeeded()) {
+                if (event.succeeded()) {
                     JsonObject equipment = getEquipmentPromise.future().result().getJsonObject(0);
-                    if(event.result().size()>1){
-                        equipment.put("structure_already_payed",alreadyPayedPromise.future().result().getBoolean("exists"));
+                    if (event.result().size() > 1) {
+                        equipment.put("structure_already_payed", alreadyPayedPromise.future().result().getBoolean("exists"));
                     }
-                    renderJson(request,equipment);
+                    renderJson(request, equipment);
                 } else {
                     log.error("Problem to catch equipment with his id");
                     badRequest(request);
@@ -93,65 +103,91 @@ public class EquipmentController extends ControllerHelper {
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
             HashMap<String, ArrayList<String>> params = new HashMap<>();
-            getAllWithFilter(request, params);
+            getCatalog(params, false)
+                    .onSuccess(result -> Renders.renderJson(request, result))
+                    .onFailure(error -> Renders.renderError(request));
         } catch (ClassCastException e) {
             log.error("An error occurred casting campaign id", e);
         }
     }
 
-    private void getAllWithFilter(HttpServerRequest request, HashMap<String, ArrayList<String>> params) {
-        equipmentService.filterWord(params, null, event -> {
-            JsonArray ressources = event.right().getValue();
-            JsonArray filtres = new JsonArray();
-            JsonArray response = new JsonArray();
-            Set<String> disciplines_set = new HashSet<>();
-            Set<String> niveaux_set = new HashSet<>();
-            Set<String> classes_set = new HashSet<>();
-            Set<String> editeur_set = new HashSet<>();
-            Set<String> public_set = new HashSet<>();
-            Set<String> os_set = new HashSet<>();
-            Set<String> distributeurs_set = new HashSet<>();
-            for(int i = 0; i < ressources.size(); i++) {
-                JsonObject ressource = ressources.getJsonObject(i);
-                for(int j = 0; j < ressource.getJsonArray("disciplines").size(); j ++) {
-                    disciplines_set.add(ressource.getJsonArray("disciplines").getJsonObject(j).getString("libelle"));
-                }
-                for(int j = 0; j < ressource.getJsonArray("niveaux").size(); j ++) {
-                    niveaux_set.add(ressource.getJsonArray("niveaux").getJsonObject(j).getString("libelle"));
-                }
-                if(ressource.containsKey("classes")) {
-                    for(int j = 0; j < ressource.getJsonArray("classes").size(); j ++) {
-                        classes_set.add(ressource.getJsonArray("classes").getJsonObject(j).getString("libelle"));
+    @Get("/equipments/catalog/filters")
+    @ApiDoc("List of item's filters")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessRight.class)
+    public void listItemsFilters(final HttpServerRequest request) {
+            getCatalog(new HashMap<>(), true)
+                    .onSuccess(result -> Renders.renderJson(request, result))
+                    .onFailure(error -> Renders.renderError(request));
+    }
+
+    private Future<JsonObject> getCatalog(HashMap<String, ArrayList<String>> params, Boolean onlyFilter) {
+        Promise<JsonObject> promise = Promise.promise();
+        List<String> fields = Boolean.TRUE.equals(onlyFilter) ? Arrays.stream(ResourceFieldEnum.values()).map(ResourceFieldEnum::getValue).collect(Collectors.toList()) : null;
+        equipmentService.filterWord(params, fields, event -> {
+            if (event.isRight()) {
+                JsonArray resources = event.right().getValue();
+                FilterItemModel filters = new FilterItemModel();
+                for (int i = 0; i < resources.size(); i++) {
+                    JsonObject resource = resources.getJsonObject(i);
+                    filters.getDisciplines().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.DISCIPLINES), JsonObject.class)
+                            .stream()
+                            .map(discipline -> discipline.getString(Field.LIBELLE))
+                            .collect(Collectors.toList()));
+
+                    filters.getGrades().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.NIVEAUX), JsonObject.class)
+                            .stream()
+                            .map(grade -> grade.getString(Field.LIBELLE))
+                            .collect(Collectors.toList()));
+
+                    if (resource.getJsonArray(Field.CLASSES) != null) {
+                        filters.getClasses().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.CLASSES), JsonObject.class)
+                                .stream()
+                                .map(c -> c.getString(Field.LIBELLE))
+                                .collect(Collectors.toList()));
                     }
-                }
-                if(ressource.containsKey("technos")) {
-                    for(int j = 0; j < ressource.getJsonArray("technos").size(); j ++) {
-                        os_set.add(ressource.getJsonArray("technos").getJsonObject(j).getString("technologie"));
+
+                    if (resource.getJsonArray(Field.TECHNOS) != null) {
+                        filters.getDevices().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.TECHNOS), JsonObject.class)
+                                .stream()
+                                .map(techno -> techno.getString(Field.TECHNOLOGY))
+                                .collect(Collectors.toList()));
                     }
-                }
-                if(ressource.getString("editeur") != null && !ressource.getString("editeur").equals("")) {
-                    editeur_set.add(ressource.getString("editeur"));
+
+                    if (resource.getString(Field.EDITEUR) != null && !resource.getString(Field.EDITEUR).equals("")) {
+                        filters.getEditors().add(resource.getString(Field.EDITEUR));
+                    }
+
+                    if (resource.getString(Field.DISTRIBUTEUR) != null && !resource.getString(Field.DISTRIBUTEUR).equals("")) {
+                        filters.getDistributors().add(resource.getString(Field.DISTRIBUTEUR));
+                    }
+
+                    if (resource.getString(ItemFilterField.TARGET) != null && !resource.getString(ItemFilterField.TARGET).equals("")) {
+                        filters.getTargets().add(resource.getString(ItemFilterField.TARGET));
+                    }
+
+                    if (resource.getString(ItemFilterField.TARGET) != null && !resource.getString(ItemFilterField.TARGET).equals("")) {
+                        filters.getTargets().add(resource.getString(ItemFilterField.TARGET));
+                    }
+
+                    if (resource.getString(Field.TYPE) != null && !resource.getString(Field.TYPE).equals("")) {
+                        filters.getCatalogs().add(resource.getString(Field.TYPE));
+                    }
                 }
 
-                if(ressource.getString("distributeur") != null && !ressource.getString("distributeur").equals("")) {
-                    distributeurs_set.add(ressource.getString("distributeur"));
-                }
-                if(ressource.containsKey("publiccible")) {
-                    public_set.add(ressource.getString("publiccible"));
-                }
+                JsonObject catalog = new JsonObject()
+                        .put(Field.FILTERS, filters.toJson())
+                        .put(Field.RESOURCES, onlyFilter ? new JsonArray() : resources);
+                promise.complete(catalog);
+            } else {
+                log.error(String.format("[CRRE@%s::getCatalog] Fail to get catalog data %s",
+                        this.getClass().getSimpleName(), event.left().getValue()));
+                promise.fail(event.left().getValue());
             }
-            filtres.add(new JsonObject().put("subjects", new JsonArray(Arrays.asList(disciplines_set.toArray())))
-                    .put("grades", new JsonArray(Arrays.asList(niveaux_set.toArray())))
-                    .put("levels", new JsonArray(Arrays.asList(classes_set.toArray())))
-                    .put("os", new JsonArray(Arrays.asList(os_set.toArray())))
-                    .put("public", new JsonArray(Arrays.asList(public_set.toArray())))
-                    .put("distributeurs", new JsonArray(Arrays.asList(distributeurs_set.toArray())))
-                    .put("editors", new JsonArray(Arrays.asList(editeur_set.toArray()))));
-            response.add(new JsonObject().put("ressources", ressources))
-                    .add(new JsonObject().put("filters", filtres));
-            renderJson(request, response);
         });
+        return promise.future();
     }
+
 
     @Get("/equipments/catalog/search")
     @ApiDoc("Search an equipment by keyword")
@@ -162,13 +198,31 @@ public class EquipmentController extends ControllerHelper {
             String query_word = URLDecoder.decode(request.getParam("word"), "UTF-8");
             HashMap<String, ArrayList<String>> params = new HashMap<>();
             getFilterFromRequest(request, params);
-            if(!params.isEmpty()) {
-                equipmentService.searchFilter(params, query_word, null, arrayResponseHandler(request));
+            if (!params.isEmpty()) {
+                equipmentService.searchFilter(params, query_word, null, event -> {
+                    if(event.isRight()) {
+                        Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, event.right().getValue()));
+                    } else {
+                        log.error(String.format("[CRRE@%s::SearchEquipment] Failed to get items filtered and searched %s",
+                                this.getClass().getSimpleName(), event.left().getValue()));
+                        Renders.renderError(request);
+                    }
+                });
             } else {
-                equipmentService.searchWord(query_word, null, arrayResponseHandler(request));
+                equipmentService.searchWord(query_word, null, event -> {
+                    if(event.isRight()) {
+                        Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, event.right().getValue()));
+                    } else {
+                        log.error(String.format("[CRRE@%s::SearchEquipment] Failed to get items searched %s",
+                                this.getClass().getSimpleName(), event.left().getValue()));
+                        Renders.renderError(request);
+                    }
+                });
             }
         } catch (ClassCastException | UnsupportedEncodingException e) {
-            log.error("An error occurred searching article", e);
+            log.error(String.format("[CRRE@%s::SearchEquipment] Failed to get items searched %s",
+                    this.getClass().getSimpleName(), e.getMessage()));
+            Renders.renderError(request);
         }
     }
 
@@ -178,16 +232,28 @@ public class EquipmentController extends ControllerHelper {
     @ResourceFilter(AccessRight.class)
     public void FilterEquipment(final HttpServerRequest request) {
         try {
-            boolean emptyFilter = Boolean.parseBoolean(request.getParam("emptyFilter"));
+            boolean emptyFilter = Boolean.parseBoolean(request.getParam(Field.EMPTY_FILTER));
             HashMap<String, ArrayList<String>> params = new HashMap<>();
             getFilterFromRequest(request, params);
             if (emptyFilter) {
-                getAllWithFilter(request, params);
+                getCatalog(params, false)
+                        .onSuccess(result -> Renders.renderJson(request, result))
+                        .onFailure(error -> Renders.renderError(request));
             } else {
-                equipmentService.filterWord(params, null, arrayResponseHandler(request));
+                equipmentService.filterWord(params, null, event -> {
+                    if(event.isRight()) {
+                        Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, event.right().getValue()));
+                    } else {
+                        log.error(String.format("[CRRE@%s::FilterEquipment] Failed to get items filtered %s",
+                                this.getClass().getSimpleName(), event.left().getValue()));
+                        Renders.renderError(request);
+                    }
+                });
             }
         } catch (ClassCastException e) {
-            log.error("An error occurred searching article", e);
+            log.error(String.format("[CRRE@%s::FilterEquipment] Failed to get items searched and filtered %s",
+                    this.getClass().getSimpleName(), e.getMessage()));
+            Renders.renderError(request);
         }
     }
 

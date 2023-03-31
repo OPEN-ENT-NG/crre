@@ -275,7 +275,7 @@ public class DefaultOrderRegionServiceTest {
         FilterItemModel filterItem = new FilterItemModel();
 
         String expectedQuery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate, " +
-                "count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders , MAX(s.name) as orderName, MAX(s.uai) as orderUai " +
+                "count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders , MAX(s.name) as structure_name, MAX(s.uai) as uai " +
                 "FROM  null.project p LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project " +
                 "AND o_r_e_o.status IN (?,?) LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project " +
                 "AND o_r_e.status IN (?,?) LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment " +

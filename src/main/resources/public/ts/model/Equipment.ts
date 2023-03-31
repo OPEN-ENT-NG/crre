@@ -1,8 +1,11 @@
 import {idiom as lang, toasts} from 'entcore';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
-import http from 'axios';
+import http, {AxiosResponse} from 'axios';
 import {Filters} from "./Filter";
 import {Utils} from "./Utils";
+import {Catalog, ICatalogResponse} from "./Catalog";
+import {FiltersCatalogItem} from "./FiltersCatalogItem";
+import {equipmentsService} from "../services/equipments.service";
 
 export class Equipment implements Selectable {
     id?: string;
@@ -90,68 +93,30 @@ export class Equipments extends Selection<Equipment> {
     _loading: boolean;
     all: Equipment[];
     page_count: number;
-    subjects: String[];
-    grades: String[];
-    levels: String[];
-    editors: String[];
-    os: String[];
-    public: String[];
-    docsType: any;
     filterFulfilled: boolean;
-    distributeurs: String[];
+    filters: FiltersCatalogItem;
 
     constructor() {
         super([]);
-        this.subjects = [];
-        this.grades = [];
-        this.levels = [];
-        this.os = [];
-        this.public = [];
-        this.editors = [];
-        this.docsType = [];
-        this.distributeurs = [];
+        this.filters = new FiltersCatalogItem();
         this._loading = false;
         this.filterFulfilled = false;
     }
 
-    async syncEquip(data: any) {
-        function setFilterValues(filters, group) {
-            this[group] = filters[group].map(v => ({name: v}));
-            if (group === 'public') {
-                this[group].forEach((item) => item.toString = () => lang.translate(item.name));
-            } else if (group === 'subjects') {
-                this[group].forEach((item) => item.toString = () => lang.translate(item.name));
-                this[group].forEach((item) => item.nameFormat = item.name.replace("É", "E"));
-            } else if (group === 'editors') {
-                this[group].forEach((item) => item.toString = () => lang.translate(item.name));
-                this[group].forEach((item) => item.nameFormat = item.name.replace("L’é", "e"));
-
-            } else {
-                this[group].forEach((item) => item.toString = () => item.name);
+    syncEquip(catalog: Catalog, isFilter: boolean = false) {
+        if (catalog.filters) {
+            if (!this.filterFulfilled) {
+                this.filters = catalog.filters;
+                this.filterFulfilled = true;
             }
         }
-
-        if (data.length > 0) {
-            if (data[0].hasOwnProperty("ressources")) {
-                if (!this.filterFulfilled) {
-                    let filters = data[1].filters[0];
-                    setFilterValues.call(this, filters, 'subjects');
-                    setFilterValues.call(this, filters, 'grades');
-                    setFilterValues.call(this, filters, 'levels');
-                    setFilterValues.call(this, filters, 'os');
-                    setFilterValues.call(this, filters, 'public');
-                    setFilterValues.call(this, filters, 'editors');
-                    setFilterValues.call(this, filters, 'distributeurs');
-                    this.docsType = [{name: "articlepapier"}, {name: "articlenumerique"}];
-                    this.docsType.forEach((item) => item.toString = () => lang.translate(item.name));
-                    this.filterFulfilled = true;
-                }
-                data = data[0].ressources;
+        if (catalog.resources && catalog.resources.length > 0) {
+            this.all = catalog.resources;
+            if (!isFilter) {
+                this.all.map((equipment: Equipment) => {
+                    reformatEquipment(equipment);
+                });
             }
-            this.all = Mix.castArrayAs(Equipment, data);
-            this.all.map((equipment) => {
-                reformatEquipment(equipment);
-            });
         } else {
             this.all = [];
         }
@@ -161,7 +126,7 @@ export class Equipments extends Selection<Equipment> {
         let params = '';
         let idsEquipments = [];
         orders.map((order) => {
-            if(idsEquipments.indexOf(order.equipment_key) === -1) {
+            if (idsEquipments.indexOf(order.equipment_key) === -1) {
                 idsEquipments.push(order.equipment_key);
             }
         });
@@ -192,24 +157,26 @@ export class Equipments extends Selection<Equipment> {
                 } else {
                     uri = (`/crre/equipments/catalog/filter?emptyFilter=${!this.filterFulfilled}${params}`);
                 }
-                let {data} = await http.get(uri);
-                await this.syncEquip(data);
+                await http.get(uri).then(async (res: AxiosResponse) => {
+                    this.syncEquip(new Catalog().build(res.data));
+                    this.loading = false;
+                })
             } else {
                 toasts.warning('crre.equipment.special');
             }
         } catch (e) {
+            this.loading = false;
             toasts.warning('crre.equipment.sync.err');
             throw e;
-        } finally {
-            this.loading = false;
         }
     }
 
-    async sync() {
+    // Return all filters contained in catalog
+    async getFilters() {
         try {
-            let {data} = await http.get(`/crre/equipments/catalog`);
-            await this.syncEquip(data);
-
+            equipmentsService.getFilters().then((catalog: Catalog) => {
+                    this.syncEquip(catalog, true);
+                })
         } catch (e) {
             toasts.warning('crre.equipment.sync.err');
             throw e;
