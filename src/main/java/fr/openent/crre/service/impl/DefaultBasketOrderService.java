@@ -162,6 +162,10 @@ public class DefaultBasketOrderService implements BasketOrderService {
     @Override
     public Future<List<BasketOrder>> getBasketOrderListByOrderRegion(List<Integer> orderRegionIdList) {
         Promise<List<BasketOrder>> promise = Promise.promise();
+        if (orderRegionIdList.isEmpty()) {
+            return Future.succeededFuture(new ArrayList<>());
+        }
+
         String selectQuery = "SELECT DISTINCT(bo.*) " +
                 "FROM " + Crre.crreSchema + ".basket_order AS bo " +
                 "LEFT JOIN " + Crre.crreSchema + ".order_client_equipment AS o_c_e ON (bo.id = o_c_e.id_basket) " +

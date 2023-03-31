@@ -3,7 +3,13 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.SqlHelper;
+import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.Campaign;
+import fr.openent.crre.model.ProjectModel;
+import fr.openent.crre.model.StructureGroupModel;
+import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.security.WorkflowActionUtils;
 import fr.openent.crre.security.WorkflowActions;
 import fr.openent.crre.service.CampaignService;
@@ -17,11 +23,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.poi.ss.formula.functions.T;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -313,58 +321,78 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
         return promise.future();
     }
-    public void create(final JsonObject campaign, final Handler<Either<String, JsonObject>> handler) {
-        String getIdQuery = "SELECT nextval('" + Crre.crreSchema + ".campaign_id_seq') as id";
-        sql.raw(getIdQuery, SqlResult.validUniqueResultHandler(event -> {
-            if (event.isRight()) {
-                try {
-                    final Number id = event.right().getValue().getInteger(Field.ID);
+    public Future<Campaign> create(final Campaign campaign, List<StructureGroupModel> groups) {
+        Promise<Campaign> promise = Promise.promise();
 
-                    Campaign createCampaign = new Campaign();
-                    createCampaign.setFromJson(campaign);
-                    createCampaign.setId((int) id);
+        SqlHelper.getNextVal("campaign_id_seq")
+                .compose(nextVal -> {
+                    campaign.setId(nextVal);
+                    String query = "INSERT INTO crre.campaign(id, name, description, image, accessible, purse_enabled, priority_enabled," +
+                            " priority_field, start_date, end_date, automatic_close, reassort, catalog, use_credit, id_type)" +
+                            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)" +
+                            " RETURNING *";
+                    JsonArray params = new JsonArray()
+                            .add(campaign.getId())
+                            .add(campaign.getName())
+                            .add(campaign.getDescription())
+                            .add(campaign.getImage())
+                            .add(campaign.isAccessible())
+                            .add(campaign.isPurseEnabled())
+                            .add(campaign.isPriorityEnabled())
+                            .add(campaign.getPriorityField())
+                            .add(campaign.getStartDate())
+                            .add(campaign.getEndDate())
+                            .add(campaign.getAutomaticClose())
+                            .add(campaign.getReassort())
+                            .add(campaign.getCatalog())
+                            .add(campaign.getUseCredit())
+                            .add(campaign.getIdType());
+                    List<TransactionElement> statements = new ArrayList<>();
+                    statements.add(new TransactionElement(query, params));
+                    statements.add(getCampaignTagsGroupsRelationshipStatement(campaign.getId(), groups));
+                    String errorMessage = String.format("[CRRE@%s::create] Fail to create campaign",
+                            this.getClass().getSimpleName());
+                    return TransactionHelper.executeTransaction(statements, errorMessage);
+                })
+                .onSuccess(res -> promise.complete(new Campaign(res.get(0).getResult().getJsonObject(0))))
+                .onFailure(promise::fail);
 
-                    createCampaign.create(resultObject -> {
-                        if(resultObject.isRight()) {
-                            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-                            JsonArray groups = campaign.getJsonArray("groups");
-                            statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
-                            sql.transaction(statements, event1 -> handler.handle(getTransactionHandler(event1, id)));
-                        } else {
-                            LOGGER.error("An error occurred when creating campaign", resultObject.left().getValue());
-                            handler.handle(new Either.Left<>(""));
-                        }
-                    });
-
-                } catch (ClassCastException e) {
-                    LOGGER.error("An error occurred when casting tags ids", e);
-                    handler.handle(new Either.Left<>(""));
-                }
-            } else {
-                LOGGER.error("An error occurred when selecting next val");
-                handler.handle(new Either.Left<>(""));
-            }
-        }));
+        return promise.future();
     }
 
-    public void update(final Integer id, JsonObject campaign,final Handler<Either<String, JsonObject>> handler){
+    public Future<Campaign> update(Campaign campaign, List<StructureGroupModel> groups){
+        Promise<Campaign> promise = Promise.promise();
+        String query = "UPDATE crre.campaign set name = ?, description = ?, image = ?, accessible = ?, purse_enabled = ?, priority_enabled = ?," +
+                " priority_field = ?, start_date = ?, end_date = ?, automatic_close = ?, reassort = ?, catalog = ?, use_credit = ?, id_type = ?" +
+                " WHERE id = ?" +
+                " RETURNING *";
+        JsonArray params = new JsonArray()
+                .add(campaign.getName())
+                .add(campaign.getDescription())
+                .add(campaign.getImage())
+                .add(campaign.isAccessible())
+                .add(campaign.isPurseEnabled())
+                .add(campaign.isPriorityEnabled())
+                .add(campaign.getPriorityField())
+                .add(campaign.getStartDate())
+                .add(campaign.getEndDate())
+                .add(campaign.getAutomaticClose())
+                .add(campaign.getReassort())
+                .add(campaign.getCatalog())
+                .add(campaign.getUseCredit())
+                .add(campaign.getIdType())
+                .add(campaign.getId());
 
-        Campaign createCampaign = new Campaign();
-        createCampaign.setFromJson(campaign);
-        createCampaign.setId(id);
-
-        createCampaign.update(resultObject -> {
-            if(resultObject.isRight()) {
-                JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(getCampaignTagGroupRelationshipDeletion(id));
-                JsonArray groups = campaign.getJsonArray("groups");
-                statements.add(getCampaignTagsGroupsRelationshipStatement(id, groups));
-                sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
-            } else {
-                LOGGER.error("An error occurred when creating campaign", resultObject.left().getValue());
-                handler.handle(new Either.Left<>(""));
-            }
-        });
+        List<TransactionElement> statements = new ArrayList<>();
+        statements.add(new TransactionElement(query, params));
+        statements.add(getCampaignTagGroupRelationshipDeletion(campaign.getId()));
+        statements.add(getCampaignTagsGroupsRelationshipStatement(campaign.getId(), groups));
+        String errorMessage = String.format("[CRRE@%s::create] Fail to create campaign",
+                this.getClass().getSimpleName());
+        TransactionHelper.executeTransaction(statements, errorMessage)
+                .onSuccess(res -> promise.complete(new Campaign(res.get(0).getResult().getJsonObject(0))))
+                .onFailure(promise::fail);
+        return promise.future();
     }
 
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
@@ -435,32 +463,25 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         sql.transaction(statements, event -> handler.handle(getTransactionHandler(event, id)));
     }
 
-    private JsonObject getCampaignTagsGroupsRelationshipStatement(Number id, JsonArray groups) {
+    private TransactionElement getCampaignTagsGroupsRelationshipStatement(Number id, List<StructureGroupModel> groups) {
         String insertTagCampaignRelationshipQuery = "INSERT INTO " +
                 Crre.crreSchema + ".rel_group_campaign" +
                 "(id_campaign, id_structure_group) VALUES ";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        for(int j = 0; j < groups.size(); j++ ){
-            JsonObject group =  groups.getJsonObject(j);
+        for(StructureGroupModel structureGroupModel : groups){
             insertTagCampaignRelationshipQuery += "(?, ?), ";
             params.add(id)
-                    .add(group.getInteger(Field.ID));
+                    .add(structureGroupModel.getId());
         }
         insertTagCampaignRelationshipQuery = insertTagCampaignRelationshipQuery.substring(0, insertTagCampaignRelationshipQuery.length() - 2);
-        return new JsonObject()
-                .put("statement", insertTagCampaignRelationshipQuery)
-                .put("values", params)
-                .put("action", "prepared");
+        return new TransactionElement(insertTagCampaignRelationshipQuery, params);
     }
 
-    private JsonObject getCampaignTagGroupRelationshipDeletion(Number id) {
+    private TransactionElement getCampaignTagGroupRelationshipDeletion(Number id) {
         String query = "DELETE FROM " + Crre.crreSchema + ".rel_group_campaign " +
                 "WHERE id_campaign = ?;";
 
-        return new JsonObject()
-                .put("statement", query)
-                .put("values", new fr.wseduc.webutils.collections.JsonArray().add(id))
-                .put("action", "prepared");
+        return new TransactionElement(query, new JsonArray().add(id));
     }
 
     private JsonObject getCampaignsGroupRelationshipDeletion(List<Integer> ids) {

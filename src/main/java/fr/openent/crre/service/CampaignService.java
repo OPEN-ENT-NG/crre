@@ -1,5 +1,7 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.Campaign;
+import fr.openent.crre.model.StructureGroupModel;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -31,18 +33,17 @@ public interface CampaignService {
 
     /**
      * Create a campaign
-     * @param campaign campaign to create
-     * @param handler function handler returning data
+     * @param campaign campaign model to create
+     * @param groups list of associated structureGroup
      */
-    void create(JsonObject campaign, Handler<Either<String, JsonObject>> handler);
+    Future<Campaign> create(Campaign campaign, List<StructureGroupModel> groups);
 
     /**
      * Update a campaign
-     * @param id campaign id to update
-     * @param campaign campaign to update
-     * @param handler function handler returning data
+     * @param campaign campaign model to update
+     * @param groups list of associated structureGroup
      */
-    void update(Integer id, JsonObject campaign, Handler<Either<String, JsonObject>> handler);
+    Future<Campaign> update(Campaign campaign, List<StructureGroupModel> groups);
     /**
      * Update an accessibility campaign
      * @param id campaign id to update
