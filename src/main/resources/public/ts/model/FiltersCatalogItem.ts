@@ -24,75 +24,156 @@ export class FilterCatalogItem {
 }
 
 export class FiltersCatalogItem {
-    public disciplines: FilterCatalogItem[];
-    public grades: FilterCatalogItem[];
-    public classes: FilterCatalogItem[];
-    public devices: FilterCatalogItem[];
-    public targets: FilterCatalogItem[];
-    public editors: FilterCatalogItem[];
-    public distributors: FilterCatalogItem[];
-    public catalogs: FilterCatalogItem[];
-    public pros: FilterCatalogItem[];
-    public consumables: FilterCatalogItem[];
+    private _disciplines: FilterCatalogItem[];
+    private _grades: FilterCatalogItem[];
+    private _classes: FilterCatalogItem[];
+    private _devices: FilterCatalogItem[];
+    private _targets: FilterCatalogItem[];
+    private _editors: FilterCatalogItem[];
+    private _distributors: FilterCatalogItem[];
+    private _catalogs: FilterCatalogItem[];
+    private _pros: FilterCatalogItem[];
+    private _consumables: FilterCatalogItem[];
 
     constructor() {
-        this.disciplines = [];
-        this.grades = [];
-        this.classes = [];
-        this.devices = [];
-        this.targets = [];
-        this.editors = [];
-        this.distributors = [];
-        this.catalogs = [];
-        this.pros = [];
-        this.consumables = [];
+        this._disciplines = [];
+        this._grades = [];
+        this._classes = [];
+        this._devices = [];
+        this._targets = [];
+        this._editors = [];
+        this._distributors = [];
+        this._catalogs = [];
+        this._pros = [];
+        this._consumables = [];
     }
 
     public build(filters: IFiltersCatalogItem): FiltersCatalogItem {
-        this.disciplines = filters.disciplines.map((discipline: string) => {
+        this._disciplines = (filters.disciplines || []).map((discipline: string) => {
             const item = new FilterCatalogItem(discipline);
             item.toString = () => item.name;
             item.nameFormat = item.name.replace("É", "E");
             return item;
         });
-        this.grades = filters.grades.map((grade: string) => {
+        this._grades = (filters.grades || []).map((grade: string) => {
             const item = new FilterCatalogItem(grade);
             item.toString = () => item.name;
             return item;
         });
-        this.classes = filters.classes.map((c: string) => {
+        this._classes = (filters.classes || []).map((c: string) => {
             const item = new FilterCatalogItem(c);
             item.toString = () => item.name;
             return item;
         });
-        this.devices = filters.devices.map((device: string) => {
+        this._devices = (filters.devices || []).map((device: string) => {
             const item = new FilterCatalogItem(device);
             item.toString = () => item.name;
             return item;
         });
-        this.targets = filters.targets.map((target: string) => {
+        this._targets = (filters.targets || []).map((target: string) => {
             const item = new FilterCatalogItem(target);
             item.toString = () => item.name;
             return item;
         });
-        this.editors = filters.editors.map((editor: string) => {
+        this._editors = (filters.editors || []).map((editor: string) => {
             const item = new FilterCatalogItem(editor);
             item.toString = () => item.name;
             item.nameFormat = item.name.replace("L’é", "e");
             return item;
         });
-        this.distributors = filters.distributors.map((distributor: string) => {
+        this._distributors = (filters.distributors || []).map((distributor: string) => {
             const item = new FilterCatalogItem(distributor);
             item.toString = () => item.name;
             return item;
         });
 
-        this.catalogs = filters.catalogs.map((catalog: string) => {
+        this._catalogs = (filters.catalogs || []).map((catalog: string) => {
             const item = new FilterCatalogItem(catalog);
             item.toString = () => lang.translate(item.name);
             return item;
         });
 
         return this;
+    }
+
+
+    get disciplines(): FilterCatalogItem[] {
+        return this._disciplines;
+    }
+
+    set disciplines(value: FilterCatalogItem[]) {
+        this._disciplines = value;
+    }
+
+    get grades(): FilterCatalogItem[] {
+        return this._grades;
+    }
+
+    set grades(value: FilterCatalogItem[]) {
+        this._grades = value;
+    }
+
+    get classes(): FilterCatalogItem[] {
+        return this._classes;
+    }
+
+    set classes(value: FilterCatalogItem[]) {
+        this._classes = value;
+    }
+
+    get devices(): FilterCatalogItem[] {
+        return this._devices;
+    }
+
+    set devices(value: FilterCatalogItem[]) {
+        this._devices = value;
+    }
+
+    get targets(): FilterCatalogItem[] {
+        return this._targets;
+    }
+
+    set targets(value: FilterCatalogItem[]) {
+        this._targets = value;
+    }
+
+    get editors(): FilterCatalogItem[] {
+        return this._editors;
+    }
+
+    set editors(value: FilterCatalogItem[]) {
+        this._editors = value;
+    }
+
+    get distributors(): FilterCatalogItem[] {
+        return this._distributors;
+    }
+
+    set distributors(value: FilterCatalogItem[]) {
+        this._distributors = value;
+    }
+
+    get catalogs(): FilterCatalogItem[] {
+        return this._catalogs;
+    }
+
+    set catalogs(value: FilterCatalogItem[]) {
+        this._catalogs = value;
+    }
+
+    get pros(): FilterCatalogItem[] {
+        return this._pros;
+    }
+
+    set pros(value: FilterCatalogItem[]) {
+        this._pros = value;
+    }
+
+    get consumables(): FilterCatalogItem[] {
+        return this._consumables;
+    }
+
+    set consumables(value: FilterCatalogItem[]) {
+        this._consumables = value;
     }
 }
