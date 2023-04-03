@@ -349,7 +349,9 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
                             .add(campaign.getIdType());
                     List<TransactionElement> statements = new ArrayList<>();
                     statements.add(new TransactionElement(query, params));
-                    statements.add(getCampaignTagsGroupsRelationshipStatement(campaign.getId(), groups));
+                    if (!groups.isEmpty()) {
+                        statements.add(getCampaignTagsGroupsRelationshipStatement(campaign.getId(), groups));
+                    }
                     String errorMessage = String.format("[CRRE@%s::create] Fail to create campaign",
                             this.getClass().getSimpleName());
                     return TransactionHelper.executeTransaction(statements, errorMessage);
@@ -386,8 +388,10 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
         List<TransactionElement> statements = new ArrayList<>();
         statements.add(new TransactionElement(query, params));
         statements.add(getCampaignTagGroupRelationshipDeletion(campaign.getId()));
-        statements.add(getCampaignTagsGroupsRelationshipStatement(campaign.getId(), groups));
-        String errorMessage = String.format("[CRRE@%s::create] Fail to create campaign",
+        if (!groups.isEmpty()) {
+            statements.add(getCampaignTagsGroupsRelationshipStatement(campaign.getId(), groups));
+        }
+        String errorMessage = String.format("[CRRE@%s::update] Fail to create campaign",
                 this.getClass().getSimpleName());
         TransactionHelper.executeTransaction(statements, errorMessage)
                 .onSuccess(res -> promise.complete(new Campaign(res.get(0).getResult().getJsonObject(0))))
