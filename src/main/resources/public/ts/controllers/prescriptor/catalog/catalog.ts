@@ -43,7 +43,8 @@ export const catalogController = ng.controller('catalogController',
                 pros: 'pro',
             };
             initFilters();
-            await  $scope.initStructures();
+
+            if (!$scope.current.structure) await $scope.initStructures();
         }
 
         function initFilters() {
