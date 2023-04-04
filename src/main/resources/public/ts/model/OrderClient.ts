@@ -153,7 +153,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 orderMap.comment = order.comment;
                 orderMap.creation_date = order.prescriber_validation_date;
                 orderMap.equipment_key = Number.parseInt(order.equipment_key);
-                orderMap.id = order.orderClientId || order.orderRegionId;
+                orderMap.id = order.order_client_id || order.order_region_id;
                 orderMap.id_basket = (!order.basket) ? null : order.basket.id;
                 orderMap.id_campaign = (!order.campaign) ? null : order.campaign.id;
                 orderMap.id_structure = order.id_structure;
