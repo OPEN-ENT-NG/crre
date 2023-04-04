@@ -852,5 +852,6 @@
   "crre.validator.confirm.optionnel": "(Optionnel)",
   "crre.orders.sent.library": "Demandes envoyées au libraire",
   "crre.orders.waiting.validation": "Demandes soumises à validation",
-  "crre.lde.orders": "Commandes LDE"
+  "crre.lde.orders": "Commandes LDE",
+  "crre.item.not.found": "Manuel introuvable dans le catalogue"
 }

@@ -30,7 +30,7 @@ export class OrderUniversal {
     private _equipment_tva5: number;
     private _equipment_tva20: number;
     private _equipment_priceht: number;
-    private _offers: string;
+    private _offers: any[];
     private _totalFree: number;
 
     private _order_client_id: number;
@@ -253,11 +253,11 @@ export class OrderUniversal {
         this._equipment_priceht = value;
     }
 
-    get offers(): string {
+    get offers(): any[] {
         return this._offers;
     }
 
-    set offers(value: string) {
+    set offers(value: any[]) {
         this._offers = value;
     }
 

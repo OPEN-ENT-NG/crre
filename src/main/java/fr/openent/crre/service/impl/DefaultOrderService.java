@@ -37,7 +37,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
 
     @Override
     public Future<List<OrderUniversalModel>> listOrder(List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
-                                                 List<String> basketIdList, String startDate, String endDate, List<OrderStatus> orderStatusList) {
+                                                       List<String> basketIdList, List<Integer> orderIdList, String startDate, String endDate, List<OrderStatus> orderStatusList) {
         Promise<List<OrderUniversalModel>> promise = Promise.promise();
         JsonArray values = new JsonArray();
         String query = "SELECT " + getOrderUniversalSelector() + ", to_jsonb(basket.*) basket, to_jsonb(campaign.*) campaign, to_jsonb(project.*) project" +
@@ -62,6 +62,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         if (basketIdList != null && !basketIdList.isEmpty()) {
             query += "AND basket.id IN " + Sql.listPrepared(basketIdList) + " ";
             values.addAll(new JsonArray(basketIdList));
+        }
+
+        if (orderIdList != null && !orderIdList.isEmpty()) {
+            query += "AND o_u.order_client_id IN " + Sql.listPrepared(orderIdList) + " OR " +
+                    "o_u.order_region_id IN " + Sql.listPrepared(orderIdList) + " ";
+            values.addAll(new JsonArray(orderIdList))
+                    .addAll(new JsonArray(orderIdList));
         }
 
         if (userIdList != null && !userIdList.isEmpty()) {
@@ -255,36 +262,6 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut,
-                           String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-
-        String query = "SELECT DISTINCT oce.id, oce.equipment_key, oce.creation_date, oce.status, oce.comment, oce.amount, bo.name as basket_name ";
-        query += (oldTable) ? ", oce.equipment_name, oce.equipment_price, oce.equipment_priceht, oce.equipment_tva5, oce.equipment_tva20 " : "";
-        query += "FROM " + Crre.crreSchema + ((oldTable) ? ".order_client_equipment_old oce " : ".order_client_equipment  oce ") +
-                "LEFT JOIN " + Crre.crreSchema + ".basket_order bo ON (bo.id = oce.id_basket) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_campaign ON (oce.id_campaign = rel_group_campaign.id_campaign) " +
-                "INNER JOIN " + Crre.crreSchema + ".rel_group_structure ON (oce.id_structure = rel_group_structure.id_structure) " +
-                "INNER JOIN " + Crre.crreSchema + ".structure_group ON (rel_group_structure.id_structure_group = structure_group.id " +
-                "AND rel_group_campaign.id_structure_group = structure_group.id) ";
-        if (statut != null) {
-            query = filterWaitingOrder("WAITING", idStructure, query, startDate, endDate, values);
-        } else {
-            query += "WHERE oce.id_campaign = ? AND oce.user_id = ? AND oce.creation_date BETWEEN ? AND ? ";
-            values.add(idCampaign).add(user.getUserId()).add(startDate).add(endDate);
-        }
-        if (idsOrders.size() > 0) {
-            query += " AND oce.id IN ( ";
-            for (int id : idsOrders) {
-                query += "?,";
-                values.add(id);
-            }
-            query = query.substring(0, query.length() - 1) + ")";
-        }
-        sql.prepared(query, values, SqlResult.validResultHandler(handler));
-    }
-
-    @Override
     public Future<List<OrderClientEquipmentModel>> updateStatus(List<Integer> orderClientEquipmentIdList, OrderStatus orderStatus) {
         Promise<List<OrderClientEquipmentModel>> promise = Promise.promise();
 
@@ -329,7 +306,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                         String filterString;
                         if (Field.ID_USER.equals(filter.getKey())) {
                             filterString = "bo.";
-                        // if the key is in OrderClientEquipmentTableField
+                            // if the key is in OrderClientEquipmentTableField
                         } else if (Arrays.stream(OrderClientEquipmentTableField.values())
                                 .anyMatch(orderClientEquipmentTableField -> orderClientEquipmentTableField.name().equalsIgnoreCase(filter.getKey()))) {
                             filterString = "oe.";

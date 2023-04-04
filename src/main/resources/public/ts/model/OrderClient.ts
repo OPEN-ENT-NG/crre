@@ -65,10 +65,10 @@ export class OrderClient implements Order {
         this.typeOrder = "client";
     }
 
-    async updateAmount(amount : number): Promise<void> {
+    async updateAmount(amount: number): Promise<void> {
         try {
             await http.put(`/crre/order/${this.id}/amount`, {amount: amount});
-            let equipment : Equipment = new Equipment()
+            let equipment: Equipment = new Equipment();
             await equipment.sync(this.equipment_key);
             if (equipment.type === "articlenumerique") {
                 this.offers = Utils.computeOffer(this, equipment);
@@ -98,7 +98,7 @@ export class OrdersClient extends Selection<OrderClient> {
         this.filters = [];
     }
 
-    async searchOrder(idStructure: string, filter: ValidatorOrderWaitingFilter, replace: boolean, page?:number) {
+    async searchOrder(idStructure: string, filter: ValidatorOrderWaitingFilter, replace: boolean, page?: number) {
         let queryParam = "";
         if (filter.queryName != null && filter.queryName.trim() !== "") {
             queryParam = `&q=${filter.queryName}`
@@ -115,7 +115,7 @@ export class OrdersClient extends Selection<OrderClient> {
             dateParam = `&startDate=${startDate}&endDate=${endDate}`
         }
 
-        let params : string = '';
+        let params: string = '';
         filter.filterChoiceCorrelation.forEach((value: string, key: string) => {
             filter[key].forEach((el: IFilter) => params += "&" + value + "=" + el.getValue())
         });
@@ -127,27 +127,27 @@ export class OrdersClient extends Selection<OrderClient> {
             response = await http.get(`/crre/orders?idStructure=${idStructure}${dateParam}${pageParam}&status=WAITING`);
         }
 
-        let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderClient, response.data);
+        let newOrderClient: Array<OrderClient> = Mix.castArrayAs(OrderClient, response.data);
         await this.reformatOrders(newOrderClient, replace);
         return newOrderClient.length > 0;
     }
 
     async syncMyOrder(filter: ValidatorOrderWaitingFilter, idCampaign: number,
-                 idStructure: string, ordersId: Array<number>, old = false): Promise<boolean> {
+                      idStructure: string, ordersId: Array<number>, old = false): Promise<boolean> {
         let dateParam = "";
         if (filter.startDate && filter.endDate) {
             const {startDate, endDate} = Utils.formatDate(filter.startDate, filter.endDate);
             dateParam = `startDate=${startDate}&endDate=${endDate}&`
         }
-        let params : string = '?';
+        let params: string = '?';
         ordersId.map((order) => {
             params += `basket_id=${order}&`;
         });
-        let url : string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}${dateParam}old=${old}`;
+        let url: string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}${dateParam}old=${old}`;
         const {data} = await http.get(url);
-        let newOrderClient : Array<OrderClient> = Mix.castArrayAs(OrderUniversal, data)
+        let newOrderClient: Array<OrderClient> = Mix.castArrayAs(OrderUniversal, data)
             .map((order: OrderUniversal) => {
-                let orderMap =  new OrderClient();
+                let orderMap = new OrderClient();
                 orderMap.amount = order.amount;
                 orderMap.cause_status = order.cause_status;
                 orderMap.comment = order.comment;
@@ -160,44 +160,28 @@ export class OrdersClient extends Selection<OrderClient> {
                 orderMap.image = order.equipment_image;
                 orderMap.name = order.equipment_name;
                 orderMap.price = order.equipment_price;
+                if (order.equipment_price !== 0.0 && !!order.offers) {
+                    orderMap.offers = new Offers();
+                    orderMap.offers.all = Mix.castArrayAs(Offer, order.offers).map((newOffer: Offer) => {
+                        let offer: Offer = new Offer();
+                        offer.name = newOffer.titre;
+                        offer.value = parseInt(newOffer.amount);
+                        offer.id = newOffer.id;
+                        return offer
+                    });
+                }
                 orderMap.reassort = order.reassort;
                 orderMap.status = order.status;
                 orderMap.projectTitle = (!order.project) ? null : order.project.title;
                 return orderMap;
             });
 
-        for (let order of newOrderClient) {
-            if (order.price !== 0.0) {
-                order.price = parseFloat(order.price.toString());
-                if (!old) {
-                    let equipments : Equipments = new Equipments();
-                    await equipments.getEquipments(newOrderClient);
-                    let equipment : Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
-                    if (equipment.type === "articlenumerique") {
-                        order.offers = Utils.computeOffer(order, equipment);
-                    }
-                } else {
-                    if (order.type === "articlenumerique" && order.offers) {
-                        let newOffers : Array<Offer> = Mix.castArrayAs(Offer, JSON.parse(order.offers.toString()));
-                        let offers : Offers = new Offers();
-                        for (let newOffer of newOffers) {
-                            let offer : Offer = new Offer();
-                            offer.name = newOffer.titre;
-                            offer.value = parseInt(newOffer.amount);
-                            offer.id = newOffer.id;
-                            offers.all.push(offer);
-                        }
-                        order.offers = offers;
-                    }
-                }
-            }
-        }
         this.all = newOrderClient;
         return newOrderClient.length > 0;
     }
 
-    private async reformatOrders(newOrderClient: Array<OrderClient>, replace: boolean) : Promise<void> {
-        let equipments : Equipments = new Equipments();
+    private async reformatOrders(newOrderClient: Array<OrderClient>, replace: boolean): Promise<void> {
+        let equipments: Equipments = new Equipments();
         await equipments.getEquipments(newOrderClient);
         for (let order of newOrderClient) {
             this.reformatOrder(equipments, order);
@@ -211,8 +195,8 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    private reformatOrder(equipments : Equipments, order : OrderClient) {
-        let equipment : Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
+    private reformatOrder(equipments: Equipments, order: OrderClient) {
+        let equipment: Equipment = equipments.all.find(equipment => order.equipment_key.toString() == equipment.id);
         if (equipment != undefined) {
             order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
             order.price = Utils.calculatePriceTTC(equipment, 2);
@@ -235,7 +219,7 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     getEquipments(orders): AxiosPromise {
-        let params : string = '';
+        let params: string = '';
         orders.map((order) => {
             params += `id=${order.equipment_key}&`;
         });
@@ -244,7 +228,7 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     toJson(status: string): {} {
-        const ids : Array<number> = _.pluck(this.all, 'id');
+        const ids: Array<number> = _.pluck(this.all, 'id');
         return {
             ids,
             status: status,
@@ -255,7 +239,7 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async updateStatus(status: string): Promise<AxiosResponse> {
         try {
-            let config : {} = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
+            let config: {} = status === 'SENT' ? {responseType: 'arraybuffer'} : {};
             return await http.put(`/crre/orders/${status.toLowerCase()}`, this.toJson(status), config);
         } catch (e) {
             toasts.warning('crre.order.update.err');
@@ -265,7 +249,7 @@ export class OrdersClient extends Selection<OrderClient> {
 
     async calculTotal(status: string, id_structure: string, filterOrder: ValidatorOrderWaitingFilter): Promise<AxiosResponse> {
         const {startDate, endDate} = Utils.formatDate(filterOrder.startDate, filterOrder.endDate);
-        let params : string = '';
+        let params: string = '';
         filterOrder.filterChoiceCorrelation.forEach((value: string, key: string) => {
             filterOrder[key].forEach((el: IFilter) => params += "&" + value + "=" + el.getValue())
         });
@@ -274,8 +258,8 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     calculTotalAmount(): number {
-        let total : number = 0;
-        this.all.map((order : OrderClient) => {
+        let total: number = 0;
+        this.all.map((order: OrderClient) => {
             if (order.campaign.use_credit == "licences" || order.campaign.use_credit == "consumable_licences") {
                 total += order.amount;
             }
@@ -284,9 +268,9 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     calculTotalPriceTTC(consumable: boolean): number {
-        let total : number = 0;
-        this.all.forEach((order : OrderClient) => {
-            if(order.selected) {
+        let total: number = 0;
+        this.all.forEach((order: OrderClient) => {
+            if (order.selected) {
                 if (!consumable && order.campaign.use_credit == "credits") {
                     total += order.price * order.amount;
                 } else if (consumable && order.campaign.use_credit == "consumable_credits") {
@@ -297,46 +281,46 @@ export class OrdersClient extends Selection<OrderClient> {
         return total;
     }
 
-    exportCSV(old: boolean, idCampaign: string, idStructure: string, start: string, end: string, all: boolean, statut?: string) : void {
+    exportCSV(old: boolean, idCampaign: string, idStructure: string, start: string, end: string, all: boolean, statut?: string): void {
         const {startDate, endDate} = Utils.formatDate(start, end);
-        let params : string = ``;
+        let params: string = ``;
         params += `startDate=${startDate}&endDate=${endDate}&`;
         params += !!idCampaign ? `idCampaign=${idCampaign}&` : ``;
         params += !!idStructure ? `idStructure=${idStructure}&` : ``;
         params += !!statut ? `statut=${statut}&` : ``;
+        params += `old=${old}&`;
         params += !all ? Utils.formatKeyToParameter(this.all, 'id') : ``;
-        const oldString : string = (old) ? `old/` : ``;
-        window.location = `/crre/orders/${oldString}exports?${params}`;
+        window.location = `/crre/orders/exports?${params}`;
     };
 
-    async resubmitOrderClient(baskets : Baskets, totalAmount: number, structure: Structure) : Promise<void> {
-        const response : AxiosResponse = await baskets.create();
+    async resubmitOrderClient(baskets: Baskets, totalAmount: number, structure: Structure): Promise<void> {
+        const response: AxiosResponse = await baskets.create();
 
-        let basketsPerCampaign : {} = {};
+        let basketsPerCampaign: {} = {};
 
         if (response.status === 200) {
             response.data.forEach(basketReturn => {
-                let basket : Basket = new Basket();
+                let basket: Basket = new Basket();
                 basket.id = basketReturn.id;
                 basket.selected = true;
-                const idCampaign : number = basketReturn.idCampaign;
+                const idCampaign: number = basketReturn.idCampaign;
                 basketsPerCampaign[idCampaign] == undefined ? basketsPerCampaign[idCampaign] = new Baskets() : null;
                 basketsPerCampaign[idCampaign].push(basket);
             })
 
-            const current_date : string = Utils.getCurrentDate();
+            const current_date: string = Utils.getCurrentDate();
 
-            let promesses : Array<Promise<AxiosResponse>> = [];
+            let promesses: Array<Promise<AxiosResponse>> = [];
             for (const idCampaign of Object.keys(basketsPerCampaign)) {
-                const baskets : Baskets = basketsPerCampaign[idCampaign];
-                const panier : string = lang.translate('crre.basket.resubmit') + current_date;
+                const baskets: Baskets = basketsPerCampaign[idCampaign];
+                const panier: string = lang.translate('crre.basket.resubmit') + current_date;
                 promesses.push(baskets.takeOrder(idCampaign.toString(), structure, panier));
             }
 
-            const responses : AxiosResponse[] = await Promise.all(promesses);
+            const responses: AxiosResponse[] = await Promise.all(promesses);
 
-            if (responses.filter((r : AxiosResponse) => r.status === 200).length === promesses.length) {
-                let messageForMany : string = totalAmount + ' ' + lang.translate('articles') +
+            if (responses.filter((r: AxiosResponse) => r.status === 200).length === promesses.length) {
+                let messageForMany: string = totalAmount + ' ' + lang.translate('articles') +
                     lang.translate('crre.confirm.orders.message');
                 toasts.confirm(messageForMany);
             } else {
@@ -346,5 +330,5 @@ export class OrdersClient extends Selection<OrderClient> {
             toasts.warning('crre.basket.added.articles.error');
         }
     };
-    
+
 }
