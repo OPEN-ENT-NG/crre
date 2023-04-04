@@ -3,7 +3,12 @@ package fr.openent.crre.model;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.IModelHelper;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import static fr.openent.crre.helpers.DateHelper.formatDate;
+import static fr.openent.crre.helpers.EquipmentHelper.getRoundedPrice;
 
 public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Integer id;
@@ -33,9 +38,8 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Double equipmentTva5;
     private Double equipmentTva20;
     private Double equipmentPriceht;
-    private String offers;
+    private JsonArray offers;
     private Integer totalFree;
-
     private Integer orderClientId;
     private Integer orderRegionId;
 
@@ -69,7 +73,11 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.equipmentTva5 = jsonObject.getDouble(Field.EQUIPMENT_TVA5);
         this.equipmentTva20 = jsonObject.getDouble(Field.EQUIPMENT_TVA20);
         this.equipmentPriceht = jsonObject.getDouble(Field.EQUIPMENT_PRICEHT);
-        this.offers = jsonObject.getString(Field.OFFERS);
+        try {
+            this.offers = jsonObject.getString(Field.OFFERS) != null ? new JsonArray(jsonObject.getString(Field.OFFERS)) : new JsonArray();
+        } catch (DecodeException e) {
+            this.offers = new JsonArray();
+        }
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
         if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof JsonObject) {
             this.project = IModelHelper.toModel(jsonObject.getJsonObject(Field.PROJECT), ProjectModel.class);
@@ -119,6 +127,10 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public String getPrescriberValidationDate() {
         return prescriberValidationDate;
+    }
+
+    public String getPrescriberValidationDateFormat() {
+        return prescriberValidationDate != null ? formatDate(prescriberValidationDate) : null;
     }
 
     public OrderUniversalModel setPrescriberValidationDate(String prescriberValidationDate) {
@@ -315,11 +327,11 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         return this;
     }
 
-    public String getOffers() {
+    public JsonArray getOffers() {
         return offers;
     }
 
-    public OrderUniversalModel setOffers(String offers) {
+    public OrderUniversalModel setOffers(JsonArray offers) {
         this.offers = offers;
         return this;
     }
@@ -376,5 +388,25 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     public OrderUniversalModel setOrderRegionId(Integer orderRegionId) {
         this.orderRegionId = orderRegionId;
         return this;
+    }
+
+    public Double getUnitedPriceTTC() {
+        return this.equipmentPrice != null ? getRoundedPrice(this.equipmentPrice) : 0.0;
+    }
+
+    public Double getTotalPriceHT() {
+        return this.equipmentPriceht != null ? getRoundedPrice(this.amount * this.equipmentPriceht) : 0.0;
+    }
+
+    public Double getTotalPriceTTC() {
+        return this.equipmentPrice != null ? getRoundedPrice(this.amount * this.equipmentPrice) : 0.0;
+    }
+
+    public Double getEquipmentPriceTva5() {
+        return this.getEquipmentTva5() != null ? getRoundedPrice(this.amount + this.equipmentTva5) : null;
+    }
+
+    public Double getEquipmentPriceTva20() {
+        return this.getEquipmentTva20() != null ? getRoundedPrice(this.amount + this.equipmentTva20) : null;
     }
 }
