@@ -240,6 +240,12 @@
             </h2>
             <table class="table twelve">
                 <tbody>
+                <tr ng-if="!!basket.equipment.type">
+                    <td class="one"><strong>
+                        <i18n>crre.equipment.format</i18n>
+                    </strong></td>
+                    <td>[[lang.translate(basket.equipment.type)]]</td>
+                </tr>
                 <tr ng-if="!!basket.equipment.editeur">
                     <td class="one"><strong>
                         <i18n>crre.equipment.editor</i18n>
