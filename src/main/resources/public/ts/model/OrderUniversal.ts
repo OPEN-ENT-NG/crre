@@ -33,8 +33,8 @@ export class OrderUniversal {
     private _offers: string;
     private _totalFree: number;
 
-    private _orderClientId: number;
-    private _orderRegionId: number;
+    private _order_client_id: number;
+    private _order_region_id: number;
 
 
     get id(): number {
@@ -270,19 +270,19 @@ export class OrderUniversal {
     }
 
 
-    get orderClientId(): number {
-        return this._orderClientId;
+    get order_client_id(): number {
+        return this._order_client_id;
     }
 
-    set orderClientId(value: number) {
-        this._orderClientId = value;
+    set order_client_id(value: number) {
+        this._order_client_id = value;
     }
 
-    get orderRegionId(): number {
-        return this._orderRegionId;
+    get order_region_id(): number {
+        return this._order_region_id;
     }
 
-    set orderRegionId(value: number) {
-        this._orderRegionId = value;
+    set order_region_id(value: number) {
+        this._order_region_id = value;
     }
 }
