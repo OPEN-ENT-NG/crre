@@ -25,9 +25,7 @@ public interface OrderService {
      * @return a future of result
      */
     Future<List<OrderUniversalModel>> listOrder(List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
-                                                List<String> basketIdList, String startDate, String endDate, List<OrderStatus> orderStatusList);
-
-    void listExport(List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, boolean oldTable, Handler<Either<String, JsonArray>> catalog);
+                                                List<String> basketIdList, List<Integer> orderIdList, String startDate, String endDate, List<OrderStatus> orderStatusList);
 
     /**
      * Get the list of all orders

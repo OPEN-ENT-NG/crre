@@ -13,33 +13,27 @@ import fr.openent.crre.security.*;
 import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
 import fr.openent.crre.service.ServiceFactory;
-import fr.openent.crre.utils.OrderUtils;
 import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,10 +42,12 @@ import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
-import static fr.openent.crre.utils.OrderUtils.*;
+import static fr.openent.crre.helpers.JsonHelper.jsonArrayToList;
+import static fr.openent.crre.utils.OrderUtils.convertPriceString;
+import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Integer.parseInt;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 
 public class OrderController extends ControllerHelper {
@@ -60,7 +56,7 @@ public class OrderController extends ControllerHelper {
     private final NotificationService notificationService;
 
     public OrderController(ServiceFactory serviceFactory) {
-        this.orderService =  serviceFactory.getOrderService();
+        this.orderService = serviceFactory.getOrderService();
         this.notificationService = serviceFactory.getNotificationService();
     }
 
@@ -80,10 +76,10 @@ public class OrderController extends ControllerHelper {
 
                 List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values())
                         .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
-                                .collect(Collectors.toList());
+                        .collect(Collectors.toList());
 
                 Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(Collections.singletonList(idCampaign),
-                        Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), basketIdList,
+                        Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), basketIdList, new ArrayList<>(),
                         startDate, endDate, orderStatusList);
 
                 orderFuture
@@ -109,12 +105,14 @@ public class OrderController extends ControllerHelper {
                                                 .findFirst()
                                                 .orElse(null);
                                         if (equipmentJson != null) {
-                                            orderUniversalModel.setEquipmentPrice(getPriceTtc(equipmentJson).getDouble(Field.PRICETTC));
+                                            JsonObject priceInfos = getPriceTtc(equipmentJson);
+                                            orderUniversalModel.setEquipmentPrice(priceInfos.getDouble(Field.PRICETTC));
                                             orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
                                             orderUniversalModel.setEquipmentImage(equipmentJson.getString(Field.URLCOUVERTURE));
+                                            orderUniversalModel.setOffers(computeOffers(orderUniversalModel, equipmentJson.getJsonArray(Field.OFFRES)));
                                         } else {
                                             orderUniversalModel.setEquipmentPrice(0.0);
-                                            orderUniversalModel.setEquipmentName("Manuel introuvable dans le catalogue");
+                                            orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", getHost(request), I18n.acceptLanguage(request)));
                                             orderUniversalModel.setEquipmentImage("/crre/public/img/pages-default.png");
                                         }
                                     });
@@ -198,7 +196,7 @@ public class OrderController extends ControllerHelper {
                         if (getOrderAmount.future().result().getString("nb_licences") != null) {
                             amount = Integer.parseInt(getOrderAmount.future().result().getString("nb_licences"));
                         }
-                        result.put("licence", amount);
+                        result.put(Field.LICENCE, amount);
                         amount = 0;
                         if (getOrderAmountConsumable.future().result().getString("nb_licences") != null) {
                             amount = Integer.parseInt(getOrderAmountConsumable.future().result().getString("nb_licences"));
@@ -328,10 +326,10 @@ public class OrderController extends ControllerHelper {
                 Integer finalId_campaign = id_campaign;
                 plainTextSearchName(finalQ, Collections.singletonList(Field.EAN), equipments -> {
                     List<String> equipementIdList = equipments.right().getValue().stream()
-                                    .filter(JsonObject.class::isInstance)
-                                    .map(JsonObject.class::cast)
-                                    .map(jsonObject -> jsonObject.getString(Field.EAN))
-                                    .collect(Collectors.toList());
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .collect(Collectors.toList());
                     orderService.search(finalQ, filters, idStructure, equipementIdList, finalId_campaign, startDate, endDate, page)
                             .onSuccess(result -> Renders.renderJson(request, result))
                             .onFailure(error -> Renders.renderError(request));
@@ -349,126 +347,164 @@ public class OrderController extends ControllerHelper {
     @ResourceFilter(PrescriptorAndStructureRight.class)
     public void export(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request,
-                userInfos -> {
-                    List<String> params = request.params().getAll(Field.ID);
-                    String idCampaign = request.params().contains("idCampaign") ? request.params().get("idCampaign") : null;
-                    String idStructure = request.params().contains("idStructure") ? request.params().get("idStructure") : null;
-                    String statut = request.params().contains("statut") ? request.params().get("statut") : null;
-                    String startDate = request.getParam("startDate");
-                    String endDate = request.getParam("endDate");
-                    List<Integer> idsOrders = params == null ? new ArrayList<>() : SqlQueryUtils.getIntegerIds(params);
-                    getOrderEquipment(idsOrders, userInfos, idStructure, idCampaign, statut, startDate, endDate, event -> {
-                        if (event.isRight()) {
-                            JsonArray orderClients = event.right().getValue();
-                            HashSet<String> idsEquipment = new HashSet<>();
-                            for (int j = 0; j < orderClients.size(); j++) {
-                                idsEquipment.add(orderClients.getJsonObject(j).getString("equipment_key"));
-                            }
-                            getEquipment(new ArrayList<>(idsEquipment), event1 -> {
-                                JsonObject orderMap;
-                                JsonArray equipments = event1.right().getValue();
-                                JsonArray orders = new JsonArray();
-                                JsonObject order, equipment;
-                                boolean check;
-                                int j;
-                                for (int i = 0; i < orderClients.size(); i++) {
-                                    order = orderClients.getJsonObject(i);
-                                    check = true;
-                                    j = 0;
-                                    while (check && j < equipments.size()) {
-                                        if (equipments.getJsonObject(j).getString("ean").equals(order.getString("equipment_key"))) {
-                                            orderMap = new JsonObject();
-                                            equipment = equipments.getJsonObject(j);
-                                            orderMap.put(Field.NAME, equipment.getString("titre"));
-                                            orderMap.put("ean", equipment.getString("ean"));
-                                            setOrderMap(orders, orderMap, order, equipment, false);
-                                            check = false;
-                                        }
-                                        j++;
+                user -> {
+                    List<String> orderIds = request.params().getAll(Field.ID);
+                    List<Integer> idsOrders = orderIds == null ? new ArrayList<>() : SqlQueryUtils.getIntegerIds(orderIds);
+
+                    Integer idCampaign = Integer.parseInt(request.params().get(Field.IDCAMPAIGN));
+                    String idStructure = request.params().get(Field.IDSTRUCTURE);
+                    String startDate = request.getParam(Field.STARTDATE);
+                    String endDate = request.getParam(Field.ENDDATE);
+                    Boolean old = request.getParam(Field.OLD) == null ? null : Boolean.parseBoolean(request.getParam(Field.OLD));
+
+                    List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values())
+                            .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
+                            .collect(Collectors.toList());
+                    Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(Collections.singletonList(idCampaign),
+                            Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), new ArrayList<>(), idsOrders,
+                            startDate, endDate, orderStatusList);
+                    orderFuture.compose(orderUniversalModels -> {
+                                List<String> itemIds = orderUniversalModels.stream()
+                                        .filter(order -> !order.getStatus().isHistoricStatus())
+                                        .map(OrderUniversalModel::getEquipmentKey)
+                                        .distinct()
+                                        .collect(Collectors.toList());
+                                return itemIds.size() > 0 ? searchByIds(itemIds, null) : Future.succeededFuture(new JsonArray());
+                            })
+                            .onSuccess(itemArray -> {
+                                List<OrderUniversalModel> orderUniversalModels = orderFuture.result();
+                                List<JsonObject> itemsList = itemArray.stream()
+                                        .filter(JsonObject.class::isInstance)
+                                        .map(JsonObject.class::cast)
+                                        .collect(Collectors.toList());
+                                orderUniversalModels.stream()
+                                        .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
+                                        .forEach(orderUniversalModel -> {
+                                            JsonObject equipmentJson = itemsList.stream()
+                                                    .filter(item -> orderUniversalModel.getEquipmentKey().equals(item.getString(Field.ID)))
+                                                    .findFirst()
+                                                    .orElse(null);
+                                            if (equipmentJson != null) {
+                                                JsonObject priceInfos = getPriceTtc(equipmentJson);
+                                                orderUniversalModel.setEquipmentPrice(priceInfos.getDouble(Field.PRICETTC));
+                                                orderUniversalModel.setEquipmentPriceht(priceInfos.getDouble(Field.PRIXHT));
+                                                orderUniversalModel.setEquipmentTva5(priceInfos.getDouble(Field.PART_TVA5));
+                                                orderUniversalModel.setEquipmentTva20(priceInfos.getDouble(Field.PART_TVA20));
+                                                orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
+                                                orderUniversalModel.setOffers(equipmentJson.getJsonArray(Field.OFFRES));
+                                            } else {
+                                                orderUniversalModel.setEquipmentPrice(0.0);
+                                                orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", getHost(request), I18n.acceptLanguage(request)));
+                                            }
+                                        });
+                                new ArrayList<>(orderUniversalModels).forEach(orderUniversal -> {
+                                    if (orderUniversal.getOffers() != null && orderUniversal.getOffers().size() > 0) {
+                                        int index = orderUniversalModels.indexOf(orderUniversal);
+                                        orderUniversalModels.addAll(index + 1, computeOffersUniversal(orderUniversal));
                                     }
-                                }
+                                });
                                 request.response()
                                         .putHeader("Content-Type", "text/csv; charset=utf-8")
                                         .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                        .end(generateExport(request, orders));
+                                        .end(generateExport(request, orderUniversalModels));
                             });
-                        }
-                    });
                 });
     }
 
-    @Get("/orders/old/exports")
-    @ApiDoc("Export list of customer's old orders as CSV")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorAndStructureRight.class)
-    public void exportOld(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request,
-                userInfos -> {
-                    List<String> params = request.params().getAll(Field.ID);
-                    String idCampaign = request.params().contains("idCampaign") ? request.params().get("idCampaign") : null;
-                    String idStructure = request.params().contains("idStructure") ? request.params().get("idStructure") : null;
-                    String startDate = request.getParam("startDate");
-                    String endDate = request.getParam("endDate");
-                    List<Integer> idsOrders = params == null ? new ArrayList<>() : SqlQueryUtils.getIntegerIds(params);
-                    getOrderEquipmentOld(idsOrders, userInfos, idStructure, idCampaign, startDate, endDate, event -> {
-                        if (event.isRight()) {
-                            JsonArray orders = new JsonArray();
-                            JsonArray orderClients = event.right().getValue();
-                            JsonObject orderMap;
-                            JsonObject order;
-                            for (int i = 0; i < orderClients.size(); i++) {
-                                order = orderClients.getJsonObject(i);
-                                orderMap = new JsonObject();
-                                orderMap.put(Field.NAME, order.getString("equipment_name"));
-                                orderMap.put("ean", order.getString("equipment_key"));
-                                setOrderMap(orders, orderMap, order, null, true);
+    private List<OrderUniversalModel> computeOffersUniversal(OrderUniversalModel orderUniversal) {
+        List<OrderUniversalModel> offers = new ArrayList<>();
+        if ((orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject) &&
+        orderUniversal.getOffers().getJsonObject(0).getString(Field.ID) != null) {
+            jsonArrayToList(orderUniversal.getOffers(), JsonObject.class).forEach(offer -> {
+                OrderUniversalModel orderUniversalOffer = new OrderUniversalModel()
+                        .setAmount(offer.getInteger(Field.AMOUNT))
+                        .setEquipmentName(offer.getString(Field.NAME))
+                        .setComment(offer.getString(Field.COMMENT))
+                        .setEquipmentKey(offer.getString(Field.EAN))
+                        .setPrescriberValidationDate(offer.getString(Field.CREATION_DATE))
+                        .setBasket(orderUniversal.getBasket());
+                offers.add(orderUniversalOffer);
+            });
+        } else {
+            if(orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject &&
+                    orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS) != null &&
+                    orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS).size() > 0) {
+                JsonArray leps = orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS);
+                Integer amount = orderUniversal.getAmount();
+                int gratuit = 0;
+                int gratuite = 0;
+                for (int i = 0; i < leps.size(); i++) {
+                    JsonObject offer = leps.getJsonObject(i);
+                    JsonArray conditions = offer.getJsonArray(Field.CONDITIONS);
+                    OrderUniversalModel orderUniversalOffer = new OrderUniversalModel();
+                    if (conditions.size() > 1) {
+                        for (int j = 0; j < conditions.size(); j++) {
+                            int condition = conditions.getJsonObject(j).getInteger(Field.CONDITIONS_FREE);
+                            if (amount >= condition && gratuit < condition) {
+                                gratuit = condition;
+                                gratuite = conditions.getJsonObject(j).getInteger(Field.FREE);
                             }
-                            request.response()
-                                    .putHeader("Content-Type", "text/csv; charset=utf-8")
-                                    .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                    .end(generateExport(request, orders));
-                        } else {
-                            Renders.renderError(request);
-                            log.error(String.format("[CRRE@%s::exportOld] Fail to get old order equipment %s", this.getClass().getSimpleName(), event.left().getValue()));
                         }
-                    });
-                });
+                    } else if (offer.getJsonArray(Field.CONDITIONS).size() == 1) {
+                        gratuit = offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
+                        gratuite = (int) (offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount / gratuit));
+                    }
+
+                    if (gratuite > 0) {
+                        orderUniversalOffer.setAmount(gratuite);
+                        orderUniversalOffer.setEquipmentName(offer.getString(Field.TITRE));
+                        orderUniversalOffer.setComment(orderUniversal.getEquipmentKey());
+                        orderUniversalOffer.setEquipmentKey(offer.getString(Field.EAN));
+                        orderUniversalOffer.setPrescriberValidationDate(orderUniversal.getPrescriberValidationDate());
+                        orderUniversalOffer.setBasket(orderUniversal.getBasket());
+                        offers.add(orderUniversalOffer);
+                    }
+                }
+            }
+        }
+        return offers;
     }
 
-    private void setOrderMap(JsonArray orders, JsonObject orderMap, JsonObject order, JsonObject equipment,
-                             boolean old) {
-        orderMap.put(Field.ID, order.getInteger(Field.ID));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSZ");
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(order.getString("creation_date"), formatter);
-        String creation_date = DateTimeFormatter.ofPattern("dd-MM-yyyy").format(zonedDateTime);
-        orderMap.put("creation_date", creation_date);
-        orderMap.put(Field.STATUS, order.getString(Field.STATUS));
-        orderMap.put("basket_name", order.getString("basket_name"));
-        orderMap.put("comment", order.getString("comment"));
-        orderMap.put("amount", order.getInteger("amount"));
-        dealWithPriceTTC_HT(orderMap, equipment, order, old);
-        orders.add(orderMap);
+    private JsonArray computeOffers(OrderUniversalModel orderUniversalModel, JsonArray equipmentOffers) {
+        JsonArray offers = new JsonArray();
+        if (equipmentOffers != null && equipmentOffers.getJsonObject(0).getJsonArray(Field.LEPS).size() > 0) {
+            JsonArray leps = equipmentOffers.getJsonObject(0).getJsonArray(Field.LEPS);
+            Integer amount = orderUniversalModel.getAmount();
+            int gratuit = 0;
+            int gratuite = 0;
+            for (int i = 0; i < leps.size(); i++) {
+                JsonObject offer = leps.getJsonObject(i);
+                JsonArray conditions = offer.getJsonArray(Field.CONDITIONS);
+                JsonObject newOffer = new JsonObject()
+                        .put(Field.TITRE, Field.MANUAL + " " + offer.getJsonArray(Field.LICENCE).getJsonObject(0).getString(Field.VALUE));
+                if (conditions.size() > 1) {
+                    for (int j = 0; j < conditions.size(); j++) {
+                        int condition = conditions.getJsonObject(j).getInteger(Field.CONDITIONS_FREE);
+                        if (amount >= condition && gratuit < condition) {
+                            gratuit = condition;
+                            gratuite = conditions.getJsonObject(j).getInteger(Field.FREE);
+                        }
+                    }
+                } else if (offer.getJsonArray(Field.CONDITIONS).size() == 1) {
+                    gratuit = offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
+                    gratuite = (int) (offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount / gratuit));
+                }
+
+                newOffer.put(Field.AMOUNT, gratuite);
+                newOffer.put(Field.ID, offer.getString(Field.EAN));
+                newOffer.put(Field.NAME, offer.getString(Field.TITRE));
+                if (gratuite > 0) {
+                    offers.add(newOffer);
+                }
+            }
+        }
+        return offers;
     }
 
-    private void getOrderEquipment
-            (List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String statut, String startDate, String endDate, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        orderService.listExport(idsOrders, user, idStructure, idCampaign, statut, startDate, endDate, false, handlerJsonArray);
-    }
-
-    private void getOrderEquipmentOld
-            (List<Integer> idsOrders, UserInfos user, String idStructure, String idCampaign, String startDate, String endDate, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        orderService.listExport(idsOrders, user, idStructure, idCampaign, null, startDate, endDate, true, handlerJsonArray);
-    }
-
-    private void getEquipment
-            (List<String> idsEquipment, Handler<Either<String, JsonArray>> handlerJsonArray) {
-        searchByIds(idsEquipment, null, handlerJsonArray);
-    }
-
-    private static String generateExport(HttpServerRequest request, JsonArray logs) {
+    private static String generateExport(HttpServerRequest request, List<OrderUniversalModel> orders) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getExportHeader(request));
-        for (int i = 0; i < logs.size(); i++) {
-            report.append(generateExportLine(request, logs.getJsonObject(i)));
+        for (int i = 0; i < orders.size(); i++) {
+            report.append(generateExportLine(request, orders.get(i)));
         }
         return report.toString();
     }
@@ -477,7 +513,7 @@ public class OrderController extends ControllerHelper {
         return I18n.getInstance().translate("crre.date", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("basket", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("name.equipment", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("ean", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate(Field.EAN, getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("quantity", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.unit.price.ht", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("price.equipment.5", getHost(request), I18n.acceptLanguage(request)) + ";" +
@@ -490,25 +526,36 @@ public class OrderController extends ControllerHelper {
                 + "\n";
     }
 
-    private static String generateExportLine(HttpServerRequest request, JsonObject log) {
-        return (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
-                (log.getString("basket_name") != null ? log.getString("basket_name") : "") + ";" +
-                (log.getString(Field.NAME) != null ? log.getString(Field.NAME) : "") + ";" +
-                (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
-                exportPriceComment(log) +
-                (log.getString(Field.STATUS) != null ? I18n.getInstance().translate(log.getString(Field.STATUS), getHost(request), I18n.acceptLanguage(request)) : "")
+    private static String generateExportLine(HttpServerRequest request, OrderUniversalModel order) {
+        return (order.getPrescriberValidationDateFormat() != null ? order.getPrescriberValidationDateFormat() : "") + ";" +
+                (order.getBasket().getName() != null ? order.getBasket().getName() : "") + ";" +
+                (order.getEquipmentName() != null ? order.getEquipmentName() : "") + ";" +
+                (order.getEquipmentKey() != null ? order.getEquipmentKey() : "") + ";" +
+                exportPriceComment(order) +
+                (order.getStatus() != null ? I18n.getInstance().translate(order.getStatus().toString(), getHost(request), I18n.acceptLanguage(request)) : "")
                 + "\n";
     }
 
-    public static String exportPriceComment(OrderRegionBeautifyModel orderRegionBeautify) {
-        return (orderRegionBeautify.getOrderRegion().getAmount() != null ? orderRegionBeautify.getOrderRegion().getAmount() : "") + ";" +
-                (orderRegionBeautify.getPriceht() != null ? orderRegionBeautify.getPriceht() : "") + ";" +
-                (orderRegionBeautify.getTva5() != null ? orderRegionBeautify.getTva5() : "") + ";" +
-                (orderRegionBeautify.getTva20() != null ? orderRegionBeautify.getTva20() : "") + ";" +
-                (orderRegionBeautify.getUnitedPriceTTC() != null ? convertPriceString(orderRegionBeautify.getUnitedPriceTTC()) : "") + ";" +
-                (orderRegionBeautify.getTotalPriceHT() != null ? convertPriceString(orderRegionBeautify.getTotalPriceHT()) : "") + ";" +
-                (orderRegionBeautify.getTotalPriceTTC() != null ? convertPriceString(orderRegionBeautify.getTotalPriceTTC()) : "") + ";" +
-                (orderRegionBeautify.getOrderRegion().getComment() != null ? orderRegionBeautify.getOrderRegion().getComment().replaceAll("\n","").replaceAll("\r","") : "") + ";";
+    public static String exportPriceComment(OrderRegionBeautifyModel orderRegionBeautifyModel) {
+        return (orderRegionBeautifyModel.getOrderRegion().getAmount() != null ? orderRegionBeautifyModel.getOrderRegion().getAmount() : "") + ";" +
+                (orderRegionBeautifyModel.getPriceht() != null ? orderRegionBeautifyModel.getPriceht() : "") + ";" +
+                (orderRegionBeautifyModel.getTva5() != null ? orderRegionBeautifyModel.getTva5() : "") + ";" +
+                (orderRegionBeautifyModel.getTva20() != null ? orderRegionBeautifyModel.getTva20() : "") + ";" +
+                (orderRegionBeautifyModel.getUnitedPriceTTC() != null ? convertPriceString(orderRegionBeautifyModel.getUnitedPriceTTC()) : "") + ";" +
+                (orderRegionBeautifyModel.getTotalPriceHT() != null ? convertPriceString(orderRegionBeautifyModel.getTotalPriceHT()) : "") + ";" +
+                (orderRegionBeautifyModel.getTotalPriceTTC() != null ? convertPriceString(orderRegionBeautifyModel.getTotalPriceTTC()) : "") + ";" +
+                (orderRegionBeautifyModel.getOrderRegion().getComment() != null ? orderRegionBeautifyModel.getOrderRegion().getComment().replaceAll("\n", "").replaceAll("\r", "") : "") + ";";
+    }
+
+    public static String exportPriceComment(OrderUniversalModel orderUniversalModel) {
+        return (orderUniversalModel.getAmount() != null ? orderUniversalModel.getAmount() : "") + ";" +
+                (orderUniversalModel.getEquipmentPriceht() != null ? orderUniversalModel.getEquipmentPriceht() : "") + ";" +
+                (orderUniversalModel.getEquipmentPriceTva5() != null ? orderUniversalModel.getEquipmentTva5() : "") + ";" +
+                (orderUniversalModel.getEquipmentPriceTva20() != null ? orderUniversalModel.getEquipmentTva20() : "") + ";" +
+                (orderUniversalModel.getUnitedPriceTTC() != null ? convertPriceString(orderUniversalModel.getUnitedPriceTTC()) : "") + ";" +
+                (orderUniversalModel.getTotalPriceHT() != null ? convertPriceString(orderUniversalModel.getTotalPriceHT()) : "") + ";" +
+                (orderUniversalModel.getTotalPriceTTC() != null ? convertPriceString(orderUniversalModel.getTotalPriceTTC()) : "") + ";" +
+                (orderUniversalModel.getComment() != null ? orderUniversalModel.getComment().replaceAll("\n", "").replaceAll("\r", "") : "") + ";";
     }
 
     /**
@@ -524,7 +571,7 @@ public class OrderController extends ControllerHelper {
                 (log.getDouble("totalPriceHT") != null ? convertPriceString(log.getDouble("totalPriceHT")) : "") + ";" +
                 (log.getDouble("totalPriceTTC") != null ? convertPriceString(log.getDouble("totalPriceTTC")) : "") + ";" +
                 (log.getString("comment") != null ?
-                        log.getString("comment").replaceAll("\n","").replaceAll("\r","") : "") + ";";
+                        log.getString("comment").replaceAll("\n", "").replaceAll("\r", "") : "") + ";";
     }
 
     public static String exportStudents(OrderRegionBeautifyModel orderRegionBeautify) {
@@ -587,8 +634,8 @@ public class OrderController extends ControllerHelper {
                             this.notificationService.sendNotificationPrescriber(orderClientEquipmentIdUpdated);
                             UserUtils.getUserInfos(eb, request, userInfos ->
                                     Logging.insert(userInfos, Contexts.ORDER.toString(), Actions.UPDATE.toString(),
-                                    orderClientEquipmentIdUpdated.stream().map(String::valueOf).collect(Collectors.toList()),
-                                    new JsonObject().put(Field.STATUS, status)));
+                                            orderClientEquipmentIdUpdated.stream().map(String::valueOf).collect(Collectors.toList()),
+                                            new JsonObject().put(Field.STATUS, status)));
                         })
                         .onFailure(error -> Renders.renderError(request));
             } else {

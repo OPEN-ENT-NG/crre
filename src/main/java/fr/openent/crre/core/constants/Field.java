@@ -230,6 +230,16 @@ public class Field {
     public static final String ORDER_REGION_ID = "order_region_id";
     public static final String GROUPS = "groups";
     public static final String URLCOUVERTURE = "urlcouverture";
+    public static final String PART_TVA5 = "partTVA5";
+    public static final String PART_TVA20 = "partTVA20";
+    public static final String PRIXHT = "prixht";
+    public static final String LEPS = "leps";
+    public static final String CONDITIONS = "conditions";
+    public static final String CONDITIONS_FREE = "conditionGratuite";
+    public static final String FREE = "gratuite";
+    public static final String VALUE = "valeur";
+    public static final String LICENCE = "licence";
+
 
     private Field() {
         throw new IllegalStateException("Utility class");

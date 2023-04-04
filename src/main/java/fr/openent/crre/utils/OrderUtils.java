@@ -1,6 +1,5 @@
 package fr.openent.crre.utils;
 
-import fr.openent.crre.core.constants.Field;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -59,53 +58,8 @@ public class OrderUtils {
         }
     }
 
-    public static void dealWithPriceTTC_HT(JsonObject orderMap, JsonObject equipment, JsonObject order, boolean old) {
-        DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
-        DecimalFormat df2 = new DecimalFormat("#.##", dfs);
-        double priceht, price;
-
-        if (!old) {
-            JsonObject priceInfo = getPriceTtc(equipment);
-            price = priceInfo.containsKey("priceTTC") ? priceInfo.getDouble("priceTTC",0.0) : 0.0;
-            priceht = priceInfo.containsKey("prixht") ? priceInfo.getDouble("prixht",0.0) : 0.0;
-
-            orderMap.put("tva5", priceInfo.getDouble("partTVA5") != null ?
-                    Double.parseDouble(df2.format(priceInfo.getDouble("partTVA5"))) : null);
-            orderMap.put("tva20",  priceInfo.getDouble("partTVA20") != null ?
-                    Double.parseDouble(df2.format(priceInfo.getDouble("partTVA20"))) : null);
-        } else {
-            price = Double.parseDouble(order.containsKey("equipment_price") ? order.getString("equipment_price","0.0") : "0.0");
-            priceht = order.containsKey("equipment_priceht") ? order.getDouble("equipment_priceht",0.0) : 0.0;
-
-            orderMap.put("tva5", order.getDouble("equipment_tva5") != null ?
-                    Double.parseDouble(df2.format(order.getDouble("equipment_tva5"))) : null);
-            orderMap.put("tva20",  order.getDouble("equipment_tva20") != null ?
-                    Double.parseDouble(df2.format(order.getDouble("equipment_tva20"))) : null);
-        }
-
-        double priceHT = priceht * (orderMap.containsKey("amount") ? orderMap.getInteger("amount",0) : 0);
-        double priceTTC = price * (orderMap.containsKey("amount") ? orderMap.getInteger("amount",0) : 0);
-
-        orderMap.put("priceht", priceht);
-        orderMap.put("unitedPriceTTC", Double.parseDouble(df2.format(price)));
-        orderMap.put("totalPriceHT", Double.parseDouble(df2.format(priceHT)));
-        orderMap.put("totalPriceTTC", Double.parseDouble(df2.format(priceTTC)));
-    }
-
     public static String convertPriceString(double price) {
         return (price == 0) ? "GRATUIT" : Double.toString(price);
-    }
-
-    public static Integer formatPage(HttpServerRequest request) {
-        Integer page = 0;
-        if (request.getParam("page") == null) {
-            page = 0;
-        } else if (request.getParam("page").equals("null")) {
-            page = null;
-        } else if (request.getParam("page") != null) {
-            page = Integer.parseInt(request.getParam("page"));
-        }
-        return page;
     }
 
 }

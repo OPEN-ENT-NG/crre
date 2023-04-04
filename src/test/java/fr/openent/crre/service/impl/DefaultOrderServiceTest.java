@@ -16,10 +16,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
@@ -155,7 +152,7 @@ public class DefaultOrderServiceTest {
         }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
         this.defaultOrderService.listOrder(Arrays.asList(185, 56), Arrays.asList("structureId1", "structureId2"),
-                Arrays.asList("userId1", "userId2"), Arrays.asList("basketId1", "basketId2"), "startDate", "endDate",
+                Arrays.asList("userId1", "userId2"), Arrays.asList("basketId1", "basketId2"), new ArrayList<>(), "startDate", "endDate",
                 Arrays.asList(OrderStatus.SENT, OrderStatus.DONE));
     }
 }
