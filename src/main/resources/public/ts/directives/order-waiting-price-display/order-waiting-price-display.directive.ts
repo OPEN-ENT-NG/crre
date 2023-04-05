@@ -3,6 +3,7 @@ import {ILocationService, IParseService, IScope, IWindowService} from "angular";
 import {RootsConst} from "../../core/constants/roots.const";
 import {Campaign, OrderClient, OrdersClient} from "../../model";
 import {CREDIT_TYPE_ENUM} from "../../enum/credit-type-enum";
+import {OrderSearchAmount} from "../../model/OrderSearchAmount";
 
 interface IViewModel extends ng.IController, IOrderWaitingPriceDisplayProps {
     totalSelectedItems(): number;
@@ -14,7 +15,7 @@ interface IViewModel extends ng.IController, IOrderWaitingPriceDisplayProps {
 interface IOrderWaitingPriceDisplayProps {
     campaign: Campaign
     ordersClient: OrdersClient
-    amountTotal: any
+    amountTotal: OrderSearchAmount
     allOrdersSelected: OrdersClient
 }
 
@@ -25,7 +26,7 @@ interface IOrderWaitingPriceDisplayScope extends IScope, IOrderWaitingPriceDispl
 class Controller implements IViewModel {
     campaign: Campaign
     ordersClient: OrdersClient
-    amountTotal: any
+    amountTotal: OrderSearchAmount
     allOrdersSelected: OrdersClient
 
     constructor(private $scope: IOrderWaitingPriceDisplayScope,
@@ -53,7 +54,7 @@ class Controller implements IViewModel {
 
     totalSelectedPriceAll(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.credit + this.amountTotal.consumable_credit;
+            return this.amountTotal.total_filtered + this.amountTotal.total_filtered_consumable;
         }
 
         return this.ordersClient.all
@@ -64,7 +65,7 @@ class Controller implements IViewModel {
 
     totalSelectedPriceConsumable(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.consumable_credit;
+            return this.amountTotal.total_filtered_consumable;
         }
 
         return this.ordersClient.all
@@ -76,7 +77,7 @@ class Controller implements IViewModel {
 
     totalSelectedPrice(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.credit;
+            return this.amountTotal.total_filtered;
         }
 
         return this.ordersClient.all

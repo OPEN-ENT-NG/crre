@@ -53,7 +53,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.getAllAmount = async () => {
-            $scope.amountTotal = await $scope.ordersClient.calculTotal('WAITING', $scope.current.structure.id, $scope.filterOrder);
+            $scope.amountTotal = await $scope.ordersClient.calculateTotal('WAITING', $scope.current.structure.id, $scope.filterOrder);
         }
 
         $scope.remainAvailable = () => {

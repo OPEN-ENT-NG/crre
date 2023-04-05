@@ -239,6 +239,9 @@ public class Field {
     public static final String FREE = "gratuite";
     public static final String VALUE = "valeur";
     public static final String LICENCE = "licence";
+    public static final String NB_LICENCES = "nb_licences";
+    public static final String CREDITS = "credits";
+    public static final String CONSUMABLE_CREDITS = "consumable_credits";
 
 
     private Field() {

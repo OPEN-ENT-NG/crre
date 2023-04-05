@@ -18,6 +18,7 @@ import http, {AxiosPromise, AxiosResponse} from 'axios';
 import {IUserModel, UserModel} from "./UserModel";
 import {ValidatorOrderWaitingFilter} from "./ValidatorOrderWaitingFilter";
 import {OrderUniversal} from "./OrderUniversal";
+import {OrderSearchAmount} from "./OrderSearchAmount";
 
 declare let window: any;
 
@@ -247,14 +248,14 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async calculTotal(status: string, id_structure: string, filterOrder: ValidatorOrderWaitingFilter): Promise<AxiosResponse> {
+    async calculateTotal(status: string, id_structure: string, filterOrder: ValidatorOrderWaitingFilter): Promise<OrderSearchAmount> {
         const {startDate, endDate} = Utils.formatDate(filterOrder.startDate, filterOrder.endDate);
         let params: string = '';
         filterOrder.filterChoiceCorrelation.forEach((value: string, key: string) => {
             filterOrder[key].forEach((el: IFilter) => params += "&" + value + "=" + el.getValue())
         });
-        const {data} = await http.get(`/crre/orders/amount?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&status=${status}${params}`);
-        return data;
+        return http.get(`/crre/orders/amount?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&status=${status}${params}`)
+            .then((res: AxiosResponse) => new OrderSearchAmount(res.data));
     }
 
     calculTotalAmount(): number {
