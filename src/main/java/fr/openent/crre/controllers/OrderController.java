@@ -8,6 +8,7 @@ import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.model.OrderRegionBeautifyModel;
+import fr.openent.crre.model.OrderSearchAmountModel;
 import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.NotificationService;
@@ -157,9 +158,9 @@ public class OrderController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             if (request.params().contains(Field.STATUS)) {
                 final String status = request.params().get(Field.STATUS);
-                String idStructure = request.getParam("idStructure");
-                String startDate = request.getParam("startDate");
-                String endDate = request.getParam("endDate");
+                String idStructure = request.getParam(Field.IDSTRUCTURE);
+                String startDate = request.getParam(Field.STARTDATE);
+                String endDate = request.getParam(Field.ENDDATE);
                 // Récupération de tout les filtres
                 JsonArray filters = new JsonArray();
                 boolean exist;
@@ -167,8 +168,8 @@ public class OrderController extends ControllerHelper {
                 for (int i = 0; i < length; i++) {
                     String key = request.params().entries().get(i).getKey();
                     exist = false;
-                    if (!key.equals(Field.ID) && !key.equals("q") && !key.equals("idStructure") && !key.equals("page") &&
-                            !key.equals("startDate") && !key.equals("endDate")) {
+                    if (!key.equals(Field.ID) && !key.equals(Field.Q) && !key.equals(Field.IDSTRUCTURE) && !key.equals(Field.PAGE) &&
+                            !key.equals(Field.STARTDATE) && !key.equals(Field.ENDDATE)) {
                         for (int f = 0; f < filters.size(); f++) {
                             if (filters.getJsonObject(f).containsKey(key)) {
                                 filters.getJsonObject(f).getJsonArray(key).add(request.params().entries().get(i).getValue());
@@ -189,19 +190,19 @@ public class OrderController extends ControllerHelper {
                 promises.add(getOrderCredit.future());
                 promises.add(getOrderAmountConsumable.future());
                 promises.add(getTotalAmount.future());
-                JsonObject result = new JsonObject();
                 CompositeFuture.all(promises).onComplete(event -> {
                     if (event.succeeded()) {
+                        OrderSearchAmountModel orderSearchAmountModel = new OrderSearchAmountModel();
                         int amount = 0;
-                        if (getOrderAmount.future().result().getString("nb_licences") != null) {
-                            amount = Integer.parseInt(getOrderAmount.future().result().getString("nb_licences"));
+                        if (getOrderAmount.future().result().getString(Field.NB_LICENCES) != null) {
+                            amount = Integer.parseInt(getOrderAmount.future().result().getString(Field.NB_LICENCES));
                         }
-                        result.put(Field.LICENCE, amount);
+                        orderSearchAmountModel.setLicence(amount);
                         amount = 0;
-                        if (getOrderAmountConsumable.future().result().getString("nb_licences") != null) {
-                            amount = Integer.parseInt(getOrderAmountConsumable.future().result().getString("nb_licences"));
+                        if (getOrderAmountConsumable.future().result().getString(Field.NB_LICENCES) != null) {
+                            amount = Integer.parseInt(getOrderAmountConsumable.future().result().getString(Field.NB_LICENCES));
                         }
-                        result.put("consumable_licence", amount);
+                        orderSearchAmountModel.setConsumableLicence(amount);
                         JsonArray totalAmount = getTotalAmount.future().result();
                         JsonArray order_credit = getOrderCredit.future().result();
                         if (order_credit.size() > 0) {
@@ -209,11 +210,11 @@ public class OrderController extends ControllerHelper {
                             HashSet<Long> idsOrderFiltered = new HashSet<>();
                             int total_amount = 0;
                             for (int i = 0; i < order_credit.size(); i++) {
-                                idsEquipment.add(order_credit.getJsonObject(i).getString("equipment_key"));
+                                idsEquipment.add(order_credit.getJsonObject(i).getString(Field.EQUIPMENT_KEY));
                             }
                             for (int i = 0; i < totalAmount.size(); i++) {
                                 idsOrderFiltered.add(totalAmount.getJsonObject(i).getLong(Field.ID));
-                                total_amount += totalAmount.getJsonObject(i).getLong("amount");
+                                total_amount += totalAmount.getJsonObject(i).getLong(Field.AMOUNT);
                             }
                             int finalTotal_amount = total_amount;
                             searchByIds(new ArrayList<>(idsEquipment), null, equipments -> {
@@ -221,22 +222,26 @@ public class OrderController extends ControllerHelper {
                                     JsonArray equipmentsArray = equipments.right().getValue();
                                     double total = 0;
                                     double totalFiltered = 0;
+                                    double totalFilteredConsumable = 0;
                                     double total_consumable = 0;
                                     for (int i = 0; i < order_credit.size(); i++) {
                                         JsonObject order = order_credit.getJsonObject(i);
-                                        String idEquipment = order.getString("equipment_key");
+                                        String idEquipment = order.getString(Field.EQUIPMENT_KEY);
                                         Long idOrder = order.getLong(Field.ID);
-                                        String credit = order.getString("use_credit");
+                                        String credit = order.getString(Field.USE_CREDIT);
                                         if (equipmentsArray.size() > 0) {
                                             for (int j = 0; j < equipmentsArray.size(); j++) {
                                                 JsonObject equipment = equipmentsArray.getJsonObject(j);
                                                 if (idEquipment.equals(equipment.getString(Field.ID))) {
-                                                    double totalPriceEquipment = order.getInteger("amount") *
-                                                            getPriceTtc(equipment).getDouble("priceTTC");
-                                                    if ((credit.equals("credits") || credit.equals("consumable_credits")) && idsOrderFiltered.contains(idOrder)) {
+                                                    double totalPriceEquipment = order.getInteger(Field.AMOUNT) *
+                                                            getPriceTtc(equipment).getDouble(Field.PRICETTC);
+                                                    if (credit.equals(Field.CREDITS) && idsOrderFiltered.contains(idOrder)) {
                                                         totalFiltered += totalPriceEquipment;
                                                     }
-                                                    if (credit.equals("credits"))
+                                                    if (credit.equals(Field.CONSUMABLE_CREDITS) && idsOrderFiltered.contains(idOrder)) {
+                                                        totalFilteredConsumable += totalPriceEquipment;
+                                                    }
+                                                    if (credit.equals(Field.CREDITS))
                                                         total += totalPriceEquipment;
                                                     else
                                                         total_consumable += totalPriceEquipment;
@@ -245,18 +250,19 @@ public class OrderController extends ControllerHelper {
                                             }
                                         }
                                     }
-                                    result.put("credit", total);
-                                    result.put("consumable_credit", total_consumable);
-                                    result.put("total", finalTotal_amount);
-                                    result.put("total_filtered", totalFiltered);
-                                    renderJson(request, result);
+                                    orderSearchAmountModel.setCredit(total)
+                                            .setConsumableCredit(total_consumable)
+                                            .setTotal(finalTotal_amount)
+                                            .setTotalFiltered(totalFiltered)
+                                            .setTotalFilteredConsumable(totalFilteredConsumable);
+                                    renderJson(request, orderSearchAmountModel.toJson());
                                 } else {
                                     log.error("[CRRE] OrderController@listOrdersAmount searchByIds failed : " + equipments.left().getValue());
                                     badRequest(request);
                                 }
                             });
                         } else {
-                            renderJson(request, result);
+                            renderJson(request, orderSearchAmountModel.toJson());
                         }
                     } else {
                         log.error("[CRRE] OrderController@listOrdersAmount CompositeFuture.all failed : " + event.cause().getMessage());
