@@ -1,13 +1,18 @@
-import {moment, ng, toasts} from 'entcore';
+import {model, moment, ng, toasts} from 'entcore';
 import {
-    Basket, BasketOrder, Baskets,
-    BasketsOrders, Equipment,
-    Filters, OrderClient,
+    Basket,
+    BasketOrder,
+    Baskets,
+    BasketsOrders,
+    Equipment,
+    Filters,
+    OrderClient,
     OrdersClient,
     Utils
 } from '../../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 import {ValidatorOrderWaitingFilter} from "../../../model/ValidatorOrderWaitingFilter";
+import {IUserModel, UserModel} from "../../../model/UserModel";
 
 export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
@@ -48,10 +53,12 @@ export const manageOrderController = ng.controller('manageOrderController',
                     order.selected = false;
                 });
             });
+            const statusList: Array<string> = $scope.filter.isOld ? Utils.getOldStatus() : Utils.getCurrentStatus();
+            const currentUser = new UserModel({id_user: model.me.userId, user_name: null} as IUserModel)
             if (order_selected.all.length != 0 && !$scope.display.allOrdersListSelected) {
-                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false);
+                order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, statusList);
             } else {
-                order_selected.exportCSV($scope.filter.isOld, $scope.campaign.id, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true);
+                order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, statusList);
             }
             $scope.display.allOrdersListSelected = false;
             Utils.safeApply($scope);

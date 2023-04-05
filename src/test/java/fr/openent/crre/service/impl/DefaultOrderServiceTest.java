@@ -136,8 +136,8 @@ public class DefaultOrderServiceTest {
                 " o_u.order_region_id, to_jsonb(basket.*) basket, to_jsonb(campaign.*) campaign, to_jsonb(project.*)" +
                 " project FROM crre.order_universal as o_u LEFT JOIN crre.basket_order basket on o_u.id_basket = basket.id" +
                 " LEFT JOIN crre.project project on o_u.id_project = project.id" +
-                " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign WHERE prescriber_validation_date" +
-                " BETWEEN ? AND ? AND campaign.id IN (?,?) AND o_u.id_structure IN (?,?) AND basket.id IN (?,?)" +
+                " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign WHERE (prescriber_validation_date" +
+                " BETWEEN ? AND ?) AND campaign.id IN (?,?) AND o_u.id_structure IN (?,?) AND basket.id IN (?,?)" +
                 " AND o_u.prescriber_id IN (?,?) AND o_u.status IN (?,?) ORDER BY o_u.prescriber_validation_date ASC";
         String expectedParams = "[\"startDate\",\"endDate\",185,56,\"structureId1\",\"structureId2\",\"basketId1\"," +
                 "\"basketId2\",\"userId1\",\"userId2\",\"SENT\",\"DONE\"]";
@@ -151,7 +151,7 @@ public class DefaultOrderServiceTest {
             return null;
         }).when(this.sql).prepared(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
-        this.defaultOrderService.listOrder(Arrays.asList(185, 56), Arrays.asList("structureId1", "structureId2"),
+        this.defaultOrderService.listOrder(null, Arrays.asList(185, 56), Arrays.asList("structureId1", "structureId2"),
                 Arrays.asList("userId1", "userId2"), Arrays.asList("basketId1", "basketId2"), new ArrayList<>(), "startDate", "endDate",
                 Arrays.asList(OrderStatus.SENT, OrderStatus.DONE));
     }

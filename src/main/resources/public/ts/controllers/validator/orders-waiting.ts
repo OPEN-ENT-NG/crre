@@ -1,10 +1,10 @@
 import {ng, template, toasts} from 'entcore';
 import {Campaign, OrderClient, OrderRegion, OrdersClient, OrdersRegion, Utils} from '../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
-import {Mix} from "entcore-toolkit";
 import {UserModel} from "../../model/UserModel";
 import {ValidatorOrderWaitingFilter} from "../../model/ValidatorOrderWaitingFilter";
 import {CREDIT_TYPE_ENUM} from "../../enum/credit-type-enum";
+import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
 
 export const waitingValidatorOrderController = ng.controller('waitingValidatorOrderController',
     ['$scope', async ($scope,) => {
@@ -21,7 +21,9 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.users = [] as Array<UserModel>;
             await $scope.getAllFilters();
 
-            let distinctOrdersCampaign = $scope.ordersClient.all.reduce((acc, x) =>
+            await checkCampaignAccessibility();
+
+            let distinctOrdersCampaign = $scope.allOrderCLient.all.reduce((acc, x) =>
                     acc.concat(acc.find(y => y.campaign.id === x.campaign.id) ? [] : [x])
                 , []);
 
@@ -34,7 +36,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             await $scope.getAllAmount();
             $scope.allOrdersSelected = false;
             $scope.loading = false;
-            await checkCampaignAccessibility();
             Utils.safeApply($scope);
         };
 
@@ -255,7 +256,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let selectedOrders = new OrdersClient();
             let all: boolean = $scope.ordersClient.selectedElements.length == 0 || $scope.allOrdersSelected;
             selectedOrders.all = all ? selectedOrders.all : $scope.ordersClient.selectedElements;
-            selectedOrders.exportCSV(false, null, $scope.current.structure.id, $scope.filterOrder.startDate, $scope.filterOrder.endDate, all, "WAITING");
+            selectedOrders.exportCSV($scope.filterOrder.typeCampaignList, $scope.filterOrder.userList, $scope.filterOrder.queryName, $scope.current.structure.id, $scope.filterOrder.startDate, $scope.filterOrder.endDate, all, [ORDER_STATUS_ENUM.WAITING]);
             $scope.ordersClient.forEach(function (order) {
                 order.selected = false;
             });
