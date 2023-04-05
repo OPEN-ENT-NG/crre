@@ -4,6 +4,7 @@ import {Basket, BasketOrder, Baskets} from "./Basket";
 import {OrderClient} from "./OrderClient";
 import {OrderRegion, OrdersRegion} from "./OrderRegion";
 import {Project} from "./Project";
+import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 
 export class Utils {
 
@@ -30,13 +31,13 @@ export class Utils {
         }
     }
 
-    static formatKeyToParameter(values: any[], key: string): string {
+    static formatKeyToParameter(values: any[], key: string, fieldKey?: string): string {
         try {
             let params: string = '';
             let array: Array<any> = []
             values.map((value) => {
                 if (array.indexOf(value[key]) == -1) {
-                    params += value.hasOwnProperty(key) ? `${key}=${value[key]}&` : '';
+                    params += value.hasOwnProperty(key) ? (!!fieldKey ? fieldKey : key) + `=${value[key]}&` : '';
                     array.push(value[key]);
                 }
             });
@@ -263,6 +264,23 @@ export class Utils {
             return {startDate, endDate};
         }
     };
+
+    static generateCSV(nameFile: string, file: any) {
+        let blob = new Blob([file], {type: ' type: "text/csv;charset=UTF-8"'});
+        let link = document.createElement('a');
+        link.href = (window as any).URL.createObjectURL(blob);
+        link.download = nameFile;
+        document.body.appendChild(link);
+        link.click();
+    }
+
+    static getOldStatus(): string[] {
+        return [ORDER_STATUS_ENUM.SENT, ORDER_STATUS_ENUM.DONE];
+    }
+
+    static getCurrentStatus(): string[] {
+        return [ORDER_STATUS_ENUM.IN_PROGRESS, ORDER_STATUS_ENUM.WAITING, ORDER_STATUS_ENUM.RESUBMIT, ORDER_STATUS_ENUM.REJECTED, ORDER_STATUS_ENUM.VALID];
+    }
 
 
     static format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;

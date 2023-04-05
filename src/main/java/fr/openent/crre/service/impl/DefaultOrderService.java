@@ -36,7 +36,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public Future<List<OrderUniversalModel>> listOrder(List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
+    public Future<List<OrderUniversalModel>> listOrder(String searchingText, List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
                                                        List<String> basketIdList, List<Integer> orderIdList, String startDate, String endDate, List<OrderStatus> orderStatusList) {
         Promise<List<OrderUniversalModel>> promise = Promise.promise();
         JsonArray values = new JsonArray();
@@ -46,8 +46,13 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                 " LEFT JOIN crre.project project on o_u.id_project = project.id" +
                 " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign";
 
-        query += " WHERE prescriber_validation_date BETWEEN ? AND ? ";
+        query += " WHERE (prescriber_validation_date BETWEEN ? AND ?) ";
         values.add(startDate).add(endDate);
+
+        if(searchingText != null) {
+            query += "AND (lower(basket.name) ~* ? OR lower(basket.name_user) ~* ?) ";
+            values.add(searchingText).add(searchingText);
+        }
 
         if (campaignIdList != null && !campaignIdList.isEmpty()) {
             query += "AND campaign.id IN " + Sql.listPrepared(campaignIdList) + " ";

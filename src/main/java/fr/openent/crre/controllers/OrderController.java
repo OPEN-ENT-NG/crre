@@ -6,6 +6,7 @@ import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
+import fr.openent.crre.model.FilterModel;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.model.OrderRegionBeautifyModel;
 import fr.openent.crre.model.OrderSearchAmountModel;
@@ -14,9 +15,9 @@ import fr.openent.crre.security.*;
 import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
 import fr.openent.crre.service.ServiceFactory;
-import fr.openent.crre.utils.SqlQueryUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -79,7 +80,7 @@ public class OrderController extends ControllerHelper {
                         .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
                         .collect(Collectors.toList());
 
-                Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(Collections.singletonList(idCampaign),
+                Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(null, Collections.singletonList(idCampaign),
                         Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), basketIdList, new ArrayList<>(),
                         startDate, endDate, orderStatusList);
 
@@ -347,80 +348,70 @@ public class OrderController extends ControllerHelper {
         });
     }
 
-    @Get("/orders/exports")
+    @Post("/orders/exports")
     @ApiDoc("Export list of customer's orders as CSV")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(PrescriptorAndStructureRight.class)
+    @ResourceFilter(ExportPrescriberRight.class)
     public void export(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request,
-                user -> {
-                    List<String> orderIds = request.params().getAll(Field.ID);
-                    List<Integer> idsOrders = orderIds == null ? new ArrayList<>() : SqlQueryUtils.getIntegerIds(orderIds);
-
-                    Integer idCampaign = Integer.parseInt(request.params().get(Field.IDCAMPAIGN));
-                    String idStructure = request.params().get(Field.IDSTRUCTURE);
-                    String startDate = request.getParam(Field.STARTDATE);
-                    String endDate = request.getParam(Field.ENDDATE);
-                    Boolean old = request.getParam(Field.OLD) == null ? null : Boolean.parseBoolean(request.getParam(Field.OLD));
-
-                    List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values())
-                            .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
-                            .collect(Collectors.toList());
-                    Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(Collections.singletonList(idCampaign),
-                            Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), new ArrayList<>(), idsOrders,
-                            startDate, endDate, orderStatusList);
-                    orderFuture.compose(orderUniversalModels -> {
-                                List<String> itemIds = orderUniversalModels.stream()
-                                        .filter(order -> !order.getStatus().isHistoricStatus())
-                                        .map(OrderUniversalModel::getEquipmentKey)
-                                        .distinct()
-                                        .collect(Collectors.toList());
-                                return itemIds.size() > 0 ? searchByIds(itemIds, null) : Future.succeededFuture(new JsonArray());
-                            })
-                            .onSuccess(itemArray -> {
-                                List<OrderUniversalModel> orderUniversalModels = orderFuture.result();
-                                List<JsonObject> itemsList = itemArray.stream()
-                                        .filter(JsonObject.class::isInstance)
-                                        .map(JsonObject.class::cast)
-                                        .collect(Collectors.toList());
-                                orderUniversalModels.stream()
-                                        .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
-                                        .forEach(orderUniversalModel -> {
-                                            JsonObject equipmentJson = itemsList.stream()
-                                                    .filter(item -> orderUniversalModel.getEquipmentKey().equals(item.getString(Field.ID)))
-                                                    .findFirst()
-                                                    .orElse(null);
-                                            if (equipmentJson != null) {
-                                                JsonObject priceInfos = getPriceTtc(equipmentJson);
-                                                orderUniversalModel.setEquipmentPrice(priceInfos.getDouble(Field.PRICETTC));
-                                                orderUniversalModel.setEquipmentPriceht(priceInfos.getDouble(Field.PRIXHT));
-                                                orderUniversalModel.setEquipmentTva5(priceInfos.getDouble(Field.PART_TVA5));
-                                                orderUniversalModel.setEquipmentTva20(priceInfos.getDouble(Field.PART_TVA20));
-                                                orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
-                                                orderUniversalModel.setOffers(equipmentJson.getJsonArray(Field.OFFRES));
-                                            } else {
-                                                orderUniversalModel.setEquipmentPrice(0.0);
-                                                orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", getHost(request), I18n.acceptLanguage(request)));
-                                            }
-                                        });
-                                new ArrayList<>(orderUniversalModels).forEach(orderUniversal -> {
-                                    if (orderUniversal.getOffers() != null && orderUniversal.getOffers().size() > 0) {
-                                        int index = orderUniversalModels.indexOf(orderUniversal);
-                                        orderUniversalModels.addAll(index + 1, computeOffersUniversal(orderUniversal));
-                                    }
-                                });
-                                request.response()
-                                        .putHeader("Content-Type", "text/csv; charset=utf-8")
-                                        .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                        .end(generateExport(request, orderUniversalModels));
+        RequestUtils.bodyToJson(request, pathPrefix + Field.EXPORTORDER, filterOrder -> {
+            UserUtils.getUserInfos(eb, request, user -> {
+                FilterModel filters = new FilterModel(filterOrder);
+                Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(filters.getSearchingText(), filters.getIdsCampaign(),
+                        filters.getIdsStructure(), filters.getIdsUser(), new ArrayList<>(), filters.getIdsOrder(),
+                        filters.getStartDate(), filters.getEndDate(), filters.getStatus());
+                orderFuture.compose(orderUniversalModels -> {
+                            List<String> itemIds = orderUniversalModels.stream()
+                                    .filter(order -> !order.getStatus().isHistoricStatus())
+                                    .map(OrderUniversalModel::getEquipmentKey)
+                                    .distinct()
+                                    .collect(Collectors.toList());
+                            return itemIds.size() > 0 ? searchByIds(itemIds, null) : Future.succeededFuture(new JsonArray());
+                        })
+                        .onSuccess(itemArray -> {
+                            List<OrderUniversalModel> orderUniversalModels = orderFuture.result();
+                            List<JsonObject> itemsList = itemArray.stream()
+                                    .filter(JsonObject.class::isInstance)
+                                    .map(JsonObject.class::cast)
+                                    .collect(Collectors.toList());
+                            orderUniversalModels.stream()
+                                    .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
+                                    .forEach(orderUniversalModel -> {
+                                        JsonObject equipmentJson = itemsList.stream()
+                                                .filter(item -> orderUniversalModel.getEquipmentKey().equals(item.getString(Field.ID)))
+                                                .findFirst()
+                                                .orElse(null);
+                                        if (equipmentJson != null) {
+                                            JsonObject priceInfos = getPriceTtc(equipmentJson);
+                                            orderUniversalModel.setEquipmentPrice(priceInfos.getDouble(Field.PRICETTC));
+                                            orderUniversalModel.setEquipmentPriceht(priceInfos.getDouble(Field.PRIXHT));
+                                            orderUniversalModel.setEquipmentTva5(priceInfos.getDouble(Field.PART_TVA5));
+                                            orderUniversalModel.setEquipmentTva20(priceInfos.getDouble(Field.PART_TVA20));
+                                            orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
+                                            orderUniversalModel.setOffers(equipmentJson.getJsonArray(Field.OFFRES));
+                                        } else {
+                                            orderUniversalModel.setEquipmentPrice(0.0);
+                                            orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", getHost(request), I18n.acceptLanguage(request)));
+                                        }
+                                    });
+                            new ArrayList<>(orderUniversalModels).forEach(orderUniversal -> {
+                                if (orderUniversal.getOffers() != null && orderUniversal.getOffers().size() > 0) {
+                                    int index = orderUniversalModels.indexOf(orderUniversal);
+                                    orderUniversalModels.addAll(index + 1, computeOffersUniversal(orderUniversal));
+                                }
                             });
-                });
+                            request.response()
+                                    .putHeader("Content-Type", "text/csv; charset=utf-8")
+                                    .putHeader("Content-Disposition", "attachment; filename=orders.csv")
+                                    .end(generateExport(request, orderUniversalModels));
+                        });
+            });
+        });
     }
 
     private List<OrderUniversalModel> computeOffersUniversal(OrderUniversalModel orderUniversal) {
         List<OrderUniversalModel> offers = new ArrayList<>();
         if ((orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject) &&
-        orderUniversal.getOffers().getJsonObject(0).getString(Field.ID) != null) {
+                orderUniversal.getOffers().getJsonObject(0).getString(Field.ID) != null) {
             jsonArrayToList(orderUniversal.getOffers(), JsonObject.class).forEach(offer -> {
                 OrderUniversalModel orderUniversalOffer = new OrderUniversalModel()
                         .setAmount(offer.getInteger(Field.AMOUNT))
@@ -432,7 +423,7 @@ public class OrderController extends ControllerHelper {
                 offers.add(orderUniversalOffer);
             });
         } else {
-            if(orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject &&
+            if (orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject &&
                     orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS) != null &&
                     orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS).size() > 0) {
                 JsonArray leps = orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS);

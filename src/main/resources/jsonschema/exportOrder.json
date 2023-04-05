@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "properties": {
+    "endDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The end date of the search period"
+    },
+    "idsCampaign": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "description": "The ID of a campaign"
+      },
+      "description": "An array of campaign IDs to filter by"
+    },
+    "idsOrder": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "description": "The ID of an order"
+      },
+      "description": "An array of order IDs to filter by"
+    },
+    "idsStructure": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "The ID of a structure"
+      },
+      "description": "An array of structure IDs to filter by"
+    },
+    "idsUser": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "The ID of a user"
+      },
+      "description": "An array of user IDs to filter by"
+    },
+    "searchingText": {
+      "type": "string",
+      "description": "A search string to filter by"
+    },
+    "startDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The start date of the search period"
+    },
+    "status": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "WAITING",
+          "IN_PROGRESS",
+          "VALID",
+          "DONE",
+          "REJECTED",
+          "SENT",
+          "RESUBMIT"
+        ],
+        "description": "The status of an order"
+      },
+      "description": "An array of order statuses to filter by"
+    }
+  },
+  "required": [
+    "endDate",
+    "idsStructure",
+    "startDate"
+  ]
+}

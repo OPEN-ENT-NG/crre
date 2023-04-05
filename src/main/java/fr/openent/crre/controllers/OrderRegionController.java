@@ -70,7 +70,6 @@ import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
 import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonObject;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -280,8 +279,6 @@ public class OrderRegionController extends BaseController {
             UserUtils.getUserInfos(eb, request, user -> {
                 FilterModel filters = new FilterModel(filterOrderRegions);
                 FilterItemModel filtersItem = new FilterItemModel(filterOrderRegions);
-                filters.setUser(user);
-
                 Future<JsonArray> structureFuture;
                 if (filters.getStructureTypes().size() > 0 || filters.getIdsStructure().size() > 0) {
                     structureFuture = structureService.getStructuresFilter(filters.getStructureTypes(), filters.getIdsStructure());
