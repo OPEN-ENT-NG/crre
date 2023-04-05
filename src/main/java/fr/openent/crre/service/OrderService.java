@@ -16,6 +16,7 @@ import java.util.Map;
 public interface OrderService {
     /**
      * List orders of a campaign and a structure in database
+     * @param searchingText text to search in orders
      * @param campaignIdList list of campaign id filter
      * @param structureIdList list of structure id filter
      * @param userIdList list of user id filter
@@ -24,7 +25,7 @@ public interface OrderService {
      * @param endDate end date filter
      * @return a future of result
      */
-    Future<List<OrderUniversalModel>> listOrder(List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
+    Future<List<OrderUniversalModel>> listOrder(String searchingText, List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
                                                 List<String> basketIdList, List<Integer> orderIdList, String startDate, String endDate, List<OrderStatus> orderStatusList);
 
     /**

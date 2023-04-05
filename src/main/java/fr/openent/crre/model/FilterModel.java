@@ -15,9 +15,10 @@ import java.util.stream.Collectors;
 public class FilterModel implements IModel<FilterModel> {
     private String startDate;
     private String endDate;
-    private UserInfos user;
+    private List<String> idsUser;
     private List<Integer> idsCampaign;
     private List<String> idsStructure;
+    private List<Integer> idsOrder;
     private Integer page;
     private List<OrderStatus> status;
     private String searchingText;
@@ -25,6 +26,7 @@ public class FilterModel implements IModel<FilterModel> {
     private List<String> editors;
     private List<String> catalogs;
     private List<String> structureTypes;
+
     private Boolean renew;
 
     private OrderByProjectFieldEnum orderBy;
@@ -33,9 +35,10 @@ public class FilterModel implements IModel<FilterModel> {
     public FilterModel() {
         this.startDate = null;
         this.endDate = null;
-        this.user = null;
+        this.idsUser = null;
         this.idsCampaign = new ArrayList<>();
         this.idsStructure = new ArrayList<>();
+        this.idsOrder = new ArrayList<>();
         this.page = null;
         this.status = new ArrayList<>();
         this.searchingText = null;
@@ -50,6 +53,7 @@ public class FilterModel implements IModel<FilterModel> {
 
         this.idsCampaign =  JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_CAMPAIGN, new JsonArray()), Integer.class);
         this.idsStructure = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_STRUCTURE, new JsonArray()), String.class);
+        this.idsOrder = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_ORDER, new JsonArray()), Integer.class);
         this.startDate = jsonObject.getString(Field.STARTDATE, null);
         this.endDate = jsonObject.getString(Field.ENDDATE, null);
         this.page = jsonObject.getInteger(Field.PAGE, null);
@@ -58,7 +62,7 @@ public class FilterModel implements IModel<FilterModel> {
         this.editors = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.EDITORS, new JsonArray()), String.class);
         this.catalogs = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.CATALOGS, new JsonArray()), String.class);
         this.structureTypes = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.STRUCTURE_TYPES, new JsonArray()), String.class);
-        this.user = new UserInfos();
+        this.idsUser = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_USER, new JsonArray()), String.class);
         List<String> renewList = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.RENEW, new JsonArray()), String.class);
         this.renew = renewList.contains(Field.TRUE) && !renewList.contains(Field.FALSE) ? Boolean.TRUE :
                 renewList.contains(Field.FALSE) && !renewList.contains(Field.TRUE) ? Boolean.FALSE : null;;
@@ -165,12 +169,12 @@ public class FilterModel implements IModel<FilterModel> {
         return this;
     }
 
-    public UserInfos getUser() {
-        return user;
+    public List<String> getIdsUser() {
+        return idsUser;
     }
 
-    public FilterModel setUser(UserInfos user) {
-        this.user = user;
+    public FilterModel setIdsUser(List<String> idsUser) {
+        this.idsUser = idsUser;
         return this;
     }
 
@@ -252,6 +256,15 @@ public class FilterModel implements IModel<FilterModel> {
 
     public FilterModel setOrderDesc(Boolean orderDesc) {
         this.orderDesc = orderDesc;
+        return this;
+    }
+
+    public List<Integer> getIdsOrder() {
+        return idsOrder;
+    }
+
+    public FilterModel setIdsOrder(List<Integer> idsOrder) {
+        this.idsOrder = idsOrder;
         return this;
     }
 }

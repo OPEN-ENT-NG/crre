@@ -19,6 +19,7 @@ import {IUserModel, UserModel} from "./UserModel";
 import {ValidatorOrderWaitingFilter} from "./ValidatorOrderWaitingFilter";
 import {OrderUniversal} from "./OrderUniversal";
 import {OrderSearchAmount} from "./OrderSearchAmount";
+import {ExportOrderFilter} from "./ExportOrderFilter";
 
 declare let window: any;
 
@@ -282,17 +283,37 @@ export class OrdersClient extends Selection<OrderClient> {
         return total;
     }
 
-    exportCSV(old: boolean, idCampaign: string, idStructure: string, start: string, end: string, all: boolean, statut?: string): void {
+    async exportCSV(campaigns: Campaign[], users: UserModel[], searchingText: string, idStructure: string, start: string, end: string, all: boolean, status: string[]): Promise<void> {
         const {startDate, endDate} = Utils.formatDate(start, end);
-        let params: string = ``;
-        params += `startDate=${startDate}&endDate=${endDate}&`;
-        params += !!idCampaign ? `idCampaign=${idCampaign}&` : ``;
-        params += !!idStructure ? `idStructure=${idStructure}&` : ``;
-        params += !!statut ? `statut=${statut}&` : ``;
-        params += `old=${old}&`;
-        params += !all ? Utils.formatKeyToParameter(this.all, 'id') : ``;
-        window.location = `/crre/orders/exports?${params}`;
+        let params: ExportOrderFilter = new ExportOrderFilter();
+        params.startDate = startDate;
+        params.endDate = endDate;
+        if (campaigns && campaigns.length > 0) {
+            params.idsCampaign = campaigns.map(campaign => campaign.id);
+        }
+        if (users && users.length > 0) {
+            params.idsUser = users.map(user => user.id_user);
+        }
+        if (idStructure) {
+            params.idsStructure.push(idStructure);
+        }
+        if (status) {
+            params.status = status;
+        }
+
+        if(searchingText) {
+            params.searchingText = searchingText;
+        }
+        if (!all) {
+            params.idsOrder = this.all.map(order => order.id);
+        }
+
+        const response = await http.post(`/crre/orders/exports`, params);
+        if (response.status == 200) {
+            Utils.generateCSV("order.csv", response.data)
+        }
     };
+
 
     async resubmitOrderClient(baskets: Baskets, totalAmount: number, structure: Structure): Promise<void> {
         const response: AxiosResponse = await baskets.create();

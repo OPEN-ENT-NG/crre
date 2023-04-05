@@ -983,7 +983,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         HashSet<String> structures = new HashSet<>();
         for (OrderRegionBeautifyModel orderRegionBeautifyModel: logs) {
             report.append(generateExportLine(orderRegionBeautifyModel));
-            if (StringUtils.isEmpty(orderRegionBeautifyModel.getUaiStructure())) {
+            if (!StringUtils.isEmpty(orderRegionBeautifyModel.getUaiStructure())) {
                 structures.add(orderRegionBeautifyModel.getUaiStructure());
             }
         }
