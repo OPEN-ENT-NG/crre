@@ -86,7 +86,7 @@ export const campaignFormController = ng.controller('campaignFormController',
         $scope.validCampaignForm = (campaign: Campaign) => {
             return campaign.name !== undefined
                 && campaign.name.trim() !== ''
-                && ((_.findWhere($scope.structureGroups.all, {selected: true}) !== undefined) || (_.findWhere($scope.structureFormat, {selected: true})))
+                && ((_.findWhere($scope.structureFormat.slice(3,6), {selected: true}) !== undefined) || (_.findWhere($scope.structureGroups.all.slice(9), {selected: true})))
                 && $scope.campaign.catalog !== undefined;
 
         };

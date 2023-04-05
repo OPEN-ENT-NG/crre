@@ -20,6 +20,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserUtils;
@@ -77,21 +78,26 @@ public class CampaignController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     @Override
     public void create(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + Field.CAMPAIGN, campaign ->
-                UserUtils.getUserInfos(eb, request, userInfos -> {
-                    try {
-                        campaignService.create(new Campaign(campaign), IModelHelper.toList(campaign.getJsonArray(Field.GROUPS), StructureGroupModel.class))
-                                .onSuccess(campaignResult -> {
-                                    Renders.renderJson(request, campaignResult.toJson());
-                                    Logging.insert(userInfos, Contexts.CAMPAIGN.toString(), Actions.CREATE.toString(), (String) null, campaign);
-                                })
-                                .onFailure(error -> Renders.renderError(request));
-                    } catch (ClassCastException e) {
-                        log.error(String.format("[CRRE@%s::create] Fail to create campaign %s", this.getClass().getSimpleName(), e.getMessage()),
-                                this.getClass().getSimpleName(), e.toString());
-                        Renders.renderError(request);
-                    }
-                }));
+        RequestUtils.bodyToJson(request, pathPrefix + Field.CAMPAIGN, campaign -> {
+            if (campaign.getJsonArray(Field.GROUPS, new JsonArray()).isEmpty()) {
+                Renders.badRequest(request);
+                return;
+            }
+            UserUtils.getUserInfos(eb, request, userInfos -> {
+                try {
+                    campaignService.create(new Campaign(campaign), IModelHelper.toList(campaign.getJsonArray(Field.GROUPS), StructureGroupModel.class))
+                            .onSuccess(campaignResult -> {
+                                Renders.renderJson(request, campaignResult.toJson());
+                                Logging.insert(userInfos, Contexts.CAMPAIGN.toString(), Actions.CREATE.toString(), (String) null, campaign);
+                            })
+                            .onFailure(error -> Renders.renderError(request));
+                } catch (ClassCastException e) {
+                    log.error(String.format("[CRRE@%s::create] Fail to create campaign %s", this.getClass().getSimpleName(), e.getMessage()),
+                            this.getClass().getSimpleName(), e.toString());
+                    Renders.renderError(request);
+                }
+            });
+        });
     }
 
     @Put("/campaign/accessibility/:id")
