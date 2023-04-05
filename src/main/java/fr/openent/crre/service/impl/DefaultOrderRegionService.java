@@ -580,7 +580,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
                 params.add(order.getOrderRegion().getIdOrderClientEquipment())
                         .add(order.getOrderRegion().getAmount())
-                        .add(order.getOrderRegion().getCreationDate())
+                        .add(order.getBasketOrder().getCreated())
                         .add(order.getOrderRegion().getOwnerId())
                         .add("SENT")
                         .add(order.getOrderRegion().getEquipmentKey());
