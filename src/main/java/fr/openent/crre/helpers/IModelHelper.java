@@ -33,7 +33,6 @@ public class IModelHelper {
         throw new IllegalStateException("Utility class");
     }
 
-    @SuppressWarnings("unchecked")
     public static <T extends IModel<T>> List<T> toList(JsonArray results, Class<T> modelClass) {
         return results.stream()
                 .filter(JsonObject.class::isInstance)
