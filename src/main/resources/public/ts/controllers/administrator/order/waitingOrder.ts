@@ -35,7 +35,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             .getScrollSubject()
             .subscribe(async () => {
                 $scope.projectFilter.page = 0;
-                await $scope.launchSearch($scope.display.projects, false, false, 0);
+                await $scope.launchSearch($scope.display.projects, false, false);
                 Utils.safeApply($scope);
             }));
 
@@ -165,7 +165,10 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             let projects: Projects = $scope.display.projects;
             if ($scope.display.allOrdersSelected) {
                 projects = new Projects();
+                const currentPage = $scope.projectFilter.page;
+                $scope.projectFilter.page = null;
                 await $scope.launchSearch(projects, false, true);
+                $scope.projectFilter.page = currentPage;
             }
             await projects.exportCSV($scope.display.allOrdersSelected);
             Utils.safeApply($scope);
@@ -191,14 +194,13 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         $scope.launchSearch = async (projectList: Projects, addNewData: boolean, onlyId: boolean): Promise<void> => {
             $scope.display.loading = true;
             Utils.safeApply($scope);
-            projectList.search($scope.projectFilter)
+            return projectList.search($scope.projectFilter)
                 .then(async (data: Project[]) => {
                     if (data && data.length > 0) {
                         if (projectList.all.length > 0) {
                             await $scope.synchroRegionOrders(addNewData, onlyId, projectList);
                             $scope.syncSelected();
-                            Behaviours.applicationsBehaviours['crre'].InfiniteScrollService
-                                .updateScroll();
+                            Behaviours.applicationsBehaviours['crre'].InfiniteScrollService.updateScroll();
                         }
                     }
                     $scope.display.loading = false;
@@ -216,15 +218,15 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         $scope.synchroRegionOrders = async (addNewData: boolean = false, onlyId: boolean = false, projects?: Projects): Promise<void> => {
-            let {resultProject, responses} = await getOrdersOfProjects(projects);
+            let responses = await getOrdersOfProjects(projects);
             if (responses[0]) {
                 let data = [];
                 responses.forEach(response => {
                     data = data.concat(response.data);
                 });
-                await filterAndBeautifyOrders(data, resultProject, onlyId);
+                await filterAndBeautifyOrders(data, projects, onlyId);
                 let projectWithOrders = new Projects();
-                beautifyProjectsFromOrders(resultProject, projectWithOrders);
+                beautifyProjectsFromOrders(projects, projectWithOrders);
                 if (addNewData) {
                     $scope.display.projects.all = $scope.display.projects.all.concat(projectWithOrders.all);
                 }
@@ -236,10 +238,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         };
 
         async function getOrdersOfProjects(projects: Projects) {
-            let resultProject = projects;
             let promesses = [];
             let projetsSplit = new Projects();
-            resultProject.forEach(projet => {
+            projects.forEach(projet => {
                 if (projet.count > 500) {
                     if (projetsSplit.all.length > 0) {
                         promesses.push(new OrdersRegion().getOrdersFromProjects(projetsSplit, $scope.projectFilter));
@@ -262,8 +263,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             if ($scope.structures.all.length == 0 && $scope.isAdministrator()) {
                 $scope.structures.sync();
             }
-            const responses = await Promise.all(promesses);
-            return {resultProject, responses};
+            return await Promise.all(promesses);
         }
 
         async function filterAndBeautifyOrders(projectsResult, projects: Projects, onlyId: boolean) {
@@ -347,8 +347,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
 
         const localeCompareSort = (property, order) => {
             var sortOrder = order === 'desc' ? -1 : 1;
-            return function(a, b) {
-                var result = a[property].localeCompare(b[property], undefined, { sensitivity: 'accent' });
+            return function (a, b) {
+                var result = a[property].localeCompare(b[property], undefined, {sensitivity: 'accent'});
                 return result * sortOrder;
             }
         }
@@ -422,11 +422,11 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             }
         }
 
-        const checkStatusChoice = (status : ORDER_STATUS_ENUM) : boolean => {
-            return $scope.projectFilter.statusFilterList.filter((state:StatusFilter) => state.getValue() === status).length > 0;
+        const checkStatusChoice = (status: ORDER_STATUS_ENUM): boolean => {
+            return $scope.projectFilter.statusFilterList.filter((state: StatusFilter) => state.getValue() === status).length > 0;
         };
 
-        $scope.containsSentOrDoneOrders = () : boolean => {
+        $scope.containsSentOrDoneOrders = (): boolean => {
             return checkStatusChoice(ORDER_STATUS_ENUM.SENT) || checkStatusChoice(ORDER_STATUS_ENUM.DONE);
         };
 

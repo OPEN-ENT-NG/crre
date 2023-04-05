@@ -114,6 +114,9 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
     }
 
     private Future<JsonObject> writeCSVFile(String idUser, List<OrderRegionBeautifyModel> orderRegion) {
+        if (orderRegion.isEmpty()) {
+            return Future.succeededFuture(new JsonObject());
+        }
         Promise<JsonObject> promise = Promise.promise();
 
         UserUtils.getUserInfos(eb, idUser, userInfos -> {

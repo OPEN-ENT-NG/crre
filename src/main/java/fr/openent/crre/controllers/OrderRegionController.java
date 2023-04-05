@@ -911,11 +911,15 @@ public class OrderRegionController extends BaseController {
                 handlerToAsyncHandler(eventExport -> {
                             if (eventExport.body().getString(Field.STATUS).equals(Field.OK)) {
                                 if (request != null) {
+                                    if (eventExport.body().getJsonObject(Field.DATA, new JsonObject()).getString(Field.CSVFILE, null) == null) {
+                                        Renders.badRequest(request);
+                                        return;
+                                    }
                                     //Export CSV
                                     request.response()
                                             .putHeader("Content-Type", "text/csv; charset=utf-8")
                                             .putHeader("Content-Disposition", "attachment; filename=orders.csv")
-                                            .end(eventExport.body().getJsonObject("data").getString("csvFile"));
+                                            .end(eventExport.body().getJsonObject(Field.DATA).getString(Field.CSVFILE));
                                 }
                             } else {
                                 log.error("Ko calling worker " + eventExport.body().toString());
