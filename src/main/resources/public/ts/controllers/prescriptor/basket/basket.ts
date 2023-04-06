@@ -1,29 +1,29 @@
-import {_, Behaviours, model, ng, template, toasts} from 'entcore';
-import {Basket, Baskets, Utils} from '../../../model';
+import {Behaviours, model, ng, template, toasts} from 'entcore';
+import {Basket, Baskets, Campaign, Utils} from '../../../model';
 
 export const basketController = ng.controller('basketController',
     ['$scope', '$routeParams', ($scope, $routeParams) => {
         $scope.display = {
-            lightbox : {
+            lightbox: {
                 confirmbasketName: false,
             },
         };
 
-        $scope.calculatePriceOfEquipments = (baskets :  Baskets, roundNumber : number) : string => {
-            return Utils.calculatePriceOfEquipments(baskets,roundNumber);
+        $scope.calculatePriceOfEquipments = (baskets: Baskets, roundNumber: number): string => {
+            return Utils.calculatePriceOfEquipments(baskets, roundNumber);
         };
 
-        $scope.calculatePriceOfBasket = (basket : Basket , roundNumber : number, toDisplay? : boolean) : string => {
-            return Utils.calculatePriceOfBasket(basket , roundNumber, toDisplay);
+        $scope.calculatePriceOfBasket = (basket: Basket, roundNumber: number, toDisplay?: boolean): string => {
+            return Utils.calculatePriceOfBasket(basket, roundNumber, toDisplay);
         };
 
-        $scope.calculateQuantity = (baskets : Baskets, numberOfEquipments : boolean) : number => {
+        $scope.calculateQuantity = (baskets: Baskets, numberOfEquipments: boolean): number => {
             let quantity = 0;
             baskets.all.map((basket) => {
                 if (Utils.isAvailable(basket.equipment) && (!Utils.hasOneSelected(baskets) || basket.selected)) {
-                    if(numberOfEquipments){
-                        quantity ++;
-                    }else {
+                    if (numberOfEquipments) {
+                        quantity++;
+                    } else {
                         quantity += basket.amount;
                     }
                 }
@@ -31,13 +31,13 @@ export const basketController = ng.controller('basketController',
             return quantity;
         };
 
-        $scope.priceDisplay = (basket: Basket) : string => {
-            let equipmentPrice : number = parseFloat(Utils.calculatePriceOfEquipment(basket.equipment, 2));
-            return (!isNaN(equipmentPrice)) ? (2 ? equipmentPrice.toFixed(2) : equipmentPrice.toString() ) : '0';
+        $scope.priceDisplay = (basket: Basket): string => {
+            let equipmentPrice: number = parseFloat(Utils.calculatePriceOfEquipment(basket.equipment, 2));
+            return (!isNaN(equipmentPrice)) ? (2 ? equipmentPrice.toFixed(2) : equipmentPrice.toString()) : '0';
         };
 
         $scope.deleteBasket = async (basket: Basket) => {
-            let { status } = await basket.delete();
+            let {status} = await basket.delete();
             if (status === 200) {
                 $scope.campaign.nb_panier -= 1;
                 await $scope.notifyBasket('deleted', basket);
@@ -68,18 +68,42 @@ export const basketController = ng.controller('basketController',
 
         $scope.checkPrice = async (baskets: Baskets) => {
             let priceIs0 = false;
-            baskets.all.forEach(basket =>{
-                if(basket.equipment.price === 0){
+            baskets.all.forEach(basket => {
+                if (basket.equipment.price === 0) {
                     priceIs0 = true;
                 }
             });
-            if(priceIs0){
+            if (priceIs0) {
                 toasts.warning("basket.price.null")
-            }else{
+            } else {
                 $scope.baskets_test = baskets;
                 $scope.duplicateBaskets = checkDuplicate(baskets);
                 confirmBasketName();
             }
+        };
+
+        $scope.checkValid = (campaign: Campaign, baskets: Baskets) => {
+            let isValid = true;
+            if (campaign.purse_enabled) {
+                if (baskets.selected.length > 0) {
+                    baskets.selected.forEach((basket: Basket) => {
+                        if (!basket.amount || basket.amount < 1) {
+                            isValid = false;
+                        }
+                    });
+                } else {
+                    baskets.all.forEach((basket: Basket) => {
+                        if (!basket.amount) {
+                            isValid = false;
+                        } else if (basket.amount < 1) {
+                            isValid = false;
+                        }
+                    });
+                }
+            } else {
+                isValid = false;
+            }
+            return isValid;
         };
 
         const checkDuplicate = (baskets: Baskets): Basket[] => {

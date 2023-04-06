@@ -2,7 +2,7 @@
     <div class="crre-order-waiting-header ten">
         <order-waiting-filter-validator class="flex-one" on-search="search" filter="filterOrder" user-list="users" type-campaign-list="type_campaign"></order-waiting-filter-validator>
         <div class="cell twelve-mobile right-magnet" style="z-index: 1;">
-            <button ng-disabled="remainAvailable()" ng-click="openLightboxConfirmOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
+            <button ng-disabled="!checkValid() || remainAvailable()" ng-click="openLightboxConfirmOrder()" class="right-magnet"><i18n>crre.take.order.2</i18n></button>
         </div>
     </div>
     <div class="flex-row">
@@ -46,8 +46,8 @@
                 <td>
                     <div class="smallTabElem center centerInputAmount">
                         <i class="moins" ng-if="order.status !== 'IN_PROGRESS' && order.price !== 0.00 && order.campaign.accessible"
-                           ng-click="updateAmount(order, order.amount - 1)"></i>
-                        <input type="number" class="quantity-input numberWithoutArrow" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                           ng-hide="!order.amount || order.amount <= 1" ng-click="updateAmount(order, order.amount - 1)"></i>
+                        <input type="number" class="quantity-input numberWithoutArrow" step="1" min="1" ng-keypress="avoidDecimals($event)"
                                ng-disabled="order.status === 'IN_PROGRESS' || order.price === 0.00 || !order.campaign.accessible"
                                ng-change="updateAmount(order, order.amount)"
                                ng-model="order.amount"/>
@@ -110,7 +110,7 @@
                 <button ng-click="exportCSV()">
                     <i18n>crre.orderEquipment.manage.exportCSV</i18n>
                 </button>
-                <button ng-disabled="remainAvailable()" ng-click="openLightboxConfirmOrder()">
+                <button ng-disabled="!checkValid() || remainAvailable()" ng-click="openLightboxConfirmOrder()">
                     <i18n>crre.take.order.2</i18n>
                 </button>
             </div>

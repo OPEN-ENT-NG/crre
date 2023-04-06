@@ -653,8 +653,12 @@ public class OrderController extends ControllerHelper {
             }
             try {
                 Integer id = Integer.parseInt(request.params().get("idOrder"));
-                Integer amount = order.getInteger("amount");
-                orderService.updateAmount(id, amount, defaultResponseHandler(request));
+                Integer amount = order.getInteger("amount", 0);
+                if(amount > 0) {
+                    orderService.updateAmount(id, amount, defaultResponseHandler(request));
+                } else {
+                    badRequest(request, "Amount is under 0");
+                }
             } catch (NumberFormatException e) {
                 e.printStackTrace();
                 renderError(request);
