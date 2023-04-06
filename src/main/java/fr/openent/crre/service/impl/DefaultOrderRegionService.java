@@ -868,8 +868,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         offers = computeOffers(orderRegionBeautifyModel, equipment);
                         int totalFree = offers.stream().map(orderRegionOffer -> orderRegionOffer.getOrderRegion().getAmount()).reduce(0, Integer::sum);
                         orderRegionBeautifyModel.setTotalFree(totalFree);
-                        orderRegionBeautifyModel.setOffers(new ArrayList<>(offers));
                     }
+                    orderRegionBeautifyModel.setOffers(new ArrayList<>(offers));
                     offers.add(orderRegionBeautifyModel);
                     return offers.stream();
                 }).sorted(Comparator.comparing(OrderRegionBeautifyModel::getId)).collect(Collectors.toList());
