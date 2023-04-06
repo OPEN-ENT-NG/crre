@@ -77,6 +77,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
                 $scope.display.projects.all = [];
                 $scope.display.loading = true;
+                $scope.projectFilter.page = null;
                 await $scope.launchSearch(new Projects(), true, true);
             }
             template.open('lightbox.waitingAdmin', 'administrator/order/confirm-generate-library');
@@ -357,8 +358,10 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.display.lightbox.waitingAdmin = false;
             if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
                 $scope.display.allOrdersSelected = false;
-                await $scope.launchSearch($scope.display.projects, false, false);
             }
+            $scope.display.projects.all = [];
+            $scope.projectFilter.page = 0;
+            await $scope.launchSearch($scope.display.projects, false, false);
             Utils.safeApply($scope);
         };
 
