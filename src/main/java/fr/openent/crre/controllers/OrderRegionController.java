@@ -998,8 +998,8 @@ public class OrderRegionController extends BaseController {
                     this.notificationService.sendNotificationPrescriberRegion(orderRegionIdList);
                 })
                 .onFailure(error -> {
-                    log.error(String.format("[CRRE@%s::generateLogs] Fail to generate logs %s"),
-                            this.getClass().getSimpleName(), error.getMessage());
+                    log.error(String.format("[CRRE@%s::generateLogs] Fail to generate logs %s",
+                            this.getClass().getSimpleName(), error.getMessage()));
                     unauthorized(request);
                 });
 
