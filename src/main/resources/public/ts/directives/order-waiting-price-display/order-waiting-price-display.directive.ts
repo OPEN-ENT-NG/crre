@@ -47,7 +47,7 @@ class Controller implements IViewModel {
         }
 
         return this.ordersClient.all
-            .filter((orderClient: OrderClient) => orderClient.selected)
+            .filter((orderClient: OrderClient) => orderClient.selected && orderClient.amount > 0)
             .map((orderClient: OrderClient) => orderClient.amount)
             .reduce((partialSum, a) => partialSum + a, 0);
     }

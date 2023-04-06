@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "properties": {
     "amount": {
-      "type": "number"
+      "type": "number",
+      "minimum": 1
     },
     "processing_date": {
       "type": ["string", "null"]

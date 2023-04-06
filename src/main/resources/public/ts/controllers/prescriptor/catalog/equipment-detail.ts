@@ -3,7 +3,7 @@ import {Basket, Campaign, Equipment, Utils} from '../../../model';
 
 export const equipmentController = ng.controller('equipmentController',
     ['$scope', '$routeParams', '$anchorScroll', ($scope, $routeParams, $anchorScroll) => {
-        $scope.scrollTo = function(id) {
+        $scope.scrollTo = function (id) {
             $anchorScroll(id);
         };
 
@@ -15,15 +15,15 @@ export const equipmentController = ng.controller('equipmentController',
             history.back();
         };
 
-        $scope.calculatePriceOfBasket = (basket : Basket , roundNumber : number, toDisplay? : boolean) : string => {
-            return Utils.calculatePriceOfBasket(basket , roundNumber, toDisplay);
+        $scope.calculatePriceOfBasket = (basket: Basket, roundNumber: number, toDisplay?: boolean): string => {
+            return Utils.calculatePriceOfBasket(basket, roundNumber, toDisplay);
         };
 
-        $scope.calculatePriceOfEquipment = (equipment : Equipment , roundNumber : number) : string => {
-            return Utils.calculatePriceOfEquipment(equipment , roundNumber);
+        $scope.calculatePriceOfEquipment = (equipment: Equipment, roundNumber: number): string => {
+            return Utils.calculatePriceOfEquipment(equipment, roundNumber);
         };
 
-        $scope.computeOffer = () : void => {
+        $scope.computeOffer = (): void => {
             $scope.offers = Utils.computeOffer($scope.basket, $scope.basket.equipment, $scope.offerStudent, $scope.offerTeacher);
         };
 
@@ -43,26 +43,26 @@ export const equipmentController = ng.controller('equipmentController',
 
         $scope.formatMultiple = (array: any[]) => {
             let return_string = "";
-            array.forEach(function(item, index) {
+            array.forEach(function (item, index) {
                 return_string += item.libelle;
-               if(array.length - 1 != index) {
-                   return_string += ", ";
-               }
+                if (array.length - 1 != index) {
+                    return_string += ", ";
+                }
             });
             return return_string;
         };
 
         $scope.addBasketItem = async (basket: Basket, campaign?: Campaign, id_structure?: string) => {
-            if(basket.id_campaign == undefined && campaign.accessible) {
+            if (basket.id_campaign == undefined && campaign.accessible) {
                 basket.id_campaign = campaign.id;
-                basket.id_structure= id_structure;
+                basket.id_structure = id_structure;
                 $scope.$emit('eventEmitedCampaign', campaign);
                 $scope.campaign = campaign;
                 $scope.display.lightbox.choosecampaign = false;
             }
-            let { status } = await basket.create();
-            if (status === 200 && basket.amount > 0 ) {
-                if( $scope.campaign.nb_panier)
+            let {status} = await basket.create();
+            if (status === 200 && basket.amount > 0) {
+                if ($scope.campaign.nb_panier)
                     $scope.campaign.nb_panier += 1;
                 else
                     $scope.campaign.nb_panier = 1;
@@ -72,7 +72,11 @@ export const equipmentController = ng.controller('equipmentController',
         };
 
         $scope.amountIncrease = async () => {
-            $scope.basket.amount += 1;
+            if($scope.basket.amount) {
+                $scope.basket.amount += 1;
+            } else {
+                $scope.basket.amount = 1;
+            }
             if ($scope.basket.equipment.type === 'articlenumerique') {
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                     $scope.offerStudent, $scope.offerTeacher);
@@ -81,11 +85,12 @@ export const equipmentController = ng.controller('equipmentController',
         };
 
         $scope.amountDecrease = async () => {
-            if ($scope.basket.amount)
+            if ($scope.basket.amount > 1) {
                 $scope.basket.amount -= 1;
-            if ($scope.basket.equipment.type === 'articlenumerique') {
-                $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
-                    $scope.offerStudent, $scope.offerTeacher);
+                if ($scope.basket.equipment.type === 'articlenumerique') {
+                    $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
+                        $scope.offerStudent, $scope.offerTeacher);
+                }
             }
             Utils.safeApply($scope);
         };

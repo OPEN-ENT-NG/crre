@@ -1,4 +1,4 @@
-import {ng} from 'entcore';
+import {ng, toasts} from 'entcore';
 import {
     BasketOrder,
     OrderClient,
@@ -41,11 +41,13 @@ export const orderController = ng.controller('orderController',
         };
 
         $scope.updateAmount = async (basketOrder: BasketOrder, orderClient: OrderClient, amount: number) => {
-            if (amount.toString() != 'undefined') {
-                orderClient.amount = amount;
-                (orderClient.status !== 'REJECTED') ? await orderClient.updateAmount(amount) : null;
+                if(!!amount && amount > 0) {
+                    orderClient.amount = amount;
+                    (orderClient.status !== 'REJECTED') ? await orderClient.updateAmount(amount) : null;
+                } else if (amount == 0) {
+                    toasts.warning('crre.empty.amount.error');
+                }
                 Utils.safeApply($scope);
-            }
         };
 
         $scope.updateReassort = async (orderClient: OrderClient) => {

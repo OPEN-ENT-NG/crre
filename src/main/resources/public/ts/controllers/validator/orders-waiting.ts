@@ -84,6 +84,34 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             return isInavailable;
         };
 
+        $scope.checkValid = () => {
+            let ordersClient: OrdersClient;
+            if ($scope.allOrdersSelected) {
+                $scope.allOrderCLient.all.forEach(order => {
+                    for (let i = 0; i <= $scope.ordersClient.all.length; i++) {
+                        if (order.id == $scope.ordersClient.all[i].id) {
+                            order.amount = $scope.ordersClient.all[i].amount;
+                            break
+                        }
+                    }
+                });
+                ordersClient = $scope.allOrderCLient;
+            } else {
+                ordersClient = $scope.ordersClient;
+            }
+            let isValid: boolean;
+            if (ordersClient.selected.length > 0) {
+                isValid = !ordersClient.selected.some(order => {
+                    return !order.amount || order.amount <= 0;
+                })
+            } else {
+                isValid = !ordersClient.all.some(order => {
+                    return !order.amount || order.amount <= 0;
+                })
+            }
+            return isValid;
+        };
+
         const checkCampaignAccessibility = async (): Promise<void> => {
             $scope.allOrderCLient = new OrdersClient();
             await $scope.allOrderCLient.searchOrder($scope.current.structure.id, $scope.filterOrder, true);
@@ -264,11 +292,13 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         }
 
         $scope.updateAmount = async (orderClient: OrderClient, amount: number) => {
-            if (amount.toString() != 'undefined') {
+            if (!!amount && amount > 0) {
                 orderClient.amount = amount;
                 await orderClient.updateAmount(amount);
                 await $scope.getAllAmount();
                 Utils.safeApply($scope);
+            } else if (amount == 0) {
+                toasts.warning('crre.empty.amount.error');
             }
         };
 

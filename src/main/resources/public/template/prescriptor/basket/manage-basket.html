@@ -11,7 +11,7 @@
                 <span ng-bind="calculatePriceOfEquipments(baskets,2) | currency"></span>
             </h3>
             <input type="button" ng-click="checkPrice(baskets)" i18n-value="crre.take.order"
-                   ng-disabled="!campaign.purse_enabled"
+                   ng-disabled="!checkValid(campaign, baskets)"
                    ng-if="campaign.purse_enabled" style="top:-20px; margin-left:20px"/>
         </div>
         <div>
@@ -65,8 +65,8 @@
                                 <span class="cell font20 black-color"><i18n>crre.quantity</i18n></span>
                             </div>
                             <div class="centerColumnInput">
-                                <i class="moins verticalAlignMiddle" ng-click="basket.amountDecrease()"></i>
-                                <input type="number" step="1" min="0" ng-keypress="avoidDecimals($event)"
+                                <i class="moins verticalAlignMiddle" ng-hide="!basket.amount || basket.amount <= 1" ng-click="basket.amountDecrease()"></i>
+                                <input type="number" step="1" min="1" ng-keypress="avoidDecimals($event)"
                                        class="aligne-text-center numberWithoutArrow three ng-pristine ng-untouched ng-valid ng-valid-min"
                                        ng-change="basket.updateAmount()" ng-model="basket.amount"/>
                                 <i class="plus verticalAlignMiddle" ng-click="basket.amountIncrease()"></i>

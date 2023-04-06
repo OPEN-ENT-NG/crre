@@ -854,5 +854,6 @@
   "crre.orders.sent.library": "Demandes envoyées au libraire",
   "crre.orders.waiting.validation": "Demandes soumises à validation",
   "crre.lde.orders": "Commandes LDE",
-  "crre.item.not.found": "Manuel introuvable dans le catalogue"
+  "crre.item.not.found": "Manuel introuvable dans le catalogue",
+  "crre.empty.amount.error": "Une quantité à 0 est impossible, veuillez changer votre montant."
 }

@@ -219,10 +219,15 @@ public class BasketController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> RequestUtils.bodyToJson(request, pathPrefix + Field.BASKET, basket -> {
             try {
                 Integer id = parseInt(request.params().get(Field.IDBASKET));
-                Integer amount = basket.getInteger(Field.AMOUNT);
-                basketOrderItemService.updateAmount(user, id, amount)
-                        .onSuccess(result -> Renders.renderJson(request, result))
-                        .onFailure(error -> Renders.renderError(request));
+                Integer amount = basket.getInteger(Field.AMOUNT, 0);
+                if(amount > 0) {
+                    basketOrderItemService.updateAmount(user, id, amount)
+                            .onSuccess(result -> Renders.renderJson(request, result))
+                            .onFailure(error -> Renders.renderError(request));
+                } else {
+                    badRequest(request, "Amount is under 0");
+                }
+
             } catch (ClassCastException e) {
                 log.error(String.format("[CRRE@%s::updateAmount] An error occurred when casting basket id %s", this.getClass().getSimpleName(), e.getMessage()));
                 Renders.renderError(request);
