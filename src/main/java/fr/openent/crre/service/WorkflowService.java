@@ -1,5 +1,6 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.WorkflowNeo4jModel;
 import io.vertx.core.Future;
 
 import java.util.List;
@@ -13,5 +14,5 @@ public interface WorkflowService {
      * @param structureIdList list of structure id
      * @return return a map with the structure id in key and the list of workflows that the user has in the structure
      */
-    Future<Map<String, List<String>>> getWorkflowListFromStructureScope(String userId, List<String> structureIdList);
+    Future<Map<String, List<WorkflowNeo4jModel>>> getWorkflowListFromStructureScope(String userId, List<String> structureIdList);
 }

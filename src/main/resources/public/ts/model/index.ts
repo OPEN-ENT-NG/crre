@@ -16,3 +16,4 @@ export * from './Quote';
 export * from './Project';
 export * from './Statistics';
 export * from './StatisticsStructure';
+export * from './WorkflowNeo4jModel';

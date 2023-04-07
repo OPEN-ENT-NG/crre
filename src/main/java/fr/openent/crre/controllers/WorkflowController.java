@@ -2,6 +2,7 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.UserHelper;
+import fr.openent.crre.model.WorkflowNeo4jModel;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.WorkflowService;
 import fr.wseduc.rs.ApiDoc;
@@ -16,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class WorkflowController extends ControllerHelper {
@@ -42,7 +44,14 @@ public class WorkflowController extends ControllerHelper {
 
             UserHelper.getUserInfos(eb, request)
                     .compose(userInfos -> this.workflowService.getWorkflowListFromStructureScope(userInfos.getUserId(), idStructureList))
-                    .onSuccess(workflowList -> Renders.renderJson(request, JsonObject.mapFrom(workflowList)))
+                    .onSuccess(workflowList -> {
+                        final Map<String, List<JsonObject>> result = workflowList.entrySet().stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey, stringListEntry -> stringListEntry.getValue().stream()
+                                        .map(WorkflowNeo4jModel::toJson)
+                                        .collect(Collectors.toList())
+                                ));
+                        Renders.renderJson(request, JsonObject.mapFrom(result));
+                    })
                     .onFailure(error -> Renders.renderError(request));
 
         });

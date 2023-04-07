@@ -3,6 +3,7 @@ import http from 'axios';
 import {Log} from "./Log";
 import {IFilter} from "./Filter";
 import {workflowService} from "../services";
+import { WorkflowNeo4jModel } from './WorkflowNeo4jModel';
 
 export class Structure implements Selectable, IFilter {
     id: string;
@@ -15,7 +16,7 @@ export class Structure implements Selectable, IFilter {
     selected: boolean;
     search: string;
     inregroupment : boolean
-    workflow: Array<string>;
+    workflow: Array<WorkflowNeo4jModel>;
 
     constructor () {
        this.selected = false;
@@ -56,9 +57,9 @@ export class Structures  extends Selection<Structure> {
 
     private async calculatesWorkflow(): Promise<void> {
         await workflowService.getWorkflowListFromStructureScope(this.all.map((structure: Structure) => structure.id))
-            .then(result => {
+            .then((result: Map<string, Array<WorkflowNeo4jModel>>) => {
                 this.all.forEach((structure: Structure) => {
-                    structure.workflow = result[structure.id];
+                    structure.workflow = result.get(structure.id);
                 })
             })
             .catch(error => console.error(error));
