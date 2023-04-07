@@ -244,6 +244,7 @@ public class Field {
     public static final String CONSUMABLE_CREDITS = "consumable_credits";
     public static final String EXPORTORDER = "exportOrder";
     public static final String IDS_ORDER = "idsOrder";
+    public static final String DISPLAYNAME = "displayName";
 
     private Field() {
         throw new IllegalStateException("Utility class");

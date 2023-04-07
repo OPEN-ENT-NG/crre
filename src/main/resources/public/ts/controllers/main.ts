@@ -17,7 +17,7 @@ import {
     StructureGroups,
     Structures,
     Student,
-    Utils
+    Utils, WorkflowNeo4jModel
 } from '../model';
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
@@ -382,7 +382,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.hasAccessInStructure = (structure: Structure): boolean => {
-            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.access) != null;
+            return structure.workflow.find((workflowName: WorkflowNeo4jModel) => workflowName.name === Behaviours.applicationsBehaviours.crre.rights.workflow.access) != null;
         };
 
         /**
@@ -393,7 +393,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.isValidatorInStructure = (structure: Structure): boolean => {
-            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.validator) != null;
+            return structure.workflow.find((workflowName: WorkflowNeo4jModel) => workflowName.name === Behaviours.applicationsBehaviours.crre.rights.workflow.validator) != null;
         };
 
         /**
@@ -404,7 +404,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.isAdministratorInStructure = (structure: Structure): boolean => {
-            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.administrator) != null;
+            return structure.workflow.find((workflowName: WorkflowNeo4jModel) => workflowName.name === Behaviours.applicationsBehaviours.crre.rights.workflow.administrator) != null;
         };
 
         /**
@@ -415,7 +415,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         };
 
         $scope.isPrescriptorInStructure = (structure: Structure): boolean => {
-            return structure.workflow.find((workflowName: string) => workflowName === Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) != null;
+            return structure.workflow.find((workflowName: WorkflowNeo4jModel) => workflowName.name === Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) != null;
         };
 
         $scope.redirectTo = (path: string) => {

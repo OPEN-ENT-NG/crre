@@ -40,7 +40,7 @@ public class DefaultWorkflowServiceTest {
         Async async = ctx.async();
 
         String expectedQuery = "MATCH (u:User)-->(g:Group)-->(r:Role)-[:AUTHORIZE]->(w:WorkflowAction), (g)-[:DEPENDS]->(s:Structure)" +
-                " WHERE s.id IN {structureIdList} AND u.id = {userId} RETURN distinct s.id, w.name";
+                " WHERE s.id IN {structureIdList} AND u.id = {userId} RETURN distinct s.id, w";
         String expectedParams = "{\"structureIdList\":[\"591\",\"220\",\"75\"],\"userId\":\"userId\"}";
 
         PowerMockito.doAnswer(invocation -> {
