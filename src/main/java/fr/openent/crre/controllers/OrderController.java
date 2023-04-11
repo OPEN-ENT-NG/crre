@@ -1,8 +1,11 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.CreditTypeEnum;
 import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.OrderHelper;
+import fr.openent.crre.helpers.UserHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
@@ -24,9 +27,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -151,132 +152,66 @@ public class OrderController extends ControllerHelper {
     }
 
 
-    @Get("/orders/amount")
+    @Post("/orders/amount/structure/:idStructure")
     @ApiDoc("Get the total amount of orders")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(ValidatorAndStructureRight.class)
+    // To avoid errors of "request has already been" ex: https://pastebin.com/J1HUWtE9, we call the resource filter
+    // later (new ValidatorInStructureRight().authorize)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void listOrdersAmountLicences(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> {
-            if (request.params().contains(Field.STATUS)) {
-                final String status = request.params().get(Field.STATUS);
-                String idStructure = request.getParam(Field.IDSTRUCTURE);
-                String startDate = request.getParam(Field.STARTDATE);
-                String endDate = request.getParam(Field.ENDDATE);
-                // Récupération de tout les filtres
-                JsonArray filters = new JsonArray();
-                boolean exist;
-                int length = request.params().entries().size();
-                for (int i = 0; i < length; i++) {
-                    String key = request.params().entries().get(i).getKey();
-                    exist = false;
-                    if (!key.equals(Field.ID) && !key.equals(Field.Q) && !key.equals(Field.IDSTRUCTURE) && !key.equals(Field.PAGE) &&
-                            !key.equals(Field.STARTDATE) && !key.equals(Field.ENDDATE)) {
-                        for (int f = 0; f < filters.size(); f++) {
-                            if (filters.getJsonObject(f).containsKey(key)) {
-                                filters.getJsonObject(f).getJsonArray(key).add(request.params().entries().get(i).getValue());
-                                exist = true;
-                            }
-                        }
-                        if (!exist) {
-                            filters.add(new JsonObject().put(request.params().entries().get(i).getKey(), new JsonArray().add(request.params().entries().get(i).getValue())));
-                        }
-                    }
-                }
-                Promise<JsonObject> getOrderAmount = Promise.promise();
-                Promise<JsonArray> getOrderCredit = Promise.promise();
-                Promise<JsonObject> getOrderAmountConsumable = Promise.promise();
-                Promise<JsonArray> getTotalAmount = Promise.promise();
-                List<Future> promises = new ArrayList<>();
-                promises.add(getOrderAmount.future());
-                promises.add(getOrderCredit.future());
-                promises.add(getOrderAmountConsumable.future());
-                promises.add(getTotalAmount.future());
-                CompositeFuture.all(promises).onComplete(event -> {
-                    if (event.succeeded()) {
-                        OrderSearchAmountModel orderSearchAmountModel = new OrderSearchAmountModel();
-                        int amount = 0;
-                        if (getOrderAmount.future().result().getString(Field.NB_LICENCES) != null) {
-                            amount = Integer.parseInt(getOrderAmount.future().result().getString(Field.NB_LICENCES));
-                        }
-                        orderSearchAmountModel.setLicence(amount);
-                        amount = 0;
-                        if (getOrderAmountConsumable.future().result().getString(Field.NB_LICENCES) != null) {
-                            amount = Integer.parseInt(getOrderAmountConsumable.future().result().getString(Field.NB_LICENCES));
-                        }
-                        orderSearchAmountModel.setConsumableLicence(amount);
-                        JsonArray totalAmount = getTotalAmount.future().result();
-                        JsonArray order_credit = getOrderCredit.future().result();
-                        if (order_credit.size() > 0) {
-                            HashSet<String> idsEquipment = new HashSet<>();
-                            HashSet<Long> idsOrderFiltered = new HashSet<>();
-                            int total_amount = 0;
-                            for (int i = 0; i < order_credit.size(); i++) {
-                                idsEquipment.add(order_credit.getJsonObject(i).getString(Field.EQUIPMENT_KEY));
-                            }
-                            for (int i = 0; i < totalAmount.size(); i++) {
-                                idsOrderFiltered.add(totalAmount.getJsonObject(i).getLong(Field.ID));
-                                total_amount += totalAmount.getJsonObject(i).getLong(Field.AMOUNT);
-                            }
-                            int finalTotal_amount = total_amount;
-                            searchByIds(new ArrayList<>(idsEquipment), null, equipments -> {
-                                if (equipments.isRight()) {
-                                    JsonArray equipmentsArray = equipments.right().getValue();
-                                    double total = 0;
-                                    double totalFiltered = 0;
-                                    double totalFilteredConsumable = 0;
-                                    double total_consumable = 0;
-                                    for (int i = 0; i < order_credit.size(); i++) {
-                                        JsonObject order = order_credit.getJsonObject(i);
-                                        String idEquipment = order.getString(Field.EQUIPMENT_KEY);
-                                        Long idOrder = order.getLong(Field.ID);
-                                        String credit = order.getString(Field.USE_CREDIT);
-                                        if (equipmentsArray.size() > 0) {
-                                            for (int j = 0; j < equipmentsArray.size(); j++) {
-                                                JsonObject equipment = equipmentsArray.getJsonObject(j);
-                                                if (idEquipment.equals(equipment.getString(Field.ID))) {
-                                                    double totalPriceEquipment = order.getInteger(Field.AMOUNT) *
-                                                            getPriceTtc(equipment).getDouble(Field.PRICETTC);
-                                                    if (credit.equals(Field.CREDITS) && idsOrderFiltered.contains(idOrder)) {
-                                                        totalFiltered += totalPriceEquipment;
-                                                    }
-                                                    if (credit.equals(Field.CONSUMABLE_CREDITS) && idsOrderFiltered.contains(idOrder)) {
-                                                        totalFilteredConsumable += totalPriceEquipment;
-                                                    }
-                                                    if (credit.equals(Field.CREDITS))
-                                                        total += totalPriceEquipment;
-                                                    else
-                                                        total_consumable += totalPriceEquipment;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    orderSearchAmountModel.setCredit(total)
-                                            .setConsumableCredit(total_consumable)
-                                            .setTotal(finalTotal_amount)
-                                            .setTotalFiltered(totalFiltered)
-                                            .setTotalFilteredConsumable(totalFilteredConsumable);
-                                    renderJson(request, orderSearchAmountModel.toJson());
-                                } else {
-                                    log.error("[CRRE] OrderController@listOrdersAmount searchByIds failed : " + equipments.left().getValue());
-                                    badRequest(request);
-                                }
-                            });
+        RequestUtils.bodyToJson(request, pathPrefix + Field.ORDERSAMOUNT, filter -> {
+            UserHelper.getUserInfos(eb, request)
+                    .compose(userInfos -> new ValidatorInStructureRight().authorize(request, null, userInfos))
+                    .compose(asAccess -> {
+                        if (asAccess) {
+                            FilterModel filters = new FilterModel(filter);
+                            filters.setIdsStructure(Collections.singletonList(request.getParam(Field.IDSTRUCTURE)));
+                            return OrderHelper.listOrderAndCalculatePrice(filters, request);
                         } else {
-                            renderJson(request, orderSearchAmountModel.toJson());
+                            return Future.failedFuture(new SecurityException());
                         }
-                    } else {
-                        log.error("[CRRE] OrderController@listOrdersAmount CompositeFuture.all failed : " + event.cause().getMessage());
-                        badRequest(request);
-                    }
-                });
-                orderService.listOrderAmount(status, idStructure, user, startDate, endDate, false, handlerJsonObject(getOrderAmount));
-                orderService.listOrderAmount(status, idStructure, user, startDate, endDate, true, handlerJsonObject(getOrderAmountConsumable));
-                orderService.getTotalAmountOrder(status, idStructure, user, startDate, endDate, filters, handlerJsonArray(getTotalAmount));
-                orderService.listOrderCredit(status, idStructure, user, startDate, endDate, filters, handlerJsonArray(getOrderCredit));
-            } else {
-                badRequest(request);
-            }
+                    })
+                    .onSuccess(orderUniversalModels -> {
+                        int nbItem = 0;
+                        int nbLicence = 0;
+                        int nbConsumableLicence = 0;
+                        double priceCredit = 0.0;
+                        double priceConsumableCredit = 0.0;
+                        for (OrderUniversalModel orderUniversalModel : orderUniversalModels) {
+                            nbItem += orderUniversalModel.getAmount();
+                            switch (CreditTypeEnum.getValue(orderUniversalModel.getCampaign().getUseCredit(), CreditTypeEnum.NONE)) {
+                                case LICENCES:
+                                    nbLicence += orderUniversalModel.getAmount();
+                                    break;
+                                case CONSUMABLE_LICENCES:
+                                    nbConsumableLicence += orderUniversalModel.getAmount();
+                                    break;
+                                case CREDITS:
+                                    priceCredit += orderUniversalModel.getTotalPriceTTC();
+                                    break;
+                                case CONSUMABLE_CREDITS:
+                                    priceConsumableCredit += orderUniversalModel.getTotalPriceTTC();
+                                    break;
+                            }
+                        }
+
+                        OrderSearchAmountModel orderSearchAmountModel = new OrderSearchAmountModel()
+                                .setNbItem(nbItem)
+                                .setNbLicence(nbLicence)
+                                .setNbConsumableLicence(nbConsumableLicence)
+                                .setPriceCredit(priceCredit)
+                                .setPriceConsumableCredit(priceConsumableCredit);
+
+                        Renders.render(request, orderSearchAmountModel.toJson());
+                    })
+                    .onFailure(error -> {
+                        if (error instanceof SecurityException) {
+                            Renders.unauthorized(request);
+                            return;
+                        }
+                        Renders.renderError(request);
+                        log.error(String.format("[CRRE@%s::listOrdersAmountLicences] Fail to Get the total amount: %s::%s",
+                                this.getClass().getSimpleName(), error.getClass().getSimpleName(), error.getMessage()));
+                    });
         });
     }
 
@@ -356,43 +291,8 @@ public class OrderController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + Field.EXPORTORDER, filterOrder -> {
             UserUtils.getUserInfos(eb, request, user -> {
                 FilterModel filters = new FilterModel(filterOrder);
-                Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(filters.getSearchingText(), filters.getIdsCampaign(),
-                        filters.getIdsStructure(), filters.getIdsUser(), new ArrayList<>(), filters.getIdsOrder(),
-                        filters.getStartDate(), filters.getEndDate(), filters.getStatus());
-                orderFuture.compose(orderUniversalModels -> {
-                            List<String> itemIds = orderUniversalModels.stream()
-                                    .filter(order -> !order.getStatus().isHistoricStatus())
-                                    .map(OrderUniversalModel::getEquipmentKey)
-                                    .distinct()
-                                    .collect(Collectors.toList());
-                            return itemIds.size() > 0 ? searchByIds(itemIds, null) : Future.succeededFuture(new JsonArray());
-                        })
-                        .onSuccess(itemArray -> {
-                            List<OrderUniversalModel> orderUniversalModels = orderFuture.result();
-                            List<JsonObject> itemsList = itemArray.stream()
-                                    .filter(JsonObject.class::isInstance)
-                                    .map(JsonObject.class::cast)
-                                    .collect(Collectors.toList());
-                            orderUniversalModels.stream()
-                                    .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
-                                    .forEach(orderUniversalModel -> {
-                                        JsonObject equipmentJson = itemsList.stream()
-                                                .filter(item -> orderUniversalModel.getEquipmentKey().equals(item.getString(Field.ID)))
-                                                .findFirst()
-                                                .orElse(null);
-                                        if (equipmentJson != null) {
-                                            JsonObject priceInfos = getPriceTtc(equipmentJson);
-                                            orderUniversalModel.setEquipmentPrice(priceInfos.getDouble(Field.PRICETTC));
-                                            orderUniversalModel.setEquipmentPriceht(priceInfos.getDouble(Field.PRIXHT));
-                                            orderUniversalModel.setEquipmentTva5(priceInfos.getDouble(Field.PART_TVA5));
-                                            orderUniversalModel.setEquipmentTva20(priceInfos.getDouble(Field.PART_TVA20));
-                                            orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
-                                            orderUniversalModel.setOffers(equipmentJson.getJsonArray(Field.OFFRES));
-                                        } else {
-                                            orderUniversalModel.setEquipmentPrice(0.0);
-                                            orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", getHost(request), I18n.acceptLanguage(request)));
-                                        }
-                                    });
+                OrderHelper.listOrderAndCalculatePrice(filters, request)
+                        .onSuccess(orderUniversalModels -> {
                             new ArrayList<>(orderUniversalModels).forEach(orderUniversal -> {
                                 if (orderUniversal.getOffers() != null && orderUniversal.getOffers().size() > 0) {
                                     int index = orderUniversalModels.indexOf(orderUniversal);
@@ -403,6 +303,10 @@ public class OrderController extends ControllerHelper {
                                     .putHeader("Content-Type", "text/csv; charset=utf-8")
                                     .putHeader("Content-Disposition", "attachment; filename=orders.csv")
                                     .end(generateExport(request, orderUniversalModels));
+                        })
+                        .onFailure(error -> {
+                            Renders.renderError(request);
+                            log.error(String.format("[CRRE@%s::export] Fail to export %s", this.getClass().getSimpleName(), error.getMessage()));
                         });
             });
         });

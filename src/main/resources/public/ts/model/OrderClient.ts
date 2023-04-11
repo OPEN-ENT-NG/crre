@@ -10,7 +10,7 @@ import {
     Offer,
     Offers,
     Order,
-    OrderRegion,
+    OrderRegion, OrderSearchAmountFilter,
     Structure,
     Utils
 } from './index';
@@ -249,13 +249,8 @@ export class OrdersClient extends Selection<OrderClient> {
         }
     }
 
-    async calculateTotal(status: string, id_structure: string, filterOrder: ValidatorOrderWaitingFilter): Promise<OrderSearchAmount> {
-        const {startDate, endDate} = Utils.formatDate(filterOrder.startDate, filterOrder.endDate);
-        let params: string = '';
-        filterOrder.filterChoiceCorrelation.forEach((value: string, key: string) => {
-            filterOrder[key].forEach((el: IFilter) => params += "&" + value + "=" + el.getValue())
-        });
-        return http.get(`/crre/orders/amount?idStructure=${id_structure}&startDate=${startDate}&endDate=${endDate}&status=${status}${params}`)
+    async calculateTotal(structureId: string, filter: OrderSearchAmountFilter): Promise<OrderSearchAmount> {
+        return http.post(`/crre/orders/amount/structure/${structureId}`, filter.toJson())
             .then((res: AxiosResponse) => new OrderSearchAmount(res.data));
     }
 

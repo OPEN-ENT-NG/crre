@@ -19,6 +19,7 @@
             <input type="button"
                    class="button"
                    ng-click="openWaitingOrder()"
+                   ng-disabled="!isValidatorInStructure(current.structure)"
                    i18n-value="crre.access.demands.waiting.toValidate"/>
         </div>
     </div>

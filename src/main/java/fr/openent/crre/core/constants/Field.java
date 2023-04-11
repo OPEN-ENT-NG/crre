@@ -245,6 +245,7 @@ public class Field {
     public static final String EXPORTORDER = "exportOrder";
     public static final String IDS_ORDER = "idsOrder";
     public static final String DISPLAYNAME = "displayName";
+    public static final String ORDERSAMOUNT = "ordersAmount";
 
     private Field() {
         throw new IllegalStateException("Utility class");

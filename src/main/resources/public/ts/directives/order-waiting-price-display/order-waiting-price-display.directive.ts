@@ -43,33 +43,33 @@ class Controller implements IViewModel {
 
     totalSelectedItems(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.total;
+            return this.amountTotal.nbItem;
         }
 
-        return this.ordersClient.all
-            .filter((orderClient: OrderClient) => orderClient.selected && orderClient.amount > 0)
+        return this.ordersClient.selected
+            .filter((orderClient: OrderClient) => orderClient.amount > 0)
             .map((orderClient: OrderClient) => orderClient.amount)
             .reduce((partialSum, a) => partialSum + a, 0);
     }
 
     totalSelectedPriceAll(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.total_filtered + this.amountTotal.total_filtered_consumable;
+            return this.amountTotal.priceCredit + this.amountTotal.priceConsumableCredit;
         }
 
-        return this.ordersClient.all
-            .filter((orderClient: OrderClient) => orderClient.selected)
+        return this.ordersClient.selected
+            .filter((orderClient: OrderClient) => orderClient.campaign.use_credit == CREDIT_TYPE_ENUM.CONSUMABLE_CREDITS
+                || orderClient.campaign.use_credit == CREDIT_TYPE_ENUM.CREDITS)
             .map((orderClient: OrderClient) => orderClient.amount * orderClient.price)
             .reduce((partialSum, a) => partialSum + a, 0);
     }
 
     totalSelectedPriceConsumable(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.total_filtered_consumable;
+            return this.amountTotal.priceConsumableCredit;
         }
 
-        return this.ordersClient.all
-            .filter((orderClient: OrderClient) => orderClient.selected)
+        return this.ordersClient.selected
             .filter((orderClient: OrderClient) => orderClient.campaign.use_credit == CREDIT_TYPE_ENUM.CONSUMABLE_CREDITS)
             .map((orderClient: OrderClient) => orderClient.amount * orderClient.price)
             .reduce((partialSum, a) => partialSum + a, 0);
@@ -77,11 +77,10 @@ class Controller implements IViewModel {
 
     totalSelectedPrice(): number {
         if (this.allOrdersSelected) {
-            return this.amountTotal.total_filtered;
+            return this.amountTotal.priceCredit;
         }
 
-        return this.ordersClient.all
-            .filter((orderClient: OrderClient) => orderClient.selected)
+        return this.ordersClient.selected
             .filter((orderClient: OrderClient) => orderClient.campaign.use_credit == CREDIT_TYPE_ENUM.CREDITS)
             .map((orderClient: OrderClient) => orderClient.amount * orderClient.price)
             .reduce((partialSum, a) => partialSum + a, 0);

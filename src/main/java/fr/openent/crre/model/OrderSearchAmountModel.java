@@ -4,13 +4,11 @@ import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
 public class OrderSearchAmountModel implements IModel<OrderSearchAmountModel> {
-    private Integer licence;
-    private Integer consumableLicence;
-    private Double credit;
-    private Double consumableCredit;
-    private Integer total;
-    private Double totalFiltered;
-    private Double totalFilteredConsumable;
+    private Integer nbItem = 0;
+    private Integer nbLicence = 0;
+    private Integer nbConsumableLicence = 0;
+    private Double priceCredit = 0.0;
+    private Double priceConsumableCredit = 0.0;
 
     public OrderSearchAmountModel() {
     }
@@ -21,69 +19,51 @@ public class OrderSearchAmountModel implements IModel<OrderSearchAmountModel> {
 
     @Override
     public JsonObject toJson() {
-        return IModelHelper.toJson(this, true, true);
+        return IModelHelper.toJson(this, true, false);
     }
 
-    public Integer getLicence() {
-        return licence;
+    public Integer getNbItem() {
+        return nbItem;
     }
 
-    public OrderSearchAmountModel setLicence(Integer licence) {
-        this.licence = licence;
+    public OrderSearchAmountModel setNbItem(Integer nbItem) {
+        this.nbItem = nbItem;
         return this;
     }
 
-    public Integer getConsumableLicence() {
-        return consumableLicence;
+    public Integer getNbLicence() {
+        return nbLicence;
     }
 
-    public OrderSearchAmountModel setConsumableLicence(Integer consumableLicence) {
-        this.consumableLicence = consumableLicence;
+    public OrderSearchAmountModel setNbLicence(Integer nbLicence) {
+        this.nbLicence = nbLicence;
         return this;
     }
 
-    public Double getCredit() {
-        return credit;
+    public Integer getNbConsumableLicence() {
+        return nbConsumableLicence;
     }
 
-    public OrderSearchAmountModel setCredit(Double credit) {
-        this.credit = credit;
+    public OrderSearchAmountModel setNbConsumableLicence(Integer nbConsumableLicence) {
+        this.nbConsumableLicence = nbConsumableLicence;
         return this;
     }
 
-    public Double getConsumableCredit() {
-        return consumableCredit;
+    public Double getPriceCredit() {
+        return priceCredit;
     }
 
-    public OrderSearchAmountModel setConsumableCredit(Double consumableCredit) {
-        this.consumableCredit = consumableCredit;
+    public OrderSearchAmountModel setPriceCredit(Double priceCredit) {
+        this.priceCredit = priceCredit;
         return this;
     }
 
-    public Integer getTotal() {
-        return total;
+    public Double getPriceConsumableCredit() {
+        return priceConsumableCredit;
     }
 
-    public OrderSearchAmountModel setTotal(Integer total) {
-        this.total = total;
-        return this;
-    }
-
-    public Double getTotalFiltered() {
-        return totalFiltered;
-    }
-
-    public OrderSearchAmountModel setTotalFiltered(Double totalFiltered) {
-        this.totalFiltered = totalFiltered;
-        return this;
-    }
-
-    public Double getTotalFilteredConsumable() {
-        return totalFilteredConsumable;
-    }
-
-    public OrderSearchAmountModel setTotalFilteredConsumable(Double totalFilteredConsumable) {
-        this.totalFilteredConsumable = totalFilteredConsumable;
+    public OrderSearchAmountModel setPriceConsumableCredit(Double priceConsumableCredit) {
+        this.priceConsumableCredit = priceConsumableCredit;
         return this;
     }
 }
