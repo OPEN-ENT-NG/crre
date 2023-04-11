@@ -586,7 +586,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                         .add(order.getOrderRegion().getEquipmentKey());
                 setOrderValuesSQL(params, order);
 
-                JsonArray offers = new JsonArray(order.getOffers().stream().map(OrderRegionBeautifyModel::toJsonFormat).collect(Collectors.toList()));
+                JsonArray offers = new JsonArray(order.getOffers().stream().map(OrderRegionBeautifyModel::toJsonOffer).collect(Collectors.toList()));
                 params.add(order.getBasketOrder().getId())
                         .add(order.getOrderRegion().getReassort())
                         .add(offers)
@@ -937,8 +937,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 JsonObject offer = leps.getJsonObject(i);
                 JsonArray conditions = offer.getJsonArray("conditions");
                 OrderRegionBeautifyModel orderRegionBeautifyModelOffer = new OrderRegionBeautifyModel()
-                        .setTitle("Manuel " +
-                                offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
+                        .setTitle(offer.getJsonArray("licence").getJsonObject(0).getString("valeur"));
                 if (conditions.size() > 1) {
                     for (int j = 0; j < conditions.size(); j++) {
                         int condition = conditions.getJsonObject(j).getInteger("conditionGratuite");
@@ -964,7 +963,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 orderRegionBeautifyModelOffer.setTotalPriceHT(0.0);
                 orderRegionBeautifyModelOffer.setTotalPriceTTC(0.0);
                 orderRegionBeautifyModelOffer.setTypeCatalogue(orderRegionBeautifyModel.getTypeCatalogue());
-                orderRegionBeautifyModelOffer.setTitle(orderRegionBeautifyModel.getTitle());
                 orderRegionBeautifyModelOffer.setUaiStructure(orderRegionBeautifyModel.getUaiStructure());
                 orderRegionBeautifyModelOffer.setNameStructure(orderRegionBeautifyModel.getNameStructure());
                 orderRegionBeautifyModelOffer.setAddressStructure(orderRegionBeautifyModel.getAddressStructure());
