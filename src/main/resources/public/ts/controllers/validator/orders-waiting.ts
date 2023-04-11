@@ -1,5 +1,13 @@
 import {ng, template, toasts} from 'entcore';
-import {Campaign, OrderClient, OrderRegion, OrdersClient, OrdersRegion, Utils} from '../../model';
+import {
+    Campaign,
+    OrderClient,
+    OrderRegion,
+    OrdersClient,
+    OrderSearchAmountFilter,
+    OrdersRegion,
+    Utils
+} from '../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../enum/infinite-scroll-eventer";
 import {UserModel} from "../../model/UserModel";
 import {ValidatorOrderWaitingFilter} from "../../model/ValidatorOrderWaitingFilter";
@@ -54,7 +62,15 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         };
 
         $scope.getAllAmount = async () => {
-            $scope.amountTotal = await $scope.ordersClient.calculateTotal('WAITING', $scope.current.structure.id, $scope.filterOrder);
+            let filter: OrderSearchAmountFilter = new OrderSearchAmountFilter();
+            filter.status = [ORDER_STATUS_ENUM.WAITING];
+            filter.idsCampaign = $scope.filterOrder.typeCampaignList.map((campaign: Campaign) => campaign.id);
+            filter.idsUser = $scope.filterOrder.userList.map((user: UserModel) => user.id_user);
+            filter.searchingText = $scope.filterOrder.queryName;
+            let {startDate, endDate} = Utils.formatDate($scope.filterOrder.startDate, $scope.filterOrder.endDate);
+            filter.startDate = startDate;
+            filter.endDate = endDate;
+            $scope.amountTotal = await $scope.ordersClient.calculateTotal($scope.current.structure.id, filter);
         }
 
         $scope.remainAvailable = () => {

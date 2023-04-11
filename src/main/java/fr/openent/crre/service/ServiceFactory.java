@@ -39,7 +39,9 @@ public class ServiceFactory {
 
 
     public ServiceFactory(Vertx vertx, ConfigModel config, EmailFactory emailFactory, Storage storage) {
-        instance = this;
+        if (ServiceFactory.instance == null) {
+            ServiceFactory.instance = this;
+        }
         this.vertx = vertx;
         this.config = config;
         this.webClient = initWebClient();
@@ -65,6 +67,10 @@ public class ServiceFactory {
         this.notificationService = new DefaultNotificationService(vertx, this);
         this.projectService = new DefaultProjectService();
         this.workflowService = new DefaultWorkflowService();
+    }
+
+    public static ServiceFactory getInstance() {
+        return ServiceFactory.instance;
     }
 
     public Vertx getVertx() {
@@ -165,9 +171,5 @@ public class ServiceFactory {
 
     public WorkflowService getWorkflowService() {
         return workflowService;
-    }
-
-    public static ServiceFactory getInstance() {
-        return instance;
     }
 }

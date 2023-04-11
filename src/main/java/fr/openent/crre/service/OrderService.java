@@ -38,13 +38,6 @@ public interface OrderService {
      */
     void listOrder(String status, String idStructure, Integer page, String startDate, String endDate, Handler<Either<String, JsonArray>> handler);
 
-    void listOrderAmount(String status, String idStructure, UserInfos user, String startDate, String endDate, Boolean consumable,
-                         Handler<Either<String, JsonObject>> handler);
-
-    void listOrderCredit(String status, String idStructure, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler);
-
-    void getTotalAmountOrder(String status, String idStructure, UserInfos user, String startDate, String endDate, JsonArray filters, Handler<Either<String, JsonArray>> handler);
-
     /**
      * Get the list of all users
      * @param status order status to retrieve

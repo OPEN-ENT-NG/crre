@@ -15,22 +15,6 @@
       },
       "description": "An array of campaign IDs to filter by"
     },
-    "idsOrder": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "description": "The ID of an order"
-      },
-      "description": "An array of order IDs to filter by"
-    },
-    "idsStructure": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "description": "The ID of a structure"
-      },
-      "description": "An array of structure IDs to filter by"
-    },
     "idsUser": {
       "type": "array",
       "items": {
@@ -50,6 +34,8 @@
     },
     "status": {
       "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
       "items": {
         "enum": [
           "WAITING",
@@ -67,7 +53,7 @@
   },
   "required": [
     "endDate",
-    "idsStructure",
-    "startDate"
+    "startDate",
+    "status"
   ]
 }

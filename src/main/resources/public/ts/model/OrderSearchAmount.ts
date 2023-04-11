@@ -1,86 +1,64 @@
 export interface IOrderSearchAmount {
-    licence: number;
-    consumable_licence: number;
-    credit: number;
-    consumable_credit: number;
-    total: number;
-    total_filtered: number;
-    total_filtered_consumable: number;
+    nbItem: number;
+    nbLicence: number;
+    nbConsumableLicence: number;
+    priceCredit: number;
+    priceConsumableCredit: number;
 }
 
 export class OrderSearchAmount implements IOrderSearchAmount{
-    private _licence: number;
-    private _consumable_licence: number;
-    private _credit: number;
-    private _consumable_credit: number;
-    private _total: number;
-    private _total_filtered: number;
-    private _total_filtered_consumable: number;
 
+    private _nbItem: number;
+    private _nbLicence: number;
+    private _nbConsumableLicence: number;
+    private _priceCredit: number;
+    private _priceConsumableCredit: number;
 
     constructor(data: IOrderSearchAmount) {
-        this._licence = data.licence;
-        this._consumable_licence = data.consumable_licence;
-        this._credit = data.credit;
-        this._consumable_credit = data.consumable_credit;
-        this._total = data.total;
-        this._total_filtered = data.total_filtered;
-        this._total_filtered_consumable = data.total_filtered_consumable;
+        this._nbItem = data.nbItem || 0;
+        this._nbLicence = data.nbLicence || 0;
+        this._nbConsumableLicence = data.nbConsumableLicence || 0;
+        this._priceCredit = data.priceCredit || 0;
+        this._priceConsumableCredit = data.priceConsumableCredit || 0;
     }
 
-    get licence(): number {
-        return this._licence;
+    get nbConsumableLicence(): number {
+        return this._nbConsumableLicence;
     }
 
-    set licence(value: number) {
-        this._licence = value;
+    set nbConsumableLicence(value: number) {
+        this._nbConsumableLicence = value;
     }
 
-    get consumable_licence(): number {
-        return this._consumable_licence;
+    get nbItem(): number {
+        return this._nbItem;
     }
 
-    set consumable_licence(value: number) {
-        this._consumable_licence = value;
+    set nbItem(value: number) {
+        this._nbItem = value;
     }
 
-    get credit(): number {
-        return this._credit;
+    get nbLicence(): number {
+        return this._nbLicence;
     }
 
-    set credit(value: number) {
-        this._credit = value;
+    set nbLicence(value: number) {
+        this._nbLicence = value;
     }
 
-    get consumable_credit(): number {
-        return this._consumable_credit;
+    get priceConsumableCredit(): number {
+        return this._priceConsumableCredit;
     }
 
-    set consumable_credit(value: number) {
-        this._consumable_credit = value;
+    set priceConsumableCredit(value: number) {
+        this._priceConsumableCredit = value;
     }
 
-    get total(): number {
-        return this._total;
+    get priceCredit(): number {
+        return this._priceCredit;
     }
 
-    set total(value: number) {
-        this._total = value;
-    }
-
-    get total_filtered(): number {
-        return this._total_filtered;
-    }
-
-    set total_filtered(value: number) {
-        this._total_filtered = value;
-    }
-
-    get total_filtered_consumable(): number {
-        return this._total_filtered_consumable;
-    }
-
-    set total_filtered_consumable(value: number) {
-        this._total_filtered_consumable = value;
+    set priceCredit(value: number) {
+        this._priceCredit = value;
     }
 }
