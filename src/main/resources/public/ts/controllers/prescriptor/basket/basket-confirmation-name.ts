@@ -17,6 +17,7 @@ export const basketConfirmationNameController = ng.controller('basketConfirmatio
                 await $scope.baskets_test.sync(parseInt($routeParams.idCampaign), $scope.current.structure.id);
                 $scope.cancelConfirmBasketName();
                 if ($scope.isValidatorInStructure($scope.current.structure)) {
+                    toasts.info('crre.confirm.basket.validator');
                     $scope.redirectTo(`/order/waiting/${$scope.current.structure.id}`);
                 }
             }
