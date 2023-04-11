@@ -326,6 +326,24 @@ public class OrderRegionBeautifyModel {
                 .put(Field.TYPECATALOGUE, this.typeCatalogue);
     }
 
+    public JsonObject toJsonOffer() {
+        return new JsonObject().put(Field.ID, this.id)
+                .put(Field.AMOUNT, this.getOrderRegion().getAmount())
+                .put(Field.CAMPAIGN_NAME, this.getCampaign().getName())
+                .put(Field.TITRE, this.getTitle())
+                .put(Field.BASKET_NAME, this.getBasketOrder().getName())
+                .put(Field.CREATION_DATE, this.getOrderRegion().getCreationDate())
+                .put(Field.UNITEDPRICETTC, this.unitedPriceTTC)
+                .put(Field.TOTALPRICEHT, this.totalPriceHT)
+                .put(Field.TOTALPRICETTC, this.totalPriceTTC)
+                .put(Field.NAME, this.name)
+                .put(Field.EAN, this.ean)
+                .put(Field.UAI_STRUCTURE, this.uaiStructure)
+                .put(Field.NAME_STRUCTURE, this.nameStructure)
+                .put(Field.ADDRESS_STRUCTURE, this.addressStructure)
+                .put(Field.TYPECATALOGUE, this.typeCatalogue);
+    }
+
     public BasketOrder getBasketOrder() {
         return this.orderRegionComplex.getBasketOrder();
     }

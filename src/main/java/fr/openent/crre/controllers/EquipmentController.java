@@ -130,25 +130,25 @@ public class EquipmentController extends ControllerHelper {
                 FilterItemModel filters = new FilterItemModel();
                 for (int i = 0; i < resources.size(); i++) {
                     JsonObject resource = resources.getJsonObject(i);
-                    filters.getDisciplines().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.DISCIPLINES), JsonObject.class)
+                    filters.getDisciplines().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.DISCIPLINES, new JsonArray()), JsonObject.class)
                             .stream()
                             .map(discipline -> discipline.getString(Field.LIBELLE))
                             .collect(Collectors.toList()));
 
-                    filters.getGrades().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.NIVEAUX), JsonObject.class)
+                    filters.getGrades().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.NIVEAUX, new JsonArray()), JsonObject.class)
                             .stream()
                             .map(grade -> grade.getString(Field.LIBELLE))
                             .collect(Collectors.toList()));
 
                     if (resource.getJsonArray(Field.CLASSES) != null) {
-                        filters.getClasses().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.CLASSES), JsonObject.class)
+                        filters.getClasses().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.CLASSES, new JsonArray()), JsonObject.class)
                                 .stream()
                                 .map(c -> c.getString(Field.LIBELLE))
                                 .collect(Collectors.toList()));
                     }
 
                     if (resource.getJsonArray(Field.TECHNOS) != null) {
-                        filters.getDevices().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.TECHNOS), JsonObject.class)
+                        filters.getDevices().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.TECHNOS, new JsonArray()), JsonObject.class)
                                 .stream()
                                 .map(techno -> techno.getString(Field.TECHNOLOGY))
                                 .collect(Collectors.toList()));
