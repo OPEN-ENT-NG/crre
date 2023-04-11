@@ -17,12 +17,10 @@ export const campaignsListController = ng.controller('campaignsListController',
         };
 
         $scope.openOrderToMain = (campaign: Campaign) => {
-            if (campaign.accessible) {
-                $scope.$emit('eventEmitedCampaign', campaign);
-                $scope.campaign = campaign;
-                $scope.redirectTo(`/campaign/${campaign.id}/order`);
-                Utils.safeApply($scope);
-            }
+            $scope.$emit('eventEmitedCampaign', campaign);
+            $scope.campaign = campaign;
+            $scope.redirectTo(`/campaign/${campaign.id}/order`);
+            Utils.safeApply($scope);
         };
 
         $scope.openWaitingOrder = () => {
