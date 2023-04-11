@@ -356,9 +356,6 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
 
         $scope.closeWaitingAdminLightbox = async () => {
             $scope.display.lightbox.waitingAdmin = false;
-            if ($scope.display.allOrdersSelected || !$scope.display.projects.hasSelectedOrders()) {
-                $scope.display.allOrdersSelected = false;
-            }
             $scope.display.projects.all = [];
             $scope.projectFilter.page = 0;
             await $scope.launchSearch($scope.display.projects, false, false);
