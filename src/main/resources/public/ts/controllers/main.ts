@@ -177,6 +177,10 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                     let idStructure = params.idStructure;
                     await $scope.initStructures(idStructure);
                 }
+                if (!$scope.isPrescriptorInStructure($scope.current.structure)) {
+                    $scope.redirectTo('/');
+                    return;
+                }
                 await template.open('main-profile', 'prescriptor/campaign-main');
                 await template.open('order-list', 'prescriptor/order/orders-list');
                 await selectCampaign(idCampaign);
@@ -186,15 +190,19 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             },
             campaignBasket: async (params) => {
                 $scope.selectedType = $location.path();
-                await template.open('main-profile', 'prescriptor/campaign-main');
-                await template.open('campaign-main', 'prescriptor/basket/manage-basket');
                 let idCampaign = params.idCampaign;
                 idIsInteger(idCampaign);
-                if (!$scope.current.structure)
+                if (!$scope.current.structure) {
                     await $scope.initStructures();
-                if ($scope.current.structure) {
-                    await $scope.baskets.sync(idCampaign, $scope.current.structure.id, $scope.campaign.reassort);
                 }
+                if (!$scope.isPrescriptorInStructure($scope.current.structure)) {
+                    $scope.redirectTo('/');
+                    return;
+                }
+                await $scope.baskets.sync(idCampaign, $scope.current.structure.id, $scope.campaign.reassort);
+                await template.open('campaign-main', 'prescriptor/basket/manage-basket');
+                await template.open('main-profile', 'prescriptor/campaign-main');
+
                 await selectCampaign(idCampaign);
                 Utils.safeApply($scope);
             },

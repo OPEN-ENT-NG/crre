@@ -13,6 +13,8 @@ import org.entcore.common.email.EmailFactory;
 import org.entcore.common.storage.Storage;
 
 public class ServiceFactory {
+    private static ServiceFactory instance;
+
     private final Vertx vertx;
     private final ConfigModel config;
     private final WebClient webClient;
@@ -37,6 +39,7 @@ public class ServiceFactory {
 
 
     public ServiceFactory(Vertx vertx, ConfigModel config, EmailFactory emailFactory, Storage storage) {
+        instance = this;
         this.vertx = vertx;
         this.config = config;
         this.webClient = initWebClient();
@@ -162,5 +165,9 @@ public class ServiceFactory {
 
     public WorkflowService getWorkflowService() {
         return workflowService;
+    }
+
+    public static ServiceFactory getInstance() {
+        return instance;
     }
 }

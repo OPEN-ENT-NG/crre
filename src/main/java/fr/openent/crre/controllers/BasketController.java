@@ -97,7 +97,7 @@ public class BasketController extends ControllerHelper {
     @Get("/basketOrder/allMyOrders")
     @ApiDoc("Get all my baskets orders")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessUpdateOrderOnClosedCampaigne.class)
+    @ResourceFilter(PrescriberInStructureRight.class)
     public void getMyBasketOrders(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             try {

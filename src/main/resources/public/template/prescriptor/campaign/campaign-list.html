@@ -109,20 +109,15 @@
                             <input type="button"
                                    class="button"
                                    ng-click="openOrderToMain(campaign)"
-                                   ng-disabled="!campaign.accessible"
+                                   ng-disabled="!isPrescriptorInStructure(current.structure)"
                                    i18n-value="crre.validator.demand"/>
                         </div>
                         <div class="twelve-mobile cell">
-                            <input ng-show="campaign.accessible"
-                                   ng-click="openCampaign(campaign)"
+                            <input ng-click="openCampaign(campaign)"
                                    type="button"
                                    class="button"
+                                   ng-disabled="!campaign.accessible || !hasAccessInStructure(current.structure)"
                                    i18n-value="crre.access.catalog"/>
-                            <input ng-show="!campaign.accessible"
-                                   type="button"
-                                   class="button"
-                                   ng-disabled="true"
-                                   i18n-value="crre.catalog.disabled"/>
                         </div>
                     </div>
                 </div>

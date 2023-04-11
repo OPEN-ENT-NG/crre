@@ -25,19 +25,19 @@
         <header class="horizontal-spacing"  ng-click="backHome()">
             <i class="home"></i>
         </header>
-        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog(campaign.id)"  >
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog(campaign.id)" ng-if="campaign.accessible && isPrescriptorInStructure(current.structure)">
             <i18n>crre.catalog</i18n>
         </header>
         <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order') &&
         selectedType.split('/').includes('campaign')}"
-                ng-click="openOrder(campaign.id)" workflow="crre.prescriptor" >
+                ng-click="openOrder(campaign.id)" ng-if="isPrescriptorInStructure(current.structure)">
             <span><i18n>crre.request.mine</i18n></span>
             <span class="notification-bull right-magnet" ng-if="campaign.order_notification && campaign.order_notification > 0">
                 [[campaign.order_notification]]
             </span>
         </header>
-        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}"
-                 ng-click="openBasket(campaign.id)" workflow="crre.prescriptor">
+        <header  class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('basket')}" ng-if="campaign.accessible && isPrescriptorInStructure(current.structure)"
+                 ng-click="openBasket(campaign.id)">
             <i18n>crre.basket</i18n>
             <span class="notification-bull right-magnet" ng-if="campaign.nb_panier > 0">
                 [[campaign.nb_panier]]

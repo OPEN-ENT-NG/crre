@@ -6,6 +6,12 @@ import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 
+/**
+ * This resource filter does not check that the user is a prescriber in the establishment
+ *
+ * @deprecated Use {@link PrescriberInStructureRight}
+ */
+@Deprecated
 public class PrescriptorRight implements ResourcesProvider {
 
     @Override
