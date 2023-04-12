@@ -7,7 +7,6 @@ import java.util.List;
 
 public class OrderRegionBeautifyModel {
     private String id;
-
     private String title;
     private Double priceht;
     private Double tva5;
@@ -28,6 +27,8 @@ public class OrderRegionBeautifyModel {
     private String addressStructure;
     private String eanLDE;
     private String typeCatalogue;
+
+    //TODO: #Multi Add bookseller attribute
 
     //not in Json Result
     private Integer totalFree;
