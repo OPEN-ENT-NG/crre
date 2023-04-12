@@ -49,6 +49,7 @@ public interface OrderRegionService {
 
     List<TransactionElement> insertOldOrders(List<OrderRegionBeautifyModel> orderRegionBeautify, boolean isRenew);
 
+    // TODO: verif si a delete isRenew
     List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew);
 
     List<TransactionElement> insertOldClientOrders(List<OrderRegionBeautifyModel> orderRegionBeautifyList);
@@ -76,6 +77,7 @@ public interface OrderRegionService {
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
 
+    //TODO #Multi Peut-être devrait-on le supprimer car on peut utiliser OrderUniversalModel.
     List<OrderRegionBeautifyModel> orderResultToBeautifyModel(JsonArray structures, List<OrderRegionComplex> orderRegionComplexList, JsonArray equipments);
 
     JsonObject generateExport(List<OrderRegionBeautifyModel> logs);
