@@ -73,7 +73,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 } else {
                     if ($scope.isValidator() || $scope.isPrescriptor()) {
                         $scope.selectedType = $location.path();
-                        if (!$scope.current.structure) await $scope.initStructures();
+                        await $scope.initStructures((!!$scope.current.structure) ? $scope.current.structure.id : null);
                         await $scope.initCampaign($scope.current.structure);
                         await template.open('main-profile', 'prescriptor/campaign/campaign-list');
                     } else if ($scope.hasAccess()) {

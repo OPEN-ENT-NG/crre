@@ -1,4 +1,5 @@
 import {$, idiom as lang, ng} from "entcore";
+import {Utils} from "../model";
 
 export const searchAndSelect = ng.directive('searchAndSelect', function() {
     return {
@@ -87,7 +88,7 @@ export const searchAndSelect = ng.directive('searchAndSelect', function() {
                     if (!(element.find(e.originalEvent.target).length)) {
                         scope.show = false;
                         $('body').off('click.multi-combo' + timeId);
-                        scope.$apply()
+                        Utils.safeApply(scope);
                     }
                 })
             };
