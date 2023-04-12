@@ -300,6 +300,7 @@ public class OrderRegionController extends BaseController {
     }
 
 
+    // TODO: verif si a delete
     @Get("/add/orders/lde")
     @ApiDoc("Insert old orders from LDE")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -450,6 +451,7 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
+    // TODO: verif si a delete
     private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments,
                                  HashMap<String, Integer> projetMap, List<Integer> idsStatus, int part) {
         JsonArray ordersRegion = new JsonArray();
@@ -1019,6 +1021,7 @@ public class OrderRegionController extends BaseController {
 
                     orderRegionIdList.addAll(orderRegionComplexList.stream().map(orderRegionComplex -> orderRegionComplex.getOrderRegion().getId()).collect(Collectors.toList()));
                     orderRegionBeautifyList.addAll(orderRegionService.orderResultToBeautifyModel(structures, orderRegionComplexList, equipments));
+                    //TODO: #Multi Group orderRegionBeautifyList by bookseller
                     List<OrderRegionBeautifyModel> orderRegionClean = orderRegionBeautifyList.stream()
                             .filter(orderRegionBeautifyModel ->
                                     Field.REJECTED.equals(orderRegionBeautifyModel.getOrderRegion().getStatus()) &&
@@ -1110,6 +1113,7 @@ public class OrderRegionController extends BaseController {
     private Future<JsonObject> sendMail(HttpServerRequest request, MailAttachment attachment) {
         Promise<JsonObject> promise = Promise.promise();
 
+        //TODO: #Multi Dynamic email
         String mail = this.mail.getAddress();
         String title = "Demande Libraire CRRE";
         String body = "Demande Libraire CRRE ; csv : " + attachment.getName();

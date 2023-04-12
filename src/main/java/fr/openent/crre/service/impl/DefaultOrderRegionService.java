@@ -97,7 +97,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         return promise.future();
     }
 
-
+    // Todo: #Multi Renouvellement année bizzare ? utilité?
     @Override
     public void equipmentAlreadyPayed(String idEquipment, String idStructure, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT EXISTS(SELECT id FROM " +
@@ -904,6 +904,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     public List<OrderRegionBeautifyModel> orderResultToBeautifyModel(JsonArray structures, List<OrderRegionComplex> orderRegionComplexList, JsonArray equipments) {
         return orderRegionComplexList.stream()
                 .flatMap(order -> {
+
+                    //TODO: #Multi Add bookseller to mapping
                     OrderRegionBeautifyModel orderRegionBeautifyModel = new OrderRegionBeautifyModel();
                     orderRegionBeautifyModel.setOrderRegionComplex(order);
                     orderRegionBeautifyModel.setId(order.getOrderRegion().getId().toString());
