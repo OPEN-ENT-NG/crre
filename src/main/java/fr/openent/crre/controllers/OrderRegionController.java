@@ -864,6 +864,20 @@ public class OrderRegionController extends BaseController {
         return null;
     }
 
+    private TransactionElement getUpdateTransactionElement(OrderStatus status, OrderRegionBeautifyModel orderRegion) {
+        if (OrderStatus.REJECTED.toString().equalsIgnoreCase(orderRegion.getOrderRegion().getStatus())) {
+            if (status.equals(OrderStatus.VALID)) {
+                return getUpdatePurseTransaction(orderRegion.getOrderRegion().getIdStructure(), "-", orderRegion.getTotalPriceTTC(), CreditTypeEnum.getValue(orderRegion.getCampaign().getUseCredit(), CreditTypeEnum.NONE));
+            } else {
+                return null;
+            }
+        } else if (status.equals(OrderStatus.REJECTED)) {
+            return getUpdatePurseTransaction(orderRegion.getOrderRegion().getIdStructure(), "+", orderRegion.getTotalPriceTTC(), CreditTypeEnum.getValue(orderRegion.getCampaign().getUseCredit(), CreditTypeEnum.NONE));
+        }
+
+        return null;
+    }
+
     private TransactionElement getUpdatePurseTransaction(String structureId, String operation, Double amount, CreditTypeEnum creditType) {
         switch (creditType) {
             case LICENCES: {
@@ -976,14 +990,13 @@ public class OrderRegionController extends BaseController {
                     List<OrderRegionBeautifyModel> orderRegionClean = orderRegionBeautifyList.stream()
                             .filter(orderRegionBeautifyModel ->
                                     Field.REJECTED.equals(orderRegionBeautifyModel.getOrderRegion().getStatus()) &&
-                                            Double.valueOf(0.0).equals(orderRegionBeautifyModel.getPrice()))
+                                            !Double.valueOf(0.0).equals(orderRegionBeautifyModel.getPrice()))
                             .collect(Collectors.toList());
 
                     Future<List<TransactionElement>> transactionFuture = Future.succeededFuture();
                     if (orderRegionClean.size() > 0) {
                         List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
-                                .map(OrderRegionBeautifyModel::getOrderRegion)
-                                .map(orderRegion -> this.getUpdateTransactionElement(OrderStatus.VALID, orderRegion, orderRegion.getPrice() * orderRegion.getAmount()))
+                                .map(orderRegionBeautifyModel -> this.getUpdateTransactionElement(OrderStatus.VALID, orderRegionBeautifyModel))
                                 .collect(Collectors.toList());
 
                         String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
