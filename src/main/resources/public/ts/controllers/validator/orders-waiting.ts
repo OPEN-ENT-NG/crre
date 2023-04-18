@@ -136,7 +136,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         }
 
         $scope.updateOrders = async (totalPrice: number, totalPriceConsumable: number, totalAmount: number, totalAmountConsumable: number,
-                                     ordersToRemove: OrdersClient, numberOrdered: number) => {
+                                     ordersToRemove: Array<OrderClient>, numberOrdered: number) => {
             $scope.campaign.nb_order_waiting -= numberOrdered;
             $scope.campaign.historic_etab_notification += numberOrdered;
             $scope.campaign.nb_licences_available -= totalAmount;
@@ -144,7 +144,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             $scope.campaign.purse_amount -= totalPrice;
             $scope.campaign.consumable_purse_amount -= totalPriceConsumable;
 
-            ordersToRemove.all.forEach(order => {
+            ordersToRemove.forEach(order => {
                 $scope.ordersClient.all.forEach((orderClient, i) => {
                     if (orderClient.id == order.id) {
                         $scope.ordersClient.all.splice(i, 1);
@@ -210,7 +210,6 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                     toasts.confirm('crre.order.region.create.message');
                     $scope.$broadcast(INFINITE_SCROLL_EVENTER.RESUME);
                     if ($scope.allOrdersSelected || $scope.ordersClient.selectedElements.length === 0) {
-                        $scope.loading = true;
                         $scope.ordersClient.all = [];
                         Utils.safeApply($scope);
                         if (!$scope.current.structure) await $scope.initStructures();
@@ -219,11 +218,11 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                         await init();
                     } else {
                         await $scope.updateOrders(totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable,
-                            $scope.ordersClient, ordersToReformat.length);
-                        await $scope.getAllFilters();
+                            $scope.ordersClient.selected, ordersToReformat.length);
                         $scope.allOrdersSelected = false;
-                        $scope.loadNextPage();
                         await $scope.getAllAmount();
+                        await checkCampaignAccessibility();
+                        $scope.loading = false;
                         Utils.safeApply($scope);
                     }
                 } else {
