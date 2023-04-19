@@ -4,15 +4,15 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.core.enums.OrderByProjectFieldEnum;
 import fr.openent.crre.helpers.JsonHelper;
+import fr.openent.crre.service.impl.DefaultOrderService;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.user.UserInfos;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FilterModel implements IModel<FilterModel> {
+public class FilterModel implements IModel<FilterModel>, Cloneable {
     private String startDate;
     private String endDate;
     private List<String> idsUser;
@@ -31,6 +31,10 @@ public class FilterModel implements IModel<FilterModel> {
 
     private OrderByProjectFieldEnum orderBy;
     private Boolean orderDesc;
+    private List<String> idsBasket;
+
+    private DefaultOrderService.OrderByOrderListEnum orderByForOrderList;
+    private Boolean orderDescForOrderList;
 
     public FilterModel() {
         this.startDate = null;
@@ -47,6 +51,7 @@ public class FilterModel implements IModel<FilterModel> {
         this.catalogs = new ArrayList<>();
         this.structureTypes = new ArrayList<>();
         this.renew = null;
+        this.idsBasket = new ArrayList<>();
     }
 
     public FilterModel(JsonObject jsonObject) {
@@ -266,5 +271,52 @@ public class FilterModel implements IModel<FilterModel> {
     public FilterModel setIdsOrder(List<Integer> idsOrder) {
         this.idsOrder = idsOrder;
         return this;
+    }
+
+    public List<String> getIdsBasket() {
+        return idsBasket;
+    }
+
+    public FilterModel setIdsBasket(List<String> idsBasket) {
+        this.idsBasket = idsBasket;
+        return this;
+    }
+
+    public DefaultOrderService.OrderByOrderListEnum getOrderByForOrderList() {
+        return orderByForOrderList;
+    }
+
+    public FilterModel setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum orderByForOrderList) {
+        this.orderByForOrderList = orderByForOrderList;
+        return this;
+    }
+
+    public Boolean getOrderDescForOrderList() {
+        return orderDescForOrderList;
+    }
+
+    public FilterModel setOrderDescForOrderList(Boolean orderDescForOrderList) {
+        this.orderDescForOrderList = orderDescForOrderList;
+        return this;
+    }
+
+    @Override
+    public FilterModel clone() {
+        try {
+            FilterModel clone = (FilterModel) super.clone();
+            if (this.idsUser != null) clone.idsUser = new ArrayList<>(this.idsUser);
+            if (this.idsCampaign != null) clone.idsCampaign = new ArrayList<>(this.idsCampaign);
+            if (this.idsStructure != null) clone.idsStructure = new ArrayList<>(this.idsStructure);
+            if (this.idsOrder != null) clone.idsOrder = new ArrayList<>(this.idsOrder);
+            if (this.status != null) clone.status = new ArrayList<>(this.status);
+            if (this.distributors != null) clone.distributors = new ArrayList<>(this.distributors);
+            if (this.editors != null) clone.editors = new ArrayList<>(this.editors);
+            if (this.catalogs != null) clone.catalogs = new ArrayList<>(this.catalogs);
+            if (this.structureTypes != null) clone.structureTypes = new ArrayList<>(this.structureTypes);
+            if (this.idsBasket != null) clone.idsBasket = new ArrayList<>(this.idsBasket);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }
