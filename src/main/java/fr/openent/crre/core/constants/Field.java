@@ -246,6 +246,24 @@ public class Field {
     public static final String IDS_ORDER = "idsOrder";
     public static final String DISPLAYNAME = "displayName";
     public static final String ORDERSAMOUNT = "ordersAmount";
+    public static final String UAI = "uai";
+    public static final String CITY = "city";
+    public static final String REGION = "region";
+    public static final String PUBLIC = "public";
+    public static final String IS_PUBLIC = "is_public";
+    public static final String MIXTE = "mixte";
+    public static final String TECHNICAL = "technical";
+    public static final String STRUCTURE = "structure";
+    public static final String PHONE = "phone";
+    public static final String ZIPCODE = "zipCode";
+    public static final String EANLIBRAIRE = "eanlibraire";
+    public static final String ARTICLENUMERIQUE = "articlenumerique";
+    public static final String VALEUR = "valeur";
+    public static final String CONSUMABLE_MIN = "consumable";
+    public static final String ARTICLEPAPIER = "articlepapier";
+    public static final String AO_IDF_CONSO = "AO_IDF_CONSO";
+    public static final String AO_IDF_PAP_PRO = "AO_IDF_PAP_PRO";
+    public static final String AO_IDF_PAP = "AO_IDF_PAP";
 
     private Field() {
         throw new IllegalStateException("Utility class");
