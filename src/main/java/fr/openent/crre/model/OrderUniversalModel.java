@@ -7,6 +7,10 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import static fr.openent.crre.helpers.DateHelper.formatDate;
 import static fr.openent.crre.helpers.EquipmentHelper.getRoundedPrice;
 
@@ -38,10 +42,17 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Double equipmentTva5;
     private Double equipmentTva20;
     private Double equipmentPriceht;
-    private JsonArray offers;
+    private StudentsTableModel students;
+
+    private List<OrderUniversalOfferModel> offers;
     private Integer totalFree;
     private Integer orderClientId;
     private Integer orderRegionId;
+
+    //Not defined for send to bookseller commands.
+    private String equipmentCatalogueType;
+    private String equipmentType;
+    private String equipmentEanLibrary;
 
     public OrderUniversalModel() {
     }
@@ -73,11 +84,17 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.equipmentTva5 = jsonObject.getDouble(Field.EQUIPMENT_TVA5);
         this.equipmentTva20 = jsonObject.getDouble(Field.EQUIPMENT_TVA20);
         this.equipmentPriceht = jsonObject.getDouble(Field.EQUIPMENT_PRICEHT);
-        try {
-            this.offers = jsonObject.getString(Field.OFFERS) != null ? new JsonArray(jsonObject.getString(Field.OFFERS)) : new JsonArray();
-        } catch (DecodeException e) {
-            this.offers = new JsonArray();
+
+        if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof JsonArray) {
+            this.offers = IModelHelper.toList(jsonObject.getJsonArray(Field.OFFERS), OrderUniversalOfferModel.class);
         }
+        if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof String) {
+            this.offers = IModelHelper.toList(new JsonArray(jsonObject.getString(Field.OFFERS)), OrderUniversalOfferModel.class);
+        }
+        if (Objects.nonNull(this.offers)) {
+            this.offers.forEach(orderUniversalOfferModel -> orderUniversalOfferModel.setOrderUniversalModel(this));
+        }
+
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
         if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof JsonObject) {
             this.project = IModelHelper.toModel(jsonObject.getJsonObject(Field.PROJECT), ProjectModel.class);
@@ -100,6 +117,13 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
         this.orderClientId = jsonObject.getInteger(Field.ORDER_CLIENT_ID);
         this.orderRegionId = jsonObject.getInteger(Field.ORDER_REGION_ID);
+
+        if (jsonObject.getValue(Field.STUDENTS) != null && jsonObject.getValue(Field.STUDENTS) instanceof JsonObject) {
+            this.students = IModelHelper.toModel(jsonObject.getJsonObject(Field.STUDENTS), StudentsTableModel.class);
+        }
+        if (jsonObject.getValue(Field.STUDENTS) != null && jsonObject.getValue(Field.STUDENTS) instanceof String) {
+            this.students = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.STUDENTS)), StudentsTableModel.class);
+        }
     }
 
     @Override
@@ -327,11 +351,11 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         return this;
     }
 
-    public JsonArray getOffers() {
+    public List<OrderUniversalOfferModel> getOffers() {
         return offers;
     }
 
-    public OrderUniversalModel setOffers(JsonArray offers) {
+    public OrderUniversalModel setOffers(List<OrderUniversalOfferModel> offers) {
         this.offers = offers;
         return this;
     }
@@ -408,5 +432,41 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public Double getEquipmentPriceTva20() {
         return this.getEquipmentTva20() != null ? getRoundedPrice(this.amount + this.equipmentTva20) : null;
+    }
+
+    public String getEquipmentCatalogueType() {
+        return equipmentCatalogueType;
+    }
+
+    public OrderUniversalModel setEquipmentCatalogueType(String equipmentCatalogueType) {
+        this.equipmentCatalogueType = equipmentCatalogueType;
+        return this;
+    }
+
+    public String getEquipmentEanLibrary() {
+        return equipmentEanLibrary;
+    }
+
+    public OrderUniversalModel setEquipmentEanLibrary(String equipmentEanLibrary) {
+        this.equipmentEanLibrary = equipmentEanLibrary;
+        return this;
+    }
+
+    public StudentsTableModel getStudents() {
+        return students;
+    }
+
+    public OrderUniversalModel setStudents(StudentsTableModel students) {
+        this.students = students;
+        return this;
+    }
+
+    public String getEquipmentType() {
+        return equipmentType;
+    }
+
+    public OrderUniversalModel setEquipmentType(String equipmentType) {
+        this.equipmentType = equipmentType;
+        return this;
     }
 }
