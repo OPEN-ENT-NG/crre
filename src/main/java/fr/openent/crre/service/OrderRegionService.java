@@ -28,14 +28,9 @@ public interface OrderRegionService {
      */
     Future<JsonArray> getAllOrderRegionByProject(List<Integer> idsProject, FilterModel filters, FilterItemModel filtersItem, List<String> itemSearchedIdsList, List<String> itemFilteredIdsList);
 
-
     Future<List<OrderRegionEquipmentModel>> getOrdersRegionById(List<Integer> orderRegionEquipmentIdList);
 
     Future<List<OrderRegionEquipmentModel>> getOrdersRegionByStatus(OrderStatus status);
-
-    Future<List<OrderRegionComplex>> getOrdersRegionById(List<Integer> idsOrder, Boolean oldTable);
-
-    void getOrdersRegionById(List<Integer> idsOrder, boolean oldTable, Handler<Either<String, JsonArray>> arrayResponseHandler);
 
     /**
      * Get projects filtered
@@ -47,17 +42,20 @@ public interface OrderRegionService {
      */
     Future<JsonArray> search(FilterModel filters, FilterItemModel filtersItem, List<String> itemSearchedIdsList, List<String> itemFilteredIdsList);
 
-    List<TransactionElement> insertOldOrders(List<OrderRegionBeautifyModel> orderRegionBeautify, boolean isRenew);
+    List<TransactionElement> insertOldRegionOrders(List<OrderUniversalModel> orderRegionBeautify, boolean isRenew);
+
+    List<TransactionElement> insertOldClientOrders(List<OrderUniversalModel> orderRegionBeautifyList);
 
     // TODO: verif si a delete isRenew
-    List<TransactionElement> insertOldOrders(JsonArray orderRegions, boolean isRenew);
-
-    List<TransactionElement> insertOldClientOrders(List<OrderRegionBeautifyModel> orderRegionBeautifyList);
+    /**
+     * @deprecated Use {@link #insertOldRegionOrders(List, boolean)}
+     */
+    @Deprecated
+    List<TransactionElement> insertOldRegionOrders(JsonArray orderRegions, boolean isRenew);
 
     Future<JsonObject> updateOrdersStatus(List<Integer> ids, String status, String justification);
 
     void updateOldOrders(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handler);
-
 
     /**
      * Update LDE order status using transaction to avoid deadlock type errors
@@ -71,16 +69,11 @@ public interface OrderRegionService {
 
     List<TransactionElement> deletedOrders(List<Long> ordersClientIdList, String table);
 
-    void getStatusByOrderId(Handler<Either<String, JsonArray>> arrayResponseHandler);
-
     void updateStatus(JsonArray listIdOrders, Handler<Either<String, JsonObject>> handlerJsonObject);
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
 
-    //TODO #Multi Peut-être devrait-on le supprimer car on peut utiliser OrderUniversalModel.
-    List<OrderRegionBeautifyModel> orderResultToBeautifyModel(JsonArray structures, List<OrderRegionComplex> orderRegionComplexList, JsonArray equipments);
-
-    JsonObject generateExport(List<OrderRegionBeautifyModel> logs);
+    JsonObject generateExport(Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap);
 
     /**
      * Gets the list of all orders region in the same project as the order region pass in parameter

@@ -2,14 +2,11 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.FutureHelper;
-import fr.openent.crre.model.OrderRegionBeautifyModel;
-import fr.openent.crre.model.OrderRegionComplex;
+import fr.openent.crre.helpers.OrderHelper;
+import fr.openent.crre.model.*;
 import fr.openent.crre.model.export.ExportOrderRegion;
 import fr.openent.crre.model.export.ExportTypeEnum;
-import fr.openent.crre.service.OrderRegionService;
-import fr.openent.crre.service.ServiceFactory;
-import fr.openent.crre.service.StorageService;
-import fr.openent.crre.service.StructureService;
+import fr.openent.crre.service.*;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -31,8 +28,7 @@ import org.vertx.java.busmods.BusModBase;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -91,19 +87,19 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
     private Future<JsonObject> processOrderRegion(ExportOrderRegion exportOrderRegion) {
         Promise<JsonObject> promise = Promise.promise();
 
-        log.info("[Crre@ExportWorker::processOrderRegion ] Process orders");
-        Future<JsonArray> structureFuture = structureService.getStructureById(new JsonArray(new ArrayList<>(exportOrderRegion.getIdsStructures())), null);
-        Future<JsonArray> equipmentsFuture = searchByIds(exportOrderRegion.getIdsEquipments(), null);
+        FilterModel filterModel = new FilterModel()
+                .setIdsOrder(exportOrderRegion.getIdsOrders())
+                .setOrderDescForOrderList(false)
+                .setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum.ORDER_REGION_ID);
+        Future<List<OrderUniversalModel>> orderFuture = OrderHelper.listOrderAndCalculateEquipmentFromId(filterModel, null);
 
-
-        CompositeFuture.all(structureFuture, equipmentsFuture)
-                .compose(res -> this.getOrder(exportOrderRegion.getIdsOrders()))
-                .compose(orderRegionComplexList -> {
-                    JsonArray structures = structureFuture.result();
-                    JsonArray equipments = equipmentsFuture.result();
-                    List<OrderRegionBeautifyModel> orderRegionList = orderRegionService.orderResultToBeautifyModel(structures, orderRegionComplexList, equipments);
-                    return writeCSVFile(exportOrderRegion.getIdUser(), orderRegionList);
+        orderFuture.compose(orderList -> {
+                    List<String> structureIdList = orderList.stream()
+                            .map(OrderUniversalModel::getIdStructure)
+                            .collect(Collectors.toList());
+                    return this.structureService.getStructureNeo4jById(structureIdList);
                 })
+                .compose(structureNeo4jModelList -> writeCSVFile(exportOrderRegion.getIdUser(), orderFuture.result(), structureNeo4jModelList))
                 .onSuccess(promise::complete)
                 .onFailure(error -> {
                     log.error(String.format("[Crre@%s::processOrderRegion] : %s", this.getClass().getSimpleName(), error.getMessage()));
@@ -113,17 +109,29 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         return promise.future();
     }
 
-    private Future<JsonObject> writeCSVFile(String idUser, List<OrderRegionBeautifyModel> orderRegion) {
-        if (orderRegion.isEmpty()) {
+    private Future<JsonObject> writeCSVFile(String idUser, List<OrderUniversalModel> orderList, List<StructureNeo4jModel> structureNeo4jModels) {
+        if (orderList.isEmpty()) {
             return Future.succeededFuture(new JsonObject());
         }
         Promise<JsonObject> promise = Promise.promise();
 
         UserUtils.getUserInfos(eb, idUser, userInfos -> {
-            List<List<OrderRegionBeautifyModel>> partition = ListUtils.partition(orderRegion, 10000);
+            List<List<OrderUniversalModel>> partition = ListUtils.partition(orderList, 10000);
             AtomicInteger i = new AtomicInteger(0);
-            Function<List<OrderRegionBeautifyModel>, Future<JsonObject>> function = orderRegionList ->
-                    this.writeCSVFileForOnePartitionElement(userInfos, orderRegionList, i.getAndIncrement());
+            Function<List<OrderUniversalModel>, Future<JsonObject>> function = orderRegionList -> {
+                // Here we can't use streams because we explicitly want a LinkedHashMap to grade the insertion order
+                Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap = new LinkedHashMap<>();
+                for (OrderUniversalModel order: orderRegionList) {
+                    if (structureNeo4jModels.stream().anyMatch(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))) {
+                        orderStructureMap.put(order, structureNeo4jModels.stream()
+                                .filter(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))
+                                .findFirst()
+                                //Impossible case
+                                .orElse(new StructureNeo4jModel()));
+                    }
+                }
+                return this.writeCSVFileForOnePartitionElement(userInfos, orderStructureMap, i.getAndIncrement());
+            };
 
             FutureHelper.compositeSequential(function, partition, true)
                     .onSuccess(res -> promise.complete(res.get(0).result()))
@@ -136,10 +144,10 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         return promise.future();
     }
 
-    private Future<JsonObject> writeCSVFileForOnePartitionElement(UserInfos user, List<OrderRegionBeautifyModel> orderRegionList, Integer index) {
+    private Future<JsonObject> writeCSVFileForOnePartitionElement(UserInfos user, Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap, Integer index) {
         Promise<JsonObject> promise = Promise.promise();
 
-        JsonObject data = orderRegionService.generateExport(orderRegionList);
+        JsonObject data = orderRegionService.generateExport(orderStructureMap);
         String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
         JsonObject body = new JsonObject()
                 .put(Field.NAME, "CRRE_Export_" + day + "_" + index + ".csv")
@@ -164,23 +172,6 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
                 .onFailure(error -> {
                     log.error(String.format("[Crre@%s::writeCSVFileForOnePartitionElement] Failed to create a new entry in the storage",
                             this.getClass().getSimpleName(), error.getMessage()));
-                    promise.fail(error);
-                });
-
-        return promise.future();
-    }
-
-    private Future<List<OrderRegionComplex>> getOrder(List<Integer> listOrders) {
-        Promise<List<OrderRegionComplex>> promise = Promise.promise();
-        List<List<Integer>> partition = ListUtils.partition(listOrders, 5000);
-
-        Function<List<Integer>, Future<List<OrderRegionComplex>>> function = idOrderList -> this.orderRegionService.getOrdersRegionById(idOrderList, null);
-
-        FutureHelper.compositeSequential(function, partition, true)
-                .onSuccess(res ->
-                        promise.complete(res.stream().flatMap(listFuture -> listFuture.result().stream()).collect(Collectors.toList())))
-                .onFailure(error -> {
-                    log.error(String.format("[CRRE@%s::getOrder]Fail to get all order %s", this.getClass().getSimpleName(), error.getMessage()));
                     promise.fail(error);
                 });
 
