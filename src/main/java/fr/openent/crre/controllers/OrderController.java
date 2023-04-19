@@ -9,15 +9,12 @@ import fr.openent.crre.helpers.UserHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
-import fr.openent.crre.model.FilterModel;
-import fr.openent.crre.model.OrderClientEquipmentModel;
-import fr.openent.crre.model.OrderRegionBeautifyModel;
-import fr.openent.crre.model.OrderSearchAmountModel;
-import fr.openent.crre.model.OrderUniversalModel;
+import fr.openent.crre.model.*;
 import fr.openent.crre.security.*;
 import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
 import fr.openent.crre.service.ServiceFactory;
+import fr.openent.crre.service.impl.DefaultOrderService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -81,45 +78,19 @@ public class OrderController extends ControllerHelper {
                         .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
                         .collect(Collectors.toList());
 
-                Future<List<OrderUniversalModel>> orderFuture = orderService.listOrder(null, Collections.singletonList(idCampaign),
-                        Collections.singletonList(idStructure), Collections.singletonList(user.getUserId()), basketIdList, new ArrayList<>(),
-                        startDate, endDate, orderStatusList);
+                FilterModel filterModel = new FilterModel()
+                        .setIdsCampaign(Collections.singletonList(idCampaign))
+                        .setIdsStructure(Collections.singletonList(idStructure))
+                        .setIdsUser(Collections.singletonList(user.getUserId()))
+                        .setIdsBasket(basketIdList)
+                        .setStartDate(startDate)
+                        .setEndDate(endDate)
+                        .setStatus(orderStatusList)
+                        .setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum.PRESCRIBER_VALIDATION_DATE)
+                        .setOrderDescForOrderList(false);
 
-                orderFuture
-                        .compose(orderUniversalModels -> {
-                            List<String> idEquipments = orderUniversalModels.stream()
-                                    .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
-                                    .map(OrderUniversalModel::getEquipmentKey)
-                                    .distinct()
-                                    .collect(Collectors.toList());
-                            return searchByIds(idEquipments, null);
-                        })
-                        .onSuccess(equipmentsArray -> {
-                            List<JsonObject> equipmentList = equipmentsArray.stream()
-                                    .filter(JsonObject.class::isInstance)
-                                    .map(JsonObject.class::cast)
-                                    .collect(Collectors.toList());
-                            List<OrderUniversalModel> orderUniversalModels = orderFuture.result();
-                            orderUniversalModels.stream()
-                                    .filter(orderUniversalModel -> !orderUniversalModel.getStatus().isHistoricStatus())
-                                    .forEach(orderUniversalModel -> {
-                                        JsonObject equipmentJson = equipmentList.stream()
-                                                .filter(equipment -> orderUniversalModel.getEquipmentKey().equals(equipment.getString(Field.ID)))
-                                                .findFirst()
-                                                .orElse(null);
-                                        if (equipmentJson != null) {
-                                            JsonObject priceInfos = getPriceTtc(equipmentJson);
-                                            orderUniversalModel.setEquipmentPrice(priceInfos.getDouble(Field.PRICETTC));
-                                            orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
-                                            orderUniversalModel.setEquipmentImage(equipmentJson.getString(Field.URLCOUVERTURE));
-                                            orderUniversalModel.setOffers(computeOffers(orderUniversalModel, equipmentJson.getJsonArray(Field.OFFRES)));
-                                        } else {
-                                            orderUniversalModel.setEquipmentPrice(0.0);
-                                            orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", getHost(request), I18n.acceptLanguage(request)));
-                                            orderUniversalModel.setEquipmentImage("/crre/public/img/pages-default.png");
-                                        }
-                                    });
-
+                OrderHelper.listOrderAndCalculatePrice(filterModel, request)
+                        .onSuccess(orderUniversalModels -> {
                             renderJson(request, IModelHelper.toJsonArray(orderUniversalModels));
                         })
                         .onFailure(error -> {
@@ -164,7 +135,9 @@ public class OrderController extends ControllerHelper {
                     .compose(asAccess -> {
                         if (asAccess) {
                             FilterModel filters = new FilterModel(filter);
-                            filters.setIdsStructure(Collections.singletonList(request.getParam(Field.IDSTRUCTURE)));
+                            filters.setIdsStructure(Collections.singletonList(request.getParam(Field.IDSTRUCTURE)))
+                                    .setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum.PRESCRIBER_VALIDATION_DATE)
+                                    .setOrderDescForOrderList(false);
                             return OrderHelper.listOrderAndCalculatePrice(filters, request);
                         } else {
                             return Future.failedFuture(new SecurityException());
@@ -290,15 +263,11 @@ public class OrderController extends ControllerHelper {
     public void export(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + Field.EXPORTORDER, filterOrder -> {
             UserUtils.getUserInfos(eb, request, user -> {
-                FilterModel filters = new FilterModel(filterOrder);
+                FilterModel filters = new FilterModel(filterOrder)
+                        .setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum.PRESCRIBER_VALIDATION_DATE)
+                        .setOrderDescForOrderList(false);
                 OrderHelper.listOrderAndCalculatePrice(filters, request)
                         .onSuccess(orderUniversalModels -> {
-                            new ArrayList<>(orderUniversalModels).forEach(orderUniversal -> {
-                                if (orderUniversal.getOffers() != null && orderUniversal.getOffers().size() > 0) {
-                                    int index = orderUniversalModels.indexOf(orderUniversal);
-                                    orderUniversalModels.addAll(index + 1, computeOffersUniversal(orderUniversal));
-                                }
-                            });
                             request.response()
                                     .putHeader("Content-Type", "text/csv; charset=utf-8")
                                     .putHeader("Content-Disposition", "attachment; filename=orders.csv")
@@ -310,96 +279,6 @@ public class OrderController extends ControllerHelper {
                         });
             });
         });
-    }
-
-    private List<OrderUniversalModel> computeOffersUniversal(OrderUniversalModel orderUniversal) {
-        List<OrderUniversalModel> offers = new ArrayList<>();
-        if ((orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject) &&
-                orderUniversal.getOffers().getJsonObject(0).getString(Field.ID) != null) {
-            jsonArrayToList(orderUniversal.getOffers(), JsonObject.class).forEach(offer -> {
-                OrderUniversalModel orderUniversalOffer = new OrderUniversalModel()
-                        .setAmount(offer.getInteger(Field.AMOUNT))
-                        .setEquipmentName(offer.getString(Field.NAME))
-                        .setComment(offer.getString(Field.COMMENT))
-                        .setEquipmentKey(offer.getString(Field.EAN))
-                        .setPrescriberValidationDate(offer.getString(Field.CREATION_DATE))
-                        .setBasket(orderUniversal.getBasket());
-                offers.add(orderUniversalOffer);
-            });
-        } else {
-            if (orderUniversal.getOffers().isEmpty() || orderUniversal.getOffers().getValue(0) instanceof JsonObject &&
-                    orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS) != null &&
-                    orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS).size() > 0) {
-                JsonArray leps = orderUniversal.getOffers().getJsonObject(0).getJsonArray(Field.LEPS);
-                Integer amount = orderUniversal.getAmount();
-                int gratuit = 0;
-                int gratuite = 0;
-                for (int i = 0; i < leps.size(); i++) {
-                    JsonObject offer = leps.getJsonObject(i);
-                    JsonArray conditions = offer.getJsonArray(Field.CONDITIONS);
-                    OrderUniversalModel orderUniversalOffer = new OrderUniversalModel();
-                    if (conditions.size() > 1) {
-                        for (int j = 0; j < conditions.size(); j++) {
-                            int condition = conditions.getJsonObject(j).getInteger(Field.CONDITIONS_FREE);
-                            if (amount >= condition && gratuit < condition) {
-                                gratuit = condition;
-                                gratuite = conditions.getJsonObject(j).getInteger(Field.FREE);
-                            }
-                        }
-                    } else if (offer.getJsonArray(Field.CONDITIONS).size() == 1) {
-                        gratuit = offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
-                        gratuite = (int) (offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount / gratuit));
-                    }
-
-                    if (gratuite > 0) {
-                        orderUniversalOffer.setAmount(gratuite);
-                        orderUniversalOffer.setEquipmentName(offer.getString(Field.TITRE));
-                        orderUniversalOffer.setComment(orderUniversal.getEquipmentKey());
-                        orderUniversalOffer.setEquipmentKey(offer.getString(Field.EAN));
-                        orderUniversalOffer.setPrescriberValidationDate(orderUniversal.getPrescriberValidationDate());
-                        orderUniversalOffer.setBasket(orderUniversal.getBasket());
-                        offers.add(orderUniversalOffer);
-                    }
-                }
-            }
-        }
-        return offers;
-    }
-
-    private JsonArray computeOffers(OrderUniversalModel orderUniversalModel, JsonArray equipmentOffers) {
-        JsonArray offers = new JsonArray();
-        if (equipmentOffers != null && equipmentOffers.getJsonObject(0).getJsonArray(Field.LEPS).size() > 0) {
-            JsonArray leps = equipmentOffers.getJsonObject(0).getJsonArray(Field.LEPS);
-            Integer amount = orderUniversalModel.getAmount();
-            int gratuit = 0;
-            int gratuite = 0;
-            for (int i = 0; i < leps.size(); i++) {
-                JsonObject offer = leps.getJsonObject(i);
-                JsonArray conditions = offer.getJsonArray(Field.CONDITIONS);
-                JsonObject newOffer = new JsonObject()
-                        .put(Field.TITRE, Field.MANUAL + " " + offer.getJsonArray(Field.LICENCE).getJsonObject(0).getString(Field.VALUE));
-                if (conditions.size() > 1) {
-                    for (int j = 0; j < conditions.size(); j++) {
-                        int condition = conditions.getJsonObject(j).getInteger(Field.CONDITIONS_FREE);
-                        if (amount >= condition && gratuit < condition) {
-                            gratuit = condition;
-                            gratuite = conditions.getJsonObject(j).getInteger(Field.FREE);
-                        }
-                    }
-                } else if (offer.getJsonArray(Field.CONDITIONS).size() == 1) {
-                    gratuit = offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
-                    gratuite = (int) (offer.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount / gratuit));
-                }
-
-                newOffer.put(Field.AMOUNT, gratuite);
-                newOffer.put(Field.ID, offer.getString(Field.EAN));
-                newOffer.put(Field.NAME, offer.getString(Field.TITRE));
-                if (gratuite > 0) {
-                    offers.add(newOffer);
-                }
-            }
-        }
-        return offers;
     }
 
     private static String generateExport(HttpServerRequest request, List<OrderUniversalModel> orders) {
@@ -437,17 +316,6 @@ public class OrderController extends ControllerHelper {
                 + "\n";
     }
 
-    public static String exportPriceComment(OrderRegionBeautifyModel orderRegionBeautifyModel) {
-        return (orderRegionBeautifyModel.getOrderRegion().getAmount() != null ? orderRegionBeautifyModel.getOrderRegion().getAmount() : "") + ";" +
-                (orderRegionBeautifyModel.getPriceht() != null ? orderRegionBeautifyModel.getPriceht() : "") + ";" +
-                (orderRegionBeautifyModel.getTva5() != null ? orderRegionBeautifyModel.getTva5() : "") + ";" +
-                (orderRegionBeautifyModel.getTva20() != null ? orderRegionBeautifyModel.getTva20() : "") + ";" +
-                (orderRegionBeautifyModel.getUnitedPriceTTC() != null ? convertPriceString(orderRegionBeautifyModel.getUnitedPriceTTC()) : "") + ";" +
-                (orderRegionBeautifyModel.getTotalPriceHT() != null ? convertPriceString(orderRegionBeautifyModel.getTotalPriceHT()) : "") + ";" +
-                (orderRegionBeautifyModel.getTotalPriceTTC() != null ? convertPriceString(orderRegionBeautifyModel.getTotalPriceTTC()) : "") + ";" +
-                (orderRegionBeautifyModel.getOrderRegion().getComment() != null ? orderRegionBeautifyModel.getOrderRegion().getComment().replaceAll("\n", "").replaceAll("\r", "") : "") + ";";
-    }
-
     public static String exportPriceComment(OrderUniversalModel orderUniversalModel) {
         return (orderUniversalModel.getAmount() != null ? orderUniversalModel.getAmount() : "") + ";" +
                 (orderUniversalModel.getEquipmentPriceht() != null ? orderUniversalModel.getEquipmentPriceht() : "") + ";" +
@@ -459,8 +327,19 @@ public class OrderController extends ControllerHelper {
                 (orderUniversalModel.getComment() != null ? orderUniversalModel.getComment().replaceAll("\n", "").replaceAll("\r", "") : "") + ";";
     }
 
+    public static String exportPriceComment(OrderUniversalOfferModel orderUniversalOfferModel) {
+        return (orderUniversalOfferModel.getAmount() != null ? orderUniversalOfferModel.getAmount() : "") + ";" +
+                ";" +
+                ";" +
+                ";" +
+                (orderUniversalOfferModel.getUnitedPriceTTC() != null ? convertPriceString(orderUniversalOfferModel.getUnitedPriceTTC()) : "") + ";" +
+                (orderUniversalOfferModel.getTotalPriceHT() != null ? convertPriceString(orderUniversalOfferModel.getTotalPriceHT()) : "") + ";" +
+                (orderUniversalOfferModel.getTotalPriceTTC() != null ? convertPriceString(orderUniversalOfferModel.getTotalPriceTTC()) : "") + ";" +
+                (orderUniversalOfferModel.getOrderUniversalModel().getEquipmentKey() != null ? orderUniversalOfferModel.getOrderUniversalModel().getEquipmentKey() : "") + ";";
+    }
+
     /**
-     * @deprecated Use {@link #exportPriceComment(OrderRegionBeautifyModel)}
+     * @deprecated Use {@link #exportPriceComment(OrderUniversalModel)}
      */
     @Deprecated
     public static String exportPriceComment(JsonObject log) {
@@ -475,25 +354,25 @@ public class OrderController extends ControllerHelper {
                         log.getString("comment").replaceAll("\n", "").replaceAll("\r", "") : "") + ";";
     }
 
-    public static String exportStudents(OrderRegionBeautifyModel orderRegionBeautify) {
-        return (orderRegionBeautify.getStudents().getSeconde() != null ? orderRegionBeautify.getStudents().getSeconde() : "") + ";" +
-                (orderRegionBeautify.getStudents().getPremiere() != null ? orderRegionBeautify.getStudents().getPremiere() : "") + ";" +
-                (orderRegionBeautify.getStudents().getTerminale() != null ? orderRegionBeautify.getStudents().getTerminale() : "") + ";" +
-                (orderRegionBeautify.getStudents().getSecondetechno() != null ? orderRegionBeautify.getStudents().getSecondetechno() : "") + ";" +
-                (orderRegionBeautify.getStudents().getPremieretechno() != null ? orderRegionBeautify.getStudents().getPremieretechno() : "") + ";" +
-                (orderRegionBeautify.getStudents().getTerminaletechno() != null ? orderRegionBeautify.getStudents().getTerminaletechno() : "") + ";" +
-                (orderRegionBeautify.getStudents().getSecondepro() != null ? orderRegionBeautify.getStudents().getSecondepro() : "") + ";" +
-                (orderRegionBeautify.getStudents().getPremierepro() != null ? orderRegionBeautify.getStudents().getPremierepro() : "") + ";" +
-                (orderRegionBeautify.getStudents().getTerminalepro() != null ? orderRegionBeautify.getStudents().getTerminalepro() : "") + ";" +
-                (orderRegionBeautify.getStudents().getBma1() != null ? orderRegionBeautify.getStudents().getBma1() : "") + ";" +
-                (orderRegionBeautify.getStudents().getBma2() != null ? orderRegionBeautify.getStudents().getBma2() : "") + ";" +
-                (orderRegionBeautify.getStudents().getCap1() != null ? orderRegionBeautify.getStudents().getCap1() : "") + ";" +
-                (orderRegionBeautify.getStudents().getCap2() != null ? orderRegionBeautify.getStudents().getCap2() : "") + ";" +
-                (orderRegionBeautify.getStudents().getCap3() != null ? orderRegionBeautify.getStudents().getCap3() : "");
+    public static String exportStudents(OrderUniversalModel orderUniversalModel) {
+        return (orderUniversalModel.getStudents().getSeconde() != null ? orderUniversalModel.getStudents().getSeconde() : "") + ";" +
+                (orderUniversalModel.getStudents().getPremiere() != null ? orderUniversalModel.getStudents().getPremiere() : "") + ";" +
+                (orderUniversalModel.getStudents().getTerminale() != null ? orderUniversalModel.getStudents().getTerminale() : "") + ";" +
+                (orderUniversalModel.getStudents().getSecondetechno() != null ? orderUniversalModel.getStudents().getSecondetechno() : "") + ";" +
+                (orderUniversalModel.getStudents().getPremieretechno() != null ? orderUniversalModel.getStudents().getPremieretechno() : "") + ";" +
+                (orderUniversalModel.getStudents().getTerminaletechno() != null ? orderUniversalModel.getStudents().getTerminaletechno() : "") + ";" +
+                (orderUniversalModel.getStudents().getSecondepro() != null ? orderUniversalModel.getStudents().getSecondepro() : "") + ";" +
+                (orderUniversalModel.getStudents().getPremierepro() != null ? orderUniversalModel.getStudents().getPremierepro() : "") + ";" +
+                (orderUniversalModel.getStudents().getTerminalepro() != null ? orderUniversalModel.getStudents().getTerminalepro() : "") + ";" +
+                (orderUniversalModel.getStudents().getBma1() != null ? orderUniversalModel.getStudents().getBma1() : "") + ";" +
+                (orderUniversalModel.getStudents().getBma2() != null ? orderUniversalModel.getStudents().getBma2() : "") + ";" +
+                (orderUniversalModel.getStudents().getCap1() != null ? orderUniversalModel.getStudents().getCap1() : "") + ";" +
+                (orderUniversalModel.getStudents().getCap2() != null ? orderUniversalModel.getStudents().getCap2() : "") + ";" +
+                (orderUniversalModel.getStudents().getCap3() != null ? orderUniversalModel.getStudents().getCap3() : "");
     }
 
     /**
-     * @deprecated Use {@link #exportStudents(OrderRegionBeautifyModel)}
+     * @deprecated Use {@link #exportStudents(OrderUniversalModel)}
      */
     @Deprecated
     public static String exportStudents(JsonObject log) {

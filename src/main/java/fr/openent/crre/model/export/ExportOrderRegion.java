@@ -3,11 +3,16 @@ package fr.openent.crre.model.export;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.JsonHelper;
+import fr.openent.crre.model.FilterModel;
 import fr.openent.crre.model.IModel;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
+/**
+ * @deprecated Use {@link FilterModel}
+ */
+@Deprecated
 public class ExportOrderRegion implements IModel<ExportOrderRegion> {
     private List<Integer> idsOrders;
     private List<String> idsEquipments;

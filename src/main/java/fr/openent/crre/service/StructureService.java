@@ -1,5 +1,7 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.OrderUniversalModel;
+import fr.openent.crre.model.StructureNeo4jModel;
 import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -29,8 +31,12 @@ public interface StructureService {
 
     void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
-    Future<JsonArray> getStructureById(JsonArray ids, List<String> consumable_formations);
+    Future<List<StructureNeo4jModel>> getStructureNeo4jById(List<String> structureIdList);
 
+    /**
+     * @deprecated Use {@link #getStructureNeo4jById(List)}
+     */
+    @Deprecated
     void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
     void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler);

@@ -2,9 +2,7 @@ package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.enums.OrderStatus;
-import fr.openent.crre.model.FilterItemModel;
-import fr.openent.crre.model.FilterModel;
-import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.model.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -20,6 +18,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
+import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -315,5 +314,190 @@ public class DefaultOrderRegionServiceTest {
 
         this.defaultOrderRegionService.search(filterModel, filterItem, Arrays.asList("equipement1", "equipement2"), Arrays.asList("equipement1", "equipement2"));
          async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void generateExportLineTest(TestContext ctx) throws Exception {
+        OrderUniversalModel order = new OrderUniversalModel();
+        StructureNeo4jModel structure = new StructureNeo4jModel();
+
+        order.setOrderRegionId(156);
+        order.setValidatorValidationDate("2023-02-28 00:00:00.000000+0000");
+        order.setProject(new ProjectModel().setTitle("projectTitle"));
+        order.setCampaign(new Campaign().setName("campaignName"));
+        order.setEquipmentKey("12345");
+        order.setEquipmentName("Name");
+        order.setEquipmentEditor("editor");
+        order.setEquipmentDiffusor("diffusor");
+        order.setEquipmentType("Camera");
+        order.setEquipmentEanLibrary("eadLibrary");
+        order.setEquipmentCatalogueType("catalogType");
+        order.setReassort(false);
+        order.setAmount(19);
+        order.setEquipmentPriceht(59.65);
+        order.setEquipmentTva5(0.5);
+        order.setEquipmentTva20(45.5);
+        order.setEquipmentPrice(480.5);
+        order.setEquipmentTva5(0.5);
+        order.setEquipmentTva5(0.5);
+        order.setComment("comment");
+        order.setStudents(new StudentsTableModel()
+                .setGeneral(true)
+                .setBma1(1)
+                .setBma2(2)
+                .setCap1(3)
+                .setCap2(4)
+                .setCap3(5)
+                .setSeconde(6)
+                .setPremiere(7)
+                .setTerminale(8)
+                .setSecondetechno(9)
+                .setPremieretechno(10)
+                .setTerminaletechno(11)
+                .setSecondepro(12)
+                .setPremierepro(13)
+                .setTerminalepro(14));
+
+
+        structure.setName("Test School");
+        structure.setUai("0123456");
+        structure.setAddress("123 Main St");
+
+        String result = Whitebox.invokeMethod(this.defaultOrderRegionService, "generateExportLine", order, structure);
+        ctx.assertEquals(result, "156;2023-02-28;Test School;0123456;123 Main St;projectTitle;campaignName;12345;Name;editor;diffusor;Camera;eadLibrary;catalogType;Non;19;59.65;0.5;45.5;480.5;1133.35;9129.5;comment;6;7;8;9;10;11;12;13;14;1;2;3;4;5\n");
+    }
+
+    @Test
+    public void insertOrderListTest(TestContext ctx) throws Exception {
+        OrderUniversalModel orderUniversalModel1 = new OrderUniversalModel()
+                .setOrderRegionId(183)
+                .setAmount(13)
+                .setValidatorValidationDate("validationDate")
+                .setValidatorName("validatorName")
+                .setValidatorId("validatorId")
+                .setStatus(OrderStatus.DONE)
+                .setEquipmentKey("equipmentKey")
+                .setOrderClientId(45)
+                .setProject(new ProjectModel().setId(8))
+                .setReassort(false)
+                .setTotalFree(4)
+                .setEquipmentName("equipmentName")
+                .setEquipmentImage("equipmentImage")
+                .setEquipmentPrice(843.1)
+                .setEquipmentGrade("grade")
+                .setEquipmentEditor("editor")
+                .setEquipmentDiffusor("diffusor")
+                .setEquipmentCatalogueType("catalogueType")
+                .setCampaign(new Campaign().setId(156))
+                .setIdStructure("idStructure")
+                .setComment("comment");
+
+        OrderUniversalModel orderUniversalModel2 = new OrderUniversalModel()
+                .setOrderRegionId(5651)
+                .setAmount(156)
+                .setValidatorValidationDate("validationDate2")
+                .setValidatorName("validatorName2")
+                .setValidatorId("validatorId2")
+                .setStatus(OrderStatus.SENT)
+                .setEquipmentKey("equipmentKey2")
+                .setOrderClientId(56)
+                .setProject(new ProjectModel().setId(5))
+                .setReassort(false)
+                .setTotalFree(15)
+                .setEquipmentName("equipmentName2")
+                .setEquipmentImage("equipmentImage2")
+                .setEquipmentPrice(45273.7)
+                .setEquipmentGrade("grade2")
+                .setEquipmentEditor("editor2")
+                .setEquipmentDiffusor("diffusor2")
+                .setEquipmentCatalogueType("catalogueType2")
+                .setCampaign(new Campaign().setId(15))
+                .setIdStructure("idStructure2")
+                .setComment("comment2");
+
+        List<OrderUniversalModel> orderList = Arrays.asList(orderUniversalModel1, orderUniversalModel2);
+
+        String expectedQuery = "INSERT INTO null.\"order-region-equipment-old\" (id,amount, creation_date,  owner_name," +
+                " owner_id, status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
+                " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure, comment, id_order_client_equipment," +
+                " id_project, reassort, id_status, total_free) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                " ,(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+        String expectedParams = "[183,13,\"validationDate\",\"validatorName\",\"validatorId\",\"SENT\",\"equipmentKey\"," +
+                "\"equipmentName\",\"equipmentImage\",843.1,\"grade\",\"editor\",\"diffusor\",\"catalogueType\",156," +
+                "\"idStructure\",\"comment\",45,8,false,null,4,5651,156,\"validationDate2\",\"validatorName2\"," +
+                "\"validatorId2\",\"SENT\",\"equipmentKey2\",\"equipmentName2\",\"equipmentImage2\",45273.7,\"grade2\"," +
+                "\"editor2\",\"diffusor2\",\"catalogueType2\",15,\"idStructure2\",\"comment2\",56,5,false,null,15]";
+
+        TransactionElement transactionElement = Whitebox.invokeMethod(this.defaultOrderRegionService, "insertOrderList", orderList, false);
+        ctx.assertEquals(expectedQuery, transactionElement.getQuery());
+        ctx.assertEquals(expectedParams, transactionElement.getParams().toString());
+    }
+
+    @Test
+    public void insertOldClientOrderListTest(TestContext ctx) throws Exception {
+        OrderUniversalModel orderUniversalModel1 = new OrderUniversalModel()
+                .setOrderClientId(183)
+                .setAmount(13)
+                .setPrescriberValidationDate("validationDate")
+                .setPrescriberId("prescriberId")
+                .setEquipmentKey("equipmentKey")
+                .setBasket(new BasketOrder().setId(95))
+                .setReassort(false)
+                .setOffers(new ArrayList<>())
+                .setEquipmentTva5(198.25)
+                .setEquipmentTva20(16.65)
+                .setEquipmentPriceht(510.2)
+                .setEquipmentName("equipmentName")
+                .setEquipmentImage("equipmentImage")
+                .setEquipmentPrice(843.1)
+                .setEquipmentGrade("grade")
+                .setEquipmentEditor("editor")
+                .setEquipmentDiffusor("diffusor")
+                .setEquipmentCatalogueType("catalogueType")
+                .setCampaign(new Campaign().setId(156))
+                .setIdStructure("idStructure")
+                .setComment("comment")
+                .setProject(new ProjectModel().setId(15));
+
+        OrderUniversalModel orderUniversalModel2 = new OrderUniversalModel()
+                .setOrderClientId(42)
+                .setAmount(52)
+                .setPrescriberValidationDate("validationDate2")
+                .setPrescriberId("prescriberId2")
+                .setEquipmentKey("equipmentKey2")
+                .setBasket(new BasketOrder().setId(42))
+                .setReassort(false)
+                .setOffers(new ArrayList<>())
+                .setEquipmentTva5(24.5)
+                .setEquipmentTva20(423.4)
+                .setEquipmentPriceht(32.1)
+                .setEquipmentName("equipmentName2")
+                .setEquipmentImage("equipmentImage2")
+                .setEquipmentPrice(245.5)
+                .setEquipmentGrade("grade2")
+                .setEquipmentEditor("editor2")
+                .setEquipmentDiffusor("diffusor2")
+                .setEquipmentCatalogueType("catalogueType2")
+                .setCampaign(new Campaign().setId(72))
+                .setIdStructure("idStructure2")
+                .setComment("comment2")
+                .setProject(new ProjectModel().setId(84));
+
+        List<OrderUniversalModel> orderList = Arrays.asList(orderUniversalModel1, orderUniversalModel2);
+
+        String expectedQuery = "INSERT INTO null.\"order_client_equipment_old\" (id, amount, creation_date, user_id, status," +
+                " equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade, equipment_editor, equipment_diffusor," +
+                " equipment_format, id_campaign, id_structure, comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20," +
+                " equipment_priceht) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)," +
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String expectedParams = "[183,13,\"validationDate\",\"prescriberId\",\"SENT\",\"equipmentKey\",\"equipmentName\"," +
+                "\"equipmentImage\",843.1,\"grade\",\"editor\",\"diffusor\",\"catalogueType\",156,\"idStructure\",\"comment\"," +
+                "95,false,[],211.25,29.65,510.2,42,52,\"validationDate2\",\"prescriberId2\",\"SENT\",\"equipmentKey2\"," +
+                "\"equipmentName2\",\"equipmentImage2\",245.5,\"grade2\",\"editor2\",\"diffusor2\",\"catalogueType2\",72," +
+                "\"idStructure2\",\"comment2\",42,false,[],76.5,475.4,32.1]";
+
+        TransactionElement transactionElement = Whitebox.invokeMethod(this.defaultOrderRegionService, "insertOldClientOrderList", orderList);
+        ctx.assertEquals(expectedQuery, transactionElement.getQuery());
+        ctx.assertEquals(expectedParams, transactionElement.getParams().toString());
     }
 }
