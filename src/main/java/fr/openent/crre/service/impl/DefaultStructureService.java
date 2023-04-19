@@ -3,6 +3,8 @@ package fr.openent.crre.service.impl;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.model.StructureNeo4jModel;
 import fr.openent.crre.model.TransactionElement;
 import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
@@ -21,6 +23,7 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,14 +127,31 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public Future<JsonArray> getStructureById(JsonArray ids, List<String> consumable_formations) {
-        Promise<JsonArray> promise = Promise.promise();
+    public Future<List<StructureNeo4jModel>> getStructureNeo4jById(List<String> structureIdList) {
+        if (structureIdList.isEmpty()) {
+            return Future.succeededFuture(new ArrayList<>());
+        }
+        Promise<List<StructureNeo4jModel>> promise = Promise.promise();
+        JsonObject params = new JsonObject().put("ids", structureIdList);
 
-        this.getStructureById(ids, consumable_formations, FutureHelper.handlerEitherPromise(promise));
+        String query = "MATCH (s:Structure) WHERE s.id IN {ids} " +
+                "OPTIONAL MATCH (s:Structure)<-[:BELONGS]-(c:Class)<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']})" +
+                " WHERE s.id IN {ids} " +
+                "RETURN DISTINCT s.id as id, s.UAI as uai, s.name as name, s.phone as phone, " +
+                "s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
+                "s.zipCode  as zipCode, s.city as city, s.type as type ";
+
+
+        String errorMessage = String.format("[CRRE@%s::getStructureNeo4jById] Fail to get structureNeo4j by id", this.getClass().getSimpleName());
+        Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, StructureNeo4jModel.class, errorMessage)));
 
         return promise.future();
     }
 
+    /**
+     * @deprecated Use {@link #getStructureNeo4jById(List)}
+     */
+    @Deprecated
     @Override
     public void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler) {
         try {

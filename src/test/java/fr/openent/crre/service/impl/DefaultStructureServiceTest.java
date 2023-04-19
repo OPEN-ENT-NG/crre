@@ -67,4 +67,27 @@ public class DefaultStructureServiceTest {
         this.defaultStructureService.getStructuresFilter(Arrays.asList("structureType1", "structureType2"), Arrays.asList("structureId1", "structureId2"));
         async.awaitSuccess(10000);
     }
+
+    @Test
+    public void getStructureNeo4jByIdTest(TestContext ctx) {
+        Async async = ctx.async();
+
+        String expectedQuery = "MATCH (s:Structure) WHERE s.id IN {ids} OPTIONAL MATCH (s:Structure)<-[:BELONGS]-(c:Class)" +
+                "<-[:DEPENDS]-(:ProfileGroup)<-[:IN]-(u:User {profiles:['Student']}) WHERE s.id IN {ids} RETURN" +
+                " DISTINCT s.id as id, s.UAI as uai, s.name as name, s.phone as phone, s.address + ' ,' + s.zipCode" +
+                " +' ' + s.city as address,  s.zipCode  as zipCode, s.city as city, s.type as type ";
+        String expectedParams = "{\"ids\":[\"structureId1\",\"structureId2\"]}";
+
+        Mockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonObject params = invocation.getArgument(1);
+            ctx.assertEquals(query, expectedQuery);
+            ctx.assertEquals(params.toString(), expectedParams);
+            async.complete();
+
+            return null;
+        }).when(this.neo).execute(Mockito.anyString(), Mockito.any(JsonObject.class), Mockito.any(Handler.class));
+        this.defaultStructureService.getStructureNeo4jById(Arrays.asList("structureId1", "structureId2"));
+        async.awaitSuccess(10000);
+    }
 }

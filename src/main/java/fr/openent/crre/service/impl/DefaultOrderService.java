@@ -6,6 +6,7 @@ import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.core.enums.database.sql.OrderClientEquipmentTableField;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.model.FilterModel;
 import fr.openent.crre.model.OrderClientEquipmentModel;
 import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.service.OrderService;
@@ -26,6 +27,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultOrderService extends SqlCrudService implements OrderService {
+    public enum OrderByOrderListEnum {
+        PRESCRIBER_VALIDATION_DATE("o_u.prescriber_validation_date"),
+        ORDER_REGION_ID("o_u.order_region_id");
+
+        private final String value;
+
+        OrderByOrderListEnum(String value) {
+            this.value = value;
+        }
+
+        private String getValue() {
+            return value;
+        }
+    }
 
     private final Integer PAGE_SIZE = 15;
     private static final Logger log = LoggerFactory.getLogger(DefaultOrderService.class);
@@ -36,57 +51,60 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
     }
 
     @Override
-    public Future<List<OrderUniversalModel>> listOrder(String searchingText, List<Integer> campaignIdList, List<String> structureIdList, List<String> userIdList,
-                                                       List<String> basketIdList, List<Integer> orderIdList, String startDate, String endDate, List<OrderStatus> orderStatusList) {
+    public Future<List<OrderUniversalModel>> listOrder(FilterModel filterModel) {
         Promise<List<OrderUniversalModel>> promise = Promise.promise();
         JsonArray values = new JsonArray();
-        String query = "SELECT " + getOrderUniversalSelector() + ", to_jsonb(basket.*) basket, to_jsonb(campaign.*) campaign, to_jsonb(project.*) project" +
+        String query = "SELECT " + getOrderUniversalSelector() + ", to_jsonb(basket.*) basket, to_jsonb(campaign.*) campaign, to_jsonb(project.*) project," +
+                " to_jsonb(students.*) students" +
                 " FROM crre.order_universal as o_u" +
                 " LEFT JOIN crre.basket_order basket on o_u.id_basket = basket.id" +
                 " LEFT JOIN crre.project project on o_u.id_project = project.id" +
-                " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign";
+                " LEFT JOIN crre.campaign campaign on campaign.id = o_u.id_campaign" +
+                " LEFT JOIN crre.students students on students.id_structure = o_u.id_structure";
 
         query += " WHERE (prescriber_validation_date BETWEEN ? AND ?) ";
-        values.add(startDate).add(endDate);
+        values.add(filterModel.getStartDate()).add(filterModel.getEndDate());
 
-        if(searchingText != null) {
+        if(filterModel.getSearchingText() != null) {
             query += "AND (lower(basket.name) ~* ? OR lower(basket.name_user) ~* ?) ";
-            values.add(searchingText).add(searchingText);
+            values.add(filterModel.getSearchingText()).add(filterModel.getSearchingText());
         }
 
-        if (campaignIdList != null && !campaignIdList.isEmpty()) {
-            query += "AND campaign.id IN " + Sql.listPrepared(campaignIdList) + " ";
-            values.addAll(new JsonArray(campaignIdList));
+        if (filterModel.getIdsCampaign() != null && !filterModel.getIdsCampaign().isEmpty()) {
+            query += "AND campaign.id IN " + Sql.listPrepared(filterModel.getIdsCampaign()) + " ";
+            values.addAll(new JsonArray(filterModel.getIdsCampaign()));
         }
 
-        if (structureIdList != null && !structureIdList.isEmpty()) {
-            query += "AND o_u.id_structure IN " + Sql.listPrepared(structureIdList) + " ";
-            values.addAll(new JsonArray(structureIdList));
+        if (filterModel.getIdsStructure() != null && !filterModel.getIdsStructure().isEmpty()) {
+            query += "AND o_u.id_structure IN " + Sql.listPrepared(filterModel.getIdsStructure()) + " ";
+            values.addAll(new JsonArray(filterModel.getIdsStructure()));
         }
 
-        if (basketIdList != null && !basketIdList.isEmpty()) {
-            query += "AND basket.id IN " + Sql.listPrepared(basketIdList) + " ";
-            values.addAll(new JsonArray(basketIdList));
+        if (filterModel.getIdsBasket() != null && !filterModel.getIdsBasket().isEmpty()) {
+            query += "AND basket.id IN " + Sql.listPrepared(filterModel.getIdsBasket()) + " ";
+            values.addAll(new JsonArray(filterModel.getIdsBasket()));
         }
 
-        if (orderIdList != null && !orderIdList.isEmpty()) {
-            query += "AND o_u.order_client_id IN " + Sql.listPrepared(orderIdList) + " OR " +
-                    "o_u.order_region_id IN " + Sql.listPrepared(orderIdList) + " ";
-            values.addAll(new JsonArray(orderIdList))
-                    .addAll(new JsonArray(orderIdList));
+        if (filterModel.getIdsOrder() != null && !filterModel.getIdsOrder().isEmpty()) {
+            query += "AND o_u.order_client_id IN " + Sql.listPrepared(filterModel.getIdsOrder()) + " OR " +
+                    "o_u.order_region_id IN " + Sql.listPrepared(filterModel.getIdsOrder()) + " ";
+            values.addAll(new JsonArray(filterModel.getIdsOrder()))
+                    .addAll(new JsonArray(filterModel.getIdsOrder()));
         }
 
-        if (userIdList != null && !userIdList.isEmpty()) {
-            query += "AND o_u.prescriber_id IN " + Sql.listPrepared(userIdList) + " ";
-            values.addAll(new JsonArray(userIdList));
+        if (filterModel.getIdsUser() != null && !filterModel.getIdsUser().isEmpty()) {
+            query += "AND o_u.prescriber_id IN " + Sql.listPrepared(filterModel.getIdsUser()) + " ";
+            values.addAll(new JsonArray(filterModel.getIdsUser()));
         }
 
-        if (orderStatusList != null && !orderStatusList.isEmpty()) {
-            query += "AND o_u.status IN " + Sql.listPrepared(orderStatusList) + " ";
-            values.addAll(new JsonArray(orderStatusList.stream().map(Enum::name).collect(Collectors.toList())));
+        if (filterModel.getStatus() != null && !filterModel.getStatus().isEmpty()) {
+            query += "AND o_u.status IN " + Sql.listPrepared(filterModel.getStatus()) + " ";
+            values.addAll(new JsonArray(filterModel.getStatus().stream().map(Enum::name).collect(Collectors.toList())));
         }
 
-        query += "ORDER BY o_u.prescriber_validation_date ASC";
+        if (filterModel.getOrderByForOrderList() != null && filterModel.getOrderDescForOrderList() != null) {
+            query += "ORDER BY " + filterModel.getOrderByForOrderList().getValue() + (filterModel.getOrderDescForOrderList() ? " DESC" : " ASC");
+        }
 
         String errorMessage = String.format("[CRRE@%s::listOrder] Fail to list order", this.getClass().getSimpleName());
         sql.prepared(query, values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, OrderUniversalModel.class, errorMessage)));
