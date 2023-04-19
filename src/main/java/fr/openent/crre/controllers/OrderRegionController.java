@@ -568,7 +568,7 @@ public class OrderRegionController extends BaseController {
                     }
                     CompositeFuture.all(futures).onComplete(event2 -> {
                         if (event2.succeeded()) {
-                            TransactionHelper.executeTransaction(orderRegionService.insertOldOrders(ordersRegion, true))
+                            TransactionHelper.executeTransaction(orderRegionService.insertOldRegionOrders(ordersRegion, true))
                                     .onSuccess(res -> historicCommand(request, sc, finalProject_id, equipments, projetMap, idsStatus, part + 1))
                                     .onFailure(error -> {
                                         badRequest(request);
@@ -898,15 +898,15 @@ public class OrderRegionController extends BaseController {
         return null;
     }
 
-    private TransactionElement getUpdateTransactionElement(OrderStatus status, OrderRegionBeautifyModel orderRegion) {
-        if (OrderStatus.REJECTED.toString().equalsIgnoreCase(orderRegion.getOrderRegion().getStatus())) {
+    private TransactionElement getUpdateTransactionElement(OrderStatus status, OrderUniversalModel orderRegion) {
+        if (OrderStatus.REJECTED.equals(orderRegion.getStatus())) {
             if (status.equals(OrderStatus.VALID)) {
-                return getUpdatePurseTransaction(orderRegion.getOrderRegion().getIdStructure(), "-", orderRegion.getTotalPriceTTC(), CreditTypeEnum.getValue(orderRegion.getCampaign().getUseCredit(), CreditTypeEnum.NONE));
+                return getUpdatePurseTransaction(orderRegion.getIdStructure(), "-", orderRegion.getTotalPriceTTC(), CreditTypeEnum.getValue(orderRegion.getCampaign().getUseCredit(), CreditTypeEnum.NONE));
             } else {
                 return null;
             }
         } else if (status.equals(OrderStatus.REJECTED)) {
-            return getUpdatePurseTransaction(orderRegion.getOrderRegion().getIdStructure(), "+", orderRegion.getTotalPriceTTC(), CreditTypeEnum.getValue(orderRegion.getCampaign().getUseCredit(), CreditTypeEnum.NONE));
+            return getUpdatePurseTransaction(orderRegion.getIdStructure(), "+", orderRegion.getTotalPriceTTC(), CreditTypeEnum.getValue(orderRegion.getCampaign().getUseCredit(), CreditTypeEnum.NONE));
         }
 
         return null;
@@ -983,11 +983,13 @@ public class OrderRegionController extends BaseController {
     public void exportLibrary(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, orderRegions -> {
             UserUtils.getUserInfos(eb, request, user -> {
-                List<Integer> idsOrders = orderRegions.getJsonArray("idsOrders").getList();
-                List<String> idsEquipments = orderRegions.getJsonArray("idsEquipments").getList();
-                List<String> idsStructures = orderRegions.getJsonArray("idsStructures").getList();
-                if (idsOrders.size() > 0 && idsStructures.size() > 0 && idsEquipments.size() > 0) {
-                    generateLogs(request, idsOrders, idsEquipments, idsStructures, user);
+                List<Integer> idsOrders = orderRegions.getJsonArray(Field.IDSORDERS).stream()
+                        .filter(Integer.class::isInstance)
+                        .map(Integer.class::cast)
+                        .collect(Collectors.toList());
+                if (idsOrders.size() > 0) {
+                    FilterModel filterModel = new FilterModel().setIdsOrder(idsOrders);
+                    generateLogs(request, user, filterModel);
                 } else {
                     noContent(request);
                 }
@@ -995,43 +997,23 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void generateLogs(HttpServerRequest request, List<Integer> idsOrders, List<String> idsEquipments,
-                              List<String> idsStructures, UserInfos user) {
-        JsonArray idStructures = new JsonArray();
-        for (String structureId : idsStructures) {
-            idStructures.add(structureId);
-        }
+    private void generateLogs(HttpServerRequest request, UserInfos user, FilterModel filterModel) {
 
-        Future<JsonArray> structureFuture = Future.future();
-        Future<JsonArray> equipmentsFuture = Future.future();
+        filterModel.setStatus(Arrays.stream(OrderStatus.values()).filter(orderStatus -> !orderStatus.isHistoricStatus()).collect(Collectors.toList()))
+                .setOrderDescForOrderList(false)
+                .setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum.ORDER_REGION_ID);
+        Future<List<OrderUniversalModel>> orderFuture = OrderHelper.listOrderAndCalculateEquipmentFromId(filterModel, request);
 
-        List<OrderRegionBeautifyModel> orderRegionBeautifyList = new ArrayList<>();
-        List<Integer> orderRegionIdList = new ArrayList<>();
-
-        CompositeFuture.all(structureFuture, equipmentsFuture)
-                .compose(res -> this.getOrder(idsOrders))
-                .compose(orderRegionComplexList -> {
-                    orderRegionComplexList = orderRegionComplexList.stream()
-                            .filter(orderRegionComplex ->
-                                    !OrderStatus.SENT.toString().equals(orderRegionComplex.getOrderRegion().getStatus()) &&
-                                            !OrderStatus.DONE.toString().equals(orderRegionComplex.getOrderRegion().getStatus()))
-                            .collect(Collectors.toList());
-                    JsonArray structures = structureFuture.result();
-                    JsonArray equipments = equipmentsFuture.result();
-
-                    orderRegionIdList.addAll(orderRegionComplexList.stream().map(orderRegionComplex -> orderRegionComplex.getOrderRegion().getId()).collect(Collectors.toList()));
-                    orderRegionBeautifyList.addAll(orderRegionService.orderResultToBeautifyModel(structures, orderRegionComplexList, equipments));
-                    //TODO: #Multi Group orderRegionBeautifyList by bookseller
-                    List<OrderRegionBeautifyModel> orderRegionClean = orderRegionBeautifyList.stream()
-                            .filter(orderRegionBeautifyModel ->
-                                    Field.REJECTED.equals(orderRegionBeautifyModel.getOrderRegion().getStatus()) &&
-                                            !Double.valueOf(0.0).equals(orderRegionBeautifyModel.getPrice()))
+        orderFuture.compose(orderUniversalModels -> {
+                    List<OrderUniversalModel> refusedOrder = orderUniversalModels.stream()
+                            .filter(orderUniversalModel -> OrderStatus.REJECTED.equals(orderUniversalModel.getStatus()) &&
+                                    !Double.valueOf(0.0).equals(orderUniversalModel.getTotalPriceTTC()))
                             .collect(Collectors.toList());
 
                     Future<List<TransactionElement>> transactionFuture = Future.succeededFuture();
-                    if (orderRegionClean.size() > 0) {
-                        List<TransactionElement> updatePurseLicenceTransactionList = orderRegionClean.stream()
-                                .map(orderRegionBeautifyModel -> this.getUpdateTransactionElement(OrderStatus.VALID, orderRegionBeautifyModel))
+                    if (refusedOrder.size() > 0) {
+                        List<TransactionElement> updatePurseLicenceTransactionList = refusedOrder.stream()
+                                .map(orderUniversalModel -> this.getUpdateTransactionElement(OrderStatus.VALID, orderUniversalModel))
                                 .collect(Collectors.toList());
 
                         String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
@@ -1039,44 +1021,46 @@ public class OrderRegionController extends BaseController {
                     }
                     return transactionFuture;
                 })
-                .compose(res -> sendMailLibraryAndRemoveWaitingAdmin(request, user, orderRegionBeautifyList))
+                .compose(res -> {
+                    List<String> structureIdList = orderFuture.result().stream()
+                            .map(OrderUniversalModel::getIdStructure)
+                            .collect(Collectors.toList());
+                    return structureService.getStructureNeo4jById(structureIdList);
+                })
+                .compose(structureList -> sendMailLibraryAndRemoveWaitingAdmin(request, user, orderFuture.result(), structureList))
                 .onSuccess(res -> {
                     Renders.ok(request);
-                    this.notificationService.sendNotificationValidator(orderRegionIdList);
-                    this.notificationService.sendNotificationPrescriberRegion(orderRegionIdList);
+                    List<Integer> orderIdList = orderFuture.result().stream()
+                            .map(OrderUniversalModel::getOrderRegionId)
+                            .collect(Collectors.toList());
+                    this.notificationService.sendNotificationValidator(orderIdList);
+                    this.notificationService.sendNotificationPrescriberRegion(orderIdList);
                 })
                 .onFailure(error -> {
                     log.error(String.format("[CRRE@%s::generateLogs] Fail to generate logs %s",
                             this.getClass().getSimpleName(), error.getMessage()));
                     unauthorized(request);
                 });
-
-        structureService.getStructureById(idStructures, null, handlerJsonArray(structureFuture));
-        searchByIds(idsEquipments, null, handlerJsonArray(equipmentsFuture));
     }
 
-    private Future<List<OrderRegionComplex>> getOrder(List<Integer> listOrders) {
-        Promise<List<OrderRegionComplex>> promise = Promise.promise();
-        List<List<Integer>> partition = ListUtils.partition(listOrders, 5000);
-
-        Function<List<Integer>, Future<List<OrderRegionComplex>>> function = idOrderList -> this.orderRegionService.getOrdersRegionById(idOrderList, false);
-
-        FutureHelper.compositeSequential(function, partition, true)
-                .onSuccess(res ->
-                        promise.complete(res.stream().flatMap(listFuture -> listFuture.result().stream()).collect(Collectors.toList())))
-                .onFailure(error -> {
-                    log.error(String.format("[CRRE@%s::getOrder] Fail to get all order %s", this.getClass().getSimpleName(), error.getMessage()));
-                    promise.fail(error);
-                });
-
-        return promise.future();
-    }
-
-    private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, List<OrderRegionBeautifyModel> orderRegion) {
+    private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, List<OrderUniversalModel> orderUniversalModelList, List<StructureNeo4jModel> structureList) {
         Promise<Void> promise = Promise.promise();
 
-        List<MailAttachment> attachmentList = ListUtils.partition(orderRegion, 10000).stream()
-                .map(orderRegionService::generateExport)
+        List<MailAttachment> attachmentList = ListUtils.partition(orderUniversalModelList, 10000).stream()
+                .map(orderUniversalModels -> {
+                    // Here we can't use streams because we explicitly want a LinkedHashMap to grade the insertion order
+                    Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap = new LinkedHashMap<>();
+                    for (OrderUniversalModel order: orderUniversalModelList) {
+                        if (structureList.stream().anyMatch(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))) {
+                            orderStructureMap.put(order, structureList.stream()
+                                    .filter(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))
+                                    .findFirst()
+                                    //Impossible case
+                                    .orElse(new StructureNeo4jModel()));
+                        }
+                    }
+                    return orderRegionService.generateExport(orderStructureMap);
+                })
                 .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
                         .setContent(data.getString(Field.CSVFILE))
                         .setNbEtab(data.getInteger(Field.NB_ETAB)))
@@ -1085,8 +1069,10 @@ public class OrderRegionController extends BaseController {
         Function<MailAttachment, Future<JsonObject>> functionSendMail = attachment -> this.sendMail(request, attachment);
         Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
 
-        List<Long> ordersClientId = orderRegion.stream()
-                .map(orderRegionBeautify -> orderRegionBeautify.getOrderRegion().getIdOrderClientEquipment().longValue())
+        List<Long> ordersClientId = orderUniversalModelList.stream()
+                .map(OrderUniversalModel::getOrderClientId)
+                .filter(Objects::nonNull)
+                .map(Integer::longValue)
                 .collect(Collectors.toList());
 
         SqlHelper.getNextVal("quote_id_seq")
@@ -1099,7 +1085,7 @@ public class OrderRegionController extends BaseController {
                     return FutureHelper.compositeSequential(functionSendMail, attachmentList, true);
                 })
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
-                .compose(res -> insertAndDeleteOrders(orderRegion, ordersClientId))
+                .compose(res -> insertAndDeleteOrders(orderUniversalModelList, ordersClientId))
                 .onSuccess(res -> promise.complete())
                 .onFailure(error -> {
                     log.error(String.format("[CRRE@%s::sendMailLibraryAndRemoveWaitingAdmin] An error has occurred when send mail to library and remove waiting admin : %s",
@@ -1139,10 +1125,10 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private Future<Void> insertAndDeleteOrders(List<OrderRegionBeautifyModel> orderRegion, List<Long> ordersClientId) {
+    private Future<Void> insertAndDeleteOrders(List<OrderUniversalModel> orderRegion, List<Long> ordersClientId) {
         Promise<Void> promise = Promise.promise();
         List<TransactionElement> prepareRequestList = new ArrayList<>();
-        prepareRequestList.addAll(orderRegionService.insertOldOrders(orderRegion, false));
+        prepareRequestList.addAll(orderRegionService.insertOldRegionOrders(orderRegion, false));
         prepareRequestList.addAll(orderRegionService.insertOldClientOrders(orderRegion));
         prepareRequestList.addAll(orderRegionService.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT));
 
