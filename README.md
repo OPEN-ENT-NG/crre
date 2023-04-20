@@ -2,7 +2,7 @@
 * Licence : [AGPL v3](http://www.gnu.org/licenses/agpl.txt)
 * Développeur : CGI
 * Financeur : Région Ile de France
-* Description : Le Catalogue de Ressources Régionales Educatives est un service de gestion des achats des ressources numériques
+* Description : Le Catalogue de Ressources Régionales Educatives est un service de gestion des achats de ressources numériques
 
 # Présentation du module
 
@@ -54,22 +54,55 @@ L'application **CRRE**, mise à disposition des collèges et lycées d'île-de-F
       "timeSecondStatCron":"${timeSecondStatCron}",
       "timeSecondStatutCron":"${timeSecondStatutCron}",
       "timeSecondNotifyAdminsCron":"${timeSecondNotifyAdminsCron}",
-      "encodeEmailContent":"${crreEncodeEmailContent}"
+      "encodeEmailContent":"${crreEncodeEmailContent}",
+      "libraryConfig":${crreLibraryConfig}
    }
 }
 </pre>
 Dans votre springboard, vous devez inclure des variables d'environnement :
 
-| **conf.properties**       | **Utilisation**                                                                                                                                                                                 | **Exemple**                     |
-|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
-| "${address}"              | adresse e-mail du libraire                                                                                                                                                                      | xxx@yyy.com                     |
-| "${elasticServerURI}"     | URI du serveur Elasticsearch                                                                                                                                                                    | http://XXX.XXX.XXX.XXX:XXXXX    |
-| "${elasticCRREIndexName}" | Nom de l'indice Elasticsearch pour CRRE                                                                                                                                                         | /articlenumerique,articlepapier |
-| "${timeSecondSynchCron}"  | Cron pour la récupération des statistiques de tous les estabs (nombre de commandes d'articles numériques, papier, crédits dépensés...) et injection dans la base de données Mongo pour stockage. | */30 * * * * ? *                |
-| "${timeSecondStatCron}"   | Cron pour mettre à jour le statut des commandes dans BDD par rapport aux informations transmises par LDE.                                                                                       | */30 * * * * ? *                |
-| "${timeSecondStatutCron}" | Cron pour récupérer le nombre d'élèves de chaque filière (seconde à terminale, cap, bma....) de chaque établissement et mettre à jour les effectifs de chaque établissement en BDD.             | */30 * * * * ? *                |
-| "${timeSecondNotifyAdminsCron}" | Cron pour envoyer une notification aux admins chaque soir avec le nombre de commande reçue.                                                                                                     | */30 * * * * ? *                |
-| "${crreEncodeEmailContent}" | Encode le contenu des mail en base64 avant l'envois. Utilisez pour le serveur SendingBlue de ODE                                                                                                | true                            |
+| **conf.properties**             | **Utilisation**                                                                                                                                                                                   | **Exemple**                     |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| "${elasticServerURI}"           | URI du serveur Elasticsearch                                                                                                                                                                      | http://XXX.XXX.XXX.XXX:XXXXX    |
+| "${elasticCRREIndexName}"       | Nom de l'indice Elasticsearch pour CRRE                                                                                                                                                           | /articlenumerique,articlepapier |
+| "${timeSecondStatCron}"         | Cron pour la récupération des statistiques de tous les estabs (nombre de commandes d'articles numériques, papier, crédits dépensés...) et injection dans la base de données Mongo pour stockage.  | */30 * * * * ? *                |
+| "${timeSecondStatutCron}"       | Cron pour mettre à jour le statut des commandes dans la base de données en fonction des informations transmises par les libraires.                                                                | */30 * * * * ? *                |
+| "${timeSecondSynchCron}"        | Cron pour récupérer le nombre d'élèves de chaque filière (seconde à terminale, CAP, BMA, etc.) de chaque établissement et mettre à jour les effectifs de chaque établissement en base de données. | */30 * * * * ? *                |
+| "${timeSecondNotifyAdminsCron}" | Cron pour envoyer une notification aux administrateurs chaque soir avec le nombre de commandes reçues                                                                                             | */30 * * * * ? *                |
+| "${crreEncodeEmailContent}"     | Encodage du contenu des mails en base64 avant l'envoi. Utilisé pour le serveur SendingBlue de ODE.                                                                                                | true                            |
+| "${crreLibraryConfig}"          | Informations des différents libraires.                                                                                                                                                            | []                              |
+
+Les éléments de la variable crreLibraryConfig doivent respecter le format suivant :
+<pre>
+      {
+          "type": "{crreLibraryType}",
+          "name": "{crreLibraryName}",
+          "param": {
+              ...
+          }
+      }
+</pre>
+
+| **conf.properties**  | **Utilisation**                                                                    | **Exemple** |
+|----------------------|------------------------------------------------------------------------------------|-------------|
+| "${crreLibraryType}" | Nom du service utilisé pour ce libraire.                                           | CRRE        |
+| "${crreLibraryName}" | Correspond au nom du libraire utilisé dans les éléments de l'index ElasticSearch.  | LDE         |
+
+Pour le paramètre "param", il doit correspondre à un format spécifique en fonction du type de service utilisé.
+
+- CRRE\
+<pre>
+          "param": {
+              "email": "${crreEmailName}",
+              "apiUrl": "${crreApiUrl}"
+          }
+</pre>
+| **conf.properties** | **Utilisation**                                                | **Exemple**              |
+|---------------------|----------------------------------------------------------------|--------------------------|
+| "${crreEmailName}"  | Adresse mail à laquelle nous allons envoyer un e-mail.         | library1@cgi.com         |
+| "${crreApiUrl}"     | L'URL d'API utilisée pour récupérer les statuts des commandes. | https://library1.cgi.com |
+
+
 
 De base CRRE va prendre le service mail défini dans la config de l'infra
 On peut redéfinir ce paramétrage en rajoutant une config dans la conf de CRRE

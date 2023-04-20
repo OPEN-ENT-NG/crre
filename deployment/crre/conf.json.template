@@ -17,10 +17,7 @@
         "entcore.port" : 8009,
         "sql": true,
         "db-schema": "crre",
-        //todo #Multi changer la conf pour avoir plusieur libaire
-         "mail": {
-            "address": "${address}"
-         },
+        "libraryConfig": [],
          "elasticsearch": true,
          "elasticsearchConfig" : {
             "server-uri": "${elasticServerURI}",

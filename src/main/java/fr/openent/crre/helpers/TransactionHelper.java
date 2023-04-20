@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class TransactionHelper {
-    private static final Logger log = LoggerFactory.getLogger(DefaultStructureGroupService.class);
+    private static final Logger log = LoggerFactory.getLogger(TransactionHelper.class);
 
     private TransactionHelper() {
         throw new IllegalStateException("Utility class");

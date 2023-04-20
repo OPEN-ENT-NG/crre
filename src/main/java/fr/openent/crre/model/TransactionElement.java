@@ -1,5 +1,6 @@
 package fr.openent.crre.model;
 
+import fr.openent.crre.core.constants.Field;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -20,9 +21,9 @@ public class TransactionElement implements IModel<TransactionElement> {
     @Override
     public JsonObject toJson() {
         return new JsonObject()
-                .put("action", "prepared")
-                .put("statement", query)
-                .put("values", params);
+                .put(Field.ACTION, Field.PREPARED)
+                .put(Field.STATEMENT, query)
+                .put(Field.VALUES, params);
     }
 
     public String getQuery() {
