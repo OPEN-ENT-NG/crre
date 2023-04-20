@@ -1,0 +1,47 @@
+package fr.openent.crre.core.constants;
+
+public class ItemField {
+    public static final String VALUE = "valeur";
+    public static final String DATE_AVAILABILITY = "datedisponibilite";
+    public static final String ORDERABLE = "commandable";
+    public static final String COMMENT = "commentaire";
+    public static final String EAN = "ean";
+    public static final String TITLE = "titre";
+    public static final String DESCRIPTION = "description";
+    public static final String DURATION = "duree";
+    public static final String FREE = "gratuite";
+    public static final String FREE_CONDITION = "conditionGratuite";
+    public static final String LICENCE = "licence";
+    public static final String CONDITIONS = "conditions";
+    public static final String PERCENT = "pourcent";
+    public static final String RATE = "taux";
+    public static final String ADOPTING = "adoptant";
+    public static final String EAN_BOOKSELLER = "eanlibraire";
+    public static final String IS3YEARS = "is3ans";
+    public static final String LEPS = "leps";
+    public static final String LIBELLE = "libelle";
+    public static final String PRESCRIBER = "prescripteur";
+    public static final String PRICE_HT = "prixht";
+    public static final String MIN_PURCHASE_AMOUNT = "quantiteminimaleachat";
+    public static final String EDITOR_REFERENCE = "referenceediteur";
+    public static final String TVAS = "tvas";
+    public static final String TYPE = "type";
+    public static final String ARK = "ark";
+    public static final String EDITOR = "editeur";
+    public static final String AUTHOR = "auteur";
+    public static final String DISTRIBUTOR = "distributeur";
+    public static final String PRIMARY_RESOURCE = "ressourceprimaire";
+    public static final String COVER_URL = "urlcouverture";
+    public static final String DEMO_URL = "urldemo";
+    public static final String PUBLICATION_DATE = "dateparution";
+    public static final String CLASSES = "classes";
+    public static final String DISCIPLINES = "disciplines";
+    public static final String LEVELS = "niveaux";
+    public static final String AVAILABILITY = "disponibilite";
+    public static final String EAN_PAPER = "eanpapier";
+    public static final String OFFERS = "offres";
+    public static final String PAPER_ITEM = "articlepapier";
+    public static final String NUMERIC_ITEM = "articlenumerique";
+    public static final String TYPE_CATALOG = "typeCatalogue";
+    public static final String TECHNOS = "technos";
+}
