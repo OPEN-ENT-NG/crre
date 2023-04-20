@@ -245,6 +245,8 @@ public class Field {
     public static final String IDS_ORDER = "idsOrder";
     public static final String DISPLAYNAME = "displayName";
     public static final String ORDERSAMOUNT = "ordersAmount";
+    public static final String EMAIL = "email";
+    public static final String APIURL = "apiUrl";
     public static final String UAI = "uai";
     public static final String CITY = "city";
     public static final String REGION = "region";
