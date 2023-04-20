@@ -172,7 +172,7 @@ public class OrderHelper {
                 if (gratuite > 0) {
                     orderUniversalOffer.setAmount(gratuite);
                     orderUniversalOffer.setName(lep.getString(Field.TITRE));
-                    orderUniversalOffer.setTitre("Manuel " + offersJsonArray.getJsonObject(0).getJsonArray(Field.LICENCE).getJsonObject(0).getString(Field.VALEUR));
+                    orderUniversalOffer.setTitre(offersJsonArray.getJsonObject(0).getJsonArray(Field.LICENCE).getJsonObject(0).getString(Field.VALEUR));
                     orderUniversalOffer.setEan(lep.getString(Field.EAN));
                     orderUniversalOffer.setTotalPriceTTC(0.0);
                     orderUniversalOffer.setTotalPriceHT(0.0);

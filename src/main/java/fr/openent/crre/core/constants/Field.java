@@ -99,7 +99,6 @@ public class Field {
     public static final String EAN = "ean";
     public static final String _SOURCE = "_source";
     public static final String _INDEX = "_index";
-    public static final String ARTICULENUMERIQUE = "articlenumerique";
     public static final String OFFRES = "offres";
     public static final String TYPE = "type";
     public static final String TYPECATALOGUE = "typeCatalogue";
