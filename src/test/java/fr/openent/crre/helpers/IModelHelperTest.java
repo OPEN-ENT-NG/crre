@@ -79,7 +79,7 @@ public class IModelHelperTest {
         Set<Class<?>> subTypes =
                 reflections.get(SubTypes.of(IModel.class).asClass());
         List<Class<?>> invalidModel = subTypes.stream()
-                .filter(modelClass -> !ignoredClassList.contains(modelClass))
+                .filter(modelClass -> !ignoredClassList.contains(modelClass) && !modelClass.isInterface())
                 .filter(modelClass -> {
             Constructor<?> emptyConstructor = Arrays.stream(modelClass.getConstructors())
                     .filter(constructor -> constructor.getParameterTypes().length == 1
