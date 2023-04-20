@@ -22,7 +22,6 @@ export class Basket implements Selectable {
             this.equipment = Mix.castAs(Equipment, equipment);
             if (equipment.type === "articlenumerique") {
                 this.amount = equipment.offres.length > 0 ? equipment.offres[0].quantiteminimaleachat : 0;
-                this.offers = Utils.computeOffer(this, equipment);
             } else {
                 this.amount = 1;
             }

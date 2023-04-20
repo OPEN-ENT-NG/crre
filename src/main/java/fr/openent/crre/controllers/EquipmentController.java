@@ -170,8 +170,8 @@ public class EquipmentController extends ControllerHelper {
                         filters.getTargets().add(resource.getString(ItemFilterField.TARGET));
                     }
 
-                    if (resource.getString(Field.TYPE) != null && !resource.getString(Field.TYPE).equals("")) {
-                        filters.getCatalogs().add(resource.getString(Field.TYPE));
+                    if (resource.getString(Field.CATALOG) != null && !resource.getString(Field.CATALOG).equals("")) {
+                        filters.getCatalogs().add(resource.getString(Field.CATALOG));
                     }
                 }
 

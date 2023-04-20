@@ -291,6 +291,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 await initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             }
             if ($scope.basket.equipment.type === 'articlenumerique') {
+                $scope.offerStudent = [];
+                $scope.offerTeacher = [];
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                     $scope.offerStudent, $scope.offerTeacher, true);
                 await computeTechnos();
