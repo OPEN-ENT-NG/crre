@@ -245,8 +245,6 @@ public class Field {
     public static final String IDS_ORDER = "idsOrder";
     public static final String DISPLAYNAME = "displayName";
     public static final String ORDERSAMOUNT = "ordersAmount";
-    public static final String EMAIL = "email";
-    public static final String APIURL = "apiUrl";
     public static final String UAI = "uai";
     public static final String CITY = "city";
     public static final String REGION = "region";
@@ -265,6 +263,12 @@ public class Field {
     public static final String AO_IDF_CONSO = "AO_IDF_CONSO";
     public static final String AO_IDF_PAP_PRO = "AO_IDF_PAP_PRO";
     public static final String AO_IDF_PAP = "AO_IDF_PAP";
+    public static final String PREPARED = "prepared";
+    public static final String STATEMENT = "statement";
+    public static final String VALUES = "values";
+    public static final String EMAIL = "email";
+    public static final String APIURL = "apiUrl";
+    public static final String PARAM = "param";
 
     private Field() {
         throw new IllegalStateException("Utility class");
