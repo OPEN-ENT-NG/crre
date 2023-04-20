@@ -93,8 +93,8 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             } else if ($scope.amountTotal && ordersClient) {
                 isInavailable = ordersClient.all.length == 0 ||
                     nbLicences - ordersClient.calculTotalAmount() < 0 ||
-                    purseAmount - $scope.amountTotal.credit < 0 ||
-                    purseAmountConsumable - $scope.amountTotal.consumable_credit < 0;
+                    purseAmount - $scope.amountTotal.priceCredit < 0 ||
+                    purseAmountConsumable - $scope.amountTotal.priceConsumableCredit < 0;
             }
 
             return isInavailable;
