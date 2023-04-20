@@ -21,4 +21,5 @@ public class ConfigField {
     public static final String ELASTIC_SEARCH_CONFIG = "elasticsearchConfig";
     public static final String MAIL = "mail";
     public static final String ENCODEEMAILCONTENT = "encodeEmailContent";
+    public static final String LIBRARYCONFIG = "libraryConfig";
 }

@@ -9,7 +9,6 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.*;
-import fr.openent.crre.model.config.ConfigMailModel;
 import fr.openent.crre.model.export.ExportOrderRegion;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
@@ -82,7 +81,6 @@ public class OrderRegionController extends BaseController {
     private final StructureService structureService;
     private final QuoteService quoteService;
     private final EmailSendService emailSender;
-    private final ConfigMailModel mail;
     private final WebClient webClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderService.class);
     private static final String LDE_ORDER_URI = "http://www.lde.fr/4dlink1/4dcgi/idf/ldc";
@@ -90,7 +88,6 @@ public class OrderRegionController extends BaseController {
 
     public OrderRegionController(ServiceFactory serviceFactory) {
         this.emailSender = serviceFactory.getEmailSender();
-        this.mail = serviceFactory.getConfig().getMail();
         this.orderRegionService = serviceFactory.getOrderRegionService();
         this.projectService = serviceFactory.getProjectService();
         this.purseService = serviceFactory.getPurseService();
@@ -1099,7 +1096,7 @@ public class OrderRegionController extends BaseController {
         Promise<JsonObject> promise = Promise.promise();
 
         //TODO: #Multi Dynamic email
-        String mail = this.mail.getAddress();
+        String mail = ""; //todo CRRE-576
         String title = "Demande Libraire CRRE";
         String body = "Demande Libraire CRRE ; csv : " + attachment.getName();
         emailSender.sendMail(request, mail, title, body, attachment, FutureHelper.handlerEitherPromise(promise));
