@@ -300,7 +300,6 @@ public class OrderRegionController extends BaseController {
     }
 
 
-    // TODO: verif si a delete
     @Get("/add/orders/lde")
     @ApiDoc("Insert old orders from LDE")
     @SecuredAction(value = "", type = ActionType.RESOURCE)

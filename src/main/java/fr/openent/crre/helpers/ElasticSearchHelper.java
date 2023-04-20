@@ -1,9 +1,11 @@
 package fr.openent.crre.helpers;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.constants.ItemField;
 import fr.openent.crre.core.constants.ItemFilterField;
 import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
 import fr.openent.crre.model.FilterItemModel;
+import fr.openent.crre.model.item.Item;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -14,6 +16,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ElasticSearchHelper {
     private static final String REGEXP_FORMAT = ".*%s.*";
@@ -59,63 +62,56 @@ public class ElasticSearchHelper {
             if (ar.failed()) {
                 handler.handle(new Either.Left<>(ar.cause().toString()));
             } else {
-                JsonArray result = new JsonArray();
+                List<Item> result = new ArrayList<>();
                 boolean isConso = conso.size() > 0 ? conso.getBoolean(0) : false;
                 boolean isPro = pro.size() > 0 ? pro.getBoolean(0) : false;
                 boolean isRessource = ressource.size() > 0 ? ressource.getBoolean(0) : false;
+                List<Item> items = JsonHelper.jsonArrayToList(ar.result(), JsonObject.class)
+                        .stream()
+                        .filter(item -> item.containsKey(Field._SOURCE) && item.containsKey(Field._INDEX))
+                        .map(item -> new Item(item.getJsonObject(Field._SOURCE).put(ItemField.TYPE_CATALOG,item.getString(Field._INDEX))))
+                        .collect(Collectors.toList());
 
-                for (Object article : ar.result()) {
-                    JsonObject articleJson = ((JsonObject) article);
-                    JsonObject addingArticle = articleJson.getJsonObject(Field._SOURCE);
-                    String typeNumeric = "";
-                    String typePapier = "";
-                    String type = "";
-                    if (articleJson.getString(Field._INDEX).equals(Field.ARTICULENUMERIQUE) && addingArticle.getJsonArray(Field.OFFRES, new JsonArray()).size() > 0) {
-                        type = addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE) == null ? "" : addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE);
-                        addingArticle.put(Field.TYPECATALOGUE, type);
-                        typeNumeric = type;
-                    } else {
-                        type = addingArticle.getString(Field.TYPE, "") == null ? "" : addingArticle.getString(Field.TYPE, "");
-                        addingArticle.put(Field.TYPECATALOGUE, type);
-                        typePapier = type;
-                    }
-                    addingArticle.put(Field.TYPE, articleJson.getString(Field._INDEX))
-                            .put(Field.ID, articleJson.getString(Field._ID));
-                    List<String> typesNumeric = Arrays.asList(typeNumeric.split(Pattern.quote("|")));
-                    boolean ressourceNumeric = isRessource == typesNumeric.contains(Field.RESSOURCE);
-                    boolean consoNumeric = isConso == typesNumeric.contains(Field.CONSOMMABLE);
-                    boolean manuelNumeric = !isConso == typesNumeric.contains(Field.NUMERIQUE);
-                    boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
+                if(items.stream().allMatch(item -> item.getEan() == null)) {
+                    handler.handle(new Either.Right<>(new JsonArray(items.stream().map(Item::toJson).collect(Collectors.toList()))));
+                    return;
+                }
+                items.forEach(item -> {
+                    List<String> types = Arrays.stream(item.getType().split(Pattern.quote("|"))).collect(Collectors.toList());
+                    // TODO: #TERRITOIRE rajouter le filre (contenu dans typesNumeric en theorie)
+                    boolean ressourceNumeric = isRessource == types.contains(Field.RESSOURCE);
+                    boolean consoNumeric = isConso == types.contains(Field.CONSOMMABLE);
+                    boolean manuelNumeric = !isConso == types.contains(Field.NUMERIQUE);
+                    boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
                     boolean proNumeric = false;
                     boolean lgtNumeric = false;
-                    if (addingArticle.getJsonArray(Field.NIVEAUX, new JsonArray()).size() > 0) {
-                        for (int i = 0; i < addingArticle.getJsonArray(Field.NIVEAUX).size(); i++) {
-                            String niveau = addingArticle.getJsonArray(Field.NIVEAUX).getJsonObject(i).getString(Field.LIBELLE) == null ? "" : addingArticle.getJsonArray(Field.NIVEAUX).getJsonObject(i).getString(Field.LIBELLE);
-                            if (niveau.equals("Lycée pro.")) {
+                    if (!item.getLevels().isEmpty() && item.getCatalog().equals(Field.ARTICLENUMERIQUE)) {
+                        for (int i = 0; i < item.getLevels().size(); i++) {
+                            String level = item.getLevels().get(i);
+                            if (level.equals("Lycée pro.")) {
                                 proNumeric = true;
-                            } else if (niveau.equals("Lycée général") || niveau.equals("Lycée techno.")) {
+                            } else if (level.equals("Lycée général") || level.equals("Lycée techno.")) {
                                 lgtNumeric = true;
                             }
                         }
                     }
                     proNumeric = isPro && proNumeric;
                     lgtNumeric = !isPro && lgtNumeric;
-                    boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
+                    boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
                     if (isConso && isPro) {
                         proPapier = true;
                     }
-                    boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
-                    // Uncomment if type "Numerique" only exist in LDE catalog
-                    /*&& (conso.size() <= 0 || consoNumeric)*/
-                    if ((articleJson.getString("_index").equals("articlenumerique") && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
-                            (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
+                    boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                    if ((item.getCatalog().equals(Field.ARTICLENUMERIQUE) && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
+                            (item.getCatalog().equals(Field.ARTICLEPAPIER) && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
                             || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {
-                        result.add(addingArticle);
+                        result.add(item);
                     }
-                }
-                handler.handle(new Either.Right<>(result));
+                });
+                handler.handle(new Either.Right<>(new JsonArray(result.stream().map(Item::toJson).collect(Collectors.toList()))));
             }
         });
+
     }
 
     private static Future<JsonArray> ESHandler(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource) {
@@ -135,7 +131,7 @@ public class ElasticSearchHelper {
                     String typeNumeric = "";
                     String typePapier = "";
                     String type = "";
-                    if (articleJson.getString(Field._INDEX).equals(Field.ARTICULENUMERIQUE) && addingArticle.getJsonArray(Field.OFFRES, new JsonArray()).size() > 0) {
+                    if (articleJson.getString(Field._INDEX).equals(Field.ARTICLENUMERIQUE) && addingArticle.getJsonArray(Field.OFFRES, new JsonArray()).size() > 0) {
                         type = addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE) == null ? "" : addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE);
                         addingArticle.put(Field.TYPECATALOGUE, type);
                         typeNumeric = type;
@@ -172,8 +168,8 @@ public class ElasticSearchHelper {
                     boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
                     // Uncomment if type "Numerique" only exist in LDE catalog
                     /*&& (conso.size() <= 0 || consoNumeric)*/
-                    if ((articleJson.getString("_index").equals("articlenumerique") && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
-                            (articleJson.getString("_index").equals("articlepapier") && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
+                    if ((articleJson.getString("_index").equals(Field.ARTICLENUMERIQUE) && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
+                            (articleJson.getString("_index").equals(Field.ARTICLEPAPIER) && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
                             || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {
                         result.add(addingArticle);
                     }
