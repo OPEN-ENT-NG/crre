@@ -11,6 +11,7 @@ export const campaignsListController = ng.controller('campaignsListController',
                 // Reset campaign without filter
                 $scope.query.word = '';
                 $scope.filters.all = [];
+                //todo ici
                 $scope.redirectTo(`/equipments/catalog/${campaign.id}`);
                 Utils.safeApply($scope);
             }
@@ -19,12 +20,12 @@ export const campaignsListController = ng.controller('campaignsListController',
         $scope.openOrderToMain = (campaign: Campaign) => {
             $scope.$emit('eventEmitedCampaign', campaign);
             $scope.campaign = campaign;
-            $scope.redirectTo(`/campaign/${campaign.id}/order`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/campaign/${campaign.id}/order`);
             Utils.safeApply($scope);
         };
 
         $scope.openWaitingOrder = () => {
-            $scope.redirectTo(`/order/waiting`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/order/waiting`);
             Utils.safeApply($scope);
         };
 

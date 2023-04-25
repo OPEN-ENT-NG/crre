@@ -18,7 +18,7 @@ export const basketConfirmationNameController = ng.controller('basketConfirmatio
                 $scope.cancelConfirmBasketName();
                 if ($scope.isValidatorInStructure($scope.current.structure)) {
                     toasts.info('crre.confirm.basket.validator');
-                    $scope.redirectTo(`/order/waiting/${$scope.current.structure.id}`);
+                    $scope.redirectTo(`/structure/${$scope.current.structure.id}/order/waiting`);
                 }
             }
         };

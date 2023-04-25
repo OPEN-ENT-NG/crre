@@ -77,6 +77,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                         await $scope.initCampaign($scope.current.structure);
                         await template.open('main-profile', 'prescriptor/campaign/campaign-list');
                     } else if ($scope.hasAccess()) {
+                        //todo ici besoin de charger les structures
                         $scope.redirectTo(`/equipments/catalog/0`);
                     }
                 }
@@ -444,11 +445,13 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
         });
 
         $scope.openEquipmentId = (equipmentId: string) => {
-            let url = `/equipments/catalog/equipment/${equipmentId}`;
-            if ($scope.campaign && $scope.campaign.id)
-                url += `/${$scope.campaign.id}`
-            else
-                url += `/0`
+            let url;
+            if ($scope.isAdministrator()) {
+                url = `/equipments/catalog/equipment/${equipmentId}/${($scope.campaign && $scope.campaign.id) ? $scope.campaign.id : 0}`
+            } else {
+                url = `/structure/${$scope.current.structure.id}/campaign/` +
+                    `${($scope.campaign && $scope.campaign.id) ? $scope.campaign.id : 0}/equipment/${equipmentId}`;
+            }
             $scope.redirectTo(url);
         };
 

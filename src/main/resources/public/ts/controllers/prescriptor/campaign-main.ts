@@ -4,23 +4,23 @@ export const campaignMainController = ng.controller('campaignMainController',
     ['$scope', ($scope) => {
 
         $scope.openCatalog = (id: number) => {
-            $scope.redirectTo(`/equipments/catalog/${id}`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/campaign/${id}/catalog`);
         };
 
         $scope.openBasket = (id: number) => {
-            $scope.redirectTo(`/campaign/${id}/basket`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/campaign/${id}/basket`);
         };
 
         $scope.openOrder = (id: number) => {
-            $scope.redirectTo(`/campaign/${id}/order`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/campaign/${id}/order`);
         };
 
         $scope.openWaitingOrder = () => {
-            $scope.redirectTo(`/order/waiting`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/order/waiting`);
         };
 
         $scope.openHistoric = () => {
-            $scope.redirectTo(`/order/historic`);
+            $scope.redirectTo(`/structure/${$scope.current.structure.id}/order/historic`);
         };
 
         $scope.backHome = () => {

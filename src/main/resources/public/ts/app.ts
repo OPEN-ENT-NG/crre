@@ -65,20 +65,20 @@ routes.define(($routeProvider) => {
             });
     } else {
         $routeProvider
-            .when('/equipments/catalog/:idCampaign', {
+            .when('/structure/:idStructure/campaign/:idCampaign/catalog', {
                 action: 'showCatalog'
             })
-            .when('/equipments/catalog/equipment/:idEquipment/:idCampaign', {
+            .when('/structure/:idStructure/campaign/:idCampaign/equipment/:idEquipment', {
                 action: 'equipmentDetail'
             });
     }
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.validator) &&
     !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
-            .when('/order/waiting/:idStructure?', {
+            .when('/structure/:idStructure/order/waiting', {
                 action: 'orderWaiting'
             })
-            .when('/order/historic/:idStructure?', {
+            .when('/structure/:idStructure/order/historic', {
                 action: 'orderHistoric'
             });
 
@@ -86,10 +86,10 @@ routes.define(($routeProvider) => {
     if (model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.prescriptor) &&
     !model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator)) {
         $routeProvider
-            .when('/campaign/:idCampaign/order/:idStructure?', {
+            .when('/structure/:idStructure/campaign/:idCampaign/order', {
                 action: 'campaignOrder'
             })
-            .when('/campaign/:idCampaign/basket', {
+            .when('/structure/:idStructure/campaign/:idCampaign/basket', {
                 action: 'campaignBasket'
             });
     }
