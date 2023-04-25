@@ -24,6 +24,7 @@ export interface IProjectPayload {
     structureTypes?: Array<String>;
     renew?: Array<String>;
     searchingText?: String;
+    idsProject?: Array<Number>;
     orderBy?: ORDER_BY_PROJECT_FIELD_ENUM;
     orderDesc?: boolean;
 }

@@ -291,7 +291,7 @@ public class OrderRegionController extends BaseController {
                                     .stream()
                                     .map(structure -> structure.getString(Field.IDSTRUCTURE))
                                     .collect(Collectors.toList()));
-                            return getOrders(filters, filtersItem);
+                            return getProjects(filters, filtersItem);
                         })
                         .onSuccess(res -> renderJson(request, res))
                         .onFailure(fail -> renderError(request));
@@ -624,7 +624,7 @@ public class OrderRegionController extends BaseController {
     }
 
 
-    private Future<JsonArray> getOrders(FilterModel filters, FilterItemModel filtersItem) {
+    private Future<JsonArray> getProjects(FilterModel filters, FilterItemModel filtersItem) {
         Promise<JsonArray> promise = Promise.promise();
         FilterItemModel filtersItemQuery = new FilterItemModel().setSearchingText(filtersItem.getSearchingText());
         FilterItemModel filtersItemFilter = filtersItem.clone().setSearchingText(null);
@@ -656,6 +656,38 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
+    private Future<JsonArray> getOrders(FilterModel filters, FilterItemModel filtersItem, List<Integer> idsProjects) {
+        Promise<JsonArray> promise = Promise.promise();
+        FilterItemModel filtersItemQuery = new FilterItemModel().setSearchingText(filtersItem.getSearchingText());
+        FilterItemModel filtersItemFilter = filtersItem.clone().setSearchingText(null);
+
+        Future<JsonArray> filterFuture = filtersItem.hasFilters() ?
+                searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
+
+        Future<JsonArray> searchFuture = filtersItem.getSearchingText() != null ?
+                searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
+
+        CompositeFuture.all(filterFuture, searchFuture)
+                .compose(items -> {
+                    JsonArray itemsSearch = searchFuture.result();
+                    JsonArray itemsFilter = filterFuture.result();
+                    List<String> itemSearchedIdsList = itemsSearch.stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .collect(Collectors.toList());
+                    List<String> itemFilteredIdsList = itemsFilter.stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .collect(Collectors.toList());
+                    return orderRegionService.getAllOrderRegionByProject(idsProjects, filters, filtersItem, itemSearchedIdsList, itemFilteredIdsList);
+                })
+                .onSuccess(promise::complete)
+                .onFailure(promise::fail);
+        return promise.future();
+    }
+
     @Post("/ordersRegion/orders")
     @ApiDoc("Get all orders of each project")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -669,9 +701,9 @@ public class OrderRegionController extends BaseController {
                         .map(Integer.class::cast)
                         .collect(Collectors.toList());
                 FilterModel filters = new FilterModel(orderRegions);
-                Future<JsonArray> ordersFuture = orderRegionService.getAllOrderRegionByProject(idsProjects, filters);
-                ordersFuture
-                        .compose(orderResults -> {
+                FilterItemModel filtersItem = new FilterItemModel(orderRegions);
+                Future<JsonArray> ordersFuture = getOrders(filters, filtersItem, idsProjects);
+                ordersFuture.compose(orderResults -> {
                             List<String> listIdsEquipment = orderResults.stream()
                                     .filter(JsonObject.class::isInstance)
                                     .map(JsonObject.class::cast)

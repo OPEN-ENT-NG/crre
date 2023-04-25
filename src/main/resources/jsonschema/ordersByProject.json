@@ -9,6 +9,51 @@
         "type": "number"
       }
     },
+    "idsCampaign": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "idsStructure": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "startDate": {
+      "type": "string"
+    },
+    "endDate": {
+      "type": "string"
+    },
+    "searchingText": {
+      "type": "string"
+    },
+    "distributors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "editors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "catalogs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "itemTypes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "status": {
       "type": "array",
       "items": {

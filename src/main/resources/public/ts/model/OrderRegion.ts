@@ -1,14 +1,9 @@
 import http from "axios";
 import {_, moment, toasts} from "entcore";
-import {Campaign, Equipment, Order, OrderClient, Projects, Structure} from "./index";
+import {Campaign, Equipment, IProjectPayload, Order, OrderClient, Projects, Structure} from "./index";
 import {Mix, Selection} from "entcore-toolkit";
 import {ProjectFilter} from "./ProjectFilter";
 import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
-
-export interface IOrderByProjectPayload {
-    idsProject: Array<Number>;
-    status: Array<String>
-}
 
 export class OrderRegion implements Order  {
     amount: number;
@@ -189,10 +184,24 @@ export class OrdersRegion extends Selection<OrderRegion> {
 
     async getOrdersFromProjects(projects: Projects, filters: ProjectFilter): Promise<any> {
 
-        let payload: IOrderByProjectPayload = {
-            idsProject: projects.all.map(project => project.id),
-            status: filters.statusFilterList.map(status => ORDER_STATUS_ENUM[status.orderStatusEnum])
+        return http.post(`/crre/ordersRegion/orders`, this.toJSONOrders(filters, projects));
+    }
+
+    toJSONOrders(filter: ProjectFilter, projects: Projects): IProjectPayload {
+
+        let payload: IProjectPayload = {
+            startDate: moment(filter.startDate).format('YYYY-MM-DD').toString(),
+            endDate: moment(filter.endDate).format('YYYY-MM-DD').toString(),
+            idsProject: projects.all.map(project => project.id)
         };
-        return http.post(`/crre/ordersRegion/orders`, payload);
+
+        if (!!filter.queryName) payload.searchingText = filter.queryName;
+        if (filter.statusFilterList.length > 0) payload.status = filter.statusFilterList.map(status => ORDER_STATUS_ENUM[status.orderStatusEnum]);
+        if (filter.campaignList.length > 0) payload.idsCampaign = filter.campaignList.map(campaign => campaign.id);
+        if (filter.distributorList.length > 0) payload.distributors = filter.distributorList.map(distributor => distributor.name);
+        if (filter.editorList.length > 0) payload.editors = filter.editorList.map(editor => editor.name);
+        if (filter.catalogList.length > 0) payload.catalogs = filter.catalogList.map(catalog => catalog.name);
+
+        return payload;
     }
 }

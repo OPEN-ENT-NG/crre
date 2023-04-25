@@ -126,8 +126,7 @@
                     <div class="smallTabElem ellipsis center">[[project.title]]</div>
                 </td>
                 <td ng-click="project.expanded = !project.expanded">
-                    <div class="smallTabElem ellipsis center" tooltip="[[project.campaign_name]]">
-                        [[project.campaign_name]]
+                    <div class="smallTabElem ellipsis center">
                     </div>
                 </td>
                 <td ng-click="project.expanded = !project.expanded">
@@ -181,7 +180,9 @@
                     <div class="smallTabElem center">[[order.equipment_key]]</div>
                 </td>
                 <td>
-                    <div class="smallTabElem"></div>
+                    <div class="smallTabElem">
+                        <div class="smallTabElem center">[[order.campaign_name]]</div>
+                    </div>
                 </td>
                 <td>
                     <div class="smallTabElem center"> [[order.amount]]</div>
