@@ -4,21 +4,24 @@ import fr.openent.crre.core.enums.ColumnsLDEOrders;
 
 import java.util.regex.Pattern;
 
-public class OrderLDEModel {
+public class CRRELibraryElementModel {
     private String etat;
     private String CGIId;
 
-    public OrderLDEModel(String line) {
+    public CRRELibraryElementModel(String line) {
         String[] values = line.split(Pattern.quote("|"));
         this.etat = values[ColumnsLDEOrders.ETAT.column()];
         this.CGIId = values[ColumnsLDEOrders.ID_CGI.column()];
+    }
+
+    public CRRELibraryElementModel() {
     }
 
     public String getEtat() {
         return etat;
     }
 
-    public OrderLDEModel setEtat(String etat) {
+    public CRRELibraryElementModel setEtat(String etat) {
         this.etat = etat;
         return this;
     }
@@ -27,7 +30,7 @@ public class OrderLDEModel {
         return CGIId;
     }
 
-    public OrderLDEModel setCGIId(String CGIId) {
+    public CRRELibraryElementModel setCGIId(String CGIId) {
         this.CGIId = CGIId;
         return this;
     }
