@@ -83,7 +83,6 @@ public class OrderRegionController extends BaseController {
     private final EmailSendService emailSender;
     private final WebClient webClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderService.class);
-    private static final String LDE_ORDER_URI = "http://www.lde.fr/4dlink1/4dcgi/idf/ldc";
     private final NotificationService notificationService;
 
     public OrderRegionController(ServiceFactory serviceFactory) {
@@ -391,61 +390,7 @@ public class OrderRegionController extends BaseController {
         return sc;
     }
 
-    /**
-     * Get order LDE from LDE API. Due to a large amount of data, the response must be processed little by little.
-     * This is why we provide a handler which will be executed for each order.
-     *
-     * @param orderLDEModelHandler handler executed for each order of the HTTP response
-     * @return future completed when HTTP response has finish to be read
-     */
-    public Future<Void> getOrderLDE(Handler<OrderLDEModel> orderLDEModelHandler) {
-        Promise<Void> promise = Promise.promise();
 
-        HttpRequest<Buffer> request = this.webClient.getAbs(LDE_ORDER_URI);
-        FileSystem fs = this.vertx.fileSystem();
-
-        //Create tmpFile
-        FileHelper.createTempFile(fs)
-                //Get tmpFile
-                .compose(path -> FileHelper.getFile(fs, path))
-                //Write in tmpFile in Stream
-                .compose(tmpFile -> HttpRequestHelper.getHttpRequestResponseAsStream(request, tmpFile, false))
-                //Read tmpFile in Stream
-                .onSuccess(tmpFile -> {
-                    //Use atomic to skip header csv line
-                    AtomicBoolean headerIsSkip = new AtomicBoolean(false);
-                    RecordParser recordParser = RecordParser.newDelimited("\r", bufferedLine -> {
-                        if (!headerIsSkip.get()) {
-                            headerIsSkip.set(true);
-                            return;
-                        }
-                        orderLDEModelHandler.handle(new OrderLDEModel(bufferedLine.toString()));
-                    }).exceptionHandler(error -> {
-                        String message = String.format("[CRRE@%s::getOrderLDE] Failed to execute handler: %s",
-                                this.getClass().getSimpleName(), error.getMessage());
-                        log.error(message);
-                    });
-
-                    tmpFile.handler(recordParser)
-                            .exceptionHandler(error -> {
-                                String message = String.format("[CRRE@%s::getOrderLDE] Failed to stream order LDE response: %s",
-                                        this.getClass().getSimpleName(), error.getMessage());
-                                log.error(message);
-                                promise.fail(error.getMessage());
-                            })
-                            .endHandler(v -> {
-                                tmpFile.close();
-                                promise.complete();
-                            });
-                })
-                .onFailure(error -> {
-                    String message = String.format("[CRRE@%s::getOrderLDE] Failed to get LDE order: %s",
-                            this.getClass().getSimpleName(), error.getMessage());
-                    log.error(message);
-                    promise.fail(error.getMessage());
-                });
-        return promise.future();
-    }
 
     // TODO: verif si a delete
     private void historicCommand(HttpServerRequest request, Scanner sc, Integer lastProjectId, JsonArray equipments,
