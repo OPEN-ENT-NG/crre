@@ -45,10 +45,10 @@ public class DefaultOrderRegionServiceTest {
     @Test
     public void testUpdateOldOrdersWithTransaction(TestContext ctx) {
         Async async = ctx.async();
-        JsonArray orderList = new JsonArray();
+        List<CRRELibraryElementModel> orderList = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             List<String> list = Arrays.asList("0", "1", "2", "3", "4", "6", "7", "9", "10", "14", "15", "20", "35", "55", "57", "58", "59", "70", "71", "72", "52", "1000");
-            orderList.add(new JsonObject().put("status", list.get(i % list.size())).put("id", String.valueOf(i + 1)));
+            orderList.add(new CRRELibraryElementModel().setEtat(list.get(i % list.size())).setCGIId(String.valueOf(i + 1)));
         }
 
         String expectedQuery = "BEGIN;UPDATE null.\"order-region-equipment-old\"  SET id_status = ? WHERE id IN (?,?,?,?);COMMIT;" +
