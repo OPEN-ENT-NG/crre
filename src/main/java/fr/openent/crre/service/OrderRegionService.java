@@ -55,17 +55,13 @@ public interface OrderRegionService {
 
     Future<JsonObject> updateOrdersStatus(List<Integer> ids, String status, String justification);
 
-    void updateOldOrders(JsonArray ordersRegion, Handler<Either<String, JsonObject>> handler);
-
     /**
      * Update LDE order status using transaction to avoid deadlock type errors
      *
      * @param ordersRegion order region list
      * @return Future
      */
-    Future<JsonObject> updateOldOrdersWithTransaction(JsonArray ordersRegion);
-
-    Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder);
+    Future<JsonObject> updateOldOrdersWithTransaction(List<CRRELibraryElementModel> ordersRegion);
 
     List<TransactionElement> deletedOrders(List<Long> ordersClientIdList, String table);
 

@@ -6,37 +6,28 @@ import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
-import fr.openent.crre.helpers.JsonHelper;
 import fr.openent.crre.model.*;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.utils.StringUtils;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static fr.openent.crre.controllers.OrderController.exportPriceComment;
 import static fr.openent.crre.controllers.OrderController.exportStudents;
 import static fr.openent.crre.core.constants.Field.UTF8_BOM;
-import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static java.lang.Math.min;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
@@ -671,31 +662,16 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public void updateOldOrders(JsonArray ordersRegion, final Handler<Either<String, JsonObject>> handler) {
-        JsonArray params = new JsonArray();
-        String query = "";
-        for (int i = 0; i < ordersRegion.size(); i++) {
-            query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
-                    " SET id_status = ?" +
-                    " WHERE id = ?; ";
-            params.add(ordersRegion.getJsonObject(i).getString(Field.STATUS));
-            params.add(ordersRegion.getJsonObject(i).getString(Field.ID));
-        }
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-    }
-
-    @Override
-    public Future<JsonObject> updateOldOrdersWithTransaction(JsonArray ordersRegion) {
+    public Future<JsonObject> updateOldOrdersWithTransaction(List<CRRELibraryElementModel> ordersRegion) {
         Promise<JsonObject> promise = Promise.promise();
         JsonArray params = new JsonArray();
         String query = "";
-        final Map<String, List<JsonObject>> statusIdOrderMap = ordersRegion.stream()
-                .map(JsonObject.class::cast)
-                .collect(Collectors.groupingBy(order -> order.getString(Field.STATUS)));
+        final Map<String, List<CRRELibraryElementModel>> statusIdOrderMap = ordersRegion.stream()
+                .collect(Collectors.groupingBy(CRRELibraryElementModel::getEtat));
 
         for (String statusId : statusIdOrderMap.keySet()) {
             List<String> idOrderList = statusIdOrderMap.get(statusId).stream()
-                    .map(order -> order.getString(Field.ID))
+                    .map(CRRELibraryElementModel::getCGIId)
                     .collect(Collectors.toList());
             query += "BEGIN;";
             query += "UPDATE " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
@@ -707,38 +683,6 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(FutureHelper.handlerJsonObject(promise)));
-
-        return promise.future();
-    }
-
-    @Override
-    public Future<JsonObject> updateOldOrderLDEModel(List<OrderLDEModel> listOrder) {
-        Promise<JsonObject> promise = Promise.promise();
-
-        List<JsonObject> ordersRegion = listOrder.stream()
-                .map(orderLDEModel -> {
-                    if (!orderLDEModel.getEtat().isEmpty() && NumberUtils.isParsable(orderLDEModel.getEtat()) &&
-                            !orderLDEModel.getCGIId().isEmpty() && NumberUtils.isParsable(orderLDEModel.getCGIId()) &&
-                            !orderLDEModel.getCGIId().equals("0")) {
-                        return new JsonObject()
-                                .put(Field.STATUS, orderLDEModel.getEtat())
-                                .put(Field.ID, orderLDEModel.getCGIId());
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        if (ordersRegion.isEmpty()) {
-            return Future.succeededFuture();
-        }
-
-        this.updateOldOrdersWithTransaction(new JsonArray(ordersRegion))
-                .onSuccess(promise::complete)
-                .onFailure(error -> {
-                    log.error(String.format("[CRRE@%s::updateOldOrderLDEModel] Failed to update order: %s",
-                            this.getClass().getSimpleName(), error.getMessage()));
-                    promise.fail(error);
-                });
 
         return promise.future();
     }
