@@ -22,4 +22,5 @@ public class ConfigField {
     public static final String MAIL = "mail";
     public static final String ENCODEEMAILCONTENT = "encodeEmailContent";
     public static final String LIBRARYCONFIG = "libraryConfig";
+    public static final String DEV_DASH_MODE = "dev-mode";
 }

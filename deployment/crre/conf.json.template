@@ -27,6 +27,7 @@
          "timeSecondStatCron": "${timeSecondStatCron}",
          "timeSecondStatutCron": "${timeSecondStatutCron}",
          "timeSecondNotifyAdminsCron": "${timeSecondNotifyAdminsCron}",
-         "encodeEmailContent": ${crreEncodeEmailContent}
+         "encodeEmailContent": ${crreEncodeEmailContent},
+         "dev-mode": false
       }
     }

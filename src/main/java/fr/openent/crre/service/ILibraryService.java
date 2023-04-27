@@ -8,7 +8,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.List;
 
 public interface ILibraryService<T extends ILibraryConfigModel> {
-    Future<Void> getStatus(T params);
+    Future<Void> updateStatus(T params);
 
     void sendOrder(List<OrderUniversalModel> orderList, T params);
 

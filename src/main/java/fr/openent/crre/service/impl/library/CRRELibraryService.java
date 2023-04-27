@@ -29,7 +29,7 @@ public class CRRELibraryService implements ILibraryService<CRREParam> {
     private static final Logger log = LoggerFactory.getLogger(CRRELibraryService.class);
 
     @Override
-    public Future<Void> getStatus(CRREParam params) {
+    public Future<Void> updateStatus(CRREParam params) {
         Promise<Void> promise = Promise.promise();
 
         List<CRRELibraryElementModel> listOrder = new ArrayList<>();
