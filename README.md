@@ -55,7 +55,8 @@ L'application **CRRE**, mise à disposition des collèges et lycées d'île-de-F
       "timeSecondStatutCron":"${timeSecondStatutCron}",
       "timeSecondNotifyAdminsCron":"${timeSecondNotifyAdminsCron}",
       "encodeEmailContent":"${crreEncodeEmailContent}",
-      "libraryConfig":${crreLibraryConfig}
+      "libraryConfig":${crreLibraryConfig},
+      "dev-mode":false
    }
 }
 </pre>
@@ -71,6 +72,8 @@ Dans votre springboard, vous devez inclure des variables d'environnement :
 | "${timeSecondNotifyAdminsCron}" | Cron pour envoyer une notification aux administrateurs chaque soir avec le nombre de commandes reçues                                                                                             | */30 * * * * ? *                |
 | "${crreEncodeEmailContent}"     | Encodage du contenu des mails en base64 avant l'envoi. Utilisé pour le serveur SendingBlue de ODE.                                                                                                | true                            |
 | "${crreLibraryConfig}"          | Informations des différents libraires.                                                                                                                                                            | []                              |
+
+La propriété "dev-mode" sert à activer les fonctions de développement de CRRE. Elle doit être définie à false sur les environnements de production pour désactiver ces fonctions et garantir la sécurité de l'application. Elle est optionnel et vaut par defaut "false".
 
 Les éléments de la variable crreLibraryConfig doivent respecter le format suivant :
 <pre>
