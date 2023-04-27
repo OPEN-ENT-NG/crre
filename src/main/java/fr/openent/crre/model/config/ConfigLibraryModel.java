@@ -52,7 +52,7 @@ public class ConfigLibraryModel implements IModel<ConfigLibraryModel> {
     }
 
     public void getStatus() {
-        this.type.getService().getStatus(param);
+        this.type.getService().updateStatus(param);
     }
 
     public void sendOrder(List<OrderUniversalModel> orderList) {
