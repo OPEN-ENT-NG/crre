@@ -25,6 +25,7 @@ public class ConfigModel implements IModel<ConfigModel> {
     private final ConfigElasticSearch elasticSearchConfig;
     private final boolean encodeEmailContent;
     private final Map<String ,ConfigLibraryModel> libraryConfig;
+    private final boolean devMode;
 
     public ConfigModel(JsonObject jsonObject) {
         this.dbSchema = jsonObject.getString(ConfigField.DB_DASH_SCHEMA);
@@ -48,6 +49,8 @@ public class ConfigModel implements IModel<ConfigModel> {
         } else {
             this.libraryConfig = new HashMap<>();
         }
+
+        this.devMode = jsonObject.getBoolean(ConfigField.DEV_DASH_MODE, false);
     }
 
     @Override
@@ -102,5 +105,9 @@ public class ConfigModel implements IModel<ConfigModel> {
 
     public Map<String, ConfigLibraryModel> getLibraryConfig() {
         return libraryConfig;
+    }
+
+    public boolean isDevMode() {
+        return devMode;
     }
 }

@@ -4,7 +4,7 @@ import fr.openent.crre.controllers.*;
 import fr.openent.crre.cron.NotifyNewOrdersAdmin;
 import fr.openent.crre.cron.statistics;
 import fr.openent.crre.cron.synchTotalStudents;
-import fr.openent.crre.cron.updateStatus;
+import fr.openent.crre.cron.UpdateStatusCron;
 import fr.openent.crre.helpers.elasticsearch.ElasticSearch;
 import fr.openent.crre.model.config.ConfigModel;
 import fr.openent.crre.service.ServiceFactory;
@@ -46,17 +46,32 @@ public class Crre extends BaseServer {
             new CronTrigger(vertx, configModel.getTimeSecondSynchCron()).schedule(
                     new synchTotalStudents(serviceFactory)
             );
+        } catch (Exception e) {
+            log.error(String.format("[CRRE@%s::start] Invalid synch cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));
+        }
+
+        try {
             new CronTrigger(vertx, configModel.getTimeSecondStatCron()).schedule(
                     new statistics(serviceFactory)
             );
+        } catch (Exception e) {
+            log.error(String.format("[CRRE@%s::start] Invalid statistics cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));
+        }
+
+        try {
             new CronTrigger(vertx, configModel.getTimeSecondStatutCron()).schedule(
-                    new updateStatus(serviceFactory)
+                    new UpdateStatusCron(serviceFactory)
             );
+        } catch (Exception e) {
+            log.error(String.format("[CRRE@%s::start] Invalid update cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));
+        }
+
+        try {
             new CronTrigger(vertx, configModel.getTimeSecondNotifyAdminsCron()).schedule(
                     new NotifyNewOrdersAdmin(serviceFactory)
             );
         } catch (Exception e) {
-            log.error(String.format("[CRRE@%s::start] Invalid CRRE cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));
+            log.error(String.format("[CRRE@%s::start] Invalid notify cron expression. %s", this.getClass().getSimpleName(), e.getMessage()));
         }
 
         if (configModel.isElasticSearch() && configModel.getElasticSearchConfig() != null) {
@@ -77,6 +92,9 @@ public class Crre extends BaseServer {
         addController(new StatisticsController(serviceFactory));
         addController(new QuoteController(serviceFactory));
         addController(new WorkflowController(serviceFactory));
+        if (serviceFactory.getConfig().isDevMode()) {
+            addController(new DevController());
+        }
         vertx.deployVerticle(ExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         CONFIG = config;
     }
