@@ -9,6 +9,7 @@ import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.*;
+import fr.openent.crre.model.config.ConfigModel;
 import fr.openent.crre.model.export.ExportOrderRegion;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
@@ -68,7 +69,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.*;
-import static fr.openent.crre.helpers.FutureHelper.handlerJsonArray;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -84,6 +84,7 @@ public class OrderRegionController extends BaseController {
     private final WebClient webClient;
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultOrderService.class);
     private final NotificationService notificationService;
+    private final ConfigModel config;
 
     public OrderRegionController(ServiceFactory serviceFactory) {
         this.emailSender = serviceFactory.getEmailSender();
@@ -95,6 +96,7 @@ public class OrderRegionController extends BaseController {
         this.webClient = serviceFactory.getWebClient();
         this.vertx = serviceFactory.getVertx();
         this.notificationService = serviceFactory.getNotificationService();
+        this.config = serviceFactory.getConfig();
     }
 
     @Post("/region/orders")
@@ -986,45 +988,36 @@ public class OrderRegionController extends BaseController {
 
     private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, List<OrderUniversalModel> orderUniversalModelList, List<StructureNeo4jModel> structureList) {
         Promise<Void> promise = Promise.promise();
-
+        List<Long> ordersClientId = new ArrayList<>();
         List<MailAttachment> attachmentList = ListUtils.partition(orderUniversalModelList, 10000).stream()
                 .map(orderUniversalModels -> {
-                    // Here we can't use streams because we explicitly want a LinkedHashMap to grade the insertion order
-                    Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap = new LinkedHashMap<>();
-                    for (OrderUniversalModel order: orderUniversalModelList) {
-                        if (structureList.stream().anyMatch(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))) {
-                            orderStructureMap.put(order, structureList.stream()
-                                    .filter(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))
+                    List<OrderUniversalModel> orders = orderUniversalModelList.stream()
+                            .filter(order -> structureList.stream()
+                                    .anyMatch(structure -> Objects.equals(structure.getId(), order.getIdStructure())))
+                            .peek(order -> order.setStructure(structureList.stream()
+                                    .filter(structure -> Objects.equals(structure.getId(), order.getIdStructure()))
                                     .findFirst()
                                     //Impossible case
-                                    .orElse(new StructureNeo4jModel()));
-                        }
-                    }
-                    return orderRegionService.generateExport(orderStructureMap);
+                                    .orElse(null)))
+                            .filter(order -> order.getStructure() != null)
+                            .collect(Collectors.toList());
+
+                    ordersClientId.addAll(orders.stream()
+                            .map(OrderUniversalModel::getOrderClientId)
+                            .filter(Objects::nonNull)
+                            .map(Integer::longValue)
+                            .collect(Collectors.toList()));
+                    return ExportHelper.generateExportRegion(orders);
                 })
                 .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
                         .setContent(data.getString(Field.CSVFILE))
                         .setNbEtab(data.getInteger(Field.NB_ETAB)))
                 .collect(Collectors.toList());
 
-        Function<MailAttachment, Future<JsonObject>> functionSendMail = attachment -> this.sendMail(request, attachment);
         Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
 
-        List<Long> ordersClientId = orderUniversalModelList.stream()
-                .map(OrderUniversalModel::getOrderClientId)
-                .filter(Objects::nonNull)
-                .map(Integer::longValue)
-                .collect(Collectors.toList());
-
-        SqlHelper.getNextVal("quote_id_seq")
-                .compose(nextVal -> {
-                    for (int i = 0; i < attachmentList.size(); i++) {
-                        MailAttachment mailAttachment = attachmentList.get(i);
-                        int id = nextVal + i;
-                        mailAttachment.setName(mailAttachment.getName() + "-" + id + ".csv");
-                    }
-                    return FutureHelper.compositeSequential(functionSendMail, attachmentList, true);
-                })
+        // TODO: change CRRE-575 by groupin by order library
+        this.config.getLibraryConfig().get("LDE").sendOrder(orderUniversalModelList)
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
                 .compose(res -> insertAndDeleteOrders(orderUniversalModelList, ordersClientId))
                 .onSuccess(res -> promise.complete())
@@ -1037,17 +1030,6 @@ public class OrderRegionController extends BaseController {
         return promise.future();
     }
 
-    private Future<JsonObject> sendMail(HttpServerRequest request, MailAttachment attachment) {
-        Promise<JsonObject> promise = Promise.promise();
-
-        //TODO: #Multi Dynamic email
-        String mail = ""; //todo CRRE-576
-        String title = "Demande Libraire CRRE";
-        String body = "Demande Libraire CRRE ; csv : " + attachment.getName();
-        emailSender.sendMail(request, mail, title, body, attachment, FutureHelper.handlerEitherPromise(promise));
-
-        return promise.future();
-    }
 
     private Future<MailAttachment> insertQuote(UserInfos user, MailAttachment attachment) {
         Promise<MailAttachment> promise = Promise.promise();

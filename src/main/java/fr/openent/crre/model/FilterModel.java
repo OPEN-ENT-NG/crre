@@ -37,8 +37,8 @@ public class FilterModel implements IModel<FilterModel>, Cloneable {
     private Boolean orderDescForOrderList;
 
     public FilterModel() {
-        this.startDate = null;
-        this.endDate = null;
+        this.startDate = "1970-01-01";
+        this.endDate = "3000-01-01";
         this.idsUser = null;
         this.idsCampaign = new ArrayList<>();
         this.idsStructure = new ArrayList<>();
