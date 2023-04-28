@@ -5,6 +5,7 @@ import fr.openent.crre.model.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -68,8 +69,6 @@ public interface OrderRegionService {
     void updateStatus(JsonArray listIdOrders, Handler<Either<String, JsonObject>> handlerJsonObject);
 
     void setIdOrderRegion(Handler<Either<String, JsonObject>> handlerJsonObject);
-
-    JsonObject generateExport(Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap);
 
     /**
      * Gets the list of all orders region in the same project as the order region pass in parameter

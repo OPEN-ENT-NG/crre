@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.ExportHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.OrderHelper;
 import fr.openent.crre.model.*;
@@ -120,17 +121,14 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
             AtomicInteger i = new AtomicInteger(0);
             Function<List<OrderUniversalModel>, Future<JsonObject>> function = orderRegionList -> {
                 // Here we can't use streams because we explicitly want a LinkedHashMap to grade the insertion order
-                Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap = new LinkedHashMap<>();
-                for (OrderUniversalModel order: orderRegionList) {
-                    if (structureNeo4jModels.stream().anyMatch(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))) {
-                        orderStructureMap.put(order, structureNeo4jModels.stream()
-                                .filter(structureNeo4jModel -> Objects.equals(structureNeo4jModel.getId(), order.getIdStructure()))
+                orderRegionList.stream()
+                        .filter(order -> structureNeo4jModels.stream()
+                                .anyMatch(structure -> Objects.equals(structure.getId(), order.getIdStructure())))
+                        .forEach(order -> order.setStructure(structureNeo4jModels.stream()
+                                .filter(structure -> Objects.equals(structure.getId(), order.getIdStructure()))
                                 .findFirst()
-                                //Impossible case
-                                .orElse(new StructureNeo4jModel()));
-                    }
-                }
-                return this.writeCSVFileForOnePartitionElement(userInfos, orderStructureMap, i.getAndIncrement());
+                                .orElse(new StructureNeo4jModel())));
+                return this.writeCSVFileForOnePartitionElement(userInfos, orderRegionList, i.getAndIncrement());
             };
 
             FutureHelper.compositeSequential(function, partition, true)
@@ -144,10 +142,10 @@ public class ExportWorker extends BusModBase implements Handler<Message<JsonObje
         return promise.future();
     }
 
-    private Future<JsonObject> writeCSVFileForOnePartitionElement(UserInfos user, Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap, Integer index) {
+    private Future<JsonObject> writeCSVFileForOnePartitionElement(UserInfos user, List<OrderUniversalModel> orderUniversalList, Integer index) {
         Promise<JsonObject> promise = Promise.promise();
 
-        JsonObject data = orderRegionService.generateExport(orderStructureMap);
+        JsonObject data = ExportHelper.generateExportRegion(orderUniversalList);
         String day = LocalDate.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy"));
         JsonObject body = new JsonObject()
                 .put(Field.NAME, "CRRE_Export_" + day + "_" + index + ".csv")

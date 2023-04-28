@@ -12,7 +12,6 @@ public class OrderUniversalOfferModel implements IModel<OrderUniversalOfferModel
     private Double totalPriceHT;
     private Double totalPriceTTC;
     private String typeCatalogue;
-
     private String idOffer;
 
     OrderUniversalModel orderUniversalModel;

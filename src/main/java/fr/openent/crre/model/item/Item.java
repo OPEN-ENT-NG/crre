@@ -34,9 +34,11 @@ public class Item implements IModel<Item> {
     private String type;
     private String catalog;
     private JsonArray technos;
+    private String bookSeller;
 
     public Item(JsonObject json) {
             this.catalog = json.getString(ItemField.TYPE_CATALOG);
+            this.bookSeller = json.getString(ItemField.BOOKSELLER);
             this.ean = json.getString(ItemField.EAN);
             this.ark = json.getString(ItemField.ARK);
             this.title = json.getString(ItemField.TITLE);
@@ -260,10 +262,29 @@ public class Item implements IModel<Item> {
         return this;
     }
 
+    public JsonArray getTechnos() {
+        return technos;
+    }
+
+    public Item setTechnos(JsonArray technos) {
+        this.technos = technos;
+        return this;
+    }
+
+    public String getBookSeller() {
+        return bookSeller;
+    }
+
+    public Item setBookSeller(String bookSeller) {
+        this.bookSeller = bookSeller;
+        return this;
+    }
+
     @Override
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
         json.put(ItemField.EAN, this.ean);
+        json.put(ItemField.BOOKSELLER, this.bookSeller);
         json.put(Field.ID, this.ean);
         json.put(ItemField.ARK, this.ark);
         json.put(ItemField.TITLE, this.title);

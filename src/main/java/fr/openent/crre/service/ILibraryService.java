@@ -10,7 +10,7 @@ import java.util.List;
 public interface ILibraryService<T extends ILibraryConfigModel> {
     Future<Void> updateStatus(T params);
 
-    void sendOrder(List<OrderUniversalModel> orderList, T params);
+    Future<Void> sendOrder(List<OrderUniversalModel> orderList, T params);
 
     T generateModel(JsonObject jsonObject);
 }
