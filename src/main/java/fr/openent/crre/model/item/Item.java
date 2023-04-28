@@ -33,6 +33,7 @@ public class Item implements IModel<Item> {
     private Offer offers;
     private String type;
     private String catalog;
+    private String target;
     private JsonArray technos;
     private String bookSeller;
 
@@ -69,6 +70,7 @@ public class Item implements IModel<Item> {
             this.tvas = this.catalog.equals(ItemField.PAPER_ITEM) ? IModelHelper.toList(json.getJsonArray(ItemField.TVAS, new JsonArray()), Tva.class) : this.offers.getTvas();
             this.technos = this.catalog.equals(ItemField.PAPER_ITEM) ? new JsonArray() : json.getJsonArray(ItemField.TECHNOS, new JsonArray());
             this.priceHT = this.catalog.equals(ItemField.PAPER_ITEM) ? json.getFloat(ItemField.PRICE_HT, null) : this.offers.getPriceHT();
+            this.target = json.getString(ItemField.TARGET, null);
     }
     
     // Getters and setters
@@ -297,6 +299,7 @@ public class Item implements IModel<Item> {
         json.put(ItemField.PUBLICATION_DATE, this.publicationDate);
         json.put(ItemField.DESCRIPTION, this.description);
         json.put(ItemField.EAN_PAPER, this.eanPaper);
+        json.put(ItemField.TARGET, this.target);
 
         if (this.classes != null && !this.classes.isEmpty()) {
             JsonArray classesArray = new JsonArray();
@@ -357,4 +360,14 @@ public class Item implements IModel<Item> {
         }
 
         return json;
-    }}
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public Item setTarget(String target) {
+        this.target = target;
+        return this;
+    }
+}
