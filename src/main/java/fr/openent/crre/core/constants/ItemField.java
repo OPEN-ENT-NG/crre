@@ -44,4 +44,5 @@ public class ItemField {
     public static final String NUMERIC_ITEM = "articlenumerique";
     public static final String TYPE_CATALOG = "typeCatalogue";
     public static final String TECHNOS = "technos";
+    public static final String BOOKSELLER = "libraire";
 }

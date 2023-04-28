@@ -1,6 +1,7 @@
 package fr.openent.crre.helpers;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.constants.ItemField;
 import fr.openent.crre.model.FilterModel;
 import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.model.OrderUniversalOfferModel;
@@ -82,12 +83,13 @@ public class OrderHelper {
                                     orderUniversalModel.setEquipmentTva20(priceInfos.getDouble(Field.PART_TVA20));
                                     orderUniversalModel.setEquipmentName(equipmentJson.getString(Field.TITRE));
                                     orderUniversalModel.setEquipmentImage(equipmentJson.getString(Field.URLCOUVERTURE));
-                                    orderUniversalModel.setOffers(computeOffersUniversal(equipmentJson.getJsonArray(Field.OFFRES), orderUniversalModel));
                                     orderUniversalModel.setEquipmentEditor(equipmentJson.getString(Field.EDITEUR, ""));
                                     orderUniversalModel.setEquipmentDiffusor(equipmentJson.getString(Field.DISTRIBUTEUR, ""));
                                     orderUniversalModel.setEquipmentCatalogueType(getUniqueTypeCatalogue(orderUniversalModel, equipmentJson));
                                     orderUniversalModel.setEquipmentType(equipmentJson.getString(Field.TYPE, ""));
+                                    orderUniversalModel.setEquipmentBookseller(equipmentJson.getString(ItemField.BOOKSELLER));
                                     if (Field.ARTICLENUMERIQUE.equals(orderUniversalModel.getEquipmentType())) {
+                                        orderUniversalModel.setOffers(computeOffersUniversal(equipmentJson.getJsonArray(Field.OFFRES), orderUniversalModel));
                                         orderUniversalModel.setEquipmentEanLibrary(equipmentJson.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.EANLIBRAIRE));
                                     } else {
                                         orderUniversalModel.setEquipmentEanLibrary(orderUniversalModel.getEquipmentKey());

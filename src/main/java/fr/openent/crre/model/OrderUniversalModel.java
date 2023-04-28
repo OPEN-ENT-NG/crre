@@ -1,6 +1,7 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.constants.ItemField;
 import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.DecodeException;
@@ -42,6 +43,7 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Double equipmentTva5;
     private Double equipmentTva20;
     private Double equipmentPriceht;
+    private String equipmentBookseller;
     private StudentsTableModel students;
 
     private List<OrderUniversalOfferModel> offers;
@@ -53,6 +55,8 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private String equipmentCatalogueType;
     private String equipmentType;
     private String equipmentEanLibrary;
+
+    private StructureNeo4jModel structure;
 
     public OrderUniversalModel() {
     }
@@ -84,15 +88,16 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.equipmentTva5 = jsonObject.getDouble(Field.EQUIPMENT_TVA5);
         this.equipmentTva20 = jsonObject.getDouble(Field.EQUIPMENT_TVA20);
         this.equipmentPriceht = jsonObject.getDouble(Field.EQUIPMENT_PRICEHT);
+        this.equipmentBookseller = jsonObject.getString(ItemField.BOOKSELLER);
 
         if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof JsonArray) {
             this.offers = IModelHelper.toList(jsonObject.getJsonArray(Field.OFFERS), OrderUniversalOfferModel.class);
-        }
-        if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof String) {
+        } else if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof String) {
             this.offers = IModelHelper.toList(new JsonArray(jsonObject.getString(Field.OFFERS)), OrderUniversalOfferModel.class);
-        }
-        if (Objects.nonNull(this.offers)) {
+        } else if (Objects.nonNull(this.offers)) {
             this.offers.forEach(orderUniversalOfferModel -> orderUniversalOfferModel.setOrderUniversalModel(this));
+        } else {
+            this.offers = new ArrayList<>();
         }
 
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
@@ -467,6 +472,24 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public OrderUniversalModel setEquipmentType(String equipmentType) {
         this.equipmentType = equipmentType;
+        return this;
+    }
+
+    public String getEquipmentBookseller() {
+        return equipmentBookseller;
+    }
+
+    public OrderUniversalModel setEquipmentBookseller(String equipmentBookseller) {
+        this.equipmentBookseller = equipmentBookseller;
+        return this;
+    }
+
+    public StructureNeo4jModel getStructure() {
+        return structure;
+    }
+
+    public OrderUniversalModel setStructure(StructureNeo4jModel structure) {
+        this.structure = structure;
         return this;
     }
 }
