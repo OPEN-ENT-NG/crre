@@ -1,11 +1,19 @@
 package fr.openent.crre.service.impl.library;
 
+import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.helpers.DateHelper;
+import fr.openent.crre.helpers.ExportHelper;
+import fr.openent.crre.helpers.FutureHelper;
+import fr.openent.crre.model.MailAttachment;
 import fr.openent.crre.helpers.FileHelper;
 import fr.openent.crre.helpers.HttpRequestHelper;
 import fr.openent.crre.model.CRRELibraryElementModel;
 import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.model.config.library.CRREParam;
 import fr.openent.crre.service.ILibraryService;
+import fr.openent.crre.service.ServiceFactory;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import fr.openent.crre.service.ServiceFactory;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -14,6 +22,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.collections4.ListUtils;
+import org.entcore.common.http.request.JsonHttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.parsetools.RecordParser;
@@ -22,10 +32,14 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CRRELibraryService implements ILibraryService<CRREParam> {
+
     private static final Logger log = LoggerFactory.getLogger(CRRELibraryService.class);
 
     @Override
@@ -56,8 +70,30 @@ public class CRRELibraryService implements ILibraryService<CRREParam> {
     }
 
     @Override
-    public void sendOrder(List<OrderUniversalModel> orderList, CRREParam params) {
-        //todo CRRE-576
+    public Future<Void> sendOrder(List<OrderUniversalModel> orderList, CRREParam params) {
+        Promise<Void> promise = Promise.promise();
+        List<MailAttachment> attachmentList = ListUtils.partition(orderList, 10000).stream()
+                .map(ExportHelper::generateExportRegion)
+                .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
+                        .setContent(data.getString(Field.CSVFILE))
+                        .setNbEtab(data.getInteger(Field.NB_ETAB)))
+                .collect(Collectors.toList());
+
+
+        Function<MailAttachment, Future<JsonObject>> functionSendMail = attachment -> {
+            String title = "Demande Libraire CRRE";
+            String body = "Demande Libraire CRRE ; csv : " + attachment.getName();
+            return ServiceFactory.getInstance().getEmailSender().sendMail(new JsonHttpServerRequest(new JsonObject()), params.getEmail(), title, body, attachment);
+        };
+
+        for (MailAttachment mailAttachment : attachmentList) {
+            mailAttachment.setName(mailAttachment.getName() + "-" + UUID.randomUUID() + ".csv");
+        }
+
+        FutureHelper.compositeSequential(functionSendMail, attachmentList, true)
+                .onSuccess(success -> promise.complete())
+                .onFailure(promise::fail);
+        return promise.future();
     }
 
     @Override

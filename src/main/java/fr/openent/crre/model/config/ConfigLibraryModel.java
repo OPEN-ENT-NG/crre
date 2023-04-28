@@ -6,6 +6,8 @@ import fr.openent.crre.model.IModel;
 import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.model.config.library.ILibraryConfigModel;
 import fr.openent.crre.service.impl.library.LibraryServiceEnum;
+import io.vertx.core.Future;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
@@ -55,8 +57,8 @@ public class ConfigLibraryModel implements IModel<ConfigLibraryModel> {
         this.type.getService().updateStatus(param);
     }
 
-    public void sendOrder(List<OrderUniversalModel> orderList) {
-        this.type.getService().sendOrder(orderList, param);
+    public Future<Void> sendOrder(List<OrderUniversalModel> orderList) {
+        return this.type.getService().sendOrder(orderList, param);
     }
 
     @Override

@@ -20,15 +20,12 @@ import org.apache.commons.collections4.ListUtils;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.utils.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import static fr.openent.crre.controllers.OrderController.exportPriceComment;
-import static fr.openent.crre.controllers.OrderController.exportStudents;
-import static fr.openent.crre.core.constants.Field.UTF8_BOM;
-import static java.lang.Math.min;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
 
@@ -756,140 +753,5 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         }));
 
         return promise.future();
-    }
-
-    @Override
-    public JsonObject generateExport(Map<OrderUniversalModel, StructureNeo4jModel> orderStructureMap) {
-        StringBuilder report = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getExportHeader());
-
-        // Generate commands first
-        orderStructureMap.forEach((key, value) -> report.append(generateExportLine(key, value)));
-
-
-        long structureCount = orderStructureMap.entrySet().stream()
-                .peek(orderStructureEntry ->
-                        orderStructureEntry.getKey().getOffers()
-                                // Then the offers
-                                .forEach(orderUniversalOfferModel -> report.append(generateExportLine(orderUniversalOfferModel, orderStructureEntry.getValue()))))
-                .map(orderStructureEntry -> orderStructureEntry.getValue().getUai())
-                .filter(uai -> !StringUtils.isEmpty(uai))
-                .distinct()
-                .count();
-        return new JsonObject()
-                .put("csvFile", report.toString())
-                .put("nbEtab", (int) structureCount);
-    }
-
-    private String getExportHeader() {
-        return "ID unique" + ";" +
-                "Date;" +
-                "Nom étab;" +
-                "UAI de l'étab;" +
-                "Adresse de livraison;" +
-                "Nom commande;" +
-                "Campagne;" +
-                "EAN de la ressource;" +
-                "Titre de la ressource;" +
-                "Editeur;" +
-                "Distributeur;" +
-                "Numerique;" +
-                "Id de l'offre choisie;" +
-                "Type;" +
-                "Reassort;" +
-                "Quantité;" +
-                "Prix HT de la ressource;" +
-                "Part prix 5,5%;" +
-                "Part prix 20%;" +
-                "Prix unitaire TTC;" +
-                "Montant total HT;" +
-                "Prix total TTC;" +
-                "Commentaire;" +
-                "2nde Generale;" +
-                "1ere Generale;" +
-                "Terminale Generale;" +
-                "2nde Technologique;" +
-                "1ere Technologique;" +
-                "Terminale Technologique;" +
-                "2nde Professionnelle;" +
-                "1ere Professionnelle;" +
-                "Terminale Professionnelle;" +
-                "BMA 1ere annee;" +
-                "BMA 2nde annee;" +
-                "CAP 1ere annee;" +
-                "CAP 2eme annee;" +
-                "CAP 3eme annee" +
-                "\n";
-    }
-
-    private String generateExportLine(OrderUniversalOfferModel orderUniversalOfferModel, StructureNeo4jModel structureNeo4jModel) {
-        OrderUniversalModel orderUniversalModel = orderUniversalOfferModel.getOrderUniversalModel();
-        return orderUniversalOfferModel.getIdOffer() + ";" +
-                (orderUniversalOfferModel.getOrderUniversalModel().getValidatorValidationDate() != null ?
-                        DateHelper.convertStringDateToOtherFormat(
-                                orderUniversalOfferModel.getOrderUniversalModel().getValidatorValidationDate(), DateHelper.SQL_FULL_FORMAT, DateHelper.SQL_FORMAT
-                        ) : "") + ";" +
-                (structureNeo4jModel.getName() != null ? structureNeo4jModel.getName() : "") + ";" +
-                (structureNeo4jModel.getUai() != null ? structureNeo4jModel.getUai() : "") + ";" +
-                (structureNeo4jModel.getAddress() != null ? structureNeo4jModel.getAddress() : "") + ";" +
-                (orderUniversalModel.getProject().getTitle() != null ? orderUniversalModel.getProject().getTitle() : "") + ";" +
-                (orderUniversalModel.getCampaign().getName() != null ? orderUniversalModel.getCampaign().getName() : "") + ";" +
-                (orderUniversalOfferModel.getEan() != null ? orderUniversalOfferModel.getEan() : "") + ";" +
-                (orderUniversalOfferModel.getName() != null ? orderUniversalOfferModel.getName() : "") + ";" +
-                ";" +
-                ";" +
-                ";" +
-                ";" +
-                (orderUniversalOfferModel.getTypeCatalogue() != null ? orderUniversalOfferModel.getTypeCatalogue() : "") + ";" +
-                ";" +
-                exportPriceComment(orderUniversalOfferModel) +
-                exportStudents(orderUniversalModel) +
-                "\n";
-    }
-
-    private String generateExportLine(OrderUniversalModel orderUniversalModel, StructureNeo4jModel structureNeo4jModel) {
-        return orderUniversalModel.getOrderRegionId() + ";" +
-                (orderUniversalModel.getValidatorValidationDate() != null ?
-                        DateHelper.convertStringDateToOtherFormat(orderUniversalModel.getValidatorValidationDate(), DateHelper.SQL_FULL_FORMAT, DateHelper.SQL_FORMAT) : "") + ";" +
-                (structureNeo4jModel.getName() != null ? structureNeo4jModel.getName() : "") + ";" +
-                (structureNeo4jModel.getUai() != null ? structureNeo4jModel.getUai() : "") + ";" +
-                (structureNeo4jModel.getAddress() != null ? structureNeo4jModel.getAddress() : "") + ";" +
-                (orderUniversalModel.getProject().getTitle() != null ? orderUniversalModel.getProject().getTitle() : "") + ";" +
-                (orderUniversalModel.getCampaign().getName() != null ? orderUniversalModel.getCampaign().getName() : "") + ";" +
-                (orderUniversalModel.getEquipmentKey() != null ? orderUniversalModel.getEquipmentKey() : "") + ";" +
-                (orderUniversalModel.getEquipmentName() != null ? orderUniversalModel.getEquipmentName() : "") + ";" +
-                (orderUniversalModel.getEquipmentEditor() != null ? orderUniversalModel.getEquipmentEditor() : "") + ";" +
-                (orderUniversalModel.getEquipmentDiffusor() != null ? orderUniversalModel.getEquipmentDiffusor() : "") + ";" +
-                (orderUniversalModel.getEquipmentType() != null ? orderUniversalModel.getEquipmentType() : "") + ";" +
-                (orderUniversalModel.getEquipmentEanLibrary() != null ? orderUniversalModel.getEquipmentEanLibrary() : "") + ";" +
-                (orderUniversalModel.getEquipmentCatalogueType() != null ? orderUniversalModel.getEquipmentCatalogueType() : "") + ";" +
-                (orderUniversalModel.getReassort() != null ? (orderUniversalModel.getReassort() ? "Oui" : "Non") : "") + ";" +
-                exportPriceComment(orderUniversalModel) +
-                exportStudents(orderUniversalModel) +
-                "\n";
-    }
-
-    /**
-     * @deprecated Use {@link #generateExportLine(OrderUniversalModel, StructureNeo4jModel)}
-     */
-    @Deprecated
-    private String generateExportLine(JsonObject log) {
-        return (log.containsKey("id_project") ? log.getLong(Field.ID).toString() : log.getString(Field.ID)) + ";" +
-                (log.getString("creation_date") != null ? log.getString("creation_date") : "") + ";" +
-                (log.getString("name_structure") != null ? log.getString("name_structure") : "") + ";" +
-                (log.getString("uai_structure") != null ? log.getString("uai_structure") : "") + ";" +
-                (log.getString("address_structure") != null ? log.getString("address_structure") : "") + ";" +
-                (log.getString(Field.TITLE) != null ? log.getString(Field.TITLE) : "") + ";" +
-                (log.getString("campaign_name") != null ? log.getString("campaign_name") : "") + ";" +
-                (log.getString("ean") != null ? log.getString("ean") : "") + ";" +
-                (log.getString(Field.NAME) != null ? log.getString(Field.NAME) : "") + ";" +
-                (log.getString("editor") != null ? log.getString("editor") : "") + ";" +
-                (log.getString("diffusor") != null ? log.getString("diffusor") : "") + ";" +
-                (log.getString("type") != null ? log.getString("type") : "") + ";" +
-                (log.getString("eanLDE") != null ? log.getString("eanLDE") : "") + ";" +
-                (log.getString("typeCatalogue") != null ? log.getString("typeCatalogue") : "") + ";" +
-                (log.getBoolean("reassort") != null ? (log.getBoolean("reassort") ? "Oui" : "Non") : "") + ";" +
-                exportPriceComment(log) +
-                exportStudents(log) +
-                "\n";
     }
 }
