@@ -101,7 +101,8 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
     public boolean isEmpty() {
         return this.disciplines.isEmpty() && this.classes.isEmpty() && this.levels.isEmpty() && this.editors.isEmpty()
                 && this.distributors.isEmpty() && this.catalogs.isEmpty() && this.itemTypes.isEmpty()
-                && this.structureSectors.isEmpty() && this.targets.isEmpty() && this.devices.isEmpty() && this.searchingText == null;
+                && this.structureSectors.isEmpty() && this.targets.isEmpty() && this.devices.isEmpty() && this.searchingText == null
+                && this.booksellers.isEmpty();
     }
 
     public boolean hasFilters() {

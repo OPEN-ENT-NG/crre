@@ -1,7 +1,9 @@
 package fr.openent.crre.service.impl;
 
+import fr.openent.crre.model.FilterItemModel;
 import fr.openent.crre.service.EquipmentService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -19,22 +21,27 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
         super(schema, table);
     }
 
+    @Override
     public void searchWord(String word, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
         plainTextSearch(word, resultFieldsExpected, handler);
     }
 
+    @Override
     public void searchAll(Handler<Either<String, JsonArray>> handler) {
         search_All(handler);
     }
 
-    public void searchFilter(HashMap<String, ArrayList<String>> result, String query, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
-        searchfilter(result, query, resultFieldsExpected, handler);
+    @Override
+    public Future<JsonArray> searchFilter(FilterItemModel filterItemModel, List<String> resultFieldsExpected) {
+        return searchfilter(filterItemModel, resultFieldsExpected);
     }
 
-    public void filterWord(HashMap<String, ArrayList<String>> test, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
-        filters(test, resultFieldsExpected, handler);
+    @Override
+    public void filterWord(FilterItemModel filterItemModel, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
+        filters(filterItemModel, resultFieldsExpected, handler);
     }
 
+    @Override
     public void equipment(String idEquipment, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler){
         searchById(idEquipment, resultFieldsExpected, handler);
     }
