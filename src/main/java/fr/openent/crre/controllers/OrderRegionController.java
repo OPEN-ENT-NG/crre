@@ -34,16 +34,12 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.parsetools.RecordParser;
-import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.collections4.ListUtils;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -63,7 +59,6 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -342,7 +337,6 @@ public class OrderRegionController extends BaseController {
     /**
      * Use a lot of JVM memory with {@link Scanner}.
      *
-     * @deprecated Replaced by {@link #getOrderLDE(Handler)}
      */
     @Deprecated
     public Scanner getOrderLDE() throws IOException {
@@ -391,7 +385,6 @@ public class OrderRegionController extends BaseController {
         }
         return sc;
     }
-
 
 
     // TODO: verif si a delete
@@ -920,7 +913,7 @@ public class OrderRegionController extends BaseController {
     }
 
     @Post("region/orders/library")
-    @ApiDoc("Generate and send mail to library")
+    @ApiDoc("Send orders to library")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
     public void exportLibrary(final HttpServerRequest request) {
@@ -932,7 +925,7 @@ public class OrderRegionController extends BaseController {
                         .collect(Collectors.toList());
                 if (idsOrders.size() > 0) {
                     FilterModel filterModel = new FilterModel().setIdsOrder(idsOrders);
-                    generateLogs(request, user, filterModel);
+                    generateOrderLibrary(request, user, filterModel);
                 } else {
                     noContent(request);
                 }
@@ -940,7 +933,7 @@ public class OrderRegionController extends BaseController {
         });
     }
 
-    private void generateLogs(HttpServerRequest request, UserInfos user, FilterModel filterModel) {
+    private void generateOrderLibrary(HttpServerRequest request, UserInfos user, FilterModel filterModel) {
 
         filterModel.setStatus(Arrays.stream(OrderStatus.values()).filter(orderStatus -> !orderStatus.isHistoricStatus()).collect(Collectors.toList()))
                 .setOrderDescForOrderList(false)
@@ -959,7 +952,7 @@ public class OrderRegionController extends BaseController {
                                 .map(orderUniversalModel -> this.getUpdateTransactionElement(OrderStatus.VALID, orderUniversalModel))
                                 .collect(Collectors.toList());
 
-                        String errorMessage = String.format("[CRRE@%s::generateLogs] Fail to generate logs", this.getClass().getSimpleName());
+                        String errorMessage = String.format("[CRRE@%s::generateOrderLibrary] Fail to generate logs", this.getClass().getSimpleName());
                         transactionFuture = TransactionHelper.executeTransaction(updatePurseLicenceTransactionList, errorMessage);
                     }
                     return transactionFuture;
@@ -970,7 +963,7 @@ public class OrderRegionController extends BaseController {
                             .collect(Collectors.toList());
                     return structureService.getStructureNeo4jById(structureIdList);
                 })
-                .compose(structureList -> sendMailLibraryAndRemoveWaitingAdmin(request, user, orderFuture.result(), structureList))
+                .compose(structureList -> sendLibrary(user, orderFuture.result(), structureList))
                 .onSuccess(res -> {
                     Renders.ok(request);
                     List<Integer> orderIdList = orderFuture.result().stream()
@@ -980,34 +973,26 @@ public class OrderRegionController extends BaseController {
                     this.notificationService.sendNotificationPrescriberRegion(orderIdList);
                 })
                 .onFailure(error -> {
-                    log.error(String.format("[CRRE@%s::generateLogs] Fail to generate logs %s",
+                    log.error(String.format("[CRRE@%s::generateOrderLibrary] Fail to generate logs %s",
                             this.getClass().getSimpleName(), error.getMessage()));
                     unauthorized(request);
                 });
     }
 
-    private Future<Void> sendMailLibraryAndRemoveWaitingAdmin(HttpServerRequest request, UserInfos user, List<OrderUniversalModel> orderUniversalModelList, List<StructureNeo4jModel> structureList) {
+    private Future<Void> sendLibrary(UserInfos user, List<OrderUniversalModel> orderUniversalModelList, List<StructureNeo4jModel> structureList) {
         Promise<Void> promise = Promise.promise();
-        List<Long> ordersClientId = new ArrayList<>();
+        List<OrderUniversalModel> ordersUniversalAll = new ArrayList<>();
         List<MailAttachment> attachmentList = ListUtils.partition(orderUniversalModelList, 10000).stream()
                 .map(orderUniversalModels -> {
-                    List<OrderUniversalModel> orders = orderUniversalModelList.stream()
-                            .filter(order -> structureList.stream()
-                                    .anyMatch(structure -> Objects.equals(structure.getId(), order.getIdStructure())))
-                            .peek(order -> order.setStructure(structureList.stream()
+                    List<OrderUniversalModel> ordersUniversalTemp = orderUniversalModelList.stream()
+                            .map(order -> order.setStructure(structureList.stream()
                                     .filter(structure -> Objects.equals(structure.getId(), order.getIdStructure()))
                                     .findFirst()
-                                    //Impossible case
                                     .orElse(null)))
                             .filter(order -> order.getStructure() != null)
                             .collect(Collectors.toList());
-
-                    ordersClientId.addAll(orders.stream()
-                            .map(OrderUniversalModel::getOrderClientId)
-                            .filter(Objects::nonNull)
-                            .map(Integer::longValue)
-                            .collect(Collectors.toList()));
-                    return ExportHelper.generateExportRegion(orders);
+                    ordersUniversalAll.addAll(ordersUniversalTemp);
+                    return ExportHelper.generateExportRegion(ordersUniversalTemp);
                 })
                 .map(data -> new MailAttachment().setName("DD" + DateHelper.now(DateHelper.MAIL_FORMAT, DateHelper.PARIS_TIMEZONE))
                         .setContent(data.getString(Field.CSVFILE))
@@ -1016,13 +1001,25 @@ public class OrderRegionController extends BaseController {
 
         Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
 
-        // TODO: change CRRE-575 by groupin by order library
-        this.config.getLibraryConfig().get("LDE").sendOrder(orderUniversalModelList)
+        List<Long> ordersClientId = (ordersUniversalAll.stream()
+                .map(OrderUniversalModel::getOrderClientId)
+                .filter(Objects::nonNull)
+                .map(Integer::longValue)
+                .collect(Collectors.toList()));
+
+        List<Future> sendOrderBooksellerFuture = ordersUniversalAll.stream()
+                .filter(order -> order.getEquipmentBookseller() != null)
+                .collect(Collectors.groupingBy(OrderUniversalModel::getEquipmentBookseller))
+                .entrySet()
+                .stream()
+                .map(ordersGrouped -> this.config.getLibraryConfig().get(ordersGrouped.getKey()).sendOrder(ordersGrouped.getValue()))
+                .collect(Collectors.toList());
+        CompositeFuture.all(sendOrderBooksellerFuture)
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
                 .compose(res -> insertAndDeleteOrders(orderUniversalModelList, ordersClientId))
                 .onSuccess(res -> promise.complete())
                 .onFailure(error -> {
-                    log.error(String.format("[CRRE@%s::sendMailLibraryAndRemoveWaitingAdmin] An error has occurred when send mail to library and remove waiting admin : %s",
+                    log.error(String.format("[CRRE@%s::sendLibrary] An error has occurred when send mail to library and remove waiting admin : %s",
                             this.getClass().getSimpleName(), error.getMessage()));
                     promise.fail(error);
                 });
