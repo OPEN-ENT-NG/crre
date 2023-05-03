@@ -21,7 +21,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
         $scope.filter = {
             page: 0
         };
-        $scope.filterOrder = null as ValidatorOrderWaitingFilter;
+        $scope.filterOrder = new ValidatorOrderWaitingFilter();
         $scope.ordersDuplicated = [] as OrderClient[];
 
         const init = async () => {
