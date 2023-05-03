@@ -41,7 +41,6 @@ class Controller implements IViewModel {
     $onInit() {
         this.lang = lang;
         this.comboLabels = COMBO_LABELS;
-        this.filter = new ValidatorOrderWaitingFilter();
         this.filter.filterChoiceCorrelation = new Map<string, string>([["userList", "id_user"], ["typeCampaignList", "id_campaign"]]);
     }
 
