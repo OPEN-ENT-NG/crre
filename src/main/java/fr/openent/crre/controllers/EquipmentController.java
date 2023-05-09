@@ -1,10 +1,11 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.core.constants.ItemFilterField;
 import fr.openent.crre.core.enums.ResourceFieldEnum;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.JsonHelper;
 import fr.openent.crre.model.FilterItemModel;
+import fr.openent.crre.model.item.Item;
 import fr.openent.crre.security.AccessRight;
 import fr.openent.crre.service.EquipmentService;
 import fr.openent.crre.service.OrderRegionService;
@@ -121,62 +122,33 @@ public class EquipmentController extends ControllerHelper {
                     .onFailure(error -> Renders.renderError(request));
     }
 
+    private FilterItemModel buildFilterFromEquipment(List<Item> itemList) {
+        FilterItemModel filters = new FilterItemModel();
+        filters.setDisciplines(itemList.stream().flatMap(item -> item.getDisciplines().stream()).collect(Collectors.toList()));
+        filters.setLevels(itemList.stream().flatMap(item -> item.getLevels().stream()).collect(Collectors.toList()));
+        filters.setClasses(itemList.stream().flatMap(item -> item.getClasses().stream()).collect(Collectors.toList()));
+        filters.setDevices(itemList.stream().flatMap(item -> JsonHelper.jsonArrayToList(item.getTechnos(), JsonObject.class).stream()
+                .filter(techno -> techno.containsKey(Field.TECHNOLOGY))
+                .map(techno -> techno.getString(Field.TECHNOLOGY))).collect(Collectors.toList()));
+        filters.setEditors(itemList.stream().map(Item::getEditor).collect(Collectors.toList()));
+        filters.setDistributors(itemList.stream().map(Item::getDistributor).collect(Collectors.toList()));
+        filters.setTargets(itemList.stream().map(Item::getTarget).collect(Collectors.toList()));
+        filters.setCatalogs(itemList.stream().map(Item::getCatalog).collect(Collectors.toList()));
+        filters.setBooksellers(itemList.stream().map(Item::getBookSeller).collect(Collectors.toList()));
+
+        return filters;
+    }
+
     private Future<JsonObject> getCatalog(HashMap<String, ArrayList<String>> params, Boolean onlyFilter) {
         Promise<JsonObject> promise = Promise.promise();
         List<String> fields = Boolean.TRUE.equals(onlyFilter) ? Arrays.stream(ResourceFieldEnum.values()).map(ResourceFieldEnum::getValue).collect(Collectors.toList()) : null;
         equipmentService.filterWord(params, fields, event -> {
             if (event.isRight()) {
                 JsonArray resources = event.right().getValue();
-                FilterItemModel filters = new FilterItemModel();
-                for (int i = 0; i < resources.size(); i++) {
-                    JsonObject resource = resources.getJsonObject(i);
-                    filters.getDisciplines().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.DISCIPLINES, new JsonArray()), JsonObject.class)
-                            .stream()
-                            .map(discipline -> discipline.getString(Field.LIBELLE))
-                            .collect(Collectors.toList()));
-
-                    filters.getGrades().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.NIVEAUX, new JsonArray()), JsonObject.class)
-                            .stream()
-                            .map(grade -> grade.getString(Field.LIBELLE))
-                            .collect(Collectors.toList()));
-
-                    if (resource.getJsonArray(Field.CLASSES) != null) {
-                        filters.getClasses().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.CLASSES, new JsonArray()), JsonObject.class)
-                                .stream()
-                                .map(c -> c.getString(Field.LIBELLE))
-                                .collect(Collectors.toList()));
-                    }
-
-                    if (resource.getJsonArray(Field.TECHNOS) != null) {
-                        filters.getDevices().addAll(JsonHelper.jsonArrayToList(resource.getJsonArray(Field.TECHNOS, new JsonArray()), JsonObject.class)
-                                .stream()
-                                .map(techno -> techno.getString(Field.TECHNOLOGY))
-                                .collect(Collectors.toList()));
-                    }
-
-                    if (resource.getString(Field.EDITEUR) != null && !resource.getString(Field.EDITEUR).equals("")) {
-                        filters.getEditors().add(resource.getString(Field.EDITEUR));
-                    }
-
-                    if (resource.getString(Field.DISTRIBUTEUR) != null && !resource.getString(Field.DISTRIBUTEUR).equals("")) {
-                        filters.getDistributors().add(resource.getString(Field.DISTRIBUTEUR));
-                    }
-
-                    if (resource.getString(ItemFilterField.TARGET) != null && !resource.getString(ItemFilterField.TARGET).equals("")) {
-                        filters.getTargets().add(resource.getString(ItemFilterField.TARGET));
-                    }
-
-                    if (resource.getString(ItemFilterField.TARGET) != null && !resource.getString(ItemFilterField.TARGET).equals("")) {
-                        filters.getTargets().add(resource.getString(ItemFilterField.TARGET));
-                    }
-
-                    if (resource.getString(Field.CATALOG) != null && !resource.getString(Field.CATALOG).equals("")) {
-                        filters.getCatalogs().add(resource.getString(Field.CATALOG));
-                    }
-                }
+                List<Item> itemList = IModelHelper.toList(resources, Item.class);
 
                 JsonObject catalog = new JsonObject()
-                        .put(Field.FILTERS, filters.toJson())
+                        .put(Field.FILTERS, this.buildFilterFromEquipment(itemList).toJson())
                         .put(Field.RESOURCES, onlyFilter ? new JsonArray() : resources);
                 promise.complete(catalog);
             } else {

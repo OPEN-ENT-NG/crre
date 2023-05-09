@@ -269,6 +269,7 @@ public class Field {
     public static final String EMAIL = "email";
     public static final String APIURL = "apiUrl";
     public static final String PARAM = "param";
+    public static final String BOOKSELLERS = "booksellers";
 
     private Field() {
         throw new IllegalStateException("Utility class");

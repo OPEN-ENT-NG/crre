@@ -19,20 +19,22 @@ export const catalogController = ng.controller('catalogController',
                 editors: [],
                 consumables: [],
                 pros: [],
+                booksellers: [],
             };
 
             $scope.preFilter = {
-                disciplines: [],
-                targets: [],
-                grades: [],
-                classes: [],
-                catalogs: [],
-                editors: [],
-                consumables: [],
-                pros: [],
+                disciplines: true,
+                targets: true,
+                grades: true,
+                classes: true,
+                catalogs: true,
+                editors: true,
+                consumables: true,
+                pros: true,
+                booksellers: true,
             }
             $scope.correlationFilterES = {
-                keys: ["catalogs", "disciplines", "grades", "classes", "editors", "consumables", "pros", "targets"],
+                keys: ["catalogs", "disciplines", "grades", "classes", "editors", "consumables", "pros", "targets", "booksellers"],
                 disciplines: 'disciplines.libelle',
                 targets: 'targetscible',
                 grades: 'niveaux.libelle',
@@ -41,6 +43,7 @@ export const catalogController = ng.controller('catalogController',
                 editors: 'editeur',
                 consumables: 'conso',
                 pros: 'pro',
+                booksellers: 'booksellers',
             };
             initFilters();
 
@@ -111,13 +114,13 @@ export const catalogController = ng.controller('catalogController',
                 const splitCatalog = $scope.campaign.catalog.split("|");
                 // If catalog contain consommable filter, the catalog is already filtered
                 if (splitCatalog.includes("consommable") || splitCatalog.includes("nonconsommable") || splitCatalog.includes("ressource")) {
-                    $scope.preFilter["consumables"].push(true);
+                    $scope.preFilter["consumables"] = false;
                 }
                 if (splitCatalog.includes("articlepapier") || splitCatalog.includes("articlenumerique")) {
-                    $scope.preFilter["catalogs"].push(true);
+                    $scope.preFilter["catalogs"] = false;
                 }
                 if (splitCatalog.includes("pro") || splitCatalog.includes("lgt")) {
-                    $scope.preFilter["pros"].push(true);
+                    $scope.preFilter["pros"] = false;
                 }
             }
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
@@ -141,10 +144,11 @@ export const catalogController = ng.controller('catalogController',
                     $scope.catalog["consumables"] = arrayConso;
                 }
                 if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
-                    let arrayPro = [];
-                    let type = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
-                    arrayPro.push($scope.equipments.filters.pros.find(t => t.name = type));
-                    $scope.catalog["pros"] = arrayPro;
+                    let type: string = $scope.campaign.catalog.split("|").includes("pro") ? "Lycée professionnel" : "Lycée général et technologique";
+                    let proFilter: string = $scope.equipments.filters.pros.find(t => t.name = type);
+                    if (proFilter) {
+                        $scope.catalog["pros"] = [proFilter];
+                    }
                 }
             }
             Utils.safeApply($scope);
