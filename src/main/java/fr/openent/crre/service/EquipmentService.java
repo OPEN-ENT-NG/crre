@@ -1,6 +1,8 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.FilterItemModel;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
@@ -19,9 +21,9 @@ public interface EquipmentService {
 
     void searchWord(String word, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
 
-    void filterWord(HashMap<String, ArrayList<String>> test, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
+    void filterWord(FilterItemModel filterItemModel, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
 
     void searchAll(Handler<Either<String, JsonArray>> handler);
 
-    void searchFilter(HashMap<String, ArrayList<String>> result, String query, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler);
+    Future<JsonArray> searchFilter(FilterItemModel filterItemModel, List<String> resultFieldsExpected);
 }
