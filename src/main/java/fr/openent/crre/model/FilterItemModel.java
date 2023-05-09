@@ -1,7 +1,6 @@
 package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.JsonHelper;
 import fr.openent.crre.helpers.ListHelper;
 import io.vertx.core.json.JsonArray;
@@ -9,18 +8,18 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
     private List<String> disciplines;
     private List<String> classes;
-    private List<String> grades;
+    private List<String> levels;
     private List<String> editors;
     private List<String> distributors;
     private List<String> catalogs;
     private List<String> itemTypes;
     private List<String> structureSectors;
     private List<String> targets;
+    private List<String> booksellers;
 
     private List<String> devices;
     private String searchingText;
@@ -29,7 +28,7 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         this.searchingText = null;
         this.disciplines = new ArrayList<>();
         this.classes = new ArrayList<>();
-        this.grades = new ArrayList<>();
+        this.levels = new ArrayList<>();
         this.editors = new ArrayList<>();
         this.distributors = new ArrayList<>();
         this.catalogs = new ArrayList<>();
@@ -37,13 +36,14 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         this.structureSectors = new ArrayList<>();
         this.devices = new ArrayList<>();
         this.targets = new ArrayList<>();
+        this.booksellers = new ArrayList<>();
     }
 
     public FilterItemModel(JsonObject jsonObject) {
         this.searchingText = jsonObject.getString(Field.SEARCHING_TEXT, null);
         this.disciplines = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.DISCIPLINES, new JsonArray()), String.class);
         this.classes = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.CLASSES, new JsonArray()), String.class);
-        this.grades = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.GRADES, new JsonArray()), String.class);
+        this.levels = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.GRADES, new JsonArray()), String.class);
         this.editors = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.EDITORS, new JsonArray()), String.class);
         this.distributors = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.DISTRIBUTORS, new JsonArray()), String.class);
         this.catalogs = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.CATALOGS, new JsonArray()), String.class);
@@ -51,6 +51,7 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         this.structureSectors = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.STRUCTURE_SECTORS, new JsonArray()), String.class);
         this.targets = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.TARGETS, new JsonArray()), String.class);
         this.devices = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.DEVICES, new JsonArray()), String.class);
+        this.booksellers = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.BOOKSELLERS, new JsonArray()), String.class);
     }
 
     @Override
@@ -66,8 +67,8 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         if (this.classes != null && !this.classes.isEmpty()) {
             FilterItemModelJson.put(Field.CLASSES, new JsonArray(ListHelper.distinct(this.classes)));
         }
-        if (this.grades != null && !this.grades.isEmpty()) {
-            FilterItemModelJson.put(Field.GRADES, new JsonArray(ListHelper.distinct(this.grades)));
+        if (this.levels != null && !this.levels.isEmpty()) {
+            FilterItemModelJson.put(Field.GRADES, new JsonArray(ListHelper.distinct(this.levels)));
         }
         if (this.disciplines != null && !this.disciplines.isEmpty()) {
             FilterItemModelJson.put(Field.DISCIPLINES, new JsonArray(ListHelper.distinct(this.disciplines)));
@@ -90,18 +91,21 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         if (this.devices != null && !this.devices.isEmpty()) {
             FilterItemModelJson.put(Field.DEVICES, new JsonArray(ListHelper.distinct(this.devices)));
         }
+        if (this.booksellers != null && !this.booksellers.isEmpty()) {
+            FilterItemModelJson.put(Field.BOOKSELLERS, new JsonArray(ListHelper.distinct(this.booksellers)));
+        }
 
         return FilterItemModelJson;
     }
 
     public boolean isEmpty() {
-        return this.disciplines.isEmpty() && this.classes.isEmpty() && this.grades.isEmpty() && this.editors.isEmpty()
+        return this.disciplines.isEmpty() && this.classes.isEmpty() && this.levels.isEmpty() && this.editors.isEmpty()
                 && this.distributors.isEmpty() && this.catalogs.isEmpty() && this.itemTypes.isEmpty()
                 && this.structureSectors.isEmpty() && this.targets.isEmpty() && this.devices.isEmpty() && this.searchingText == null;
     }
 
     public boolean hasFilters() {
-        return !this.disciplines.isEmpty() || !this.classes.isEmpty() || !this.grades.isEmpty() || !this.editors.isEmpty()
+        return !this.disciplines.isEmpty() || !this.classes.isEmpty() || !this.levels.isEmpty() || !this.editors.isEmpty()
                 || !this.distributors.isEmpty() || !this.catalogs.isEmpty() || !this.itemTypes.isEmpty()
                 || !this.structureSectors.isEmpty() || !this.targets.isEmpty() || !this.devices.isEmpty();
     }
@@ -124,12 +128,12 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         return this;
     }
 
-    public List<String> getGrades() {
-        return grades;
+    public List<String> getLevels() {
+        return levels;
     }
 
-    public FilterItemModel setGrades(List<String> grades) {
-        this.grades = grades;
+    public FilterItemModel setLevels(List<String> levels) {
+        this.levels = levels;
         return this;
     }
 
@@ -204,6 +208,16 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
         this.searchingText = searchingText;
         return this;
     }
+
+    public List<String> getBooksellers() {
+        return booksellers;
+    }
+
+    public FilterItemModel setBooksellers(List<String> booksellers) {
+        this.booksellers = booksellers;
+        return this;
+    }
+
     @Override
     public FilterItemModel clone() {
         return new FilterItemModel(this.toJson());
