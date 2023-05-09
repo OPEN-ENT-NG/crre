@@ -235,7 +235,7 @@ public class ElasticSearchHelper {
         regexSearchBool(handler, should, resultFieldsExpected);
     }
 
-    public static void filters(HashMap<String, ArrayList<String>> result, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
+    public static void filters(FilterItemModel filterItemModel, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
         JsonArray term = new JsonArray();
         JsonObject filter = new JsonObject();
         JsonArray query = new JsonArray();
@@ -244,7 +244,7 @@ public class ElasticSearchHelper {
         JsonArray ressource = new JsonArray();
 
 
-        prepareFilterES(result, term, query, conso, pro, ressource);
+        prepareFilterES(filterItemModel, term, query, conso, pro, ressource);
 
         filter.put(Field.FILTER, term.addAll(query));
 
@@ -252,71 +252,6 @@ public class ElasticSearchHelper {
                 .put(Field.BOOL, filter);
 
         search(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource, handler);
-    }
-
-    @Deprecated
-    /**
-     * Use Future instead of Handler.
-     *
-     * @deprecated Replaced by {@link #prepareFilterES(FilterItemModel, JsonArray, JsonArray,
-     *                                         JsonArray, JsonArray, JsonArray)}
-     */
-    private static void prepareFilterES(HashMap<String, ArrayList<String>> result, JsonArray term, JsonArray query,
-                                        JsonArray conso, JsonArray pro, JsonArray ressource) {
-        Set<Map.Entry<String, ArrayList<String>>> set = result.entrySet();
-
-        for (Map.Entry<String, ArrayList<String>> me : set) {
-            switch (me.getKey()) {
-                case "disciplines.libelle":
-                case "classes.libelle":
-                case "niveaux.libelle":
-                case "technos.technologie": {
-                    JsonObject terms = new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue())));
-                    JsonObject bool = new JsonObject().put("bool", new JsonObject().put("filter", terms));
-                    JsonObject nested = new JsonObject().put("path", me.getKey().split("\\.")[0])
-                            .put("query", bool);
-                    query.add(new JsonObject().put("nested", nested));
-                    break;
-                }
-                case "conso": {
-                    if (me.getValue().size() == 1) {
-                        switch (me.getValue().get(0)) {
-                            case "Consommable":
-                                conso.add(true);
-                                break;
-                            case "Ressource":
-                                ressource.add(true);
-                                break;
-                            case "Manuel":
-                                conso.add(false);
-                                ressource.add(false);
-                                break;
-                        }
-                    }
-                    break;
-                }
-                case "pro": {
-                    if (me.getValue().size() == 1) {
-                        pro.add(me.getValue().get(0).equals("Lycée professionnel"));
-                    }
-                    break;
-                }
-/*                case "ressource": {
-                    if (me.getValue().size() == 1) {
-                        if (me.getValue().get(0).equals("Ressource")) {
-                            ressource.add(true);
-                        } else {
-                            ressource.add(false);
-                        }
-                    }
-                    break;
-                }*/
-                default: {
-                    term.add(new JsonObject().put("terms", new JsonObject().put(me.getKey(), new JsonArray(me.getValue()))));
-                    break;
-                }
-            }
-        }
     }
 
     private static void prepareFilterES(FilterItemModel filters, JsonArray term, JsonArray query,
@@ -389,6 +324,10 @@ public class ElasticSearchHelper {
                     term.add(new JsonObject().put(Field.TERMS, new JsonObject().put(Field._INDEX, filtersJson.getJsonArray(key))));
                     break;
                 }
+                case Field.BOOKSELLERS: {
+                    term.add(new JsonObject().put(Field.TERMS, new JsonObject().put(ItemField.BOOKSELLER, filtersJson.getJsonArray(key))));
+                    break;
+                }
                 default: {
                     break;
                 }
@@ -419,39 +358,6 @@ public class ElasticSearchHelper {
         JsonObject terms = new JsonObject().put(Field._ID, new JsonArray(ids));
         queryObject.put(Field.TERMS, terms);
         search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
-    }
-
-    @Deprecated
-    /**
-     * Use Future instead of Handler.
-     *
-     * @deprecated Replaced by {@link #searchfilter(FilterItemModel, List<String>)}
-     */
-    public static void searchfilter(HashMap<String, ArrayList<String>> result, String query, List<String> resultFieldsExpected,
-                                    Handler<Either<String, JsonArray>> handler) {
-        JsonArray term = new JsonArray();
-        JsonArray should = new JsonArray();
-        JsonObject request = new JsonObject();
-        JsonArray j = new JsonArray();
-        JsonArray conso = new JsonArray();
-        JsonArray pro = new JsonArray();
-        JsonArray ressource = new JsonArray();
-
-
-        for (String field : PLAIN_TEXT_FIELDS) {
-            JsonObject regexp = regexpField(field, query);
-            should.add(regexp);
-        }
-
-        prepareFilterES(result, term, j, conso, pro, ressource);
-        request.put(Field.FILTER, term.addAll(j))
-                .put(Field.MINIMUM_SHOULD_MATCH, 1)
-                .put(Field.SHOULD, should);
-
-        JsonObject queryObject = new JsonObject()
-                .put(Field.BOOL, request);
-
-        search(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource, handler);
     }
 
     public static Future<JsonArray> searchfilter(FilterItemModel filters, List<String> resultFieldsExpected) {

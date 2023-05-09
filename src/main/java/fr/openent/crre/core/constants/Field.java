@@ -270,6 +270,7 @@ public class Field {
     public static final String APIURL = "apiUrl";
     public static final String PARAM = "param";
     public static final String BOOKSELLERS = "booksellers";
+    public static final String CONSO = "conso";
 
     private Field() {
         throw new IllegalStateException("Utility class");

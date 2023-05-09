@@ -1,6 +1,7 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.constants.ItemFilterField;
 import fr.openent.crre.core.enums.ResourceFieldEnum;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.JsonHelper;
@@ -103,8 +104,7 @@ public class EquipmentController extends ControllerHelper {
     @ResourceFilter(AccessRight.class)
     public void listEquipmentFromCampaign(final HttpServerRequest request) {
         try {
-            HashMap<String, ArrayList<String>> params = new HashMap<>();
-            getCatalog(params, false)
+            getCatalog(new FilterItemModel(), false)
                     .onSuccess(result -> Renders.renderJson(request, result))
                     .onFailure(error -> Renders.renderError(request));
         } catch (ClassCastException e) {
@@ -117,7 +117,7 @@ public class EquipmentController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessRight.class)
     public void listItemsFilters(final HttpServerRequest request) {
-            getCatalog(new HashMap<>(), true)
+            getCatalog(new FilterItemModel(), true)
                     .onSuccess(result -> Renders.renderJson(request, result))
                     .onFailure(error -> Renders.renderError(request));
     }
@@ -139,10 +139,10 @@ public class EquipmentController extends ControllerHelper {
         return filters;
     }
 
-    private Future<JsonObject> getCatalog(HashMap<String, ArrayList<String>> params, Boolean onlyFilter) {
+    private Future<JsonObject> getCatalog(FilterItemModel filterItemModel, Boolean onlyFilter) {
         Promise<JsonObject> promise = Promise.promise();
         List<String> fields = Boolean.TRUE.equals(onlyFilter) ? Arrays.stream(ResourceFieldEnum.values()).map(ResourceFieldEnum::getValue).collect(Collectors.toList()) : null;
-        equipmentService.filterWord(params, fields, event -> {
+        equipmentService.filterWord(filterItemModel, fields, event -> {
             if (event.isRight()) {
                 JsonArray resources = event.right().getValue();
                 List<Item> itemList = IModelHelper.toList(resources, Item.class);
@@ -168,18 +168,15 @@ public class EquipmentController extends ControllerHelper {
     public void SearchEquipment(final HttpServerRequest request) {
         try {
             String query_word = URLDecoder.decode(request.getParam("word"), "UTF-8");
-            HashMap<String, ArrayList<String>> params = new HashMap<>();
-            getFilterFromRequest(request, params);
-            if (!params.isEmpty()) {
-                equipmentService.searchFilter(params, query_word, null, event -> {
-                    if(event.isRight()) {
-                        Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, event.right().getValue()));
-                    } else {
-                        log.error(String.format("[CRRE@%s::SearchEquipment] Failed to get items filtered and searched %s",
-                                this.getClass().getSimpleName(), event.left().getValue()));
-                        Renders.renderError(request);
-                    }
-                });
+            FilterItemModel filterItemModel = getFilterFromRequest(request);
+            if (!filterItemModel.isEmpty()) {
+                equipmentService.searchFilter(filterItemModel, null)
+                        .onSuccess(result -> Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, result)))
+                        .onFailure(error -> {
+                            Renders.renderError(request);
+                            log.error(String.format("[CRRE@%s::SearchEquipment] Failed to get items filtered and searched %s:%s",
+                                    this.getClass().getSimpleName(), error.getClass().getSimpleName(), error.getMessage()));
+                        });
             } else {
                 equipmentService.searchWord(query_word, null, event -> {
                     if(event.isRight()) {
@@ -205,14 +202,13 @@ public class EquipmentController extends ControllerHelper {
     public void FilterEquipment(final HttpServerRequest request) {
         try {
             boolean emptyFilter = Boolean.parseBoolean(request.getParam(Field.EMPTY_FILTER));
-            HashMap<String, ArrayList<String>> params = new HashMap<>();
-            getFilterFromRequest(request, params);
+            FilterItemModel filterItemModel = getFilterFromRequest(request);
             if (emptyFilter) {
-                getCatalog(params, false)
+                getCatalog(filterItemModel, false)
                         .onSuccess(result -> Renders.renderJson(request, result))
                         .onFailure(error -> Renders.renderError(request));
             } else {
-                equipmentService.filterWord(params, null, event -> {
+                equipmentService.filterWord(filterItemModel, null, event -> {
                     if(event.isRight()) {
                         Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, event.right().getValue()));
                     } else {
@@ -229,30 +225,35 @@ public class EquipmentController extends ControllerHelper {
         }
     }
 
-    private void getFilterFromRequest(HttpServerRequest request, HashMap<String, ArrayList<String>> params) {
-        if (request.params().contains("editeur")) {
-            params.put("editeur", new ArrayList<>(request.params().getAll("editeur")));
+    private FilterItemModel getFilterFromRequest(HttpServerRequest request) {
+        FilterItemModel filterItemModel = new FilterItemModel();
+        if (request.params().contains(Field.EDITEUR)) {
+            filterItemModel.setEditors(request.params().getAll(Field.EDITEUR));
         }
-        if (request.params().contains("niveaux.libelle")) {
-            params.put("niveaux.libelle", new ArrayList<>(request.params().getAll("niveaux.libelle")));
+        if (request.params().contains(ItemFilterField.GRADES_FIELD)) {
+            filterItemModel.setLevels(new ArrayList<>(request.params().getAll(ItemFilterField.GRADES_FIELD)));
         }
-        if (request.params().contains("classes.libelle")) {
-            params.put("classes.libelle", new ArrayList<>(request.params().getAll("classes.libelle")));
+        if (request.params().contains(ItemFilterField.CLASSES_FIELD)) {
+            filterItemModel.setClasses(new ArrayList<>(request.params().getAll(ItemFilterField.CLASSES_FIELD)));
         }
-        if (request.params().contains("_index")) {
-            params.put("_index", new ArrayList<>(request.params().getAll("_index")));
+        if (request.params().contains(Field._INDEX)) {
+            filterItemModel.setCatalogs(new ArrayList<>(request.params().getAll(Field._INDEX)));
         }
-        if (request.params().contains("publiccible")) {
-            params.put("publiccible", new ArrayList<>(request.params().getAll("publiccible")));
+        if (request.params().contains(ItemFilterField.TARGET)) {
+            filterItemModel.setTargets(new ArrayList<>(request.params().getAll(ItemFilterField.TARGET)));
         }
-        if (request.params().contains("disciplines.libelle")) {
-            params.put("disciplines.libelle", new ArrayList<>(request.params().getAll("disciplines.libelle")));
+        if (request.params().contains(ItemFilterField.DISCIPLINES_FIELD)) {
+            filterItemModel.setDisciplines(new ArrayList<>(request.params().getAll(ItemFilterField.DISCIPLINES_FIELD)));
         }
-        if (request.params().contains("conso")) {
-            params.put("conso", new ArrayList<>(request.params().getAll("conso")));
+        if (request.params().contains(Field.CONSO)) {
+            filterItemModel.setItemTypes(new ArrayList<>(request.params().getAll(Field.CONSO)));
         }
-        if (request.params().contains("pro")) {
-            params.put("pro", new ArrayList<>(request.params().getAll("pro")));
+        if (request.params().contains(Field.PRO)) {
+            filterItemModel.setStructureSectors(new ArrayList<>(request.params().getAll(Field.PRO)));
         }
+        if (request.params().contains(Field.BOOKSELLERS)) {
+            filterItemModel.setBooksellers(new ArrayList<>(request.params().getAll(Field.BOOKSELLERS)));
+        }
+        return filterItemModel;
     }
 }
