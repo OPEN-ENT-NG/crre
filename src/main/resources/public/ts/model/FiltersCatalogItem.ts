@@ -11,6 +11,7 @@ export interface IFiltersCatalogItem {
     catalogs: Array<string>;
     pros: Array<string>;
     consumables: Array<string>;
+    booksellers: Array<string>;
 }
 
 export class FilterCatalogItem {
@@ -23,7 +24,7 @@ export class FilterCatalogItem {
     }
 }
 
-export class FiltersCatalogItem {
+export class FiltersCatalogItem{
     private _disciplines: FilterCatalogItem[];
     private _grades: FilterCatalogItem[];
     private _classes: FilterCatalogItem[];
@@ -34,6 +35,7 @@ export class FiltersCatalogItem {
     private _catalogs: FilterCatalogItem[];
     private _pros: FilterCatalogItem[];
     private _consumables: FilterCatalogItem[];
+    private _booksellers: FilterCatalogItem[];
 
     constructor() {
         this._disciplines = [];
@@ -46,6 +48,7 @@ export class FiltersCatalogItem {
         this._catalogs = [];
         this._pros = [];
         this._consumables = [];
+        this._booksellers = [];
     }
 
     public build(filters: IFiltersCatalogItem): FiltersCatalogItem {
@@ -90,6 +93,12 @@ export class FiltersCatalogItem {
         this._catalogs = (filters.catalogs || []).map((catalog: string) => {
             const item = new FilterCatalogItem(catalog);
             item.toString = () => lang.translate(item.name);
+            return item;
+        });
+
+        this._booksellers = (filters.booksellers || []).map((library: string) => {
+            const item = new FilterCatalogItem(library);
+            item.toString = () => item.name;
             return item;
         });
 
@@ -175,5 +184,13 @@ export class FiltersCatalogItem {
 
     set consumables(value: FilterCatalogItem[]) {
         this._consumables = value;
+    }
+
+    get booksellers(): FilterCatalogItem[] {
+        return this._booksellers;
+    }
+
+    set booksellers(value: FilterCatalogItem[]) {
+        this._booksellers = value;
     }
 }
