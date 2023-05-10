@@ -10,11 +10,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DevController extends ControllerHelper {
     static private String txtStatus;
+    static private Map<String, JsonArray> infoMap = new HashMap<>();
 
     public DevController() {
         txtStatus = generateExport(new JsonObject());
@@ -22,6 +25,7 @@ public class DevController extends ControllerHelper {
 
     // Protect by dev mode
     @Get("/dev/library/status")
+    // Allows you to retrieve the status of a bookseller
     public void getStatus(final HttpServerRequest request) {
         request.response()
                 .putHeader("Content-Type", "text/csv; charset=utf-8")
@@ -31,6 +35,7 @@ public class DevController extends ControllerHelper {
 
     // Protect by dev mode
     @Post("/dev/library/status")
+    // Allows you to define the status of a bookseller
     public void setStatus(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, body -> {
             txtStatus = generateExport(body);
@@ -52,5 +57,22 @@ public class DevController extends ControllerHelper {
                         .append(line.getString(Field.ID, ""))
                         .append("\r"));
         return sb.toString();
+    }
+
+    // Protect by dev mode
+    @Get("/dev/library/info/:id")
+    // Allows you to retrieve the status of a bookseller
+    public void getInfo(final HttpServerRequest request) {
+        Renders.renderJson(request, infoMap.getOrDefault(request.params().get(Field.ID), new JsonArray()));
+    }
+
+    // Protect by dev mode
+    @Post("/dev/library/info/:id")
+    // Permet de récupérer les information d'un libraire a moissoner
+    public void setInfo(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, body -> {
+            infoMap.put(request.params().get(Field.ID), body.getJsonArray(Field.DATA, new JsonArray()));
+            Renders.ok(request);
+        });
     }
 }
