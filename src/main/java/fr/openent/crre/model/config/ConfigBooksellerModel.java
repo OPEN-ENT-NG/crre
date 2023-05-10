@@ -4,33 +4,32 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.IModel;
 import fr.openent.crre.model.OrderUniversalModel;
-import fr.openent.crre.model.config.library.ILibraryConfigModel;
-import fr.openent.crre.service.impl.library.LibraryServiceEnum;
+import fr.openent.crre.model.config.bookseller.IBooksellerConfigModel;
+import fr.openent.crre.service.impl.bookseller.BooksellerServiceEnum;
 import io.vertx.core.Future;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
-public class ConfigLibraryModel implements IModel<ConfigLibraryModel> {
-    private LibraryServiceEnum type;
+public class ConfigBooksellerModel implements IModel<ConfigBooksellerModel> {
+    private BooksellerServiceEnum type;
     private String name;
-    private ILibraryConfigModel param;
+    private IBooksellerConfigModel param;
 
-    public ConfigLibraryModel() {
+    public ConfigBooksellerModel() {
     }
 
-    public ConfigLibraryModel(JsonObject jsonObject) {
-        this.type = LibraryServiceEnum.getValue(jsonObject.getString(Field.TYPE), null);
+    public ConfigBooksellerModel(JsonObject jsonObject) {
+        this.type = BooksellerServiceEnum.getValue(jsonObject.getString(Field.TYPE), null);
         this.name = jsonObject.getString(Field.NAME);
         this.param = this.type.getService().generateModel(jsonObject.getJsonObject(Field.PARAM));
     }
 
-    public LibraryServiceEnum getType() {
+    public BooksellerServiceEnum getType() {
         return type;
     }
 
-    public ConfigLibraryModel setType(LibraryServiceEnum type) {
+    public ConfigBooksellerModel setType(BooksellerServiceEnum type) {
         this.type = type;
         return this;
     }
@@ -39,16 +38,16 @@ public class ConfigLibraryModel implements IModel<ConfigLibraryModel> {
         return name;
     }
 
-    public ConfigLibraryModel setName(String name) {
+    public ConfigBooksellerModel setName(String name) {
         this.name = name;
         return this;
     }
 
-    public ILibraryConfigModel getParam() {
+    public IBooksellerConfigModel getParam() {
         return param;
     }
 
-    public ConfigLibraryModel setParam(ILibraryConfigModel param) {
+    public ConfigBooksellerModel setParam(IBooksellerConfigModel param) {
         this.param = param;
         return this;
     }

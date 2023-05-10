@@ -1,7 +1,6 @@
 package fr.openent.crre.model.config;
 
 import fr.openent.crre.core.constants.ConfigField;
-import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.IModel;
 import io.vertx.core.json.JsonArray;
@@ -9,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +22,7 @@ public class ConfigModel implements IModel<ConfigModel> {
     private final boolean elasticSearch;
     private final ConfigElasticSearch elasticSearchConfig;
     private final boolean encodeEmailContent;
-    private final Map<String ,ConfigLibraryModel> libraryConfig;
+    private final Map<String , ConfigBooksellerModel> booksellerConfig;
     private final boolean devMode;
 
     public ConfigModel(JsonObject jsonObject) {
@@ -43,11 +41,11 @@ public class ConfigModel implements IModel<ConfigModel> {
         }
         this.encodeEmailContent = jsonObject.getBoolean(ConfigField.ENCODEEMAILCONTENT, true);
 
-        if (jsonObject.containsKey(ConfigField.LIBRARYCONFIG) && jsonObject.getValue(ConfigField.LIBRARYCONFIG) instanceof JsonArray) {
-            this.libraryConfig = IModelHelper.toList(jsonObject.getJsonArray(ConfigField.LIBRARYCONFIG), ConfigLibraryModel.class).stream()
-                    .collect(Collectors.toMap(ConfigLibraryModel::getName, Function.identity()));
+        if (jsonObject.containsKey(ConfigField.BOOKSELLERCONFIG) && jsonObject.getValue(ConfigField.BOOKSELLERCONFIG) instanceof JsonArray) {
+            this.booksellerConfig = IModelHelper.toList(jsonObject.getJsonArray(ConfigField.BOOKSELLERCONFIG), ConfigBooksellerModel.class).stream()
+                    .collect(Collectors.toMap(ConfigBooksellerModel::getName, Function.identity()));
         } else {
-            this.libraryConfig = new HashMap<>();
+            this.booksellerConfig = new HashMap<>();
         }
 
         this.devMode = jsonObject.getBoolean(ConfigField.DEV_DASH_MODE, false);
@@ -62,7 +60,7 @@ public class ConfigModel implements IModel<ConfigModel> {
                 .put(ConfigField.TIME_SECOND_STAT_CRON, this.timeSecondStatCron)
                 .put(ConfigField.TIME_SECOND_STATUT_CRON, this.timeSecondStatutCron)
                 .put(ConfigField.ELASTIC_SEARCH, this.elasticSearch)
-                .put(ConfigField.LIBRARYCONFIG, IModelHelper.toJsonArray(new ArrayList<>(this.libraryConfig.values())))
+                .put(ConfigField.BOOKSELLERCONFIG, IModelHelper.toJsonArray(new ArrayList<>(this.booksellerConfig.values())))
                 .put(ConfigField.ELASTIC_SEARCH_CONFIG, this.elasticSearchConfig.toJson())
                 .put(ConfigField.ENCODEEMAILCONTENT, this.encodeEmailContent);
     }
@@ -103,8 +101,8 @@ public class ConfigModel implements IModel<ConfigModel> {
         return encodeEmailContent;
     }
 
-    public Map<String, ConfigLibraryModel> getLibraryConfig() {
-        return libraryConfig;
+    public Map<String, ConfigBooksellerModel> getBooksellerConfig() {
+        return booksellerConfig;
     }
 
     public boolean isDevMode() {
