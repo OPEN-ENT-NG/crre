@@ -1,10 +1,10 @@
-package fr.openent.crre.model.config.library;
+package fr.openent.crre.model.config.bookseller;
 
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 import fr.openent.crre.core.constants.Field;
 
-public class CRREParam implements ILibraryConfigModel {
+public class CRREParam implements IBooksellerConfigModel {
     private String email;
     private String apiUrl;
 

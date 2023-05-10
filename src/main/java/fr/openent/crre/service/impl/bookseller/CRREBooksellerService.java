@@ -1,4 +1,4 @@
-package fr.openent.crre.service.impl.library;
+package fr.openent.crre.service.impl.bookseller;
 
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.DateHelper;
@@ -9,16 +9,13 @@ import fr.openent.crre.helpers.FileHelper;
 import fr.openent.crre.helpers.HttpRequestHelper;
 import fr.openent.crre.model.CRRELibraryElementModel;
 import fr.openent.crre.model.OrderUniversalModel;
-import fr.openent.crre.model.config.library.CRREParam;
-import fr.openent.crre.service.ILibraryService;
+import fr.openent.crre.model.config.bookseller.CRREParam;
+import fr.openent.crre.service.IBooksellerService;
 import fr.openent.crre.service.ServiceFactory;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import fr.openent.crre.service.ServiceFactory;
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
@@ -36,11 +33,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
-public class CRRELibraryService implements ILibraryService<CRREParam> {
+public class CRREBooksellerService implements IBooksellerService<CRREParam> {
 
-    private static final Logger log = LoggerFactory.getLogger(CRRELibraryService.class);
+    private static final Logger log = LoggerFactory.getLogger(CRREBooksellerService.class);
 
     @Override
     public Future<Void> updateStatus(CRREParam params) {
