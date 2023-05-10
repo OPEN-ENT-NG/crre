@@ -55,7 +55,7 @@ L'application **CRRE**, mise à disposition des collèges et lycées d'île-de-F
       "timeSecondStatutCron":"${timeSecondStatutCron}",
       "timeSecondNotifyAdminsCron":"${timeSecondNotifyAdminsCron}",
       "encodeEmailContent":"${crreEncodeEmailContent}",
-      "libraryConfig":${crreLibraryConfig},
+      "booksellerConfig":${crreBooksellerConfig},
       "dev-mode":false
    }
 }
@@ -71,25 +71,25 @@ Dans votre springboard, vous devez inclure des variables d'environnement :
 | "${timeSecondSynchCron}"        | Cron pour récupérer le nombre d'élèves de chaque filière (seconde à terminale, CAP, BMA, etc.) de chaque établissement et mettre à jour les effectifs de chaque établissement en base de données. | */30 * * * * ? *                |
 | "${timeSecondNotifyAdminsCron}" | Cron pour envoyer une notification aux administrateurs chaque soir avec le nombre de commandes reçues                                                                                             | */30 * * * * ? *                |
 | "${crreEncodeEmailContent}"     | Encodage du contenu des mails en base64 avant l'envoi. Utilisé pour le serveur SendingBlue de ODE.                                                                                                | true                            |
-| "${crreLibraryConfig}"          | Informations des différents libraires.                                                                                                                                                            | []                              |
+| "${crreBooksellerConfig}"       | Informations des différents libraires.                                                                                                                                                            | []                              |
 
 La propriété "dev-mode" sert à activer les fonctions de développement de CRRE. Elle doit être définie à false sur les environnements de production pour désactiver ces fonctions et garantir la sécurité de l'application. Elle est optionnel et vaut par defaut "false".
 
-Les éléments de la variable crreLibraryConfig doivent respecter le format suivant :
+Les éléments de la variable crreBooksellerConfig doivent respecter le format suivant :
 <pre>
       {
-          "type": "{crreLibraryType}",
-          "name": "{crreLibraryName}",
+          "type": "{crreBooksellerType}",
+          "name": "{crreBooksellerName}",
           "param": {
               ...
           }
       }
 </pre>
 
-| **conf.properties**  | **Utilisation**                                                                    | **Exemple** |
-|----------------------|------------------------------------------------------------------------------------|-------------|
-| "${crreLibraryType}" | Nom du service utilisé pour ce libraire.                                           | CRRE        |
-| "${crreLibraryName}" | Correspond au nom du libraire utilisé dans les éléments de l'index ElasticSearch.  | LDE         |
+| **conf.properties**     | **Utilisation**                                                                    | **Exemple** |
+|-------------------------|------------------------------------------------------------------------------------|-------------|
+| "${crreBooksellerType}" | Nom du service utilisé pour ce libraire.                                           | CRRE        |
+| "${crreBooksellerName}" | Correspond au nom du libraire utilisé dans les éléments de l'index ElasticSearch.  | LDE         |
 
 Pour le paramètre "param", il doit correspondre à un format spécifique en fonction du type de service utilisé.
 
@@ -100,10 +100,10 @@ Pour le paramètre "param", il doit correspondre à un format spécifique en fon
               "apiUrl": "${crreApiUrl}"
           }
 </pre>
-| **conf.properties** | **Utilisation**                                                | **Exemple**              |
-|---------------------|----------------------------------------------------------------|--------------------------|
-| "${crreEmailName}"  | Adresse mail à laquelle nous allons envoyer un e-mail.         | library1@cgi.com         |
-| "${crreApiUrl}"     | L'URL d'API utilisée pour récupérer les statuts des commandes. | https://library1.cgi.com |
+| **conf.properties** | **Utilisation**                                                | **Exemple**                 |
+|---------------------|----------------------------------------------------------------|-----------------------------|
+| "${crreEmailName}"  | Adresse mail à laquelle nous allons envoyer un e-mail.         | bookseller1@cgi.com         |
+| "${crreApiUrl}"     | L'URL d'API utilisée pour récupérer les statuts des commandes. | https://bookseller1.cgi.com |
 
 
 

@@ -17,7 +17,7 @@
         "entcore.port" : 8009,
         "sql": true,
         "db-schema": "crre",
-        "libraryConfig": [],
+        "booksellerConfig": [],
          "elasticsearch": true,
          "elasticsearchConfig" : {
             "server-uri": "${elasticServerURI}",

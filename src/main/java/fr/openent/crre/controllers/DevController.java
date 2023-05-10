@@ -24,7 +24,7 @@ public class DevController extends ControllerHelper {
     }
 
     // Protect by dev mode
-    @Get("/dev/library/status")
+    @Get("/dev/bookseller/status")
     // Allows you to retrieve the status of a bookseller
     public void getStatus(final HttpServerRequest request) {
         request.response()
@@ -34,7 +34,7 @@ public class DevController extends ControllerHelper {
     }
 
     // Protect by dev mode
-    @Post("/dev/library/status")
+    @Post("/dev/bookseller/status")
     // Allows you to define the status of a bookseller
     public void setStatus(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, body -> {
@@ -60,14 +60,14 @@ public class DevController extends ControllerHelper {
     }
 
     // Protect by dev mode
-    @Get("/dev/library/info/:id")
+    @Get("/dev/bookseller/info/:id")
     // Allows you to retrieve the status of a bookseller
     public void getInfo(final HttpServerRequest request) {
         Renders.renderJson(request, infoMap.getOrDefault(request.params().get(Field.ID), new JsonArray()));
     }
 
     // Protect by dev mode
-    @Post("/dev/library/info/:id")
+    @Post("/dev/bookseller/info/:id")
     // Permet de récupérer les information d'un libraire a moissoner
     public void setInfo(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, body -> {

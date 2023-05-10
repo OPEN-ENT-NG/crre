@@ -32,7 +32,6 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServerRequest;
@@ -1012,7 +1011,7 @@ public class OrderRegionController extends BaseController {
                 .collect(Collectors.groupingBy(OrderUniversalModel::getEquipmentBookseller))
                 .entrySet()
                 .stream()
-                .map(ordersGrouped -> this.config.getLibraryConfig().get(ordersGrouped.getKey()).sendOrder(ordersGrouped.getValue()))
+                .map(ordersGrouped -> this.config.getBooksellerConfig().get(ordersGrouped.getKey()).sendOrder(ordersGrouped.getValue()))
                 .collect(Collectors.toList());
         CompositeFuture.all(sendOrderBooksellerFuture)
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
