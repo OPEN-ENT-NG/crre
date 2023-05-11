@@ -16,29 +16,25 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DevController extends ControllerHelper {
-    static private String txtStatus;
+    static private Map<String, String> txtStatusMap = new HashMap<>();
     static private Map<String, JsonArray> infoMap = new HashMap<>();
 
-    public DevController() {
-        txtStatus = generateExport(new JsonObject());
-    }
-
     // Protect by dev mode
-    @Get("/dev/bookseller/status")
+    @Get("/dev/bookseller/status/:id")
     // Allows you to retrieve the status of a bookseller
     public void getStatus(final HttpServerRequest request) {
         request.response()
                 .putHeader("Content-Type", "text/csv; charset=utf-8")
                 .putHeader("Content-Disposition", "attachment; filename=libraryStatus.txt")
-                .end(txtStatus);
+                .end(txtStatusMap.getOrDefault(request.params().get(Field.ID), generateExport(new JsonObject())));
     }
 
     // Protect by dev mode
-    @Post("/dev/bookseller/status")
+    @Post("/dev/bookseller/status/:id")
     // Allows you to define the status of a bookseller
     public void setStatus(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, body -> {
-            txtStatus = generateExport(body);
+            txtStatusMap.put(request.params().get(Field.ID), generateExport(body));
             Renders.ok(request);
         });
     }
