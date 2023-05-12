@@ -47,6 +47,10 @@ public class Offer implements IModel<Offer> {
         this.type = json.getString(ItemField.TYPE);
     }
 
+    public boolean isEmpty() {
+        return this.type == null || this.eanBookseller == null;
+    }
+
     // Getters and setters
 
     public Boolean getAdopting() {
