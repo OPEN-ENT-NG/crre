@@ -33,160 +33,73 @@ public class ElasticSearchHelper {
         return String.format(REGEXP_FORMAT, query.toLowerCase());
     }
 
-    @Deprecated
-    /**
-     * Use Future instead of Handler.
-     *
-     * @deprecated Replaced by {@link #search(JsonObject, JsonArray, JsonArray, JsonArray)}
-     */
-    private static void search(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource, Handler<Either<String, JsonArray>> handler) {
-        ESHandler(query, pro, conso, ressource, handler);
-    }
-
-    private static Future<JsonArray> search(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource) {
-        Promise<JsonArray> promise = Promise.promise();
-        ESHandler(query, pro, conso, ressource)
-                .onFailure(promise::fail)
-                .onSuccess(promise::complete);
-        return promise.future();
-    }
-
-    @Deprecated
-    /**
-     * Use Future instead of Handler.
-     *
-     * @deprecated Replaced by {@link #ESHandler(JsonObject, JsonArray, JsonArray, JsonArray)}
-     */
-    private static void ESHandler(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource, Handler<Either<String, JsonArray>> handler) {
-        executeEsSearch(query, ar -> {
-            if (ar.failed()) {
-                handler.handle(new Either.Left<>(ar.cause().toString()));
-            } else {
-                List<Item> result = new ArrayList<>();
-                boolean isConso = conso.size() > 0 ? conso.getBoolean(0) : false;
-                boolean isPro = pro.size() > 0 ? pro.getBoolean(0) : false;
-                boolean isRessource = ressource.size() > 0 ? ressource.getBoolean(0) : false;
-                List<Item> items = JsonHelper.jsonArrayToList(ar.result(), JsonObject.class)
-                        .stream()
-                        .filter(item -> item.containsKey(Field._SOURCE) && item.containsKey(Field._INDEX))
-                        .map(item -> new Item(item.getJsonObject(Field._SOURCE).put(ItemField.TYPE_CATALOG,item.getString(Field._INDEX))))
-                        .collect(Collectors.toList());
-
-                if(items.stream().allMatch(item -> item.getEan() == null)) {
-                    handler.handle(new Either.Right<>(new JsonArray(items.stream().map(Item::toJson).collect(Collectors.toList()))));
-                    return;
-                }
-                items.forEach(item -> {
-                    List<String> types = Arrays.stream(item.getType().split(Pattern.quote("|"))).collect(Collectors.toList());
-                    // TODO: #TERRITOIRE rajouter le filre (contenu dans typesNumeric en theorie)
-                    boolean ressourceNumeric = isRessource == types.contains(Field.RESSOURCE);
-                    boolean consoNumeric = isConso == types.contains(Field.CONSOMMABLE);
-                    boolean manuelNumeric = !isConso == types.contains(Field.NUMERIQUE);
-                    boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
-                    boolean proNumeric = false;
-                    boolean lgtNumeric = false;
-                    if (!item.getLevels().isEmpty() && item.getCatalog().equals(Field.ARTICLENUMERIQUE)) {
-                        for (int i = 0; i < item.getLevels().size(); i++) {
-                            String level = item.getLevels().get(i);
-                            if (level.equals("Lycée pro.")) {
-                                proNumeric = true;
-                            } else if (level.equals("Lycée général") || level.equals("Lycée techno.")) {
-                                lgtNumeric = true;
-                            }
-                        }
-                    }
-                    proNumeric = isPro && proNumeric;
-                    lgtNumeric = !isPro && lgtNumeric;
-                    boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
-                    if (isConso && isPro) {
-                        proPapier = true;
-                    }
-                    boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
-                    if ((item.getCatalog().equals(Field.ARTICLENUMERIQUE) && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
-                            (item.getCatalog().equals(Field.ARTICLEPAPIER) && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
-                            || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {
-                        result.add(item);
-                    }
-                });
-                handler.handle(new Either.Right<>(new JsonArray(result.stream().map(Item::toJson).collect(Collectors.toList()))));
-            }
-        });
-
-    }
-
     private static Future<JsonArray> ESHandler(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource) {
         Promise<JsonArray> promise = Promise.promise();
         executeEsSearch(query, ar -> {
             if (ar.failed()) {
                 promise.fail(ar.cause().toString());
-            } else {
-                JsonArray result = new JsonArray();
-                boolean isConso = conso.size() > 0 ? conso.getBoolean(0) : false;
-                boolean isPro = pro.size() > 0 ? pro.getBoolean(0) : false;
-                boolean isRessource = ressource.size() > 0 ? ressource.getBoolean(0) : false;
+            }
+            List<Item> result = new ArrayList<>();
+            boolean isConso = conso.size() > 0 ? conso.getBoolean(0) : false;
+            boolean isPro = pro.size() > 0 ? pro.getBoolean(0) : false;
+            boolean isRessource = ressource.size() > 0 ? ressource.getBoolean(0) : false;
+            List<Item> items = JsonHelper.jsonArrayToList(ar.result(), JsonObject.class)
+                    .stream()
+                    .filter(item -> item.containsKey(Field._SOURCE) && item.containsKey(Field._INDEX))
+                    .map(item -> new Item(item.getJsonObject(Field._SOURCE).put(ItemField.TYPE_CATALOG,item.getString(Field._INDEX))))
+                    .filter(item -> item.getOffers() != null && !item.getOffers().isEmpty())
+                    .collect(Collectors.toList());
 
-                for (Object article : ar.result()) {
-                    JsonObject articleJson = ((JsonObject) article);
-                    JsonObject addingArticle = articleJson.getJsonObject(Field._SOURCE);
-                    String typeNumeric = "";
-                    String typePapier = "";
-                    String type = "";
-                    if (articleJson.getString(Field._INDEX).equals(Field.ARTICLENUMERIQUE) && addingArticle.getJsonArray(Field.OFFRES, new JsonArray()).size() > 0) {
-                        type = addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE) == null ? "" : addingArticle.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.TYPE);
-                        addingArticle.put(Field.TYPECATALOGUE, type);
-                        typeNumeric = type;
-                    } else {
-                        type = addingArticle.getString(Field.TYPE, "") == null ? "" : addingArticle.getString(Field.TYPE, "");
-                        addingArticle.put(Field.TYPECATALOGUE, type);
-                        typePapier = type;
-                    }
-                    addingArticle.put(Field.TYPE, articleJson.getString(Field._INDEX))
-                            .put(Field.ID, articleJson.getString(Field._ID));
-                    List<String> typesNumeric = Arrays.asList(typeNumeric.split(Pattern.quote("|")));
-                    boolean ressourceNumeric = isRessource == typesNumeric.contains(Field.RESSOURCE);
-                    boolean consoNumeric = isConso == typesNumeric.contains(Field.CONSOMMABLE);
-                    boolean manuelNumeric = !isConso == typesNumeric.contains(Field.NUMERIQUE);
-                    boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
-                    boolean proNumeric = false;
-                    boolean lgtNumeric = false;
-                    if (addingArticle.getJsonArray(Field.NIVEAUX, new JsonArray()).size() > 0) {
-                        for (int i = 0; i < addingArticle.getJsonArray(Field.NIVEAUX).size(); i++) {
-                            String niveau = addingArticle.getJsonArray(Field.NIVEAUX).getJsonObject(i).getString(Field.LIBELLE) == null ? "" : addingArticle.getJsonArray(Field.NIVEAUX).getJsonObject(i).getString(Field.LIBELLE);
-                            if (niveau.equals("Lycée pro.")) {
-                                proNumeric = true;
-                            } else if (niveau.equals("Lycée général") || niveau.equals("Lycée techno.")) {
-                                lgtNumeric = true;
-                            }
+            if(items.stream().allMatch(item -> item.getEan() == null)) {
+                promise.complete(new JsonArray(items.stream().map(Item::toJson).collect(Collectors.toList())));
+                return;
+            }
+            items.forEach(item -> {
+                List<String> types = Arrays.stream(item.getType().split(Pattern.quote("|"))).collect(Collectors.toList());
+                // TODO: #TERRITOIRE rajouter le filre (contenu dans typesNumeric en theorie)
+                boolean ressourceNumeric = isRessource == types.contains(Field.RESSOURCE);
+                boolean consoNumeric = isConso == types.contains(Field.CONSOMMABLE);
+                boolean manuelNumeric = !isConso == types.contains(Field.NUMERIQUE);
+                boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                boolean proNumeric = false;
+                boolean lgtNumeric = false;
+                if (!item.getLevels().isEmpty() && item.getCatalog().equals(Field.ARTICLENUMERIQUE)) {
+                    for (int i = 0; i < item.getLevels().size(); i++) {
+                        String level = item.getLevels().get(i);
+                        if (level.equals("Lycée pro.")) {
+                            proNumeric = true;
+                        } else if (level.equals("Lycée général") || level.equals("Lycée techno.")) {
+                            lgtNumeric = true;
                         }
                     }
-                    proNumeric = isPro && proNumeric;
-                    lgtNumeric = !isPro && lgtNumeric;
-                    boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
-                    if (isConso && isPro) {
-                        proPapier = true;
-                    }
-                    boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(typePapier).find();
-                    // Uncomment if type "Numerique" only exist in LDE catalog
-                    /*&& (conso.size() <= 0 || consoNumeric)*/
-                    if ((articleJson.getString("_index").equals(Field.ARTICLENUMERIQUE) && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
-                            (articleJson.getString("_index").equals(Field.ARTICLEPAPIER) && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
-                            || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {
-                        result.add(addingArticle);
-                    }
                 }
-                promise.complete(result);
-            }
+                proNumeric = isPro && proNumeric;
+                lgtNumeric = !isPro && lgtNumeric;
+                boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                if (isConso && isPro) {
+                    proPapier = true;
+                }
+                boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                if ((item.getCatalog().equals(Field.ARTICLENUMERIQUE) && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
+                        (item.getCatalog().equals(Field.ARTICLEPAPIER) && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
+                        || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {
+                    result.add(item);
+                }
+            });
+            promise.complete(new JsonArray(result.stream().map(Item::toJson).collect(Collectors.toList())));
         });
         return promise.future();
     }
 
     public static void search_All(Handler<Either<String, JsonArray>> handler) {
         JsonObject query = new JsonObject()
-                .put("from", 0)
-                .put("size", PAGE_SIZE)
-                .put("query", new JsonObject().put("match_all", new JsonObject()));
+                .put(Field.FROM, 0)
+                .put(Field.SIZE, PAGE_SIZE)
+                .put(Field.QUERY, new JsonObject().put(Field.MATCH_ALL, new JsonObject()));
 
-        ESHandler(query, new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        ESHandler(query, new JsonArray(), new JsonArray(), new JsonArray())
+                .onSuccess(result -> handler.handle(new Either.Right<>(result)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
     }
 
 
@@ -211,7 +124,9 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put(Field.BOOL, bool);
 
-        search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        ESHandler(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray())
+                .onSuccess(result -> handler.handle(new Either.Right<>(result)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
     }
 
     public static Future<JsonArray> plainTextSearchName(String query, List<String> resultFieldsExpected) {
@@ -251,7 +166,9 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put(Field.BOOL, filter);
 
-        search(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource, handler);
+        ESHandler(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource)
+                .onSuccess(result -> handler.handle(new Either.Right<>(result)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
     }
 
     private static void prepareFilterES(FilterItemModel filters, JsonArray term, JsonArray query,
@@ -341,7 +258,9 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject();
         JsonObject match = new JsonObject().put(Field._ID, id);
         queryObject.put(Field.MATCH, match);
-        search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        ESHandler(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray())
+                .onSuccess(result -> handler.handle(new Either.Right<>(result)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
     }
 
     public static Future<JsonArray> searchByIds(List<String> ids, List<String> resultFieldsExpected) {
@@ -357,7 +276,9 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject();
         JsonObject terms = new JsonObject().put(Field._ID, new JsonArray(ids));
         queryObject.put(Field.TERMS, terms);
-        search(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray(), handler);
+        ESHandler(esQueryObject(queryObject, resultFieldsExpected), new JsonArray(), new JsonArray(), new JsonArray())
+                .onSuccess(result -> handler.handle(new Either.Right<>(result)))
+                .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
     }
 
     public static Future<JsonArray> searchfilter(FilterItemModel filters, List<String> resultFieldsExpected) {
@@ -389,7 +310,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put(Field.BOOL, request);
 
-        search(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource)
+        ESHandler(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource)
                 .onSuccess(promise::complete)
                 .onFailure(promise::fail);
         return promise.future();
