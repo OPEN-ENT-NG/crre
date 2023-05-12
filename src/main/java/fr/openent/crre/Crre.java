@@ -93,7 +93,7 @@ public class Crre extends BaseServer {
         addController(new QuoteController(serviceFactory));
         addController(new WorkflowController(serviceFactory));
         if (serviceFactory.getConfig().isDevMode()) {
-            addController(new DevController());
+            addController(new DevController(serviceFactory));
         }
         vertx.deployVerticle(ExportWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
         CONFIG = config;

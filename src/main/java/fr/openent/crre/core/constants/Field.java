@@ -271,6 +271,9 @@ public class Field {
     public static final String PARAM = "param";
     public static final String BOOKSELLERS = "booksellers";
     public static final String CONSO = "conso";
+    public static final String BOOKSELLER = "bookseller";
+    public static final String PAPIER = "papier";
+    public static final String NUMERIC = "numeric";
 
     private Field() {
         throw new IllegalStateException("Utility class");
