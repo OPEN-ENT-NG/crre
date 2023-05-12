@@ -274,6 +274,7 @@ public class Field {
     public static final String BOOKSELLER = "bookseller";
     public static final String PAPIER = "papier";
     public static final String NUMERIC = "numeric";
+    public static final String MATCH_ALL = "match_all";
 
     private Field() {
         throw new IllegalStateException("Utility class");
