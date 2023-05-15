@@ -125,10 +125,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         // Condition de recherche de texte
         if (filters.getSearchingText() != null) {
             select += "AND (lower(o_r_e.owner_name) ~* ? OR lower(bo.name) ~* ? OR lower(struct.uai) ~* ? OR lower(struct.name) ~* ? " +
-                    "OR lower(struct.city) ~* ? OR lower(struct.region) ~* ? OR lower(struct.public) ~* ? OR lower(struct.catalog) ~* ? OR lower(p.title) ~* ?";
+                    "OR lower(struct.city) ~* ? OR lower(struct.region) ~* ? OR lower(struct.public) ~* ? OR lower(struct.catalog) ~* ? OR " +
+                    "lower(p.title) ~* ?  OR lower(o_r_e.equipment_key) ~* ?";
             values.add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText())
                     .add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText())
-                    .add(filters.getSearchingText());
+                    .add(filters.getSearchingText()).add(filters.getSearchingText());
             if (!itemSearchedIdsList.isEmpty()) {
                 select += " OR o_r_e.equipment_key IN " + Sql.listPrepared(itemSearchedIdsList);
                 values.addAll(new JsonArray(itemSearchedIdsList));
@@ -204,10 +205,11 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         // Condition de recherche de texte
         if (filters.getSearchingText() != null) {
             selectOld += "AND (lower(o_r_e_o.owner_name) ~* ? OR lower(bo.name) ~* ? OR lower(struct.uai) ~* ? OR lower(struct.name) ~* ? " +
-                    "OR lower(struct.city) ~* ? OR lower(struct.region) ~* ? OR lower(struct.public) ~* ? OR lower(struct.catalog) ~* ? OR lower(p.title) ~* ? OR o_r_e_o.equipment_name ~* ?)";
+                    "OR lower(struct.city) ~* ? OR lower(struct.region) ~* ? OR lower(struct.public) ~* ? OR lower(struct.catalog) ~* ? " +
+                    "OR lower(p.title) ~* ? OR lower(o_r_e_o.equipment_name) ~* ? OR lower(o_r_e_o.equipment_key) ~* ?)";
             values.add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText())
                     .add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText())
-                    .add(filters.getSearchingText()).add(filters.getSearchingText());
+                    .add(filters.getSearchingText()).add(filters.getSearchingText()).add(filters.getSearchingText());
         }
 
         // Condition de filtrage de structures
@@ -329,8 +331,10 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
         if (filters.getSearchingText() != null) {
             sqlquery += "AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR " +
                     "lower(s.public) ~* ? OR lower(s.catalog) ~* ? OR " +
-                    "lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? OR lower(b.name) ~* ? OR o_r_e_o.equipment_name ~* ? ";
+                    "lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? OR lower(b.name) ~* ? OR " +
+                    "lower(o_r_e_o.equipment_name) ~* ? OR lower(o_r_e_o.equipment_key) ~* ? OR lower(o_r_e.equipment_key) ~* ?";
             values.add(filters.getSearchingText()).add(filters.getSearchingText())
+                    .add(filters.getSearchingText()).add(filters.getSearchingText())
                     .add(filters.getSearchingText()).add(filters.getSearchingText())
                     .add(filters.getSearchingText()).add(filters.getSearchingText())
                     .add(filters.getSearchingText()).add(filters.getSearchingText())
