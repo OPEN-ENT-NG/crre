@@ -29,7 +29,7 @@
             </h1>
             <article class="basket-item twelve cell"
                      ng-class="{ openedOptions: display.equipmentOption[$index], disabled: basket.equipment.disponibilite[0].valeur != 'Disponible' }">
-                <div class="cell width-40">
+                <div class="cell width-40" ng-if="basket.equipment.disponibilite[0].valeur == 'Disponible'">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="basket.selected"
                                ng-checked="basket.selected"/>

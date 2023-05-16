@@ -102,6 +102,7 @@ public class OrderHelper {
                                     } else {
                                         orderUniversalModel.setEquipmentName(I18n.getInstance().translate("crre.item.not.found", Field.DEFAULT_DASH_DOMAIN, (String) null));
                                     }
+                                    orderUniversalModel.setValid(false);
                                 }
                             });
                     promise.complete(orderUniversalModels);
