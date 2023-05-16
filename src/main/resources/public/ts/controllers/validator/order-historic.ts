@@ -13,6 +13,8 @@ import {
     OrderClient,
 } from "../../model";
 import {Mix} from "entcore-toolkit";
+import {AxiosResponse} from "axios";
+import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
     ['$scope', async ($scope) => {
@@ -43,6 +45,11 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             }
         };
 
+        $scope.canResubmit = () : boolean => {
+            return $scope.display.projects.all.flatMap((project : Project) => project.orders)
+                .filter((order : OrderRegion) => order.selected && (!order.equipment || !order.equipment.valid)).length == 0;
+        }
+
         $scope.reSubmit = async () : Promise<void> => {
             let totalAmount : number = 0;
             let baskets : Baskets = new Baskets();
@@ -65,27 +72,29 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                 });
             });
 
-            await new OrdersClient().resubmitOrderClient(baskets, totalAmount, $scope.current.structure);
-
-            let {status} = await ordersToResubmit.updateStatus('RESUBMIT');
-            if (status != 200) {
-                toasts.warning('crre.order.update.err');
-            }
-
-            $scope.display.projects.forEach((project : Project) => {
-                project.orders.forEach(async (order : OrderClient) => {
-                    if (order.selected) {
-                        order.status = 'RESUBMIT';
+            new OrdersClient().resubmitOrderClient(baskets, totalAmount, $scope.current.structure)
+                .then(() => ordersToResubmit.updateStatus(ORDER_STATUS_ENUM.RESUBMIT))
+                .then((res: AxiosResponse) => {
+                    if (res.status != 200) {
+                        toasts.warning('crre.order.update.err');
                     }
-                });
-                Utils.setStatus(project, project.orders);
 
-            });
+                    $scope.display.projects.all.flatMap((project : Project) => project.orders.all)
+                        .filter((order : OrderClient) => order.selected)
+                        .forEach((order : OrderClient) => order.status = ORDER_STATUS_ENUM.RESUBMIT)
 
-            $scope.campaign.nb_order += 1;
-            $scope.campaign.order_notification += 1;
-            $scope.campaign.nb_order_waiting += baskets.all.length;
-            uncheckAll();
+                    $scope.display.projects.all.forEach((project : Project) => Utils.setStatus(project, project.orders));
+
+                    $scope.campaign.nb_order += 1;
+                    $scope.campaign.order_notification += 1;
+                    $scope.campaign.nb_order_waiting += baskets.all.length;
+                    uncheckAll();
+                })
+                .catch(error => {
+                    toasts.warning('crre.order.update.err');
+                    console.error(error);
+                    uncheckAll();
+                })
         };
 
         $scope.getFilter = async () : Promise<void> => {
