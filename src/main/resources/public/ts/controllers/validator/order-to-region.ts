@@ -218,6 +218,8 @@ export const orderRegionController = ng.controller('orderRegionController',
                     const idProject = orders[0].id_project;
                     for (let order of orders) {
                         if (!onlyId) {
+                            let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
+                            order.equipment = equipment;
                             if (order.old) {
                                 if (order.offers != null) {
                                     let offers = new Offers();
@@ -231,7 +233,6 @@ export const orderRegionController = ng.controller('orderRegionController',
                                     order.offers = offers;
                                 }
                             } else {
-                                let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
                                 if (equipment && equipment.type === "articlenumerique") {
                                     order.offers = Utils.computeOffer(order, equipment);
                                 }
