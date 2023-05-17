@@ -62,9 +62,11 @@ export class OrderClient implements Order {
     type: string;
     displayStatus: boolean;
     projectTitle: string;
+    valid: boolean
 
     constructor() {
         this.typeOrder = "client";
+        this.valid = true;
     }
 
     async updateAmount(amount: number): Promise<void> {
@@ -175,6 +177,7 @@ export class OrdersClient extends Selection<OrderClient> {
                 orderMap.reassort = order.reassort;
                 orderMap.status = order.status;
                 orderMap.projectTitle = (!order.project) ? null : order.project.title;
+                orderMap.valid = order.valid;
                 return orderMap;
             });
 
@@ -203,6 +206,7 @@ export class OrdersClient extends Selection<OrderClient> {
             order.priceTotalTTC = Utils.calculatePriceTTC(equipment, 2) * order.amount;
             order.price = Utils.calculatePriceTTC(equipment, 2);
             order.name = equipment.titre;
+            order.valid = equipment.valid;
             order.image = equipment.urlcouverture.replace("cns-edu.org", "www.cns-edu.com");
             if (equipment.type === "articlenumerique") {
                 order.offers = Utils.computeOffer(order, equipment);
@@ -212,6 +216,7 @@ export class OrdersClient extends Selection<OrderClient> {
             order.price = 0.0;
             order.name = "Manuel introuvable dans le catalogue";
             order.image = "/crre/public/img/pages-default.png";
+            order.valid = false;
         }
     }
 

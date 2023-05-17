@@ -45,13 +45,13 @@
                 <td><div class="smallTabElem center breakLines ellipsis" tooltip="[[order.basket_name]]">[[order.basket_name]]</div></td>
                 <td>
                     <div class="smallTabElem center centerInputAmount">
-                        <i class="moins" ng-if="order.status !== 'IN_PROGRESS' && order.price !== 0.00 && order.campaign.accessible"
+                        <i class="moins" ng-if="order.status !== 'IN_PROGRESS' && order.valid && order.campaign.accessible"
                            ng-hide="!order.amount || order.amount <= 1" ng-click="updateAmount(order, order.amount - 1)"></i>
                         <input type="number" class="quantity-input numberWithoutArrow" step="1" min="1" ng-keypress="avoidDecimals($event)"
-                               ng-disabled="order.status === 'IN_PROGRESS' || order.price === 0.00 || !order.campaign.accessible"
+                               ng-disabled="order.status === 'IN_PROGRESS' || !order.valid || !order.campaign.accessible"
                                ng-change="updateAmount(order, order.amount)"
                                ng-model="order.amount"/>
-                        <i class="plus_medium" ng-if="order.status !== 'IN_PROGRESS' && order.price !== 0.00 && order.campaign.accessible"
+                        <i class="plus_medium" ng-if="order.status !== 'IN_PROGRESS' && order.valid && order.campaign.accessible"
                            ng-click="updateAmount(order, order.amount + 1)"></i>
                     </div>
                 </td>

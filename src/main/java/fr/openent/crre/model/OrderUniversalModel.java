@@ -50,6 +50,7 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Integer totalFree;
     private Integer orderClientId;
     private Integer orderRegionId;
+    private boolean valid = true;
 
     //Not defined for send to bookseller commands.
     private String equipmentCatalogueType;
@@ -490,6 +491,15 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public OrderUniversalModel setStructure(StructureNeo4jModel structure) {
         this.structure = structure;
+        return this;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public OrderUniversalModel setValid(boolean valid) {
+        this.valid = valid;
         return this;
     }
 }

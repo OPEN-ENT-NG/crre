@@ -118,11 +118,11 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let isValid: boolean;
             if (ordersClient.selected.length > 0) {
                 isValid = !ordersClient.selected.some(order => {
-                    return !order.amount || order.amount <= 0;
+                    return !order.amount || order.amount <= 0 || !order.valid;
                 })
             } else {
                 isValid = !ordersClient.all.some(order => {
-                    return !order.amount || order.amount <= 0;
+                    return !order.amount || order.amount <= 0 || !order.valid;
                 })
             }
             return isValid;
