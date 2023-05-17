@@ -1,5 +1,6 @@
 package fr.openent.crre.helpers;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.model.BasketOrderItem;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,12 +14,13 @@ public class EquipmentHelper {
     public static final DecimalFormat df2 = new DecimalFormat("#.##", dfs);
     public static JsonObject getDefaultEquipment(BasketOrderItem basketOrderItem) {
         return new JsonObject()
-                .put("urlcouverture", "/crre/public/img/pages-default.png")
-                .put("disponibilite", new JsonArray().add(new JsonObject().put("valeur", "Non disponible à long terme")))
-                .put("titre", "Manuel introuvable dans le catalogue")
-                .put("ean", basketOrderItem.getIdItem())
-                .put("inCatalog", false)
-                .put("price", 0.0);
+                .put(Field.URLCOUVERTURE, "/crre/public/img/pages-default.png")
+                .put(Field.DISPONIBILITE, new JsonArray().add(new JsonObject().put(Field.VALEUR, "Non disponible à long terme")))
+                .put(Field.TITRE, "Manuel introuvable dans le catalogue")
+                .put(Field.EAN, basketOrderItem.getIdItem())
+                .put(Field.INCATALOG, false)
+                .put(Field.PRICE, 0.0)
+                .put(Field.VALID, false);
     }
 
     public static Double getRoundedPrice(Double price) {

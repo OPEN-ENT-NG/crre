@@ -275,6 +275,10 @@ public class Field {
     public static final String PAPIER = "papier";
     public static final String NUMERIC = "numeric";
     public static final String MATCH_ALL = "match_all";
+    public static final String VALID = "valid";
+    public static final String NAN = "NaN";
+    public static final String DISPONIBILITE = "disponibilite";
+    public static final String INCATALOG = "inCatalog";
     public static final String WORD = "word";
 
     private Field() {
