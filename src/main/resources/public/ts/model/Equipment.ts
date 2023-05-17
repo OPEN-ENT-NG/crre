@@ -29,9 +29,11 @@ export class Equipment implements Selectable {
     tvas: any;
     commentaire: string;
     commandable: boolean;
+    valid: boolean;
 
     constructor() {
         this._loading = false;
+        this.valid = true;
     }
 
     async sync(id, idStructure?: string) {

@@ -66,13 +66,13 @@
             </td>
             <td>
                 <div class="smallTabElem center centerInputAmount">
-                    <i class="moins" ng-if="(order.status !== 'IN_PROGRESS' && order.status !== 'RESUBMIT' && !filter.isOld) && order.price !== 0.00"
+                    <i class="moins" ng-if="(order.status !== 'IN_PROGRESS' && order.status !== 'RESUBMIT' && !filter.isOld) && order.valid"
                        ng-hide="!order.amount || order.amount <= 1" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
                     <input type="number" class="quantity-input numberWithoutArrow" step="1" min="1" ng-keypress="avoidDecimals($event)"
-                           ng-disabled="order.status === 'IN_PROGRESS' || order.status === 'RESUBMIT' || filter.isOld || order.price === 0.00"
+                           ng-disabled="order.status === 'IN_PROGRESS' || order.status === 'RESUBMIT' || filter.isOld || !order.valid"
                            ng-change="updateAmount(basket, order, order.amount)"
                            ng-model="order.amount"/>
-                    <i class="plus_medium" ng-if="(order.status !== 'IN_PROGRESS' && order.status !== 'RESUBMIT' && !filter.isOld) && order.price !== 0.00"
+                    <i class="plus_medium" ng-if="(order.status !== 'IN_PROGRESS' && order.status !== 'RESUBMIT' && !filter.isOld) && order.valid"
                        ng-click="updateAmount(basket, order, order.amount + 1)"></i>
                 </div>
             </td>

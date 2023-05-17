@@ -730,13 +730,14 @@ public class OrderRegionController extends BaseController {
     }
 
     private void equipmentNotFound(JsonObject orderJson, String idEquipment) {
-        orderJson.put("price", 0.0);
-        orderJson.put(Field.NAME, "Manuel introuvable dans le catalogue");
-        orderJson.put("image", "/crre/public/img/pages-default.png");
-        orderJson.put("ean", idEquipment);
-        orderJson.put("_index", "NaN");
-        orderJson.put("editeur", "NaN");
-        orderJson.put("distributeur", "NaN");
+        orderJson.put(Field.PRICE, 0.0)
+                .put(Field.NAME, "Manuel introuvable dans le catalogue")
+                .put(Field.IMAGE, "/crre/public/img/pages-default.png")
+                .put(Field.EAN, idEquipment)
+                .put(Field._INDEX, Field.NAN)
+                .put(Field.EDITEUR, Field.NAN)
+                .put(Field.DISTRIBUTEUR, Field.NAN)
+                .put(Field.VALID, false);
     }
 
     private void getSearchByIdsOld(JsonObject order) {

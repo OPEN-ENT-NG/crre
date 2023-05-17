@@ -32,6 +32,7 @@ export class OrderUniversal {
     private _equipment_priceht: number;
     private _offers: any[];
     private _totalFree: number;
+    private _valid: boolean;
 
     private _order_client_id: number;
     private _order_region_id: number;
@@ -284,5 +285,13 @@ export class OrderUniversal {
 
     set order_region_id(value: number) {
         this._order_region_id = value;
+    }
+
+    get valid(): boolean {
+        return this._valid;
+    }
+
+    set valid(value: boolean) {
+        this._valid = value;
     }
 }
