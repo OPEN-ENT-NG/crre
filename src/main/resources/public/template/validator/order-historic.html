@@ -216,7 +216,7 @@
         <section class="toggle-buttons" ng-class="{ hide: !display.toggle }">
             <div class="toggle">
                 <div class="row">
-                    <button ng-click="reSubmit()" ><i18n>crre.resubmit</i18n></button>
+                    <button ng-click="reSubmit()" ng-disabled="!canResubmit()" ><i18n>crre.resubmit</i18n></button>
                     <button ng-click="display.projects.exportCSV(false)"><i18n>crre.logs.csv.export</i18n></button>
                 </div>
             </div>
