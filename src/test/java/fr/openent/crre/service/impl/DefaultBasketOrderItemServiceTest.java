@@ -47,11 +47,14 @@ public class DefaultBasketOrderItemServiceTest {
         UserInfos userInfos = new UserInfos();
         userInfos.setUserId("userId");
 
-        String expectedQuery = "SELECT id, amount, comment , processing_date, id_campaign, id_structure, id_item, reassort" +
-                " FROM null.basket_order_item basket WHERE basket.id_campaign = ? AND basket.id_structure = ?" +
-                " AND basket.owner_id = ? GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure)" +
+        String expectedQuery = "SELECT * FROM null.basket_order_item basket" +
+                " WHERE basket.id_campaign = ?" +
+                " AND basket.id_structure = ?" +
+                " AND basket.owner_id = ?" +
+                " AND basket.id_item IN (?,?)" +
+                " GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure)" +
                 " ORDER BY basket.id DESC;";
-        String expectedParams = "[1,\"idStructure\",\"userId\"]";
+        String expectedParams = "[1,\"idStructure\",\"userId\",\"18\",\"19\"]";
 
         Mockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);
@@ -62,7 +65,7 @@ public class DefaultBasketOrderItemServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketItemService.listBasketOrderItem(1, "idStructure", userInfos.getUserId());
+        this.defaultBasketItemService.listBasketOrderItem(1, "idStructure", userInfos.getUserId(), Arrays.asList("18", "19"));
 
         async.awaitSuccess(10000);
     }
@@ -129,6 +132,27 @@ public class DefaultBasketOrderItemServiceTest {
                     async.complete();
                 })
                 .onFailure(ctx::fail);
+
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void deleteListTest(TestContext ctx) throws Exception {
+        Async async = ctx.async();
+
+        String expectedQuery = "DELETE FROM null.basket_order_item WHERE id IN (?,?,?)";
+        String expectedParams = "[18,294,896]";
+
+        Mockito.doAnswer(invocation -> {
+            String query = invocation.getArgument(0);
+            JsonArray values = invocation.getArgument(1);
+            ctx.assertEquals(expectedQuery, query);
+            ctx.assertEquals(expectedParams, values.toString());
+            async.complete();
+            return null;
+        }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
+
+        this.defaultBasketItemService.delete(Arrays.asList(18, 294, 896));
 
         async.awaitSuccess(10000);
     }

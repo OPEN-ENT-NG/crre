@@ -1,6 +1,7 @@
 package fr.openent.crre.service;
 
 import fr.openent.crre.model.FilterItemModel;
+import fr.openent.crre.model.item.Item;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -25,5 +26,5 @@ public interface EquipmentService {
 
     void searchAll(Handler<Either<String, JsonArray>> handler);
 
-    Future<JsonArray> searchFilter(FilterItemModel filterItemModel, List<String> resultFieldsExpected);
+    Future<List<Item>> searchFilter(FilterItemModel filterItemModel, List<String> resultFieldsExpected);
 }
