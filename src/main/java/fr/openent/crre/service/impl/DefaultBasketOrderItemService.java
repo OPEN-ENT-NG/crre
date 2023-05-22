@@ -69,6 +69,10 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
 
     @Override
     public Future<List<BasketOrderItem>> delete(List<Integer> basketIds) {
+        if (basketIds.isEmpty()) {
+            return Future.succeededFuture(new ArrayList<>());
+        }
+
         Promise<List<BasketOrderItem>> promise = Promise.promise();
 
         String query = "DELETE FROM " + Crre.crreSchema + ".basket_order_item WHERE id IN " + Sql.listPrepared(basketIds) + " RETURNING *";

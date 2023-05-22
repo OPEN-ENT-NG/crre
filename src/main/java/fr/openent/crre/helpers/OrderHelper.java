@@ -159,7 +159,7 @@ public class OrderHelper {
                 JsonObject lep = leps.getJsonObject(i);
                 JsonArray conditions = lep.getJsonArray(Field.CONDITIONS);
                 OrderUniversalOfferModel orderUniversalOffer = new OrderUniversalOfferModel();
-                if (conditions.size() > 1) {
+                if (conditions != null && conditions.size() > 1) {
                     for (int j = 0; j < conditions.size(); j++) {
                         int condition = conditions.getJsonObject(j).getInteger(Field.CONDITIONS_FREE);
                         if (amount >= condition && gratuit < condition) {
@@ -167,9 +167,9 @@ public class OrderHelper {
                             gratuite = conditions.getJsonObject(j).getInteger(Field.FREE);
                         }
                     }
-                } else if (lep.getJsonArray(Field.CONDITIONS).size() == 1) {
-                    gratuit = lep.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
-                    gratuite = (int) (lep.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount * 1.0 / gratuit));
+                } else if (conditions != null && conditions.size() == 1) {
+                    gratuit = conditions.getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
+                    gratuite = (int) (conditions.getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount * 1.0 / gratuit));
                 }
 
                 if (gratuite > 0) {
