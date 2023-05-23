@@ -85,6 +85,11 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
             values.addAll(new JsonArray(filterModel.getIdsBasket()));
         }
 
+        if (filterModel.getEquipmentIds() != null && !filterModel.getEquipmentIds().isEmpty()) {
+            query += "AND o_u.equipment_key IN " + Sql.listPrepared(filterModel.getEquipmentIds()) + " ";
+            values.addAll(new JsonArray(filterModel.getEquipmentIds()));
+        }
+
         if (filterModel.getIdsOrder() != null && !filterModel.getIdsOrder().isEmpty()) {
             query += "AND o_u.order_client_id IN " + Sql.listPrepared(filterModel.getIdsOrder()) + " OR " +
                     "o_u.order_region_id IN " + Sql.listPrepared(filterModel.getIdsOrder()) + " ";
