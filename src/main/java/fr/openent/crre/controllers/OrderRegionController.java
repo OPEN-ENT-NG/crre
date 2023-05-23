@@ -11,6 +11,7 @@ import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.*;
 import fr.openent.crre.model.config.ConfigModel;
 import fr.openent.crre.model.export.ExportOrderRegion;
+import fr.openent.crre.model.item.Item;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.security.UpdateStatusRight;
 import fr.openent.crre.security.ValidatorAndStructureHistoricRight;
@@ -566,25 +567,21 @@ public class OrderRegionController extends BaseController {
         FilterItemModel filtersItemQuery = new FilterItemModel().setSearchingText(filtersItem.getSearchingText());
         FilterItemModel filtersItemFilter = filtersItem.clone().setSearchingText(null);
 
-        Future<JsonArray> filterFuture = filtersItem.hasFilters() ?
-                searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
+        Future<List<Item>> filterFuture = filtersItem.hasFilters() ?
+                searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new ArrayList<>());
 
-        Future<JsonArray> searchFuture = filtersItem.getSearchingText() != null ?
-                searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
+        Future<List<Item>> searchFuture = filtersItem.getSearchingText() != null ?
+                searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new ArrayList<>());
 
         CompositeFuture.all(filterFuture, searchFuture)
                 .compose(items -> {
-                    JsonArray itemsSearch = searchFuture.result();
-                    JsonArray itemsFilter = filterFuture.result();
+                    List<Item> itemsSearch = searchFuture.result();
+                    List<Item> itemsFilter = filterFuture.result();
                     List<String> itemSearchedIdsList = itemsSearch.stream()
-                            .filter(JsonObject.class::isInstance)
-                            .map(JsonObject.class::cast)
-                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .map(Item::getEan)
                             .collect(Collectors.toList());
                     List<String> itemFilteredIdsList = itemsFilter.stream()
-                            .filter(JsonObject.class::isInstance)
-                            .map(JsonObject.class::cast)
-                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .map(Item::getEan)
                             .collect(Collectors.toList());
                     return orderRegionService.search(filters, filtersItem, itemSearchedIdsList, itemFilteredIdsList);
                 })
@@ -598,25 +595,21 @@ public class OrderRegionController extends BaseController {
         FilterItemModel filtersItemQuery = new FilterItemModel().setSearchingText(filtersItem.getSearchingText());
         FilterItemModel filtersItemFilter = filtersItem.clone().setSearchingText(null);
 
-        Future<JsonArray> filterFuture = filtersItem.hasFilters() ?
-                searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
+        Future<List<Item>> filterFuture = filtersItem.hasFilters() ?
+                searchfilter(filtersItemFilter, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new ArrayList<>());
 
-        Future<JsonArray> searchFuture = filtersItem.getSearchingText() != null ?
-                searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new JsonArray());
+        Future<List<Item>> searchFuture = filtersItem.getSearchingText() != null ?
+                searchfilter(filtersItemQuery, Collections.singletonList(Field.EAN)) : Future.succeededFuture(new ArrayList<>());
 
         CompositeFuture.all(filterFuture, searchFuture)
                 .compose(items -> {
-                    JsonArray itemsSearch = searchFuture.result();
-                    JsonArray itemsFilter = filterFuture.result();
+                    List<Item> itemsSearch = searchFuture.result();
+                    List<Item> itemsFilter = filterFuture.result();
                     List<String> itemSearchedIdsList = itemsSearch.stream()
-                            .filter(JsonObject.class::isInstance)
-                            .map(JsonObject.class::cast)
-                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .map(Item::getEan)
                             .collect(Collectors.toList());
                     List<String> itemFilteredIdsList = itemsFilter.stream()
-                            .filter(JsonObject.class::isInstance)
-                            .map(JsonObject.class::cast)
-                            .map(jsonObject -> jsonObject.getString(Field.EAN))
+                            .map(Item::getEan)
                             .collect(Collectors.toList());
                     return orderRegionService.getAllOrderRegionByProject(idsProjects, filters, filtersItem, itemSearchedIdsList, itemFilteredIdsList);
                 })

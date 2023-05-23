@@ -24,6 +24,13 @@ public interface BasketOrderItemService {
     Future<JsonObject> delete(Integer idBasket);
 
     /**
+     * Delete a list basket item
+     *
+     * @param basketIds list of id of the basket item
+     */
+    Future<List<BasketOrderItem>> delete(List<Integer> basketIds);
+
+    /**
      * Update a basket's amount
      *
      * @param idBasket id of a basket item
@@ -77,5 +84,5 @@ public interface BasketOrderItemService {
      * @param idStructure structure identifier
      * @param userId user id
      */
-    Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, String userId);
+    Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, String userId, List<String> itemIds);
 }

@@ -17,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
+import org.entcore.common.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,6 +63,19 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
                 .onSuccess(res -> promise.complete(new JsonObject()
                         .put(Field.ID, idBasket)))
                 .onFailure(promise::fail);
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<List<BasketOrderItem>> delete(List<Integer> basketIds) {
+        Promise<List<BasketOrderItem>> promise = Promise.promise();
+
+        String query = "DELETE FROM " + Crre.crreSchema + ".basket_order_item WHERE id IN " + Sql.listPrepared(basketIds) + " RETURNING *";
+        JsonArray params = new JsonArray(new ArrayList<>(basketIds));
+
+        String errorMessage = String.format("[CRRE@%s::delete] Fail to delete basket item", this.getClass().getSimpleName());
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrderItem.class, errorMessage)));
 
         return promise.future();
     }
@@ -187,21 +201,43 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
     }
 
     @Override
-    public Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, String userId) {
+    public Future<List<BasketOrderItem>> listBasketOrderItem(Integer idCampaign, String idStructure, String userId, List<String> itemIds) {
         Promise<List<BasketOrderItem>> promise = Promise.promise();
 
         JsonArray values = new JsonArray();
-        String query = "SELECT id, amount, comment , processing_date, id_campaign, id_structure, id_item, reassort " +
-                "FROM " + Crre.crreSchema + ".basket_order_item basket " +
-                "WHERE basket.id_campaign = ? " +
-                "AND basket.id_structure = ? " +
-                "AND basket.owner_id = ? " +
-                "GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure) " +
-                "ORDER BY basket.id DESC;";
-        values.add(idCampaign).add(idStructure).add(userId);
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT * FROM ").append(Crre.crreSchema).append(".basket_order_item basket ");
+
+        StringBuilder queryFilter = new StringBuilder();
+        if (idCampaign != null) {
+            queryFilter.append("AND basket.id_campaign = ? ");
+            values.add(idCampaign);
+        }
+
+        if (!StringUtils.isEmpty(idStructure)) {
+            queryFilter.append("AND basket.id_structure = ? ");
+            values.add(idStructure);
+        }
+
+        if (!StringUtils.isEmpty(userId)) {
+            queryFilter.append("AND basket.owner_id = ? ");
+            values.add(userId);
+        }
+
+        if (itemIds != null && !itemIds.isEmpty()) {
+            queryFilter.append("AND basket.id_item IN ").append(Sql.listPrepared(itemIds)).append(" ");
+            values.addAll(new JsonArray(new ArrayList<>(itemIds)));
+        }
+
+        if (queryFilter.length() > 0) {
+            query.append(queryFilter.toString().replaceFirst("AND", "WHERE"));
+        }
+
+        query.append("GROUP BY (basket.id, basket.amount, basket.processing_date, basket.id_campaign, basket.id_structure) " + "ORDER BY basket.id DESC;");
+
 
         String errorMessage = String.format("[CRRE@%s::listBasketOrderItem] Fail to retrieve basket order item list", this.getClass().getSimpleName());
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrderItem.class, errorMessage)));
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrderItem.class, errorMessage)));
 
         return promise.future();
     }
