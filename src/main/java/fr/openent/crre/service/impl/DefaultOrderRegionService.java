@@ -6,6 +6,7 @@ import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.DateHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.*;
 import fr.openent.crre.service.OrderRegionService;
 import fr.wseduc.webutils.Either;
@@ -21,10 +22,7 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DefaultOrderRegionService extends SqlCrudService implements OrderRegionService {
@@ -438,47 +436,46 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public List<TransactionElement> insertOldRegionOrders(List<OrderUniversalModel> orderList, boolean isRenew) {
-        return ListUtils.partition(orderList, 500).stream()
-                .map(order -> this.insertOrderList(order, isRenew))
+    public List<TransactionElement> insertOldRegionOrders(List<OrderUniversalModel> orderUniversalModelList) {
+        return ListUtils.partition(orderUniversalModelList, 500).stream()
+                .map(this::insertOrderList)
                 .collect(Collectors.toList());
     }
 
-    private TransactionElement insertOrderList(List<OrderUniversalModel> orderList, boolean isRenew) {
+    private TransactionElement insertOrderList(List<OrderUniversalModel> orderUniversalModelList) {
         JsonArray params = new JsonArray();
         StringBuilder query = new StringBuilder("" +
                 "INSERT INTO " + Crre.crreSchema + ".\"order-region-equipment-old\"" +
-                " (" +
-                ((isRenew) ? "" : "id,") +
-                "amount, creation_date,  owner_name, owner_id," +
+                " (id, amount, creation_date,  owner_name, owner_id," +
                 " status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_order_client_equipment, id_project, reassort, id_status, total_free) VALUES ");
 
-        for (OrderUniversalModel order : orderList) {
-            if (order.getProject().getId() != null) {
-                query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?");
-                if (isRenew) {
-                    query.append(") ,");
-                } else {
-                    params.add(order.getOrderRegionId());
-                    query.append(", ?) ,");
-                }
+        for (OrderUniversalModel order : orderUniversalModelList) {
+            query.append("(");
 
-                params.add(order.getAmount())
-                        .add(order.getValidatorValidationDate())
-                        .add(order.getValidatorName())
-                        .add(order.getValidatorId())
-                        .add((!isRenew) ? "SENT" : order.getStatus())
-                        .add(order.getEquipmentKey());
-                setOrderValuesSQL(params, order);
-                params.add(order.getOrderClientId())
-                        .add(order.getProject().getId())
-                        .add(order.getReassort())
-                        .addNull() //Order region n'est pas encore envoyé a lde on ne peut pas avoir d'id status
-                        .add(order.getTotalFree());
+            if (order.getOrderRegionId() != null) {
+                query.append("?, ");
+                params.add(order.getOrderRegionId());
+            } else {
+                query.append("(Select nextval('").append(Crre.crreSchema).append(".\"order-region-equipment-old_id_seq\"')), ");
             }
+            query.append("?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ,");
+
+            params.add(order.getAmount())
+                    .add(OrderStatus.ARCHIVED.equals(order.getStatus()) ? "now()" : order.getValidatorValidationDate())
+                    .add(order.getValidatorName())
+                    .add(order.getValidatorId())
+                    .add(order.getStatus())
+                    .add(order.getEquipmentKey());
+            setOrderValuesSQL(params, order);
+            params.add(order.getOrderClientId())
+                    .add(order.getProject() != null ? order.getProject().getId() : null)
+                    .add(order.getReassort())
+                    .addNull() //Order region n'est pas encore envoyé a lde on ne peut pas avoir d'id status
+                    .add(order.getTotalFree());
         }
+
         query = new StringBuilder(query.substring(0, query.length() - 1));
         return new TransactionElement(query.toString(), params);
     }
@@ -608,24 +605,22 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure," +
                 " comment, id_basket, reassort, offers, equipment_tva5, equipment_tva20, equipment_priceht) VALUES ");
         for (OrderUniversalModel order : orderUniversalModelList) {
-            if (order.getProject() != null && order.getProject().getId() != null) {
-                query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
-                params.add(order.getOrderClientId())
-                        .add(order.getAmount())
-                        .add(order.getPrescriberValidationDate())
-                        .add(order.getPrescriberId())
-                        .add("SENT")
-                        .add(order.getEquipmentKey());
-                setOrderValuesSQL(params, order);
+            query.append("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),");
+            params.add(order.getOrderClientId())
+                    .add(order.getAmount())
+                    .add(order.getPrescriberValidationDate())
+                    .add(order.getPrescriberId())
+                    .add(order.getStatus())
+                    .add(order.getEquipmentKey());
+            setOrderValuesSQL(params, order);
 
-                JsonArray offers = IModelHelper.toJsonArray(order.getOffers());
-                params.add(order.getBasket().getId())
-                        .add(order.getReassort())
-                        .add(offers)
-                        .add(order.getEquipmentPriceTva5())
-                        .add(order.getEquipmentPriceTva20())
-                        .add(order.getEquipmentPriceht());
-            }
+            JsonArray offers = IModelHelper.toJsonArray(order.getOffers());
+            params.add(order.getBasket().getId())
+                    .add(order.getReassort())
+                    .add(offers)
+                    .add(order.getEquipmentPriceTva5())
+                    .add(order.getEquipmentPriceTva20())
+                    .add(order.getEquipmentPriceht());
         }
         query = new StringBuilder(query.substring(0, query.length() - 1));
         return new TransactionElement(query.toString(), params);
@@ -644,7 +639,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 "WHERE id in ( SELECT ore.id_order_client_equipment FROM " + Crre.crreSchema + ".\"order-region-equipment\" ore " +
                 "WHERE id in " + Sql.listPrepared(ids.toArray()) + " );";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(status.toUpperCase()).add(justification);
+        JsonArray params = new JsonArray().add(status.toUpperCase()).add(justification);
         for (Integer id : ids) {
             params.add(id);
         }
@@ -751,6 +746,35 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 promise.fail(stringJsonArrayEither.left().getValue());
             }
         }));
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<Void> insertAndDeleteOrders(List<OrderUniversalModel> ordersUniversalList) {
+        Promise<Void> promise = Promise.promise();
+        List<Long> ordersClientId = (ordersUniversalList.stream()
+                .map(OrderUniversalModel::getOrderClientId)
+                .filter(Objects::nonNull)
+                .map(Integer::longValue)
+                .collect(Collectors.toList()));
+
+        List<TransactionElement> prepareRequestList = new ArrayList<>();
+        prepareRequestList.addAll(this.insertOldRegionOrders(ordersUniversalList));
+        prepareRequestList.addAll(this.insertOldClientOrders(ordersUniversalList));
+        prepareRequestList.addAll(this.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT));
+
+        TransactionHelper.executeTransaction(prepareRequestList)
+                .onSuccess(event -> {
+                    log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
+                            "Orders Deleted and insert in old table was successfull");
+                    promise.complete();
+                })
+                .onFailure(error -> {
+                    String message = String.format("An error has occurred in CompositeFuture : %s", error.getMessage());
+                    promise.fail(message);
+                    log.error(String.format("[CRRE@%s::insertAndDeleteOrders] %s", this.getClass().getSimpleName(), message));
+                });
 
         return promise.future();
     }

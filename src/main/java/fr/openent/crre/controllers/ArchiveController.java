@@ -1,12 +1,16 @@
 package fr.openent.crre.controllers;
 
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.IModelHelper;
+import fr.openent.crre.helpers.OrderHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.BasketOrderItem;
 import fr.openent.crre.model.FilterItemModel;
+import fr.openent.crre.model.FilterModel;
+import fr.openent.crre.model.OrderUniversalModel;
 import fr.openent.crre.model.item.Item;
 import fr.openent.crre.service.ServiceFactory;
 import fr.wseduc.rs.Get;
@@ -52,10 +56,26 @@ public class ArchiveController extends ControllerHelper {
                     .compose(basketOrderItems -> this.serviceFactory.getBasketOrderItemService().delete(basketOrderItems.stream()
                             .map(BasketOrderItem::getId)
                             .collect(Collectors.toList())))
-                    .onSuccess(deletedBasketItem -> {
-                        Renders.ok(request);
+                    .compose(deletedBasketItem -> {
                         Logging.insert(userInfos, Contexts.BASKET_ITEM.toString(), Actions.DELETE.toString(), bookseller, IModelHelper.toJsonArray(deletedBasketItem));
+                        List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values()).filter(orderStatus -> !orderStatus.isHistoricStatus()).collect(Collectors.toList());
+
+                        FilterModel filterModel = new FilterModel()
+                                .setStatus(orderStatusList)
+                                .setEquipmentIds(equimpmentItemFuture.result().stream()
+                                        .map(Item::getEan)
+                                        .collect(Collectors.toList()));
+                        return OrderHelper.listOrderAndCalculatePrice(filterModel, null);
                     })
+                    .compose(orderUniversalModelList -> {
+                        orderUniversalModelList.forEach(orderUniversalModel -> {
+                            orderUniversalModel.setStatus(OrderStatus.ARCHIVED);
+                            orderUniversalModel.setValidatorName(userInfos.getUsername());
+                            orderUniversalModel.setValidatorId(userInfos.getUserId());
+                        });
+                        return this.serviceFactory.getOrderRegionService().insertAndDeleteOrders(orderUniversalModelList);
+                    })
+                    .onSuccess(res-> Renders.ok(request))
                     .onFailure(error -> {
                         log.error(String.format("[CRRE@%s::startArchive] Fail to archive %s:%s",
                                 this.getClass().getSimpleName(), error.getClass().getSimpleName(), error.getMessage()));
