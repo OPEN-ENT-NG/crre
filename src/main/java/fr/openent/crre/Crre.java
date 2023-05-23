@@ -92,6 +92,7 @@ public class Crre extends BaseServer {
         addController(new StatisticsController(serviceFactory));
         addController(new QuoteController(serviceFactory));
         addController(new WorkflowController(serviceFactory));
+        addController(new ArchiveController(serviceFactory));
         if (serviceFactory.getConfig().isDevMode()) {
             addController(new DevController(serviceFactory));
         }

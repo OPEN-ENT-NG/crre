@@ -33,8 +33,8 @@ public class ElasticSearchHelper {
         return String.format(REGEXP_FORMAT, query.toLowerCase());
     }
 
-    private static Future<JsonArray> ESHandler(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource) {
-        Promise<JsonArray> promise = Promise.promise();
+    private static Future<List<Item>> execute(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource) {
+        Promise<List<Item>> promise = Promise.promise();
         executeEsSearch(query, ar -> {
             if (ar.failed()) {
                 promise.fail(ar.cause().toString());
@@ -51,7 +51,7 @@ public class ElasticSearchHelper {
                     .collect(Collectors.toList());
 
             if(items.stream().allMatch(item -> item.getEan() == null)) {
-                promise.complete(new JsonArray(items.stream().map(Item::toJson).collect(Collectors.toList())));
+                promise.complete(items);
                 return;
             }
             items.forEach(item -> {
@@ -86,8 +86,22 @@ public class ElasticSearchHelper {
                     result.add(item);
                 }
             });
-            promise.complete(new JsonArray(result.stream().map(Item::toJson).collect(Collectors.toList())));
+            promise.complete(result);
         });
+        return promise.future();
+    }
+
+    /**
+     * @deprecated  Replaced by {@link #execute(JsonObject, JsonArray, JsonArray, JsonArray)}
+     */
+    @Deprecated
+    private static Future<JsonArray> ESHandler(JsonObject query, JsonArray pro, JsonArray conso, JsonArray ressource) {
+        Promise<JsonArray> promise = Promise.promise();
+
+        execute(query, pro, conso, ressource)
+                .onSuccess(itemList -> promise.complete(IModelHelper.toJsonArray(itemList)))
+                .onFailure(promise::fail);
+
         return promise.future();
     }
 
@@ -252,7 +266,6 @@ public class ElasticSearchHelper {
         }
     }
 
-
     public static void searchById(String id, List<String> resultFieldsExpected, Handler<Either<String, JsonArray>> handler) {
 
         JsonObject queryObject = new JsonObject();
@@ -281,8 +294,8 @@ public class ElasticSearchHelper {
                 .onFailure(error -> handler.handle(new Either.Left<>(error.getMessage())));
     }
 
-    public static Future<JsonArray> searchfilter(FilterItemModel filters, List<String> resultFieldsExpected) {
-        Promise<JsonArray> promise = Promise.promise();
+    public static Future<List<Item>> searchfilter(FilterItemModel filters, List<String> resultFieldsExpected) {
+        Promise<List<Item>> promise = Promise.promise();
         JsonArray term = new JsonArray();
         JsonArray should = new JsonArray();
         JsonObject request = new JsonObject();
@@ -310,7 +323,7 @@ public class ElasticSearchHelper {
         JsonObject queryObject = new JsonObject()
                 .put(Field.BOOL, request);
 
-        ESHandler(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource)
+        execute(esQueryObject(queryObject, resultFieldsExpected), pro, conso, ressource)
                 .onSuccess(promise::complete)
                 .onFailure(promise::fail);
         return promise.future();

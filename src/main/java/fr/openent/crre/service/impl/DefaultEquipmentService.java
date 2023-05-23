@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.model.FilterItemModel;
+import fr.openent.crre.model.item.Item;
 import fr.openent.crre.service.EquipmentService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
@@ -32,7 +33,7 @@ public class DefaultEquipmentService extends SqlCrudService implements Equipment
     }
 
     @Override
-    public Future<JsonArray> searchFilter(FilterItemModel filterItemModel, List<String> resultFieldsExpected) {
+    public Future<List<Item>> searchFilter(FilterItemModel filterItemModel, List<String> resultFieldsExpected) {
         return searchfilter(filterItemModel, resultFieldsExpected);
     }
 

@@ -49,7 +49,8 @@ public class CrreController extends ControllerHelper {
 
         }
 
-        renderJson(request, safeConfig);    }
+        renderJson(request, safeConfig);
+    }
 
     @Get("")
     @ApiDoc("Display the home view")
