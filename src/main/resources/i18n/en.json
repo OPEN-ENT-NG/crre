@@ -358,6 +358,7 @@
   "DONE": "Commande clôturée",
   "SENT": "Transmise au libraire",
   "WAITING_FOR_ACCEPTANCE": "Demande en cours d'instruction",
+  "ARCHIVED": "Archivée",
   "create": "Créer",
   "money.symbol": "€",
   "true": "Oui",

@@ -11,6 +11,7 @@ public enum OrderStatus {
     RESUBMIT("RESUBMIT", false),
     WAITING_FOR_ACCEPTANCE("WAITING_FOR_ACCEPTANCE", false),
     DONE("DONE", true),
+    ARCHIVED("ARCHIVED", true),
     ;
 
     private final String value;

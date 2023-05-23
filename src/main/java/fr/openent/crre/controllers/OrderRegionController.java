@@ -977,7 +977,7 @@ public class OrderRegionController extends BaseController {
         List<OrderUniversalModel> ordersUniversalAll = new ArrayList<>();
         List<MailAttachment> attachmentList = ListUtils.partition(orderUniversalModelList, 10000).stream()
                 .map(orderUniversalModels -> {
-                    List<OrderUniversalModel> ordersUniversalTemp = orderUniversalModelList.stream()
+                    List<OrderUniversalModel> ordersUniversalTemp = orderUniversalModels.stream()
                             .map(order -> order.setStructure(structureList.stream()
                                     .filter(structure -> Objects.equals(structure.getId(), order.getIdStructure()))
                                     .findFirst()
@@ -994,12 +994,6 @@ public class OrderRegionController extends BaseController {
 
         Function<MailAttachment, Future<MailAttachment>> functionInsertQuote = attachment -> this.insertQuote(user, attachment);
 
-        List<Long> ordersClientId = (ordersUniversalAll.stream()
-                .map(OrderUniversalModel::getOrderClientId)
-                .filter(Objects::nonNull)
-                .map(Integer::longValue)
-                .collect(Collectors.toList()));
-
         List<Future> sendOrderBooksellerFuture = ordersUniversalAll.stream()
                 .filter(order -> order.getEquipmentBookseller() != null)
                 .collect(Collectors.groupingBy(OrderUniversalModel::getEquipmentBookseller))
@@ -1009,7 +1003,10 @@ public class OrderRegionController extends BaseController {
                 .collect(Collectors.toList());
         CompositeFuture.all(sendOrderBooksellerFuture)
                 .compose(res -> FutureHelper.compositeSequential(functionInsertQuote, attachmentList, false))
-                .compose(res -> insertAndDeleteOrders(orderUniversalModelList, ordersClientId))
+                .compose(res -> {
+                    ordersUniversalAll.forEach(orderUniversalModel -> orderUniversalModel.setStatus(OrderStatus.SENT));
+                    return orderRegionService.insertAndDeleteOrders(ordersUniversalAll);
+                })
                 .onSuccess(res -> promise.complete())
                 .onFailure(error -> {
                     log.error(String.format("[CRRE@%s::sendLibrary] An error has occurred when send mail to library and remove waiting admin : %s",
@@ -1034,28 +1031,6 @@ public class OrderRegionController extends BaseController {
                 promise.fail(message);
             }
         });
-
-        return promise.future();
-    }
-
-    private Future<Void> insertAndDeleteOrders(List<OrderUniversalModel> orderRegion, List<Long> ordersClientId) {
-        Promise<Void> promise = Promise.promise();
-        List<TransactionElement> prepareRequestList = new ArrayList<>();
-        prepareRequestList.addAll(orderRegionService.insertOldRegionOrders(orderRegion, false));
-        prepareRequestList.addAll(orderRegionService.insertOldClientOrders(orderRegion));
-        prepareRequestList.addAll(orderRegionService.deletedOrders(ordersClientId, Field.ORDER_CLIENT_EQUIPMENT));
-
-        TransactionHelper.executeTransaction(prepareRequestList)
-                .onSuccess(event -> {
-                    log.info("[CRRE@OrderRegionController.insertAndDeleteOrders] " +
-                            "Orders Deleted and insert in old table was successfull");
-                    promise.complete();
-                })
-                .onFailure(error -> {
-                    String message = String.format("An error has occurred in CompositeFuture : %s", error.getMessage());
-                    promise.fail(message);
-                    log.error(String.format("[CRRE@O%s::insertAndDeleteOrders] %s", this.getClass().getSimpleName(), message));
-                });
 
         return promise.future();
     }

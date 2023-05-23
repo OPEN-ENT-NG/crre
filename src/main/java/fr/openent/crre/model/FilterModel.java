@@ -32,6 +32,7 @@ public class FilterModel implements IModel<FilterModel>, Cloneable {
     private OrderByProjectFieldEnum orderBy;
     private Boolean orderDesc;
     private List<String> idsBasket;
+    private List<String> equipmentIds;
 
     private DefaultOrderService.OrderByOrderListEnum orderByForOrderList;
     private Boolean orderDescForOrderList;
@@ -52,10 +53,10 @@ public class FilterModel implements IModel<FilterModel>, Cloneable {
         this.structureTypes = new ArrayList<>();
         this.renew = null;
         this.idsBasket = new ArrayList<>();
+        this.equipmentIds = new ArrayList<>();
     }
 
     public FilterModel(JsonObject jsonObject) {
-
         this.idsCampaign =  JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_CAMPAIGN, new JsonArray()), Integer.class);
         this.idsStructure = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_STRUCTURE, new JsonArray()), String.class);
         this.idsOrder = JsonHelper.jsonArrayToList(jsonObject.getJsonArray(Field.IDS_ORDER, new JsonArray()), Integer.class);
@@ -300,6 +301,15 @@ public class FilterModel implements IModel<FilterModel>, Cloneable {
         return this;
     }
 
+    public List<String> getEquipmentIds() {
+        return equipmentIds;
+    }
+
+    public FilterModel setEquipmentIds(List<String> equipmentIds) {
+        this.equipmentIds = equipmentIds;
+        return this;
+    }
+
     @Override
     public FilterModel clone() {
         try {
@@ -314,6 +324,7 @@ public class FilterModel implements IModel<FilterModel>, Cloneable {
             if (this.catalogs != null) clone.catalogs = new ArrayList<>(this.catalogs);
             if (this.structureTypes != null) clone.structureTypes = new ArrayList<>(this.structureTypes);
             if (this.idsBasket != null) clone.idsBasket = new ArrayList<>(this.idsBasket);
+            if (this.equipmentIds != null) clone.equipmentIds = new ArrayList<>(this.equipmentIds);
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
