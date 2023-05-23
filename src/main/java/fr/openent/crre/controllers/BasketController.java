@@ -62,7 +62,7 @@ public class BasketController extends ControllerHelper {
                 String idStructure = request.params().contains(Field.IDSTRUCTURE)
                         ? request.params().get(Field.IDSTRUCTURE)
                         : null;
-                Future<List<BasketOrderItem>> listBasketOrderItemFuture = basketOrderItemService.listBasketOrderItem(idCampaign, idStructure, user.getUserId());
+                Future<List<BasketOrderItem>> listBasketOrderItemFuture = basketOrderItemService.listBasketOrderItem(idCampaign, idStructure, user.getUserId(), null);
                 listBasketOrderItemFuture
                         .compose(basketOrderItemList -> {
                             List<String> itemIdList = basketOrderItemList.stream()
