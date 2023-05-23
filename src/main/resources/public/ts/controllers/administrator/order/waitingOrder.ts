@@ -53,7 +53,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         const init = async () => {
             $scope.projectFilter.orderBy = ORDER_BY_PROJECT_FIELD_ENUM.DATE;
             $scope.projectFilter.orderDesc = true;
-            $scope.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+            $scope.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.ARCHIVED), new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                 new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.DONE), new StatusFilter(ORDER_STATUS_ENUM.REJECTED)];
 
             $scope.schoolType = [{name: 'PU'}, {name: 'PR'}];
@@ -91,7 +91,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             $scope.display.projects.forEach((project: Project) => {
                 project.orders.forEach(async (order: OrderRegion) => {
                     if (order.selected &&
-                        order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE &&
+                        order.status != ORDER_STATUS_ENUM.SENT &&
+                        order.status != ORDER_STATUS_ENUM.ARCHIVED &&
+                        order.status != ORDER_STATUS_ENUM.DONE &&
                         order.status != ORDER_STATUS_ENUM.VALID) {
                         selectedOrders.push(order);
                     }
@@ -104,7 +106,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             if (status == 200) {
                 projectsToShow.forEach((project: Project) => {
                     project.orders.forEach(async (order: OrderRegion) => {
-                        if (order.selected && order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE) {
+                        if (!Utils.isHistoricalStatus(order.status)) {
                             order.status = ORDER_STATUS_ENUM.VALID;
                         }
                         order.selected = false;
@@ -426,8 +428,8 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             return $scope.projectFilter.statusFilterList.filter((state: StatusFilter) => state.getValue() === status).length > 0;
         };
 
-        $scope.containsSentOrDoneOrders = (): boolean => {
-            return checkStatusChoice(ORDER_STATUS_ENUM.SENT) || checkStatusChoice(ORDER_STATUS_ENUM.DONE);
+        $scope.containsHistoricalOrders = (): boolean => {
+            return Utils.getHistoricalStatus().some((value: ORDER_STATUS_ENUM) => checkStatusChoice(value));
         };
 
         await init();

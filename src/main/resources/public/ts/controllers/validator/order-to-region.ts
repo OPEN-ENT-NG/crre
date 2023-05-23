@@ -63,7 +63,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             let projects = new Projects();
             $scope.projectFilter.structureList.push($scope.current.structure as Structure);
             if (old) {
-                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+                $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
             } else {
                 $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                     new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
@@ -90,7 +90,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             all ? $scope.projectFilter.page = null : 0;
             $scope.projectFilter.structureList.push($scope.current.structure as Structure);
             if (old) {
-                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+                $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
             } else {
                 $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                     new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
@@ -109,7 +109,7 @@ export const orderRegionController = ng.controller('orderRegionController',
         $scope.search = async (old = false) => {
             $scope.projectFilter.page = 0;
             if (old) {
-                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+                $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
             } else {
                 $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                     new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
@@ -165,7 +165,7 @@ export const orderRegionController = ng.controller('orderRegionController',
             if (!isSearching) {
                 $scope.projectFilter.structureList.push($scope.current.structure as Structure);
                 if (old) {
-                    $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.DONE)] as Array<StatusFilter>;
+                    $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
                 } else {
                     $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
                         new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;

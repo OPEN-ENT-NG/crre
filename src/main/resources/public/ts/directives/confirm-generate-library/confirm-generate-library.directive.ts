@@ -8,7 +8,7 @@ interface IViewModel extends ng.IController, ICrreProps {
     generateLibraryOrder(): Promise<void>;
 
     checkStatusOrder(status : string): boolean;
-    checkSendOrDoneStatusOrder(): boolean;
+    checkHistoricalStatusOrder(): boolean;
     checkRejectedStatusOrder(): boolean;
 
     // link method
@@ -75,8 +75,8 @@ class Controller implements IViewModel {
         return this.extractSelectedOrders().all.filter((order : OrderRegion) => order.status === status).length > 0;
     };
 
-    checkSendOrDoneStatusOrder = () : boolean => {
-        return this.checkStatusOrder(ORDER_STATUS_ENUM.SENT) || this.checkStatusOrder(ORDER_STATUS_ENUM.DONE);
+    checkHistoricalStatusOrder = () : boolean => {
+        return Utils.getHistoricalStatus().some((value: ORDER_STATUS_ENUM) => this.checkStatusOrder(value));
     };
 
     checkRejectedStatusOrder = () : boolean => {

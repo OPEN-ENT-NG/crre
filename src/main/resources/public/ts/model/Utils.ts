@@ -274,14 +274,18 @@ export class Utils {
         link.click();
     }
 
-    static getOldStatus(): string[] {
-        return [ORDER_STATUS_ENUM.SENT, ORDER_STATUS_ENUM.DONE];
+    static getHistoricalStatus(): ORDER_STATUS_ENUM[] {
+        return [ORDER_STATUS_ENUM.SENT, ORDER_STATUS_ENUM.DONE, ORDER_STATUS_ENUM.ARCHIVED];
     }
 
-    static getCurrentStatus(): string[] {
+    static getCurrentStatus(): ORDER_STATUS_ENUM[] {
         return [ORDER_STATUS_ENUM.IN_PROGRESS, ORDER_STATUS_ENUM.WAITING, ORDER_STATUS_ENUM.RESUBMIT, ORDER_STATUS_ENUM.REJECTED, ORDER_STATUS_ENUM.VALID];
     }
 
 
     static format = /^[`@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~]/;
+
+    static isHistoricalStatus(status: string) {
+        return this.getHistoricalStatus().some(value => value == status);
+    }
 }
