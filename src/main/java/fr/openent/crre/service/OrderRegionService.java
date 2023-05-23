@@ -43,13 +43,13 @@ public interface OrderRegionService {
      */
     Future<JsonArray> search(FilterModel filters, FilterItemModel filtersItem, List<String> itemSearchedIdsList, List<String> itemFilteredIdsList);
 
-    List<TransactionElement> insertOldRegionOrders(List<OrderUniversalModel> orderRegionBeautify, boolean isRenew);
+    List<TransactionElement> insertOldRegionOrders(List<OrderUniversalModel> orderUniversalModelList);
 
     List<TransactionElement> insertOldClientOrders(List<OrderUniversalModel> orderRegionBeautifyList);
 
     // TODO: verif si a delete isRenew
     /**
-     * @deprecated Use {@link #insertOldRegionOrders(List, boolean)}
+     * @deprecated Use {@link #insertOldRegionOrders(List)}
      */
     @Deprecated
     List<TransactionElement> insertOldRegionOrders(JsonArray orderRegions, boolean isRenew);
@@ -76,4 +76,6 @@ public interface OrderRegionService {
      * @param projectIdList list of projectId
      */
     Future<Map<ProjectModel, List<OrderRegionEquipmentModel>>> getOrderRegionEquipmentInSameProject(List<Integer> projectIdList, boolean old);
+
+    Future<Void> insertAndDeleteOrders(List<OrderUniversalModel> orderUniversalList);
 }
