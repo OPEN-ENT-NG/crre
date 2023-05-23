@@ -4,6 +4,7 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.core.constants.ItemField;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.JsonHelper;
+import fr.openent.crre.helpers.StringHelper;
 import fr.openent.crre.model.IModel;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -369,5 +370,17 @@ public class Item implements IModel<Item> {
     public Item setTarget(String target) {
         this.target = target;
         return this;
+    }
+
+    public boolean isValid() {
+        return this.ean != null &&
+                (this.catalog.equals(ItemField.PAPER_ITEM) || this.getOffers() != null && !this.getOffers().isEmpty()) &&
+                !StringHelper.isNullOrEmpty(this.title) &&
+                this.tvas != null && !this.tvas.isEmpty() &&
+                !StringHelper.isNullOrEmpty(this.type) &&
+                !StringHelper.isNullOrEmpty(this.bookSeller) &&
+                this.priceHT != null &&
+                this.availability != null && !this.availability.isEmpty() &&
+                this.availability.stream().allMatch(Availability::isValid);
     }
 }
