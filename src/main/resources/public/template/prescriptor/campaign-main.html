@@ -25,7 +25,7 @@
         <header class="horizontal-spacing"  ng-click="backHome()">
             <i class="home"></i>
         </header>
-        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog(campaign.id)" ng-if="campaign.accessible && isPrescriptorInStructure(current.structure)">
+        <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('catalog')}"  ng-click="openCatalog(campaign.id)" ng-if="campaign.accessible && hasAccessInStructure(current.structure)">
             <i18n>crre.catalog</i18n>
         </header>
         <header class="horizontal-spacing" ng-class="{selected: selectedType.split('/').includes('order') &&
