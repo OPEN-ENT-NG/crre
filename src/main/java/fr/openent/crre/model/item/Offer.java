@@ -48,7 +48,9 @@ public class Offer implements IModel<Offer> {
     }
 
     public boolean isEmpty() {
-        return this.type == null || this.eanBookseller == null;
+        return this.type == null ||
+                this.eanBookseller == null ||
+                this.minPurchaseAmount == null;
     }
 
     // Getters and setters

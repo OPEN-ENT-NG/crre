@@ -47,7 +47,7 @@ public class ElasticSearchHelper {
                     .stream()
                     .filter(item -> item.containsKey(Field._SOURCE) && item.containsKey(Field._INDEX))
                     .map(item -> new Item(item.getJsonObject(Field._SOURCE).put(ItemField.TYPE_CATALOG,item.getString(Field._INDEX))))
-                    .filter(item -> item.getOffers() != null && !item.getOffers().isEmpty())
+                    .filter(Item::isValid)
                     .collect(Collectors.toList());
 
             if(items.stream().allMatch(item -> item.getEan() == null)) {
