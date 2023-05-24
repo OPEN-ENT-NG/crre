@@ -1,6 +1,7 @@
 package fr.openent.crre.model.item;
 
 import fr.openent.crre.core.constants.ItemField;
+import fr.openent.crre.helpers.StringHelper;
 import fr.openent.crre.model.IModel;
 import io.vertx.core.json.JsonObject;
 
@@ -8,7 +9,7 @@ public class Availability implements IModel<Availability> {
 
     private String value;
     private String availabilityDate;
-    private boolean orderable;
+    private Boolean orderable;
     private String comment;
 
     public Availability(JsonObject json) {
@@ -38,11 +39,11 @@ public class Availability implements IModel<Availability> {
         return this;
     }
 
-    public boolean isOrderable() {
+    public Boolean isOrderable() {
         return orderable;
     }
 
-    public Availability setOrderable(boolean orderable) {
+    public Availability setOrderable(Boolean orderable) {
         this.orderable = orderable;
         return this;
     }
@@ -63,5 +64,10 @@ public class Availability implements IModel<Availability> {
                 .put(ItemField.DATE_AVAILABILITY, this.availabilityDate)
                 .put(ItemField.ORDERABLE, this.orderable)
                 .put(ItemField.COMMENT, this.comment);
+    }
+
+    public boolean isValid() {
+        return !StringHelper.isNullOrEmpty(this.value) &&
+                this.orderable != null;
     }
 }
