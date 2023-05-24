@@ -279,6 +279,13 @@ public class Field {
     public static final String NAN = "NaN";
     public static final String DISPONIBILITE = "disponibilite";
     public static final String INCATALOG = "inCatalog";
+    public static final String NEW_VALUE = "newValue";
+    public static final String ADD_VALUE = "addValue";
+    public static final String REFUND_VALUE = "refundValue";
+    public static final String CONSUMABLE_AMOUNT = "consumable_amount";
+    public static final String PURSES = "purses";
+    public static final String PURSE = "purse";
+
 
     private Field() {
         throw new IllegalStateException("Utility class");

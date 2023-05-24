@@ -1,7 +1,9 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.model.PurseImport;
 import fr.openent.crre.model.TransactionElement;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -12,10 +14,11 @@ public interface PurseService {
 
     /**
      * Launch purse import
+     *
      * @param statementsValues Object containing structure ids as key and purse amount as value
-     * @param handler Function handler
+     * @param uaiErrorList
      */
-    void launchImport(JsonObject statementsValues, boolean invalidDatas, Handler<Either<String, JsonObject>> handler);
+    Future<PurseImport> launchImport(JsonObject statementsValues, List<String> uaiErrorList);
 
     /**
      * Get purses by campaign id
