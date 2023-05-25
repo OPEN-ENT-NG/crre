@@ -53,7 +53,7 @@ export const manageOrderController = ng.controller('manageOrderController',
                     order.selected = false;
                 });
             });
-            const statusList: Array<string> = $scope.filter.isOld ? Utils.getOldStatus() : Utils.getCurrentStatus();
+            const statusList: Array<string> = $scope.filter.isOld ? Utils.getHistoricalStatus() : Utils.getCurrentStatus();
             const currentUser = new UserModel({id_user: model.me.userId, user_name: null} as IUserModel)
             if (order_selected.all.length != 0 && !$scope.display.allOrdersListSelected) {
                 order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, statusList);
@@ -94,7 +94,7 @@ export const manageOrderController = ng.controller('manageOrderController',
                     $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld, $scope.current.structure.id);
             } else {
                 newData = await $scope.basketsOrders.getMyOrders($scope.filter.page,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld, $scope.current.structure.id);
+                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.campaign.id, $scope.filter.isOld, $scope.current.structure.id);
             }
             if(newData.length > 0) {
                 await $scope.synchroMyBaskets(newData);

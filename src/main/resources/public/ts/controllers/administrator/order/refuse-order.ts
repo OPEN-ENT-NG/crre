@@ -15,7 +15,7 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
                 project.orders.forEach( async (order: OrderRegion) => {
                     if(order.selected &&
                         order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE &&
-                        order.status != ORDER_STATUS_ENUM.REJECTED) {
+                        order.status != ORDER_STATUS_ENUM.REJECTED && order.status != ORDER_STATUS_ENUM.ARCHIVED) {
                         selectedOrders.all.push(order);
                     }
                 });
@@ -31,7 +31,9 @@ export const refuseOrderRegionController = ng.controller('refuseOrderRegionContr
                 projectsToShow.all.forEach((project: Project) => {
                     project.orders.forEach( async (order: OrderRegion) => {
                         if(order.selected &&
-                            order.status != ORDER_STATUS_ENUM.SENT && order.status != ORDER_STATUS_ENUM.DONE &&
+                            order.status != ORDER_STATUS_ENUM.SENT &&
+                            order.status != ORDER_STATUS_ENUM.DONE &&
+                            order.status != ORDER_STATUS_ENUM.ARCHIVED &&
                             order.status != ORDER_STATUS_ENUM.REJECTED) {
                             order.status = ORDER_STATUS_ENUM.REJECTED;
                             order.cause_status = justification;
