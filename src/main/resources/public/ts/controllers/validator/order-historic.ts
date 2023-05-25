@@ -47,7 +47,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
 
         $scope.canResubmit = () : boolean => {
             return $scope.display.projects.all.flatMap((project : Project) => project.orders)
-                .filter((order : OrderRegion) => order.selected && (!order.equipment || !order.equipment.valid)).length == 0;
+                .filter((order : OrderRegion) => order.selected && (!order.equipment || !order.equipment.valid || order.status == ORDER_STATUS_ENUM.ARCHIVED)).length == 0;
         }
 
         $scope.reSubmit = async () : Promise<void> => {
