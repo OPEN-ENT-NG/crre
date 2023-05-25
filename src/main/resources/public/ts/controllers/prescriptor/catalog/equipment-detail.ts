@@ -1,5 +1,6 @@
 import {ng, template} from 'entcore';
 import {Basket, Campaign, Equipment, Utils} from '../../../model';
+import {TypeCatalogEnum} from "../../../enum/type-catalog-enum";
 
 export const equipmentController = ng.controller('equipmentController',
     ['$scope', '$routeParams', '$anchorScroll', ($scope, $routeParams, $anchorScroll) => {
@@ -77,7 +78,7 @@ export const equipmentController = ng.controller('equipmentController',
             } else {
                 $scope.basket.amount = 1;
             }
-            if ($scope.basket.equipment.type === 'articlenumerique') {
+            if ($scope.basket.equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                     $scope.offerStudent, $scope.offerTeacher);
             }
@@ -87,7 +88,7 @@ export const equipmentController = ng.controller('equipmentController',
         $scope.amountDecrease = async () => {
             if ($scope.basket.amount > 1) {
                 $scope.basket.amount -= 1;
-                if ($scope.basket.equipment.type === 'articlenumerique') {
+                if ($scope.basket.equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                     $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,
                         $scope.offerStudent, $scope.offerTeacher);
                 }

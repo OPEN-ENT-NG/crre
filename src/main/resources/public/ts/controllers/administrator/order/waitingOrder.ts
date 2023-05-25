@@ -17,6 +17,7 @@ import {Subscription} from "rxjs";
 import {Mix} from "entcore-toolkit";
 import {StatusFilter} from "../../../model/StatusFilter";
 import {ORDER_BY_PROJECT_FIELD_ENUM} from "../../../enum/order-by-project-field-enum";
+import {TypeCatalogEnum} from "../../../enum/type-catalog-enum";
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
     ['$scope', async ($scope) => {
@@ -294,7 +295,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
                                 }
                             } else {
                                 let equipment = equipments.all.find(equipment => order.equipment_key == equipment.id);
-                                if (equipment && equipment.type === "articlenumerique") {
+                                if (equipment && equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                                     order.offers = Utils.computeOffer(order, equipment);
                                 }
                                 if (!$scope.isAdministrator()) {

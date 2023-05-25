@@ -349,11 +349,11 @@ public class Item implements IModel<Item> {
         }
 
         if (this.type != null) {
-            json.put(ItemField.TYPE_CATALOG, this.type);
+            json.put(ItemField.TYPE, this.type);
         }
 
         if (this.catalog != null) {
-            json.put(Field.TYPE, this.catalog);
+            json.put(ItemField.TYPE_CATALOG, this.catalog);
         }
 
         if(this.technos != null && !this.technos.isEmpty()) {

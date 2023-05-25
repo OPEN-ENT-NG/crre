@@ -6,6 +6,8 @@ import {Utils} from "./Utils";
 import {Catalog, ICatalogResponse} from "./Catalog";
 import {FiltersCatalogItem} from "./FiltersCatalogItem";
 import {equipmentsService} from "../services/equipments.service";
+import {Lep, LepCondition} from "./Lep";
+import {TypeCatalogEnum} from "../enum/type-catalog-enum";
 
 export class Equipment implements Selectable {
     id?: string;
@@ -24,6 +26,7 @@ export class Equipment implements Selectable {
     titre: string;
     ark: string;
     type: string;
+    typeCatalogue: string;
     offres: any;
     prixht: number;
     tvas: any;
@@ -43,13 +46,10 @@ export class Equipment implements Selectable {
             let {data} = await http.get(url);
             Mix.extend(this, data);
             reformatEquipment(this);
-            if (this.type === 'articlenumerique') {
+            if (this.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                 if (this.offres.length != 0) {
-                    this.offres[0].leps.forEach(function (offre) {
-                        offre.conditions.sort(function (a, b) {
-                            return a.gratuite - b.gratuite;
-                        });
-                    });
+                    this.offres[0].leps.forEach((lep: Lep) =>
+                        lep.conditions.sort((condition1: LepCondition, condition2: LepCondition) => condition1.gratuite - condition2.gratuite));
                 }
             }
         } catch (e) {

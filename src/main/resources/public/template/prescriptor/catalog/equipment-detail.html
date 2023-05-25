@@ -32,7 +32,7 @@
             </div>
             <div class="twelve-small padding-20 cell right-magnet twelve-mobile"
                  ng-style="{height: offers.all.length > 1 ? '480px' : '330px'}">
-                <div ng-if="basket.equipment.type === 'articlenumerique' && basket.equipment.offres[0].adoptant === true"
+                <div ng-if="basket.equipment.typeCatalogue === 'articlenumerique' && basket.equipment.offres[0].adoptant === true"
                      id="box">
                     <input type="radio" id="item_1" name="box" checked/>
                     <label for="item_1" class="labeltab">
@@ -117,7 +117,7 @@
                         </div>
                     </label>
                 </div>
-                <div ng-if="basket.equipment.type === 'articlenumerique' && basket.equipment.offres[0].adoptant === false">
+                <div ng-if="basket.equipment.typeCatalogue === 'articlenumerique' && basket.equipment.offres[0].adoptant === false">
                     <div style="display: block; margin-left: 25px" class="contentTab">
                         <div class="boxF">
                             <div></div>
@@ -192,7 +192,7 @@
                         </div>
                     </div>
                 </div>
-                <div ng-if="basket.equipment.type === 'articlepapier'" id="box2">
+                <div ng-if="basket.equipment.typeCatalogue === 'articlepapier'" id="box2">
                     <div class="contentTabPaper">
                         <div class="boxF">
                             <div>
@@ -252,11 +252,11 @@
             </h2>
             <table class="table twelve">
                 <tbody>
-                <tr ng-if="!!basket.equipment.type">
+                <tr ng-if="!!basket.equipment.typeCatalogue">
                     <td class="one"><strong>
                         <i18n>crre.equipment.format</i18n>
                     </strong></td>
-                    <td>[[lang.translate(basket.equipment.type)]]</td>
+                    <td>[[lang.translate(basket.equipment.typeCatalogue)]]</td>
                 </tr>
                 <tr ng-if="!!basket.equipment.editeur">
                     <td class="one"><strong>

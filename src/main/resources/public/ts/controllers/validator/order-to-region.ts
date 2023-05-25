@@ -19,6 +19,7 @@ import {Mix} from "entcore-toolkit";
 import {ProjectFilter} from "../../model/ProjectFilter";
 import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
 import {StatusFilter} from "../../model/StatusFilter";
+import {TypeCatalogEnum} from "../../enum/type-catalog-enum";
 
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', async ($scope) => {
@@ -233,7 +234,7 @@ export const orderRegionController = ng.controller('orderRegionController',
                                     order.offers = offers;
                                 }
                             } else {
-                                if (equipment && equipment.type === "articlenumerique") {
+                                if (equipment && equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                                     order.offers = Utils.computeOffer(order, equipment);
                                 }
                                 if (!$scope.isAdministrator()) {

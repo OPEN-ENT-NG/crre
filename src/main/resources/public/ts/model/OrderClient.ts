@@ -20,6 +20,7 @@ import {ValidatorOrderWaitingFilter} from "./ValidatorOrderWaitingFilter";
 import {OrderUniversal} from "./OrderUniversal";
 import {OrderSearchAmount} from "./OrderSearchAmount";
 import {ExportOrderFilter} from "./ExportOrderFilter";
+import {TypeCatalogEnum} from "../enum/type-catalog-enum";
 
 declare let window: any;
 
@@ -74,7 +75,7 @@ export class OrderClient implements Order {
             await http.put(`/crre/order/${this.id}/amount`, {amount: amount});
             let equipment: Equipment = new Equipment();
             await equipment.sync(this.equipment_key);
-            if (equipment.type === "articlenumerique") {
+            if (equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                 this.offers = Utils.computeOffer(this, equipment);
             }
         } catch (e) {
@@ -208,7 +209,7 @@ export class OrdersClient extends Selection<OrderClient> {
             order.name = equipment.titre;
             order.valid = equipment.valid;
             order.image = equipment.urlcouverture.replace("cns-edu.org", "www.cns-edu.com");
-            if (equipment.type === "articlenumerique") {
+            if (equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                 order.offers = Utils.computeOffer(order, equipment);
             }
         } else {
