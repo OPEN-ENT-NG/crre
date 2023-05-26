@@ -62,37 +62,37 @@ public class FilterItemModel implements IModel<FilterItemModel>, Cloneable {
             FilterItemModelJson.put(Field.SEARCHING_TEXT, this.searchingText);
         }
         if (this.distributors != null && !this.distributors.isEmpty()) {
-            FilterItemModelJson.put(Field.DISTRIBUTORS, new JsonArray(ListHelper.distinct(this.distributors)));
+            FilterItemModelJson.put(Field.DISTRIBUTORS, new JsonArray(this.distributors));
         }
         if (this.classes != null && !this.classes.isEmpty()) {
-            FilterItemModelJson.put(Field.CLASSES, new JsonArray(ListHelper.distinct(this.classes)));
+            FilterItemModelJson.put(Field.CLASSES, new JsonArray(this.classes));
         }
         if (this.levels != null && !this.levels.isEmpty()) {
-            FilterItemModelJson.put(Field.GRADES, new JsonArray(ListHelper.distinct(this.levels)));
+            FilterItemModelJson.put(Field.GRADES, new JsonArray(this.levels));
         }
         if (this.disciplines != null && !this.disciplines.isEmpty()) {
-            FilterItemModelJson.put(Field.DISCIPLINES, new JsonArray(ListHelper.distinct(this.disciplines)));
+            FilterItemModelJson.put(Field.DISCIPLINES, new JsonArray(this.disciplines));
         }
         if (this.itemTypes != null && !this.itemTypes.isEmpty()) {
-            FilterItemModelJson.put(Field.ITEM_TYPES, new JsonArray(ListHelper.distinct(this.itemTypes)));
+            FilterItemModelJson.put(Field.ITEM_TYPES, new JsonArray(this.itemTypes));
         }
         if (this.targets != null && !this.targets.isEmpty()) {
-            FilterItemModelJson.put(Field.TARGETS, new JsonArray(ListHelper.distinct(this.targets)));
+            FilterItemModelJson.put(Field.TARGETS, new JsonArray(this.targets));
         }
         if (this.editors != null && !this.editors.isEmpty()) {
-            FilterItemModelJson.put(Field.EDITORS, new JsonArray(ListHelper.distinct(this.editors)));
+            FilterItemModelJson.put(Field.EDITORS, new JsonArray(this.editors));
         }
         if (this.catalogs != null && !this.catalogs.isEmpty()) {
-            FilterItemModelJson.put(Field.CATALOGS, new JsonArray(ListHelper.distinct(this.catalogs)));
+            FilterItemModelJson.put(Field.CATALOGS, new JsonArray(this.catalogs));
         }
         if (this.structureSectors != null && !this.structureSectors.isEmpty()) {
-            FilterItemModelJson.put(Field.STRUCTURE_SECTORS, new JsonArray(ListHelper.distinct(this.structureSectors)));
+            FilterItemModelJson.put(Field.STRUCTURE_SECTORS, new JsonArray(this.structureSectors));
         }
         if (this.devices != null && !this.devices.isEmpty()) {
-            FilterItemModelJson.put(Field.DEVICES, new JsonArray(ListHelper.distinct(this.devices)));
+            FilterItemModelJson.put(Field.DEVICES, new JsonArray(this.devices));
         }
         if (this.booksellers != null && !this.booksellers.isEmpty()) {
-            FilterItemModelJson.put(Field.BOOKSELLERS, new JsonArray(ListHelper.distinct(this.booksellers)));
+            FilterItemModelJson.put(Field.BOOKSELLERS, new JsonArray(this.booksellers));
         }
 
         return FilterItemModelJson;
