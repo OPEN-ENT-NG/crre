@@ -27,10 +27,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
@@ -124,17 +121,17 @@ public class EquipmentController extends ControllerHelper {
 
     private FilterItemModel buildFilterFromEquipment(List<Item> itemList) {
         FilterItemModel filters = new FilterItemModel();
-        filters.setDisciplines(itemList.stream().flatMap(item -> item.getDisciplines().stream()).collect(Collectors.toList()));
-        filters.setLevels(itemList.stream().flatMap(item -> item.getLevels().stream()).collect(Collectors.toList()));
-        filters.setClasses(itemList.stream().flatMap(item -> item.getClasses().stream()).collect(Collectors.toList()));
+        filters.setDisciplines(itemList.stream().flatMap(item -> item.getDisciplines().stream()).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setLevels(itemList.stream().flatMap(item -> item.getLevels().stream()).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setClasses(itemList.stream().flatMap(item -> item.getClasses().stream()).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
         filters.setDevices(itemList.stream().flatMap(item -> JsonHelper.jsonArrayToList(item.getTechnos(), JsonObject.class).stream()
                 .filter(techno -> techno.containsKey(Field.TECHNOLOGY))
-                .map(techno -> techno.getString(Field.TECHNOLOGY))).collect(Collectors.toList()));
-        filters.setEditors(itemList.stream().map(Item::getEditor).collect(Collectors.toList()));
-        filters.setDistributors(itemList.stream().map(Item::getDistributor).collect(Collectors.toList()));
-        filters.setTargets(itemList.stream().map(Item::getTarget).collect(Collectors.toList()));
-        filters.setCatalogs(itemList.stream().map(Item::getCatalog).collect(Collectors.toList()));
-        filters.setBooksellers(itemList.stream().map(Item::getBookSeller).collect(Collectors.toList()));
+                .map(techno -> techno.getString(Field.TECHNOLOGY))).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setEditors(itemList.stream().map(Item::getEditor).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setDistributors(itemList.stream().map(Item::getDistributor).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setTargets(itemList.stream().map(Item::getTarget).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setCatalogs(itemList.stream().map(Item::getCatalog).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
+        filters.setBooksellers(itemList.stream().map(Item::getBookSeller).distinct().filter(Objects::nonNull).collect(Collectors.toList()));
 
         return filters;
     }
@@ -227,6 +224,9 @@ public class EquipmentController extends ControllerHelper {
 
     private FilterItemModel getFilterFromRequest(HttpServerRequest request) {
         FilterItemModel filterItemModel = new FilterItemModel();
+        if (request.params().contains(Field.WORD)) {
+            filterItemModel.setSearchingText(request.params().get(Field.WORD));
+        }
         if (request.params().contains(Field.EDITEUR)) {
             filterItemModel.setEditors(request.params().getAll(Field.EDITEUR));
         }
