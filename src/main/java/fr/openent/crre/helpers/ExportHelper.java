@@ -28,7 +28,8 @@ public class ExportHelper {
         });
 
         long structureCount = orderUniversalModelList.stream()
-                .filter(order -> order.getIdStructure() != null)
+                .map(OrderUniversalModel::getIdStructure)
+                .filter(idStructure -> !StringHelper.isNullOrEmpty(idStructure))
                 .distinct()
                 .count();
 
