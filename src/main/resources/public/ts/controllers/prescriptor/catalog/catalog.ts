@@ -1,5 +1,5 @@
 import {_, ng} from 'entcore';
-import {Equipment, Filter, Filters, Utils} from '../../../model';
+import {Equipment, Equipments, Filter, Filters, Utils} from '../../../model';
 import {FilterCatalogItem} from "../../../model/FiltersCatalogItem";
 
 export const catalogController = ng.controller('catalogController',
@@ -8,6 +8,8 @@ export const catalogController = ng.controller('catalogController',
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
+            $scope.equipments = new Equipments();
+            $scope.equipments.loading = true;
             $scope.loading = true;
 
             $scope.catalog = {
