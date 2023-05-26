@@ -174,9 +174,8 @@ export class Equipments extends Selection<Equipment> {
     // Return all filters contained in catalog
     async getFilters() {
         try {
-            equipmentsService.getFilters().then((catalog: Catalog) => {
-                    this.syncEquip(catalog, true);
-                })
+            let catalog: Catalog = await equipmentsService.getFilters();
+            await this.syncEquip(catalog, true);
         } catch (e) {
             toasts.warning('crre.equipment.sync.err');
             throw e;
