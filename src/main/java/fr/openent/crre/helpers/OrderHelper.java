@@ -147,7 +147,7 @@ public class OrderHelper {
 
     private static List<OrderUniversalOfferModel> computeOffersUniversal(JsonArray offersJsonArray, OrderUniversalModel orderUniversalModel) {
         List<OrderUniversalOfferModel> offers = new ArrayList<>();
-        if (!offersJsonArray.isEmpty() && offersJsonArray.getJsonObject(0) != null &&
+        if (offersJsonArray != null && !offersJsonArray.isEmpty() && offersJsonArray.getJsonObject(0) != null &&
                 offersJsonArray.getJsonObject(0).getJsonArray(Field.LEPS) != null &&
                 !offersJsonArray.getJsonObject(0).getJsonArray(Field.LEPS).isEmpty()) {
             JsonArray leps = offersJsonArray.getJsonObject(0).getJsonArray(Field.LEPS);
