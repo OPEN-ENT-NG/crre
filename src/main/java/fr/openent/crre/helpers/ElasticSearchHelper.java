@@ -47,7 +47,6 @@ public class ElasticSearchHelper {
                     .stream()
                     .filter(item -> item.containsKey(Field._SOURCE) && item.containsKey(Field._INDEX))
                     .map(item -> new Item(item.getJsonObject(Field._SOURCE).put(ItemField.TYPE_CATALOG,item.getString(Field._INDEX))))
-                    .filter(Item::isValid)
                     .collect(Collectors.toList());
 
             if(items.stream().allMatch(item -> item.getEan() == null)) {
@@ -55,12 +54,12 @@ public class ElasticSearchHelper {
                 return;
             }
             items.forEach(item -> {
-                List<String> types = Arrays.stream(item.getType().split(Pattern.quote("|"))).collect(Collectors.toList());
+                List<String> types = item.getType() == null ? new ArrayList<>() : Arrays.stream(item.getType().split(Pattern.quote("|"))).collect(Collectors.toList());
                 // TODO: #TERRITOIRE rajouter le filre (contenu dans typesNumeric en theorie)
                 boolean ressourceNumeric = isRessource == types.contains(Field.RESSOURCE);
                 boolean consoNumeric = isConso == types.contains(Field.CONSOMMABLE);
                 boolean manuelNumeric = !isConso == types.contains(Field.NUMERIQUE);
-                boolean consoPapier = isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                boolean consoPapier = item.getType() != null && isConso == Pattern.compile(".*conso.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
                 boolean proNumeric = false;
                 boolean lgtNumeric = false;
                 if (!item.getLevels().isEmpty() && item.getCatalog().equals(Field.ARTICLENUMERIQUE)) {
@@ -75,11 +74,11 @@ public class ElasticSearchHelper {
                 }
                 proNumeric = isPro && proNumeric;
                 lgtNumeric = !isPro && lgtNumeric;
-                boolean proPapier = isPro && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                boolean proPapier = isPro && item.getType() != null && Pattern.compile(".*pro.*", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
                 if (isConso && isPro) {
                     proPapier = true;
                 }
-                boolean lgtPapier = !isPro && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
+                boolean lgtPapier = !isPro && item.getType() != null && Pattern.compile(".*pap$", Pattern.CASE_INSENSITIVE).matcher(item.getType()).find();
                 if ((item.getCatalog().equals(Field.ARTICLENUMERIQUE) && (conso.size() <= 0 || consoNumeric || (manuelNumeric && !isConso)) && (ressource.size() <= 0 || ressourceNumeric) && (pro.size() <= 0 || proNumeric || lgtNumeric)) ||
                         (item.getCatalog().equals(Field.ARTICLEPAPIER) && (conso.size() <= 0 || consoPapier) && (pro.size() <= 0 || proPapier || lgtPapier) && !isRessource)
                         || ressource.size() != 1 && conso.size() != 1 && pro.size() != 1) {

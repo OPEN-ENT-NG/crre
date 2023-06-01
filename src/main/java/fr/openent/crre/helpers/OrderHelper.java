@@ -147,7 +147,7 @@ public class OrderHelper {
 
     private static List<OrderUniversalOfferModel> computeOffersUniversal(JsonArray offersJsonArray, OrderUniversalModel orderUniversalModel) {
         List<OrderUniversalOfferModel> offers = new ArrayList<>();
-        if (!offersJsonArray.isEmpty() && offersJsonArray.getJsonObject(0) != null &&
+        if (offersJsonArray != null && !offersJsonArray.isEmpty() && offersJsonArray.getJsonObject(0) != null &&
                 offersJsonArray.getJsonObject(0).getJsonArray(Field.LEPS) != null &&
                 !offersJsonArray.getJsonObject(0).getJsonArray(Field.LEPS).isEmpty()) {
             JsonArray leps = offersJsonArray.getJsonObject(0).getJsonArray(Field.LEPS);
@@ -156,7 +156,7 @@ public class OrderHelper {
             int gratuite = 0;
             for (int i = 0; i < leps.size(); i++) {
                 JsonObject lep = leps.getJsonObject(i);
-                JsonArray conditions = lep.getJsonArray(Field.CONDITIONS);
+                JsonArray conditions = lep.getJsonArray(Field.CONDITIONS, new JsonArray());
                 OrderUniversalOfferModel orderUniversalOffer = new OrderUniversalOfferModel();
                 if (conditions.size() > 1) {
                     for (int j = 0; j < conditions.size(); j++) {
@@ -166,7 +166,7 @@ public class OrderHelper {
                             gratuite = conditions.getJsonObject(j).getInteger(Field.FREE);
                         }
                     }
-                } else if (lep.getJsonArray(Field.CONDITIONS).size() == 1) {
+                } else if (conditions.size() == 1) {
                     gratuit = lep.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.CONDITIONS_FREE);
                     gratuite = (int) (lep.getJsonArray(Field.CONDITIONS).getJsonObject(0).getInteger(Field.FREE) * Math.floor(amount * 1.0 / gratuit));
                 }
