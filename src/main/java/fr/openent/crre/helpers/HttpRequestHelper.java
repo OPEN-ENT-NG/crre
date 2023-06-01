@@ -1,9 +1,12 @@
 package fr.openent.crre.helpers;
 
+import fr.openent.crre.exception.CRREException;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.AsyncFile;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.codec.BodyCodec;
 
@@ -36,5 +39,14 @@ public class HttpRequestHelper {
                 });
 
         return promise.future();
+    }
+
+    public static void sendError(HttpServerRequest request, Throwable fail) {
+        if (fail instanceof CRREException) {
+            CRREException crreException = (CRREException) fail;
+            Renders.renderJson(request, crreException.getMessageResult(request), crreException.getStatus());
+        } else {
+            Renders.renderError(request);
+        }
     }
 }

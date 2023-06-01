@@ -94,7 +94,7 @@ public class StructureGroupController extends ControllerHelper {
                 if (uais.size() > 0) {
                     matchUAIID(request, filename, uais);
                 } else {
-                    returnErrorMessage(request, new Throwable("missing.uai"), filename);
+                    returnErrorMessage(request, new Throwable("crre.error.message.missing.uai"), filename);
                 }
             } catch (IOException e) {
                 log.error(String.format("[Crre@%s::parseCsv]: csv exception %s", this.getClass().getSimpleName(), e.getMessage()));
