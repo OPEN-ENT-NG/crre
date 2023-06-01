@@ -59,7 +59,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                 ") AS year " +
                 "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
                 "WHERE owner_id != 'renew2021-2022' AND id_structure = ? ";
-
+        // TODO: CRRE-628 rajouter condition partout pour ne pas prendre en compte les status archived
         if (type.equals("articlenumerique") || type.equals("articlepapier")) {
             query += "AND equipment_format = ? ";
             params.add(type);
