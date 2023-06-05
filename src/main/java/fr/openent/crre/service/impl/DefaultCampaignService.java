@@ -401,7 +401,6 @@ public class DefaultCampaignService extends SqlCrudService implements CampaignSe
 
     public void delete(final List<Integer> ids, final Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray()
-                .add(getCampaignsGroupRelationshipDeletion(ids))
                 .add(getCampaignsDeletion(ids));
 
         sql.transaction(statements, event -> handler.handle(getTransactionHandler(event,ids.get(0))));
