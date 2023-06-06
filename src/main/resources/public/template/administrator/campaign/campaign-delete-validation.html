@@ -3,7 +3,10 @@
     <ul>
         <li ng-repeat="campaign in campaigns.selected">[[campaign.name]]</li>
     </ul>
-    <div class="right-magnet twelve cell">
+    <div class="warning">
+        <i18n>crre.campaign.delete.message</i18n>
+    </div>
+    <div class="right-magnet">
         <input type="button" class="cancel" ng-click="display.lightbox.campaign = false;" i18n-value="cancel" />
         <input type="submit" class="button" i18n-value="delete"/>
     </div>

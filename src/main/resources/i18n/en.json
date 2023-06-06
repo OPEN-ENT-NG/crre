@@ -741,6 +741,7 @@
   "crre.campaigns.date.start": "Date d'ouverture",
   "crre.campaigns.date.end": "Date de fermeture",
   "crre.campaign.delete": "Supprimer la(es) campagne(s): ",
+  "crre.campaign.delete.message": "Les données de commandes liées à la campagne seront supprimées et les historiques seront inaccessibles aux valideurs et prescripteurs.",
   "crre.regroup.permanent": "Regroupement permanent",
   "campaign.automatic.manual.change": "Vous allez modifier la date d'ouverture ou de fermeture saisie lors de la création de la campagne. Voulez-vous continuer ?",
   "articlepapier" : "Catalogue papier",
