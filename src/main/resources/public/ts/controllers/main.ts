@@ -22,6 +22,7 @@ import {
 import {INFINITE_SCROLL_EVENTER} from "../enum/infinite-scroll-eventer";
 import {COMBO_LABELS} from "../enum/comboLabels";
 import {ValidatorOrderWaitingFilter} from "../model/ValidatorOrderWaitingFilter";
+import {TypeCatalogEnum} from "../enum/type-catalog-enum";
 
 export const mainController = ng.controller('MainController', ['$scope', 'route', '$location', '$rootScope',
     ($scope, route, $location, $rootScope) => {
@@ -290,7 +291,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             } else {
                 await initBasketItem(parseInt(idEquipment), $scope.campaign.id, $scope.current.structure.id);
             }
-            if ($scope.basket.equipment.type === 'articlenumerique') {
+            if ($scope.basket.equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                 $scope.offerStudent = [];
                 $scope.offerTeacher = [];
                 $scope.offers = await Utils.computeOffer($scope.basket, $scope.basket.equipment,

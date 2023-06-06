@@ -5,9 +5,9 @@ import {OrderClient} from "./OrderClient";
 import {OrderRegion, OrdersRegion} from "./OrderRegion";
 import {Project} from "./Project";
 import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
+import {TypeCatalogEnum} from "../enum/type-catalog-enum";
 
 export class Utils {
-
     static parsePostgreSQLJson(json: any): any {
         try {
             if (json === '[null]') return [];
@@ -68,7 +68,7 @@ export class Utils {
             if (!equipment || !this.isAvailable(equipment)) {
                 return 0;
             } else {
-                if (equipment.type == 'articlenumerique' && equipment.offres && equipment.offres[0] &&
+                if (equipment.typeCatalogue == TypeCatalogEnum.NUMERIC && equipment.offres && equipment.offres[0] &&
                     equipment.offres[0].prixht && equipment.offres[0].tvas) {
                     prixHT = equipment.offres[0].prixht;
                     TVAs = equipment.offres[0].tvas;

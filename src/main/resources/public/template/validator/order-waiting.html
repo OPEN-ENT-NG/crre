@@ -26,7 +26,7 @@
                 <td><div class="smallTabElem">  </div></td>
             </tr>
             </thead>
-            <tbody ng-repeat="order in ordersClient.all" ng-if="!loading">
+            <tbody ng-repeat="order in ordersClient.all track by $index" ng-if="!loading">
             <tr class="subline" ng-class="{'background-grey' : !order.campaign.accessible}">
                 <td workflow="crre.validator" class="table-selector">
                     <label class="checkbox">
