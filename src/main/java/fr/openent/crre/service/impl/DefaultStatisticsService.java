@@ -58,7 +58,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
                 "       END AS character varying" +
                 ") AS year " +
                 "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
-                "WHERE owner_id != 'renew2021-2022' AND id_structure = ? ";
+                "WHERE owner_id != 'renew2021-2022' AND id_structure = ? AND (status = 'SENT' OR status = 'DONE') ";
         // TODO: CRRE-628 rajouter condition partout pour ne pas prendre en compte les status archived
         if (type.equals("articlenumerique") || type.equals("articlepapier")) {
             query += "AND equipment_format = ? ";
@@ -73,7 +73,7 @@ public class DefaultStatisticsService extends SqlCrudService implements Statisti
         String query = "SELECT c.name, c.id, count(*)::integer AS total " +
                 "FROM " + Crre.crreSchema + ".\"order-region-equipment-old\" " +
                 "LEFT JOIN " + Crre.crreSchema + ".campaign c ON (c.id = id_campaign) " +
-                "WHERE owner_id != 'renew2021-2022' AND id_structure = ? " +
+                "WHERE owner_id != 'renew2021-2022' AND id_structure = ? AND (status = 'SENT' OR status = 'DONE') " +
                 "GROUP BY c.id, c.name;";
         Sql.getInstance().prepared(query, new JsonArray().add(id_structure), new DeliveryOptions().setSendTimeout(Crre.timeout * 1000000000L), SqlResult.validResultHandler(handlerJsonArray));
     }
