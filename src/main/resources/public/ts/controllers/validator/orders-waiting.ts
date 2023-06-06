@@ -154,14 +154,13 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             Utils.safeApply($scope);
         }
 
-        function reformatOrders(ordersToReformat, ordersToCreate: OrdersRegion, ordersToRemove: OrdersClient,
+        function reformatOrders(ordersToReformat: Array<OrderClient>, ordersToCreate: OrdersRegion,
                                 totalPrice: number, totalPriceConsumable: number, totalAmount: number, totalAmountConsumable: number) {
-            ordersToReformat.forEach(order => {
+            ordersToReformat.forEach((order: OrderClient) => {
                 if (order.campaign.accessible) {
                     let orderRegionTemp = new OrderRegion();
                     orderRegionTemp.createFromOrderClient(order);
                     ordersToCreate.all.push(orderRegionTemp);
-                    ordersToRemove.all.push(order);
                     if (order.campaign.use_credit == CREDIT_TYPE_ENUM.CREDITS) {
                         totalPrice += order.price * order.amount;
                     } else if (order.campaign.use_credit == CREDIT_TYPE_ENUM.CONSUMABLE_CREDITS) {
@@ -185,7 +184,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let totalPriceConsumable = 0;
             let totalAmount = 0;
             let totalAmountConsumable = 0;
-            let ordersToReformat;
+            let ordersToReformat: Array<OrderClient>;
 
             if ($scope.allOrdersSelected || $scope.ordersClient.selectedElements.length === 0) {
                 await $scope.ordersClient.searchOrder($scope.current.structure.id, $scope.filterOrder, true);
@@ -198,7 +197,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
                 })
             } else {
                 ordersToReformat = $scope.ordersClient.selectedElements;
-                const __ret = reformatOrders(ordersToReformat, ordersToCreate, $scope.ordersClient,
+                const __ret = reformatOrders(ordersToReformat, ordersToCreate,
                     totalPrice, totalPriceConsumable, totalAmount, totalAmountConsumable);
                 totalPrice = __ret.totalPrice;
                 totalPriceConsumable = __ret.totalPriceConsumable

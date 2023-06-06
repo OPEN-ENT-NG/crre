@@ -2,6 +2,7 @@ import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {moment, toasts} from 'entcore';
 import http from 'axios';
 import {Equipment, Offers, OrdersClient, Structure, Utils} from './index';
+import {TypeCatalogEnum} from "../enum/type-catalog-enum";
 
 
 export class Basket implements Selectable {
@@ -20,7 +21,7 @@ export class Basket implements Selectable {
     constructor(equipment?: Equipment, id_campaign?: number, id_structure?: string) {
         if (equipment) {
             this.equipment = Mix.castAs(Equipment, equipment);
-            if (equipment.type === "articlenumerique") {
+            if (equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                 this.amount = equipment.offres.length > 0 ? equipment.offres[0].quantiteminimaleachat : 0;
             } else {
                 this.amount = 1;
@@ -52,7 +53,7 @@ export class Basket implements Selectable {
         try {
             if (this.amount) {
                 http.put(`/crre/basket/${this.id}/amount`, this.toJson());
-                if (this.equipment.type === "articlenumerique") {
+                if (this.equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                     this.offers = Utils.computeOffer(this, this.equipment);
                 }
             }
@@ -122,7 +123,7 @@ export class Baskets extends Selection<Basket> {
                     basket.updateReassort();
                 }
                 basket.equipment = Mix.castAs(Equipment, basket.equipment);
-                if (basket.equipment.type === "articlenumerique") {
+                if (basket.equipment.typeCatalogue == TypeCatalogEnum.NUMERIC) {
                     basket.offers = Utils.computeOffer(basket, basket.equipment);
                 }
             });
