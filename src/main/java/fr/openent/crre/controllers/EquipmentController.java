@@ -168,7 +168,7 @@ public class EquipmentController extends ControllerHelper {
             FilterItemModel filterItemModel = getFilterFromRequest(request);
             if (!filterItemModel.isEmpty()) {
                 equipmentService.searchFilter(filterItemModel, null)
-                        .onSuccess(result -> Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, result)))
+                        .onSuccess(result -> Renders.renderJson(request, new JsonObject().put(Field.RESOURCES, IModelHelper.toJsonArray(result))))
                         .onFailure(error -> {
                             Renders.renderError(request);
                             log.error(String.format("[CRRE@%s::SearchEquipment] Failed to get items filtered and searched %s:%s",
