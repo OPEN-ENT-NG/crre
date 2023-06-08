@@ -50,7 +50,7 @@ public class ArchiveController extends ControllerHelper {
         }
 
         UserUtils.getUserInfos(eb, request, userInfos -> {
-            Future<List<Item>> equimpmentItemFuture =  this.serviceFactory.getEquipmentService().searchFilter(new FilterItemModel().setBooksellers(Arrays.asList(bookseller)), Arrays.asList(Field._ID));
+            Future<List<Item>> equimpmentItemFuture =  this.serviceFactory.getEquipmentService().searchFilter(new FilterItemModel().setBooksellers(Arrays.asList(bookseller)), Arrays.asList(Field.EAN));
 
             equimpmentItemFuture.compose(itemList -> this.serviceFactory.getBasketOrderItemService().listBasketOrderItem(null, null, null, itemList.stream().map(Item::getEan).collect(Collectors.toList())))
                     .compose(basketOrderItems -> this.serviceFactory.getBasketOrderItemService().delete(basketOrderItems.stream()
