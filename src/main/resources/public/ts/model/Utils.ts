@@ -77,7 +77,7 @@ export class Utils {
                     TVAs = equipment.tvas;
                 }
                 price_TTC = prixHT;
-                if (TVAs.length > 0) {
+                if (TVAs && TVAs.length > 0) {
                     TVAs.forEach((tva) => {
                         if (tva.taux && tva.pourcent) {
                             let taxFloat = tva.taux;
