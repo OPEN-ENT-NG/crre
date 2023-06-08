@@ -171,7 +171,13 @@ public class DefaultPurseService implements PurseService {
             params.add(purse.getIdStructure())
                     .add(purse.getCreditsConsumable().getDefaultValue())
                     .add(purse.getCreditsConsumable().getDefaultValue());
-            if (purse.getCreditsConsumable().getAddValue() != null && purse.getCreditsConsumable().getRefundValue() != null) {
+            if (purse.getCreditsConsumable().getAddValue() != null && purse.getCreditsConsumable().getRefundValue() != null &&
+                    purse.getCreditsConsumable().getNewValue() != null) {
+                statement += "SET consumable_initial_amount = ?, " +
+                        "consumable_amount = ? ";
+                Double newValue = purse.getCreditsConsumable().getNewValue() + purse.getCreditsConsumable().getAddValue();
+                params.add(newValue).add(newValue);
+            } else if (purse.getCreditsConsumable().getAddValue() != null && purse.getCreditsConsumable().getRefundValue() != null) {
                 statement += "SET consumable_initial_amount = " + Field.PURSE + ".consumable_initial_amount + ?, " +
                         "consumable_amount = " + Field.PURSE + ".consumable_amount + ? + MIN(?, " + Field.PURSE + ".consumable_initial_amount - " +
                         Field.PURSE + ".consumable_amount) ";
@@ -189,6 +195,10 @@ public class DefaultPurseService implements PurseService {
             } else if (purse.getCreditsConsumable().getRefundValue() != null) {
                 statement += "SET consumable_amount = " + Field.PURSE + ".consumable_amount + ? ";
                 params.add(purse.getCreditsConsumable().getRefundValue());
+            } else if (purse.getCreditsConsumable().getAddValue() != null) {
+                statement += "SET consumable_amount = " + Field.PURSE + ".consumable_amount + ?, " +
+                        "consumable_initial_amount = " + Field.PURSE + ".consumable_initial_amount + ? ";
+                params.add(purse.getCreditsConsumable().getAddValue()).add(purse.getCreditsConsumable().getAddValue());
             }
         } else {
             statement += "amount, initial_amount) " +
@@ -197,7 +207,13 @@ public class DefaultPurseService implements PurseService {
             params.add(purse.getIdStructure())
                     .add(purse.getCredits().getDefaultValue())
                     .add(purse.getCredits().getDefaultValue());
-            if (purse.getCredits().getAddValue() != null && purse.getCredits().getRefundValue() != null) {
+            if (purse.getCredits().getAddValue() != null && purse.getCredits().getRefundValue() != null &&
+                    purse.getCredits().getNewValue() != null) {
+                statement += "SET initial_amount = ?, " +
+                        "amount = ? ";
+                Double newValue = purse.getCredits().getNewValue() + purse.getCredits().getAddValue();
+                params.add(newValue).add(newValue);
+            } else if (purse.getCredits().getAddValue() != null && purse.getCredits().getRefundValue() != null) {
                 statement += "SET initial_amount = " + Field.PURSE + ".initial_amount + ?, " +
                         "amount = " + Field.PURSE + ".amount + ? + LEAST(?, " + Field.PURSE + ".initial_amount - " +
                         Field.PURSE + ".amount) ";
@@ -215,6 +231,10 @@ public class DefaultPurseService implements PurseService {
             } else if (purse.getCredits().getRefundValue() != null) {
                 statement += "SET amount = " + Field.PURSE + ".amount + ? ";
                 params.add(purse.getCredits().getRefundValue());
+            } else if (purse.getCredits().getAddValue() != null) {
+                statement += "SET amount = " + Field.PURSE + ".amount + ?, " +
+                        "initial_amount = " + Field.PURSE + ".initial_amount + ? ";
+                params.add(purse.getCredits().getAddValue()).add(purse.getCredits().getAddValue());
             }
         }
         statement += "WHERE " + Field.PURSE + ".id_structure = ?;";
