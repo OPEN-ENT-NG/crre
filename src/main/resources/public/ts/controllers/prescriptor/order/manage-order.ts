@@ -6,13 +6,14 @@ import {
     BasketsOrders,
     Equipment,
     Filters,
-    OrderClient,
+    OrderClient, OrderRegion,
     OrdersClient,
     Utils
 } from '../../../model';
 import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 import {ValidatorOrderWaitingFilter} from "../../../model/ValidatorOrderWaitingFilter";
 import {IUserModel, UserModel} from "../../../model/UserModel";
+import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
 
 export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
@@ -158,24 +159,14 @@ export const manageOrderController = ng.controller('manageOrderController',
         }
 
         $scope.displayToggle = () : void => {
-            $scope.display.toggle = checkOnlyRejected();
+            $scope.display.toggle = checkAtLeastOneRejectedAndOnlyRejected();
             Utils.safeApply($scope);
         };
 
-        const checkOnlyRejected = () : boolean => {
-            let displayToggle : boolean = false;
-            for(const basket of $scope.displayedBasketsOrders) {
-                const selectedOrders : OrdersClient = basket.orders.all.filter((order : OrderClient) => order.selected);
-                if (selectedOrders.length > 0) {
-                    const statusNoRejected : OrdersClient = basket.orders.all.filter((order: OrderClient) => order.selected && order.status != 'REJECTED');
-                    if (statusNoRejected.length > 0) {
-                        break;
-                    } else {
-                        displayToggle = true;
-                    }
-                }
-            }
-            return displayToggle;
+        const checkAtLeastOneRejectedAndOnlyRejected = () : boolean => {
+            let selectedOrder: Array<OrderClient> = $scope.displayedBasketsOrders.flatMap((basket: BasketOrder) => basket.orders.all)
+                .filter((order : OrderClient) => order.selected);
+            return selectedOrder.length > 0 && selectedOrder.filter((order : OrderClient) => !order.valid || order.status != ORDER_STATUS_ENUM.REJECTED).length == 0;
         }
 
         $scope.reSubmit = async () : Promise<void> => {
