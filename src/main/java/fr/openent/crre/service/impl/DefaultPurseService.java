@@ -24,6 +24,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 public class DefaultPurseService implements PurseService {
     @Override
@@ -33,13 +34,11 @@ public class DefaultPurseService implements PurseService {
         String[] fields = statementsValues.fieldNames().toArray(new String[0]);
         for (String field : fields) {
             JsonObject values = statementsValues.getJsonObject(field);
-            Purse purse = values.getJsonObject(Field.PURSES) != null ? IModelHelper.toModel(values.getJsonObject(Field.PURSES), Purse.class) : new Purse();
+            Optional<Purse> purse = IModelHelper.toModel(values.getJsonObject(Field.PURSES), Purse.class);
             statements.add(getImportStatementStudent(field,
                     values.getInteger("second"), values.getInteger("premiere"), values.getInteger("terminale"),
                     values.getBoolean("pro")));
-            if (purse != null) {
-                statements.addAll(getImportStatementAmount(purse));
-            }
+            purse.ifPresent(value -> statements.addAll(getImportStatementAmount(value)));
             if (values.getInteger("licence") != -1) {
                 statements.add(getImportStatementAmount(field,
                         values.getInteger("licence"), "licences", false, true, false));
