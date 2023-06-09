@@ -3,7 +3,6 @@ package fr.openent.crre.controllers;
 import com.opencsv.CSVReader;
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
-import fr.openent.crre.exception.CRREException;
 import fr.openent.crre.exception.ImportPurseException;
 import fr.openent.crre.helpers.HttpRequestHelper;
 import fr.openent.crre.logging.Actions;
@@ -125,7 +124,9 @@ public class PurseController extends ControllerHelper {
                     uaiList.add(uai);
                     purses.add(purse);
                 }
-                if (uaiList.size() > 0 || uaiErrorList.size() > 0) {
+                if (uaiErrorList.size() > 0) {
+                    promise.fail(new ImportPurseException("crre.error.message.parse.csv", uaiErrorList));
+                } else if (uaiList.size() > 0) {
                     matchUAIID(uaiList, uaiErrorList, purses, licences, consumable_licences, seconds, premieres, terminales)
                             .onSuccess(success -> promise.complete(new PurseImport(uaiErrorList, event.toString())))
                             .onFailure(fail -> {

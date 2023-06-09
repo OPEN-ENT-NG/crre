@@ -17,6 +17,12 @@ public class ImportPurseException extends Throwable implements CRREException {
         this.i18nError = i18nError;
     }
 
+    public ImportPurseException(String i18nError, List<String> uaiErrorList) {
+        super();
+        this.i18nError = i18nError;
+        this.uaiErrorList = uaiErrorList;
+    }
+
     @Override
     public JsonObject getMessageResult(HttpServerRequest request) {
         String error = I18n.getInstance().translate(this.i18nError, Renders.getHost(request), I18n.acceptLanguage(request)) + ".";
