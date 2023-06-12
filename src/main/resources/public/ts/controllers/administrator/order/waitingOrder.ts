@@ -106,12 +106,13 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             let {status} = await selectedOrders.updateStatus(ORDER_STATUS_ENUM.VALID);
             if (status == 200) {
                 projectsToShow.forEach((project: Project) => {
-                    project.orders.forEach(async (order: OrderRegion) => {
-                        if (!Utils.isHistoricalStatus(order.status)) {
-                            order.status = ORDER_STATUS_ENUM.VALID;
-                        }
-                        order.selected = false;
-                    });
+                    project.orders.filter((order: OrderRegion) => order.selected)
+                        .forEach((order: OrderRegion) => {
+                            if (!Utils.isHistoricalStatus(order.status)) {
+                                order.status = ORDER_STATUS_ENUM.VALID;
+                            }
+                            order.selected = false;
+                        });
                     project.selected = false;
                     Utils.setStatus(project, project.orders);
                 });
