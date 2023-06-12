@@ -36,6 +36,16 @@
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>
+            <div class="cell two margin-top-8 twelve-mobile">
+                <multi-combo title="[[lang.translate('crre.request.state')]]"
+                             combo-model="statusFilterValue"
+                             search-on="orderStatusEnum" order-by="orderStatusEnum"
+                             labels="comboLabels" filtered-model="filter.statusFilterList"
+                             selection-event="searchByName(true)"
+                             deselection-event="searchByName(true)"
+                             class="inline-block horizontal-spacing no-border">
+                </multi-combo>
+            </div>
             <div class="cell twelve-mobile right-magnet">
                 <button class="right-magnet" ng-click="exportCSV()"><i18n>crre.orderEquipment.manage.exportCSV</i18n></button>
             </div>

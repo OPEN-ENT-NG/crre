@@ -1,9 +1,9 @@
 package fr.openent.crre.service;
 
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.model.BasketOrder;
 import fr.openent.crre.model.TransactionElement;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import org.entcore.common.user.UserInfos;
 
 import java.util.List;
@@ -18,10 +18,10 @@ public interface BasketOrderService {
      * @param idStructure structure identifier
      * @param startDate start date for search
      * @param endDate end date for search
-     * @param oldTable serach in history table or not
+     * @param statusList status filter
      */
     Future<List<BasketOrder>> getMyBasketOrders(String userId, Integer page, Integer idCampaign, String idStructure,
-                                                String startDate, String endDate, boolean oldTable);
+                                                String startDate, String endDate, List<OrderStatus> statusList);
 
     /**
      * Search basket from a query (name, user_name or article)
@@ -32,10 +32,10 @@ public interface BasketOrderService {
      * @param idStructure structure identifier
      * @param startDate starting date filter
      * @param endDate ending date filter
-     * @param old search in historic or not
+     * @param statusList status filter
      */
     Future<List<BasketOrder>> search(String query, UserInfos user, List<String> equipementIdList, int idCampaign, String idStructure,
-                                     String startDate, String endDate, Integer page, Boolean old);
+                                     String startDate, String endDate, Integer page, List<OrderStatus> statusList);
 
     /**
      * Get transaction element for create a new basketOrder

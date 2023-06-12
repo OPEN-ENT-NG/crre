@@ -14,10 +14,13 @@ import {INFINITE_SCROLL_EVENTER} from "../../../enum/infinite-scroll-eventer";
 import {ValidatorOrderWaitingFilter} from "../../../model/ValidatorOrderWaitingFilter";
 import {IUserModel, UserModel} from "../../../model/UserModel";
 import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
+import {StatusFilter} from "../../../model/StatusFilter";
 
 export const manageOrderController = ng.controller('manageOrderController',
     ['$scope', '$routeParams', async ($scope, $routeParams) => {
-
+        $scope.statusFilterValue = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+            new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.SENT),
+            new StatusFilter(ORDER_STATUS_ENUM.DONE), new StatusFilter(ORDER_STATUS_ENUM.ARCHIVED), new StatusFilter(ORDER_STATUS_ENUM.WAITING)];
         $scope.display = {
             allOrdersListSelected: false,
             toggle: false
@@ -29,7 +32,7 @@ export const manageOrderController = ng.controller('manageOrderController',
         $scope.filter = {
             page: 0,
             isDate: false,
-            isOld: false
+            statusFilterList: [] as Array<StatusFilter>
         };
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-6, 'months')._d;
@@ -54,12 +57,12 @@ export const manageOrderController = ng.controller('manageOrderController',
                     order.selected = false;
                 });
             });
-            const statusList: Array<string> = $scope.filter.isOld ? Utils.getHistoricalStatus() : Utils.getCurrentStatus();
             const currentUser = new UserModel({id_user: model.me.userId, user_name: null} as IUserModel)
+            let statusFilter: Array<ORDER_STATUS_ENUM> = $scope.filter.statusFilterList.map((filter: StatusFilter) => filter.orderStatusEnum);
             if (order_selected.all.length != 0 && !$scope.display.allOrdersListSelected) {
-                order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, statusList);
+                order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, false, statusFilter);
             } else {
-                order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, statusList);
+                order_selected.exportCSV([$scope.campaign], [currentUser], $scope.query_name, $scope.current.structure.id, $scope.filtersDate.startDate, $scope.filtersDate.endDate, true, statusFilter);
             }
             $scope.display.allOrdersListSelected = false;
             Utils.safeApply($scope);
@@ -90,12 +93,13 @@ export const manageOrderController = ng.controller('manageOrderController',
                 $scope.startInitLoading();
             }
             let newData : BasketsOrders;
+            let statusFilter: Array<ORDER_STATUS_ENUM> = $scope.filter.statusFilterList.map((filter: StatusFilter) => filter.orderStatusEnum);
             if (!!$scope.query_name) {
                 newData = await $scope.basketsOrders.search($scope.query_name, $scope.campaign.id, $scope.filtersDate.startDate,
-                    $scope.filtersDate.endDate, $scope.filter.page, $scope.filter.isOld, $scope.current.structure.id);
+                    $scope.filtersDate.endDate, statusFilter, $scope.filter.page, $scope.current.structure.id);
             } else {
                 newData = await $scope.basketsOrders.getMyOrders($scope.filter.page,
-                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.campaign.id, $scope.filter.isOld, $scope.current.structure.id);
+                    $scope.filtersDate.startDate, $scope.filtersDate.endDate, $scope.campaign.id, statusFilter, $scope.current.structure.id);
             }
             if(newData.length > 0) {
                 await $scope.synchroMyBaskets(newData);
@@ -126,7 +130,8 @@ export const manageOrderController = ng.controller('manageOrderController',
             let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter();
             filter.startDate = $scope.filtersDate.startDate;
             filter.endDate = $scope.filtersDate.endDate;
-            await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, basketId, $scope.filter.isOld);
+            filter.status = $scope.filter.statusFilterList.map((filter: StatusFilter) => filter.orderStatusEnum);
+            await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, basketId);
             formatDisplayedBasketOrders();
             Utils.safeApply($scope);
         };
@@ -148,8 +153,9 @@ export const manageOrderController = ng.controller('manageOrderController',
         };
 
         $scope.getOrders = async (): Promise<void> => {
+            let statusFilter: Array<ORDER_STATUS_ENUM> = $scope.filter.statusFilterList.map((filter: StatusFilter) => filter.orderStatusEnum);
             let newData : BasketsOrders = await $scope.basketsOrders.getMyOrders($scope.filter.page,
-                $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, $scope.filter.isOld, $scope.current.structure.id);
+                $scope.filtersDate.startDate, $scope.filtersDate.endDate, $routeParams.idCampaign, statusFilter, $scope.current.structure.id);
             if(newData.length > 0) {
                 await $scope.synchroMyBaskets(newData);
                 $scope.$broadcast(INFINITE_SCROLL_EVENTER.UPDATE);

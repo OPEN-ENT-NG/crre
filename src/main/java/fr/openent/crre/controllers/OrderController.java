@@ -73,9 +73,9 @@ public class OrderController extends ControllerHelper {
                 String startDate = request.getParam(Field.STARTDATE);
                 String endDate = request.getParam(Field.ENDDATE);
                 Boolean old = request.getParam(Field.OLD) == null ? null : Boolean.parseBoolean(request.getParam(Field.OLD));
-
-                List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values())
-                        .filter(orderStatus -> old == null || orderStatus.isHistoricStatus() == old)
+                List<OrderStatus> statusList = request.params().getAll(Field.STATUS).stream()
+                        .map(OrderStatus::getValue)
+                        .filter(Objects::nonNull)
                         .collect(Collectors.toList());
 
                 FilterModel filterModel = new FilterModel()
@@ -85,7 +85,7 @@ public class OrderController extends ControllerHelper {
                         .setIdsBasket(basketIdList)
                         .setStartDate(startDate)
                         .setEndDate(endDate)
-                        .setStatus(orderStatusList)
+                        .setStatus(statusList)
                         .setOrderByForOrderList(DefaultOrderService.OrderByOrderListEnum.PRESCRIBER_VALIDATION_DATE)
                         .setOrderDescForOrderList(false);
 

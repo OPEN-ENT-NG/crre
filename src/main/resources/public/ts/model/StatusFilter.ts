@@ -22,10 +22,6 @@ export class StatusFilter implements IFilter{
     }
 
     toString() {
-        if (this._orderStatusEnum === ORDER_STATUS_ENUM.IN_PROGRESS) {
-            return lang.translate("NEW");
-        } else {
-            return lang.translate(this._orderStatusEnum)
-        }
+        return lang.translate(this._orderStatusEnum);
     }
 }

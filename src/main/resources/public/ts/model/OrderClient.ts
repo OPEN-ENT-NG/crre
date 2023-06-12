@@ -21,6 +21,7 @@ import {OrderUniversal} from "./OrderUniversal";
 import {OrderSearchAmount} from "./OrderSearchAmount";
 import {ExportOrderFilter} from "./ExportOrderFilter";
 import {TypeCatalogEnum} from "../enum/type-catalog-enum";
+import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 
 declare let window: any;
 
@@ -138,7 +139,7 @@ export class OrdersClient extends Selection<OrderClient> {
     }
 
     async syncMyOrder(filter: ValidatorOrderWaitingFilter, idCampaign: number,
-                      idStructure: string, ordersId: Array<number>, old = false): Promise<boolean> {
+                      idStructure: string, ordersId: Array<number>): Promise<boolean> {
         let dateParam = "";
         if (filter.startDate && filter.endDate) {
             const {startDate, endDate} = Utils.formatDate(filter.startDate, filter.endDate);
@@ -148,7 +149,8 @@ export class OrdersClient extends Selection<OrderClient> {
         ordersId.map((order) => {
             params += `basket_id=${order}&`;
         });
-        let url: string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}${dateParam}old=${old}`;
+        filter.status.forEach((status: ORDER_STATUS_ENUM) => params += `status=${status}&`);
+        let url: string = `/crre/orders/mine/${idCampaign}/${idStructure}${params}${dateParam}`;
         const {data} = await http.get(url);
         let newOrderClient: Array<OrderClient> = Mix.castArrayAs(OrderUniversal, data)
             .map((order: OrderUniversal) => {
