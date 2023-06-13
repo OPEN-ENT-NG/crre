@@ -1,5 +1,6 @@
 package fr.openent.crre.helpers;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.model.IModel;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -18,6 +19,7 @@ import org.reflections.Reflections;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,7 +36,7 @@ public class IModelHelperTest {
     static class MyClass {
         public String id;
     }
-    class MyIModel implements IModel<MyIModel> {
+    static class MyIModel implements IModel<MyIModel> {
         public String id;
         public boolean isGood;
         public MyOtherIModel otherIModel;
@@ -46,6 +48,13 @@ public class IModelHelperTest {
         public MyEnum myEnum;
         public List<MyEnum> myEnumList;
         public MyEnum nullValue = null;
+
+        public MyIModel() {
+        }
+
+        public MyIModel(JsonObject jsonObject) {
+            this.id = jsonObject.getString(Field.ID);
+        }
 
         @Override
         public JsonObject toJson() {
@@ -143,10 +152,11 @@ public class IModelHelperTest {
     @Test
     public void sqlUniqueResultToIModelTest(TestContext ctx) {
         Async async = ctx.async();
-        Promise<MyOtherIModel> promise = Promise.promise();
+        Promise<Optional<MyOtherIModel>> promise = Promise.promise();
 
         promise.future().onSuccess(myOtherIModel -> {
-            ctx.assertEquals(myOtherIModel.myName, "test");
+            ctx.assertTrue(myOtherIModel.isPresent());
+            ctx.assertEquals(myOtherIModel.get().myName, "test");
             async.complete();
         });
 
@@ -172,5 +182,24 @@ public class IModelHelperTest {
         handler.handle(new Either.Right<>(new JsonArray("[{\"myName\":\"test\"}, {\"myName\":\"test2\"}]")));
 
         async.awaitSuccess(1000);
+    }
+
+    @Test
+    public void toModelTest(TestContext ctx) {
+        Optional<MyIModel> myIModel = IModelHelper.toModel(new JsonObject().put(Field.ID, "3"), MyIModel.class);
+        ctx.assertTrue(myIModel.isPresent());
+        ctx.assertEquals(myIModel.get().id, "3");
+
+        myIModel = IModelHelper.toModel(new JsonObject(), MyIModel.class);
+        ctx.assertTrue(myIModel.isPresent());
+        ctx.assertNull(myIModel.get().id);
+
+        //CastException
+        myIModel = IModelHelper.toModel(new JsonObject().put(Field.ID, 3), MyIModel.class);
+        ctx.assertFalse(myIModel.isPresent());
+
+        //NPE
+        myIModel = IModelHelper.toModel(null, MyIModel.class);
+        ctx.assertFalse(myIModel.isPresent());
     }
 }

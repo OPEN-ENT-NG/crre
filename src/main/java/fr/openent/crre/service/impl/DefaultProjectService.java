@@ -15,11 +15,12 @@ import org.entcore.common.sql.SqlResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class DefaultProjectService implements ProjectService {
     @Override
-    public Future<ProjectModel> createProject(ProjectModel project) {
-        Promise<ProjectModel> promise = Promise.promise();
+    public Future<Optional<ProjectModel>> createProject(ProjectModel project) {
+        Promise<Optional<ProjectModel>> promise = Promise.promise();
 
         String queryProjectEquipment = "" +
                 "INSERT INTO " + Crre.crreSchema + ".project " +
@@ -62,8 +63,8 @@ public class DefaultProjectService implements ProjectService {
     }
 
     @Override
-    public Future<ProjectModel> getLastProject() {
-        Promise<ProjectModel> promise = Promise.promise();
+    public Future<Optional<ProjectModel>> getLastProject() {
+        Promise<Optional<ProjectModel>> promise = Promise.promise();
 
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT p.*" +

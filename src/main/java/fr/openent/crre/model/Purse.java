@@ -13,8 +13,8 @@ public class Purse implements IModel<Purse> {
     public Purse(JsonObject json) {
         this.uai = json.getString(Field.UAI);
         this.idStructure = json.getString(Field.IDSTRUCTURE);
-        this.credits = IModelHelper.toModel(json.getJsonObject(Field.CREDITS), Credits.class);
-        this.creditsConsumable = IModelHelper.toModel(json.getJsonObject(Field.CONSUMABLE_CREDITS), Credits.class);
+        this.credits = IModelHelper.toModel(json.getJsonObject(Field.CREDITS), Credits.class).orElse(null);
+        this.creditsConsumable = IModelHelper.toModel(json.getJsonObject(Field.CONSUMABLE_CREDITS), Credits.class).orElse(null);
     }
 
     public Purse() {

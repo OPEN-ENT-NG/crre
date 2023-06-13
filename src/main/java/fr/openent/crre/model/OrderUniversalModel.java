@@ -95,32 +95,32 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
         if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof JsonObject) {
-            this.project = IModelHelper.toModel(jsonObject.getJsonObject(Field.PROJECT), ProjectModel.class);
+            this.project = IModelHelper.toModel(jsonObject.getJsonObject(Field.PROJECT), ProjectModel.class).orElse(null);
         }
         if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof String) {
-            this.project = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class);
+            this.project = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class).orElse(null);
         }
         if (jsonObject.getValue(Field.BASKET) != null && jsonObject.getValue(Field.BASKET) instanceof JsonObject) {
-            this.basket = IModelHelper.toModel(jsonObject.getJsonObject(Field.BASKET), BasketOrder.class);
+            this.basket = IModelHelper.toModel(jsonObject.getJsonObject(Field.BASKET), BasketOrder.class).orElse(null);
         }
         if (jsonObject.getValue(Field.BASKET) != null && jsonObject.getValue(Field.BASKET) instanceof String) {
-            this.basket = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.BASKET)), BasketOrder.class);
+            this.basket = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.BASKET)), BasketOrder.class).orElse(null);
         }
         if (jsonObject.getValue(Field.CAMPAIGN) != null && jsonObject.getValue(Field.CAMPAIGN) instanceof JsonObject) {
-            this.campaign = IModelHelper.toModel(jsonObject.getJsonObject(Field.CAMPAIGN), Campaign.class);
+            this.campaign = IModelHelper.toModel(jsonObject.getJsonObject(Field.CAMPAIGN), Campaign.class).orElse(null);
         }
         if (jsonObject.getValue(Field.CAMPAIGN) != null && jsonObject.getValue(Field.CAMPAIGN) instanceof String) {
-            this.campaign = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.CAMPAIGN)), Campaign.class);
+            this.campaign = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.CAMPAIGN)), Campaign.class).orElse(null);
         }
 
         this.orderClientId = jsonObject.getInteger(Field.ORDER_CLIENT_ID);
         this.orderRegionId = jsonObject.getInteger(Field.ORDER_REGION_ID);
 
         if (jsonObject.getValue(Field.STUDENTS) != null && jsonObject.getValue(Field.STUDENTS) instanceof JsonObject) {
-            this.students = IModelHelper.toModel(jsonObject.getJsonObject(Field.STUDENTS), StudentsTableModel.class);
+            this.students = IModelHelper.toModel(jsonObject.getJsonObject(Field.STUDENTS), StudentsTableModel.class).orElse(null);
         }
         if (jsonObject.getValue(Field.STUDENTS) != null && jsonObject.getValue(Field.STUDENTS) instanceof String) {
-            this.students = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.STUDENTS)), StudentsTableModel.class);
+            this.students = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.STUDENTS)), StudentsTableModel.class).orElse(null);
         }
 
         if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof JsonArray) {
