@@ -725,8 +725,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
     }
 
     @Override
-    public Future<Map<ProjectModel, List<OrderRegionEquipmentModel>>> getOrderRegionEquipmentInSameProject
-            (List<Integer> projectIdList, boolean old) {
+    public Future<Map<ProjectModel, List<OrderRegionEquipmentModel>>> getOrderRegionEquipmentInSameProject(List<Integer> projectIdList, boolean old) {
         if (projectIdList.isEmpty()) {
             return Future.succeededFuture(new HashMap<>());
         }
@@ -744,7 +743,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 promise.complete(stringJsonArrayEither.right().getValue().stream()
                         .filter(JsonObject.class::isInstance)
                         .map(JsonObject.class::cast)
-                        .collect(Collectors.toMap(jsonObject -> IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class),
+                        .collect(Collectors.toMap(jsonObject -> IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.PROJECT)), ProjectModel.class).orElse(new ProjectModel()),
                                 jsonObject -> IModelHelper.toList(new JsonArray(jsonObject.getString(Field.ARRAY_TO_JSON)), OrderRegionEquipmentModel.class))));
             } else {
                 promise.fail(stringJsonArrayEither.left().getValue());

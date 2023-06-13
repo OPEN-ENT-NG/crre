@@ -326,6 +326,8 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
                                 .filter(JsonObject.class::isInstance)
                                 .map(JsonObject.class::cast)
                                 .map(orderJson -> IModelHelper.toModel(new JsonObject(orderJson.getString(Field.ROW_TO_JSON)), OrderClientEquipmentModel.class))
+                                .filter(Optional::isPresent)
+                                .map(Optional::get)
                                 .collect(Collectors.toList()));
                     } else {
                         String errorMessage = String.format("[CRRE@%s::getOrderClientEquipmentListFromBasketId] Fail to get basket order", this.getClass().getSimpleName());

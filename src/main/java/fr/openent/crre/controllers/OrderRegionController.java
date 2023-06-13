@@ -135,7 +135,7 @@ public class OrderRegionController extends BaseController {
 
         projectService.getLastProject()
                 .compose(lastProject -> {
-                    String last = lastProject.getTitle();
+                    String last = lastProject.orElse(new ProjectModel()).getTitle();
                     String date = LocalDate.now().format(DateTimeFormatter.ofPattern(DateHelper.DAY_FORMAT_DASH));
                     String title = "Commande_" + date;
                     if (last != null && title.equals(last.substring(0, last.length() - 2))) {
@@ -146,9 +146,15 @@ public class OrderRegionController extends BaseController {
                     return projectService.createProject(new ProjectModel().setTitle(title).setComment(commentProject));
                 })
                 .onSuccess(projectModel -> {
-                    promise.complete(projectModel);
-                    Logging.insert(userInfos, null, Actions.CREATE.toString(), String.valueOf(projectModel.getId()),
-                            projectModel.toJson());
+                    if (projectModel.isPresent()) {
+                        promise.complete(projectModel.get());
+                        Logging.insert(userInfos, null, Actions.CREATE.toString(), String.valueOf(projectModel.get().getId()),
+                                projectModel.get().toJson());
+                    } else {
+                        String message = "[CRRE@%s::createProject] Fail to create project";
+                        LOGGER.error(String.format(message, this.getClass().getSimpleName()));
+                        promise.fail(message);
+                    }
                 })
                 .onFailure(error -> {
                     LOGGER.error(String.format("[CRRE@%s::createProject] An error when create project %s",
@@ -293,10 +299,14 @@ public class OrderRegionController extends BaseController {
     }
 
 
+    /**
+     * @deprecated Watch for several versions. Many features have been refactored and no longer work. To retest
+     */
     @Get("/add/orders/lde")
     @ApiDoc("Insert old orders from LDE")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AdministratorRight.class)
+    @Deprecated
     public void addOrders(HttpServerRequest request) throws IOException {
         Scanner sc = getOrderLDE();
         projectService.getLastProject()
@@ -313,7 +323,7 @@ public class OrderRegionController extends BaseController {
                                         }
                                         // Store all orders by key (uai + date) and value (id project) No duplicate
                                         HashMap<String, Integer> projetMap = new HashMap<>();
-                                        historicCommand(request, sc, lastProject.getId(),
+                                        historicCommand(request, sc, lastProject.orElse(null).getId(),
                                                 getEquipmentEvent.right().getValue(), projetMap, idsStatus, part);
                                     })
                                     .onFailure(error -> {
