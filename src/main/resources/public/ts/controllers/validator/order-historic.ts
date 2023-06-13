@@ -79,7 +79,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
                         toasts.warning('crre.order.update.err');
                     }
 
-                    $scope.display.projects.all.flatMap((project : Project) => project.orders.all)
+                    $scope.display.projects.all.flatMap((project : Project) => project.orders)
                         .filter((order : OrderClient) => order.selected)
                         .forEach((order : OrderClient) => order.status = ORDER_STATUS_ENUM.RESUBMIT)
 
