@@ -4,6 +4,9 @@ export const campaignMainController = ng.controller('campaignMainController',
     ['$scope', ($scope) => {
 
         $scope.openCatalog = (id: number) => {
+            if (!id) {
+                id = 0;
+            }
             $scope.redirectTo(`/equipments/catalog/${id}`);
         };
 
