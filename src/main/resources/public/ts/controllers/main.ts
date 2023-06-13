@@ -141,6 +141,7 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
                 Utils.safeApply($scope);
             },
             showCatalog: async (params) => {
+                $scope.isPublicCatalogPage = true;
                 $scope.selectedType = $location.path();
                 await setCampaign(params);
                 await template.open('main-profile', 'prescriptor/campaign-main');
