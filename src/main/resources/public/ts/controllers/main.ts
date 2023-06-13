@@ -404,15 +404,8 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             return structure.workflow.find((workflowName: WorkflowNeo4jModel) => workflowName.name === Behaviours.applicationsBehaviours.crre.rights.workflow.validator) != null;
         };
 
-        /**
-         * @deprecated Use {@link hasAccessInStructure}
-         */
         $scope.isAdministrator = () => {
             return model.me.hasWorkflow(Behaviours.applicationsBehaviours.crre.rights.workflow.administrator);
-        };
-
-        $scope.isAdministratorInStructure = (structure: Structure): boolean => {
-            return structure.workflow.find((workflowName: WorkflowNeo4jModel) => workflowName.name === Behaviours.applicationsBehaviours.crre.rights.workflow.administrator) != null;
         };
 
         /**

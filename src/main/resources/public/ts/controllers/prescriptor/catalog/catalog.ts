@@ -121,12 +121,10 @@ export const catalogController = ng.controller('catalogController',
                 }
             }
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
-            if($scope.isAdministratorInStructure($scope.current.structure)) {
-                $scope.equipments.filters.consumables = [{name: 'Consommable'}, {name: 'Manuel'}, {name: 'Ressource'}] as FilterCatalogItem[];
-                $scope.equipments.filters.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
-                $scope.equipments.filters.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}] as FilterCatalogItem[];
-                $scope.equipments.filters.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
-            }
+            $scope.equipments.filters.consumables = [{name: 'Consommable'}, {name: 'Manuel'}, {name: 'Ressource'}] as FilterCatalogItem[];
+            $scope.equipments.filters.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
+            $scope.equipments.filters.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}] as FilterCatalogItem[];
+            $scope.equipments.filters.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
 
             Utils.safeApply($scope);
             if (!!$scope.campaign.catalog) {
