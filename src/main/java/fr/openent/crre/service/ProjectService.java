@@ -7,6 +7,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProjectService {
     /**
@@ -15,7 +16,7 @@ public interface ProjectService {
      * @param project model which contains the information of the new project
      * @return a future of the project created
      */
-    Future<ProjectModel> createProject(ProjectModel project);
+    Future<Optional<ProjectModel>> createProject(ProjectModel project);
 
     /**
      * Get all project from an order region id list
@@ -29,5 +30,5 @@ public interface ProjectService {
      *
      * @return a future of the last project created
      */
-    Future<ProjectModel> getLastProject();
+    Future<Optional<ProjectModel>> getLastProject();
 }
