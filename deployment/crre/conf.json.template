@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~crre~1.4-SNAPSHOT",
+      "name": "fr.openent~crre~1.4.3",
       "config": {
         "main" : "fr.openent.crre.Crre",
         "port" : 8150,
