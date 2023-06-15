@@ -1403,13 +1403,13 @@ body.crre {
     color: white;
   }
 
-  input[type="radio"]:checked + .labeltab, {
+  input[type="radio"]:checked + .labeltab {
     background: rgb(251, 251, 251);
     color: black;
     font-size: 18px;
   }
 
-  input[type="radio"]:checked + .labeltabOrder, {
+  input[type="radio"]:checked + .labeltabOrder {
     background: rgb(251, 251, 251);
     color: black;
     font-size: 18px;
@@ -1517,6 +1517,7 @@ body.crre {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    white-space: normal;
   }
 
   .basketTruncate {
@@ -1621,7 +1622,7 @@ body.crre {
 
   .float {
     position: fixed;
-    bottom: 20px;
+    bottom: 70px;
     right: 20px;
     overflow-x: hidden;
     overflow-y: auto;
@@ -1758,4 +1759,55 @@ body.crre {
     display : flex;
   }
 
+  .crre {
+    &-display-duplicate-basket {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 4px;
+    }
+
+    &-display-duplicate-basket::before {
+      content: "\2022"; /* code unicode pour le point */
+      margin-right: 10px;
+    }
+
+    &-order-waiting {
+      &-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+
+      &-table {
+        &-header {
+          &-column {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+
+            &-order {
+              &-icon {
+                width: 30px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .crre-display-hover-element {
+    .crre-hover-element {
+      transition: 0.2s;
+      opacity: 0;
+    }
+  }
+
+  .crre-display-hover-element:hover {
+    .crre-hover-element {
+      opacity: 1;
+    }
+  }
 }
