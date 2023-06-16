@@ -282,26 +282,25 @@ public class DefaultOrderRegionServiceTest {
         filterModel.setPage(5);
         FilterItemModel filterItem = new FilterItemModel();
 
-        String expectedQuery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate, " +
-                "count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders , MAX(s.name) as structure_name, MAX(s.uai) as uai " +
-                "FROM  null.project p " +
-                "LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project AND o_r_e_o.status IN (?,?) " +
-                "LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project AND o_r_e.status IN (?,?) " +
-                "LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment " +
-                "LEFT JOIN null.order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment " +
-                "LEFT JOIN null.basket_order AS b ON (b.id = o_c_e.id_basket OR b.id = o_c_e_o.id_basket) " +
-                "LEFT JOIN null.structure AS s ON (o_r_e.id_structure = s.id_structure OR o_r_e_o.id_structure = s.id_structure) " +
-                "WHERE ((o_r_e.creation_date BETWEEN ? AND ? AND o_r_e.equipment_key IS NOT NULL) OR (o_r_e_o.creation_date BETWEEN ? AND ?)) " +
-                "AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR lower(s.public) ~* ? " +
-                "OR lower(s.catalog) ~* ? OR lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? " +
-                "OR lower(b.name) ~* ? OR o_r_e_o.equipment_name ~* ?  OR o_r_e.equipment_key IN (?,?))  " +
-                "AND (o_r_e.id_structure IN (?,?) OR o_r_e_o.id_structure IN (?,?) ) AND o_r_e_o.owner_id ~* 'renew'  " +
-                "GROUP BY p.id, creationDateOFFSET ? LIMIT ? ";
-        String expectedParams = "[\"SENT\",\"RESUBMIT\",\"SENT\",\"RESUBMIT\",\"startDate\",\"endDate\",\"startDate\"," +
-                "\"endDate\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
-                "\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
-                "\"searching text\",\"equipement1\",\"equipement2\",\"idStructure1\",\"idStructure2\",\"idStructure1\"," +
-                "\"idStructure2\",50,10]";
+        String expectedQuery = "SELECT DISTINCT p.*, COALESCE (o_r_e_o.creation_date, o_r_e.creation_date) as creationDate," +
+                " count(o_r_e.*) + count(o_r_e_o.*) AS nbOrders , MAX(s.name) as structure_name, MAX(s.uai) as uai" +
+                " FROM  null.project p LEFT JOIN null.\"order-region-equipment-old\" o_r_e_o ON p.id = o_r_e_o.id_project AND o_r_e_o.status IN (?,?)" +
+                " LEFT JOIN null.\"order-region-equipment\" o_r_e ON p.id = o_r_e.id_project AND o_r_e.status IN (?,?)" +
+                " LEFT JOIN null.order_client_equipment_old AS o_c_e_o ON o_c_e_o.id = o_r_e_o.id_order_client_equipment" +
+                " LEFT JOIN null.order_client_equipment AS o_c_e ON o_c_e.id = o_r_e.id_order_client_equipment" +
+                " LEFT JOIN null.basket_order AS b ON (b.id = o_c_e.id_basket OR b.id = o_c_e_o.id_basket)" +
+                " LEFT JOIN null.structure AS s ON (o_r_e.id_structure = s.id_structure OR o_r_e_o.id_structure = s.id_structure)" +
+                " WHERE ((o_r_e.creation_date BETWEEN ? AND ? AND o_r_e.equipment_key IS NOT NULL) OR (o_r_e_o.creation_date BETWEEN ? AND ?))" +
+                " AND (lower(s.uai) ~* ? OR lower(s.name) ~* ? OR lower(s.city) ~* ? OR lower(s.region) ~* ? OR lower(s.public) ~* ? OR lower(s.catalog) ~* ?" +
+                " OR lower(p.title) ~* ? OR lower(o_r_e.owner_name) ~* ? OR lower(o_r_e_o.owner_name) ~* ? OR lower(b.name) ~* ?" +
+                " OR lower(o_r_e_o.equipment_name) ~* ? OR lower(o_r_e_o.equipment_key) ~* ? OR lower(o_r_e.equipment_key) ~* ?" +
+                " OR o_r_e.equipment_key IN (?,?))  AND (o_r_e.id_structure IN (?,?) OR o_r_e_o.id_structure IN (?,?) ) AND o_r_e_o.owner_id ~* 'renew'" +
+                "  GROUP BY p.id, creationDateOFFSET ? LIMIT ? ";
+        String expectedParams = "[\"SENT\",\"RESUBMIT\",\"SENT\",\"RESUBMIT\",\"startDate\",\"endDate\",\"startDate\",\"endDate\"," +
+                "\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
+                "\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\",\"searching text\"," +
+                "\"searching text\",\"equipement1\",\"equipement2\",\"idStructure1\",\"idStructure2\",\"idStructure1\",\"idStructure2\"," +
+                "50,10]";
 
         PowerMockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);
@@ -366,18 +365,20 @@ public class DefaultOrderRegionServiceTest {
 
         List<OrderUniversalModel> orderList = Arrays.asList(orderUniversalModel1, orderUniversalModel2);
 
-        String expectedQuery = "INSERT INTO null.\"order-region-equipment-old\" (id,amount, creation_date,  owner_name," +
+        String expectedQuery = "INSERT INTO null.\"order-region-equipment-old\" (id, amount, creation_date,  owner_name," +
                 " owner_id, status, equipment_key, equipment_name, equipment_image, equipment_price, equipment_grade," +
                 " equipment_editor, equipment_diffusor, equipment_format, id_campaign, id_structure, comment, id_order_client_equipment," +
-                " id_project, reassort, id_status, total_free) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
-                " ,(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
-        String expectedParams = "[183,13,\"validationDate\",\"validatorName\",\"validatorId\",\"SENT\",\"equipmentKey\"," +
-                "\"equipmentName\",\"equipmentImage\",843.1,\"grade\",\"editor\",\"diffusor\",\"catalogueType\",156," +
-                "\"idStructure\",\"comment\",45,8,false,null,4,5651,156,\"validationDate2\",\"validatorName2\"," +
-                "\"validatorId2\",\"SENT\",\"equipmentKey2\",\"equipmentName2\",\"equipmentImage2\",45273.7,\"grade2\"," +
-                "\"editor2\",\"diffusor2\",\"catalogueType2\",15,\"idStructure2\",\"comment2\",56,5,false,null,15]";
+                " id_project, reassort, id_status, total_free) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ,(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+        String expectedParams = "[183,13,\"validationDate\",\"validatorName\",\"validatorId\",\"DONE\",\"equipmentKey\"," +
+                "\"equipmentName\",\"equipmentImage\",843.1,\"grade\",\"editor\",\"diffusor\",\"catalogueType\",156,\"idStructure\"," +
+                "\"comment\",45,8,false,null,4,5651,156,\"validationDate2\",\"validatorName2\",\"validatorId2\",\"SENT\"," +
+                "\"equipmentKey2\",\"equipmentName2\",\"equipmentImage2\",45273.7,\"grade2\",\"editor2\",\"diffusor2\"," +
+                "\"catalogueType2\",15,\"idStructure2\",\"comment2\",56,5,false,null,15]";
 
-        TransactionElement transactionElement = Whitebox.invokeMethod(this.defaultOrderRegionService, "insertOrderList", orderList, false);
+
+
+        TransactionElement transactionElement = Whitebox.invokeMethod(this.defaultOrderRegionService, "insertOrderList", orderList);
         ctx.assertEquals(expectedQuery, transactionElement.getQuery());
         ctx.assertEquals(expectedParams, transactionElement.getParams().toString());
     }
@@ -406,6 +407,7 @@ public class DefaultOrderRegionServiceTest {
                 .setCampaign(new Campaign().setId(156))
                 .setIdStructure("idStructure")
                 .setComment("comment")
+                .setStatus(OrderStatus.SENT)
                 .setProject(new ProjectModel().setId(15));
 
         OrderUniversalModel orderUniversalModel2 = new OrderUniversalModel()
@@ -430,6 +432,7 @@ public class DefaultOrderRegionServiceTest {
                 .setCampaign(new Campaign().setId(72))
                 .setIdStructure("idStructure2")
                 .setComment("comment2")
+                .setStatus(OrderStatus.ARCHIVED)
                 .setProject(new ProjectModel().setId(84));
 
         List<OrderUniversalModel> orderList = Arrays.asList(orderUniversalModel1, orderUniversalModel2);
@@ -441,7 +444,7 @@ public class DefaultOrderRegionServiceTest {
                 "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String expectedParams = "[183,13,\"validationDate\",\"prescriberId\",\"SENT\",\"equipmentKey\",\"equipmentName\"," +
                 "\"equipmentImage\",843.1,\"grade\",\"editor\",\"diffusor\",\"catalogueType\",156,\"idStructure\",\"comment\"," +
-                "95,false,[],211.25,29.65,510.2,42,52,\"validationDate2\",\"prescriberId2\",\"SENT\",\"equipmentKey2\"," +
+                "95,false,[],211.25,29.65,510.2,42,52,\"validationDate2\",\"prescriberId2\",\"ARCHIVED\",\"equipmentKey2\"," +
                 "\"equipmentName2\",\"equipmentImage2\",245.5,\"grade2\",\"editor2\",\"diffusor2\",\"catalogueType2\",72," +
                 "\"idStructure2\",\"comment2\",42,false,[],76.5,475.4,32.1]";
 
