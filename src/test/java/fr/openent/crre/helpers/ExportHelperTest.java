@@ -7,7 +7,10 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Collections;
+
+import static fr.openent.crre.core.constants.Field.UTF8_BOM;
 
 @RunWith(VertxUnitRunner.class)
 public class ExportHelperTest {
@@ -62,9 +65,11 @@ public class ExportHelperTest {
         order.setStructure(structure);
 
 
-        JsonObject expectedResult = new JsonObject()
-                .put("csvFile","﻿﻿ID unique;Date;Nom étab;UAI de l'étab;Adresse de livraison;Nom commande;Campagne;EAN de la ressource;Titre de la ressource;Editeur;Distributeur;Numerique;Id de l'offre choisie;Type;Reassort;Quantité;Prix HT de la ressource;Part prix 5,5%;Part prix 20%;Prix unitaire TTC;Montant total HT;Prix total TTC;Commentaire;2nde Generale;1ere Generale;Terminale Generale;2nde Technologique;1ere Technologique;Terminale Technologique;2nde Professionnelle;1ere Professionnelle;Terminale Professionnelle;BMA 1ere annee;BMA 2nde annee;CAP 1ere annee;CAP 2eme annee;CAP 3eme annee\n156;2023-02-28;Test School;0123456;123 Main St;projectTitle;campaignName;12345;Name;editor;diffusor;Camera;eadLibrary;catalogType;Non;19;59.65;0.5;45.5;480.5;1133.35;9129.5;comment;6;7;8;9;10;11;12;13;14;1;2;3;4;5\n")
-                .put("nbEtab", 1);
-        ctx.assertEquals(ExportHelper.generateExportRegion(Collections.singletonList(order)), expectedResult);
+        String expectedResult = UTF8_BOM + UTF8_BOM + "ID unique;Date;Nom étab;UAI de l'étab;Adresse de livraison;Nom commande;Campagne;EAN de la ressource;Titre de la ressource;Editeur;Distributeur;Numerique;Id de l'offre choisie;Type;Reassort;Quantité;Prix HT de la ressource;Part prix 5,5%;Part prix 20%;Prix unitaire TTC;Montant total HT;Prix total TTC;Commentaire;2nde Generale;1ere Generale;Terminale Generale;2nde Technologique;1ere Technologique;Terminale Technologique;2nde Professionnelle;1ere Professionnelle;Terminale Professionnelle;BMA 1ere annee;BMA 2nde annee;CAP 1ere annee;CAP 2eme annee;CAP 3eme annee\n" +
+                "156;2023-02-28;Test School;0123456;123 Main St;projectTitle;campaignName;12345;Name;editor;diffusor;catalogType;eadLibrary;Camera;Non;19;59.65;0.5;45.5;480.5;1133.35;9129.5;comment;6;7;8;9;10;11;12;13;14;1;2;3;4;5\n";
+
+        JsonObject result = ExportHelper.generateExportRegion(Collections.singletonList(order));
+        ctx.assertEquals(expectedResult, result.getString("csvFile"));
+        ctx.assertEquals(1, result.getInteger("nbEtab"));
     }
 }
