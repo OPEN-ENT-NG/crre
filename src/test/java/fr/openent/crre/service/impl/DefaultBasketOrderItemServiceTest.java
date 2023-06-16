@@ -140,7 +140,7 @@ public class DefaultBasketOrderItemServiceTest {
     public void deleteListTest(TestContext ctx) throws Exception {
         Async async = ctx.async();
 
-        String expectedQuery = "DELETE FROM null.basket_order_item WHERE id IN (?,?,?)";
+        String expectedQuery = "DELETE FROM null.basket_order_item WHERE id IN (?,?,?) RETURNING *";
         String expectedParams = "[18,294,896]";
 
         Mockito.doAnswer(invocation -> {

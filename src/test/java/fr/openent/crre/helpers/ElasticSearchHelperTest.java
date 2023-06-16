@@ -64,7 +64,7 @@ public class ElasticSearchHelperTest {
             async.complete();
 
             return Future.succeededFuture();
-        }).when(ElasticSearchHelper.class, "search", Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+        }).when(ElasticSearchHelper.class, "execute", Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
         ElasticSearchHelper.searchfilter(filters, Arrays.asList("ID"));
         async.awaitSuccess(10000);
