@@ -8,6 +8,8 @@ import {
     OrdersRegion,
     Project,
     Projects,
+    Student,
+    StudentInfo,
     Utils,
 } from "../../../model";
 import {ORDER_STATUS_ENUM} from "../../../enum/order-status-enum";
@@ -31,6 +33,7 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
             projects: new Projects()
         };
         $scope.projectFilter = new ProjectFilter();
+        $scope.studentInformations = new Map<string, Student>();
 
         let scrollSubscription: Subscription = new Subscription().add(Behaviours.applicationsBehaviours['crre'].SnipletScrollService
             .getScrollSubject()
@@ -433,6 +436,19 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         $scope.containsHistoricalOrders = (): boolean => {
             return Utils.getHistoricalStatus().some((value: ORDER_STATUS_ENUM) => checkStatusChoice(value));
         };
+
+        $scope.getStudentInformation = (idStructure): Array<StudentInfo> => {
+            let studentInfo: Student;
+            if ($scope.studentInformations.has(idStructure)) {
+                studentInfo = $scope.studentInformations.get(idStructure);
+            } else {
+                studentInfo = new Student();
+                $scope.studentInformations.set(idStructure, studentInfo);
+                studentInfo.getAmount(idStructure).then(() => Utils.safeApply($scope));
+            }
+
+            return studentInfo.studentInfo;
+        }
 
         await init();
     }
