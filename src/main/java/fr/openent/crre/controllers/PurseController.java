@@ -33,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -313,19 +314,17 @@ public class PurseController extends ControllerHelper {
     public void updateHolder(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, pathPrefix + "purse", body -> {
             try {
-                purseService.update(request.params().get("idStructure"), body, event -> {
-                            if (event.isRight()) {
-                                Logging.defaultResponseHandler(eb,
-                                        request,
-                                        Contexts.PURSE.toString(),
-                                        Actions.UPDATE.toString(),
-                                        request.params().get("idStructure"),
-                                        body).handle(new Either.Right<>(event.right().getValue()));
-                            } else {
-                                badRequest(request);
-                            }
-                        }
-                );
+                UserUtils.getUserInfos(eb, request, userInfos ->
+                        purseService.update(request.params().get(Field.IDSTRUCTURE), body)
+                                .onSuccess(unused -> {
+                                    Renders.ok(request);
+                                    Logging.insert(userInfos,
+                                            Contexts.PURSE.toString(),
+                                            Actions.UPDATE.toString(),
+                                            request.params().get(Field.IDSTRUCTURE),
+                                            body);
+                                })
+                                .onFailure(error -> renderError(request)));
             } catch (NumberFormatException e) {
                 log.error("An error occurred when casting purse id", e);
                 badRequest(request);

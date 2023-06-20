@@ -123,17 +123,20 @@ public class DefaultPurseService implements PurseService {
     }
 
     @Override
-    public void update(String id_structure, JsonObject purse, Handler<Either<String, JsonObject>> handler) {
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-        statements.add(getImportStatementAmount(id_structure, purse.getDouble("initial_amount"), "purse",
+    public Future<Void> update(String idStructure, JsonObject purse) {
+        Promise<Void> promise = Promise.promise();
+
+        List<TransactionElement> statements = new ArrayList<>();
+        statements.add(getImportStatementAmount(idStructure, purse.getDouble(Field.INITIAL_AMOUNT), Field.PURSE,
                 false, false, true));
-        statements.add(getImportStatementAmount(id_structure, purse.getDouble("consumable_initial_amount"), "purse",
+        statements.add(getImportStatementAmount(idStructure, purse.getDouble(Field.CONSUMABLE_INITIAL_AMOUNT), Field.PURSE,
                 true, false, true));
-        statements.add(getImportStatementAmount(id_structure, purse.getInteger("licence_initial_amount"), "licences",
-                false, false, true));
-        statements.add(getImportStatementAmount(id_structure, purse.getInteger("consumable_licence_initial_amount"), "licences",
-                true, false, true));
-        handleSQLStatements(handler, statements);
+        String errorMessage = "[CRRE@%s::update] Fail to update purse:";
+        TransactionHelper.executeTransaction(statements, errorMessage)
+                .onSuccess(result -> promise.complete())
+                .onFailure(promise::fail);
+
+        return promise.future();
     }
 
     private void handleSQLStatements(Handler<Either<String, JsonObject>> handler, JsonArray statements) {
