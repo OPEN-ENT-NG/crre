@@ -2,24 +2,19 @@ import { toasts } from 'entcore';
 import http from 'axios';
 import {Mix, Selectable, Selection} from 'entcore-toolkit';
 import {Utils} from "./Utils";
+import {StructureNeo4jModel} from "./StructureNeo4jModel";
 
 declare let window: any;
 export class Purse implements Selectable {
-    id?: number;
     id_structure: string;
     amount: number;
     initial_amount: number;
     consumable_amount: number;
     consumable_initial_amount: number;
+    added_initial_amount: number;
+    added_consumable_initial_amount: number;
+    structure: StructureNeo4jModel;
     selected: boolean;
-    seconde: number;
-    premiere: number;
-    terminale: number;
-    total: number;
-    licence_amount: number;
-    consumable_licence_amount: number;
-    licence_initial_amount: number;
-    consumable_licence_initial_amount: number;
 
     constructor (id_structure?: string, amount?: number) {
         if (id_structure) this.id_structure = id_structure;
@@ -40,9 +35,7 @@ export class Purse implements Selectable {
         return {
             id_structure: this.id_structure,
             initial_amount: this.initial_amount,
-            consumable_initial_amount: this.consumable_initial_amount,
-            licence_initial_amount: this.licence_initial_amount,
-            consumable_licence_initial_amount: this.consumable_licence_initial_amount
+            consumable_initial_amount: this.consumable_initial_amount
         };
     }
 }
@@ -80,7 +73,7 @@ export class Purses extends Selection<Purse> {
         if(!!all) {
             window.location = `/crre/purses/export`;
         } else {
-            let params_id_purses = Utils.formatKeyToParameter(this.selected, 'id');
+            let params_id_purses: string = Utils.formatKeyToParameter(this.selected, 'id_structure');
             window.location = `/crre/purses/export?${params_id_purses}`;
         }
     };

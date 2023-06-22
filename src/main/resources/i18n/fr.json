@@ -860,5 +860,10 @@
   "crre.orders.waiting.validation": "Demandes soumises à validation",
   "crre.lde.orders": "Commandes LDE",
   "crre.item.not.found": "Manuel introuvable dans le catalogue",
-  "crre.empty.amount.error": "Une quantité à 0 est impossible, veuillez changer votre montant."
+  "crre.empty.amount.error": "Une quantité à 0 est impossible, veuillez changer votre montant.",
+  "crre.credit.added": "Quantité ajoutée",
+  "crre.purse.money.initial.added": "Crédit monétaire ajouté",
+  "crre.purse.money.conso.initial": "Crédit monétaire consommables initial",
+  "crre.purse.money.conso.rest": "Crédit monétaire consommables restant",
+  "crre.purse.money.conso.initial.added": "Crédit monétaire consommables ajouté"
 }

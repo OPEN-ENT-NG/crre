@@ -288,6 +288,8 @@ public class Field {
     public static final String PURSE = "purse";
     public static final String INITIAL_AMOUNT = "initial_amount";
     public static final String CONSUMABLE_INITIAL_AMOUNT = "consumable_initial_amount";
+    public static final String ADDED_INITIAL_AMOUNT = "added_initial_amount";
+    public static final String ADDED_CONSUMABLE_INITIAL_AMOUNT = "added_consumable_initial_amount";
 
 
     private Field() {

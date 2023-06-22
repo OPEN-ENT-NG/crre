@@ -32,6 +32,7 @@
                 <td><div class="smallTabElem center"><i18n>crre.credit.type</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.initial.quantity</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.rest.quantity</i18n></div></td>
+                <td><div class="smallTabElem center"><i18n>crre.credit.added</i18n></div></td>
                 <td><div class="smallTabElem center"><i18n>crre.detail</i18n></div></td>
             </tr>
             </thead>
@@ -44,8 +45,8 @@
                         <span></span>
                     </label>
                 </td>
-                <td><div class="smallTabElem center">[[purse.uai]]</div></td>
-                <td><div class="tabElem center">[[purse.name]]</div></td>
+                <td><div class="smallTabElem center">[[purse.structure.uai]]</div></td>
+                <td><div class="tabElem center">[[purse.structure.name]]</div></td>
                 <td>
                     <div class="smallTabElem center">
 <!--                        <i18n ng-if="purse.licence_initial_amount">crre.Licences</i18n>
@@ -72,20 +73,33 @@
                 </td>
                 <td>
                     <div class="smallTabElem center">
-<!--                        <span ng-bind="purse.licence_amount" ng-if="purse.licence_initial_amount"></span>
-                        <br ng-if="purse.licence_initial_amount && purse.initial_amount"/>-->
+                        <!--                        <span ng-bind="purse.licence_amount" ng-if="purse.licence_initial_amount"></span>
+                                                <br ng-if="purse.licence_initial_amount && purse.initial_amount"/>-->
                         <span ng-bind="purse.amount | currency" ng-if="purse.initial_amount"></span>
                         <br ng-if="(purse.licence_initial_amount || purse.initial_amount) && purse.consumable_initial_amount"/>
                         <span ng-bind="purse.consumable_amount | currency" ng-if="purse.consumable_initial_amount"></span>
-                       <!-- <br ng-if="(purse.licence_initial_amount || purse.initial_amount || purse.consumable_initial_amount) &&
-                        purse.consumable_licence_initial_amount"/>
-                        <span ng-bind="purse.consumable_licence_amount" ng-if="purse.consumable_licence_initial_amount"></span>-->
+                        <!-- <br ng-if="(purse.licence_initial_amount || purse.initial_amount || purse.consumable_initial_amount) &&
+                         purse.consumable_licence_initial_amount"/>
+                         <span ng-bind="purse.consumable_licence_amount" ng-if="purse.consumable_licence_initial_amount"></span>-->
                     </div>
                 </td>
                 <td>
                     <div class="smallTabElem center">
-                        <i class="info-circle" tooltip="2nde : [[purse.seconde]]   /   1ère : [[purse.premiere]]   /
-                           Tale : [[purse.terminale]]   /   Supp : [[purse.licence_initial_amount - purse.seconde - purse.premiere - purse.terminale]]"></i>
+                        <span ng-bind="purse.added_initial_amount | currency" ng-if="purse.added_initial_amount != null"></span>
+                        <br/>
+                        <span ng-bind="purse.added_consumable_initial_amount | currency" ng-if="purse.added_consumable_initial_amount != null"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="smallTabElem center crre-admin-credits-table-tooltip relative"
+                         ng-if="purse.id_structure && getStudentInformation(purse.id_structure).length > 0">
+                        <i class="info-circle"></i>
+                        <!-- tooltip hovered -->
+                        <span class="tooltip-top">
+                            <div ng-repeat="info in getStudentInformation(purse.id_structure) | orderBy : 'position'">
+                                <span class="font-bold"><b>[[info.title]]</b>: [[info.value]]</span>
+                            </div>
+                        </span>
                     </div>
                 </td>
             </tr>

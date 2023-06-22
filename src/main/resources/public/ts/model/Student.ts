@@ -2,23 +2,24 @@ import http from "axios";
 import {idiom as lang, toasts} from 'entcore';
 import {Mix} from "entcore-toolkit";
 
-const fieldToI18nMap = new Map<string, string>([
-    ["seconde", "crre.second.class"],
-    ["premiere", "crre.premiere.class"],
-    ["terminale", "crre.terminal.class"],
-    ["secondepro", "crre.second.pro.class"],
-    ["premierepro", "crre.premiere.pro.class"],
-    ["terminalepro", "crre.terminal.pro.class"],
-    ["cap1", "crre.first.cap.class"],
-    ["cap2", "crre.second.cap.class"],
-    ["cap3", "crre.third.cap.class"],
-    ["bma1", "crre.first.bma.class"],
-    ["bma2", "crre.second.bma.class"]
+const fieldToI18nMap = new Map<string, any[]>([
+    ["seconde", ["crre.second.class", 0]],
+    ["premiere", ["crre.premiere.class", 1]],
+    ["terminale", ["crre.terminal.class", 2]],
+    ["secondepro", ["crre.second.pro.class", 3]],
+    ["premierepro", ["crre.premiere.pro.class", 4]],
+    ["terminalepro", ["crre.terminal.pro.class", 5]],
+    ["cap1", ["crre.first.cap.class", 6]],
+    ["cap2", ["crre.second.cap.class", 7]],
+    ["cap3", ["crre.third.cap.class", 8]],
+    ["bma1", ["crre.first.bma.class", 9]],
+    ["bma2", ["crre.second.bma.class", 10]]
 ]);
 
 export interface StudentInfo {
     title: string
     value: number
+    position: number
 }
 
 export class Student {
@@ -73,7 +74,7 @@ export class Student {
     private calculateStudentInformation(): void {
         this._studentInfo = Object.keys(this).filter((key: string) => typeof this[key] === 'number' && this[key] > 0 && fieldToI18nMap.has(key))
             .map((key: string) => {
-                return {title: lang.translate(fieldToI18nMap.get(key)), value: this[key]};
+                return {title: lang.translate(fieldToI18nMap.get(key)[0]), value: this[key], position: fieldToI18nMap.get(key)[1]};
             });
     }
 
