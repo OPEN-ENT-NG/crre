@@ -34,11 +34,12 @@ public interface PurseService {
 
     /**
      * Update a purse based on his id structure
-     * @param id_structure Purse id
-     * @param purse purse object
-     * @param handler Function handler returning data
+     *
+     * @param idStructure Purse id
+     * @param purse        purse object
+     * @return
      */
-    void update(String id_structure, JsonObject purse, Handler<Either<String, JsonObject>> handler);
+    Future<Void> update(String idStructure, JsonObject purse);
 
     /**
      * decrease or increase an amount of Purse
