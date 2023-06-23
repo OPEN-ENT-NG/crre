@@ -9,7 +9,7 @@
                     <i class="diary-calendar"></i>
                     <date-picker
                             ng-model="projectFilter.startDate"
-                            ng-change="search(filter.isOld)"
+                            ng-change="search()"
                             class="input-date-picker-style">
                     </date-picker>
                 </div>
@@ -21,7 +21,7 @@
                     <i class="diary-calendar"></i>
                     <date-picker
                             ng-model="projectFilter.endDate"
-                            ng-change="search(filter.isOld)"
+                            ng-change="search()"
                             class="input-date-picker-style">
                     </date-picker>
                 </div>
@@ -32,15 +32,15 @@
                     <input class="twelve"
                            type="text"
                            ng-model="projectFilter.queryName"
-                           ng-keyup="$event.keyCode == 13 ? search(filter.isOld) : null"
+                           ng-keyup="$event.keyCode == 13 ? search() : null"
                            i18n-placeholder="search.filter.order">
                 </div>
             </div>
-            <div class="cell two margin-top-8 twelve-mobile" ng-if="filter.isOld">
-                <multi-combo title="[[lang.translate('Renews')]]"
-                             combo-model="renews"
-                             search-on="name" order-by="name"
-                             labels="comboLabels" filtered-model="projectFilter.renew"
+            <div class="cell two margin-top-8 twelve-mobile">
+                <multi-combo title="[[lang.translate('crre.request.state')]]"
+                             combo-model="statusFilterValue"
+                             search-on="orderStatusEnum" order-by="orderStatusEnum"
+                             labels="comboLabels" filtered-model="projectFilter.statusFilterList"
                              selection-event="getFilter()"
                              deselection-event="getFilter()"
                              class="inline-block horizontal-spacing no-border">
@@ -49,13 +49,6 @@
             <div class="cell twelve-mobile right-magnet">
                 <button ng-click="display.projects.exportCSV(false)" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
             </div>
-        </div>
-        <div style="margin-bottom: -0.5%; margin-top: 1%">
-            <input type="radio" id="item_1" name="box" checked="">
-            <label for="item_1" ng-click="changeOld(false)" class="labeltabOrder"><i18n>crre.orders.waiting.validation</i18n></label>
-            <input type="radio" id="item_2" name="box">
-            <label for="item_2" ng-click="changeOld(true)" class="labeltabOrder"><i18n>crre.orders.sent.library</i18n>
-            </label>
         </div>
         <div class="flex-row">
             <table class="twelve-mobile twelve">
@@ -212,7 +205,7 @@
             </div>
 -->
         </div>
-        <infinite-scroll-v2 scrolled="onScroll(filter.isOld)" loading-mode="false"></infinite-scroll-v2>
+        <infinite-scroll-v2 scrolled="onScroll()" loading-mode="false"></infinite-scroll-v2>
         <section class="toggle-buttons" ng-class="{ hide: !display.toggle }">
             <div class="toggle">
                 <div class="row">

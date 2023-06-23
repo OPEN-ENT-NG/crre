@@ -18,6 +18,7 @@ import {Mix} from "entcore-toolkit";
 import {StatusFilter} from "../../../model/StatusFilter";
 import {ORDER_BY_PROJECT_FIELD_ENUM} from "../../../enum/order-by-project-field-enum";
 import {TypeCatalogEnum} from "../../../enum/type-catalog-enum";
+import {idiom as lang} from 'entcore';
 
 export const waitingOrderRegionController = ng.controller('waitingOrderRegionController',
     ['$scope', async ($scope) => {
@@ -54,7 +55,9 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         const init = async () => {
             $scope.projectFilter.orderBy = ORDER_BY_PROJECT_FIELD_ENUM.DATE;
             $scope.projectFilter.orderDesc = true;
-            $scope.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.ARCHIVED), new StatusFilter(ORDER_STATUS_ENUM.SENT), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+            let newFilter: StatusFilter = new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS);
+            newFilter.toString = (): string => lang.translate("NEW");
+            $scope.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.ARCHIVED), new StatusFilter(ORDER_STATUS_ENUM.SENT), newFilter,
                 new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.DONE), new StatusFilter(ORDER_STATUS_ENUM.REJECTED)];
 
             $scope.schoolType = [{name: 'PU'}, {name: 'PR'}];

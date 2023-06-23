@@ -1,10 +1,3 @@
-<div style="margin-bottom: -0.5%; margin-top: 1%">
-    <input type="radio" id="item_1" name="box" checked="">
-    <label for="item_1" ng-click="changeOld(false)" class="labeltabOrder"><i18n>crre.orders.waiting.validation</i18n></label>
-    <input type="radio" id="item_2" name="box">
-    <label for="item_2" ng-click="changeOld(true)" class="labeltabOrder"><i18n>crre.orders.sent.library</i18n>
-    </label>
-</div>
 <div class="flex-row">
     <table class="twelve-mobile twelve">
         <thead>
@@ -66,13 +59,13 @@
             </td>
             <td>
                 <div class="smallTabElem center centerInputAmount">
-                    <i class="moins" ng-if="(order.status !== 'IN_PROGRESS' && order.status !== 'RESUBMIT' && !filter.isOld) && order.valid"
+                    <i class="moins" ng-if="order.status == 'WAITING' && order.valid"
                        ng-hide="!order.amount || order.amount <= 1" ng-click="updateAmount(basket, order, order.amount - 1)"></i>
                     <input type="number" class="quantity-input numberWithoutArrow" step="1" min="1" ng-keypress="avoidDecimals($event)"
-                           ng-disabled="order.status === 'IN_PROGRESS' || order.status === 'RESUBMIT' || filter.isOld || !order.valid"
+                           ng-disabled="order.status != 'WAITING' || !order.valid"
                            ng-change="updateAmount(basket, order, order.amount)"
                            ng-model="order.amount"/>
-                    <i class="plus_medium" ng-if="(order.status !== 'IN_PROGRESS' && order.status !== 'RESUBMIT' && !filter.isOld) && order.valid"
+                    <i class="plus_medium" ng-if="order.status == 'WAITING' && order.valid"
                        ng-click="updateAmount(basket, order, order.amount + 1)"></i>
                 </div>
             </td>

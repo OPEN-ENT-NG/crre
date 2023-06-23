@@ -1,49 +1,25 @@
 import {ng, toasts} from 'entcore';
 import {
-    Utils,
     Basket,
-    Equipment,
-    FilterFront,
-    Filter,
     Baskets,
     Campaign,
+    Equipment,
+    OrderClient,
+    OrderRegion,
     OrdersClient,
     Project,
-    OrderRegion,
-    OrderClient,
+    Utils,
 } from "../../model";
 import {Mix} from "entcore-toolkit";
 import {AxiosResponse} from "axios";
 import {ORDER_STATUS_ENUM} from "../../enum/order-status-enum";
+import {StatusFilter} from "../../model/StatusFilter";
 
 export const historicOrderRegionController = ng.controller('historicOrderRegionController',
     ['$scope', async ($scope) => {
-        $scope.filter = {
-            isOld: false
-        };
-        $scope.filterChoice = {
-            renew: []
-        };
-        $scope.filterChoiceCorrelation = {
-            keys: ["renew"],
-            renew: 'renew'
-        };
-        $scope.renews = [{name: 'true'}, {name: 'false'}];
-        $scope.renews.forEach((item : {name : string}) => item.toString = () => $scope.translate(item.name));
-
-
-        $scope.changeOld = async (old: boolean) : Promise<void> => {
-            if ($scope.filter.isOld !== old) {
-                $scope.filter.isOld = old;
-                $scope.projectFilter.page = 0;
-                $scope.filtersFront.all = [];
-                $scope.filters.all = []
-                $scope.display.loading = true;
-                $scope.display.projects.all = [];
-                Utils.safeApply($scope);
-                await $scope.synchroRegionOrders(null,false, null, $scope.filter.isOld);
-            }
-        };
+        $scope.statusFilterValue = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
+            new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.SENT),
+            new StatusFilter(ORDER_STATUS_ENUM.DONE), new StatusFilter(ORDER_STATUS_ENUM.ARCHIVED)];
 
         $scope.canResubmit = () : boolean => {
             return $scope.display.projects.all.flatMap((project : Project) => project.orders)
@@ -98,23 +74,7 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
         };
 
         $scope.getFilter = async () : Promise<void> => {
-            $scope.filters.all = [];
-            $scope.filtersFront.all = [];
-            for (const key of Object.keys($scope.filterChoice)) {
-                let newFilterFront : FilterFront = new FilterFront();
-                newFilterFront.name = $scope.filterChoiceCorrelation[key];
-                newFilterFront.value = [];
-                $scope.filterChoice[key].forEach(item => {
-                    let newFilter : Filter = new Filter();
-                    newFilter.name = $scope.filterChoiceCorrelation[key];
-                    let value = item.name;
-                    newFilter.value = value;
-                    newFilterFront.value.push(value);
-                    $scope.filters.all.push(newFilter);
-                });
-                $scope.filtersFront.all.push(newFilterFront);
-            }
-            await $scope.searchProjectAndOrders($scope.filter.isOld, false, false);
+            await $scope.searchProjectAndOrders(null, false, false);
         };
 
         const uncheckAll = () : void => {

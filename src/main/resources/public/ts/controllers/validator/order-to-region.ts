@@ -24,7 +24,6 @@ import {TypeCatalogEnum} from "../../enum/type-catalog-enum";
 export const orderRegionController = ng.controller('orderRegionController',
     ['$scope', async ($scope) => {
         $scope.filters = new Filters();
-        $scope.filtersFront = new FiltersFront();
         $scope.structures = new Structures();
         $scope.filtersDate = [];
         $scope.filtersDate.startDate = moment().add(-6, 'months')._d;
@@ -63,12 +62,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             Utils.safeApply($scope);
             let projects = new Projects();
             $scope.projectFilter.structureList.push($scope.current.structure as Structure);
-            if (old) {
-                $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
-            } else {
-                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
-                    new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
-            }
             if($scope.display.projects.all.length > 0) {
                 $scope.projectFilter.page++;
             }
@@ -85,17 +78,11 @@ export const orderRegionController = ng.controller('orderRegionController',
                 });
          };
 
-        $scope.searchProjectAndOrders = async (old = false, all: boolean, onlyId: boolean) => {
+        $scope.searchProjectAndOrders = async (old: boolean, all: boolean, onlyId: boolean) => {
             let projects = new Projects();
             initProjects();
             all ? $scope.projectFilter.page = null : 0;
             $scope.projectFilter.structureList.push($scope.current.structure as Structure);
-            if (old) {
-                $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
-            } else {
-                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
-                    new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
-            }
             projects.search($scope.projectFilter)
                 .then(async (data: Project[]) => {
                     if (data && data.length > 0) {
@@ -109,12 +96,6 @@ export const orderRegionController = ng.controller('orderRegionController',
 
         $scope.search = async (old = false) => {
             $scope.projectFilter.page = 0;
-            if (old) {
-                $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
-            } else {
-                $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
-                    new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
-            }
             if ($scope.filters.all.length == 0 && !$scope.projectFilter.queryName) {
                 initProjects();
                 await $scope.synchroRegionOrders(false, false, null, old);
@@ -165,12 +146,6 @@ export const orderRegionController = ng.controller('orderRegionController',
             let projects = new Projects();
             if (!isSearching) {
                 $scope.projectFilter.structureList.push($scope.current.structure as Structure);
-                if (old) {
-                    $scope.projectFilter.statusFilterList = Utils.getHistoricalStatus().map((value: ORDER_STATUS_ENUM) => new StatusFilter(value)) as Array<StatusFilter>;
-                } else {
-                    $scope.projectFilter.statusFilterList = [new StatusFilter(ORDER_STATUS_ENUM.VALID), new StatusFilter(ORDER_STATUS_ENUM.IN_PROGRESS),
-                        new StatusFilter(ORDER_STATUS_ENUM.REJECTED), new StatusFilter(ORDER_STATUS_ENUM.RESUBMIT)] as Array<StatusFilter>;
-                }
                 await projects.search($scope.projectFilter);
             } else {
                 projects = (projectsResult) ? projectsResult : $scope.display.projects;
@@ -264,8 +239,8 @@ export const orderRegionController = ng.controller('orderRegionController',
             }
         }
 
-        $scope.synchroRegionOrders = async (isSearching: boolean = false, onlyId: boolean = false, projectsList?: Projects,
-                                            old = false): Promise<void> => {
+        $scope.synchroRegionOrders = async (isSearching: boolean = false, onlyId: boolean = false, projectsList: Projects,
+                                            old: boolean): Promise<void> => {
             let {projects, responses} = await getOrdersOfProjects(isSearching, old, projectsList);
             if (responses[0]) {
                 let projectsResult = [];

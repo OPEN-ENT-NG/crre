@@ -2,6 +2,7 @@ package fr.openent.crre.controllers;
 
 import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.EquipmentHelper;
 import fr.openent.crre.helpers.FutureHelper;
 import fr.openent.crre.helpers.IModelHelper;
@@ -31,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.plainTextSearchName;
@@ -105,9 +107,12 @@ public class BasketController extends ControllerHelper {
                 Integer idCampaign = request.params().contains(Field.IDCAMPAIGN) ? parseInt(request.params().get(Field.IDCAMPAIGN)) : null;
                 String startDate = request.getParam(Field.STARTDATE);
                 String endDate = request.getParam(Field.ENDDATE);
-                boolean old = Boolean.parseBoolean(request.getParam(Field.OLD));
+                final List<OrderStatus> statusList = request.params().getAll(Field.STATUS).stream()
+                        .map(OrderStatus::getValue)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
                 String structureId = request.params().contains(Field.IDSTRUCTURE) ? request.params().get(Field.IDSTRUCTURE) : null;
-                basketOrderService.getMyBasketOrders(user.getUserId(), page, idCampaign, structureId, startDate, endDate, old)
+                basketOrderService.getMyBasketOrders(user.getUserId(), page, idCampaign, structureId, startDate, endDate, statusList)
                         .onSuccess(basketOrders -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrders)))
                         .onFailure(error -> Renders.renderError(request));
             } catch (NumberFormatException e) {
@@ -132,7 +137,10 @@ public class BasketController extends ControllerHelper {
                     String idStructure = request.params().contains(Field.IDSTRUCTURE) ? request.params().get(Field.IDSTRUCTURE) : null;
                     String startDate = request.getParam(Field.STARTDATE);
                     String endDate = request.getParam(Field.ENDDATE);
-                    Boolean old = Boolean.valueOf(request.getParam(Field.OLD));
+                    final List<OrderStatus> statusList = request.params().getAll(Field.STATUS).stream()
+                            .map(OrderStatus::getValue)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
                     plainTextSearchName(query, Collections.singletonList(Field.EAN))
                             .compose(equipments -> {
                                 List<String> equipementIdList = equipments.stream()
@@ -141,7 +149,7 @@ public class BasketController extends ControllerHelper {
                                         .map(jsonObject -> jsonObject.getString(Field.EAN))
                                         .collect(Collectors.toList());
                                 return basketOrderService.search(query, user,
-                                        equipementIdList, idCampaign, idStructure, startDate, endDate, page, old);
+                                        equipementIdList, idCampaign, idStructure, startDate, endDate, page, statusList);
                             })
                             .onSuccess(basketOrderList -> Renders.renderJson(request, IModelHelper.toJsonArray(basketOrderList)))
                             .onFailure(error -> Renders.renderError(request));
