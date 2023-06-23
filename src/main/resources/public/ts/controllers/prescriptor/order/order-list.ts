@@ -8,14 +8,6 @@ import {
 export const orderController = ng.controller('orderController',
     ['$scope', async ($scope) => {
 
-        $scope.changeOld = async (old: boolean) => {
-            if ($scope.filter.isOld !== old) {
-                $scope.filter.isOld = old;
-                $scope.startInitLoading();
-                await $scope.getOrders();
-            }
-        };
-
         $scope.switchAllOrders = (allOrdersListSelected: boolean) => {
             $scope.displayedBasketsOrders.map((basket) => {
                 basket.selected = allOrdersListSelected;

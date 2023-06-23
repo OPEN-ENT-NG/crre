@@ -1,6 +1,8 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.constants.Field;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.model.BasketOrder;
 import fr.openent.crre.model.TransactionElement;
@@ -13,9 +15,12 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
+import org.entcore.common.utils.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DefaultBasketOrderService implements BasketOrderService {
 
@@ -28,35 +33,40 @@ public class DefaultBasketOrderService implements BasketOrderService {
 
     @Override
     public Future<List<BasketOrder>> getMyBasketOrders(String userId, Integer page, Integer idCampaign, String idStructure,
-                                                       String startDate, String endDate, boolean oldTable) {
+                                                       String startDate, String endDate, List<OrderStatus> statusList) {
         Promise<List<BasketOrder>> promise = Promise.promise();
 
         JsonArray values = new JsonArray();
-        String query = "SELECT distinct b.* FROM " + Crre.crreSchema + ".basket_order b " +
-                "INNER JOIN " + Crre.crreSchema + "." + (oldTable ? "order_client_equipment_old" : "order_client_equipment") + " oce on (oce.id_basket = b.id) " +
-                "WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? ";
+        StringBuilder query = new StringBuilder().append("SELECT distinct b.* FROM ").append(Crre.crreSchema).append(".basket_order b ")
+                .append("INNER JOIN ").append(Crre.crreSchema).append(".order_universal as o_u on (o_u.id_basket = b.id) ")
+                .append("WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? ");
         values.add(startDate).add(endDate).add(userId).add(idCampaign);
         if (idStructure != null) {
-            query += "AND b.id_structure = ? ";
+            query.append("AND b.id_structure = ? ");
             values.add(idStructure);
         }
 
-        query += "ORDER BY b.id DESC ";
+        if (!statusList.isEmpty()) {
+            query.append("AND o_u.status IN ").append(Sql.listPrepared(statusList)).append(" ");
+            values.addAll(new JsonArray(statusList.stream().map(Enum::name).collect(Collectors.toList())));
+        }
+
+        query.append("ORDER BY b.id DESC ");
 
         if (page != null) {
-            query += "OFFSET ? LIMIT ? ";
+            query.append("OFFSET ? LIMIT ? ");
             values.add(PAGE_SIZE * page);
             values.add(PAGE_SIZE);
         }
         String errorMessage = String.format("[CRRE@%s::getMyBasketOrders] Fail to get user basket order ", this.getClass().getSimpleName());
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class, errorMessage)));
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class, errorMessage)));
 
         return promise.future();
     }
 
     @Override
     public Future<List<BasketOrder>> search(String query, UserInfos user, List<String> equipementIdList, int idCampaign, String idStructure,
-                       String startDate, String endDate, Integer page, Boolean old) {
+                                            String startDate, String endDate, Integer page, List<OrderStatus> statusList) {
         Promise<List<BasketOrder>> promise = Promise.promise();
         if (user.getStructures().isEmpty() && idStructure == null) {
             promise.complete(new ArrayList<>());
@@ -64,35 +74,40 @@ public class DefaultBasketOrderService implements BasketOrderService {
         }
 
         JsonArray values = new JsonArray();
-        String sqlquery = "SELECT distinct bo.* " +
-                "FROM " + Crre.crreSchema + ".basket_order bo " +
-                "INNER JOIN " + Crre.crreSchema + (old ? ".order_client_equipment_old" : ".order_client_equipment") + " AS oe ON (bo.id = oe.id_basket) " +
-                "WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ";
+        StringBuilder sqlquery = new StringBuilder()
+                .append("SELECT distinct bo.* FROM ")
+                .append(Crre.crreSchema)
+                .append(".basket_order bo ")
+                .append("INNER JOIN ")
+                .append(Crre.crreSchema)
+                .append(".order_universal as o_u ON (bo.id = o_u.id_basket) ")
+                .append("WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? ");
+
         values.add(startDate).add(endDate).add(user.getUserId()).add(idCampaign);
 
-        sqlquery = SQLConditionQueryEquipments(query, equipementIdList, values, old, sqlquery);
+        sqlquery.append(sqlConditionQueryEquipments(query, equipementIdList, values));
 
         if (idStructure != null) {
-            sqlquery += ") AND bo.id_structure = ? ";
+            sqlquery.append(" AND bo.id_structure = ? ");
             values.add(idStructure);
         } else {
-            sqlquery += ") AND bo.id_structure IN ( ";
-            for (String idStruct : user.getStructures()) {
-                sqlquery += "?,";
-                values.add(idStruct);
-            }
-            sqlquery = sqlquery.substring(0, sqlquery.length() - 1) + ")";
+            sqlquery.append(" AND bo.id_structure IN ").append(Sql.listPrepared(user.getStructures()));
+            values.addAll(new JsonArray(user.getStructures()));
         }
 
+        if (!statusList.isEmpty()) {
+            sqlquery.append(" AND o_u.status IN ").append(Sql.listPrepared(statusList));
+            values.addAll(new JsonArray(statusList.stream().map(Enum::name).collect(Collectors.toList())));
+        }
 
-        sqlquery += " ORDER BY bo.id DESC ";
+        sqlquery.append(" ORDER BY bo.id DESC ");
         if (page != null) {
-            sqlquery += "OFFSET ? LIMIT ? ";
+            sqlquery.append("OFFSET ? LIMIT ? ");
             values.add(PAGE_SIZE * page);
             values.add(PAGE_SIZE);
         }
         String errorMessage = String.format("[CRRE@%s::search] Fail to search basket order ", this.getClass().getSimpleName());
-        Sql.getInstance().prepared(sqlquery, values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class), errorMessage));
+        Sql.getInstance().prepared(String.valueOf(sqlquery), values, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, BasketOrder.class), errorMessage));
 
         return promise.future();
     }
@@ -125,6 +140,42 @@ public class DefaultBasketOrderService implements BasketOrderService {
             values.add(query);
         }
         return sqlQuery;
+    }
+
+    public String sqlConditionQueryEquipments(String query, List<String> equipementIdList, JsonArray values) {
+        // No filter
+        if (StringUtils.isEmpty(query) && equipementIdList.isEmpty()) {
+            return "";
+        }
+
+        // Query filter
+        if (!StringUtils.isEmpty(query)) {
+
+            String oldCondition = " o_u.status IN ('" + Arrays.stream(OrderStatus.values())
+                    .filter(OrderStatus::isHistoricStatus)
+                    .map(Enum::name)
+                    .collect(Collectors.joining("', '")) + "')";
+            String notOldCondition = " o_u.status IN ('" + Arrays.stream(OrderStatus.values())
+                    .filter(orderStatus -> !orderStatus.isHistoricStatus())
+                    .map(Enum::name)
+                    .collect(Collectors.joining("', '")) + "')";
+
+            values.add(query)
+                    .add(query)
+                    .add(query);
+            String equipmentCondition;
+            if (equipementIdList.isEmpty()) {
+                equipmentCondition = "TRUE";
+            } else {
+                equipmentCondition = "o_u.equipment_key IN " + Sql.listPrepared(equipementIdList);
+                values.addAll(new JsonArray(new ArrayList<>(equipementIdList)));
+            }
+            return "AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR ((" + oldCondition + " AND o_u.equipment_name ~* ?) OR (" + notOldCondition + " AND " + equipmentCondition + ")))";
+        }
+
+        // Equipment filter
+        values.addAll(new JsonArray(new ArrayList<>(equipementIdList)));
+        return "AND o_u.equipment_key IN " + Sql.listPrepared(equipementIdList);
     }
 
     @Override

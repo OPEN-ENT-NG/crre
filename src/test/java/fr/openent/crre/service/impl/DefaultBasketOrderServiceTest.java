@@ -1,6 +1,7 @@
 package fr.openent.crre.service.impl;
 
 import fr.openent.crre.Crre;
+import fr.openent.crre.core.enums.OrderStatus;
 import fr.openent.crre.helpers.SqlHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.TransactionElement;
@@ -22,6 +23,7 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
@@ -46,10 +48,10 @@ public class DefaultBasketOrderServiceTest {
         UserInfos userInfos = new UserInfos();
         userInfos.setUserId("userId");
 
-        String expectedQuery = "SELECT distinct b.* FROM null.basket_order b INNER JOIN null.order_client_equipment oce " +
-                "on (oce.id_basket = b.id) WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? AND" +
-                " b.id_structure = ? ORDER BY b.id DESC OFFSET ? LIMIT ? ";
-        String expectedParams = "[\"idStructure\",\"endDate\",\"userId\",30,\"startDate\",15,15]";
+        String expectedQuery = "SELECT distinct b.* FROM null.basket_order b INNER JOIN null.order_universal as o_u on (o_u.id_basket = b.id)" +
+                " WHERE b.created BETWEEN ? AND ? AND b.id_user = ? AND b.id_campaign = ? AND b.id_structure = ? AND o_u.status IN (?,?,?,?,?,?) ORDER BY b.id DESC OFFSET ? LIMIT ? ";
+        String expectedParams = "[\"idStructure\",\"endDate\",\"userId\",30,\"startDate\",\"WAITING\",\"REJECTED\"," +
+                "\"IN_PROGRESS\",\"VALID\",\"RESUBMIT\",\"WAITING_FOR_ACCEPTANCE\",15,15]";
 
         Mockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);
@@ -60,7 +62,8 @@ public class DefaultBasketOrderServiceTest {
             return null;
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
 
-        this.defaultBasketService.getMyBasketOrders(userInfos.getUserId(), 1, 30, "startDate", "idStructure", "endDate", false);
+        List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values()).filter(orderStatus -> !orderStatus.isHistoricStatus()).collect(Collectors.toList());
+        this.defaultBasketService.getMyBasketOrders(userInfos.getUserId(), 1, 30, "startDate", "idStructure", "endDate", orderStatusList);
 
         async.awaitSuccess(10000);
     }
@@ -72,11 +75,13 @@ public class DefaultBasketOrderServiceTest {
         userInfos.setUserId("userId");
         userInfos.setStructures(Arrays.asList("structure1", "structure2"));
 
-        String expectedQuery = "SELECT distinct bo.* FROM null.basket_order bo INNER JOIN null.order_client_equipment AS" +
-                " oe ON (bo.id = oe.id_basket) WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ?" +
-                " AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ? OR oe.equipment_key IN (?,?)) AND bo.id_structure" +
-                " IN ( ?,?) ORDER BY bo.id DESC OFFSET ? LIMIT ? ";
-        String expectedParams = "[\"startDate\",\"endDate\",\"userId\",13,\"query\",\"query\",\"ean1\",\"ean2\",\"structure1\",\"structure2\",60,15]";
+        String expectedQuery = "SELECT distinct bo.* FROM null.basket_order bo INNER JOIN null.order_universal as o_u ON (bo.id = o_u.id_basket)" +
+                " WHERE bo.created BETWEEN ? AND ? AND bo.id_user = ? AND bo.id_campaign = ? AND (lower(bo.name) ~* ? OR lower(bo.name_user) ~* ?" +
+                " OR (( o_u.status IN ('SENT', 'DONE', 'ARCHIVED') AND o_u.equipment_name ~* ?) OR ( o_u.status IN" +
+                " ('WAITING', 'REJECTED', 'IN_PROGRESS', 'VALID', 'RESUBMIT', 'WAITING_FOR_ACCEPTANCE') AND o_u.equipment_key IN (?,?))))" +
+                " AND bo.id_structure IN (?,?) AND o_u.status IN (?,?,?,?,?,?) ORDER BY bo.id DESC OFFSET ? LIMIT ? ";
+        String expectedParams = "[\"startDate\",\"endDate\",\"userId\",13,\"query\",\"query\",\"query\",\"ean1\",\"ean2\"," +
+                "\"structure1\",\"structure2\",\"WAITING\",\"REJECTED\",\"IN_PROGRESS\",\"VALID\",\"RESUBMIT\",\"WAITING_FOR_ACCEPTANCE\",60,15]";
 
         Mockito.doAnswer(invocation -> {
             String query = invocation.getArgument(0);
@@ -88,7 +93,9 @@ public class DefaultBasketOrderServiceTest {
         }).when(sql).prepared(Mockito.anyString(), Mockito.any(), Mockito.any());
         List<String> equipementIdList = Arrays.asList("ean1", "ean2");
 
-        this.defaultBasketService.search("query", userInfos, equipementIdList, 13, null, "startDate", "endDate", 4, false);
+        List<OrderStatus> orderStatusList = Arrays.stream(OrderStatus.values()).filter(orderStatus -> !orderStatus.isHistoricStatus()).collect(Collectors.toList());
+
+        this.defaultBasketService.search("query", userInfos, equipementIdList, 13, null, "startDate", "endDate", 4, orderStatusList);
 
         async.awaitSuccess(10000);
     }

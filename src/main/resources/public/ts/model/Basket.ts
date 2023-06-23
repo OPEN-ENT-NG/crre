@@ -3,6 +3,7 @@ import {moment, toasts} from 'entcore';
 import http from 'axios';
 import {Equipment, Offers, OrdersClient, Structure, Utils} from './index';
 import {TypeCatalogEnum} from "../enum/type-catalog-enum";
+import {ORDER_STATUS_ENUM} from "../enum/order-status-enum";
 
 
 export class Basket implements Selectable {
@@ -195,16 +196,17 @@ export class BasketsOrders extends Selection<BasketOrder> {
         super([]);
     }
 
-    async search(text: String, id_campaign: number, start: string, end: string, page?: number, old?: boolean, idStructure?: string) {
+    async search(text: String, id_campaign: number, start: string, end: string, statusFilter: Array<ORDER_STATUS_ENUM>, page?: number, idStructure?: string) {
         try {
             if ((text.trim() === '' || !text)) return;
             const {startDate, endDate} = Utils.formatDate(start, end);
             const pageParams = (page) ? `&page=${page}` : ``;
-            let url = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&old=${old}&q=${text}`;
+            let url: string = `/crre/basketOrder/search?startDate=${startDate}&endDate=${endDate}&q=${text}`;
             if (idStructure) {
                 url += `&idStructure=${idStructure}`;
             }
             url += `&idCampaign=${id_campaign}${pageParams}`;
+            statusFilter.forEach((status: ORDER_STATUS_ENUM) => url += `&status=${status}`);
             const {data} = await http.get(url);
             return this.setBaskets(data);
         } catch (err) {
@@ -213,12 +215,13 @@ export class BasketsOrders extends Selection<BasketOrder> {
         }
     }
 
-    async getMyOrders(page: number, start: string, end: string, id_campaign: string, old: boolean, structureId: string) {
+    async getMyOrders(page: number, start: string, end: string, id_campaign: string, statusFilter: Array<ORDER_STATUS_ENUM>, structureId: string) {
         try {
             const {startDate, endDate} = Utils.formatDate(start, end);
             const pageParams = (page) ? `&page=${page}` : ``;
-            let url = `/crre/basketOrder/allMyOrders?idCampaign=${id_campaign}&old=${old}&idStructure=${structureId}`;
+            let url: string = `/crre/basketOrder/allMyOrders?idCampaign=${id_campaign}&idStructure=${structureId}`;
             url += `&startDate=${startDate}&endDate=${endDate}${pageParams}`;
+            statusFilter.forEach((status: ORDER_STATUS_ENUM) => url += `&status=${status}`);
             let {data} = await http.get(url);
             return this.setBaskets(data);
         } catch (e) {
