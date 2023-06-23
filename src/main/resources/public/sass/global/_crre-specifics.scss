@@ -16,6 +16,7 @@ body.crre {
   color: black;
 
   $secondary: #38a4cd;
+  $tooltip-background: #5b6472;
 
   .black-color {
     color: black;
@@ -1808,6 +1809,45 @@ body.crre {
   .crre-display-hover-element:hover {
     .crre-hover-element {
       opacity: 1;
+    }
+  }
+
+  *:hover > .tooltip-top {
+    @include tooltipVisible();
+  }
+
+  .tooltip-top {
+    @include tooltipTemplate();
+    text-align: left;
+    line-height: 20px;
+    transform: scale(0.80);
+    bottom: 20px;
+    margin-left: -23px;
+  }
+
+  .crre-admin-table-tooltip {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+
+    & > .tooltip-top {
+      bottom: -222px;
+      margin-left: unset;
+      color: white;
+      background: $tooltip-background;
+
+      &:before{
+        @include tooltipTopArrow();
+        top: -4%;
+        left: 47%;
+        border-bottom-color: $tooltip-background;
+      }
+    }
+
+    & > i {
+      height: 12px;
     }
   }
 }

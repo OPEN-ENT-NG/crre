@@ -102,6 +102,11 @@
                 <td>
                     <div class="smallTabElem center"></div>
                 </td>
+                <td>
+                    <div class="smallTabElem center">
+                        <i18n>crre.detail</i18n>
+                    </div>
+                </td>
             </tr>
             </thead>
             <tbody ng-repeat="project in display.projects.all">
@@ -150,6 +155,10 @@
                 <td ng-click="project.expanded = !project.expanded">
                     <div class="smallTabElem center" tooltip="[[lang.translate('crre.admin.valid.comment.validator') + project.comment]]">
                         <i ng-if="project.comment" class="comment-icon"></i>
+                    </div>
+                </td>
+                <td ng-click="project.expanded = !project.expanded">
+                    <div class="smallTabElem ellipsis center">
                     </div>
                 </td>
             </tr>
@@ -221,6 +230,18 @@
                         <i class="comment-icon"></i>
                     </div>
                 </td>
+                <td>
+                    <div class="smallTabElem center relative crre-admin-table-tooltip flex"
+                         ng-if="order.id_structure && getStudentInformation(order.id_structure).length > 0">
+                        <!-- tooltip hovered -->
+                        <span class="tooltip-top">
+                            <div ng-repeat="info in getStudentInformation(order.id_structure)">
+                                <span class="font-bold"><b>[[info.title]]</b>: [[info.value]]</span>
+                            </div>
+                        </span>
+                        <i class="info-circle"></i>
+                    </div>
+                </td>
             </tr>
             <tr class="subline" ng-repeat="offer in order.offers.all"
                 ng-if="project.expanded && order.offers.all.length > 0" ng-repeat-end>
@@ -232,6 +253,7 @@
                 <td></td>
                 <td class="center">[[offer.value]]</td>
                 <td class="center">[[lang.translate('crre.FREE')]]</td>
+                <td></td>
                 <td></td>
                 <td></td>
             </tr>
