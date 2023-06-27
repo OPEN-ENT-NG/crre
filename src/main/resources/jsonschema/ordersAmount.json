@@ -44,7 +44,8 @@
           "DONE",
           "REJECTED",
           "SENT",
-          "RESUBMIT"
+          "RESUBMIT",
+          "ARCHIVED"
         ],
         "description": "The status of an order"
       },
