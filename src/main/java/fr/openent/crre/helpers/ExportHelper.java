@@ -92,9 +92,9 @@ public class ExportHelper {
                 (orderUniversalModel.getEquipmentName() != null ? orderUniversalModel.getEquipmentName() : "") + ";" +
                 (orderUniversalModel.getEquipmentEditor() != null ? orderUniversalModel.getEquipmentEditor() : "") + ";" +
                 (orderUniversalModel.getEquipmentDiffusor() != null ? orderUniversalModel.getEquipmentDiffusor() : "") + ";" +
-                (orderUniversalModel.getEquipmentType() != null ? orderUniversalModel.getEquipmentType() : "") + ";" +
-                (orderUniversalModel.getEquipmentEanLibrary() != null ? orderUniversalModel.getEquipmentEanLibrary() : "") + ";" +
                 (orderUniversalModel.getEquipmentCatalogueType() != null ? orderUniversalModel.getEquipmentCatalogueType() : "") + ";" +
+                (orderUniversalModel.getEquipmentEanLibrary() != null ? orderUniversalModel.getEquipmentEanLibrary() : "") + ";" +
+                (orderUniversalModel.getEquipmentType() != null ? orderUniversalModel.getEquipmentType() : "") + ";" +
                 (orderUniversalModel.getReassort() != null ? (orderUniversalModel.getReassort() ? "Oui" : "Non") : "") + ";" +
                 exportPriceComment(orderUniversalModel) +
                 exportStudents(orderUniversalModel) +
@@ -119,7 +119,7 @@ public class ExportHelper {
                 ";" +
                 ";" +
                 ";" +
-                (orderUniversalOfferModel.getTypeCatalogue() != null ? orderUniversalOfferModel.getTypeCatalogue() : "") + ";" +
+                (orderUniversalOfferModel.getType() != null ? orderUniversalOfferModel.getType() : "") + ";" +
                 ";" +
                 exportPriceComment(orderUniversalOfferModel) +
                 exportStudents(orderUniversalModel) +

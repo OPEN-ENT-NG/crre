@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static fr.openent.crre.helpers.ElasticSearchHelper.searchByIds;
-import static fr.openent.crre.helpers.JsonHelper.jsonArrayToList;
 import static fr.openent.crre.utils.OrderUtils.getPriceTtc;
 
 public class OrderHelper {
@@ -85,10 +84,10 @@ public class OrderHelper {
                                     orderUniversalModel.setEquipmentImage(equipmentJson.getString(Field.URLCOUVERTURE));
                                     orderUniversalModel.setEquipmentEditor(equipmentJson.getString(Field.EDITEUR, ""));
                                     orderUniversalModel.setEquipmentDiffusor(equipmentJson.getString(Field.DISTRIBUTEUR, ""));
-                                    orderUniversalModel.setEquipmentCatalogueType(getUniqueTypeCatalogue(orderUniversalModel, equipmentJson));
-                                    orderUniversalModel.setEquipmentType(equipmentJson.getString(Field.TYPE, ""));
+                                    orderUniversalModel.setEquipmentCatalogueType(equipmentJson.getString(Field.TYPECATALOGUE, ""));
+                                    orderUniversalModel.setEquipmentType(getUniqueType(orderUniversalModel, equipmentJson));
                                     orderUniversalModel.setEquipmentBookseller(equipmentJson.getString(ItemField.BOOKSELLER));
-                                    if (Field.ARTICLENUMERIQUE.equals(orderUniversalModel.getEquipmentType())) {
+                                    if (Field.ARTICLENUMERIQUE.equals(orderUniversalModel.getEquipmentCatalogueType())) {
                                         orderUniversalModel.setOffers(computeOffersUniversal(equipmentJson.getJsonArray(Field.OFFRES), orderUniversalModel));
                                         orderUniversalModel.setEquipmentEanLibrary(equipmentJson.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.EANLIBRAIRE));
                                     } else {
@@ -117,24 +116,24 @@ public class OrderHelper {
     }
 
     //todo #Territoire Rajouter territoire
-    private static String getUniqueTypeCatalogue(OrderUniversalModel order, JsonObject equipment) {
-        if (equipment.getString(Field.TYPECATALOGUE, "").contains("|")) {
+    private static String getUniqueType(OrderUniversalModel order, JsonObject equipment) {
+        if (equipment.getString(Field.TYPE, "").contains("|")) {
             if (order.getCampaign().getUseCredit() != null && order.getCampaign().getUseCredit().contains(Field.CONSUMABLE_MIN)) {
-                if (Field.ARTICLEPAPIER.equals(equipment.getString(Field.TYPE))) {
+                if (Field.ARTICLEPAPIER.equals(equipment.getString(Field.TYPECATALOGUE))) {
                     return Field.AO_IDF_CONSO;
                 } else {
                     return Field.CONSOMMABLE;
                 }
             } else {
-                if (Field.ARTICLEPAPIER.equals(equipment.getString(Field.TYPE))) {
+                if (Field.ARTICLEPAPIER.equals(equipment.getString(Field.TYPECATALOGUE))) {
                     if ((order.getCampaign().getCatalog() != null && order.getCampaign().getCatalog().contains(Field.PRO)) ||
-                            !equipment.getString(Field.TYPECATALOGUE).contains(Field.AO_IDF_PAP)) {
+                            !equipment.getString(Field.TYPE).contains(Field.AO_IDF_PAP)) {
                         return Field.AO_IDF_PAP_PRO;
                     } else {
                         return Field.AO_IDF_PAP;
                     }
                 } else {
-                    if (ArrayUtils.contains(equipment.getString(Field.TYPECATALOGUE).split(Pattern.quote("|")), Field.RESSOURCE)) {
+                    if (ArrayUtils.contains(equipment.getString(Field.TYPE).split(Pattern.quote("|")), Field.RESSOURCE)) {
                         return Field.RESSOURCE;
                     } else {
                         return Field.NUMERIQUE;
@@ -142,7 +141,7 @@ public class OrderHelper {
                 }
             }
         } else {
-            return equipment.getString(Field.TYPECATALOGUE);
+            return equipment.getString(Field.TYPE);
         }
     }
 
@@ -180,7 +179,7 @@ public class OrderHelper {
                     orderUniversalOffer.setTotalPriceTTC(0.0);
                     orderUniversalOffer.setTotalPriceHT(0.0);
                     orderUniversalOffer.setUnitedPriceTTC(0.0);
-                    orderUniversalOffer.setTypeCatalogue(orderUniversalModel.getEquipmentCatalogueType());
+                    orderUniversalOffer.setType(orderUniversalModel.getEquipmentType());
 
                     orderUniversalOffer.setIdOffer("F" + orderUniversalModel.getOrderRegionId() + "_" + i);
                     orderUniversalOffer.setOrderUniversalModel(orderUniversalModel);
