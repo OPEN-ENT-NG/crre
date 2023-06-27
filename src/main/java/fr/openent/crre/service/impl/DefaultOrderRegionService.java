@@ -573,7 +573,7 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
                 .add(order.getEquipmentGrade())
                 .add(order.getEquipmentEditor())
                 .add(order.getEquipmentDiffusor())
-                .add(order.getEquipmentCatalogueType())
+                .add(order.getEquipmentType())
                 .add(order.getCampaign().getId())
                 .add(order.getIdStructure())
                 .add(order.getComment());

@@ -15,6 +15,7 @@ import fr.openent.crre.service.NotificationService;
 import fr.openent.crre.service.OrderService;
 import fr.openent.crre.service.ServiceFactory;
 import fr.openent.crre.service.impl.DefaultOrderService;
+import fr.openent.crre.utils.OrderUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -283,9 +284,10 @@ public class OrderController extends ControllerHelper {
 
     private static String generateExport(HttpServerRequest request, List<OrderUniversalModel> orders) {
         StringBuilder report = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getExportHeader(request));
-        for (int i = 0; i < orders.size(); i++) {
-            report.append(generateExportLine(request, orders.get(i)));
-        }
+        orders.forEach(orderUniversalModel -> {
+            report.append(generateExportLine(request, orderUniversalModel));
+            orderUniversalModel.getOffers().forEach(orderUniversalOfferModel -> report.append(generateExportLine(orderUniversalOfferModel)));
+        });
         return report.toString();
     }
 
@@ -316,9 +318,19 @@ public class OrderController extends ControllerHelper {
                 + "\n";
     }
 
+    private static String generateExportLine(OrderUniversalOfferModel orderUniversalOfferModel) {
+        return (orderUniversalOfferModel.getOrderUniversalModel().getPrescriberValidationDateFormat() != null ? orderUniversalOfferModel.getOrderUniversalModel().getPrescriberValidationDateFormat() : "") + ";" +
+                (orderUniversalOfferModel.getOrderUniversalModel().getBasket().getName() != null ? orderUniversalOfferModel.getOrderUniversalModel().getBasket().getName() : "") + ";" +
+                (orderUniversalOfferModel.getOrderUniversalModel().getEquipmentName() != null ? orderUniversalOfferModel.getOrderUniversalModel().getEquipmentName() : "") + ";" +
+                (orderUniversalOfferModel.getOrderUniversalModel().getEquipmentKey() != null ? orderUniversalOfferModel.getOrderUniversalModel().getEquipmentKey() : "") + ";" +
+                exportPriceComment(orderUniversalOfferModel) +
+                ";"
+                + "\n";
+    }
+
     public static String exportPriceComment(OrderUniversalModel orderUniversalModel) {
         return (orderUniversalModel.getAmount() != null ? orderUniversalModel.getAmount() : "") + ";" +
-                (orderUniversalModel.getEquipmentPriceht() != null ? orderUniversalModel.getEquipmentPriceht() : "") + ";" +
+                (orderUniversalModel.getEquipmentPriceht() != null ? Double.parseDouble(OrderUtils.df2.format(orderUniversalModel.getEquipmentPriceht())) : "") + ";" +
                 (orderUniversalModel.getEquipmentPriceTva5() != null ? orderUniversalModel.getEquipmentTva5() : "") + ";" +
                 (orderUniversalModel.getEquipmentPriceTva20() != null ? orderUniversalModel.getEquipmentTva20() : "") + ";" +
                 (orderUniversalModel.getUnitedPriceTTC() != null ? convertPriceString(orderUniversalModel.getUnitedPriceTTC()) : "") + ";" +

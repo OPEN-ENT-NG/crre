@@ -13,6 +13,7 @@ import java.util.Locale;
 public class OrderUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderUtils.class);
+    public static final DecimalFormat df2 = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.US));
 
     private OrderUtils() {
         throw new IllegalAccessError("OrderUtils Utility class");
@@ -23,8 +24,6 @@ public class OrderUtils {
         try {
             Double prixht = 0.0, price_TTC;
             JsonArray tvas = new JsonArray();
-            DecimalFormatSymbols dfs = DecimalFormatSymbols.getInstance(Locale.US);
-            DecimalFormat df2 = new DecimalFormat("#.##", dfs);
 
             if (equipmentJson.containsKey("type") && equipmentJson.getString("type", "").equals("articlenumerique") &&
                     equipmentJson.getJsonArray("offres") != null && equipmentJson.getJsonArray("offres").size() > 0 &&
@@ -49,7 +48,7 @@ public class OrderUtils {
                     result.put("partTVA20", Double.parseDouble(df2.format(priceToAdd)));
                 }
             }
-            result.put("prixht", prixht).put("priceTTC", Double.parseDouble(df2.format(price_TTC)));
+            result.put("prixht", Double.parseDouble(df2.format(prixht))).put("priceTTC", Double.parseDouble(df2.format(price_TTC)));
             return result;
         } catch (Exception e) {
             LOGGER.error("An error occurred getPriceTtc in Utils : " + e);

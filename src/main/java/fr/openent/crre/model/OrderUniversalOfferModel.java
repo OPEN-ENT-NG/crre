@@ -2,6 +2,7 @@ package fr.openent.crre.model;
 
 import fr.openent.crre.core.constants.Field;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.utils.StringUtils;
 
 public class OrderUniversalOfferModel implements IModel<OrderUniversalOfferModel> {
     private String name;
@@ -11,7 +12,7 @@ public class OrderUniversalOfferModel implements IModel<OrderUniversalOfferModel
     private Double unitedPriceTTC;
     private Double totalPriceHT;
     private Double totalPriceTTC;
-    private String typeCatalogue;
+    private String type;
     private String idOffer;
 
     OrderUniversalModel orderUniversalModel;
@@ -27,7 +28,12 @@ public class OrderUniversalOfferModel implements IModel<OrderUniversalOfferModel
         this.unitedPriceTTC = jsonObject.getDouble(Field.UNITEDPRICETTC);
         this.totalPriceHT = jsonObject.getDouble(Field.TOTALPRICEHT);
         this.totalPriceTTC = jsonObject.getDouble(Field.TOTALPRICETTC);
-        this.typeCatalogue = jsonObject.getString(Field.TYPECATALOGUE);
+        // If you want to remove this condition, you must resume giving to change the "typeCatalogue" field to "type" in the offer column
+        if (!StringUtils.isEmpty(jsonObject.getString(Field.TYPECATALOGUE))) {
+            this.type = jsonObject.getString(Field.TYPECATALOGUE);
+        } else {
+            this.type = jsonObject.getString(Field.TYPE);
+        }
     }
 
     public String getName() {
@@ -93,12 +99,12 @@ public class OrderUniversalOfferModel implements IModel<OrderUniversalOfferModel
         return this;
     }
 
-    public String getTypeCatalogue() {
-        return typeCatalogue;
+    public String getType() {
+        return type;
     }
 
-    public OrderUniversalOfferModel setTypeCatalogue(String typeCatalogue) {
-        this.typeCatalogue = typeCatalogue;
+    public OrderUniversalOfferModel setType(String type) {
+        this.type = type;
         return this;
     }
 
@@ -129,6 +135,6 @@ public class OrderUniversalOfferModel implements IModel<OrderUniversalOfferModel
                 .put(Field.TOTALPRICETTC, this.totalPriceTTC)
                 .put(Field.NAME, this.name)
                 .put(Field.EAN, this.ean)
-                .put(Field.TYPECATALOGUE, this.typeCatalogue);
+                .put(Field.TYPE, this.type);
     }
 }
