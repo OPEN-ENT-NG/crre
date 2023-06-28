@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 import static fr.openent.crre.helpers.DateHelper.formatDate;
 import static fr.openent.crre.helpers.EquipmentHelper.getRoundedPrice;
@@ -86,20 +87,11 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.equipmentEditor = jsonObject.getString(Field.EQUIPMENT_EDITOR);
         this.equipmentDiffusor = jsonObject.getString(Field.EQUIPMENT_DIFFUSOR);
         this.equipmentFormat = jsonObject.getString(Field.EQUIPMENT_FORMAT);
+        this.equipmentCatalogueType = this.equipmentFormat;
         this.equipmentTva5 = jsonObject.getDouble(Field.EQUIPMENT_TVA5);
         this.equipmentTva20 = jsonObject.getDouble(Field.EQUIPMENT_TVA20);
         this.equipmentPriceht = jsonObject.getDouble(Field.EQUIPMENT_PRICEHT);
         this.equipmentBookseller = jsonObject.getString(ItemField.BOOKSELLER);
-
-        if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof JsonArray) {
-            this.offers = IModelHelper.toList(jsonObject.getJsonArray(Field.OFFERS), OrderUniversalOfferModel.class);
-        } else if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof String) {
-            this.offers = IModelHelper.toList(new JsonArray(jsonObject.getString(Field.OFFERS)), OrderUniversalOfferModel.class);
-        } else if (Objects.nonNull(this.offers)) {
-            this.offers.forEach(orderUniversalOfferModel -> orderUniversalOfferModel.setOrderUniversalModel(this));
-        } else {
-            this.offers = new ArrayList<>();
-        }
 
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
         if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof JsonObject) {
@@ -129,6 +121,22 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         }
         if (jsonObject.getValue(Field.STUDENTS) != null && jsonObject.getValue(Field.STUDENTS) instanceof String) {
             this.students = IModelHelper.toModel(new JsonObject(jsonObject.getString(Field.STUDENTS)), StudentsTableModel.class);
+        }
+
+        if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof JsonArray) {
+            this.offers = IModelHelper.toList(jsonObject.getJsonArray(Field.OFFERS), OrderUniversalOfferModel.class);
+        } else if (Objects.nonNull(jsonObject.getValue(Field.OFFERS)) && jsonObject.getValue(Field.OFFERS) instanceof String) {
+            this.offers = IModelHelper.toList(new JsonArray(jsonObject.getString(Field.OFFERS)), OrderUniversalOfferModel.class);
+        }
+        if (Objects.nonNull(this.offers)) {
+            IntStream.range(0, this.offers.size())
+                    .forEach(index -> {
+                        OrderUniversalOfferModel orderUniversalOfferModel = this.offers.get(index);
+                        orderUniversalOfferModel.setOrderUniversalModel(this);
+                        orderUniversalOfferModel.setIdOffer("F" + this.getOrderRegionId() + "_" + index);
+                    });
+        } else {
+            this.offers = new ArrayList<>();
         }
     }
 
