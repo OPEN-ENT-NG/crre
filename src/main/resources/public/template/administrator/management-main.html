@@ -23,7 +23,7 @@
         </drop-down-menu>
     </header>
     <header class="horizontal-spacing" ng-class="{ selected : selectedType.startsWith('/equipments/catalog') }"
-            ng-click="redirectTo('/equipments/catalog')">
+            ng-click="switchToCatalogTab()">
         <i18n>crre.catalog</i18n>
     </header>
     <header class="horizontal-spacing" ng-class="{selected: (selectedType == '/campaigns' || selectedType == '/structureGroups')}">
