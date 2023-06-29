@@ -356,7 +356,7 @@ public class Item implements IModel<Item> {
             json.put(ItemField.TYPE_CATALOG, this.catalog);
         }
 
-        if(this.technos != null && !this.technos.isEmpty()) {
+        if(this.technos != null) {
             json.put(ItemField.TECHNOS, this.technos);
         }
 
