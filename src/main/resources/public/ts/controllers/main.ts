@@ -621,4 +621,9 @@ export const mainController = ng.controller('MainController', ['$scope', 'route'
             Utils.safeApply($scope);
         }
 
+        $scope.switchToCatalogTab = () => {
+            $scope.equipments = new Equipments();
+            $scope.redirectTo('/equipments/catalog');
+        }
+
     }]);

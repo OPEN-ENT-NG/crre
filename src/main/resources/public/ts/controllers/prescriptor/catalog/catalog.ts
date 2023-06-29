@@ -8,7 +8,6 @@ export const catalogController = ng.controller('catalogController',
             $scope.pageSize = 20;
             $scope.nbItemsDisplay = $scope.pageSize;
             $scope.equipment = new Equipment();
-            $scope.equipments = new Equipments();
             $scope.equipments.loading = true;
             $scope.loading = true;
 
