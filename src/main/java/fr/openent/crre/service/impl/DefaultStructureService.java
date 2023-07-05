@@ -182,15 +182,18 @@ public class DefaultStructureService extends SqlCrudService implements Structure
     }
 
     @Override
-    public void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler) {
+    public Future<List<StructureNeo4jModel>> searchStructureByNameUai(String q) {
+        Promise<List<StructureNeo4jModel>> promise = Promise.promise();
+
         q = ".*" + q + ".*";
         String query = "MATCH (s:Structure) WHERE (toLower(s.name) =~ {word} OR toLower(s.UAI) =~ {word}) return s.id as id, s.UAI as uai," +
                 " s.name as name, s.phone as phone, s.address + ' ,' + s.zipCode +' ' + s.city as address,  " +
                 "s.zipCode  as zipCode, s.city as city, s.type as type;";
 
-        Neo4j.getInstance().execute(query,
-                new JsonObject().put("word", q),
-                Neo4jResult.validResultHandler(handler));
+        String errorMessage = String.format("[CRRE@%s::searchStructureByNameUai] Fail to search structure by name uai", this.getClass().getSimpleName());
+        Neo4j.getInstance().execute(query, new JsonObject().put("word", q), Neo4jResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, StructureNeo4jModel.class, errorMessage)));
+
+        return promise.future();
     }
     @Override
     public void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler) {

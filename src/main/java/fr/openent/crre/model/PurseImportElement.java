@@ -4,26 +4,26 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.IModelHelper;
 import io.vertx.core.json.JsonObject;
 
-public class Purse implements IModel<Purse> {
+public class PurseImportElement implements IModel<PurseImportElement> {
     private String uai;
     private String idStructure;
     private Credits credits;
     private Credits creditsConsumable;
 
-    public Purse(JsonObject json) {
+    public PurseImportElement(JsonObject json) {
         this.uai = json.getString(Field.UAI);
         this.idStructure = json.getString(Field.IDSTRUCTURE);
         this.credits = IModelHelper.toModel(json.getJsonObject(Field.CREDITS), Credits.class).orElse(null);
         this.creditsConsumable = IModelHelper.toModel(json.getJsonObject(Field.CONSUMABLE_CREDITS), Credits.class).orElse(null);
     }
 
-    public Purse() {
+    public PurseImportElement() {
         this.uai = null;
         this.credits = null;
         this.creditsConsumable = null;
     }
 
-    public Purse(String uai, Credits credits, Credits creditsConsumable) {
+    public PurseImportElement(String uai, Credits credits, Credits creditsConsumable) {
         this.uai = uai;
         this.credits = credits;
         this.creditsConsumable = creditsConsumable;
@@ -33,7 +33,7 @@ public class Purse implements IModel<Purse> {
         return uai;
     }
 
-    public Purse setUai(String uai) {
+    public PurseImportElement setUai(String uai) {
         this.uai = uai;
         return this;
     }
@@ -42,7 +42,7 @@ public class Purse implements IModel<Purse> {
         return idStructure;
     }
 
-    public Purse setIdStructure(String idStructure) {
+    public PurseImportElement setIdStructure(String idStructure) {
         this.idStructure = idStructure;
         return this;
     }
@@ -51,7 +51,7 @@ public class Purse implements IModel<Purse> {
         return credits;
     }
 
-    public Purse setCredits(Credits credits) {
+    public PurseImportElement setCredits(Credits credits) {
         this.credits = credits;
         return this;
     }
@@ -60,7 +60,7 @@ public class Purse implements IModel<Purse> {
         return creditsConsumable;
     }
 
-    public Purse setCreditsConsumable(Credits creditsConsumable) {
+    public PurseImportElement setCreditsConsumable(Credits creditsConsumable) {
         this.creditsConsumable = creditsConsumable;
         return this;
     }

@@ -29,6 +29,10 @@ public interface StructureService {
      */
     Future<JsonArray> getStructuresFilter(List<String> structureTypes, List<String> structureIds);
 
+    /**
+     * @deprecated Use {@link #searchStructureByNameUai(String q)}
+     */
+    @Deprecated
     void getStructureByUAI(JsonArray uais, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
     Future<List<StructureNeo4jModel>> getStructureNeo4jById(List<String> structureIdList);
@@ -39,7 +43,7 @@ public interface StructureService {
     @Deprecated
     void getStructureById(JsonArray ids, List<String> consumable_formations, Handler<Either<String, JsonArray>> handler);
 
-    void searchStructureByNameUai(String q, Handler<Either<String, JsonArray>> handler);
+    Future<List<StructureNeo4jModel>> searchStructureByNameUai(String q);
 
     void getStudentsByStructure(JsonArray structureIds, Handler<Either<String, JsonArray>> handler);
 

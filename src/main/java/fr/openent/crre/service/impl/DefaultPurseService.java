@@ -5,10 +5,10 @@ import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.exception.ImportPurseException;
 import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.helpers.TransactionHelper;
-import fr.openent.crre.model.Purse;
-import fr.openent.crre.model.PurseImport;
-import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.model.*;
 import fr.openent.crre.service.PurseService;
+import fr.openent.crre.service.ServiceFactory;
+import fr.openent.crre.service.StructureService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -16,17 +16,24 @@ import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DefaultPurseService implements PurseService {
+    private static final Logger log = LoggerFactory.getLogger(DefaultPurseService.class);
+    private final StructureService structureService;
+
+    public DefaultPurseService(ServiceFactory serviceFactory) {
+        this.structureService = serviceFactory.getStructureService();
+    }
+
     @Override
     public Future<PurseImport> launchImport(JsonObject statementsValues, List<String> uaiErrorList) {
         Promise<PurseImport> promise = Promise.promise();
@@ -34,7 +41,7 @@ public class DefaultPurseService implements PurseService {
         String[] fields = statementsValues.fieldNames().toArray(new String[0]);
         for (String field : fields) {
             JsonObject values = statementsValues.getJsonObject(field);
-            Optional<Purse> purse = IModelHelper.toModel(values.getJsonObject(Field.PURSES), Purse.class);
+            Optional<PurseImportElement> purse = IModelHelper.toModel(values.getJsonObject(Field.PURSES), PurseImportElement.class);
             statements.add(getImportStatementStudent(field,
                     values.getInteger("second"), values.getInteger("premiere"), values.getInteger("terminale"),
                     values.getBoolean("pro")));
@@ -60,65 +67,97 @@ public class DefaultPurseService implements PurseService {
         return promise.future();
     }
 
-    @Override
-    public void getPursesStudentsAndLicences(List<String> ids, Handler<Either<String, JsonArray>> handler) {
-        String query = getQueryPursesAndLicences();
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+    private Future<List<PurseModel>> getPursesFromSql(Integer page, List<String> idStructureList) {
+        Promise<List<PurseModel>> promise = Promise.promise();
 
-        if (ids.size() > 0) {
-            query += "AND licences.id_structure IN " + Sql.listPrepared(ids.toArray());
-            for (String id : ids) {
-                params.add(id);
-            }
+        StringBuilder query = new StringBuilder().append("SELECT * FROM ").append(Crre.crreSchema).append(".purse")
+                .append(" INNER JOIN ").append(Crre.crreSchema).append(".structure ON structure.id_structure = purse.id_structure");
+
+
+        JsonArray params = new JsonArray();
+
+        if (idStructureList != null && !idStructureList.isEmpty()) {
+            query.append(" WHERE purse.id_structure IN ").append(Sql.listPrepared(idStructureList));
+            params.addAll(new JsonArray(new ArrayList<>(idStructureList)));
         }
-
-        query += " ORDER BY name ";
-
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
-    }
-
-    private String getQueryPursesAndLicences() {
-        return "SELECT DISTINCT COALESCE(licences.id_structure, purse.id_structure, students.id_structure) AS id_structure, structure.name, " +
-                "ROUND(purse.amount::numeric,2)::double precision AS amount, ROUND(purse.initial_amount::numeric,2)::double precision AS initial_amount, " +
-                "ROUND(purse.consumable_amount::numeric,2)::double precision AS consumable_amount, ROUND(purse.consumable_initial_amount::numeric,2)::double precision AS consumable_initial_amount, " +
-                "seconde, premiere, terminale, pro, " +
-                "licences.amount as licence_amount, licences.initial_amount as licence_initial_amount, " +
-                "licences.consumable_amount as consumable_licence_amount, " +
-                "licences.consumable_initial_amount as consumable_licence_initial_amount " +
-                "FROM " + Crre.crreSchema + ".purse " +
-                "FULL OUTER JOIN " + Crre.crreSchema + ".students ON students.id_structure = purse.id_structure " +
-                "FULL OUTER JOIN " + Crre.crreSchema + ".licences ON purse.id_structure = licences.id_structure " +
-                "JOIN " + Crre.crreSchema + ".structure ON structure.id_structure = licences.id_structure " +
-                "OR structure.id_structure = purse.id_structure " +
-                "OR structure.id_structure = students.id_structure " +
-                "WHERE (purse.initial_amount IS NOT NULL OR purse.consumable_initial_amount IS NOT NULL OR " +
-                "licences.initial_amount <> 0 OR licences.consumable_initial_amount <> 0) ";
-    }
-
-    @Override
-    public void getPursesStudentsAndLicences(Integer page, JsonArray idStructures, Handler<Either<String, JsonArray>> handler) {
-        String query = getQueryPursesAndLicences();
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-
-        if (idStructures != null && !idStructures.isEmpty()) {
-            query += "AND (purse.id_structure IN " + Sql.listPrepared(idStructures) + " OR licences.id_structure IN " + Sql.listPrepared(idStructures) + ") ";
-            for (int i = 0; i < idStructures.size(); i++) {
-                params.add(idStructures.getString(i));
-                params.add(idStructures.getString(i));
-            }
-        }
-
-        query += " ORDER BY name ";
 
         if (page != null) {
-            query += " OFFSET ? LIMIT ? ";
+            query.append(" OFFSET ? LIMIT ? ");
             Integer PAGE_SIZE = 30;
             params.add(PAGE_SIZE * page);
             params.add(PAGE_SIZE);
         }
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        String messageError = String.format("[CRRE@%s::getPursesStudentsAndLicences] Fail to get purse", this.getClass().getSimpleName());
+
+        Sql.getInstance().prepared(String.valueOf(query), params, SqlResult.validResultHandler(IModelHelper.sqlResultToIModel(promise, PurseModel.class, messageError)));
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<List<PurseModel>> searchPursesByUAI(Integer page, String query) {
+        Promise<List<PurseModel>> promise = Promise.promise();
+
+        Map<String, Object> params = new HashMap<>();
+        this.structureService.searchStructureByNameUai(query)
+                .compose(structureNeo4jModelList -> {
+                    params.put(Field.STRUCTURES, structureNeo4jModelList);
+                    List<String> idStructureList = structureNeo4jModelList.stream()
+                            .map(StructureNeo4jModel::getId)
+                            .collect(Collectors.toList());
+                    return this.getPursesFromSql(page, idStructureList);
+                })
+                .onSuccess(purseModelList -> {
+                    List<StructureNeo4jModel> structureNeo4jModelList = (List<StructureNeo4jModel>) params.getOrDefault(Field.STRUCTURES, null);
+                    purseModelList.forEach(purseModel -> structureNeo4jModelList.stream()
+                            .filter(structureNeo4jModel -> structureNeo4jModel.getId().equals(purseModel.getIdStructure()))
+                            .findFirst()
+                            .ifPresent(purseModel::setStructureNeo4jModel));
+
+                    promise.complete(purseModelList.stream()
+                            .filter(purseModel -> purseModel.getStructureNeo4jModel() != null)
+                            .collect(Collectors.toList()));
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[CRRE@%s::searchPursesByUAI] Fail to get purse %s:%s", this.getClass().getSimpleName(), error.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
+    }
+
+    @Override
+    public Future<List<PurseModel>> getPurses(Integer page, List<String> idStructureList) {
+        Promise<List<PurseModel>> promise = Promise.promise();
+
+        Map<String, Object> params = new HashMap<>();
+        this.getPursesFromSql(page, idStructureList)
+                .compose(purseModelList -> {
+                    params.put(Field.PURSES, purseModelList);
+                    List<String> searchStructureIdList = purseModelList.stream()
+                            .map(PurseModel::getIdStructure)
+                            .distinct()
+                            .collect(Collectors.toList());
+                    return this.structureService.getStructureNeo4jById(searchStructureIdList);
+                })
+                .onSuccess(structureNeo4jModelList -> {
+                    List<PurseModel> purseModelList = (List<PurseModel>) params.get(Field.PURSES);
+                    purseModelList.forEach(purseModel -> structureNeo4jModelList.stream()
+                            .filter(structureNeo4jModel -> structureNeo4jModel.getId().equals(purseModel.getIdStructure()))
+                            .findFirst()
+                            .ifPresent(purseModel::setStructureNeo4jModel));
+
+                    promise.complete(purseModelList.stream()
+                            .filter(purseModel -> purseModel.getStructureNeo4jModel() != null)
+                            .collect(Collectors.toList()));
+                })
+                .onFailure(error -> {
+                    log.error(String.format("[CRRE@%s::getPursesStudentsAndLicences] Fail to get purse %s:%s", this.getClass().getSimpleName(), error.getClass().getSimpleName(), error.getMessage()));
+                    promise.fail(error);
+                });
+
+        return promise.future();
     }
 
     @Override
@@ -126,6 +165,9 @@ public class DefaultPurseService implements PurseService {
         Promise<Void> promise = Promise.promise();
 
         List<TransactionElement> statements = new ArrayList<>();
+        statements.add(incrementAddedInitialAmountFromNewValue(false, purse.getDouble(Field.INITIAL_AMOUNT), idStructure));
+        statements.add(incrementAddedInitialAmountFromNewValue(true, purse.getDouble(Field.CONSUMABLE_INITIAL_AMOUNT), idStructure));
+
         statements.add(getImportStatementAmount(idStructure, purse.getDouble(Field.INITIAL_AMOUNT), Field.PURSE,
                 false, false, true));
         statements.add(getImportStatementAmount(idStructure, purse.getDouble(Field.CONSUMABLE_INITIAL_AMOUNT), Field.PURSE,
@@ -138,32 +180,56 @@ public class DefaultPurseService implements PurseService {
         return promise.future();
     }
 
-    private void handleSQLStatements(Handler<Either<String, JsonObject>> handler, JsonArray statements) {
-        Sql.getInstance().transaction(statements, message -> {
-            if (message.body().containsKey(Field.STATUS) &&
-                    Field.OK.equals(message.body().getString(Field.STATUS))) {
-                handler.handle(new Either.Right<>(
-                        new JsonObject().put(Field.STATUS, Field.OK)));
-            } else {
-                handler.handle(new Either.Left<>
-                        ("crre.statements.error"));
-            }
-        });
+    @Override
+    public TransactionElement incrementAddedInitialAmountFromNewValue(boolean consumable, Double newValue, String structureId) {
+        StringBuilder query = new StringBuilder().append("UPDATE crre.purse SET ")
+                .append(consumable ? "added_consumable_initial_amount" : "added_initial_amount")
+                .append(" =  ")
+                .append(consumable ? "added_consumable_initial_amount" : "added_initial_amount")
+                .append(" + ? - ")
+                .append(consumable ? "consumable_initial_amount" : "initial_amount")
+                .append(" WHERE id_structure = ?");
+        JsonArray params = new JsonArray()
+                .add(newValue)
+                .add(structureId);
+
+        return new TransactionElement(query.toString(), params);
     }
 
-    private List<TransactionElement> getImportStatementAmount(Purse purse) {
+    private List<TransactionElement> getImportStatementAmount(PurseImportElement purse) {
         List<TransactionElement> statements = new ArrayList<>();
         if (!purse.getCreditsConsumable().isEmpty()) {
+            if (purse.getCreditsConsumable().getNewValue() != null) {
+                statements.add(this.setAddedInitialAmount(purse.getIdStructure(), true, 0));
+            } else if (purse.getCreditsConsumable().getAddValue() != null) {
+                statements.add(this.setAddedInitialAmount(purse.getIdStructure(), true, purse.getCreditsConsumable().getAddValue()));
+            }
             statements.add(this.insertAmount(purse, true));
         }
 
         if (!purse.getCredits().isEmpty()) {
+            if (purse.getCredits().getNewValue() != null) {
+                statements.add(this.setAddedInitialAmount(purse.getIdStructure(), false, 0));
+            } else if (purse.getCredits().getAddValue() != null) {
+                statements.add(this.setAddedInitialAmount(purse.getIdStructure(), false, purse.getCredits().getAddValue()));
+            }
             statements.add(this.insertAmount(purse, false));
         }
         return statements;
     }
 
-    private TransactionElement insertAmount(Purse purse, Boolean consumable) {
+    private TransactionElement setAddedInitialAmount(String idStructure, boolean consumable, double amount) {
+        String query = "UPDATE " + Crre.crreSchema + ".purse SET " +
+                (consumable ? "added_consumable_initial_amount" : "added_initial_amount") +
+                " = ? WHERE id_structure = ?";
+        JsonArray params = new JsonArray()
+                .add(amount)
+                .add(idStructure);
+
+        return new TransactionElement(query, params);
+    }
+
+    private TransactionElement insertAmount(PurseImportElement purse, Boolean consumable) {
         String statement = "INSERT INTO " + Crre.crreSchema + "." + Field.PURSE + " (id_structure, ";
         JsonArray params = new JsonArray();
         if (consumable) {

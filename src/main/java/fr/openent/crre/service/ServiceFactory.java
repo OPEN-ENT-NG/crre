@@ -51,9 +51,9 @@ public class ServiceFactory {
             this.emailSender = null;
         }
         this.orderRegionService = new DefaultOrderRegionService(Field.EQUIPEMENT);
-        this.purseService = new DefaultPurseService();
         this.quoteService = new DefaultQuoteService(Field.EQUIPEMENT);
         this.structureService = new DefaultStructureService(Crre.crreSchema, vertx.eventBus());
+        this.purseService = new DefaultPurseService(this);
         this.basketOrderService = new DefaultBasketOrderService();
         this.basketOrderItemService = new DefaultBasketOrderItemService(this);
         this.campaignService = new DefaultCampaignService(Crre.crreSchema, Field.CAMPAIGN);

@@ -12,17 +12,18 @@ export const purseEditFormController = ng.controller('purseEditFormController',
         $scope.validPurse = async (purse: Purse) => {
             await purse.save();
             $scope.lightbox.open = false;
-            purse.amount = $scope.purses.selected[0].amount +
-                (purse.initial_amount - $scope.purses.selected[0].initial_amount);
-            purse.consumable_amount = $scope.purses.selected[0].consumable_amount +
-                (purse.consumable_initial_amount - $scope.purses.selected[0].consumable_initial_amount);
-            purse.licence_amount = $scope.purses.selected[0].licence_amount +
-                (purse.licence_initial_amount - $scope.purses.selected[0].licence_initial_amount);
-            purse.consumable_licence_amount = $scope.purses.selected[0].consumable_licence_amount +
-                (purse.consumable_licence_initial_amount - $scope.purses.selected[0].consumable_licence_initial_amount);
-            purse.selected = false;
-            $scope.purses.all = $scope.purses.all.filter(purse => { return purse.id != $scope.purses.selected[0].id });
-            $scope.purses.push(purse);
+
+            if ($scope.purses.selected.length > 0) {
+                $scope.purses.selected[0].amount += purse.initial_amount - $scope.purses.selected[0].initial_amount;
+                $scope.purses.selected[0].consumable_amount += purse.consumable_initial_amount - $scope.purses.selected[0].consumable_initial_amount;
+
+                $scope.purses.selected[0].added_initial_amount += purse.initial_amount - $scope.purses.selected[0].initial_amount;
+                $scope.purses.selected[0].added_consumable_initial_amount += purse.consumable_initial_amount - $scope.purses.selected[0].consumable_initial_amount;
+
+                $scope.purses.selected[0].initial_amount = purse.initial_amount;
+                $scope.purses.selected[0].consumable_initial_amount = purse.consumable_initial_amount;
+            }
+
             $scope.purses.forEach(purse => {purse.selected = false;});
             $scope.allPurseSelected = false;
             Utils.safeApply($scope);

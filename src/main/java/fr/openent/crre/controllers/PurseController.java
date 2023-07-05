@@ -5,12 +5,14 @@ import fr.openent.crre.Crre;
 import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.exception.ImportPurseException;
 import fr.openent.crre.helpers.HttpRequestHelper;
+import fr.openent.crre.helpers.IModelHelper;
 import fr.openent.crre.logging.Actions;
 import fr.openent.crre.logging.Contexts;
 import fr.openent.crre.logging.Logging;
 import fr.openent.crre.model.Credits;
-import fr.openent.crre.model.Purse;
+import fr.openent.crre.model.PurseImportElement;
 import fr.openent.crre.model.PurseImport;
+import fr.openent.crre.model.PurseModel;
 import fr.openent.crre.security.AdministratorRight;
 import fr.openent.crre.service.PurseService;
 import fr.openent.crre.service.ServiceFactory;
@@ -21,7 +23,6 @@ import fr.wseduc.rs.Post;
 import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
@@ -98,7 +99,7 @@ public class PurseController extends ControllerHelper {
                 String[] values;
                 List<String> uaiList = new ArrayList<>();
                 List<String> uaiErrorList = new ArrayList<>();
-                List<Purse> purses = new ArrayList<>();
+                List<PurseImportElement> purses = new ArrayList<>();
 
                 // Inutiliser à supprimer un jour si on est sur que les licences ne seront plus de mise et le nombre d'élèves ne prends pas tout les cas (pro, bma, cap etc..)
                 JsonObject licences = new JsonObject();
@@ -107,7 +108,7 @@ public class PurseController extends ControllerHelper {
                 JsonObject premieres = new JsonObject();
                 JsonObject terminales = new JsonObject();
                 while ((values = csv.readNext()) != null) {
-                    Purse purse = new Purse();
+                    PurseImportElement purse = new PurseImportElement();
                     String uai = values[0];
                     purse.setUai(uai);
                     try {
@@ -183,7 +184,7 @@ public class PurseController extends ControllerHelper {
      * @param purses       Object containing UAI as key and purse amount as value
      */
     private Future<PurseImport> matchUAIID(List<String> uaiList,
-                                           List<String> uaiErrorList, List<Purse> purses,
+                                           List<String> uaiErrorList, List<PurseImportElement> purses,
                                            final JsonObject licence, final JsonObject consumable_licence,
                                            final JsonObject seconds, final JsonObject premieres, final JsonObject terminales) {
         Promise<PurseImport> promise = Promise.promise();
@@ -227,7 +228,7 @@ public class PurseController extends ControllerHelper {
 
                             } catch (NumberFormatException e) {
                             }
-                            Purse purse = purses
+                            PurseImportElement purse = purses
                                     .stream()
                                     .filter(purseFilter -> purseFilter.getUai().equals(structure.getString(Field.UAI)))
                                     .findFirst()
@@ -288,19 +289,10 @@ public class PurseController extends ControllerHelper {
     @ResourceFilter(AdministratorRight.class)
     public void export(final HttpServerRequest request) {
         try {
-            List<String> params = request.params().getAll(Field.ID);
-            purseService.getPursesStudentsAndLicences(params, event -> {
-                if (event.isRight()) {
-                    JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                    JsonArray purses = event.right().getValue();
-                    for (int i = 0; i < purses.size(); i++) {
-                        ids.add(purses.getJsonObject(i).getString("id_structure"));
-                    }
-                    retrieveStructures(ids, purses, request);
-                } else {
-                    badRequest(request);
-                }
-            });
+            List<String> params = request.params().getAll(Field.ID_STRUCTURE);
+            purseService.getPurses(null, params)
+                    .onSuccess(purseList -> launchExport(purseList, request))
+                    .onFailure(error -> badRequest(request));
         } catch (NumberFormatException e) {
             log.error("[Crre@CSVExport] : An error occurred when casting purses", e);
             badRequest(request);
@@ -329,7 +321,6 @@ public class PurseController extends ControllerHelper {
                 log.error("An error occurred when casting purse id", e);
                 badRequest(request);
             }
-
         });
     }
 
@@ -340,21 +331,10 @@ public class PurseController extends ControllerHelper {
     @Override
     public void list(final HttpServerRequest request) {
         try {
-            Integer page = request.getParam("page") != null ? Integer.parseInt(request.getParam("page")) : 0;
-            purseService.getPursesStudentsAndLicences(page, null, event -> {
-                if (event.isRight()) {
-                    JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                    JsonArray purses = event.right().getValue();
-                    JsonObject purse;
-                    for (int i = 0; i < purses.size(); i++) {
-                        purse = purses.getJsonObject(i);
-                        ids.add(purse.getString("id_structure"));
-                    }
-                    getPursesInformations(request, ids, purses);
-                } else {
-                    badRequest(request);
-                }
-            });
+            Integer page = request.getParam(Field.PAGE) != null ? Integer.parseInt(request.getParam(Field.PAGE)) : 0;
+            purseService.getPurses(page, null)
+                    .onSuccess(purseList -> Renders.renderJson(request, IModelHelper.toJsonArray(purseList)))
+                    .onFailure(error -> badRequest(request));
         } catch (NumberFormatException e) {
             log.error("[Crre@purses] : An error occurred when casting purses", e);
             badRequest(request);
@@ -371,122 +351,9 @@ public class PurseController extends ControllerHelper {
         if (request.params().contains("q")) {
             query = URLDecoder.decode(request.getParam("q"), "UTF-8").toLowerCase();
         }
-        structureService.searchStructureByNameUai(query, structures -> {
-            if (structures.isRight()) {
-                JsonArray structuresJson = structures.right().getValue();
-                JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
-                for (int i = 0; i < structuresJson.size(); i++) {
-                    JsonObject structure = structuresJson.getJsonObject(i);
-                    ids.add(structure.getString(Field.ID));
-                }
-                if (ids.isEmpty()) {
-                    Renders.renderJson(request, new JsonObject());
-                } else {
-                    purseService.getPursesStudentsAndLicences(page, ids, event -> {
-                        if (event.isRight()) {
-                            JsonArray purses = event.right().getValue();
-                            getPursesInformations(request, ids, purses);
-                        } else {
-                            badRequest(request);
-                        }
-                    });
-                }
-            } else {
-                log.error(structures.left().getValue());
-                badRequest(request);
-            }
-        });
-    }
-
-    private void getPursesInformations(HttpServerRequest request, JsonArray ids, JsonArray purses) {
-        structureService.getConsumableFormation(formations -> {
-            if (formations.isRight()) {
-                JsonArray res_consumable_formations = formations.right().getValue();
-                List<String> consumable_formations = res_consumable_formations
-                        .stream()
-                        .map((json) -> ((JsonObject) json).getString("label"))
-                        .collect(Collectors.toList());
-                retrieveStructuresData(ids, consumable_formations, purses, request);
-            } else {
-                renderErrorMessage(request, new Throwable(formations.left().getValue()));
-            }
-        });
-    }
-
-    /**
-     * Retrieve structure uais and name based on ids list
-     *
-     * @param ids     JsonArray containing ids list
-     * @param purses  JsonArray containing purses list
-     * @param request Http request
-     */
-    private void retrieveStructuresData(JsonArray ids, List<String> consumable_formations, final JsonArray purses,
-                                        final HttpServerRequest request) {
-        structureService.getStructureById(ids, consumable_formations, event -> {
-            if (event.isRight()) {
-                Renders.renderJson(request, prepareDataPurses(purses, event));
-
-            } else {
-                renderError(request, new JsonObject().put("message",
-                        event.left().getValue()));
-            }
-        });
-    }
-
-    /**
-     * Retrieve structure uais based on ids list
-     *
-     * @param ids     JsonArray containing ids list
-     * @param purses  Values to exports
-     * @param request Http request
-     */
-    private void retrieveStructures(JsonArray ids, final JsonArray purses,
-                                    final HttpServerRequest request) {
-        structureService.getStructureById(ids, null, event -> {
-            if (event.isRight()) {
-                launchExport(prepareDataPurses(purses, event), request);
-            } else {
-                renderError(request, new JsonObject().put("message",
-                        event.left().getValue()));
-            }
-        });
-    }
-
-    private JsonArray prepareDataPurses(JsonArray purses, Either<String, JsonArray> event) {
-        JsonArray structures = event.right().getValue();
-        JsonObject structure;
-        JsonObject purse;
-
-        // put structure name / uai on the purse according to structure id
-        for (int i = 0; i < structures.size(); i++) {
-            structure = structures.getJsonObject(i);
-            for (int j = 0; j < purses.size(); j++) {
-                purse = purses.getJsonObject(j);
-
-                if (purse.getString("id_structure").equals(structure.getString(Field.ID))) {
-                    structure.put("id_structure", purse.getString("id_structure"));
-                    // we convert amount to get a number instead of a string
-                    structure.put("amount", purse.getDouble("amount", 0.0));
-                    structure.put("initial_amount", purse.getDouble("initial_amount", 0.0));
-                    structure.put("consumable_amount", purse.getDouble("consumable_amount", 0.0));
-                    structure.put("consumable_initial_amount", purse.getDouble("consumable_initial_amount", 0.0));
-                    structure.put("licence_amount", purse.getInteger("licence_amount", 0));
-                    structure.put("licence_initial_amount", purse.getInteger("licence_initial_amount", 0));
-                    structure.put("consumable_licence_amount", purse.getInteger("consumable_licence_amount", 0));
-                    structure.put("consumable_licence_initial_amount", purse.getInteger("consumable_licence_initial_amount", 0));
-                    if (purse.getBoolean("pro", false)) {
-                        structure.put("seconde", purse.getInteger("seconde", 0) * 3);
-                        structure.put("premiere", purse.getInteger("premiere", 0) * 3);
-                        structure.put("terminale", purse.getInteger("terminale", 0) * 3);
-                    } else {
-                        structure.put("seconde", purse.getInteger("seconde", 0) * 9);
-                        structure.put("premiere", purse.getInteger("premiere", 0) * 8);
-                        structure.put("terminale", purse.getInteger("terminale", 0) * 7);
-                    }
-                }
-            }
-        }
-        return structures;
+        purseService.searchPursesByUAI(page, query)
+                .onSuccess(purseModelList -> Renders.renderJson(request, IModelHelper.toJsonArray(purseModelList)))
+                .onFailure(error -> badRequest(request));
     }
 
     /**
@@ -495,11 +362,9 @@ public class PurseController extends ControllerHelper {
      * @param purses  values to export
      * @param request Http request
      */
-    private static void launchExport(JsonArray purses, HttpServerRequest request) {
+    private static void launchExport(List<PurseModel> purses, HttpServerRequest request) {
         StringBuilder exportString = new StringBuilder(UTF8_BOM).append(UTF8_BOM).append(getCSVHeader(request));
-        for (Object purse : purses) {
-            exportString.append(getCSVLine((JsonObject) purse));
-        }
+        purses.forEach(purseModel -> exportString.append(getCSVLine(purseModel)));
         request.response()
                 .putHeader("Content-Type", "text/csv; charset=utf-8")
                 .putHeader("Content-Disposition", "attachment; filename=" + getFileExportName(request))
@@ -517,13 +382,10 @@ public class PurseController extends ControllerHelper {
                 I18n.getInstance().translate("crre.structure", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.purse.money.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
                 I18n.getInstance().translate("crre.purse.money.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.purse.licence.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.purse.licence.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.purse.licence.conso.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.purse.licence.conso.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.second.class", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.premiere.class", getHost(request), I18n.acceptLanguage(request)) + ";" +
-                I18n.getInstance().translate("crre.terminal.class", getHost(request), I18n.acceptLanguage(request)) + "\n";
+                I18n.getInstance().translate("crre.purse.money.initial.added", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.money.conso.initial", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.money.conso.rest", getHost(request), I18n.acceptLanguage(request)) + ";" +
+                I18n.getInstance().translate("crre.purse.money.conso.initial.added", getHost(request), I18n.acceptLanguage(request)) + "\n";
     }
 
     /**
@@ -532,18 +394,15 @@ public class PurseController extends ControllerHelper {
      * @param purse purse Values
      * @return CSV Line
      */
-    private static String getCSVLine(JsonObject purse) {
-        return (purse.getString("uai") != null ? purse.getString("uai") : "") + ";" +
-                (purse.getString(Field.NAME) != null ? purse.getString(Field.NAME) : "") + ";" +
-                (purse.getDouble("initial_amount") != null ? purse.getDouble("initial_amount").toString() : "") + ";" +
-                (purse.getDouble("amount") != null ? purse.getDouble("amount").toString() : "") + ";" +
-                (purse.getInteger("licence_initial_amount") != null ? purse.getInteger("licence_initial_amount").toString() : "") + ";" +
-                (purse.getInteger("licence_amount") != null ? purse.getInteger("licence_amount").toString() : "") + ";" +
-                (purse.getInteger("consumable_licence_initial_amount") != null ? purse.getInteger("consumable_licence_initial_amount").toString() : "") + ";" +
-                (purse.getInteger("consumable_licence_amount") != null ? purse.getInteger("consumable_licence_amount").toString() : "") + ";" +
-                (purse.getInteger("seconde") != null ? purse.getInteger("seconde").toString() : "") + ";" +
-                (purse.getInteger("premiere") != null ? purse.getInteger("premiere").toString() : "") + ";" +
-                (purse.getInteger("terminale") != null ? purse.getInteger("terminale").toString() : "") + "\n";
+    private static String getCSVLine(PurseModel purse) {
+        return (purse.getStructureNeo4jModel().getUai() != null ? purse.getStructureNeo4jModel().getUai() : "") + ";" +
+                (purse.getStructureNeo4jModel().getName() != null ? purse.getStructureNeo4jModel().getName() : "") + ";" +
+                (purse.getInitialAmount() != null ? purse.getInitialAmount().toString() : "") + ";" +
+                (purse.getAmount() != null ? purse.getAmount().toString() : "") + ";" +
+                (purse.getAddedInitialAmount() != null ? purse.getAddedInitialAmount().toString() : "") + ";" +
+                (purse.getConsumableInitialAmount() != null ? purse.getConsumableInitialAmount().toString() : "") + ";" +
+                (purse.getConsumableAmount() != null ? purse.getConsumableAmount().toString() : "") + ";" +
+                (purse.getAddedConsumableInitialAmount() != null ? purse.getAddedConsumableInitialAmount().toString() : "") + "\n";
     }
 
     /**
