@@ -235,7 +235,7 @@
                          ng-if="order.id_structure && getStudentInformation(order.id_structure).length > 0">
                         <!-- tooltip hovered -->
                         <span class="tooltip-top">
-                            <div ng-repeat="info in getStudentInformation(order.id_structure)">
+                            <div ng-repeat="info in getStudentInformation(order.id_structure) | orderBy : 'position'">
                                 <span class="font-bold"><b>[[info.title]]</b>: [[info.value]]</span>
                             </div>
                         </span>

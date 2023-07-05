@@ -12,6 +12,7 @@ public class StructureNeo4jModel implements  IModel<StructureNeo4jModel> {
     private String address;
     private String zipCode;
     private String type;
+    private String city;
 
     public StructureNeo4jModel() {
     }
@@ -24,6 +25,7 @@ public class StructureNeo4jModel implements  IModel<StructureNeo4jModel> {
         this.address = jsonObject.getString(Field.ADDRESS);
         this.zipCode = jsonObject.getString(Field.ZIPCODE);
         this.type = jsonObject.getString(Field.TYPE);
+        this.city = jsonObject.getString(Field.CITY);
     }
 
     @Override
@@ -91,6 +93,15 @@ public class StructureNeo4jModel implements  IModel<StructureNeo4jModel> {
 
     public StructureNeo4jModel setType(String type) {
         this.type = type;
+        return this;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public StructureNeo4jModel setCity(String city) {
+        this.city = city;
         return this;
     }
 }
