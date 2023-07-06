@@ -64,7 +64,10 @@ export const catalogController = ng.controller('catalogController',
                 } else if ($scope.campaign.catalog.split("|").includes("ressource")) {
                     consommableFilter.value = "Ressource";
                 }
-                $scope.filters.all.push(consommableFilter);
+
+                if (consommableFilter.value) {
+                    $scope.filters.all.push(consommableFilter);
+                }
 
                 // If catalog contain pro/lgt filter
                 if ($scope.campaign.catalog.split("|").includes("pro") || $scope.campaign.catalog.split("|").includes("lgt")) {
@@ -125,10 +128,12 @@ export const catalogController = ng.controller('catalogController',
                 }
             }
             await $scope.equipments.getFilterEquipments($scope.query.word, $scope.filters);
-            $scope.equipments.filters.consumables = [{name: 'Consommable'}, {name: 'Manuel'}, {name: 'Ressource'}] as FilterCatalogItem[];
-            $scope.equipments.filters.consumables.forEach((item) => item.toString = () => $scope.translate(item.name));
-            $scope.equipments.filters.pros = [{name: 'Lycée général et technologique'}, {name: 'Lycée professionnel'}] as FilterCatalogItem[];
-            $scope.equipments.filters.pros.forEach((item) => item.toString = () => $scope.translate(item.name));
+            $scope.equipments.filters.consumables = [new FilterCatalogItem('Consommable'), new FilterCatalogItem('Manuel'), new FilterCatalogItem('Ressource')];
+            $scope.equipments.filters.consumables.forEach((item: FilterCatalogItem) => item.toString = () => $scope.translate(item.name));
+            $scope.catalog.consumables = $scope.equipments.filters.consumables.filter((item: FilterCatalogItem) => $scope.catalog.consumables.find((itemCatalog: FilterCatalogItem) => item.name == itemCatalog.name));
+            $scope.equipments.filters.pros = [new FilterCatalogItem('Lycée général et technologique'), new FilterCatalogItem('Lycée professionnel')];
+            $scope.equipments.filters.pros.forEach((item: FilterCatalogItem) => item.toString = () => $scope.translate(item.name));
+            $scope.catalog.pros = $scope.equipments.filters.pros.filter((item: FilterCatalogItem) => $scope.catalog.pros.find((itemCatalog: FilterCatalogItem) => item.name == itemCatalog.name));
 
             Utils.safeApply($scope);
             if (!!$scope.campaign.catalog) {
