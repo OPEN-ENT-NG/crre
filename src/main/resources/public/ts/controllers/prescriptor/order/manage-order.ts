@@ -126,21 +126,21 @@ export const manageOrderController = ng.controller('manageOrderController',
             newData.forEach((basket: BasketOrder) => {
                 basketId.push(basket.id);
             });
-            $scope.newOrders = new OrdersClient();
+            let newOrders: OrdersClient = new OrdersClient();
             let filter: ValidatorOrderWaitingFilter = new ValidatorOrderWaitingFilter();
             filter.startDate = $scope.filtersDate.startDate;
             filter.endDate = $scope.filtersDate.endDate;
             filter.status = $scope.filter.statusFilterList.map((filter: StatusFilter) => filter.orderStatusEnum);
-            await $scope.newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, basketId);
-            formatDisplayedBasketOrders();
+            await newOrders.syncMyOrder(filter, $routeParams.idCampaign, $scope.current.structure.id, basketId);
+            formatDisplayedBasketOrders(newOrders);
             Utils.safeApply($scope);
         };
 
-        const formatDisplayedBasketOrders = (): void => {
+        const formatDisplayedBasketOrders = (newOrders: OrdersClient): void => {
             $scope.displayedBasketsOrders = [];
-            $scope.basketsOrders.forEach(function (basketOrder : BasketOrder) {
+            $scope.basketsOrders.forEach((basketOrder : BasketOrder) => {
                 let displayedBasket : BasketOrder = basketOrder;
-                $scope.newOrders.arr.forEach(function (order : OrderClient) {
+                newOrders.all.forEach((order : OrderClient) => {
                     if (order.id_basket === basketOrder.id) {
                         displayedBasket.orders.push(order);
                     }
