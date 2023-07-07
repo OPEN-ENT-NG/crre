@@ -622,8 +622,8 @@ public class DefaultOrderRegionService extends SqlCrudService implements OrderRe
             params.add(order.getBasket().getId())
                     .add(order.getReassort())
                     .add(offers)
-                    .add(order.getEquipmentPriceTva5())
-                    .add(order.getEquipmentPriceTva20())
+                    .add(order.getEquipmentTva5())
+                    .add(order.getEquipmentTva20())
                     .add(order.getEquipmentPriceht());
         }
         query = new StringBuilder(query.substring(0, query.length() - 1));

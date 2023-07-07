@@ -331,8 +331,8 @@ public class OrderController extends ControllerHelper {
     public static String exportPriceComment(OrderUniversalModel orderUniversalModel) {
         return (orderUniversalModel.getAmount() != null ? orderUniversalModel.getAmount() : "") + ";" +
                 (orderUniversalModel.getEquipmentPriceht() != null ? Double.parseDouble(OrderUtils.df2.format(orderUniversalModel.getEquipmentPriceht())) : "") + ";" +
-                (orderUniversalModel.getEquipmentPriceTva5() != null ? orderUniversalModel.getEquipmentTva5() : "") + ";" +
-                (orderUniversalModel.getEquipmentPriceTva20() != null ? orderUniversalModel.getEquipmentTva20() : "") + ";" +
+                (orderUniversalModel.getEquipmentTva5() != null ? orderUniversalModel.getEquipmentTva5() : "") + ";" +
+                (orderUniversalModel.getEquipmentTva20() != null ? orderUniversalModel.getEquipmentTva20() : "") + ";" +
                 (orderUniversalModel.getUnitedPriceTTC() != null ? convertPriceString(orderUniversalModel.getUnitedPriceTTC()) : "") + ";" +
                 (orderUniversalModel.getTotalPriceHT() != null ? convertPriceString(orderUniversalModel.getTotalPriceHT()) : "") + ";" +
                 (orderUniversalModel.getTotalPriceTTC() != null ? convertPriceString(orderUniversalModel.getTotalPriceTTC()) : "") + ";" +
