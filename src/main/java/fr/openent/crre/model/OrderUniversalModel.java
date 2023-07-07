@@ -45,6 +45,8 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     private Double equipmentTva20;
     private Double equipmentPriceht;
     private String equipmentBookseller;
+    private Integer idStatus;
+    private String statusName;
     private StudentsTableModel students;
 
     private List<OrderUniversalOfferModel> offers;
@@ -92,6 +94,8 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
         this.equipmentTva20 = jsonObject.getDouble(Field.EQUIPMENT_TVA20);
         this.equipmentPriceht = jsonObject.getDouble(Field.EQUIPMENT_PRICEHT);
         this.equipmentBookseller = jsonObject.getString(ItemField.BOOKSELLER);
+        this.idStatus = jsonObject.getInteger(Field.ID_STATUS);
+        this.statusName = jsonObject.getString(Field.STATUS_NAME);
 
         this.totalFree = jsonObject.getInteger(Field.TOTAL_FREE);
         if (jsonObject.getValue(Field.PROJECT) != null && jsonObject.getValue(Field.PROJECT) instanceof JsonObject) {
@@ -508,6 +512,24 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
 
     public OrderUniversalModel setValid(boolean valid) {
         this.valid = valid;
+        return this;
+    }
+
+    public Integer getIdStatus() {
+        return idStatus;
+    }
+
+    public OrderUniversalModel setIdStatus(Integer idStatus) {
+        this.idStatus = idStatus;
+        return this;
+    }
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public OrderUniversalModel setStatusName(String statusName) {
+        this.statusName = statusName;
         return this;
     }
 }
