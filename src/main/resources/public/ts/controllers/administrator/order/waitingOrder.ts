@@ -220,11 +220,19 @@ export const waitingOrderRegionController = ng.controller('waitingOrderRegionCon
         }
 
         $scope.syncSelected = (): void => {
-            $scope.display.projects.all.forEach(project => {
-                project.selected = $scope.display.allOrdersSelected;
-                project.orders.forEach(order => {
+            $scope.display.projects.all.flatMap((project: Project) => {
+                if ($scope.display.allOrdersSelected) {
+                    project.selected = $scope.display.allOrdersSelected;
+                } else if (project.selected == undefined) {
+                    project.selected = false;
+                }
+                return project.orders;
+            }).forEach((order: OrderRegion) => {
+                if ($scope.display.allOrdersSelected) {
                     order.selected = $scope.display.allOrdersSelected;
-                });
+                } else if (order.selected == undefined) {
+                    order.selected = false;
+                }
             })
         };
 
