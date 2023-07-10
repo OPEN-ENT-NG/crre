@@ -135,8 +135,8 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
     }
 
     @Override
-    public Future<JsonObject> takeOrder(List<BasketOrderItem> basketOrderItemList, Integer idCampaign, UserInfos user, String idStructure, String nameBasket) {
-        Promise<JsonObject> promise = Promise.promise();
+    public Future<Integer> takeOrder(List<BasketOrderItem> basketOrderItemList, Integer idCampaign, UserInfos user, String idStructure, String nameBasket) {
+        Promise<Integer> promise = Promise.promise();
 
         int amount = basketOrderItemList.stream()
                 .map(BasketOrderItem::getAmount)
@@ -162,17 +162,13 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
                             .map(BasketOrderItem::getId)
                             .collect(Collectors.toList());
 
-                    otherStatements.add(getDeletionBasketsOrderItemStatements(idCampaign, idStructure, user.getUserId(), basketOrderItemIdList, user));
+                    otherStatements.add(getDeletionBasketsOrderItemStatements(idCampaign, idStructure, user.getUserId(), basketOrderItemIdList));
 
                     String otherErrorMessage = String.format("[CRRE@%s::takeOrder] Fail to interact with basket item", this.getClass().getSimpleName());
 
                     return TransactionHelper.executeTransaction(otherStatements, otherErrorMessage);
                 })
-                .onSuccess(transactionResult -> {
-                    JsonObject basicBDObject = new JsonObject(transactionResult.get(transactionResult.size() - 1).getResult().getJsonObject(0).getString(Field.ROW_TO_JSON));
-                    promise.complete(getTransactionFuture(basicBDObject)
-                            .put(Field.ID_BASKET, transactionInsertBasketName.getResult().getJsonObject(0).getInteger(Field.ID)));
-                })
+                .onSuccess(transactionResult -> promise.complete(transactionInsertBasketName.getResult().getJsonObject(0).getInteger(Field.ID)))
                 .onFailure(promise::fail);
 
         return promise.future();
@@ -283,42 +279,15 @@ public class DefaultBasketOrderItemService implements BasketOrderItemService {
         return new TransactionElement(insertBasketOrderItemRelationshipQuery, params);
     }
 
-    private static TransactionElement getDeletionBasketsOrderItemStatements(Integer idCampaign, String idStructure, String idUser, List<Integer> basketOrderItemIdList,
-                                                                            UserInfos user) {
+    private static TransactionElement getDeletionBasketsOrderItemStatements(Integer idCampaign, String idStructure, String idUser, List<Integer> basketOrderItemIdList) {
         String basketFilter = basketOrderItemIdList.size() > 0 ? "AND basket_order_item.id IN " + Sql.listPrepared(basketOrderItemIdList) : "";
 
         JsonArray params = new JsonArray()
                 .add(idCampaign).add(idStructure).add(idUser);
         basketOrderItemIdList.forEach(params::add);
-        params.add(idStructure);
-        params.add(idCampaign).add(idStructure);
-        params.add(user.getUserId());
         String queryOrderItem = " DELETE FROM " + Crre.crreSchema + ".basket_order_item " +
-                " WHERE id_campaign = ? AND id_structure = ? AND owner_id = ? " + basketFilter + " RETURNING " +
-                getReturningQueryOfTakeOrder();
+                " WHERE id_campaign = ? AND id_structure = ? AND owner_id = ? " + basketFilter + " RETURNING *";
         return new TransactionElement(queryOrderItem, params);
-    }
-
-    private static String getReturningQueryOfTakeOrder() {
-        return "( SELECT row_to_json(row(ROUND(p.amount::numeric,2)::double precision, count(o.id ) )) " +
-                " FROM " + Crre.crreSchema + ".purse p, " + Crre.crreSchema + ".order_client_equipment o " +
-                " where p.id_structure = ? " +
-                " AND  o.id_campaign = ? " +
-                " AND o.id_structure = ? AND o.status != 'VALID' AND o.user_id = ? " +
-                " GROUP BY(p.amount) )";
-    }
-
-    private static JsonObject getTransactionFuture(JsonObject basicBDObject) {
-        JsonObject returns = new JsonObject()
-                .put("nb_order", basicBDObject.getInteger(basicBDObject.containsKey("f2") ? "f2" : "f1"));
-        if (basicBDObject.containsKey("f2")) {
-            try {
-                returns.put("amount", basicBDObject.getDouble("f1"));
-            } catch (Exception e) {
-                returns.put("amount", basicBDObject.getInteger("f1"));
-            }
-        }
-        return returns;
     }
 
     /**
