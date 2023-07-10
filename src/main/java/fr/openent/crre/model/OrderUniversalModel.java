@@ -441,11 +441,11 @@ public class OrderUniversalModel implements IModel<OrderUniversalModel> {
     }
 
     public Double getEquipmentPriceTva5() {
-        return this.getEquipmentTva5() != null ? getRoundedPrice(this.amount + this.equipmentTva5) : null;
+        return this.getEquipmentTva5() != null ? getRoundedPrice(this.amount * this.equipmentTva5) : null;
     }
 
     public Double getEquipmentPriceTva20() {
-        return this.getEquipmentTva20() != null ? getRoundedPrice(this.amount + this.equipmentTva20) : null;
+        return this.getEquipmentTva20() != null ? getRoundedPrice(this.amount * this.equipmentTva20) : null;
     }
 
     public String getEquipmentCatalogueType() {

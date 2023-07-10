@@ -444,9 +444,9 @@ public class DefaultOrderRegionServiceTest {
                 "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String expectedParams = "[183,13,\"validationDate\",\"prescriberId\",\"SENT\",\"equipmentKey\",\"equipmentName\"," +
                 "\"equipmentImage\",843.1,\"grade\",\"editor\",\"diffusor\",\"catalogueType\",156,\"idStructure\",\"comment\"," +
-                "95,false,[],211.25,29.65,510.2,42,52,\"validationDate2\",\"prescriberId2\",\"ARCHIVED\",\"equipmentKey2\"," +
+                "95,false,[],198.25,16.65,510.2,42,52,\"validationDate2\",\"prescriberId2\",\"ARCHIVED\",\"equipmentKey2\"," +
                 "\"equipmentName2\",\"equipmentImage2\",245.5,\"grade2\",\"editor2\",\"diffusor2\",\"catalogueType2\",72," +
-                "\"idStructure2\",\"comment2\",42,false,[],76.5,475.4,32.1]";
+                "\"idStructure2\",\"comment2\",42,false,[],24.5,423.4,32.1]";
 
         TransactionElement transactionElement = Whitebox.invokeMethod(this.defaultOrderRegionService, "insertOldClientOrderList", orderList);
         ctx.assertEquals(expectedQuery, transactionElement.getQuery());
