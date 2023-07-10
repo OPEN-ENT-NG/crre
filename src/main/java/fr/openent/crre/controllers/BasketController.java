@@ -308,9 +308,9 @@ public class BasketController extends ControllerHelper {
                     Future<List<BasketOrderItem>> listBasketItemForOrderFuture = basketOrderItemService.listBasketItemForOrder(idCampaign, idStructure, user.getUserId(), basketIdList);
                     listBasketItemForOrderFuture.compose(listBasket ->
                                     basketOrderItemService.takeOrder(listBasket, idCampaign, user, idStructure, nameBasket))
-                            .onSuccess(result -> {
-                                this.notificationService.sendNotificationValidatorBasket(result.getInteger(Field.ID_BASKET));
-                                Renders.renderJson(request, result);
+                            .onSuccess(idBasket -> {
+                                Renders.ok(request);
+                                this.notificationService.sendNotificationValidatorBasket(idBasket);
                                 Logging.insert(user, Contexts.ORDER.toString(), Actions.CREATE.toString(), Field.ID_ORDER,
                                         IModelHelper.toJsonArray(listBasketItemForOrderFuture.result()));
                             })

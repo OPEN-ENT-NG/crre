@@ -65,7 +65,7 @@ public interface BasketOrderItemService {
      * @param nameBasket basket name
      */
     //todo décalé cette fonction dans orderService
-    Future<JsonObject> takeOrder(List<BasketOrderItem> basketOrderItemList, Integer idCampaign, UserInfos user,
+    Future<Integer> takeOrder(List<BasketOrderItem> basketOrderItemList, Integer idCampaign, UserInfos user,
                                  String idStructure, String nameBasket);
 
     /**

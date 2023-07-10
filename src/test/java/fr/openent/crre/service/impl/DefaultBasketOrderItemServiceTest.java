@@ -1,9 +1,11 @@
 package fr.openent.crre.service.impl;
 
+import fr.openent.crre.core.constants.Field;
 import fr.openent.crre.helpers.SqlHelper;
 import fr.openent.crre.helpers.TransactionHelper;
 import fr.openent.crre.model.BasketOrderItem;
 import fr.openent.crre.model.TransactionElement;
+import fr.openent.crre.service.ServiceFactory;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,18 +25,23 @@ import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(PowerMockRunner.class) //Using the PowerMock runner
 @PowerMockRunnerDelegate(VertxUnitRunner.class) //And the Vertx runner
 @PrepareForTest({Sql.class, TransactionHelper.class, SqlHelper.class}) //Prepare the static class you want to test
 public class DefaultBasketOrderItemServiceTest {
-
+    private ServiceFactory serviceFactory;
     private DefaultBasketOrderItemService defaultBasketItemService;
     private Sql sql;
+    private DefaultBasketOrderService basketOrderService;
 
     @Before
     public void setup() {
-        this.defaultBasketItemService = PowerMockito.spy(new DefaultBasketOrderItemService(null));
+        this.serviceFactory = Mockito.mock(ServiceFactory.class);
+        this.basketOrderService = Mockito.mock(DefaultBasketOrderService.class);
+        Mockito.when(this.serviceFactory.getBasketOrderService()).thenReturn(this.basketOrderService);
+        this.defaultBasketItemService = PowerMockito.spy(new DefaultBasketOrderItemService(this.serviceFactory));
         this.sql = Mockito.spy(Sql.getInstance());
         PowerMockito.spy(TransactionHelper.class);
         PowerMockito.spy(Sql.class);
@@ -245,6 +252,77 @@ public class DefaultBasketOrderItemServiceTest {
         List<Integer> basketIdList = Arrays.asList(84, 715, 1315);
         this.defaultBasketItemService.listBasketItemForOrder(75, "structureId", "userId", basketIdList);
 
+        async.awaitSuccess(10000);
+    }
+
+    @Test
+    public void takeOrderTest(TestContext ctx) throws Exception {
+        Async async = ctx.async();
+        Mockito.doReturn(new TransactionElement("query", new JsonArray())).when(this.basketOrderService)
+                .getTransactionInsertBasketName(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyDouble(), Mockito.anyInt());
+
+        AtomicBoolean firstCall = new AtomicBoolean(true);
+        PowerMockito.doAnswer(invocation -> {
+            if (firstCall.get()) {
+                String expectedQuery = "query";
+                String expectedParams = "[]";
+                List<TransactionElement> transactionElementList = invocation.getArgument(0);
+                ctx.assertEquals(1, transactionElementList.size());
+                ctx.assertEquals(expectedQuery, transactionElementList.get(0).getQuery());
+                ctx.assertEquals(expectedParams, transactionElementList.get(0).getParams().toString());
+                transactionElementList.get(0).setResult(new JsonArray().add(new JsonObject().put(Field.ID, 8)));
+                firstCall.set(false);
+                return Future.succeededFuture();
+            } else {
+                String expectedQuery1 = "INSERT INTO null.order_client_equipment (id, amount, id_campaign, id_structure," +
+                        " status, equipment_key, comment, user_id, id_basket, reassort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                String expectedParams1 = "[29,30,65,\"idStructure\",\"WAITING\",\"idItem1\",\"comment1\",\"userId\",8,false]";
+                String expectedQuery2 = "INSERT INTO null.order_client_equipment (id, amount, id_campaign, id_structure," +
+                        " status, equipment_key, comment, user_id, id_basket, reassort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                String expectedParams2 = "[26,21,65,\"idStructure\",\"WAITING\",\"idItem2\",\"comment2\",\"userId\",8,true]";
+                String expectedQueryDelete = " DELETE FROM null.basket_order_item  WHERE id_campaign = ? AND id_structure = ?" +
+                        " AND owner_id = ? AND basket_order_item.id IN (?,?) RETURNING *";
+                String expectedParamsDelete = "[65,\"idStructure\",\"userId\",21,262]";
+                List<TransactionElement> transactionElementList = invocation.getArgument(0);
+                ctx.assertEquals(3, transactionElementList.size());
+                ctx.assertEquals(expectedQuery1, transactionElementList.get(0).getQuery());
+                ctx.assertEquals(expectedParams1, transactionElementList.get(0).getParams().toString());
+                ctx.assertEquals(expectedQuery2, transactionElementList.get(1).getQuery());
+                ctx.assertEquals(expectedParams2, transactionElementList.get(1).getParams().toString());
+                ctx.assertEquals(expectedQueryDelete, transactionElementList.get(2).getQuery());
+                ctx.assertEquals(expectedParamsDelete, transactionElementList.get(2).getParams().toString());
+                return Future.succeededFuture();
+            }
+
+        }).when(TransactionHelper.class, "executeTransaction", Mockito.any(), Mockito.any());
+
+
+        List<BasketOrderItem> basketOrderItemList = Arrays.asList(
+                new BasketOrderItem()
+                        .setAmount(30)
+                        .setId(21)
+                        .setReassort(false)
+                        .setIdOrder(29)
+                        .setIdCampaign(65)
+                        .setIdStructure("idStructure")
+                        .setIdItem("idItem1")
+                        .setComment("comment1"),
+                new BasketOrderItem()
+                        .setAmount(21)
+                        .setId(262)
+                        .setReassort(true)
+                        .setIdOrder(26)
+                        .setIdCampaign(65)
+                        .setIdStructure("idStructure")
+                        .setIdItem("idItem2")
+                        .setComment("comment2"));
+        UserInfos user = new UserInfos();
+        user.setUserId("userId");
+        this.defaultBasketItemService.takeOrder(basketOrderItemList, 65, user, "idStructure", "basketName")
+                .onSuccess(result -> {
+                    ctx.assertEquals(result, 8);
+                    async.complete();
+                });
         async.awaitSuccess(10000);
     }
 }
