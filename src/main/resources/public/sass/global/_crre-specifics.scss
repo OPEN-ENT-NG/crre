@@ -657,6 +657,9 @@ body.crre {
         .top {
           background-color: unset;
           height: 250px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
 
           &.item {
             padding-left: 5% !important;
@@ -667,8 +670,22 @@ body.crre {
             width: 100% !important;
           }
 
+          .laptop-icon {
+            position: absolute;
+            z-index: 10;
+          }
+
           .image-container {
-            height: 70%;
+            display: flex;
+            align-items: center;
+            height: 100%;
+
+            img {
+              max-width: 100%;
+              width: auto;
+              height: auto;
+              max-height: 100%;
+            }
           }
 
           img {
