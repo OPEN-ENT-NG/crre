@@ -89,7 +89,9 @@ public class OrderHelper {
                                     orderUniversalModel.setEquipmentBookseller(equipmentJson.getString(ItemField.BOOKSELLER));
                                     if (Field.ARTICLENUMERIQUE.equals(orderUniversalModel.getEquipmentCatalogueType())) {
                                         orderUniversalModel.setOffers(computeOffersUniversal(equipmentJson.getJsonArray(Field.OFFRES), orderUniversalModel));
-                                        orderUniversalModel.setEquipmentEanLibrary(equipmentJson.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.EANLIBRAIRE));
+                                        if (equipmentJson.getJsonArray(Field.OFFRES) != null && !equipmentJson.getJsonArray(Field.OFFRES).isEmpty()) {
+                                            orderUniversalModel.setEquipmentEanLibrary(equipmentJson.getJsonArray(Field.OFFRES).getJsonObject(0).getString(Field.EANLIBRAIRE));
+                                        }
                                     } else {
                                         orderUniversalModel.setEquipmentEanLibrary(orderUniversalModel.getEquipmentKey());
                                     }
