@@ -64,7 +64,9 @@ export class OrderClient implements Order {
     type: string;
     displayStatus: boolean;
     projectTitle: string;
-    valid: boolean
+    valid: boolean;
+    status_name: string;
+    status_id: number;
 
     constructor() {
         this.typeOrder = "client";
@@ -181,6 +183,8 @@ export class OrdersClient extends Selection<OrderClient> {
                 orderMap.status = order.status;
                 orderMap.projectTitle = (!order.project) ? null : order.project.title;
                 orderMap.valid = order.valid;
+                orderMap.status_id = order.id_status;
+                orderMap.status_name = order.status_name;
                 return orderMap;
             });
 

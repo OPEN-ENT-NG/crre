@@ -30,6 +30,8 @@ export class OrderUniversal {
     private _equipment_tva5: number;
     private _equipment_tva20: number;
     private _equipment_priceht: number;
+    private _id_status: number;
+    private _status_name: string;
     private _offers: any[];
     private _totalFree: number;
     private _valid: boolean;
@@ -293,5 +295,21 @@ export class OrderUniversal {
 
     set valid(value: boolean) {
         this._valid = value;
+    }
+
+    get id_status() {
+        return this._id_status;
+    }
+
+    set id_status(value) {
+        this._id_status = value;
+    }
+
+    get status_name() {
+        return this._status_name;
+    }
+
+    set status_name(value) {
+        this._status_name = value;
     }
 }
