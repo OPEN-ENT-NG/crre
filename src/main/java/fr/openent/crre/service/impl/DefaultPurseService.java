@@ -261,7 +261,8 @@ public class DefaultPurseService implements PurseService {
                 }
                 params.add(newValue).add(newValue);
             } else if (purse.getCreditsConsumable().getRefundValue() != null) {
-                statement += "SET consumable_amount = " + Field.PURSE + ".consumable_amount + ? ";
+                statement += "SET consumable_amount = " + Field.PURSE + ".consumable_amount + LEAST(?, " + Field.PURSE + ".consumable_initial_amount - " +
+                        Field.PURSE + ".consumable_amount) ";
                 params.add(purse.getCreditsConsumable().getRefundValue());
             } else if (purse.getCreditsConsumable().getAddValue() != null) {
                 statement += "SET consumable_amount = " + Field.PURSE + ".consumable_amount + ?, " +
@@ -297,7 +298,8 @@ public class DefaultPurseService implements PurseService {
                 }
                 params.add(newValue).add(newValue);
             } else if (purse.getCredits().getRefundValue() != null) {
-                statement += "SET amount = " + Field.PURSE + ".amount + ? ";
+                statement += "SET amount = " + Field.PURSE + ".amount + LEAST(?, " + Field.PURSE + ".initial_amount - " +
+                        Field.PURSE + ".amount) ";
                 params.add(purse.getCredits().getRefundValue());
             } else if (purse.getCredits().getAddValue() != null) {
                 statement += "SET amount = " + Field.PURSE + ".amount + ?, " +
