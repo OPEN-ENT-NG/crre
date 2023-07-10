@@ -247,7 +247,7 @@ public class DefaultPurseService implements PurseService {
                 params.add(newValue).add(newValue);
             } else if (purse.getCreditsConsumable().getAddValue() != null && purse.getCreditsConsumable().getRefundValue() != null) {
                 statement += "SET consumable_initial_amount = " + Field.PURSE + ".consumable_initial_amount + ?, " +
-                        "consumable_amount = " + Field.PURSE + ".consumable_amount + ? + MIN(?, " + Field.PURSE + ".consumable_initial_amount - " +
+                        "consumable_amount = " + Field.PURSE + ".consumable_amount + ? + LEAST(?, " + Field.PURSE + ".consumable_initial_amount - " +
                         Field.PURSE + ".consumable_amount) ";
                 params.add(purse.getCreditsConsumable().getAddValue())
                         .add(purse.getCreditsConsumable().getAddValue())
