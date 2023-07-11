@@ -27,7 +27,7 @@ export class Equipment implements Selectable {
     ark: string;
     type: string;
     typeCatalogue: string;
-    offres: any;
+    offres: any[];
     prixht: number;
     tvas: any;
     commentaire: string;
@@ -37,6 +37,7 @@ export class Equipment implements Selectable {
     constructor() {
         this._loading = false;
         this.valid = true;
+        this.offres = [];
     }
 
     async sync(id, idStructure?: string) {
