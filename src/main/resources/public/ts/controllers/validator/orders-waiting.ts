@@ -49,12 +49,13 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
 
         $scope.loadNextPage = async (): Promise<void> => {
             $scope.filter.page++;
-            const newData = await $scope.ordersClient.searchOrder($scope.current.structure.id, $scope.filterOrder, false, $scope.filter.page);
-            endLoading(newData);
-            $scope.loading = false;
-
-            $scope.syncSelected();
-            Utils.safeApply($scope);
+            if (!$scope.loading) {
+                const newData = await $scope.ordersClient.searchOrder($scope.current.structure.id, $scope.filterOrder, false, $scope.filter.page);
+                endLoading(newData);
+                $scope.loading = false;
+                $scope.syncSelected();
+                Utils.safeApply($scope);
+            }
         };
 
         $scope.getAllFilters = async () => {
@@ -104,7 +105,7 @@ export const waitingValidatorOrderController = ng.controller('waitingValidatorOr
             let ordersClient: OrdersClient;
             if ($scope.allOrdersSelected) {
                 $scope.allOrderCLient.all.forEach(order => {
-                    for (let i = 0; i <= $scope.ordersClient.all.length; i++) {
+                    for (let i = 0; i < $scope.ordersClient.all.length; i++) {
                         if (order.id == $scope.ordersClient.all[i].id) {
                             order.amount = $scope.ordersClient.all[i].amount;
                             break
