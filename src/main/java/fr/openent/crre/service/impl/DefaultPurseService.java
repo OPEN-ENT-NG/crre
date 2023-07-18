@@ -202,7 +202,7 @@ public class DefaultPurseService implements PurseService {
             if (purse.getCreditsConsumable().getNewValue() != null) {
                 statements.add(this.setAddedInitialAmount(purse.getIdStructure(), true, 0));
             } else if (purse.getCreditsConsumable().getAddValue() != null) {
-                statements.add(this.setAddedInitialAmount(purse.getIdStructure(), true, purse.getCreditsConsumable().getAddValue()));
+                statements.add(this.addAddedInitialAmount(purse.getIdStructure(), true, purse.getCreditsConsumable().getAddValue()));
             }
             statements.add(this.insertAmount(purse, true));
         }
@@ -211,7 +211,7 @@ public class DefaultPurseService implements PurseService {
             if (purse.getCredits().getNewValue() != null) {
                 statements.add(this.setAddedInitialAmount(purse.getIdStructure(), false, 0));
             } else if (purse.getCredits().getAddValue() != null) {
-                statements.add(this.setAddedInitialAmount(purse.getIdStructure(), false, purse.getCredits().getAddValue()));
+                statements.add(this.addAddedInitialAmount(purse.getIdStructure(), false, purse.getCredits().getAddValue()));
             }
             statements.add(this.insertAmount(purse, false));
         }
@@ -227,6 +227,19 @@ public class DefaultPurseService implements PurseService {
                 .add(idStructure);
 
         return new TransactionElement(query, params);
+    }
+
+    private TransactionElement addAddedInitialAmount(String idStructure, boolean consumable, double amount) {
+        StringBuilder query = new StringBuilder()
+                .append("UPDATE ").append(Crre.crreSchema).append(".purse SET ")
+                .append(consumable ? "added_consumable_initial_amount" : "added_initial_amount")
+                .append(" = ? + ").append(consumable ? "added_consumable_initial_amount" : "added_initial_amount")
+                .append(" WHERE id_structure = ?");
+        JsonArray params = new JsonArray()
+                .add(amount)
+                .add(idStructure);
+
+        return new TransactionElement(query.toString(), params);
     }
 
     private TransactionElement insertAmount(PurseImportElement purse, Boolean consumable) {
