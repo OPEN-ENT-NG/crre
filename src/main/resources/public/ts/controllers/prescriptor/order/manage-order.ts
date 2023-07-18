@@ -225,6 +225,11 @@ export const manageOrderController = ng.controller('manageOrderController',
             Utils.safeApply($scope);
         };
 
+        $scope.dropElement = (item: StatusFilter): void => {
+            $scope.filter.statusFilterList = $scope.filter.statusFilterList.filter((el: StatusFilter) => el != item);
+            $scope.searchByName(true);
+        }
+
         await init();
     }])
 ;
