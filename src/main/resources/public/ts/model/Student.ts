@@ -9,11 +9,14 @@ const fieldToI18nMap = new Map<string, any[]>([
     ["secondepro", ["crre.second.pro.class", 3]],
     ["premierepro", ["crre.premiere.pro.class", 4]],
     ["terminalepro", ["crre.terminal.pro.class", 5]],
-    ["cap1", ["crre.first.cap.class", 6]],
-    ["cap2", ["crre.second.cap.class", 7]],
-    ["cap3", ["crre.third.cap.class", 8]],
-    ["bma1", ["crre.first.bma.class", 9]],
-    ["bma2", ["crre.second.bma.class", 10]]
+    ["secondetechno", ["crre.second.tech.class", 6]],
+    ["premieretechno", ["crre.premiere.tech.class", 7]],
+    ["terminaletechno", ["crre.terminal.tech.class", 8]],
+    ["cap1", ["crre.first.cap.class", 9]],
+    ["cap2", ["crre.second.cap.class", 10]],
+    ["cap3", ["crre.third.cap.class", 11]],
+    ["bma1", ["crre.first.bma.class", 12]],
+    ["bma2", ["crre.second.bma.class", 13]]
 ]);
 
 export interface StudentInfo {
@@ -30,6 +33,9 @@ export class Student {
     secondepro: number;
     premierepro: number;
     terminalepro: number;
+    secondetechno: number;
+    premieretechno: number;
+    terminaletechno: number;
     cap1: number;
     cap2: number;
     cap3: number;
