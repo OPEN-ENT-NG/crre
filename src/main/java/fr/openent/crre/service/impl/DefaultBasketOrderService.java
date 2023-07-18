@@ -165,7 +165,7 @@ public class DefaultBasketOrderService implements BasketOrderService {
                     .add(query);
             String equipmentCondition;
             if (equipementIdList.isEmpty()) {
-                equipmentCondition = "TRUE";
+                equipmentCondition = "FALSE";
             } else {
                 equipmentCondition = "o_u.equipment_key IN " + Sql.listPrepared(equipementIdList);
                 values.addAll(new JsonArray(new ArrayList<>(equipementIdList)));
