@@ -133,7 +133,7 @@ public class DefaultOrderService extends SqlCrudService implements OrderService 
         query = filterWaitingOrder(status, idStructure, query, startDate, endDate, values);
 
         query += "GROUP BY (bo.name, bo.name_user, oce.id, campaign.id, ore.status) " +
-                "ORDER BY oce.creation_date DESC ";
+                "ORDER BY oce.creation_date DESC, oce.id DESC ";
         if (page != null) {
             query += "OFFSET ? LIMIT ? ";
             values.add(PAGE_SIZE * page);
