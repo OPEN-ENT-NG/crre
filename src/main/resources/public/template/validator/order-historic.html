@@ -46,6 +46,16 @@
                              class="inline-block horizontal-spacing no-border">
                 </multi-combo>
             </div>
+            <div class="cell six twelve-mobile" ng-if="projectFilter.statusFilterList.length > 0">
+                <div class="remove-margin-bottom">
+                    <div class="select-blocks inline-block">
+                        <div ng-repeat="item in projectFilter.statusFilterList"
+                             ng-click="dropElement(item)">
+                            [[item.toString()]]
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="cell twelve-mobile right-magnet">
                 <button ng-click="display.projects.exportCSV(false)" class="right-magnet"><i18n>crre.logs.csv.export</i18n></button>
             </div>

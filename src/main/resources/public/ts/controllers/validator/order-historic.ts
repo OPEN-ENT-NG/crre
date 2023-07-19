@@ -77,6 +77,11 @@ export const historicOrderRegionController = ng.controller('historicOrderRegionC
             await $scope.searchProjectAndOrders(null, false, false);
         };
 
+        $scope.dropElement = (item: StatusFilter): void => {
+            $scope.projectFilter.statusFilterList = $scope.projectFilter.statusFilterList.filter((el: StatusFilter) => el != item);
+            $scope.getFilter();
+        }
+
         const uncheckAll = () : void => {
             $scope.display.projects.forEach((project : Project) => {
                 project.selected = false;
